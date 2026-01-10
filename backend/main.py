@@ -1,5 +1,7 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 import uvicorn
 import os
 from typing import List, Optional
@@ -77,6 +79,22 @@ def save_estate(estate_data: dict, user_id: int, session: Session = Depends(get_
     estate.encrypted_vault = estate_data.get("encrypted_vault", b"")
     session.commit()
     return {"status": "saved"}
+
+
+# --- SPA Static File Serving ---
+# Mount the frontend/dist directory (ensure this exists after build)
+# We use a catch-all exception to strictly prioritize API routes above
+app.mount("/assets", StaticFiles(directory="frontend/dist/assets"), name="assets")
+
+# Catch-all route to serve index.html for client-side routing
+@app.get("/{full_path:path}")
+async def serve_spa(full_path: str):
+    # If the path starts with /api, let it fall through to the API routes (or 404 if not found)
+    if full_path.startswith("api"):
+        raise HTTPException(status_code=404, detail="API endpoint not found")
+    
+    # Otherwise, serve the index.html for the frontend to handle routing
+    return FileResponse("frontend/dist/index.html")
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

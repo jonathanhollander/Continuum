@@ -23,7 +23,7 @@ def get_registration_options(user_id: str, email: str):
     return generate_registration_options(
         rp_id=RP_ID,
         rp_name=RP_NAME,
-        user_id=user_id,
+        user_id=user_id.encode("utf-8"),
         user_name=email,
         attestation=AttestationConveyancePreference.NONE,
         authenticator_selection=AuthenticatorSelectionCriteria(
