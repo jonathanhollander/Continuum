@@ -7,7 +7,7 @@ from webauthn import (
     options_to_json,
 )
 from webauthn.helpers.structs import (
-    AttestationPreference,
+    AttestationConveyancePreference,
     AuthenticatorSelectionCriteria,
     AuthenticatorAttachment,
     UserVerificationRequirement,
@@ -25,7 +25,7 @@ def get_registration_options(user_id: str, email: str):
         rp_name=RP_NAME,
         user_id=user_id,
         user_name=email,
-        attestation=AttestationPreference.NONE,
+        attestation=AttestationConveyancePreference.NONE,
         authenticator_selection=AuthenticatorSelectionCriteria(
             authenticator_attachment=AuthenticatorAttachment.PLATFORM,
             user_verification=UserVerificationRequirement.REQUIRED,
