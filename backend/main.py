@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+import os
 from typing import List, Optional
 from pydantic import BaseModel
 from sqlmodel import Session
