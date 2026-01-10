@@ -1,0 +1,84 @@
+
+> frontend@0.0.1 dev
+> vite dev --port 9999
+
+
+  VITE v7.3.0  ready in 475 ms
+
+  ➜  Local:   http://localhost:9999/
+  ➜  Network: use --host to expose
+  ➜  press h + enter to show help
+10:51:27 PM [vite-plugin-svelte] src/routes/+layout.svelte:182:4 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+10:51:27 PM [vite-plugin-svelte] src/routes/+layout.svelte:182:4 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+10:51:27 PM [vite-plugin-svelte] src/routes/+layout.svelte:391:1 Unused CSS selector ".custom-scrollbar::-webkit-scrollbar"
+https://svelte.dev/e/css_unused_selector
+10:51:27 PM [vite-plugin-svelte] src/routes/+layout.svelte:394:1 Unused CSS selector ".custom-scrollbar::-webkit-scrollbar-track"
+https://svelte.dev/e/css_unused_selector
+10:51:27 PM [vite-plugin-svelte] src/routes/+layout.svelte:397:1 Unused CSS selector ".custom-scrollbar::-webkit-scrollbar-thumb"
+https://svelte.dev/e/css_unused_selector
+10:51:27 PM [vite-plugin-svelte] src/routes/+layout.svelte:401:1 Unused CSS selector ".custom-scrollbar::-webkit-scrollbar-thumb:hover"
+https://svelte.dev/e/css_unused_selector
+10:51:28 PM [vite-plugin-svelte] src/lib/components/concierge/ConciergeSettings.svelte:92:16 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+10:51:28 PM [vite-plugin-svelte] src/lib/components/concierge/ConciergeSettings.svelte:123:16 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+10:51:28 PM [vite-plugin-svelte] src/lib/components/concierge/ConciergeSettings.svelte:165:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+10:51:28 PM [vite-plugin-svelte] src/lib/components/concierge/ConciergeSettings.svelte:177:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+10:51:28 PM [vite-plugin-svelte] src/lib/components/concierge/ConciergeSettings.svelte:194:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+10:51:28 PM [vite-plugin-svelte] src/lib/components/concierge/ConciergeSettings.svelte:205:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+10:51:28 PM [vite-plugin-svelte] src/lib/components/concierge/ConciergeSettings.svelte:219:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+10:51:28 PM [vite-plugin-svelte] src/lib/components/concierge/ConciergeSettings.svelte:418:20 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+10:51:28 PM [vite-plugin-svelte] src/lib/components/concierge/ConciergeSettings.svelte:461:24 Buttons and links should either contain text or have an `aria-label`, `aria-labelledby` or `title` attribute
+https://svelte.dev/e/a11y_consider_explicit_label
+10:51:31 PM [vite-plugin-svelte] src/lib/components/layout/CompassPanel.svelte:34:4 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+10:51:31 PM [vite-plugin-svelte] src/lib/components/layout/CompassPanel.svelte:34:4 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+10:51:31 PM [vite-plugin-svelte] src/lib/components/ui/Modal.svelte:42:8 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+10:51:31 PM [vite-plugin-svelte] src/lib/components/ui/Modal.svelte:42:8 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+10:51:31 PM [vite-plugin-svelte] src/lib/components/ui/CommandCenter.svelte:222:0 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+10:51:31 PM [vite-plugin-svelte] src/lib/components/ui/CommandCenter.svelte:222:0 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+10:51:31 PM [vite-plugin-svelte] src/lib/components/ui/CommandCenter.svelte:227:4 `<div>` with a keydown handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+10:51:31 PM [vite-plugin-svelte] src/lib/components/layout/Sidebar.svelte:88:24 `<svelte:component>` is deprecated in runes mode — components are dynamic by default
+https://svelte.dev/e/svelte_component_deprecated
+10:51:32 PM [vite-plugin-svelte] src/lib/components/ui/ProfileSwitcher.svelte:162:28 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus
+
+[1;31m[500] GET /[0m
+TypeError: Cannot read properties of undefined (reading 'name')
+    at eval (eval at runInlinedModule (file:///Users/jonathanhollander/AI%20Code/Notion%20Template/NOTION%20Template%20-%20ANTIGRAVITY/frontend/node_modules/vite/dist/node/module-runner.js:913:9), <anonymous>:95:147)
+    at Renderer.child (eval at runInlinedModule (file:///Users/jonathanhollander/AI%20Code/Notion%20Template/NOTION%20Template%20-%20ANTIGRAVITY/frontend/node_modules/vite/dist/node/module-runner.js:913:9), <anonymous>:198:18)
+    at Renderer.component (eval at runInlinedModule (file:///Users/jonathanhollander/AI%20Code/Notion%20Template/NOTION%20Template%20-%20ANTIGRAVITY/frontend/node_modules/vite/dist/node/module-runner.js:913:9), <anonymous>:223:22)
+    at ProfileSwitcher (eval at runInlinedModule (file:///Users/jonathanhollander/AI%20Code/Notion%20Template/NOTION%20Template%20-%20ANTIGRAVITY/frontend/node_modules/vite/dist/node/module-runner.js:913:9), <anonymous>:20:13)
+    at eval (eval at runInlinedModule (file:///Users/jonathanhollander/AI%20Code/Notion%20Template/NOTION%20Template%20-%20ANTIGRAVITY/frontend/node_modules/vite/dist/node/module-runner.js:913:9), <anonymous>:142:38)
+    at Renderer.child (eval at runInlinedModule (file:///Users/jonathanhollander/AI%20Code/Notion%20Template/NOTION%20Template%20-%20ANTIGRAVITY/frontend/node_modules/vite/dist/node/module-runner.js:913:9), <anonymous>:198:18)
+    at Renderer.component (eval at runInlinedModule (file:///Users/jonathanhollander/AI%20Code/Notion%20Template/NOTION%20Template%20-%20ANTIGRAVITY/frontend/node_modules/vite/dist/node/module-runner.js:913:9), <anonymous>:223:22)
+    at Sidebar (eval at runInlinedModule (file:///Users/jonathanhollander/AI%20Code/Notion%20Template/NOTION%20Template%20-%20ANTIGRAVITY/frontend/node_modules/vite/dist/node/module-runner.js:913:9), <anonymous>:31:13)
+    at $$render_inner (eval at runInlinedModule (file:///Users/jonathanhollander/AI%20Code/Notion%20Template/NOTION%20Template%20-%20ANTIGRAVITY/frontend/node_modules/vite/dist/node/module-runner.js:913:9), <anonymous>:177:41)
+    at eval (eval at runInlinedModule (file:///Users/jonathanhollander/AI%20Code/Notion%20Template/NOTION%20Template%20-%20ANTIGRAVITY/frontend/node_modules/vite/dist/node/module-runner.js:913:9), <anonymous>:453:5)
+
+[1;31m[500] GET /[0m
+TypeError: Cannot read properties of undefined (reading 'name')
+    at eval (eval at runInlinedModule (file:///Users/jonathanhollander/AI%20Code/Notion%20Template/NOTION%20Template%20-%20ANTIGRAVITY/frontend/node_modules/vite/dist/node/module-runner.js:913:9), <anonymous>:95:147)
+    at Renderer.child (eval at runInlinedModule (file:///Users/jonathanhollander/AI%20Code/Notion%20Template/NOTION%20Template%20-%20ANTIGRAVITY/frontend/node_modules/vite/dist/node/module-runner.js:913:9), <anonymous>:198:18)
+    at Renderer.component (eval at runInlinedModule (file:///Users/jonathanhollander/AI%20Code/Notion%20Template/NOTION%20Template%20-%20ANTIGRAVITY/frontend/node_modules/vite/dist/node/module-runner.js:913:9), <anonymous>:223:22)
+    at ProfileSwitcher (eval at runInlinedModule (file:///Users/jonathanhollander/AI%20Code/Notion%20Template/NOTION%20Template%20-%20ANTIGRAVITY/frontend/node_modules/vite/dist/node/module-runner.js:913:9), <anonymous>:20:13)
+    at eval (eval at runInlinedModule (file:///Users/jonathanhollander/AI%20Code/Notion%20Template/NOTION%20Template%20-%20ANTIGRAVITY/frontend/node_modules/vite/dist/node/module-runner.js:913:9), <anonymous>:142:38)
+    at Renderer.child (eval at runInlinedModule (file:///Users/jonathanhollander/AI%20Code/Notion%20Template/NOTION%20Template%20-%20ANTIGRAVITY/frontend/node_modules/vite/dist/node/module-runner.js:913:9), <anonymous>:198:18)
+    at Renderer.component (eval at runInlinedModule (file:///Users/jonathanhollander/AI%20Code/Notion%20Template/NOTION%20Template%20-%20ANTIGRAVITY/frontend/node_modules/vite/dist/node/module-runner.js:913:9), <anonymous>:223:22)
+    at Sidebar (eval at runInlinedModule (file:///Users/jonathanhollander/AI%20Code/Notion%20Template/NOTION%20Template%20-%20ANTIGRAVITY/frontend/node_modules/vite/dist/node/module-runner.js:913:9), <anonymous>:31:13)
+    at $$render_inner (eval at runInlinedModule (file:///Users/jonathanhollander/AI%20Code/Notion%20Template/NOTION%20Template%20-%20ANTIGRAVITY/frontend/node_modules/vite/dist/node/module-runner.js:913:9), <anonymous>:177:41)
+    at eval (eval at runInlinedModule (file:///Users/jonathanhollander/AI%20Code/Notion%20Template/NOTION%20Template%20-%20ANTIGRAVITY/frontend/node_modules/vite/dist/node/module-runner.js:913:9), <anonymous>:453:5)

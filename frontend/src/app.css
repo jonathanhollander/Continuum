@@ -1,0 +1,254 @@
+@import "tailwindcss";
+
+@theme {
+
+    /* Estate Executive Palette */
+    --color-primary: #4A7C74;
+    --color-primary-foreground: #ffffff;
+
+    --color-secondary: #527B84;
+    --color-secondary-foreground: #ffffff;
+
+    --color-accent: #90CDF4;
+    --color-accent-foreground: #0f172a;
+
+    --color-gold: #D4AF37;
+    --color-gold-muted: #C5A028;
+
+    /* Base Colors */
+    --color-background: #f8fafc;
+    --color-foreground: #1e293b;
+
+    --color-card: #ffffff;
+    --color-card-foreground: #1e293b;
+
+    --color-popover: #ffffff;
+    --color-popover-foreground: #1e293b;
+
+    --color-muted: #f1f5f9;
+    --color-muted-foreground: #64748b;
+
+    --color-border: #e2e8f0;
+    --color-input: #e2e8f0;
+
+    /* Typography */
+    --font-serif: "Playfair Display",
+        serif;
+    --font-sans: "Lato",
+        sans-serif;
+
+    /* Radius */
+    --radius: 0.5rem;
+}
+
+@layer base {
+    body {
+        @apply font-sans antialiased bg-background text-foreground selection:bg-primary/20 transition-colors duration-1000;
+        font-size: 18px;
+        /* Universal Design Base */
+        line-height: 1.6;
+        background-image:
+            radial-gradient(at 0% 0%, hsla(170, 40%, 96%, 1) 0, transparent 50%),
+            radial-gradient(at 100% 0%, hsla(190, 40%, 96%, 1) 0, transparent 50%);
+        background-attachment: fixed;
+    }
+
+    /* --- Tone Overrides --- */
+    body.tone-grief {
+        --color-primary: #5A6B8F;
+        /* Soft Blue/Grave */
+        --color-background: #F4F6FB;
+        filter: saturate(0.85);
+        /* Slightly desaturate for somber tone */
+    }
+
+    body.tone-executor {
+        --color-primary: #1E293B;
+        /* Navy/Serious */
+        --color-background: #F1F5F9;
+    }
+
+    body.tone-planning {
+        --color-primary: #4A7C74;
+        /* Original Teal */
+    }
+
+    /* Slow down transitions in Grief mode for a calmer feel */
+    body.tone-grief * {
+        transition-duration: 600ms !important;
+    }
+
+    /* --- Theme: Dark Mode --- */
+    body.theme-dark {
+        --color-background: #0f172a;
+        /* Slate 900 */
+        --color-foreground: #f8fafc;
+        /* Slate 50 */
+        --color-card: #1e293b;
+        /* Slate 800 */
+        --color-card-foreground: #f8fafc;
+        --color-muted: #1e293b;
+        --color-muted-foreground: #94a3b8;
+        --color-border: #334155;
+        --color-input: #334155;
+    }
+
+    /* --- Theme: Color Accents --- */
+    body.theme-color-teal {
+        --color-primary: #4A7C74;
+        /* Original Teal */
+    }
+
+    body.theme-color-indigo {
+        --color-primary: #6366f1;
+        /* Indigo 500 */
+    }
+
+    body.theme-color-emerald {
+        --color-primary: #10b981;
+        /* Emerald 500 */
+    }
+
+    body.theme-color-rose {
+        --color-primary: #f43f5e;
+        /* Rose 500 */
+    }
+
+    body.theme-color-amber {
+        --color-primary: #f59e0b;
+        /* Amber 500 */
+    }
+
+    body.theme-color-slate {
+        --color-primary: #0f172a;
+        /* Slate 900 */
+    }
+
+    /* --- Accessibility Overrides (Specifics) --- */
+    body.accessibility-high-contrast {
+        --color-primary: #000000;
+        --color-background: #ffffff;
+        --color-surface: #ffffff;
+        --color-border: #000000;
+        --color-text-main: #000000;
+        --color-text-muted: #222222;
+        filter: contrast(1.2);
+    }
+
+    /* High Contrast Dark Mode Override */
+    body.theme-dark.accessibility-high-contrast {
+        --color-primary: #ffffff;
+        --color-background: #000000;
+        --color-foreground: #ffffff;
+        --color-border: #ffffff;
+        filter: contrast(1.3);
+    }
+
+    body.accessibility-high-contrast button,
+    body.accessibility-high-contrast a {
+        border: 2px solid currentColor !important;
+    }
+
+    body.accessibility-reduced-motion * {
+        transition-duration: 0ms !important;
+        animation-duration: 0ms !important;
+        animation-iteration-count: 1 !important;
+    }
+
+    body.font-size-large {
+        font-size: 130%;
+    }
+
+    body.font-size-xlarge {
+        font-size: 165%;
+    }
+
+    body.font-size-max {
+        font-size: 200%;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        @apply font-serif tracking-tight text-foreground transition-colors duration-1000;
+    }
+}
+
+@layer utilities {
+    .glass-panel {
+        @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-sm min-h-fit;
+    }
+
+    .glass-card {
+        @apply bg-white/60 backdrop-blur-sm border border-black/5 shadow-sm hover:shadow-md transition-all duration-300 min-h-fit;
+    }
+
+    .text-gold {
+        background: linear-gradient(135deg, #D4AF37 0%, #C5A028 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Print Optimizations */
+    @media print {
+        @page {
+            margin: 0.5in;
+        }
+
+        body {
+            background: white !important;
+            color: black !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        /* Hide UI Elements */
+        nav,
+        aside,
+        button:not(.print\:show),
+        .no-print,
+        [role="dialog"] {
+            display: none !important;
+        }
+
+        /* Layout Resets */
+        main,
+        .max-w-7xl,
+        .max-w-6xl {
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+        }
+
+        /* Text Contrast */
+        h1,
+        h2,
+        h3,
+        h4,
+        p,
+        span {
+            color: black !important;
+            text-shadow: none !important;
+        }
+
+        /* Cards */
+        .glass-card,
+        .glass-panel {
+            background: white !important;
+            border: 1px solid #ddd !important;
+            box-shadow: none !important;
+            break-inside: avoid;
+        }
+
+        /* Images */
+        img {
+            max-width: 100% !important;
+            filter: grayscale(100%) !important;
+            /* Optional: print save ink */
+        }
+    }
+}

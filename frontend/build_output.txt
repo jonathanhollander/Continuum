@@ -1,0 +1,1853 @@
+
+> frontend@0.0.1 build
+> vite build
+
+vite v7.3.0 building ssr environment for production...
+transforming...
+10:48:54 PM [vite-plugin-svelte] src/routes/+layout.svelte:182:4 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+180:       <!-- Mobile Sidebar Overlay -->
+181:       {#if isSidebarOpen}
+182:         <div
+                 ^
+183:           class="fixed inset-0 bg-slate-900/50 z-40 lg:hidden backdrop-blur-sm"
+184:           transition:fade={{ duration: 200 }}
+10:48:54 PM [vite-plugin-svelte] src/routes/+layout.svelte:182:4 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+180:       <!-- Mobile Sidebar Overlay -->
+181:       {#if isSidebarOpen}
+182:         <div
+                 ^
+183:           class="fixed inset-0 bg-slate-900/50 z-40 lg:hidden backdrop-blur-sm"
+184:           transition:fade={{ duration: 200 }}
+10:48:54 PM [vite-plugin-svelte] src/routes/+layout.svelte:391:1 Unused CSS selector ".custom-scrollbar::-webkit-scrollbar"
+https://svelte.dev/e/css_unused_selector
+389: <style>
+390:   /* Custom scrollbar for sidebar navigation */
+391:   .custom-scrollbar::-webkit-scrollbar {
+                                           ^
+392:     width: 4px;
+393:   }
+10:48:54 PM [vite-plugin-svelte] src/routes/+layout.svelte:394:1 Unused CSS selector ".custom-scrollbar::-webkit-scrollbar-track"
+https://svelte.dev/e/css_unused_selector
+392:     width: 4px;
+393:   }
+394:   .custom-scrollbar::-webkit-scrollbar-track {
+                                                 ^
+395:     background: transparent;
+396:   }
+10:48:54 PM [vite-plugin-svelte] src/routes/+layout.svelte:397:1 Unused CSS selector ".custom-scrollbar::-webkit-scrollbar-thumb"
+https://svelte.dev/e/css_unused_selector
+395:     background: transparent;
+396:   }
+397:   .custom-scrollbar::-webkit-scrollbar-thumb {
+                                                 ^
+398:     background-color: rgba(255, 255, 255, 0.1);
+399:     border-radius: 20px;
+10:48:54 PM [vite-plugin-svelte] src/routes/+layout.svelte:401:1 Unused CSS selector ".custom-scrollbar::-webkit-scrollbar-thumb:hover"
+https://svelte.dev/e/css_unused_selector
+399:     border-radius: 20px;
+400:   }
+401:   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                                                       ^
+402:     background-color: rgba(255, 255, 255, 0.2);
+403:   }
+10:48:55 PM [vite-plugin-svelte] src/routes/admin/ui-audit/+page.svelte:59:24 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+57:                     {#each checks as check}
+58:                         <!-- svelte-ignore a11y-click-events-have-key-events - Admin tool -->
+59:                         <div
+                                ^
+60:                             class="flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-all
+61:                             {check.checked
+10:48:55 PM [vite-plugin-svelte] src/routes/marketing/+page.svelte:66:8 Avoid declaring classes below the top level scope
+https://svelte.dev/e/perf_avoid_nested_class
+64:         });
+65: 
+66:         class Particle {
+             ^
+67:             x: number;
+68:             y: number;
+10:48:55 PM [vite-plugin-svelte] src/routes/marketing/+page.svelte:351:8 `<div>` with a mousemove or mouseleave handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+349:         </div>
+350: 
+351:         <div
+                 ^
+352:             class="relative group perspective-container"
+353:             use:reveal
+10:48:55 PM [vite-plugin-svelte] src/routes/marketing/+page.svelte:389:12 `<div>` with a mousemove or mouseleave handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+387:         <div class="grid md:grid-cols-3 gap-8 perspective-container">
+388:             <!-- Pillar 1: The Vault -->
+389:             <div
+                     ^
+390:                 class="group holo-card relative bg-[#0F1115] rounded-3xl overflow-hidden border border-white/10 shadow-xl"
+391:                 on:mousemove={handleTilt}
+10:48:55 PM [vite-plugin-svelte] src/routes/marketing/+page.svelte:421:12 `<div>` with a mousemove or mouseleave handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+419: 
+420:             <!-- Pillar 2: The Signal -->
+421:             <div
+                     ^
+422:                 class="group holo-card relative bg-[#0F1115] rounded-3xl overflow-hidden border border-white/10 shadow-xl"
+423:                 on:mousemove={handleTilt}
+10:48:55 PM [vite-plugin-svelte] src/routes/marketing/+page.svelte:453:12 `<div>` with a mousemove or mouseleave handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+451: 
+452:             <!-- Pillar 3: The Guardian -->
+453:             <div
+                     ^
+454:                 class="group holo-card relative bg-[#0F1115] rounded-3xl overflow-hidden border border-white/10 shadow-xl"
+455:                 on:mousemove={handleTilt}
+10:48:55 PM [vite-plugin-svelte] src/routes/marketing/+page.svelte:520:12 `<div>` with a mousemove or mouseleave handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+518:         <div class="grid md:grid-cols-3 gap-8 perspective-container">
+519:             <!-- AI Card 1: Visual Archivist -->
+520:             <div
+                     ^
+521:                 class="group relative p-8 rounded-3xl bg-[#0F1115] border border-white/5 hover:border-indigo-500/30 transition-all duration-500"
+522:                 on:mousemove={handleTilt}
+10:48:55 PM [vite-plugin-svelte] src/routes/marketing/+page.svelte:548:12 `<div>` with a mousemove or mouseleave handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+546: 
+547:             <!-- AI Card 2: Empathy Engine -->
+548:             <div
+                     ^
+549:                 class="group relative p-8 rounded-3xl bg-[#0F1115] border border-white/5 hover:border-emerald-500/30 transition-all duration-500 delay-100"
+550:                 on:mousemove={handleTilt}
+10:48:55 PM [vite-plugin-svelte] src/routes/marketing/+page.svelte:576:12 `<div>` with a mousemove or mouseleave handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+574: 
+575:             <!-- AI Card 3: Jargon Slayer -->
+576:             <div
+                     ^
+577:                 class="group relative p-8 rounded-3xl bg-[#0F1115] border border-white/5 hover:border-amber-500/30 transition-all duration-500 delay-200"
+578:                 on:mousemove={handleTilt}
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/analytics/+page.svelte:45:4 Self-closing HTML tags for non-void elements are ambiguous — use `<div ...></div>` rather than `<div ... />`
+https://svelte.dev/e/element_invalid_self_closing_tag
+43: 
+44:     <!-- Background Gradient -->
+45:     <div
+          ^
+46:         class="absolute top-0 right-0 w-[800px] h-[800px] bg-indigo-900/20 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2"
+47:     />
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/analytics/+page.svelte:134:32 Self-closing HTML tags for non-void elements are ambiguous — use `<div ...></div>` rather than `<div ... />`
+https://svelte.dev/e/element_invalid_self_closing_tag
+132:                                 >
+133:                             {:else}
+134:                                 <div
+                                       ^
+135:                                     class="w-4 h-4 rounded-full border border-slate-700"
+136:                                 />
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/analytics/+page.svelte:192:32 Self-closing HTML tags for non-void elements are ambiguous — use `<div ...></div>` rather than `<div ... />`
+https://svelte.dev/e/element_invalid_self_closing_tag
+190:                                 class="h-1 bg-slate-800 rounded-full overflow-hidden"
+191:                             >
+192:                                 <div
+                                       ^
+193:                                     class="h-full bg-emerald-500/50"
+194:                                     style="width: {Math.min(
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/analytics/+page.svelte:211:28 Self-closing HTML tags for non-void elements are ambiguous — use `<div ...></div>` rather than `<div ... />`
+https://svelte.dev/e/element_invalid_self_closing_tag
+209:                             >
+210:                         {:else}
+211:                             <div
+                                   ^
+212:                                 class="w-4 h-4 rounded-full border border-slate-700"
+213:                             />
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/analytics/+page.svelte:256:28 Self-closing HTML tags for non-void elements are ambiguous — use `<div ...></div>` rather than `<div ... />`
+https://svelte.dev/e/element_invalid_self_closing_tag
+254:                             <span class="text-slate-300">Wishes Defined</span>
+255:                         {:else}
+256:                             <div
+                                   ^
+257:                                 class="w-4 h-4 rounded-full border border-slate-700"
+258:                             />
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/analytics/+page.svelte:283:36 Self-closing HTML tags for non-void elements are ambiguous — use `<div ...></div>` rather than `<div ... />`
+https://svelte.dev/e/element_invalid_self_closing_tag
+281:                             <div class="flex items-center justify-between">
+282:                                 <div class="flex items-center gap-4">
+283:                                     <div
+                                           ^
+284:                                         class={`w-2 h-2 rounded-full ${gap.type === "legal" ? "bg-indigo-400" : gap.type === "financial" ? "bg-emerald-400" : "bg-rose-400"}`}
+285:                                     />
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/anniversary-manager/+page.svelte:325:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+323:                 <div class="space-y-4">
+324:                     <div class="space-y-1">
+325:                         <label
+                              ^
+326:                             class="text-xs font-black uppercase text-slate-400 tracking-widest pl-1"
+327:                             >Title</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/anniversary-manager/+page.svelte:338:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+336:                     <div class="grid grid-cols-2 gap-4">
+337:                         <div class="space-y-1">
+338:                             <label
+                                  ^
+339:                                 class="text-xs font-black uppercase text-slate-400 tracking-widest pl-1"
+340:                                 >Date (MM-DD)</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/anniversary-manager/+page.svelte:349:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+347:                         </div>
+348:                         <div class="space-y-1">
+349:                             <label
+                                  ^
+350:                                 class="text-xs font-black uppercase text-slate-400 tracking-widest pl-1"
+351:                                 >Type</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/anniversary-manager/+page.svelte:366:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+364: 
+365:                     <div class="space-y-1">
+366:                         <label
+                              ^
+367:                             class="text-xs font-black uppercase text-slate-400 tracking-widest pl-1"
+368:                             >Description</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/anniversary-manager/+page.svelte:378:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+376: 
+377:                     <div class="space-y-1">
+378:                         <label
+                              ^
+379:                             class="text-xs font-black uppercase text-slate-400 tracking-widest pl-1"
+380:                             >Ritual Instructions (Optional)</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/calendar/+page.svelte:363:8 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+361: 
+362:         <!-- AI Suggestion Card (Mock) -->
+363:         <div
+                 ^
+364:             class="border-2 border-dashed border-gray-200 rounded-3xl p-6 flex flex-col items-center justify-center text-center text-gray-400 gap-4 min-h-[300px] hover:border-[#304743]/50 hover:bg-gray-50/50 transition-all cursor-pointer"
+365:             on:click={() => (showAddForm = true)}
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/calendar/+page.svelte:363:8 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+361: 
+362:         <!-- AI Suggestion Card (Mock) -->
+363:         <div
+                 ^
+364:             class="border-2 border-dashed border-gray-200 rounded-3xl p-6 flex flex-col items-center justify-center text-center text-gray-400 gap-4 min-h-[300px] hover:border-[#304743]/50 hover:bg-gray-50/50 transition-all cursor-pointer"
+365:             on:click={() => (showAddForm = true)}
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/calendar/+page.svelte:418:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+416:                     <div class="space-y-4">
+417:                         <div>
+418:                             <label
+                                  ^
+419:                                 class="block text-xs font-bold uppercase text-gray-500 mb-1"
+420:                                 >Event Title</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/calendar/+page.svelte:432:32 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+430:                         <div class="grid grid-cols-2 gap-4">
+431:                             <div>
+432:                                 <label
+                                      ^
+433:                                     class="block text-xs font-bold uppercase text-gray-500 mb-1"
+434:                                     >Date</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/calendar/+page.svelte:443:32 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+441:                             </div>
+442:                             <div>
+443:                                 <label
+                                      ^
+444:                                     class="block text-xs font-bold uppercase text-gray-500 mb-1"
+445:                                     >Type</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/advanced-registry/+page.svelte:559:32 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+557:                         <div class="grid grid-cols-2 gap-4">
+558:                             <div class="space-y-2">
+559:                                 <label
+                                      ^
+560:                                     class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+561:                                     >Asset ID</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/advanced-registry/+page.svelte:570:32 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+568:                             </div>
+569:                             <div class="space-y-2">
+570:                                 <label
+                                      ^
+571:                                     class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+572:                                     >Date</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/advanced-registry/+page.svelte:582:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+580:                         </div>
+581:                         <div class="space-y-2">
+582:                             <label
+                                  ^
+583:                                 class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+584:                                 >Description</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/advanced-registry/+page.svelte:594:32 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+592:                         <div class="grid grid-cols-2 gap-4">
+593:                             <div class="space-y-2">
+594:                                 <label
+                                      ^
+595:                                     class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+596:                                     >Type</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/advanced-registry/+page.svelte:610:32 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+608:                             </div>
+609:                             <div class="space-y-2">
+610:                                 <label
+                                      ^
+611:                                     class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+612:                                     >Amount ($)</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/advanced-registry/+page.svelte:625:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+623:                     <div class="space-y-4">
+624:                         <div class="space-y-2">
+625:                             <label
+                                  ^
+626:                                 class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+627:                                 >Item / Task</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/advanced-registry/+page.svelte:637:32 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+635:                         <div class="grid grid-cols-2 gap-4">
+636:                             <div class="space-y-2">
+637:                                 <label
+                                      ^
+638:                                     class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+639:                                     >Cost ($)</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/advanced-registry/+page.svelte:648:32 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+646:                             </div>
+647:                             <div class="space-y-2">
+648:                                 <label
+                                      ^
+649:                                     class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+650:                                     >Date</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/advanced-registry/+page.svelte:663:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+661:                     <div class="space-y-4">
+662:                         <div class="space-y-2">
+663:                             <label
+                                  ^
+664:                                 class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+665:                                 >Claim Number</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/advanced-registry/+page.svelte:674:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+672:                         </div>
+673:                         <div class="space-y-2">
+674:                             <label
+                                  ^
+675:                                 class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+676:                                 >Note / Details</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/advanced-registry/+page.svelte:689:32 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+687:                         <div class="grid grid-cols-2 gap-4">
+688:                             <div class="space-y-2">
+689:                                 <label
+                                      ^
+690:                                     class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+691:                                     >Platform</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/advanced-registry/+page.svelte:700:32 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+698:                             </div>
+699:                             <div class="space-y-2">
+700:                                 <label
+                                      ^
+701:                                     class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+702:                                     >Username / ID</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/advanced-registry/+page.svelte:713:32 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+711:                         <div class="grid grid-cols-2 gap-4">
+712:                             <div class="space-y-2">
+713:                                 <label
+                                      ^
+714:                                     class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+715:                                     >Preference</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/advanced-registry/+page.svelte:733:32 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+731:                             </div>
+732:                             <div class="space-y-2">
+733:                                 <label
+                                      ^
+734:                                     class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+735:                                     >Priority</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/advanced-registry/+page.svelte:748:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+746:                         </div>
+747:                         <div class="space-y-2">
+748:                             <label
+                                  ^
+749:                                 class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+750:                                 >Final Instructions</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/contacts/+page.svelte:428:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+426:                         class="bg-indigo-50 p-4 rounded-xl border border-indigo-100"
+427:                     >
+428:                         <label
+                              ^
+429:                             class="block text-xs font-bold uppercase text-indigo-700 mb-2"
+430:                             >Notification Priority</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/digital-guardian/+page.svelte:329:12 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+327:             class="bg-white rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+328:         >
+329:             <div
+                     ^
+330:                 class="p-6 flex items-start gap-4 cursor-pointer"
+331:                 on:click={() => toggleGuide("apple")}
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/digital-guardian/+page.svelte:329:12 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+327:             class="bg-white rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+328:         >
+329:             <div
+                     ^
+330:                 class="p-6 flex items-start gap-4 cursor-pointer"
+331:                 on:click={() => toggleGuide("apple")}
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/digital-guardian/+page.svelte:405:12 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+403:             class="bg-white rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+404:         >
+405:             <div
+                     ^
+406:                 class="p-6 flex items-start gap-4 cursor-pointer"
+407:                 on:click={() => toggleGuide("google")}
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/digital-guardian/+page.svelte:405:12 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+403:             class="bg-white rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+404:         >
+405:             <div
+                     ^
+406:                 class="p-6 flex items-start gap-4 cursor-pointer"
+407:                 on:click={() => toggleGuide("google")}
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/digital-guardian/+page.svelte:479:12 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+477:             class="bg-white rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow md:col-span-2"
+478:         >
+479:             <div
+                     ^
+480:                 class="p-6 flex items-start gap-4 cursor-pointer"
+481:                 on:click={() => toggleGuide("passwordManager")}
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/digital-guardian/+page.svelte:479:12 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+477:             class="bg-white rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow md:col-span-2"
+478:         >
+479:             <div
+                     ^
+480:                 class="p-6 flex items-start gap-4 cursor-pointer"
+481:                 on:click={() => toggleGuide("passwordManager")}
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/digital-guardian/+page.svelte:559:12 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+557:             class="bg-white rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+558:         >
+559:             <div
+                     ^
+560:                 class="p-6 flex items-start gap-4 cursor-pointer"
+561:                 on:click={() => toggleGuide("facebook")}
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/digital-guardian/+page.svelte:559:12 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+557:             class="bg-white rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+558:         >
+559:             <div
+                     ^
+560:                 class="p-6 flex items-start gap-4 cursor-pointer"
+561:                 on:click={() => toggleGuide("facebook")}
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/digital-guardian/+page.svelte:615:12 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+613:             class="bg-white rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+614:         >
+615:             <div
+                     ^
+616:                 class="p-6 flex items-start gap-4 cursor-pointer"
+617:                 on:click={() => toggleGuide("linkedin")}
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/digital-guardian/+page.svelte:615:12 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+613:             class="bg-white rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+614:         >
+615:             <div
+                     ^
+616:                 class="p-6 flex items-start gap-4 cursor-pointer"
+617:                 on:click={() => toggleGuide("linkedin")}
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/executor-toolkit/+page.svelte:166:20 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+164:             <div in:fade class="space-y-4 max-w-3xl mx-auto">
+165:                 {#each filteredTasks as task}
+166:                     <div
+                             ^
+167:                         class="group flex items-center gap-4 p-4 rounded-xl border border-transparent hover:border-gray-200 hover:bg-gray-50 transition-all cursor-pointer"
+168:                         on:click={() => (selectedTask = task)}
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/executor-toolkit/+page.svelte:166:20 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+164:             <div in:fade class="space-y-4 max-w-3xl mx-auto">
+165:                 {#each filteredTasks as task}
+166:                     <div
+                             ^
+167:                         class="group flex items-center gap-4 p-4 rounded-xl border border-transparent hover:border-gray-200 hover:bg-gray-50 transition-all cursor-pointer"
+168:                         on:click={() => (selectedTask = task)}
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/executor-toolkit/+page.svelte:170:24 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+168:                         on:click={() => (selectedTask = task)}
+169:                     >
+170:                         <div
+                                 ^
+171:                             on:click|stopPropagation={() =>
+172:                                 toggleCompletion(task.id)}
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/executor-toolkit/+page.svelte:170:24 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+168:                         on:click={() => (selectedTask = task)}
+169:                     >
+170:                         <div
+                                 ^
+171:                             on:click|stopPropagation={() =>
+172:                                 toggleCompletion(task.id)}
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/funeral/+page.svelte:504:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+502:                     <div class="p-6 space-y-4">
+503:                         <div class="space-y-2">
+504:                             <label
+                                  ^
+505:                                 class="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+506:                                 >Item Name</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/funeral/+page.svelte:515:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+513:                         </div>
+514:                         <div class="space-y-2">
+515:                             <label
+                                  ^
+516:                                 class="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+517:                                 >Cost ($)</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/family-hub/+page.svelte:308:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+306: 
+307:                     <div class="space-y-2">
+308:                         <label class="text-xs font-bold uppercase text-gray-400"
+                              ^
+309:                             >Title</label
+310:                         >
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/family-hub/+page.svelte:326:36 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+324:                             {#if !newMemory.image}
+325:                                 <div class="space-y-1">
+326:                                     <label
+                                          ^
+327:                                         class="text-xs font-bold uppercase text-gray-400"
+328:                                         >Or Paste URL</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/family-hub/+page.svelte:339:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+337:                         </div>
+338:                         <div class="space-y-2">
+339:                             <label
+                                  ^
+340:                                 class="text-xs font-bold uppercase text-gray-400"
+341:                                 >Date / Year</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/family-hub/+page.svelte:351:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+349:                     {:else if newMemory.type === "recipe"}
+350:                         <div class="space-y-2">
+351:                             <label
+                                  ^
+352:                                 class="text-xs font-bold uppercase text-gray-400"
+353:                                 >Description / Ingredients</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/family-hub/+page.svelte:363:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+361:                     {:else if newMemory.type === "quote"}
+362:                         <div class="space-y-2">
+363:                             <label
+                                  ^
+364:                                 class="text-xs font-bold uppercase text-gray-400"
+365:                                 >Quote Text</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/family-hub/+page.svelte:374:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+372:                         </div>
+373:                         <div class="space-y-2">
+374:                             <label
+                                  ^
+375:                                 class="text-xs font-bold uppercase text-gray-400"
+376:                                 >Attribution</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/family-hub/+page.svelte:585:16 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+583:             <div class="space-y-8">
+584:                 <!-- Educational Resources Widget -->
+585:                 <div
+                         ^
+586:                     class="bg-[#304743] rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group cursor-pointer"
+587:                     on:click={() =>
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/family-hub/+page.svelte:585:16 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+583:             <div class="space-y-8">
+584:                 <!-- Educational Resources Widget -->
+585:                 <div
+                         ^
+586:                     class="bg-[#304743] rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group cursor-pointer"
+587:                     on:click={() =>
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/heirlooms/+page.svelte:389:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+387:                 <div class="p-6 space-y-4">
+388:                     <div>
+389:                         <label
+                              ^
+390:                             class="block text-xs font-bold uppercase text-gray-500 mb-1"
+391:                             >Item Name</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/heirlooms/+page.svelte:402:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+400: 
+401:                     <div>
+402:                         <label
+                              ^
+403:                             class="block text-xs font-bold uppercase text-gray-500 mb-1"
+404:                             >Intended Recipient</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/heirlooms/+page.svelte:415:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+413: 
+414:                     <div>
+415:                         <label
+                              ^
+416:                             class="block text-xs font-bold uppercase text-gray-500 mb-1"
+417:                             >The Story</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/heirlooms/+page.svelte:436:32 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+434:                             </div>
+435:                             <div class="mt-2">
+436:                                 <label
+                                      ^
+437:                                     class="block text-xs font-bold uppercase text-gray-500 mb-1"
+438:                                     >Or paste a URL</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/insurance/+page.svelte:595:8 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+593:         transition:fade={{ duration: 300 }}
+594:     >
+595:         <div
+                 ^
+596:             class="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+597:             on:click={resetForm}
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/insurance/+page.svelte:595:8 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+593:         transition:fade={{ duration: 300 }}
+594:     >
+595:         <div
+                 ^
+596:             class="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+597:             on:click={resetForm}
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/insurance/+page.svelte:642:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+640:                     >
+641:                         <div class="space-y-3">
+642:                             <label
+                                  ^
+643:                                 class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+644:                                 >Policy Title</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/insurance/+page.svelte:654:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+652:                         </div>
+653:                         <div class="space-y-3">
+654:                             <label
+                                  ^
+655:                                 class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+656:                                 >Insurance Classification</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/insurance/+page.svelte:668:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+666:                         </div>
+667:                         <div class="space-y-3">
+668:                             <label
+                                  ^
+669:                                 class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+670:                                 >Insurance Carrier</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/insurance/+page.svelte:695:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+693:                     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+694:                         <div class="space-y-3">
+695:                             <label
+                                  ^
+696:                                 class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-mono"
+697:                                 >Premium Amount ($)</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/insurance/+page.svelte:712:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+710:                         </div>
+711:                         <div class="space-y-3">
+712:                             <label
+                                  ^
+713:                                 class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+714:                                 >Billing Interval</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/insurance/+page.svelte:726:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+724:                         </div>
+725:                         <div class="space-y-3">
+726:                             <label
+                                  ^
+727:                                 class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+728:                                 >Status Tracking</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/insurance/+page.svelte:762:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+760:                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+761:                         <div class="space-y-3">
+762:                             <label
+                                  ^
+763:                                 class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+764:                                 >Designated Beneficiaries</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/insurance/+page.svelte:774:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+772:                         </div>
+773:                         <div class="space-y-3">
+774:                             <label
+                                  ^
+775:                                 class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+776:                                 >Agent / Point of Contact</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/insurance/+page.svelte:786:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+784:                         </div>
+785:                         <div class="space-y-3 md:col-span-2">
+786:                             <label
+                                       ^
+787:                                 class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 flex items-center gap-2"
+788:                             >
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/letters/+page.svelte:599:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+597:                     {#each detectedVariables as variable}
+598:                         <div class="space-y-3">
+599:                             <label
+                                  ^
+600:                                 class="block text-[11px] font-black text-slate-800 uppercase tracking-widest pl-1"
+601:                                 >{variable}</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/letters/+page.svelte:871:32 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+869:                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+870:                             <div class="space-y-2">
+871:                                 <label
+                                      ^
+872:                                     class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+873:                                     >Specific Release Date</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/letters/+page.svelte:882:32 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+880:                             </div>
+881:                             <div class="space-y-2">
+882:                                 <label
+                                      ^
+883:                                     class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+884:                                     >Or Lifecycle Milestone</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/letters/+page.svelte:1154:4 Unused CSS selector "textarea::placeholder"
+https://svelte.dev/e/css_unused_selector
+1152:     }
+1153: 
+1154:     textarea::placeholder {
+                               ^
+1155:         opacity: 0.3;
+1156:         font-style: italic;
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/medical/+page.svelte:242:32 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+240:                         <div class="space-y-4" in:slide>
+241:                             <div>
+242:                                 <label
+                                      ^
+243:                                     class="block text-xs font-bold uppercase text-gray-500 mb-1"
+244:                                     >Blood Type</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/medical/+page.svelte:262:32 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+260:                             </div>
+261:                             <div>
+262:                                 <label
+                                      ^
+263:                                     class="block text-xs font-bold uppercase text-gray-500 mb-1"
+264:                                     >Critical Allergies</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/medical/+page.svelte:457:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+455:                 <div class="grid grid-cols-2 gap-4">
+456:                     <div>
+457:                         <label
+                              ^
+458:                             class="block text-xs font-bold uppercase text-gray-500 mb-1"
+459:                             >Directive Type</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/medical/+page.svelte:477:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+475:                     </div>
+476:                     <div>
+477:                         <label
+                              ^
+478:                             class="block text-xs font-bold uppercase text-gray-500 mb-1"
+479:                             >Title</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/medical/+page.svelte:491:20 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+489: 
+490:                 <div>
+491:                     <label
+                          ^
+492:                         class="block text-xs font-bold uppercase text-gray-500 mb-1"
+493:                         >Summary of Wishes</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/medical/+page.svelte:505:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+503:                 <div class="grid grid-cols-2 gap-4">
+504:                     <div>
+505:                         <label
+                              ^
+506:                             class="block text-xs font-bold uppercase text-gray-500 mb-1"
+507:                             >Primary Proxy/Contact</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/medical/+page.svelte:517:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+515:                     </div>
+516:                     <div>
+517:                         <label
+                              ^
+518:                             class="block text-xs font-bold uppercase text-gray-500 mb-1"
+519:                             >Contact Phone</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/medical/+page.svelte:531:20 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+529: 
+530:                 <div>
+531:                     <label
+                          ^
+532:                         class="block text-xs font-bold uppercase text-gray-500 mb-1"
+533:                         >Location of Original Document</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/pets/+page.svelte:282:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+280:                 <div class="p-6 space-y-4">
+281:                     <div>
+282:                         <label
+                              ^
+283:                             class="block text-xs font-bold uppercase text-gray-500 mb-1"
+284:                             >Name</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/pets/+page.svelte:296:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+294:                     <div class="grid grid-cols-2 gap-4">
+295:                         <div>
+296:                             <label
+                                  ^
+297:                                 class="block text-xs font-bold uppercase text-gray-500 mb-1"
+298:                                 >Type</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/pets/+page.svelte:310:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+308:                         </div>
+309:                         <div>
+310:                             <label
+                                  ^
+311:                                 class="block text-xs font-bold uppercase text-gray-500 mb-1"
+312:                                 >Breed / Species</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/pets/+page.svelte:324:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+322: 
+323:                     <div>
+324:                         <label
+                              ^
+325:                             class="block text-xs font-bold uppercase text-gray-500 mb-1"
+326:                             >Designated Guardian</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/pets/+page.svelte:337:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+335: 
+336:                     <div>
+337:                         <label
+                              ^
+338:                             class="block text-xs font-bold uppercase text-gray-500 mb-1"
+339:                             >Vet Name</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/pets/+page.svelte:349:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+347:                     </div>
+348:                     <div>
+349:                         <label
+                              ^
+350:                             class="block text-xs font-bold uppercase text-gray-500 mb-1"
+351:                             >Vet Phone</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/pets/+page.svelte:363:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+361:                     <div class="grid grid-cols-2 gap-4">
+362:                         <div>
+363:                             <label
+                                  ^
+364:                                 class="block text-xs font-bold uppercase text-gray-500 mb-1"
+365:                                 >Food Instructions</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/pets/+page.svelte:375:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+373:                         </div>
+374:                         <div>
+375:                             <label
+                                  ^
+376:                                 class="block text-xs font-bold uppercase text-gray-500 mb-1"
+377:                                 >Medical Needs</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/property/+page.svelte:621:8 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+619:         transition:fade={{ duration: 300 }}
+620:     >
+621:         <div
+                 ^
+622:             class="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+623:             on:click={resetForm}
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/property/+page.svelte:621:8 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+619:         transition:fade={{ duration: 300 }}
+620:     >
+621:         <div
+                 ^
+622:             class="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+623:             on:click={resetForm}
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/property/+page.svelte:667:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+665:                     >
+666:                         <div class="space-y-3">
+667:                             <label
+                                  ^
+668:                                 class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-sans"
+669:                                 >Asset Name</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/property/+page.svelte:679:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+677:                         </div>
+678:                         <div class="space-y-3">
+679:                             <label
+                                  ^
+680:                                 class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-sans"
+681:                                 >Asset Type</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/property/+page.svelte:693:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+691:                         </div>
+692:                         <div class="space-y-3">
+693:                             <label
+                                  ^
+694:                                 class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-sans"
+695:                                 >Primary Location</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/property/+page.svelte:720:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+718:                     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+719:                         <div class="space-y-3">
+720:                             <label
+                                  ^
+721:                                 class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-sans"
+722:                                 >Current Valuation ($)</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/property/+page.svelte:737:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+735:                         </div>
+736:                         <div class="space-y-3">
+737:                             <label
+                                  ^
+738:                                 class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-sans"
+739:                                 >Current Status</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/property/+page.svelte:760:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+758:                         </div>
+759:                         <div class="space-y-3">
+760:                             <label
+                                  ^
+761:                                 class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-sans"
+762:                                 >Purchase/Acquisition Date</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/property/+page.svelte:784:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+782:                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+783:                         <div class="space-y-3">
+784:                             <label
+                                  ^
+785:                                 class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-sans"
+786:                                 >Title / Ownership Group</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/property/+page.svelte:796:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+794:                         </div>
+795:                         <div class="space-y-3">
+796:                             <label
+                                  ^
+797:                                 class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-sans"
+798:                                 >Critical Documents</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/property/+page.svelte:808:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+806:                         </div>
+807:                         <div class="space-y-3 md:col-span-2">
+808:                             <label
+                                  ^
+809:                                 class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-sans"
+810:                                 >Inventory Notes</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/subscriptions/+page.svelte:408:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+406:                 <div class="p-6 space-y-4">
+407:                     <div>
+408:                         <label
+                              ^
+409:                             class="block text-xs font-bold uppercase text-gray-500 mb-1"
+410:                             >Service Name</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/subscriptions/+page.svelte:417:28 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus
+415:                             class="w-full px-4 py-3 rounded-xl border border-gray-200"
+416:                             placeholder="e.g. Netflix"
+417:                             autoFocus
+                                          ^
+418:                         />
+419:                     </div>
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/subscriptions/+page.svelte:423:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+421:                     <div class="grid grid-cols-2 gap-4">
+422:                         <div>
+423:                             <label
+                                  ^
+424:                                 class="block text-xs font-bold uppercase text-gray-500 mb-1"
+425:                                 >Cost</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/subscriptions/+page.svelte:436:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+434:                         </div>
+435:                         <div>
+436:                             <label
+                                  ^
+437:                                 class="block text-xs font-bold uppercase text-gray-500 mb-1"
+438:                                 >Cycle</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/subscriptions/+page.svelte:451:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+449: 
+450:                     <div>
+451:                         <label
+                              ^
+452:                             class="block text-xs font-bold uppercase text-gray-500 mb-1"
+453:                             >Difficulty to Cancel</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/subscriptions/+page.svelte:475:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+473: 
+474:                     <div>
+475:                         <label
+                              ^
+476:                             class="block text-xs font-bold uppercase text-gray-500 mb-1"
+477:                             >Cancellation Instructions</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/subscriptions/+page.svelte:487:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+485: 
+486:                     <div>
+487:                         <label
+                              ^
+488:                             class="block text-xs font-bold uppercase text-gray-500 mb-1"
+489:                             >Payment Method (Optional)</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/time-capsule/+page.svelte:315:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+313:                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+314:                     <div class="space-y-1">
+315:                         <label
+                              ^
+316:                             class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] pl-1"
+317:                             >Message Title</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/time-capsule/+page.svelte:326:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+324:                     </div>
+325:                     <div class="space-y-1">
+326:                         <label
+                              ^
+327:                             class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] pl-1"
+328:                             >Who is this for?</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/time-capsule/+page.svelte:340:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+338:                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+339:                     <div class="space-y-1">
+340:                         <label
+                              ^
+341:                             class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] pl-1"
+342:                             >Release Type</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/time-capsule/+page.svelte:368:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+366:                     </div>
+367:                     <div class="space-y-1">
+368:                         <label
+                              ^
+369:                             class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] pl-1"
+370:                             >Release Condition</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/time-capsule/+page.svelte:394:20 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+392: 
+393:                 <div class="space-y-4">
+394:                     <label
+                          ^
+395:                         class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] pl-1"
+396:                         >Legacy Content</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/time-capsule/+page.svelte:494:16 `<video>` elements must have a `<track kind="captions">`
+https://svelte.dev/e/a11y_media_has_caption
+492:                 class="w-full max-w-4xl aspect-video rounded-3xl overflow-hidden shadow-2xl bg-black"
+493:             >
+494:                 <video
+                           ^
+495:                     src={activeVideoUrl}
+496:                     controls
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/visual-memories/+page.svelte:168:20 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+166:             <div class="p-6 space-y-4">
+167:                 <div class="space-y-2">
+168:                     <label
+                          ^
+169:                         class="text-xs font-bold uppercase text-slate-500 tracking-wider"
+170:                         >Platform / Device Name</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/visual-memories/+page.svelte:181:20 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+179: 
+180:                 <div class="space-y-2">
+181:                     <label
+                          ^
+182:                         class="text-xs font-bold uppercase text-slate-500 tracking-wider"
+183:                         >Access Instructions</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/visual-memories/+page.svelte:193:20 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+191: 
+192:                 <div class="space-y-2">
+193:                     <label
+                          ^
+194:                         class="text-xs font-bold uppercase text-slate-500 tracking-wider"
+195:                         >Direct URL (Optional)</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/timeline/+page.svelte:193:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+191:                 <div class="p-6 space-y-4">
+192:                     <div class="space-y-1">
+193:                         <label class="text-xs font-bold uppercase text-gray-400"
+                              ^
+194:                             >Label</label
+195:                         >
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/timeline/+page.svelte:215:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+213:                     <div class="grid grid-cols-2 gap-4">
+214:                         <div class="space-y-1">
+215:                             <label
+                                  ^
+216:                                 class="text-xs font-bold uppercase text-gray-400"
+217:                                 >Date</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/timeline/+page.svelte:238:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+236:                         </div>
+237:                         <div class="space-y-1">
+238:                             <label
+                                  ^
+239:                                 class="text-xs font-bold uppercase text-gray-400"
+240:                                 >Type</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/timeline/+page.svelte:261:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+259: 
+260:                     <div class="space-y-1">
+261:                         <label class="text-xs font-bold uppercase text-gray-400"
+                              ^
+262:                             >Designated Contact</label
+263:                         >
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/timeline/+page.svelte:282:32 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+280:                         >
+281:                             <div class="space-y-1">
+282:                                 <label
+                                      ^
+283:                                     class="text-xs font-bold uppercase text-gray-400"
+284:                                     >Category</label
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/timeline/+page.svelte:387:20 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+385:             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+386:                 {#each lifeEvents.filter((e) => e.type === "accomplishment") as trophy}
+387:                     <div
+                             ^
+388:                         class="bg-white border border-amber-100 p-6 rounded-2xl relative group cursor-pointer hover:shadow-xl hover:border-amber-300 transition-all flex flex-col h-full"
+389:                         on:click={() => editEvent(trophy)}
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/timeline/+page.svelte:387:20 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+385:             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+386:                 {#each lifeEvents.filter((e) => e.type === "accomplishment") as trophy}
+387:                     <div
+                             ^
+388:                         class="bg-white border border-amber-100 p-6 rounded-2xl relative group cursor-pointer hover:shadow-xl hover:border-amber-300 transition-all flex flex-col h-full"
+389:                         on:click={() => editEvent(trophy)}
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/timeline/+page.svelte:522:12 `<div>` with a mouseleave or mousemove handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+520:             </div>
+521: 
+522:             <div
+                     ^
+523:                 class="flex flex-wrap gap-1 justify-center max-h-[600px] overflow-y-auto p-4 custom-scrollbar relative"
+524:                 on:mouseleave={() => (hoveredWeek = null)}
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/timeline/+page.svelte:528:20 `<div>` with a mouseenter handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+526:             >
+527:                 {#each weeksData as week (week.index)}
+528:                     <div
+                             ^
+529:                         class="w-2 h-2 rounded-[1px] transition-colors cursor-pointer relative group
+530:                         {week.hasEvent
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/timeline/+page.svelte:795:4 Unused CSS selector ".custom-scrollbar-x::-webkit-scrollbar"
+https://svelte.dev/e/css_unused_selector
+793:     }
+794: 
+795:     .custom-scrollbar-x::-webkit-scrollbar {
+                                               ^
+796:         height: 8px;
+797:     }
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/timeline/+page.svelte:798:4 Unused CSS selector ".custom-scrollbar-x::-webkit-scrollbar-track"
+https://svelte.dev/e/css_unused_selector
+796:         height: 8px;
+797:     }
+798:     .custom-scrollbar-x::-webkit-scrollbar-track {
+                                                     ^
+799:         background: #f1f1f1;
+800:         border-radius: 4px;
+10:48:55 PM [vite-plugin-svelte] src/routes/modules/timeline/+page.svelte:802:4 Unused CSS selector ".custom-scrollbar-x::-webkit-scrollbar-thumb"
+https://svelte.dev/e/css_unused_selector
+800:         border-radius: 4px;
+801:     }
+802:     .custom-scrollbar-x::-webkit-scrollbar-thumb {
+                                                     ^
+803:         background: #d1d5db;
+804:         border-radius: 4px;
+10:48:55 PM [vite-plugin-svelte] src/routes/wizard/+page.svelte:213:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+211:                 <div class="space-y-4">
+212:                     <div class="space-y-2">
+213:                         <label
+                              ^
+214:                             class="text-xs uppercase tracking-widest text-slate-500 font-bold ml-1"
+215:                             >Full Name</label
+10:48:55 PM [vite-plugin-svelte] src/routes/wizard/+page.svelte:225:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+223:                     </div>
+224:                     <div class="space-y-2">
+225:                         <label
+                              ^
+226:                             class="text-xs uppercase tracking-widest text-slate-500 font-bold ml-1"
+227:                             >Email (Optional)</label
+10:48:55 PM [vite-plugin-svelte] src/routes/wizard/+page.svelte:282:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+280:                 <div class="space-y-4">
+281:                     <div class="space-y-2">
+282:                         <label
+                              ^
+283:                             class="text-xs uppercase tracking-widest text-slate-500 font-bold ml-1"
+284:                             >Their Name</label
+10:48:55 PM [vite-plugin-svelte] src/routes/wizard/+page.svelte:295:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+293:                     <div class="grid grid-cols-2 gap-4">
+294:                         <div class="space-y-2">
+295:                             <label
+                                  ^
+296:                                 class="text-xs uppercase tracking-widest text-slate-500 font-bold ml-1"
+297:                                 >Relation</label
+10:48:55 PM [vite-plugin-svelte] src/routes/wizard/+page.svelte:307:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+305:                         </div>
+306:                         <div class="space-y-2">
+307:                             <label
+                                  ^
+308:                                 class="text-xs uppercase tracking-widest text-slate-500 font-bold ml-1"
+309:                                 >Email (Optional)</label
+10:48:55 PM [vite-plugin-svelte] src/lib/components/concierge/ConciergeSettings.svelte:92:16 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+90:             <!-- Role Selection -->
+91:             <div class="space-y-4">
+92:                 <label
+                          ^
+93:                     class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500"
+94:                 >
+10:48:55 PM [vite-plugin-svelte] src/lib/components/concierge/ConciergeSettings.svelte:123:16 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+121:             <!-- Language Selection -->
+122:             <div class="space-y-4">
+123:                 <label
+                           ^
+124:                     class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500"
+125:                 >
+10:48:55 PM [vite-plugin-svelte] src/lib/components/concierge/ConciergeSettings.svelte:165:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+163:                 <div class="space-y-4">
+164:                     <div class="grid grid-cols-1 gap-1.5">
+165:                         <label
+                              ^
+166:                             class="text-[10px] font-bold text-slate-400 uppercase"
+167:                             >{$t.labelOwner}</label
+10:48:55 PM [vite-plugin-svelte] src/lib/components/concierge/ConciergeSettings.svelte:177:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+175:                     </div>
+176:                     <div class="grid grid-cols-1 gap-1.5">
+177:                         <label
+                              ^
+178:                             class="text-[10px] font-bold text-slate-400 uppercase"
+179:                             >{$t.labelExecutor}</label
+10:48:55 PM [vite-plugin-svelte] src/lib/components/concierge/ConciergeSettings.svelte:194:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+192:                     <div class="grid grid-cols-2 gap-4">
+193:                         <div class="space-y-1.5">
+194:                             <label
+                                  ^
+195:                                 class="text-[10px] font-bold text-slate-400 uppercase"
+196:                                 >{$t.labelDeathDate}</label
+10:48:55 PM [vite-plugin-svelte] src/lib/components/concierge/ConciergeSettings.svelte:205:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+203:                         </div>
+204:                         <div class="space-y-1.5">
+205:                             <label
+                                  ^
+206:                                 class="text-[10px] font-bold text-slate-400 uppercase"
+207:                                 >{$t.labelSSN}</label
+10:48:55 PM [vite-plugin-svelte] src/lib/components/concierge/ConciergeSettings.svelte:219:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+217:                     </div>
+218:                     <div class="grid grid-cols-1 gap-1.5 pt-0.5">
+219:                         <label
+                              ^
+220:                             class="text-[10px] font-bold text-slate-400 uppercase"
+221:                             >{$t.labelResidence}</label
+10:48:55 PM [vite-plugin-svelte] src/lib/components/concierge/ConciergeSettings.svelte:418:20 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+416:                 <!-- Scope selection -->
+417:                 <div class="space-y-3">
+418:                     <label
+                          ^
+419:                         class="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1"
+420:                         >{$t.labelExportScope}</label
+10:48:55 PM [vite-plugin-svelte] src/lib/components/concierge/ConciergeSettings.svelte:461:24 Buttons and links should either contain text or have an `aria-label`, `aria-labelledby` or `title` attribute
+https://svelte.dev/e/a11y_consider_explicit_label
+459:                             </p>
+460:                         </div>
+461:                         <button
+                                    ^
+462:                             class="w-11 h-6 rounded-full transition-colors relative {includeImages
+463:                                 ? 'bg-emerald-500'
+10:48:55 PM [vite-plugin-svelte] src/lib/components/layout/CompassPanel.svelte:34:4 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+32: {#if isOpen}
+33:     <!-- Backdrop -->
+34:     <div
+            ^
+35:         class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-40 transition-opacity"
+36:         on:click={onClose}
+10:48:55 PM [vite-plugin-svelte] src/lib/components/layout/CompassPanel.svelte:34:4 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+32: {#if isOpen}
+33:     <!-- Backdrop -->
+34:     <div
+            ^
+35:         class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-40 transition-opacity"
+36:         on:click={onClose}
+10:48:55 PM [vite-plugin-svelte] src/lib/components/ui/Modal.svelte:42:8 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+40:     >
+41:         <!-- Backdrop -->
+42:         <div
+                ^
+43:             class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+44:             transition:fade={{ duration: 200 }}
+10:48:55 PM [vite-plugin-svelte] src/lib/components/ui/Modal.svelte:42:8 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+40:     >
+41:         <!-- Backdrop -->
+42:         <div
+                ^
+43:             class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+44:             transition:fade={{ duration: 200 }}
+10:48:55 PM [vite-plugin-svelte] src/lib/components/ui/CommandCenter.svelte:222:0 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+220: </script>
+221: 
+222: <div
+         ^
+223:     class="fixed inset-0 z-[200] flex items-start justify-center pt-24 px-4 bg-slate-900/40 backdrop-blur-sm"
+224:     on:click|self={() => dispatch("close")}
+10:48:55 PM [vite-plugin-svelte] src/lib/components/ui/CommandCenter.svelte:222:0 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+220: </script>
+221: 
+222: <div
+         ^
+223:     class="fixed inset-0 z-[200] flex items-start justify-center pt-24 px-4 bg-slate-900/40 backdrop-blur-sm"
+224:     on:click|self={() => dispatch("close")}
+10:48:55 PM [vite-plugin-svelte] src/lib/components/ui/CommandCenter.svelte:227:4 `<div>` with a keydown handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+225:     transition:fade={{ duration: 200 }}
+226: >
+227:     <div
+             ^
+228:         class="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200"
+229:         transition:scale={{ start: 0.95, easing: quintOut }}
+10:48:55 PM [vite-plugin-svelte] src/lib/components/layout/Sidebar.svelte:88:24 `<svelte:component>` is deprecated in runes mode — components are dynamic by default
+https://svelte.dev/e/svelte_component_deprecated
+86:                         {/if}
+87: 
+88:                         <svelte:component
+                              ^
+89:                             this={item.icon}
+90:                             class="w-5 h-5 transition-transform duration-300 group-hover:scale-110 {$page
+10:48:55 PM [vite-plugin-svelte] src/lib/components/admin/AutomationCard.svelte:39:4 Buttons and links should either contain text or have an `aria-label`, `aria-labelledby` or `title` attribute
+https://svelte.dev/e/a11y_consider_explicit_label
+37:     </div>
+38: 
+39:     <button
+               ^
+40:         class="w-12 h-6 rounded-full transition-colors relative {rule.enabled
+41:             ? 'bg-[#4A7C74]'
+10:48:55 PM [vite-plugin-svelte] src/lib/components/admin/AutomationCard.svelte:45:8 Self-closing HTML tags for non-void elements are ambiguous — use `<span ...></span>` rather than `<span ... />`
+https://svelte.dev/e/element_invalid_self_closing_tag
+43:         on:click={() => onToggle(rule.id)}
+44:     >
+45:         <span
+              ^
+46:             class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform {rule.enabled
+47:                 ? 'translate-x-6'
+10:48:55 PM [vite-plugin-svelte] src/lib/components/ui/SmartTextarea.svelte:94:8 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+92: <div class="space-y-2 h-full">
+93:     {#if label}
+94:         <label
+             ^
+95:             class="text-xs font-bold uppercase tracking-widest text-slate-500 ml-1"
+96:             >{label}</label
+10:48:55 PM [vite-plugin-svelte] src/lib/components/ModuleContent.svelte:178:28 '#' is not a valid href attribute
+https://svelte.dev/e/a11y_invalid_attribute
+176:                     <li>
+177:                         <a
+178:                             href="#"
+                                         ^
+179:                             class="flex items-center justify-between group p-2 hover:bg-background rounded transition-colors text-sm"
+180:                         >
+10:48:55 PM [vite-plugin-svelte] src/lib/components/ModuleContent.svelte:193:28 '#' is not a valid href attribute
+https://svelte.dev/e/a11y_invalid_attribute
+191:                     <li>
+192:                         <a
+193:                             href="#"
+                                         ^
+194:                             class="flex items-center justify-between group p-2 hover:bg-background rounded transition-colors text-sm"
+195:                         >
+10:48:55 PM [vite-plugin-svelte] src/lib/components/ModuleContent.svelte:208:28 '#' is not a valid href attribute
+https://svelte.dev/e/a11y_invalid_attribute
+206:                     <li>
+207:                         <a
+208:                             href="#"
+                                         ^
+209:                             class="flex items-center justify-between group p-2 hover:bg-background rounded transition-colors text-sm"
+210:                         >
+10:48:55 PM [vite-plugin-svelte] src/lib/components/archetypes/AssetManager.svelte:461:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+459:                 >
+460:                     <div class="space-y-2">
+461:                         <label
+                              ^
+462:                             class="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+463:                             >Asset Name</label
+10:48:55 PM [vite-plugin-svelte] src/lib/components/archetypes/AssetManager.svelte:473:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+471:                     </div>
+472:                     <div class="space-y-2">
+473:                         <label
+                              ^
+474:                             class="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+475:                             >Type</label
+10:48:55 PM [vite-plugin-svelte] src/lib/components/archetypes/AssetManager.svelte:490:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+488:                     </div>
+489:                     <div class="space-y-2">
+490:                         <label
+                              ^
+491:                             class="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+492:                             >Estimated Value</label
+10:48:55 PM [vite-plugin-svelte] src/lib/components/archetypes/AssetManager.svelte:507:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+505:                     </div>
+506:                     <div class="space-y-2">
+507:                         <label
+                              ^
+508:                             class="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+509:                             >Location / Institution</label
+10:48:55 PM [vite-plugin-svelte] src/lib/components/archetypes/AssetManager.svelte:520:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+518:                     {#if newAsset.type === "Financial" || newAsset.type === "Digital"}
+519:                         <div class="space-y-2">
+520:                             <label
+                                  ^
+521:                                 class="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+522:                                 >Login URL</label
+10:48:55 PM [vite-plugin-svelte] src/lib/components/archetypes/AssetManager.svelte:534:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+532: 
+533:                     <div class="space-y-2">
+534:                         <label
+                              ^
+535:                             class="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+536:                             >Beneficiary Name</label
+10:48:55 PM [vite-plugin-svelte] src/lib/components/archetypes/AssetManager.svelte:547:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+545: 
+546:                     <div class="space-y-2">
+547:                         <label
+                              ^
+548:                             class="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+549:                             >Beneficiary Email</label
+10:48:55 PM [vite-plugin-svelte] src/lib/components/archetypes/AssetManager.svelte:560:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+558: 
+559:                     <div class="col-span-full space-y-2">
+560:                         <label
+                              ^
+561:                             class="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+562:                             >Closure / Transfer Notes</label
+10:48:55 PM [vite-plugin-svelte] src/lib/components/archetypes/ContactDirectory.svelte:249:20 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+247:                 <!-- Name & Role -->
+248:                 <div class="space-y-2">
+249:                     <label
+                          ^
+250:                         class="text-xs font-bold uppercase text-muted-foreground"
+251:                         >Full Name</label
+10:48:55 PM [vite-plugin-svelte] src/lib/components/archetypes/ContactDirectory.svelte:260:20 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+258:                 </div>
+259:                 <div class="space-y-2">
+260:                     <label
+                          ^
+261:                         class="text-xs font-bold uppercase text-muted-foreground"
+262:                         >Role in your life</label
+10:48:55 PM [vite-plugin-svelte] src/lib/components/archetypes/ContactDirectory.svelte:285:20 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+283:                 <!-- Contact Info -->
+284:                 <div class="space-y-2">
+285:                     <label
+                          ^
+286:                         class="text-xs font-bold uppercase text-muted-foreground"
+287:                         >Email</label
+10:48:55 PM [vite-plugin-svelte] src/lib/components/archetypes/ContactDirectory.svelte:295:20 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+293:                 </div>
+294:                 <div class="space-y-2">
+295:                     <label
+                          ^
+296:                         class="text-xs font-bold uppercase text-muted-foreground"
+297:                         >Phone</label
+10:48:55 PM [vite-plugin-svelte] src/lib/components/archetypes/ContactDirectory.svelte:307:20 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+305:                 <!-- Org -->
+306:                 <div class="col-span-full space-y-2">
+307:                     <label
+                          ^
+308:                         class="text-xs font-bold uppercase text-muted-foreground"
+309:                         >Organization / Firm</label
+10:48:55 PM [vite-plugin-svelte] src/lib/components/archetypes/DocumentVault.svelte:475:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+473:                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+474:                         <div class="space-y-1.5">
+475:                             <label
+                                  ^
+476:                                 class="text-xs font-bold uppercase text-muted-foreground"
+477:                                 >Document Title</label
+10:48:55 PM [vite-plugin-svelte] src/lib/components/archetypes/DocumentVault.svelte:486:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+484:                         </div>
+485:                         <div class="space-y-1.5">
+486:                             <label
+                                  ^
+487:                                 class="text-xs font-bold uppercase text-muted-foreground"
+488:                                 >Category</label
+10:48:55 PM [vite-plugin-svelte] src/lib/components/archetypes/DocumentVault.svelte:516:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+514:                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+515:                         <div class="space-y-1.5">
+516:                             <label
+                                  ^
+517:                                 class="text-xs font-bold uppercase text-muted-foreground"
+518:                                 >Physical Location</label
+10:48:55 PM [vite-plugin-svelte] src/lib/components/archetypes/DocumentVault.svelte:527:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+525:                         </div>
+526:                         <div class="space-y-1.5">
+527:                             <label
+                                  ^
+528:                                 class="text-xs font-bold uppercase text-muted-foreground"
+529:                                 >Witnesses</label
+10:48:55 PM [vite-plugin-svelte] src/lib/components/archetypes/DocumentVault.svelte:539:32 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+537:                         <div class="space-y-1.5">
+538:                             <div class="flex justify-between">
+539:                                 <label
+                                      ^
+540:                                     class="text-xs font-bold uppercase text-muted-foreground"
+541:                                     >Next Review</label
+10:48:55 PM [vite-plugin-svelte] src/lib/components/modules/analytics/FireDrill.svelte:123:24 Self-closing HTML tags for non-void elements are ambiguous — use `<div ...></div>` rather than `<div ... />`
+https://svelte.dev/e/element_invalid_self_closing_tag
+121:                 <div class="flex items-center gap-2 mb-8">
+122:                     {#each questions as q, i}
+123:                         <div
+                               ^
+124:                             class={`h-1 flex-1 rounded-full transition-colors ${i <= step ? "bg-indigo-500" : "bg-slate-800"}`}
+125:                         />
+10:48:55 PM [vite-plugin-svelte] src/lib/components/modules/funeral/FuneralWizard.svelte:143:16 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+141: 
+142:             {#each STEPS as step}
+143:                 <div
+                         ^
+144:                     class="relative z-10 flex flex-col items-center gap-2 cursor-pointer group"
+145:                     on:click={() => (currentStep = step.id)}
+10:48:55 PM [vite-plugin-svelte] src/lib/components/modules/funeral/FuneralWizard.svelte:143:16 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+141: 
+142:             {#each STEPS as step}
+143:                 <div
+                         ^
+144:                     class="relative z-10 flex flex-col items-center gap-2 cursor-pointer group"
+145:                     on:click={() => (currentStep = step.id)}
+10:48:55 PM [vite-plugin-svelte] src/lib/components/modules/funeral/FuneralWizard.svelte:347:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+345:                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+346:                         <div class="space-y-4">
+347:                             <label
+                                  ^
+348:                                 class="text-xs font-bold uppercase tracking-widest text-stone-400"
+349:                                 >Venue</label
+10:48:55 PM [vite-plugin-svelte] src/lib/components/modules/funeral/FuneralWizard.svelte:365:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+363: 
+364:                         <div class="space-y-4">
+365:                             <label
+                                  ^
+366:                                 class="text-xs font-bold uppercase tracking-widest text-stone-400"
+367:                                 >Officiant ({activeTradition.terminology
+10:48:55 PM [vite-plugin-svelte] src/lib/components/modules/funeral/FuneralWizard.svelte:549:28 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+547:                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+548:                         <div class="space-y-4">
+549:                             <label
+                                  ^
+550:                                 class="text-xs font-bold uppercase tracking-widest text-stone-400"
+551:                                 >Charity Donations</label
+10:48:55 PM [vite-plugin-svelte] src/lib/components/ui/FileUploader.svelte:99:4 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+ 97: 
+ 98: <div class="space-y-2">
+ 99:     <label class="block text-xs font-bold uppercase text-gray-500 mb-1"
+          ^
+100:         >{label}</label
+101:     >
+10:48:55 PM [vite-plugin-svelte] src/lib/components/ui/FileUploader.svelte:131:8 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+129:         </div>
+130:     {:else}
+131:         <div
+                 ^
+132:             class="relative border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer
+133:             {dragging
+10:48:55 PM [vite-plugin-svelte] src/lib/components/ui/FileUploader.svelte:131:8 `<div>` with a dragover, dragleave, drop or click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+129:         </div>
+130:     {:else}
+131:         <div
+                 ^
+132:             class="relative border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer
+133:             {dragging
+10:48:55 PM [vite-plugin-svelte] src/lib/components/family/FamilyTreeGraph.svelte:304:20 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+302:             <div class="space-y-4">
+303:                 <div>
+304:                     <label class="text-xs font-bold uppercase text-slate-400"
+                          ^
+305:                         >Name</label
+306:                     >
+10:48:55 PM [vite-plugin-svelte] src/lib/components/family/FamilyTreeGraph.svelte:314:20 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+312: 
+313:                 <div>
+314:                     <label class="text-xs font-bold uppercase text-slate-400"
+                          ^
+315:                         >Relationship</label
+316:                     >
+10:48:55 PM [vite-plugin-svelte] src/lib/components/family/FamilyTreeGraph.svelte:332:20 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+330: 
+331:                 <div>
+332:                     <label class="text-xs font-bold uppercase text-slate-400"
+                          ^
+333:                         >Email Address</label
+334:                     >
+10:48:55 PM [vite-plugin-svelte] src/lib/components/modules/heirlooms/VisionUploader.svelte:77:4 `<div>` with a dragover, dragleave or drop handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+75: 
+76: <div class="space-y-4">
+77:     <div
+            ^
+78:         class="relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 overflow-hidden group
+79:         {isDragging
+10:48:55 PM [vite-plugin-svelte] src/lib/components/modules/heirlooms/VisionUploader.svelte:147:12 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+145:             </div>
+146:         {:else}
+147:             <div class="py-8 cursor-pointer" on:click={triggerUpload}>
+                       ^
+148:                 <div
+149:                     class="w-16 h-16 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-sm border border-indigo-100"
+10:48:55 PM [vite-plugin-svelte] src/lib/components/modules/heirlooms/VisionUploader.svelte:147:12 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+145:             </div>
+146:         {:else}
+147:             <div class="py-8 cursor-pointer" on:click={triggerUpload}>
+                       ^
+148:                 <div
+149:                     class="w-16 h-16 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-sm border border-indigo-100"
+10:48:55 PM [vite-plugin-svelte] src/lib/components/modules/legacy-journal/LifeLessons.svelte:121:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+119:                 <div class="p-6 space-y-4">
+120:                     <div class="space-y-2">
+121:                         <label class="text-xs font-bold uppercase text-gray-400"
+                              ^
+122:                             >Lesson Title</label
+123:                         >
+10:48:55 PM [vite-plugin-svelte] src/lib/components/modules/legacy-journal/LifeLessons.svelte:131:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+129:                     </div>
+130:                     <div class="space-y-2">
+131:                         <label class="text-xs font-bold uppercase text-gray-400"
+                              ^
+132:                             >Category</label
+133:                         >
+10:48:55 PM [vite-plugin-svelte] src/lib/components/modules/legacy-journal/LifeLessons.svelte:146:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+144:                     </div>
+145:                     <div class="space-y-2">
+146:                         <label class="text-xs font-bold uppercase text-gray-400"
+                              ^
+147:                             >The Lesson</label
+148:                         >
+10:48:55 PM [vite-plugin-svelte] src/lib/components/modules/letters/LetterAssistant.svelte:129:20 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+127:             <div class="space-y-6">
+128:                 <div>
+129:                     <label
+                               ^
+130:                         class="flex items-center justify-between text-xs font-bold uppercase tracking-widest text-slate-400 mb-4"
+131:                     >
+10:48:55 PM [vite-plugin-svelte] src/lib/components/ui/EvidenceGalleryUploader.svelte:112:4 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+110: <div class="space-y-6">
+111:     <!-- Drag & Drop Area -->
+112:     <div
+             ^
+113:         class="relative border-2 border-dashed rounded-2xl p-8 text-center transition-all duration-300 group cursor-pointer
+114:         {isDragging
+10:48:55 PM [vite-plugin-svelte] src/lib/components/ui/EvidenceGalleryUploader.svelte:112:4 `<div>` with a dragover, dragleave, drop or click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+110: <div class="space-y-6">
+111:     <!-- Drag & Drop Area -->
+112:     <div
+             ^
+113:         class="relative border-2 border-dashed rounded-2xl p-8 text-center transition-all duration-300 group cursor-pointer
+114:         {isDragging
+10:48:55 PM [vite-plugin-svelte] src/lib/components/modules/subscriptions/SubscriptionRow.svelte:29:4 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+27: >
+28:     <!-- Main Row -->
+29:     <div
+            ^
+30:         class="p-4 flex items-center justify-between cursor-pointer"
+31:         on:click={() => (expanded = !expanded)}
+10:48:55 PM [vite-plugin-svelte] src/lib/components/modules/subscriptions/SubscriptionRow.svelte:29:4 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+27: >
+28:     <!-- Main Row -->
+29:     <div
+            ^
+30:         class="p-4 flex items-center justify-between cursor-pointer"
+31:         on:click={() => (expanded = !expanded)}
+10:48:55 PM [vite-plugin-svelte] src/lib/components/modules/subscriptions/SubscriptionRow.svelte:12:15 Component has unused export property 'onCancel'. If it is for external reference only, please consider using `export const onCancel`
+https://svelte.dev/e/export_let_unused
+10: 
+11:     export let sub;
+12:     export let onCancel;
+                           ^
+13:     export let onGenerateLetter;
+14: 
+10:48:55 PM [vite-plugin-svelte] src/lib/components/media/VideoRecorder.svelte:176:16 Buttons and links should either contain text or have an `aria-label`, `aria-labelledby` or `title` attribute
+https://svelte.dev/e/a11y_consider_explicit_label
+174: 
+175:             {#if !isRecording}
+176:                 <button
+                            ^
+177:                     on:click={startRecording}
+178:                     class="w-16 h-16 rounded-full border-[6px] border-white/30 flex items-center justify-center hover:scale-105 transition-all group/rec"
+10:48:55 PM [vite-plugin-svelte] src/lib/components/media/VideoRecorder.svelte:185:16 Buttons and links should either contain text or have an `aria-label`, `aria-labelledby` or `title` attribute
+https://svelte.dev/e/a11y_consider_explicit_label
+183:                 </button>
+184:             {:else}
+185:                 <button
+                            ^
+186:                     on:click={stopRecording}
+187:                     class="w-16 h-16 rounded-full border-[6px] border-white/30 flex items-center justify-center hover:scale-105 transition-all group/stop"
+10:48:55 PM [vite-plugin-svelte] src/lib/components/modules/visual-memories/BulkActionBar.svelte:46:24 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus
+44:                         class="bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500 w-32 placeholder:text-slate-500"
+45:                         on:keydown={(e) => e.key === "Enter" && handleAddTag()}
+46:                         autoFocus
+                                     ^
+47:                     />
+48:                     <button
+10:48:55 PM [vite-plugin-svelte] src/lib/components/modules/visual-memories/MemoryGallery.svelte:101:16 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+ 99:         >
+100:             {#each memories as memory (memory.id)}
+101:                 <div
+                         ^
+102:                     class="group relative aspect-square bg-slate-100 rounded-xl overflow-hidden cursor-pointer hover:shadow-lg transition-all {selectedIds.includes(
+103:                         memory.id,
+10:48:55 PM [vite-plugin-svelte] src/lib/components/modules/visual-memories/MemoryGallery.svelte:101:16 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+ 99:         >
+100:             {#each memories as memory (memory.id)}
+101:                 <div
+                         ^
+102:                     class="group relative aspect-square bg-slate-100 rounded-xl overflow-hidden cursor-pointer hover:shadow-lg transition-all {selectedIds.includes(
+103:                         memory.id,
+10:48:55 PM [vite-plugin-svelte] src/lib/components/onboarding/GlobalSetupWizard.svelte:180:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+178:                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+179:                     <div class="space-y-2">
+180:                         <label
+                              ^
+181:                             class="text-xs font-bold uppercase text-muted-foreground"
+182:                             >{$t.wizLabelFirstName}</label
+10:48:55 PM [vite-plugin-svelte] src/lib/components/onboarding/GlobalSetupWizard.svelte:191:24 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+189:                     </div>
+190:                     <div class="space-y-2">
+191:                         <label
+                              ^
+192:                             class="text-xs font-bold uppercase text-muted-foreground"
+193:                             >{$t.wizLabelState}</label
+10:48:55 PM [vite-plugin-svelte] src/lib/components/onboarding/GlobalSetupWizard.svelte:204:20 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+202: 
+203:                 <div class="pt-4">
+204:                     <label
+                          ^
+205:                         class="text-xs font-bold uppercase text-muted-foreground block mb-3"
+206:                         >{$t.wizLabelMarital}</label
+10:48:55 PM [vite-plugin-svelte] src/lib/components/ui/ProfileSwitcher.svelte:162:28 Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus
+160:                             placeholder="Name (e.g. Spouse)"
+161:                             class="w-full bg-transparent text-sm text-white placeholder:text-slate-600 outline-none mb-2"
+162:                             autofocus
+                                          ^
+163:                             onkeydown={(e) =>
+164:                                 e.key === "Enter" && createProfile()}
+10:48:55 PM [vite-plugin-svelte] src/lib/components/modules/legal-documents/JargonSlayer.svelte:134:20 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+132:                     class="flex-1 overflow-y-auto p-12 bg-[#FDFBF7] relative paper-texture"
+133:                 >
+134:                     <div
+                             ^
+135:                         class="prose prose-lg max-w-none font-serif text-slate-800 leading-loose whitespace-pre-wrap"
+136:                         on:click={handleTextClick}
+10:48:55 PM [vite-plugin-svelte] src/lib/components/modules/legal-documents/JargonSlayer.svelte:134:20 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+132:                     class="flex-1 overflow-y-auto p-12 bg-[#FDFBF7] relative paper-texture"
+133:                 >
+134:                     <div
+                             ^
+135:                         class="prose prose-lg max-w-none font-serif text-slate-800 leading-loose whitespace-pre-wrap"
+136:                         on:click={handleTextClick}
+10:48:55 PM [vite-plugin-svelte] src/lib/components/ui/MediaGallery.svelte:151:20 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+149:             >
+150:                 {#each items as item (item.id)}
+151:                     <div
+                             ^
+152:                         class="group relative aspect-square bg-slate-100 rounded-xl overflow-hidden cursor-pointer hover:shadow-lg transition-all {selectedIds.includes(
+153:                             item.id,
+10:48:55 PM [vite-plugin-svelte] src/lib/components/ui/MediaGallery.svelte:151:20 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+149:             >
+150:                 {#each items as item (item.id)}
+151:                     <div
+                             ^
+152:                         class="group relative aspect-square bg-slate-100 rounded-xl overflow-hidden cursor-pointer hover:shadow-lg transition-all {selectedIds.includes(
+153:                             item.id,
+✓ 3968 modules transformed.
+✗ Build failed in 3.38s
+error during build:
+src/routes/wizard/+page.svelte (4:13): "profiles" is not exported by "src/lib/stores/concierge.ts", imported by "src/routes/wizard/+page.svelte".
+file: /Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/wizard/+page.svelte:4:13
+
+2:     import { genesisStore } from "$lib/stores/genesisStore";
+3:     import { familyMembers, addMember } from "$lib/stores/familyStore";
+4:     import { profiles, currentProfileId } from "$lib/stores/concierge";
+                ^
+5:     import { page } from "$app/stores";
+6:     import { fade, fly, slide } from "svelte/transition";
+
+    at getRollupError (file:///Users/jonathanhollander/AI%20Code/Notion%20Template/NOTION%20Template%20-%20ANTIGRAVITY/frontend/node_modules/rollup/dist/es/shared/parseAst.js:401:41)
+    at error (file:///Users/jonathanhollander/AI%20Code/Notion%20Template/NOTION%20Template%20-%20ANTIGRAVITY/frontend/node_modules/rollup/dist/es/shared/parseAst.js:397:42)
+    at Module.error (file:///Users/jonathanhollander/AI%20Code/Notion%20Template/NOTION%20Template%20-%20ANTIGRAVITY/frontend/node_modules/rollup/dist/es/shared/node-entry.js:17022:16)
+    at Module.traceVariable (file:///Users/jonathanhollander/AI%20Code/Notion%20Template/NOTION%20Template%20-%20ANTIGRAVITY/frontend/node_modules/rollup/dist/es/shared/node-entry.js:17478:29)
+    at ModuleScope.findVariable (file:///Users/jonathanhollander/AI%20Code/Notion%20Template/NOTION%20Template%20-%20ANTIGRAVITY/frontend/node_modules/rollup/dist/es/shared/node-entry.js:15141:39)
+    at FunctionScope.findVariable (file:///Users/jonathanhollander/AI%20Code/Notion%20Template/NOTION%20Template%20-%20ANTIGRAVITY/frontend/node_modules/rollup/dist/es/shared/node-entry.js:5688:38)
+    at FunctionBodyScope.findVariable (file:///Users/jonathanhollander/AI%20Code/Notion%20Template/NOTION%20Template%20-%20ANTIGRAVITY/frontend/node_modules/rollup/dist/es/shared/node-entry.js:5688:38)
+    at ReturnValueScope.findVariable (file:///Users/jonathanhollander/AI%20Code/Notion%20Template/NOTION%20Template%20-%20ANTIGRAVITY/frontend/node_modules/rollup/dist/es/shared/node-entry.js:5688:38)
+    at FunctionBodyScope.findVariable (file:///Users/jonathanhollander/AI%20Code/Notion%20Template/NOTION%20Template%20-%20ANTIGRAVITY/frontend/node_modules/rollup/dist/es/shared/node-entry.js:5688:38)
+    at ReturnValueScope.findVariable (file:///Users/jonathanhollander/AI%20Code/Notion%20Template/NOTION%20Template%20-%20ANTIGRAVITY/frontend/node_modules/rollup/dist/es/shared/node-entry.js:5688:38)
