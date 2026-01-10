@@ -1,8 +1,14 @@
 [phases.setup]
-nixPkgs = ["python311", "gcc"]
+nixPkgs = ["python311", "gcc", "nodejs_20", "npm-9_x"]
 
 [phases.install]
-cmds = ["python -m venv /opt/venv && /opt/venv/bin/pip install --upgrade pip && /opt/venv/bin/pip install -r backend/requirements.txt"]
+cmds = [
+    "python -m venv /opt/venv && /opt/venv/bin/pip install --upgrade pip && /opt/venv/bin/pip install -r backend/requirements.txt",
+    "npm ci --prefix frontend"
+]
+
+[phases.build]
+cmds = ["npm run build --prefix frontend"]
 
 [start]
 cmd = "/opt/venv/bin/python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT"

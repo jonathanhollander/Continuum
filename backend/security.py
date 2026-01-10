@@ -20,10 +20,12 @@ ORIGIN = os.getenv("ORIGIN", "http://localhost:5173")
 
 def get_registration_options(user_id: str, email: str):
     """Generates options for WebAuthn registration (Passkey creation)."""
+    print(f"DEBUG: user_id type: {type(user_id)}")
+    print(f"DEBUG: user_id value: {user_id}")
     return generate_registration_options(
         rp_id=RP_ID,
         rp_name=RP_NAME,
-        user_id=user_id.encode("utf-8"),
+        user_id=user_id.encode("utf-8") if isinstance(user_id, str) else user_id,
         user_name=email,
         attestation=AttestationConveyancePreference.NONE,
         authenticator_selection=AuthenticatorSelectionCriteria(
