@@ -83,15 +83,23 @@ def save_estate(estate_data: dict, user_id: int, session: Session = Depends(get_
 
 # --- SPA Static File Serving ---
 # Mount the frontend/dist directory (ensure this exists after build)
-# We use a catch-all exception to strictly prioritize API routes above
-app.mount("/assets", StaticFiles(directory="frontend/dist/assets"), name="assets")
+# We mount this at the root, but after all /api routes are defined
+# This handles CSS, JS, and image assets
+app.mount("/_app", StaticFiles(directory="frontend/dist/_app"), name="_app")
+app.mount("/images", StaticFiles(directory="frontend/dist/images"), name="images")
 
 # Catch-all route to serve index.html for client-side routing
 @app.get("/{full_path:path}")
 async def serve_spa(full_path: str):
-    # If the path starts with /api, let it fall through to the API routes (or 404 if not found)
+    # If the path starts with api, it should have been caught by the routes above.
+    # If we are here, it means the API route doesn't exist.
     if full_path.startswith("api"):
         raise HTTPException(status_code=404, detail="API endpoint not found")
+    
+    # Check if the file exists in dist (e.g. /favicon.ico, /robots.txt)
+    file_path = os.path.join("frontend", "dist", full_path)
+    if os.path.isfile(file_path):
+        return FileResponse(file_path)
     
     # Otherwise, serve the index.html for the frontend to handle routing
     return FileResponse("frontend/dist/index.html")
