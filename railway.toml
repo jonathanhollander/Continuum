@@ -4,9 +4,3 @@ builder = "nixpacks"
 [deploy]
 startCommand = "uvicorn backend.main:app --host 0.0.0.0 --port $PORT"
 healthcheckPath = "/api/health"
-restartPolicyType = "on-failure"
-
-[services.frontend]
-build.builder = "nixpacks"
-deploy.startCommand = "npm run start" # Assuming SvelteKit build output
-deploy.healthcheckPath = "/"
