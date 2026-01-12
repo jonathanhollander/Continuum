@@ -47,7 +47,7 @@
             </p>
         </div>
         <a
-            href="https://undefined"
+            href="https://unclaimed.org/"
             target="_blank"
             rel="noreferrer"
             class="shrink-0 px-5 py-3 bg-white border border-amber-200 text-amber-700 font-bold rounded-xl hover:bg-amber-50 transition-colors flex items-center gap-2 shadow-sm"

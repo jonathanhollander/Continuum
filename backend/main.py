@@ -59,6 +59,12 @@ def register_verify(request: RegistrationResponse, session: Session = Depends(ge
     # After verification, save user to DB
     return {"status": "success"}
 
+@app.post("/api/auth/magic-link")
+def send_magic_link(request: ChallengeRequest):
+    # In a real app, send a secure signed token via email provider (Postmark/SendGrid)
+    print(f"📧 Sending Magic Link to {request.email}...")
+    return {"status": "sent", "email": request.email}
+
 @app.get("/api/estate")
 def get_estate(user_id: int, session: Session = Depends(get_session)):
     # In real SaaS, get user_id from JWT token

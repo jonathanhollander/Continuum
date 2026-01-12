@@ -189,15 +189,19 @@
     <!-- Left: The Architect (Always present guide) -->
     <TheArchitect
         title={wizardStep === "complete"
-            ? "Welcome, " + (ownerName || "Owner") + "."
+            ? "Estate Blueprint Organized."
             : "System Initialization"}
         blueprint={wizardStep === "complete"
-            ? "Estate Architecture"
+            ? "Your Construction Plan"
             : "Core Configuration"}
-        why="A legacy isn't built in a day. It is built one block at a time."
-        tip="There is no wrong place to start. Pick what keeps you up at night."
+        why={wizardStep === "complete"
+            ? "We have identified the core pillars of your legacy. Now, we build."
+            : "A legacy isn't built in a day. It is built one block at a time."}
+        tip={wizardStep === "complete"
+            ? "You can always return here to see your progress."
+            : "There is no wrong place to start. Pick what keeps you up at night."}
         backLink="/"
-        backLabel="Main Menu"
+        backLabel="Main Dashboard"
     />
 
     <!-- Center Stage -->
@@ -372,104 +376,117 @@
                 </div>
             {/if}
 
-            <!-- AI Input / Architect Interface -->
+            <!-- CONSTRUCTION PLAN (Guided Flow) -->
             <div
-                class="max-w-xl mx-auto mb-20 relative z-20 w-full"
+                class="max-w-4xl mx-auto w-full flex flex-col items-center"
                 in:fade={{ duration: 800 }}
             >
-                <h2
-                    class="text-3xl md:text-4xl font-light text-center mb-8 tracking-wide text-white"
-                >
-                    What requires your <span
-                        class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400 font-medium"
-                        >immediate attention</span
-                    >?
-                </h2>
-                <div class="flex justify-center mb-6">
-                    <div
-                        class="p-3 bg-white/5 rounded-full border border-white/10 animate-pulse"
-                    >
-                        <Sparkles size={24} class="text-indigo-400" />
-                    </div>
-                </div>
-
-                <div class="relative group">
-                    <input
-                        type="text"
-                        bind:value={input}
-                        on:keydown={(e) => e.key === "Enter" && handleInput()}
-                        placeholder="e.g., 'I want to make sure my wife can access the bank accounts...'"
-                        class="w-full bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-2xl py-6 px-8 text-lg md:text-xl text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all shadow-2xl"
-                    />
-
-                    <button
-                        on:click={handleInput}
-                        class="absolute right-3 top-3 bottom-3 aspect-square bg-slate-800 hover:bg-slate-700 text-indigo-400 rounded-xl flex items-center justify-center transition-colors border border-white/5"
-                    >
-                        <ArrowRight size={24} />
-                    </button>
-                </div>
-
-                <!-- AI Response Area -->
-                {#if responseMessage}
-                    <div
-                        class="mt-6 p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-xl text-indigo-200 text-sm"
-                        in:slide
-                    >
-                        <span class="font-bold mr-2">System:</span>
-                        {@html responseMessage}
-                    </div>
-                {/if}
-            </div>
-
-            <!-- The Citadel Blocks -->
-            <div
-                class="grid grid-cols-2 md:grid-cols-4 gap-6 w-full max-w-5xl"
-                in:fade={{ duration: 1000, delay: 200 }}
-            >
-                {#each BLOCKS as block, i}
-                    <button
-                        class="group relative h-48 rounded-3xl bg-slate-900/40 border border-white/5 backdrop-blur-sm overflow-hidden hover:scale-105 transition-all duration-500 hover:shadow-[0_0_30px_-5px_rgba(255,255,255,0.1)] text-left p-6 flex flex-col justify-between"
-                        in:fly={{ y: 50, duration: 800, delay: i * 100 }}
-                        on:click={() => handleNavigation(block.route, block.id)}
-                    >
-                        <!-- Background Gradient (Hidden by default, reveal on hover) -->
-                        <div
-                            class="absolute inset-0 bg-gradient-to-br {block.color} opacity-0 group-hover:opacity-20 transition-opacity duration-500"
-                        ></div>
-
-                        <!-- Icon -->
-                        <div
-                            class="relative z-10 w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors"
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl md:text-5xl font-light text-white mb-4">
+                        Construction <span
+                            class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400 font-medium"
+                            >Underway</span
                         >
-                            <svelte:component
-                                this={block.icon}
+                    </h2>
+                    <p class="text-slate-400 text-lg max-w-xl mx-auto">
+                        Your foundation is set. I've prepared your initial
+                        construction plan. You can explore these modules
+                        individually, or use the command center at any time.
+                    </p>
+                </div>
+
+                <!-- Suggested First Steps (The Blocks) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mb-12">
+                    {#each BLOCKS as block, i}
+                        <button
+                            class="group relative h-40 rounded-3xl bg-slate-900/40 border border-white/5 backdrop-blur-sm overflow-hidden hover:scale-[1.02] transition-all duration-500 hover:shadow-[0_0_30px_-5px_rgba(255,255,255,0.1)] text-left p-6 flex items-center gap-6"
+                            in:fly={{ y: 30, duration: 800, delay: i * 150 }}
+                            on:click={() =>
+                                handleNavigation(block.route, block.id)}
+                        >
+                            <div
+                                class="absolute inset-0 bg-gradient-to-br {block.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500"
+                            ></div>
+
+                            <div
+                                class="relative z-10 w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors shrink-0"
+                            >
+                                <svelte:component
+                                    this={block.icon}
+                                    size={28}
+                                    class="text-slate-300 group-hover:text-white"
+                                />
+                            </div>
+
+                            <div class="relative z-10 flex-1">
+                                <h3
+                                    class="text-xl font-bold text-slate-200 group-hover:text-white transition-colors"
+                                >
+                                    {block.label}
+                                </h3>
+                                <p
+                                    class="text-sm text-slate-500 group-hover:text-slate-300 mt-1"
+                                >
+                                    {block.desc}
+                                </p>
+                            </div>
+
+                            <ArrowRight
                                 size={20}
-                                class="text-slate-300 group-hover:text-white"
+                                class="text-slate-600 group-hover:text-white group-hover:translate-x-1 transition-all"
                             />
-                        </div>
+                        </button>
+                    {/each}
+                </div>
 
-                        <!-- Text -->
-                        <div class="relative z-10">
-                            <h3
-                                class="text-xl font-bold text-slate-200 group-hover:text-white transition-colors"
-                            >
-                                {block.label}
-                            </h3>
-                            <p
-                                class="text-xs text-slate-500 group-hover:text-slate-300 uppercase tracking-wider mt-1"
-                            >
-                                {block.desc}
-                            </p>
-                        </div>
-
-                        <!-- 3D Edge Highlight -->
-                        <div
-                            class="absolute inset-0 border border-white/10 rounded-3xl transition-all group-hover:border-white/30"
-                        ></div>
+                <!-- Exit Strategy -->
+                <div
+                    class="flex flex-col items-center gap-4 w-full pt-8 border-t border-white/5"
+                >
+                    <button
+                        on:click={() => goto("/")}
+                        class="px-12 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-2xl transition-all shadow-xl shadow-indigo-900/20 flex items-center gap-2 group"
+                    >
+                        <span>Go to My Dashboard</span>
+                        <ArrowRight
+                            size={20}
+                            class="group-hover:translate-x-1 transition-transform"
+                        />
                     </button>
-                {/each}
+
+                    <p class="text-slate-500 text-sm italic">
+                        The Architect will guide you through each section.
+                    </p>
+                </div>
+
+                <!-- Hidden AI Input (Secondary Focus) -->
+                <div
+                    class="mt-20 w-full max-w-lg opacity-40 hover:opacity-100 transition-opacity"
+                >
+                    <p
+                        class="text-center text-xs uppercase tracking-widest text-slate-600 font-bold mb-4"
+                    >
+                        Direct Query
+                    </p>
+                    <div class="relative">
+                        <input
+                            type="text"
+                            bind:value={input}
+                            on:keydown={(e) =>
+                                e.key === "Enter" && handleInput()}
+                            placeholder="Need something else? Ask here..."
+                            class="w-full bg-slate-900/50 border border-white/10 rounded-xl py-3 px-5 text-sm text-white focus:outline-none focus:border-indigo-500/50 transition-all"
+                        />
+                        <button
+                            on:click={handleInput}
+                            class="absolute right-2 top-2 bottom-2 px-3 bg-slate-800 text-indigo-400 rounded-lg"
+                        >
+                            <ArrowRight size={14} />
+                        </button>
+                    </div>
+                </div>
             </div>
         {/if}
     </div>
 </div>
+```

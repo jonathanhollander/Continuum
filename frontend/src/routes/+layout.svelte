@@ -205,7 +205,7 @@
 						why={$compassStore.human_impact}
 						tip={$compassStore.pro_tips?.[0] ||
 							"Take it one step at a time."}
-						backLink="/wizard"
+						backLink="/"
 					/>
 				</div>
 			{/if}

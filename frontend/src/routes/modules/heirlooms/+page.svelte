@@ -270,7 +270,7 @@
                 <div in:fade={{ duration: 400 }} class="relative group">
                     <HeirloomCard
                         {heirloom}
-                        on:printQr={() => openQrModal(heirloom)}
+                        onPrintQr={() => openQrModal(heirloom)}
                     />
                     <button
                         on:click={() => removeHeirloom(heirloom.id)}

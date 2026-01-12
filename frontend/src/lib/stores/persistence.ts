@@ -1,6 +1,7 @@
 import { writable, get, type Writable } from 'svelte/store';
 import { currentProfileId } from './profileContext';
 import { activeAccountId } from './keyringStore';
+import { syncWithBackend } from '../services/syncService';
 
 // Helper: Get data from LocalStorage with Account & Profile Namespace
 export const getStored = <T>(key: string, def: T, profileId?: string): T => {
@@ -32,6 +33,14 @@ export const setStored = <T>(key: string, value: T, profileId?: string) => {
 
     const valToStore = typeof value === 'string' ? value : JSON.stringify(value);
     localStorage.setItem(fullKey, valToStore);
+
+    // Trigger background sync if not anonymous
+    if (accId !== 'anonymous') {
+        // Collect all related profile data for the active account to sync
+        // For simplicity in this concierge demo, we sync the individual key update
+        // In a full implementation, we'd sync the entire transparent state object
+        syncWithBackend({ [key]: value });
+    }
 };
 
 // Helper: Get legacy non-namespaced data for migration

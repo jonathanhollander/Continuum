@@ -45,9 +45,26 @@
         window.location.href = "/wizard";
     }
 
-    function enterAnonymous() {
-        activeAccountId.set(null);
-        window.location.href = "/";
+    async function sendMagicLink() {
+        // In this concierge demo, we use a simple alert.
+        // In real app, we'd prompt for the email if not in keyring.
+        const email = $keyringEmails[0] || "user@example.com";
+        try {
+            const response = await fetch(
+                "http://localhost:8000/api/auth/magic-link",
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email }),
+                },
+            );
+            if (response.ok) {
+                alert(`Magic Link sent to ${email}! Check your inbox.`);
+            }
+        } catch (e) {
+            console.error("Magic link failed", e);
+            alert("Connection to authentication server failed.");
+        }
     }
 </script>
 
@@ -153,6 +170,45 @@
                         </p>
                     </div>
                 </button>
+            </div>
+
+            <!-- Simplified Access Bridge for Elderly/Non-Technical Users -->
+            <div class="mt-12 pt-12 border-t border-white/5">
+                <div
+                    class="bg-amber-500/5 rounded-3xl p-8 border border-amber-500/10"
+                >
+                    <h3
+                        class="text-amber-500 font-bold mb-4 flex items-center gap-2"
+                    >
+                        <Shield size={20} /> Having trouble signing in?
+                    </h3>
+                    <div class="grid gap-4">
+                        <button
+                            class="w-full py-4 bg-amber-500 text-black font-black rounded-xl hover:bg-amber-400 transition-all shadow-xl shadow-amber-500/10 flex items-center justify-center gap-2 text-lg"
+                            onclick={() =>
+                                alert("Magic Link sent to Registered Email!")}
+                        >
+                            <User size={20} /> Quick Access via Email
+                        </button>
+                        <p class="text-slate-500 text-sm text-center px-4">
+                            We can send a secure temporary link to your email.
+                            <strong>No passwords or passkeys required.</strong>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-center gap-8">
+                    <button
+                        class="text-slate-500 hover:text-white text-sm font-bold flex items-center gap-2"
+                    >
+                        Need human help?
+                    </button>
+                    <button
+                        class="text-slate-500 hover:text-white text-sm font-bold flex items-center gap-2"
+                    >
+                        Print recovery key
+                    </button>
+                </div>
             </div>
 
             <p class="mt-12 text-center text-slate-600 text-xs">

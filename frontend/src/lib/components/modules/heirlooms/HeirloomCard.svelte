@@ -3,18 +3,19 @@
     import { Gift, Heart, QrCode, User, ZoomIn } from "lucide-svelte";
     import { createEventDispatcher } from "svelte";
 
-    const dispatch = createEventDispatcher();
+    let { heirloom, onPrintQr } = $props<{
+        heirloom: {
+            id: string | number;
+            name: string;
+            image?: string;
+            recipient: string;
+            story: string;
+            value?: string;
+        };
+        onPrintQr?: (id: string | number) => void;
+    }>();
 
-    export let heirloom: {
-        id: string | number;
-        name: string;
-        image?: string;
-        recipient: string;
-        story: string;
-        value?: string;
-    };
-
-    let isExpanded = false;
+    let isExpanded = $state(false);
 </script>
 
 <div
@@ -60,7 +61,7 @@
             class="flex items-center justify-between pt-4 border-t border-stone-100"
         >
             <button
-                on:click={() => (isExpanded = !isExpanded)}
+                onclick={() => (isExpanded = !isExpanded)}
                 class="text-xs font-bold text-stone-400 hover:text-[#4A7C74] flex items-center gap-1 transition-colors"
             >
                 <ZoomIn size={14} />
@@ -69,7 +70,7 @@
 
             <!-- Digital Heirloom QR Trigger -->
             <button
-                on:click={() => dispatch("printQr", { id: heirloom.id })}
+                onclick={() => onPrintQr?.(heirloom.id)}
                 class="p-2 bg-stone-50 rounded-lg text-stone-400 hover:text-[#304743] hover:bg-stone-100 transition-colors"
                 title="Generate Digital Heirloom QR"
             >
