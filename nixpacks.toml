@@ -4,6 +4,10 @@ nixPkgs = ["python311", "gcc", "nodejs_22", "pnpm"]
 [phases.install]
 cmds = [
     "python -m venv /opt/venv && /opt/venv/bin/pip install --upgrade pip && /opt/venv/bin/pip install -r backend/requirements.txt",
+    "ls -la frontend",
+    "echo 'Checking pnpm...'",
+    "which pnpm || npm install -g pnpm",
+    "pnpm --version",
     "cd frontend && pnpm install --no-frozen-lockfile"
 ]
 
