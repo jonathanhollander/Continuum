@@ -4,9 +4,14 @@ nixPkgs = ["python311", "gcc", "nodejs_20"]
 [phases.install]
 cmds = [
     "python -m venv /opt/venv && /opt/venv/bin/pip install --upgrade pip && /opt/venv/bin/pip install -r backend/requirements.txt",
-    "npm install -g pnpm",
-    "pnpm --version",
-    "cd frontend && pnpm install --no-frozen-lockfile"
+    "echo '--- SYSTEM DIAGNOSTICS ---'",
+    "df -h",
+    "free -m",
+    "ulimit -a",
+    "npm --version",
+    "node -v",
+    "echo '--- END DIAGNOSTICS ---'",
+    "exit 1"
 ]
 
 [phases.build]
