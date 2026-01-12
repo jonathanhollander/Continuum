@@ -4,7 +4,7 @@ nixPkgs = ["python311", "gcc", "nodejs_22"]
 [phases.install]
 cmds = [
     "python -m venv /opt/venv && /opt/venv/bin/pip install --upgrade pip && /opt/venv/bin/pip install -r backend/requirements.txt",
-    "rm -f frontend/package-lock.json && npm install --include=dev --verbose --prefix frontend"
+    "rm -f frontend/package-lock.json && npm install --include=dev --prefix frontend"
 ]
 
 [phases.build]
