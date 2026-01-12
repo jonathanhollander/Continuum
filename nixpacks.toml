@@ -4,7 +4,7 @@ nixPkgs = ["python311", "gcc", "nodejs_20"]
 [phases.install]
 cmds = [
     "python -m venv /opt/venv && /opt/venv/bin/pip install --upgrade pip && /opt/venv/bin/pip install -r backend/requirements.txt",
-    "corepack enable && corepack prepare pnpm@latest --activate",
+    "npm install -g pnpm",
     "pnpm --version",
     "cd frontend && pnpm install --no-frozen-lockfile"
 ]
