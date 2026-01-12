@@ -1,0 +1,7 @@
+legacy_nextjs_archive/
+legacy_nextjs_archive
+node_modules/
+.venv/
+__pycache__/
+.DS_Store
+.env
