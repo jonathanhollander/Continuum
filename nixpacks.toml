@@ -1,14 +1,14 @@
 [phases.setup]
-nixPkgs = ["python311", "gcc", "nodejs_22"]
+nixPkgs = ["python311", "gcc", "nodejs_22", "pnpm"]
 
 [phases.install]
 cmds = [
     "python -m venv /opt/venv && /opt/venv/bin/pip install --upgrade pip && /opt/venv/bin/pip install -r backend/requirements.txt",
-    "free -m && rm -f frontend/package-lock.json && npm install --prefix frontend --no-audit --no-fund --omit=optional"
+    "cd frontend && pnpm install --no-frozen-lockfile"
 ]
 
 [phases.build]
-cmds = ["npm run build --prefix frontend"]
+cmds = ["cd frontend && pnpm run build"]
 
 [start]
 cmd = "/opt/venv/bin/python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT"
