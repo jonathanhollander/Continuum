@@ -68,9 +68,9 @@
         */
 
         memories = getStored<Memory[]>(STORAGE_KEY, []); // Start empty to test Ghost Rows
-        if (memories.length === 0) {
-            viewMode = "concierge";
-        }
+        // if (memories.length === 0) {
+        //     viewMode = "concierge";
+        // }
     });
 
     function handleConciergeAnswer(e: CustomEvent) {
@@ -583,6 +583,15 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         {#if memories.length === 0}
                             <!-- GHOST ROWS -->
+                            <div class="col-span-full flex justify-center mb-4">
+                                <button
+                                    on:click={() => (viewMode = "concierge")}
+                                    class="text-sm font-bold text-indigo-600 bg-indigo-50 px-4 py-2 rounded-full hover:bg-indigo-100 transition-colors flex items-center gap-2"
+                                >
+                                    <Pencil size={16} /> Start Guided Setup
+                                </button>
+                            </div>
+
                             <GhostRow
                                 type="Memory"
                                 onClick={() => (showAddModal = true)}
