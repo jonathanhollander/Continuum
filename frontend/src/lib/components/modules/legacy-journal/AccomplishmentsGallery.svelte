@@ -3,6 +3,8 @@
     import { Trophy, Plus, Search, X, Pencil } from "lucide-svelte";
     import { timelineStore, type LifeEvent } from "$lib/stores/timelineStore";
     import { onMount } from "svelte";
+    import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
+    import { goto } from "$app/navigation";
 
     let searchTerm = "";
     let activeCategory = "All";
@@ -68,30 +70,34 @@
     </div>
 
     {#if filteredAccomplishments.length === 0}
-        <div
-            class="bg-stone-50 rounded-3xl p-12 text-center border-2 border-dashed border-stone-200"
-        >
-            <div
-                class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm text-stone-300"
-            >
-                <Trophy size={32} />
+        <div class="space-y-4">
+            <GhostRow
+                type="Accomplishment"
+                onClick={() => goto("/modules/timeline")}
+            />
+            <GhostRow
+                type="Accomplishment"
+                onClick={() => goto("/modules/timeline")}
+            />
+            <GhostRow
+                type="Accomplishment"
+                onClick={() => goto("/modules/timeline")}
+            />
+
+            <div class="flex justify-center mt-6">
+                {#if !searchTerm && activeCategory === "All"}
+                    <a
+                        href="/modules/timeline"
+                        class="inline-block px-6 py-2 bg-amber-600 text-white font-bold rounded-full hover:bg-amber-700 transition-colors shadow-lg"
+                    >
+                        Go to Timeline to Add
+                    </a>
+                {:else}
+                    <p class="text-stone-400 text-sm">
+                        No matches found. Try clearing filters.
+                    </p>
+                {/if}
             </div>
-            <h3 class="text-xl font-bold text-stone-600 mb-2">
-                No accomplishments found
-            </h3>
-            <p class="text-stone-400 max-w-sm mx-auto">
-                {searchTerm || activeCategory !== "All"
-                    ? "Try adjusting your filters or search terms."
-                    : "Add your milestones and achievements in the Timeline module to see them here."}
-            </p>
-            {#if !searchTerm && activeCategory === "All"}
-                <a
-                    href="/modules/timeline"
-                    class="inline-block mt-6 px-6 py-2 bg-amber-600 text-white font-bold rounded-full hover:bg-amber-700 transition-colors shadow-lg"
-                >
-                    Go to Timeline
-                </a>
-            {/if}
         </div>
     {:else}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

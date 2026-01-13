@@ -14,6 +14,7 @@
     } from "lucide-svelte";
     import { onMount } from "svelte";
     import ContactRow from "$lib/components/modules/contacts/ContactRow.svelte";
+    import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
     import { getStored, setStored } from "$lib/stores/persistence";
@@ -207,10 +208,29 @@
     <!-- Content -->
     <div class="min-h-[500px]">
         {#if contacts.length === 0}
-            <EmptyStateGuide
-                type="contacts"
-                onAdd={() => (showAddModal = true)}
-            />
+            <div class="max-w-3xl mx-auto space-y-4">
+                <GhostRow
+                    type="Contact"
+                    onClick={() => (showAddModal = true)}
+                />
+                <GhostRow
+                    type="Contact"
+                    onClick={() => (showAddModal = true)}
+                />
+                <GhostRow
+                    type="Contact"
+                    onClick={() => (showAddModal = true)}
+                />
+
+                <div class="flex justify-center mt-4">
+                    <button
+                        on:click={() => (showAddModal = true)}
+                        class="text-sm font-bold text-[#4A7C74] hover:bg-[#4A7C74]/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                    >
+                        <Plus size={14} /> Create First Contact
+                    </button>
+                </div>
+            </div>
         {:else if activeTab === "call-list"}
             <div in:fade class="space-y-8 max-w-4xl mx-auto">
                 <div

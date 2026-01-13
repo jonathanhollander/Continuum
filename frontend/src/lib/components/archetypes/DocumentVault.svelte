@@ -23,6 +23,7 @@
     import JargonSlayer from "$lib/components/modules/legal-documents/JargonSlayer.svelte";
     import { slide, scale, fade, fly } from "svelte/transition";
     import FileUploader from "$lib/components/ui/FileUploader.svelte";
+    import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import { estateProfile } from "$lib/stores/estateStore";
     import { activityLog } from "$lib/stores/activityLog";
@@ -678,7 +679,17 @@
             </div>
         {/each}
         {#if docs.length === 0}
-            <EmptyStateGuide type="legal" onAdd={startWizard} />
+            <GhostRow type="Document" onClick={startWizard} />
+            <GhostRow type="Document" onClick={startWizard} />
+            <GhostRow type="Document" onClick={startWizard} />
+            <div class="flex justify-center mt-4">
+                <button
+                    on:click={startWizard}
+                    class="text-sm font-bold text-[#4A7C74] hover:bg-[#4A7C74]/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                >
+                    <Sparkles size={14} /> Start Vault Assistant
+                </button>
+            </div>
         {/if}
     </div>
 

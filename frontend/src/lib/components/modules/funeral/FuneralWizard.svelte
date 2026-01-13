@@ -23,7 +23,8 @@
         type TraditionConfig,
     } from "$lib/data/funeralTraditions";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
-    import RefreshControl from "$lib/components/ui/RefreshControl.svelte"; // NEW IMPORT
+    import RefreshControl from "$lib/components/ui/RefreshControl.svelte";
+    import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import { REFLECTION_POOLS } from "$lib/data/reflectionPools"; // NEW IMPORT
 
     // Steps

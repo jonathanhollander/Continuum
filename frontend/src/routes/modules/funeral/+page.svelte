@@ -18,6 +18,7 @@
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
+    import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import { onMount } from "svelte";
     import { estateProfile } from "$lib/stores/estateStore";
     import { activityLog } from "$lib/stores/activityLog";
@@ -327,17 +328,46 @@
             <!-- BUDGET TAB -->
             <div in:fade={{ duration: 300 }}>
                 {#if budgetItems.length === 0}
-                    <EmptyStateGuide type="funeral" onAdd={prefillEstimates} />
-                    <div class="text-center mt-4">
-                        <button
-                            on:click={() => {
-                                newExpense = { name: "New Expense", cost: 0 };
-                                showAddExpense = true;
-                            }}
-                            class="text-[#4A7C74] font-bold text-sm hover:underline"
-                        >
-                            Manually Add Item
-                        </button>
+                    <!-- GHOST ROWS -->
+                    <div class="grid gap-4">
+                        <GhostRow
+                            type="Budget Item"
+                            onClick={prefillEstimates}
+                        />
+                        <GhostRow
+                            type="Budget Item"
+                            onClick={prefillEstimates}
+                        />
+                        <GhostRow
+                            type="Budget Item"
+                            onClick={prefillEstimates}
+                        />
+                    </div>
+                    <!-- <EmptyStateGuide type="funeral" onAdd={prefillEstimates} /> -->
+                    <div class="text-center mt-6">
+                        <p class="text-stone-500 text-sm mb-4">
+                            Start with industry estimates or build your own.
+                        </p>
+                        <div class="flex justify-center gap-4">
+                            <button
+                                on:click={prefillEstimates}
+                                class="text-[#4A7C74] font-bold text-sm bg-[#4A7C74]/10 px-4 py-2 rounded-lg hover:bg-[#4A7C74]/20 transition-colors"
+                            >
+                                Auto-Fill Common Costs
+                            </button>
+                            <button
+                                on:click={() => {
+                                    newExpense = {
+                                        name: "New Expense",
+                                        cost: 0,
+                                    };
+                                    showAddExpense = true;
+                                }}
+                                class="text-stone-500 font-bold text-sm hover:text-stone-700 hover:underline px-4 py-2"
+                            >
+                                Manually Add Item
+                            </button>
+                        </div>
                     </div>
                 {:else}
                     <!-- Total Cost / Comparison -->

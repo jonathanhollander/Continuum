@@ -2,6 +2,7 @@
     import { fade, scale } from "svelte/transition";
     import { Tag, Plus, Filter, Search, X } from "lucide-svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
+    import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import { onMount } from "svelte";
 
     // --- Types ---
@@ -31,35 +32,8 @@
 
     const STORAGE_KEY = "life_lessons";
 
-    onMount(() => {
-        const defaults = [
-            {
-                id: 1,
-                title: "The 80/20 Rule of Happiness",
-                category: "Life",
-                preview:
-                    "Focus on the 20% of activities that bring 80% of your joy.",
-                tags: ["Life", "Happiness"],
-            },
-            {
-                id: 2,
-                title: "Compound Interest Applies to Relationships",
-                category: "Relationships",
-                preview:
-                    "Small, consistent acts of kindness matter more than grand gestures.",
-                tags: ["Love", "Relationships"],
-            },
-            {
-                id: 3,
-                title: "Never Sign Anything When Hungry",
-                category: "Business",
-                preview:
-                    "Always take a step back. Hunger—for food or success—clouds judgment.",
-                tags: ["Career", "Money"],
-            },
-        ];
-
-        lessons = getStored(STORAGE_KEY, defaults);
+        // REMOVED DEFAULT DATA FOR GHOST ROW IMPLEMENTATION
+        lessons = getStored(STORAGE_KEY, []);
     });
 
     function save() {
@@ -213,79 +187,106 @@
     </div>
 
     <!-- Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {#each filteredLessons as lesson (lesson.id)}
-            <div
-                in:scale={{ duration: 300, start: 0.95 }}
-                class="group bg-white rounded-2xl p-6 border border-stone-200 shadow-sm hover:shadow-md hover:border-[#4A7C74]/50 transition-all cursor-pointer h-full flex flex-col relative"
-            >
-                <button
-                    onclick={(e) => {
-                        e.stopPropagation();
-                        removeLesson(lesson.id);
-                    }}
-                    class="absolute top-2 right-2 p-1.5 bg-gray-50 rounded-full text-gray-300 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all"
-                >
-                    <X size={14} />
-                </button>
-
-                <div class="mb-4">
-                    <span
-                        class="inline-block px-2.5 py-1 rounded-md bg-stone-100 text-xs font-bold text-stone-500 tracking-wide uppercase"
-                    >
-                        {lesson.category}
-                    </span>
-                </div>
-
-                <h3
-                    class="text-xl font-serif font-bold text-[#304743] mb-3 leading-tight group-hover:text-[#4A7C74] transition-colors"
-                >
-                    {lesson.title}
-                </h3>
-
-                <p
-                    class="text-muted-foreground text-sm leading-relaxed mb-6 flex-grow"
-                >
-                    {lesson.preview}
-                </p>
-
-                <div
-                    class="flex justify-between items-center pt-4 border-t border-stone-100"
-                >
-                    <div class="flex -space-x-2">
-                        <!-- Placeholder for "Shared With" faces -->
-                        <div
-                            class="w-6 h-6 rounded-full bg-stone-200 border-2 border-white"
-                        ></div>
-                        <div
-                            class="w-6 h-6 rounded-full bg-stone-300 border-2 border-white"
-                        ></div>
-                    </div>
-                    <span
-                        class="text-xs font-bold text-[#4A7C74] group-hover:underline"
-                        >Read Lesson →</span
-                    >
-                </div>
-            </div>
-        {/each}
-
-        <!-- Add New Card -->
-        <button
-            onclick={() => (showAddModal = true)}
-            class="border-2 border-dashed border-stone-200 rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-stone-50 hover:border-[#4A7C74] hover:text-[#4A7C74] transition-all min-h-[250px] group w-full"
+    {#if lessons.length === 0}
+        <div
+            class="space-y-4 border border-dashed border-stone-200 rounded-2xl p-8 bg-stone-50/50"
         >
-            <div
-                class="w-16 h-16 rounded-full bg-stone-100 group-hover:bg-[#4A7C74]/10 flex items-center justify-center mb-4 transition-colors"
-            >
-                <Plus
-                    size={32}
-                    class="text-stone-400 group-hover:text-[#4A7C74]"
-                />
+            <div class="text-center mb-6">
+                <h3 class="font-serif font-bold text-xl text-stone-600">
+                    Your Wisdom Library is Empty
+                </h3>
+                <p class="text-sm text-stone-400">
+                    Capture the lessons that defined your journey.
+                </p>
             </div>
-            <h3 class="font-bold text-lg mb-1">Add a New Lesson</h3>
-            <p class="text-sm text-stone-400 max-w-[200px]">
-                Capture a thought, a quote, or a story before it fades.
-            </p>
-        </button>
-    </div>
+
+            <GhostRow type="Lesson" onClick={() => (showAddModal = true)} />
+            <GhostRow type="Lesson" onClick={() => (showAddModal = true)} />
+
+            <div class="flex justify-center mt-6">
+                <button
+                    onclick={() => (showAddModal = true)}
+                    class="px-6 py-2 bg-[#4A7C74] text-white rounded-full font-bold shadow-lg hover:bg-[#3b635d] transition-all"
+                >
+                    + Write First Lesson
+                </button>
+            </div>
+        </div>
+    {:else}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {#each filteredLessons as lesson (lesson.id)}
+                <div
+                    in:scale={{ duration: 300, start: 0.95 }}
+                    class="group bg-white rounded-2xl p-6 border border-stone-200 shadow-sm hover:shadow-md hover:border-[#4A7C74]/50 transition-all cursor-pointer h-full flex flex-col relative"
+                >
+                    <button
+                        onclick={(e) => {
+                            e.stopPropagation();
+                            removeLesson(lesson.id);
+                        }}
+                        class="absolute top-2 right-2 p-1.5 bg-gray-50 rounded-full text-gray-300 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all"
+                    >
+                        <X size={14} />
+                    </button>
+
+                    <div class="mb-4">
+                        <span
+                            class="inline-block px-2.5 py-1 rounded-md bg-stone-100 text-xs font-bold text-stone-500 tracking-wide uppercase"
+                        >
+                            {lesson.category}
+                        </span>
+                    </div>
+
+                    <h3
+                        class="text-xl font-serif font-bold text-[#304743] mb-3 leading-tight group-hover:text-[#4A7C74] transition-colors"
+                    >
+                        {lesson.title}
+                    </h3>
+
+                    <p
+                        class="text-muted-foreground text-sm leading-relaxed mb-6 flex-grow"
+                    >
+                        {lesson.preview}
+                    </p>
+
+                    <div
+                        class="flex justify-between items-center pt-4 border-t border-stone-100"
+                    >
+                        <div class="flex -space-x-2">
+                            <!-- Placeholder for "Shared With" faces -->
+                            <div
+                                class="w-6 h-6 rounded-full bg-stone-200 border-2 border-white"
+                            ></div>
+                            <div
+                                class="w-6 h-6 rounded-full bg-stone-300 border-2 border-white"
+                            ></div>
+                        </div>
+                        <span
+                            class="text-xs font-bold text-[#4A7C74] group-hover:underline"
+                            >Read Lesson →</span
+                        >
+                    </div>
+                </div>
+            {/each}
+
+            <!-- Add New Card -->
+            <button
+                onclick={() => (showAddModal = true)}
+                class="border-2 border-dashed border-stone-200 rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-stone-50 hover:border-[#4A7C74] hover:text-[#4A7C74] transition-all min-h-[250px] group w-full"
+            >
+                <div
+                    class="w-16 h-16 rounded-full bg-stone-100 group-hover:bg-[#4A7C74]/10 flex items-center justify-center mb-4 transition-colors"
+                >
+                    <Plus
+                        size={32}
+                        class="text-stone-400 group-hover:text-[#4A7C74]"
+                    />
+                </div>
+                <h3 class="font-bold text-lg mb-1">Add a New Lesson</h3>
+                <p class="text-sm text-stone-400 max-w-[200px]">
+                    Capture a thought, a quote, or a story before it fades.
+                </p>
+            </button>
+        </div>
+    {/if}
 </div>

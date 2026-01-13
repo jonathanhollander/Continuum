@@ -21,6 +21,7 @@
         Sparkles,
         Pencil,
     } from "lucide-svelte";
+    import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import { encouragementMode, userRole } from "$lib/stores/concierge";
     import { estateProfile } from "$lib/stores/estateStore";
@@ -681,18 +682,26 @@
         {/each}
 
         <!-- Smart Default Empty State -->
+        <!-- Smart Default Empty State -->
         {#if assets.length === 0}
-            <EmptyStateGuide
-                type="financial"
-                onAdd={() => (showAddForm = true)}
-            />
-            <div class="flex justify-center mt-4">
+            <GhostRow type="Asset" onClick={() => (showAddForm = true)} />
+            <GhostRow type="Asset" onClick={() => (showAddForm = true)} />
+            <GhostRow type="Asset" onClick={() => (showAddForm = true)} />
+
+            <div class="col-span-full flex justify-center mt-4">
                 {#if $userRole !== "Family"}
                     <button
                         on:click={addStarterPack}
                         class="text-sm font-bold text-[#4A7C74] hover:bg-[#4A7C74]/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
                     >
                         <Sparkles size={14} /> Or use the Starter Pack
+                    </button>
+                    <!-- Fallback manual trigger -->
+                    <button
+                        on:click={() => (showAddForm = true)}
+                        class="text-sm font-bold text-stone-400 hover:text-[#4A7C74] px-4 py-2"
+                    >
+                        Add Item Manually
                     </button>
                 {/if}
             </div>

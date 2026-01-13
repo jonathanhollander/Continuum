@@ -13,6 +13,7 @@
     import { goto } from "$app/navigation";
     import { heirloomStore, type Heirloom } from "$lib/stores/heirloomStore";
     import { REFLECTION_POOLS } from "$lib/data/reflectionPools";
+    import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
 
     onMount(() => {
         // Migration: Fix broken/legacy Unsplash URLs in existing data
@@ -261,7 +262,31 @@
 
     <!-- Grid -->
     {#if $heirloomStore.length === 0}
-        <EmptyStateGuide type="heirlooms" onAdd={() => (showAddForm = true)} />
+        <div
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+        >
+            <GhostRow type="Heirloom" onClick={() => (showAddForm = true)} />
+            <GhostRow type="Heirloom" onClick={() => (showAddForm = true)} />
+            <GhostRow type="Heirloom" onClick={() => (showAddForm = true)} />
+
+            <button
+                class="border-2 border-dashed border-stone-200 rounded-xl flex flex-col items-center justify-center text-stone-400 hover:border-[#4A7C74] hover:text-[#4A7C74] hover:bg-[#4A7C74]/5 transition-all h-[88px] group"
+                on:click={() => (showAddForm = true)}
+            >
+                <div class="flex items-center gap-2">
+                    <Plus size={20} />
+                    <span class="font-bold">Catalog New</span>
+                </div>
+            </button>
+        </div>
+        <div class="flex justify-center mt-6">
+            <button
+                on:click={() => (showAddForm = true)}
+                class="text-sm font-bold text-[#4A7C74] hover:bg-[#4A7C74]/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+            >
+                <Gift size={14} /> Start Heirloom Registry
+            </button>
+        </div>
     {:else}
         <div
             class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"

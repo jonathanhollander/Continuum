@@ -10,6 +10,7 @@
         Save,
     } from "lucide-svelte";
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
+    import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import {
         visualMemories,
         externalArchives,
@@ -318,16 +319,20 @@
                 {/if}
 
                 {#if !hasMemories}
-                    <div
-                        class="flex items-center justify-center h-full min-h-[400px]"
-                    >
-                        <EmptyStateGuide
-                            icon={Image}
-                            title="Start Your Collection"
-                            description="Upload your most precious photos and videos here. This is your curated 'Best Of' collection."
-                            actionLabel="Add Memories"
-                            onAdd={triggerUpload}
-                        />
+                    <div class="p-8">
+                        <div class="grid gap-4">
+                            <GhostRow type="Memory" onClick={triggerUpload} />
+                            <GhostRow type="Memory" onClick={triggerUpload} />
+                            <GhostRow type="Memory" onClick={triggerUpload} />
+                        </div>
+                        <div class="flex justify-center mt-6">
+                            <button
+                                on:click={triggerUpload}
+                                class="text-sm font-bold text-[#4A7C74] hover:bg-[#4A7C74]/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                            >
+                                <Image size={14} /> Upload First Memory
+                            </button>
+                        </div>
                     </div>
                 {:else}
                     <MemoryGallery

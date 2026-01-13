@@ -7,6 +7,7 @@
         Wallet,
         Receipt,
     } from "lucide-svelte";
+    import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte"; // NEW IMPORT
     import { onMount } from "svelte";
     import { getStored } from "$lib/stores/persistence";
 
