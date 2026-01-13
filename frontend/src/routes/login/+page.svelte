@@ -41,6 +41,11 @@
         }
     });
 
+    function enterAnonymous() {
+        activeAccountId.set("anonymous");
+        window.location.href = "/modules/family-hub";
+    }
+
     function createNew() {
         window.location.href = "/wizard";
     }

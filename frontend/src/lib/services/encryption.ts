@@ -19,7 +19,7 @@ export async function deriveKeyFromPRF(credentialId: Uint8Array): Promise<Crypto
                 challenge,
                 allowCredentials: [{
                     type: 'public-key',
-                    id: credentialId,
+                    id: credentialId as unknown as BufferSource,
                     transports: ['internal']
                 }],
                 extensions: {
@@ -35,12 +35,12 @@ export async function deriveKeyFromPRF(credentialId: Uint8Array): Promise<Crypto
             throw new Error("Passkey PRF extension not available or failed.");
         }
 
-        const prfOutput = new Uint8Array(extensions.prf.results.first);
+        const prfOutput = new Uint8Array(extensions.prf.results.first as ArrayBuffer);
 
         // Import the PRF output as a CryptoKey
         return await crypto.subtle.importKey(
             "raw",
-            prfOutput.slice(0, 32), // Use first 32 bytes for AES-256
+            (prfOutput as any).slice(0, 32), // Use first 32 bytes for AES-256
             { name: "AES-GCM" },
             false,
             ["encrypt", "decrypt"]

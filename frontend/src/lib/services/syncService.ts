@@ -1,7 +1,7 @@
 import { get } from 'svelte/store';
 import { activeAccountId } from '../stores/keyringStore';
 
-const API_BASE = 'http://localhost:8000/api'; // In production, use env var
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
 interface SyncPayload {
     transparent_data: string;
