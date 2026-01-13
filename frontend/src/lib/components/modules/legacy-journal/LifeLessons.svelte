@@ -32,6 +32,7 @@
 
     const STORAGE_KEY = "life_lessons";
 
+    onMount(() => {
         // REMOVED DEFAULT DATA FOR GHOST ROW IMPLEMENTATION
         lessons = getStored(STORAGE_KEY, []);
     });
