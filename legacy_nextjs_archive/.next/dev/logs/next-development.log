@@ -1,0 +1,1907 @@
+[00:00:00.609] Server  WARN    ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+[00:00:00.669] Server  LOG     ✓ Ready in 506ms
+[00:00:01.072] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:00:01.180] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:00:01.233] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:00:01.495] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:00:01.604] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:00:01.746] Browser ERROR   uncaughtError: PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:00:01.835] Browser ERROR   uncaughtError: PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:00:01.847] Browser ERROR   uncaughtError: PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:00:01.883] Browser WARN    Image with src "http://localhost:3000/vercel.svg" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:00:07.604] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:00:07.714] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:00:07.826] Browser ERROR   uncaughtError: PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:00:23.099] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:00:23.239] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:00:23.386] Browser ERROR   uncaughtError: PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:00:37.240] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="/AI Code/N...">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" suppressHydrationWarning={true}>
+                          <body
++                           className="inter_fe8b9d92-module__LINzvG__variable cinzel_a1fd8d72-module__0bFjSa__variabl..."
+-                           className="inter_fe8b9d92-module__LINzvG__variable cinzel_a1fd8d72-module__0bFjSa__variabl..."
+                          >
+                  ...
+
+[00:00:37.240] Browser WARN    Image with src "http://localhost:3000/vercel.svg" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:00:43.817] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:00:43.992] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:00:44.147] Browser ERROR   uncaughtError: PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:00:54.143] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:00:54.313] Browser ERROR   uncaughtError: PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:01:28.687] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasourceUrl provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:01:28.797] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasourceUrl provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:01:28.935] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasourceUrl provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:01:29.046] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasourceUrl provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:01:29.273] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasourceUrl provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:01:29.397] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasourceUrl provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:01:29.417] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasourceUrl provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:01:29.570] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasourceUrl provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:01:29.687] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasourceUrl provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:01:29.864] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasourceUrl provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:01:29.978] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasourceUrl provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:01:29.997] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasourceUrl provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:01:30.153] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasourceUrl provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:01:30.269] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasourceUrl provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:01:30.339] Browser ERROR   uncaughtError: PrismaClientConstructorValidationError: Unknown property datasourceUrl provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:01:30.377] Browser ERROR   uncaughtError: PrismaClientConstructorValidationError: Unknown property datasourceUrl provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:01:30.438] Browser ERROR   uncaughtError: PrismaClientConstructorValidationError: Unknown property datasourceUrl provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:01:30.485] Browser ERROR   uncaughtError: PrismaClientConstructorValidationError: Unknown property datasourceUrl provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:01:30.536] Browser ERROR   uncaughtError: PrismaClientConstructorValidationError: Unknown property datasourceUrl provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:01:30.588] Browser ERROR   uncaughtError: PrismaClientConstructorValidationError: Unknown property datasourceUrl provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:01:30.627] Browser ERROR   uncaughtError: PrismaClientConstructorValidationError: Unknown property datasourceUrl provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:01:31.438] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasourceUrl provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:01:31.552] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasourceUrl provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:01:31.669] Browser ERROR   uncaughtError: PrismaClientConstructorValidationError: Unknown property datasourceUrl provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:01:43.426] Browser LOG     Checking for errors
+[00:01:54.861] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="/AI Code/N...">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" suppressHydrationWarning={true}>
+                          <body
++                           className="inter_fe8b9d92-module__LINzvG__variable cinzel_a1fd8d72-module__0bFjSa__variabl..."
+-                           className="inter_fe8b9d92-module__LINzvG__variable cinzel_a1fd8d72-module__0bFjSa__variabl..."
+                          >
+                  ...
+
+[00:01:54.861] Browser WARN    Image with src "http://localhost:3000/vercel.svg" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:02:15.205] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:02:15.319] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:02:15.459] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:02:15.585] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:02:15.847] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:02:15.977] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:02:16.000] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:02:16.161] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:02:16.282] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:02:16.454] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:02:16.585] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:02:16.607] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:02:16.775] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:02:16.904] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:02:17.064] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:02:17.182] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:02:17.279] Browser ERROR   uncaughtError: PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:02:17.332] Browser ERROR   uncaughtError: PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:02:17.371] Browser ERROR   uncaughtError: PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:02:17.432] Browser ERROR   uncaughtError: PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:02:17.511] Browser ERROR   uncaughtError: PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:02:17.560] Browser ERROR   uncaughtError: PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:02:17.608] Browser ERROR   uncaughtError: PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:02:17.651] Browser ERROR   uncaughtError: PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:02:19.550] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:02:19.689] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:02:19.809] Browser ERROR   uncaughtError: PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:02:30.665] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:02:30.806] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:02:30.968] Browser ERROR   uncaughtError: PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:02:37.162] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="/AI Code/N...">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" suppressHydrationWarning={true}>
+                          <body
++                           className="inter_fe8b9d92-module__LINzvG__variable cinzel_a1fd8d72-module__0bFjSa__variabl..."
+-                           className="inter_fe8b9d92-module__LINzvG__variable cinzel_a1fd8d72-module__0bFjSa__variabl..."
+                          >
+                  ...
+
+[00:02:37.162] Browser WARN    Image with src "http://localhost:3000/vercel.svg" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:02:42.670] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:02:42.829] Server  ERROR   ⨯ PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:02:42.988] Browser ERROR   uncaughtError: PrismaClientConstructorValidationError: Unknown property datasources provided to PrismaClient constructor.
+Read more at https://pris.ly/d/client-constructor
+[00:03:07.124] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:07.258] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:07.415] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:07.555] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:07.869] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:08.012] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:08.040] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:08.215] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:08.341] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:08.516] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:08.639] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:08.670] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:08.846] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:08.973] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:09.134] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:09.253] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:09.417] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:09.534] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:09.709] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:09.829] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:10.013] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:10.130] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:10.200] Browser ERROR   uncaughtError: PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:10.236] Browser ERROR   uncaughtError: PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:10.294] Browser ERROR   uncaughtError: PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:10.350] Browser ERROR   uncaughtError: PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:10.409] Browser ERROR   uncaughtError: PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:10.477] Browser ERROR   uncaughtError: PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:10.531] Browser ERROR   uncaughtError: PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:10.587] Browser ERROR   uncaughtError: PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:10.652] Browser ERROR   uncaughtError: PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:10.712] Browser ERROR   uncaughtError: PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:10.750] Browser ERROR   uncaughtError: PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:11.660] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:11.777] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:11.887] Browser ERROR   uncaughtError: PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:26.615] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:26.777] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:26.855] Browser ERROR   uncaughtError: PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:34.513] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="/AI Code/N...">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" suppressHydrationWarning={true}>
+                          <body
++                           className="inter_fe8b9d92-module__LINzvG__variable cinzel_a1fd8d72-module__0bFjSa__variabl..."
+-                           className="inter_fe8b9d92-module__LINzvG__variable cinzel_a1fd8d72-module__0bFjSa__variabl..."
+                          >
+                  ...
+
+[00:03:34.513] Browser WARN    Image with src "http://localhost:3000/vercel.svg" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:03:40.684] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:40.860] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:41.059] Browser ERROR   uncaughtError: PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:47.711] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:03:47.867] Browser ERROR   uncaughtError: PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:04:19.269] Server  LOG     ✓ Compiled in 66ms
+[00:04:19.583] Server  ERROR   ⨯ Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:04:19.685] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:04:19.719] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:04:19.849] Server  ERROR   ⨯ Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:04:19.919] Server  ERROR   ⨯ Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:04:19.985] Server  ERROR   ⨯ Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:04:20.054] Server  ERROR   ⨯ Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:04:20.119] Server  ERROR   ⨯ Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:04:20.206] Server  ERROR   ⨯ PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:04:20.210] Server  ERROR   ⨯ Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:04:20.279] Server  ERROR   ⨯ Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:04:20.325] Server  ERROR   ⨯ Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:04:20.376] Server  ERROR   ⨯ Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:04:20.430] Server  ERROR   ⨯ Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:04:20.651] Browser ERROR   uncaughtError: PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:04:20.698] Server  LOG     ✓ Compiled in 54ms
+[00:04:20.792] Browser ERROR   uncaughtError: PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:04:20.850] Browser ERROR   uncaughtError: Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:04:20.866] Browser ERROR   uncaughtError: PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+[00:04:21.025] Browser ERROR   uncaughtError: Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:04:21.134] Browser ERROR   uncaughtError: Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:04:21.279] Browser ERROR   uncaughtError: Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:04:21.407] Browser ERROR   uncaughtError: Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:04:21.483] Browser ERROR   uncaughtError: Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:04:21.613] Browser ERROR   uncaughtError: Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:04:21.694] Browser ERROR   uncaughtError: Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:04:21.742] Browser ERROR   uncaughtError: Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:04:21.803] Browser ERROR   uncaughtError: Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:04:21.838] Browser ERROR   uncaughtError: Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:04:24.456] Server  ERROR   ⨯ Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:04:24.779] Browser ERROR   uncaughtError: Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:04:37.707] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="/AI Code/N...">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" suppressHydrationWarning={true}>
+                          <body
++                           className="inter_fe8b9d92-module__LINzvG__variable cinzel_a1fd8d72-module__0bFjSa__variabl..."
+-                           className="inter_fe8b9d92-module__LINzvG__variable cinzel_a1fd8d72-module__0bFjSa__variabl..."
+                          >
+                  ...
+
+[00:04:37.707] Browser WARN    Image with src "http://localhost:3000/vercel.svg" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:04:49.774] Server  ERROR   ⨯ Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:04:50.124] Browser ERROR   uncaughtError: Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:05:07.807] Server  ERROR   ⨯ Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:05:08.208] Browser ERROR   uncaughtError: Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:05:38.511] Server  ERROR   ⨯ ReferenceError: currentUser is not defined
+[00:05:38.601] Server  ERROR   ⨯ Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:05:38.657] Server  ERROR   ⨯ Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:05:38.732] Server  ERROR   ⨯ ReferenceError: currentUser is not defined
+[00:05:38.850] Server  ERROR   ⨯ Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:05:38.939] Server  ERROR   ⨯ Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:05:39.006] Server  ERROR   ⨯ ReferenceError: currentUser is not defined
+[00:05:39.094] Server  ERROR   ⨯ ReferenceError: currentUser is not defined
+[00:05:39.155] Server  ERROR   ⨯ ReferenceError: currentUser is not defined
+[00:05:39.218] Server  ERROR   ⨯ ReferenceError: currentUser is not defined
+[00:05:39.290] Server  ERROR   ⨯ ReferenceError: currentUser is not defined
+[00:05:39.352] Server  ERROR   ⨯ ReferenceError: currentUser is not defined
+[00:05:39.424] Server  ERROR   ⨯ ReferenceError: currentUser is not defined
+[00:05:39.512] Server  ERROR   ⨯ ReferenceError: currentUser is not defined
+[00:05:39.572] Server  ERROR   ⨯ ReferenceError: currentUser is not defined
+[00:05:39.633] Server  ERROR   ⨯ ReferenceError: currentUser is not defined
+[00:05:39.686] Server  ERROR   ⨯ ReferenceError: currentUser is not defined
+[00:05:39.923] Server  LOG     ✓ Compiled in 110ms
+[00:05:39.963] Server  ERROR   ⨯ ReferenceError: currentUser is not defined
+[00:05:40.233] Browser ERROR   uncaughtError: Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:05:40.367] Browser ERROR   uncaughtError: ReferenceError: currentUser is not defined
+[00:05:40.468] Browser ERROR   uncaughtError: Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:05:40.542] Browser ERROR   uncaughtError: Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:05:40.690] Browser ERROR   uncaughtError: ReferenceError: currentUser is not defined
+[00:05:40.774] Browser ERROR   uncaughtError: Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your Middleware exists at ./src/middleware.(ts|js)
+- clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+[00:05:40.859] Browser ERROR   uncaughtError: ReferenceError: currentUser is not defined
+[00:05:40.962] Browser ERROR   uncaughtError: ReferenceError: currentUser is not defined
+[00:05:41.148] Browser ERROR   uncaughtError: ReferenceError: currentUser is not defined
+[00:05:41.284] Browser ERROR   uncaughtError: ReferenceError: currentUser is not defined
+[00:05:41.368] Browser ERROR   uncaughtError: ReferenceError: currentUser is not defined
+[00:05:41.491] Browser ERROR   uncaughtError: ReferenceError: currentUser is not defined
+[00:05:41.593] Browser ERROR   uncaughtError: ReferenceError: currentUser is not defined
+[00:05:41.677] Browser ERROR   uncaughtError: ReferenceError: currentUser is not defined
+[00:05:41.723] Browser ERROR   uncaughtError: ReferenceError: currentUser is not defined
+[00:05:41.752] Browser ERROR   uncaughtError: ReferenceError: currentUser is not defined
+[00:05:41.767] Browser ERROR   uncaughtError: ReferenceError: currentUser is not defined
+[00:05:44.488] Server  ERROR   ⨯ ReferenceError: currentUser is not defined
+[00:05:44.813] Browser ERROR   uncaughtError: ReferenceError: currentUser is not defined
+[00:05:52.541] Server  ERROR   ⨯ ReferenceError: currentUser is not defined
+[00:05:52.873] Browser ERROR   uncaughtError: ReferenceError: currentUser is not defined
+[00:05:57.925] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="/AI Code/N...">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" suppressHydrationWarning={true}>
+                          <body
++                           className="inter_fe8b9d92-module__LINzvG__variable cinzel_a1fd8d72-module__0bFjSa__variabl..."
+-                           className="inter_fe8b9d92-module__LINzvG__variable cinzel_a1fd8d72-module__0bFjSa__variabl..."
+                          >
+                  ...
+
+[00:05:57.925] Browser WARN    Image with src "http://localhost:3000/vercel.svg" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:06:03.968] Server  ERROR   ⨯ ReferenceError: currentUser is not defined
+[00:06:04.306] Browser ERROR   uncaughtError: ReferenceError: currentUser is not defined
+[00:06:37.487] Server  ERROR   ⨯ ReferenceError: Settings is not defined
+[00:06:37.631] Server  ERROR   ⨯ ReferenceError: currentUser is not defined
+[00:06:37.713] Server  ERROR   ⨯ ReferenceError: currentUser is not defined
+[00:06:37.834] Server  ERROR   ⨯ ReferenceError: Settings is not defined
+[00:06:37.937] Server  ERROR   ⨯ ReferenceError: currentUser is not defined
+[00:06:38.011] Server  ERROR   ⨯ ReferenceError: currentUser is not defined
+[00:06:38.087] Server  ERROR   ⨯ ReferenceError: Settings is not defined
+[00:06:38.161] Server  ERROR   ⨯ ReferenceError: Settings is not defined
+[00:06:38.245] Server  ERROR   ⨯ ReferenceError: Settings is not defined
+[00:06:38.315] Server  ERROR   ⨯ ReferenceError: Settings is not defined
+[00:06:38.379] Server  ERROR   ⨯ ReferenceError: Settings is not defined
+[00:06:38.441] Server  ERROR   ⨯ ReferenceError: Settings is not defined
+[00:06:38.505] Server  ERROR   ⨯ ReferenceError: Settings is not defined
+[00:06:38.567] Server  ERROR   ⨯ ReferenceError: Settings is not defined
+[00:06:38.632] Server  ERROR   ⨯ ReferenceError: Settings is not defined
+[00:06:38.705] Server  ERROR   ⨯ ReferenceError: Settings is not defined
+[00:06:38.798] Server  ERROR   ⨯ ReferenceError: Settings is not defined
+[00:06:38.830] Server  LOG     ✓ Compiled in 17ms
+[00:06:38.850] Server  ERROR   ⨯ ReferenceError: Settings is not defined
+[00:06:38.902] Server  ERROR   ⨯ ReferenceError: Settings is not defined
+[00:06:39.259] Browser ERROR   uncaughtError: ReferenceError: Settings is not defined
+[00:06:39.341] Browser ERROR   uncaughtError: ReferenceError: currentUser is not defined
+[00:06:39.411] Browser ERROR   uncaughtError: ReferenceError: currentUser is not defined
+[00:06:39.518] Browser ERROR   uncaughtError: ReferenceError: Settings is not defined
+[00:06:39.627] Browser ERROR   uncaughtError: ReferenceError: currentUser is not defined
+[00:06:39.742] Browser ERROR   uncaughtError: ReferenceError: currentUser is not defined
+[00:06:39.833] Browser ERROR   uncaughtError: ReferenceError: Settings is not defined
+[00:06:39.928] Browser ERROR   uncaughtError: ReferenceError: Settings is not defined
+[00:06:40.038] Browser ERROR   uncaughtError: ReferenceError: Settings is not defined
+[00:06:40.128] Browser ERROR   uncaughtError: ReferenceError: Settings is not defined
+[00:06:40.223] Browser ERROR   uncaughtError: ReferenceError: Settings is not defined
+[00:06:40.364] Browser ERROR   uncaughtError: ReferenceError: Settings is not defined
+[00:06:40.455] Browser ERROR   uncaughtError: ReferenceError: Settings is not defined
+[00:06:40.552] Browser ERROR   uncaughtError: ReferenceError: Settings is not defined
+[00:06:40.643] Browser ERROR   uncaughtError: ReferenceError: Settings is not defined
+[00:06:40.717] Browser ERROR   uncaughtError: ReferenceError: Settings is not defined
+[00:06:40.961] Browser ERROR   uncaughtError: ReferenceError: Settings is not defined
+[00:06:41.012] Browser ERROR   uncaughtError: ReferenceError: Settings is not defined
+[00:06:41.022] Browser ERROR   uncaughtError: ReferenceError: Settings is not defined
+[00:06:43.570] Server  ERROR   ⨯ ReferenceError: Settings is not defined
+[00:06:43.887] Browser ERROR   uncaughtError: ReferenceError: Settings is not defined
+[00:06:51.471] Server  ERROR   ⨯ ReferenceError: Settings is not defined
+[00:06:51.849] Browser ERROR   uncaughtError: ReferenceError: Settings is not defined
+[00:06:59.333] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="/AI Code/N...">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" suppressHydrationWarning={true}>
+                          <body
++                           className="inter_fe8b9d92-module__LINzvG__variable cinzel_a1fd8d72-module__0bFjSa__variabl..."
+-                           className="inter_fe8b9d92-module__LINzvG__variable cinzel_a1fd8d72-module__0bFjSa__variabl..."
+                          >
+                  ...
+
+[00:06:59.333] Browser WARN    Image with src "http://localhost:3000/vercel.svg" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:07:03.753] Server  ERROR   ⨯ ReferenceError: Settings is not defined
+[00:07:04.103] Browser ERROR   uncaughtError: ReferenceError: Settings is not defined
+[00:07:19.374] Server  ERROR   ⨯ ReferenceError: Settings is not defined
+[00:07:19.777] Browser ERROR   uncaughtError: ReferenceError: Settings is not defined
+[00:07:45.718] Server  ERROR   ⨯ Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+[00:07:45.984] Server  ERROR   ⨯ Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+[00:07:46.291] Server  ERROR   ⨯ Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+[00:07:46.503] Server  ERROR   ⨯ Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+[00:07:49.274] Browser ERROR   uncaughtError: Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `EstateDashboardPage`.
+[00:07:49.447] Browser ERROR   uncaughtError: Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `EstateDashboardPage`.
+[00:07:50.016] Browser ERROR   uncaughtError: Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `EstateDashboardPage`.
+[00:07:50.763] Browser ERROR   uncaughtError: Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `EstateDashboardPage`.
+[00:07:55.363] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/dashboard" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="/AI Code/N...">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" suppressHydrationWarning={true}>
+                          <body
++                           className="inter_fe8b9d92-module__LINzvG__variable cinzel_a1fd8d72-module__0bFjSa__variabl..."
+-                           className="inter_fe8b9d92-module__LINzvG__variable cinzel_a1fd8d72-module__0bFjSa__variabl..."
+                          >
+                  ...
+
+[00:29:16.470] Browser ERROR   uncaughtError: Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `EstateDashboardPage`.

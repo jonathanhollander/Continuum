@@ -1,0 +1,3752 @@
+
+> frontend@0.0.1 check
+> svelte-kit sync && svelte-check --tsconfig ./tsconfig.json
+
+Loading svelte-check in workspace: /Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend
+Getting Svelte diagnostics...
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/services/encryption.ts:22:21
+Error: Type 'Uint8Array<ArrayBufferLike>' is not assignable to type 'BufferSource'.
+  Type 'Uint8Array<ArrayBufferLike>' is not assignable to type 'ArrayBufferView<ArrayBuffer>'.
+    Types of property 'buffer' are incompatible.
+      Type 'ArrayBufferLike' is not assignable to type 'ArrayBuffer'.
+        Type 'SharedArrayBuffer' is missing the following properties from type 'ArrayBuffer': resizable, resize, detached, transfer, transferToFixedLength 
+                    type: 'public-key',
+                    id: credentialId,
+                    transports: ['internal']
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/services/encryption.ts:38:42
+Error: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'BufferSource' is not assignable to parameter of type 'ArrayBuffer | ArrayLike<number>'.
+      Type 'ArrayBufferView<ArrayBuffer>' is not assignable to type 'ArrayBuffer | ArrayLike<number>'.
+        Type 'ArrayBufferView<ArrayBuffer>' is missing the following properties from type 'ArrayBuffer': slice, maxByteLength, resizable, resize, and 4 more. 
+
+        const prfOutput = new Uint8Array(extensions.prf.results.first);
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/ModuleContent.svelte:178:29
+Warn: '#' is not a valid href attribute
+https://svelte.dev/e/a11y_invalid_attribute (svelte)
+                        <a
+                            href="#"
+                            class="flex items-center justify-between group p-2 hover:bg-background rounded transition-colors text-sm"
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/ModuleContent.svelte:193:29
+Warn: '#' is not a valid href attribute
+https://svelte.dev/e/a11y_invalid_attribute (svelte)
+                        <a
+                            href="#"
+                            class="flex items-center justify-between group p-2 hover:bg-background rounded transition-colors text-sm"
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/ModuleContent.svelte:208:29
+Warn: '#' is not a valid href attribute
+https://svelte.dev/e/a11y_invalid_attribute (svelte)
+                        <a
+                            href="#"
+                            class="flex items-center justify-between group p-2 hover:bg-background rounded transition-colors text-sm"
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/admin/AutomationCard.svelte:39:5
+Warn: Buttons and links should either contain text or have an `aria-label`, `aria-labelledby` or `title` attribute
+https://svelte.dev/e/a11y_consider_explicit_label (svelte)
+
+    <button
+        class="w-12 h-6 rounded-full transition-colors relative {rule.enabled
+            ? 'bg-[#4A7C74]'
+            : 'bg-gray-200'}"
+        on:click={() => onToggle(rule.id)}
+    >
+        <span
+            class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform {rule.enabled
+                ? 'translate-x-6'
+                : ''}"
+        />
+    </button>
+</div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/admin/AutomationCard.svelte:45:9
+Warn: Self-closing HTML tags for non-void elements are ambiguous — use `<span ...></span>` rather than `<span ... />`
+https://svelte.dev/e/element_invalid_self_closing_tag (svelte)
+    >
+        <span
+            class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform {rule.enabled
+                ? 'translate-x-6'
+                : ''}"
+        />
+    </button>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/archetypes/AssetManager.svelte:459:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div class="space-y-2">
+                        <label
+                            class="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                            >Asset Name</label
+                        >
+                        <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/archetypes/AssetManager.svelte:471:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div class="space-y-2">
+                        <label
+                            class="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                            >Type</label
+                        >
+                        <select
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/archetypes/AssetManager.svelte:488:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div class="space-y-2">
+                        <label
+                            class="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                            >Estimated Value</label
+                        >
+                        <div class="relative">
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/archetypes/AssetManager.svelte:505:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div class="space-y-2">
+                        <label
+                            class="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                            >Location / Institution</label
+                        >
+                        <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/archetypes/AssetManager.svelte:518:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-2">
+                            <label
+                                class="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                                >Login URL</label
+                            >
+                            <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/archetypes/AssetManager.svelte:532:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div class="space-y-2">
+                        <label
+                            class="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                            >Beneficiary Name</label
+                        >
+                        <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/archetypes/AssetManager.svelte:545:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div class="space-y-2">
+                        <label
+                            class="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                            >Beneficiary Email</label
+                        >
+                        <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/archetypes/AssetManager.svelte:558:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div class="col-span-full space-y-2">
+                        <label
+                            class="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                            >Closure / Transfer Notes</label
+                        >
+                        <textarea
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/archetypes/ContactDirectory.svelte:246:21
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                <div class="space-y-2">
+                    <label
+                        class="text-xs font-bold uppercase text-muted-foreground"
+                        >Full Name</label
+                    >
+                    <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/archetypes/ContactDirectory.svelte:257:21
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                <div class="space-y-2">
+                    <label
+                        class="text-xs font-bold uppercase text-muted-foreground"
+                        >Role in your life</label
+                    >
+                    <select
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/archetypes/ContactDirectory.svelte:282:21
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                <div class="space-y-2">
+                    <label
+                        class="text-xs font-bold uppercase text-muted-foreground"
+                        >Email</label
+                    >
+                    <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/archetypes/ContactDirectory.svelte:292:21
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                <div class="space-y-2">
+                    <label
+                        class="text-xs font-bold uppercase text-muted-foreground"
+                        >Phone</label
+                    >
+                    <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/archetypes/ContactDirectory.svelte:304:21
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                <div class="col-span-full space-y-2">
+                    <label
+                        class="text-xs font-bold uppercase text-muted-foreground"
+                        >Organization / Firm</label
+                    >
+                    <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/modules/legal-documents/JargonSlayer.svelte:134:21
+Warn: Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events (svelte)
+                >
+                    <div
+                        class="prose prose-lg max-w-none font-serif text-slate-800 leading-loose whitespace-pre-wrap"
+                        on:click={handleTextClick}
+                    >
+                        {@html highlightText(analysis.fullText, analysis.terms)}
+                    </div>
+                </div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/modules/legal-documents/JargonSlayer.svelte:134:21
+Warn: `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions (svelte)
+                >
+                    <div
+                        class="prose prose-lg max-w-none font-serif text-slate-800 leading-loose whitespace-pre-wrap"
+                        on:click={handleTextClick}
+                    >
+                        {@html highlightText(analysis.fullText, analysis.terms)}
+                    </div>
+                </div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/ui/FileUploader.svelte:99:5
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+<div class="space-y-2">
+    <label class="block text-xs font-bold uppercase text-gray-500 mb-1"
+        >{label}</label
+    >
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/ui/FileUploader.svelte:131:9
+Warn: Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events (svelte)
+    {:else}
+        <div
+            class="relative border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer
+            {dragging
+                ? 'border-[#4A7C74] bg-[#4A7C74]/5'
+                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}
+            {error ? 'border-red-300 bg-red-50' : ''}"
+            on:dragover={handleDragOver}
+            on:dragleave={handleDragLeave}
+            on:drop={handleDrop}
+            on:click={() => fileInput.click()}
+        >
+            <input
+                type="file"
+                bind:this={fileInput}
+                on:change={handleFileSelect}
+                accept="image/*"
+                class="hidden"
+            />
+
+            <div
+                class="flex flex-col items-center justify-center gap-3 text-gray-400"
+            >
+                {#if processing}
+                    <div
+                        class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4A7C74]"
+                    ></div>
+                    <span class="text-sm font-medium">Compressing...</span>
+                {:else}
+                    <div class="p-3 bg-white rounded-full shadow-sm">
+                        <Upload size={24} />
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-gray-600">
+                            Click to upload or drag image here
+                        </p>
+                        <p class="text-xs mt-1">Supports JPG, PNG (Max 5MB)</p>
+                    </div>
+                {/if}
+            </div>
+
+            {#if error}
+                <div
+                    class="absolute bottom-2 left-0 right-0 text-center text-xs font-bold text-red-500"
+                >
+                    {error}
+                </div>
+            {/if}
+        </div>
+    {/if}
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/ui/FileUploader.svelte:131:9
+Warn: `<div>` with a dragover, dragleave, drop or click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions (svelte)
+    {:else}
+        <div
+            class="relative border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer
+            {dragging
+                ? 'border-[#4A7C74] bg-[#4A7C74]/5'
+                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}
+            {error ? 'border-red-300 bg-red-50' : ''}"
+            on:dragover={handleDragOver}
+            on:dragleave={handleDragLeave}
+            on:drop={handleDrop}
+            on:click={() => fileInput.click()}
+        >
+            <input
+                type="file"
+                bind:this={fileInput}
+                on:change={handleFileSelect}
+                accept="image/*"
+                class="hidden"
+            />
+
+            <div
+                class="flex flex-col items-center justify-center gap-3 text-gray-400"
+            >
+                {#if processing}
+                    <div
+                        class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4A7C74]"
+                    ></div>
+                    <span class="text-sm font-medium">Compressing...</span>
+                {:else}
+                    <div class="p-3 bg-white rounded-full shadow-sm">
+                        <Upload size={24} />
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-gray-600">
+                            Click to upload or drag image here
+                        </p>
+                        <p class="text-xs mt-1">Supports JPG, PNG (Max 5MB)</p>
+                    </div>
+                {/if}
+            </div>
+
+            {#if error}
+                <div
+                    class="absolute bottom-2 left-0 right-0 text-center text-xs font-bold text-red-500"
+                >
+                    {error}
+                </div>
+            {/if}
+        </div>
+    {/if}
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/archetypes/DocumentVault.svelte:473:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-1.5">
+                            <label
+                                class="text-xs font-bold uppercase text-muted-foreground"
+                                >Document Title</label
+                            >
+                            <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/archetypes/DocumentVault.svelte:484:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-1.5">
+                            <label
+                                class="text-xs font-bold uppercase text-muted-foreground"
+                                >Category</label
+                            >
+                            <select
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/archetypes/DocumentVault.svelte:514:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-1.5">
+                            <label
+                                class="text-xs font-bold uppercase text-muted-foreground"
+                                >Physical Location</label
+                            >
+                            <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/archetypes/DocumentVault.svelte:525:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-1.5">
+                            <label
+                                class="text-xs font-bold uppercase text-muted-foreground"
+                                >Witnesses</label
+                            >
+                            <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/archetypes/DocumentVault.svelte:537:33
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                            <div class="flex justify-between">
+                                <label
+                                    class="text-xs font-bold uppercase text-muted-foreground"
+                                    >Next Review</label
+                                >
+                                <span
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/concierge/ConciergeSettings.svelte:126:17
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+            <div class="space-y-4">
+                <label
+                    class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500"
+                >
+                    {$t.labelPerspective}
+                </label>
+                <div
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/concierge/ConciergeSettings.svelte:157:17
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+            <div class="space-y-4">
+                <label
+                    class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500"
+                >
+                    {$t.labelLanguages}
+                </label>
+                <div class="grid grid-cols-2 gap-2">
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/concierge/ConciergeSettings.svelte:199:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div class="grid grid-cols-1 gap-1.5">
+                        <label
+                            class="text-[10px] font-bold text-slate-400 uppercase"
+                            >{$t.labelOwner}</label
+                        >
+                        <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/concierge/ConciergeSettings.svelte:211:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div class="grid grid-cols-1 gap-1.5">
+                        <label
+                            class="text-[10px] font-bold text-slate-400 uppercase"
+                            >{$t.labelExecutor}</label
+                        >
+                        <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/concierge/ConciergeSettings.svelte:228:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-1.5">
+                            <label
+                                class="text-[10px] font-bold text-slate-400 uppercase"
+                                >{$t.labelDeathDate}</label
+                            >
+                            <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/concierge/ConciergeSettings.svelte:239:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-1.5">
+                            <label
+                                class="text-[10px] font-bold text-slate-400 uppercase"
+                                >{$t.labelSSN}</label
+                            >
+                            <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/concierge/ConciergeSettings.svelte:253:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div class="grid grid-cols-1 gap-1.5 pt-0.5">
+                        <label
+                            class="text-[10px] font-bold text-slate-400 uppercase"
+                            >{$t.labelResidence}</label
+                        >
+                        <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/concierge/ConciergeSettings.svelte:458:25
+Warn: `<svelte:component>` is deprecated in runes mode — components are dynamic by default
+https://svelte.dev/e/svelte_component_deprecated (svelte)
+                    >
+                        <svelte:component
+                            this={theme.icon}
+                            size={14}
+                            class={$accessibilityStore.theme === theme.id
+                                ? "text-primary"
+                                : ""}
+                        />
+                        {theme.label}
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/concierge/ConciergeSettings.svelte:539:21
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                <div class="space-y-3">
+                    <label
+                        class="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1"
+                        >{$t.labelExportScope}</label
+                    >
+                    <div class="space-y-2">
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/concierge/ConciergeSettings.svelte:582:25
+Warn: Buttons and links should either contain text or have an `aria-label`, `aria-labelledby` or `title` attribute
+https://svelte.dev/e/a11y_consider_explicit_label (svelte)
+                        </div>
+                        <button
+                            class="w-11 h-6 rounded-full transition-colors relative {includeImages
+                                ? 'bg-emerald-500'
+                                : 'bg-slate-300'}"
+                            onclick={() => (includeImages = !includeImages)}
+                        >
+                            <div
+                                class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform {includeImages
+                                    ? 'translate-x-5'
+                                    : ''}"
+                            ></div>
+                        </button>
+                    </div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/concierge/ConciergeSettings.svelte:53:9
+Warn: `selectedScope` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update (svelte)
+    // Export State
+    let selectedScope: ExportScope = "full";
+    let includeImages = true;
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/concierge/ConciergeSettings.svelte:54:9
+Warn: `includeImages` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update (svelte)
+    let selectedScope: ExportScope = "full";
+    let includeImages = true;
+    let isSaving = $state(false);
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/dashboard/EstateNetWorth.svelte:37:1
+Warn: Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events (svelte)
+
+<div
+    class="p-6 rounded-xl bg-gray-50 border border-gray-100 h-full flex flex-col justify-between group hover:border-primary/20 transition-colors cursor-pointer"
+    on:click={() => (window.location.href = "/modules/financial-accounts")}
+>
+    <div>
+        <div
+            class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2"
+        >
+            Estate Net Worth
+            {#if !loading && hasAssets}
+                <span class="w-2 h-2 rounded-full bg-primary animate-pulse"
+                ></span>
+            {/if}
+        </div>
+
+        {#if loading}
+            <div class="h-8 w-24 bg-gray-200 rounded animate-pulse"></div>
+        {:else}
+            <div
+                class="text-3xl font-serif font-bold text-primary tracking-tight"
+                in:fade
+            >
+                {#if totalValue > 0}
+                    {new Intl.NumberFormat("en-US", {
+                        style: "currency",
+                        currency: "USD",
+                        maximumFractionDigits: 0,
+                    }).format(totalValue)}
+                {:else}
+                    $0.00
+                {/if}
+            </div>
+        {/if}
+    </div>
+
+    <div class="mt-4 pt-4 border-t border-gray-100">
+        {#if !hasAssets}
+            <div
+                class="text-xs text-orange-500 font-medium flex items-center gap-1.5 bg-orange-50 px-2 py-1.5 rounded-md w-fit"
+            >
+                <TriangleAlert size={12} /> Needs Valuation
+            </div>
+        {:else}
+            <div
+                class="text-xs text-primary font-medium flex items-center gap-1.5 bg-primary/10 px-2 py-1.5 rounded-md w-fit"
+            >
+                <TrendingUp size={12} />
+                <span class="font-bold">Tracking Active</span>
+            </div>
+        {/if}
+    </div>
+</div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/dashboard/EstateNetWorth.svelte:37:1
+Warn: `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions (svelte)
+
+<div
+    class="p-6 rounded-xl bg-gray-50 border border-gray-100 h-full flex flex-col justify-between group hover:border-primary/20 transition-colors cursor-pointer"
+    on:click={() => (window.location.href = "/modules/financial-accounts")}
+>
+    <div>
+        <div
+            class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2"
+        >
+            Estate Net Worth
+            {#if !loading && hasAssets}
+                <span class="w-2 h-2 rounded-full bg-primary animate-pulse"
+                ></span>
+            {/if}
+        </div>
+
+        {#if loading}
+            <div class="h-8 w-24 bg-gray-200 rounded animate-pulse"></div>
+        {:else}
+            <div
+                class="text-3xl font-serif font-bold text-primary tracking-tight"
+                in:fade
+            >
+                {#if totalValue > 0}
+                    {new Intl.NumberFormat("en-US", {
+                        style: "currency",
+                        currency: "USD",
+                        maximumFractionDigits: 0,
+                    }).format(totalValue)}
+                {:else}
+                    $0.00
+                {/if}
+            </div>
+        {/if}
+    </div>
+
+    <div class="mt-4 pt-4 border-t border-gray-100">
+        {#if !hasAssets}
+            <div
+                class="text-xs text-orange-500 font-medium flex items-center gap-1.5 bg-orange-50 px-2 py-1.5 rounded-md w-fit"
+            >
+                <TriangleAlert size={12} /> Needs Valuation
+            </div>
+        {:else}
+            <div
+                class="text-xs text-primary font-medium flex items-center gap-1.5 bg-primary/10 px-2 py-1.5 rounded-md w-fit"
+            >
+                <TrendingUp size={12} />
+                <span class="font-bold">Tracking Active</span>
+            </div>
+        {/if}
+    </div>
+</div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/family/FamilyTreeGraph.svelte:304:21
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                <div>
+                    <label class="text-xs font-bold uppercase text-slate-400"
+                        >Name</label
+                    >
+                    <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/family/FamilyTreeGraph.svelte:314:21
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                <div>
+                    <label class="text-xs font-bold uppercase text-slate-400"
+                        >Relationship</label
+                    >
+                    <select
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/family/FamilyTreeGraph.svelte:332:21
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                <div>
+                    <label class="text-xs font-bold uppercase text-slate-400"
+                        >Email Address</label
+                    >
+                    <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/layout/CompassPanel.svelte:34:5
+Warn: Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events (svelte)
+    <!-- Backdrop -->
+    <div
+        class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-40 transition-opacity"
+        on:click={onClose}
+        transition:fade={{ duration: 200 }}
+    ></div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/layout/CompassPanel.svelte:34:5
+Warn: `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions (svelte)
+    <!-- Backdrop -->
+    <div
+        class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-40 transition-opacity"
+        on:click={onClose}
+        transition:fade={{ duration: 200 }}
+    ></div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/ui/ProfileSwitcher.svelte:163:29
+Warn: Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus (svelte)
+                            class="w-full bg-transparent text-sm text-white placeholder:text-slate-600 outline-none mb-2"
+                            autofocus
+                            onkeydown={(e) =>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/layout/Sidebar.svelte:102:25
+Warn: `<svelte:component>` is deprecated in runes mode — components are dynamic by default
+https://svelte.dev/e/svelte_component_deprecated (svelte)
+
+                        <svelte:component
+                            this={item.icon}
+                            class="w-5 h-5 transition-transform duration-300 group-hover:scale-110 {$page
+                                .url.pathname === item.href
+                                ? 'text-white'
+                                : ''}"
+                        />
+                        <span class="font-medium text-sm"
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/media/VideoRecorder.svelte:176:17
+Warn: Buttons and links should either contain text or have an `aria-label`, `aria-labelledby` or `title` attribute
+https://svelte.dev/e/a11y_consider_explicit_label (svelte)
+            {#if !isRecording}
+                <button
+                    on:click={startRecording}
+                    class="w-16 h-16 rounded-full border-[6px] border-white/30 flex items-center justify-center hover:scale-105 transition-all group/rec"
+                >
+                    <div
+                        class="w-12 h-12 bg-rose-500 rounded-full group-hover/rec:scale-90 transition-all"
+                    ></div>
+                </button>
+            {:else}
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/media/VideoRecorder.svelte:185:17
+Warn: Buttons and links should either contain text or have an `aria-label`, `aria-labelledby` or `title` attribute
+https://svelte.dev/e/a11y_consider_explicit_label (svelte)
+            {:else}
+                <button
+                    on:click={stopRecording}
+                    class="w-16 h-16 rounded-full border-[6px] border-white/30 flex items-center justify-center hover:scale-105 transition-all group/stop"
+                >
+                    <div class="w-6 h-6 bg-white rounded-md"></div>
+                </button>
+            {/if}
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/modules/analytics/FireDrill.svelte:123:25
+Warn: Self-closing HTML tags for non-void elements are ambiguous — use `<div ...></div>` rather than `<div ... />`
+https://svelte.dev/e/element_invalid_self_closing_tag (svelte)
+                    {#each questions as q, i}
+                        <div
+                            class={`h-1 flex-1 rounded-full transition-colors ${i <= step ? "bg-indigo-500" : "bg-slate-800"}`}
+                        />
+                    {/each}
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/ui/SmartTextarea.svelte:94:9
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+    {#if label}
+        <label
+            class="text-xs font-bold uppercase tracking-widest text-slate-500 ml-1"
+            >{label}</label
+        >
+    {/if}
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/modules/funeral/FuneralWizard.svelte:143:17
+Warn: Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events (svelte)
+            {#each STEPS as step}
+                <div
+                    class="relative z-10 flex flex-col items-center gap-2 cursor-pointer group"
+                    on:click={() => (currentStep = step.id)}
+                >
+                    <div
+                        class="w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300
+                        {step.id === currentStep
+                            ? 'bg-[#4A7C74] border-[#4A7C74] text-white shadow-lg scale-110'
+                            : step.id < currentStep
+                              ? 'bg-[#4A7C74] border-[#4A7C74] text-white'
+                              : 'bg-white border-stone-300 text-stone-300 group-hover:border-[#4A7C74]/50'}"
+                    >
+                        <svelte:component this={step.icon} size={18} />
+                    </div>
+                    <div
+                        class="text-[10px] font-bold uppercase tracking-widest transition-colors duration-300
+                        {step.id === currentStep
+                            ? 'text-[#4A7C74]'
+                            : 'text-stone-400'}"
+                    >
+                        {step.title}
+                    </div>
+                </div>
+            {/each}
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/modules/funeral/FuneralWizard.svelte:143:17
+Warn: `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions (svelte)
+            {#each STEPS as step}
+                <div
+                    class="relative z-10 flex flex-col items-center gap-2 cursor-pointer group"
+                    on:click={() => (currentStep = step.id)}
+                >
+                    <div
+                        class="w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300
+                        {step.id === currentStep
+                            ? 'bg-[#4A7C74] border-[#4A7C74] text-white shadow-lg scale-110'
+                            : step.id < currentStep
+                              ? 'bg-[#4A7C74] border-[#4A7C74] text-white'
+                              : 'bg-white border-stone-300 text-stone-300 group-hover:border-[#4A7C74]/50'}"
+                    >
+                        <svelte:component this={step.icon} size={18} />
+                    </div>
+                    <div
+                        class="text-[10px] font-bold uppercase tracking-widest transition-colors duration-300
+                        {step.id === currentStep
+                            ? 'text-[#4A7C74]'
+                            : 'text-stone-400'}"
+                    >
+                        {step.title}
+                    </div>
+                </div>
+            {/each}
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/modules/funeral/FuneralWizard.svelte:347:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-4">
+                            <label
+                                class="text-xs font-bold uppercase tracking-widest text-stone-400"
+                                >Venue</label
+                            >
+                            <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/modules/funeral/FuneralWizard.svelte:365:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-4">
+                            <label
+                                class="text-xs font-bold uppercase tracking-widest text-stone-400"
+                                >Officiant ({activeTradition.terminology
+                                    .officiant})</label
+                            >
+                            <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/modules/funeral/FuneralWizard.svelte:549:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-4">
+                            <label
+                                class="text-xs font-bold uppercase tracking-widest text-stone-400"
+                                >Charity Donations</label
+                            >
+                            <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/modules/heirlooms/VisionUploader.svelte:77:5
+Warn: `<div>` with a dragover, dragleave or drop handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions (svelte)
+<div class="space-y-4">
+    <div
+        class="relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 overflow-hidden group
+        {isDragging
+            ? 'border-indigo-500 bg-indigo-50/50'
+            : 'border-stone-200 hover:border-indigo-300 hover:bg-stone-50'}"
+        on:dragover={handleDragOver}
+        on:dragleave={handleDragLeave}
+        on:drop={handleDrop}
+    >
+        <input
+            type="file"
+            accept="image/*"
+            class="hidden"
+            bind:this={fileInput}
+            on:change={(e) =>
+                e.currentTarget.files && handleFile(e.currentTarget.files[0])}
+        />
+
+        {#if imageUrl}
+            <div
+                class="relative aspect-video w-full max-w-sm mx-auto rounded-lg overflow-hidden shadow-sm"
+            >
+                <img
+                    src={imageUrl}
+                    alt="Uploaded heirloom"
+                    class="w-full h-full object-cover"
+                />
+
+                <!-- Overlay for Analysis State -->
+                {#if isAnalyzing}
+                    <div
+                        class="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center text-white"
+                    >
+                        <div class="relative">
+                            <div
+                                class="absolute inset-0 bg-indigo-500 blur-xl opacity-50 animate-pulse"
+                            ></div>
+                            <Loader2
+                                size={48}
+                                class="animate-spin relative z-10 text-indigo-400"
+                            />
+                        </div>
+                        <p
+                            class="mt-4 font-mono text-sm uppercase tracking-widest text-indigo-300 animate-pulse"
+                        >
+                            Analyzing Artifact...
+                        </p>
+                    </div>
+                {/if}
+
+                {#if analysisComplete}
+                    <div
+                        class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-emerald-500/90 text-white px-4 py-2 rounded-full flex items-center gap-2 shadow-lg backdrop-blur-md animate-in slide-in-from-bottom-4 fade-in duration-500"
+                    >
+                        <ScanEye size={16} />
+                        <span class="text-xs font-bold uppercase tracking-wide"
+                            >Analysis Complete</span
+                        >
+                    </div>
+
+                    <button
+                        on:click={triggerUpload}
+                        class="absolute top-2 right-2 p-2 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors"
+                        title="Change Image"
+                    >
+                        <Upload size={14} />
+                    </button>
+                {/if}
+            </div>
+        {:else}
+            <div class="py-8 cursor-pointer" on:click={triggerUpload}>
+                <div
+                    class="w-16 h-16 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-sm border border-indigo-100"
+                >
+                    <ScanEye size={32} />
+                </div>
+                <h3 class="text-sm font-bold text-slate-700 mb-1">
+                    Visual Archivist
+                </h3>
+                <p class="text-xs text-slate-400">
+                    Drag photo here or click to upload
+                </p>
+                <div
+                    class="mt-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-[10px] font-bold uppercase tracking-wide text-indigo-500"
+                >
+                    <Sparkles size={10} />
+                    AI Powered
+                </div>
+            </div>
+        {/if}
+    </div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/modules/heirlooms/VisionUploader.svelte:147:13
+Warn: Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events (svelte)
+        {:else}
+            <div class="py-8 cursor-pointer" on:click={triggerUpload}>
+                <div
+                    class="w-16 h-16 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-sm border border-indigo-100"
+                >
+                    <ScanEye size={32} />
+                </div>
+                <h3 class="text-sm font-bold text-slate-700 mb-1">
+                    Visual Archivist
+                </h3>
+                <p class="text-xs text-slate-400">
+                    Drag photo here or click to upload
+                </p>
+                <div
+                    class="mt-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-[10px] font-bold uppercase tracking-wide text-indigo-500"
+                >
+                    <Sparkles size={10} />
+                    AI Powered
+                </div>
+            </div>
+        {/if}
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/modules/heirlooms/VisionUploader.svelte:147:13
+Warn: `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions (svelte)
+        {:else}
+            <div class="py-8 cursor-pointer" on:click={triggerUpload}>
+                <div
+                    class="w-16 h-16 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-sm border border-indigo-100"
+                >
+                    <ScanEye size={32} />
+                </div>
+                <h3 class="text-sm font-bold text-slate-700 mb-1">
+                    Visual Archivist
+                </h3>
+                <p class="text-xs text-slate-400">
+                    Drag photo here or click to upload
+                </p>
+                <div
+                    class="mt-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-[10px] font-bold uppercase tracking-wide text-indigo-500"
+                >
+                    <Sparkles size={10} />
+                    AI Powered
+                </div>
+            </div>
+        {/if}
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/modules/insurance/PolicyCard.svelte:27:5
+Warn: Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events (svelte)
+    <!-- Header Card -->
+    <div
+        class="p-5 flex items-start justify-between cursor-pointer"
+        on:click={() => (showDetails = !showDetails)}
+    >
+        <div class="flex items-start gap-4">
+            <div
+                class="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0"
+            >
+                <Shield class="w-5 h-5" />
+            </div>
+            <div>
+                <h3 class="font-bold text-slate-800 text-lg">
+                    {policy.provider || "Unnamed Provider"}
+                </h3>
+                <p class="text-sm text-slate-500 font-medium">
+                    {policy.type} • {policy.policyNumber}
+                </p>
+
+                {#if policy.coverageAmount}
+                    <div
+                        class="mt-2 text-xs font-semibold uppercase tracking-wider text-slate-400"
+                    >
+                        Coverage
+                    </div>
+                    <div class="text-emerald-700 font-bold font-mono">
+                        {new Intl.NumberFormat("en-US", {
+                            style: "currency",
+                            currency: "USD",
+                        }).format(policy.coverageAmount)}
+                    </div>
+                {/if}
+            </div>
+        </div>
+
+        <div
+            class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
+        >
+            <button
+                class="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                on:click|stopPropagation={onEdit}
+            >
+                <Edit2 class="w-4 h-4" />
+            </button>
+            <button
+                class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                on:click|stopPropagation={onDelete}
+            >
+                <Trash2 class="w-4 h-4" />
+            </button>
+        </div>
+    </div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/modules/insurance/PolicyCard.svelte:27:5
+Warn: `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions (svelte)
+    <!-- Header Card -->
+    <div
+        class="p-5 flex items-start justify-between cursor-pointer"
+        on:click={() => (showDetails = !showDetails)}
+    >
+        <div class="flex items-start gap-4">
+            <div
+                class="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0"
+            >
+                <Shield class="w-5 h-5" />
+            </div>
+            <div>
+                <h3 class="font-bold text-slate-800 text-lg">
+                    {policy.provider || "Unnamed Provider"}
+                </h3>
+                <p class="text-sm text-slate-500 font-medium">
+                    {policy.type} • {policy.policyNumber}
+                </p>
+
+                {#if policy.coverageAmount}
+                    <div
+                        class="mt-2 text-xs font-semibold uppercase tracking-wider text-slate-400"
+                    >
+                        Coverage
+                    </div>
+                    <div class="text-emerald-700 font-bold font-mono">
+                        {new Intl.NumberFormat("en-US", {
+                            style: "currency",
+                            currency: "USD",
+                        }).format(policy.coverageAmount)}
+                    </div>
+                {/if}
+            </div>
+        </div>
+
+        <div
+            class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
+        >
+            <button
+                class="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                on:click|stopPropagation={onEdit}
+            >
+                <Edit2 class="w-4 h-4" />
+            </button>
+            <button
+                class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                on:click|stopPropagation={onDelete}
+            >
+                <Trash2 class="w-4 h-4" />
+            </button>
+        </div>
+    </div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/modules/insurance/PolicyCard.svelte:16:16
+Warn: Component has unused export property 'expanded'. If it is for external reference only, please consider using `export const expanded`
+https://svelte.dev/e/export_let_unused (svelte)
+    export let policy;
+    export let expanded = false;
+    export let onEdit;
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/modules/letters/LetterAssistant.svelte:129:21
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                <div>
+                    <label
+                        class="flex items-center justify-between text-xs font-bold uppercase tracking-widest text-slate-400 mb-4"
+                    >
+                        <span>Tone Softener</span>
+                        <span class="text-[#4A7C74]"
+                            >{sentimentValue}% Warmth</span
+                        >
+                    </label>
+                    <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/modules/subscriptions/SubscriptionRow.svelte:29:5
+Warn: Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events (svelte)
+    <!-- Main Row -->
+    <div
+        class="p-4 flex items-center justify-between cursor-pointer"
+        on:click={() => (expanded = !expanded)}
+    >
+        <div class="flex items-center gap-4">
+            <!-- Icon placeholder or logo -->
+            <div
+                class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold shrink-0"
+            >
+                {sub.name.charAt(0)}
+            </div>
+
+            <div>
+                <h3 class="font-bold text-slate-800">{sub.name}</h3>
+                <div class="flex items-center gap-2 text-xs text-slate-500">
+                    <CreditCard class="w-3 h-3" />
+                    <span>{sub.paymentMethod}</span>
+                    <span>•</span>
+                    <Calendar class="w-3 h-3" />
+                    <span
+                        >Next: {new Date(
+                            sub.nextBilling,
+                        ).toLocaleDateString()}</span
+                    >
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-6">
+            <div class="text-right hidden sm:block">
+                <div class="font-bold text-slate-800">
+                    {new Intl.NumberFormat("en-US", {
+                        style: "currency",
+                        currency: "USD",
+                    }).format(sub.cost)}
+                </div>
+                <div class="text-xs text-slate-500 uppercase tracking-wide">
+                    /{sub.cycle}
+                </div>
+            </div>
+
+            <span
+                class="px-2.5 py-1 rounded-full text-xs font-bold {difficultyColors[
+                    sub.difficulty
+                ] || 'bg-slate-100 text-slate-600'}"
+            >
+                {sub.difficulty} Cancel
+            </span>
+        </div>
+    </div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/modules/subscriptions/SubscriptionRow.svelte:29:5
+Warn: `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions (svelte)
+    <!-- Main Row -->
+    <div
+        class="p-4 flex items-center justify-between cursor-pointer"
+        on:click={() => (expanded = !expanded)}
+    >
+        <div class="flex items-center gap-4">
+            <!-- Icon placeholder or logo -->
+            <div
+                class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold shrink-0"
+            >
+                {sub.name.charAt(0)}
+            </div>
+
+            <div>
+                <h3 class="font-bold text-slate-800">{sub.name}</h3>
+                <div class="flex items-center gap-2 text-xs text-slate-500">
+                    <CreditCard class="w-3 h-3" />
+                    <span>{sub.paymentMethod}</span>
+                    <span>•</span>
+                    <Calendar class="w-3 h-3" />
+                    <span
+                        >Next: {new Date(
+                            sub.nextBilling,
+                        ).toLocaleDateString()}</span
+                    >
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-6">
+            <div class="text-right hidden sm:block">
+                <div class="font-bold text-slate-800">
+                    {new Intl.NumberFormat("en-US", {
+                        style: "currency",
+                        currency: "USD",
+                    }).format(sub.cost)}
+                </div>
+                <div class="text-xs text-slate-500 uppercase tracking-wide">
+                    /{sub.cycle}
+                </div>
+            </div>
+
+            <span
+                class="px-2.5 py-1 rounded-full text-xs font-bold {difficultyColors[
+                    sub.difficulty
+                ] || 'bg-slate-100 text-slate-600'}"
+            >
+                {sub.difficulty} Cancel
+            </span>
+        </div>
+    </div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/modules/subscriptions/SubscriptionRow.svelte:12:16
+Warn: Component has unused export property 'onCancel'. If it is for external reference only, please consider using `export const onCancel`
+https://svelte.dev/e/export_let_unused (svelte)
+    export let sub;
+    export let onCancel;
+    export let onGenerateLetter;
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/modules/visual-memories/BulkActionBar.svelte:46:25
+Warn: Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus (svelte)
+                        on:keydown={(e) => e.key === "Enter" && handleAddTag()}
+                        autoFocus
+                    />
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/modules/visual-memories/MemoryGallery.svelte:101:17
+Warn: Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events (svelte)
+            {#each memories as memory (memory.id)}
+                <div
+                    class="group relative aspect-square bg-slate-100 rounded-xl overflow-hidden cursor-pointer hover:shadow-lg transition-all {selectedIds.includes(
+                        memory.id,
+                    )
+                        ? 'ring-4 ring-indigo-500 ring-offset-2'
+                        : ''}"
+                    on:click={() => handleCardClick(memory)}
+                >
+                    <img
+                        src={memory.url}
+                        alt={memory.name}
+                        class="w-full h-full object-cover transition-transform duration-500 {isSelectionMode
+                            ? 'scale-100'
+                            : 'group-hover:scale-105'}"
+                        loading="lazy"
+                    />
+
+                    <!-- Selection Overlay -->
+                    {#if isSelectionMode}
+                        <div
+                            class="absolute inset-0 bg-black/10 flex items-start justify-end p-2 transition-opacity"
+                        >
+                            <div
+                                class="h-6 w-6 rounded-full border-2 border-white flex items-center justify-center transition-colors {selectedIds.includes(
+                                    memory.id,
+                                )
+                                    ? 'bg-indigo-500 border-indigo-500'
+                                    : 'bg-black/30'}"
+                            >
+                                {#if selectedIds.includes(memory.id)}
+                                    <div
+                                        class="w-2.5 h-2.5 bg-white rounded-full"
+                                    ></div>
+                                {/if}
+                            </div>
+                        </div>
+                    {/if}
+
+                    <!-- Overlay (Only when not in selection mode or on hover) -->
+                    {#if !isSelectionMode}
+                        <div
+                            class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4"
+                        >
+                            <div
+                                class="text-white font-medium truncate text-sm"
+                            >
+                                {memory.name}
+                            </div>
+                            <div class="flex gap-2 mt-1">
+                                {#each memory.tags as tag}
+                                    <span
+                                        class="text-[10px] bg-white/20 backdrop-blur px-2 py-0.5 rounded-full text-white"
+                                        >{tag}</span
+                                    >
+                                {/each}
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div
+                            class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2"
+                        >
+                            <button
+                                class="p-2 bg-white/80 backdrop-blur rounded-full hover:bg-white text-slate-500 hover:text-red-500 transition-colors"
+                                on:click={(e) => toggleFavorite(memory.id, e)}
+                            >
+                                <Heart
+                                    size={14}
+                                    class={memory.isFavorite
+                                        ? "fill-red-500 text-red-500"
+                                        : ""}
+                                />
+                            </button>
+                        </div>
+                    {/if}
+                </div>
+            {/each}
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/modules/visual-memories/MemoryGallery.svelte:101:17
+Warn: `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions (svelte)
+            {#each memories as memory (memory.id)}
+                <div
+                    class="group relative aspect-square bg-slate-100 rounded-xl overflow-hidden cursor-pointer hover:shadow-lg transition-all {selectedIds.includes(
+                        memory.id,
+                    )
+                        ? 'ring-4 ring-indigo-500 ring-offset-2'
+                        : ''}"
+                    on:click={() => handleCardClick(memory)}
+                >
+                    <img
+                        src={memory.url}
+                        alt={memory.name}
+                        class="w-full h-full object-cover transition-transform duration-500 {isSelectionMode
+                            ? 'scale-100'
+                            : 'group-hover:scale-105'}"
+                        loading="lazy"
+                    />
+
+                    <!-- Selection Overlay -->
+                    {#if isSelectionMode}
+                        <div
+                            class="absolute inset-0 bg-black/10 flex items-start justify-end p-2 transition-opacity"
+                        >
+                            <div
+                                class="h-6 w-6 rounded-full border-2 border-white flex items-center justify-center transition-colors {selectedIds.includes(
+                                    memory.id,
+                                )
+                                    ? 'bg-indigo-500 border-indigo-500'
+                                    : 'bg-black/30'}"
+                            >
+                                {#if selectedIds.includes(memory.id)}
+                                    <div
+                                        class="w-2.5 h-2.5 bg-white rounded-full"
+                                    ></div>
+                                {/if}
+                            </div>
+                        </div>
+                    {/if}
+
+                    <!-- Overlay (Only when not in selection mode or on hover) -->
+                    {#if !isSelectionMode}
+                        <div
+                            class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4"
+                        >
+                            <div
+                                class="text-white font-medium truncate text-sm"
+                            >
+                                {memory.name}
+                            </div>
+                            <div class="flex gap-2 mt-1">
+                                {#each memory.tags as tag}
+                                    <span
+                                        class="text-[10px] bg-white/20 backdrop-blur px-2 py-0.5 rounded-full text-white"
+                                        >{tag}</span
+                                    >
+                                {/each}
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div
+                            class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2"
+                        >
+                            <button
+                                class="p-2 bg-white/80 backdrop-blur rounded-full hover:bg-white text-slate-500 hover:text-red-500 transition-colors"
+                                on:click={(e) => toggleFavorite(memory.id, e)}
+                            >
+                                <Heart
+                                    size={14}
+                                    class={memory.isFavorite
+                                        ? "fill-red-500 text-red-500"
+                                        : ""}
+                                />
+                            </button>
+                        </div>
+                    {/if}
+                </div>
+            {/each}
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/onboarding/GlobalSetupWizard.svelte:198:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div class="space-y-2">
+                        <label
+                            class="text-xs font-bold uppercase text-muted-foreground"
+                            >{$t.wizLabelFirstName}</label
+                        >
+                        <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/onboarding/GlobalSetupWizard.svelte:209:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div class="space-y-2">
+                        <label
+                            class="text-xs font-bold uppercase text-muted-foreground"
+                            >{$t.wizLabelEmail || "Email (Optional)"}</label
+                        >
+                        <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/onboarding/GlobalSetupWizard.svelte:223:21
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                <div class="pt-4">
+                    <label
+                        class="text-xs font-bold uppercase text-muted-foreground block mb-3"
+                        >{$t.wizLabelMarital}</label
+                    >
+                    <div class="flex gap-4">
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/ui/CommandCenter.svelte:222:1
+Warn: Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events (svelte)
+
+<div
+    class="fixed inset-0 z-[200] flex items-start justify-center pt-24 px-4 bg-slate-900/40 backdrop-blur-sm"
+    on:click|self={() => dispatch("close")}
+    transition:fade={{ duration: 200 }}
+>
+    <div
+        class="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200"
+        transition:scale={{ start: 0.95, easing: quintOut }}
+        on:keydown={handleKeydown}
+    >
+        <!-- Search Header -->
+        <div
+            class="px-6 py-4 flex items-center gap-4 border-b border-slate-100"
+        >
+            <Search class="text-slate-400" size={20} />
+            <input
+                bind:this={inputElement}
+                bind:value={query}
+                placeholder="Search modules, features, or tools... (e.g. 'Will')"
+                class="flex-1 bg-transparent border-none outline-none text-lg font-medium text-slate-800 placeholder:text-slate-300"
+            />
+            <div
+                class="flex items-center gap-1 px-2 py-1 bg-slate-100 rounded-md border border-slate-200 text-[10px] font-bold text-slate-400 uppercase"
+            >
+                Esc
+            </div>
+        </div>
+
+        <!-- Results List -->
+        <div class="max-h-[400px] overflow-y-auto p-2 custom-scrollbar">
+            {#if filteredItems.length > 0}
+                <div
+                    class="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest"
+                >
+                    Quick Navigation
+                </div>
+                {#each filteredItems as item, i}
+                    <button
+                        class="w-full flex items-center gap-4 px-4 py-3 rounded-2xl transition-all text-left
+                        {i === selectedIndex
+                            ? 'bg-indigo-50 text-indigo-700'
+                            : 'text-slate-600 hover:bg-slate-50'}"
+                        on:click={() => navigate(item.href)}
+                        on:mouseenter={() => (selectedIndex = i)}
+                    >
+                        <div
+                            class="p-2 rounded-xl {i === selectedIndex
+                                ? 'bg-white shadow-sm'
+                                : 'bg-slate-100 text-slate-500'}"
+                        >
+                            <svelte:component this={item.icon} size={18} />
+                        </div>
+                        <span class="flex-1 font-bold">{item.label}</span>
+                        {#if i === selectedIndex}
+                            <ArrowRight size={14} class="opacity-50" />
+                        {/if}
+                    </button>
+                {/each}
+            {:else}
+                <div
+                    class="flex flex-col items-center justify-center py-12 text-slate-400 space-y-4"
+                >
+                    <div class="p-4 bg-slate-50 rounded-full">
+                        <Command size={32} />
+                    </div>
+                    <div class="text-center">
+                        <p class="font-bold">No results found for "{query}"</p>
+                        <p class="text-sm">
+                            Try searching for 'Digital', 'Executor', or 'Will'
+                        </p>
+                    </div>
+                </div>
+            {/if}
+        </div>
+
+        <!-- Footer -->
+        <div
+            class="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider"
+        >
+            <div class="flex items-center gap-4">
+                <span class="flex items-center gap-1"
+                    ><span
+                        class="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-slate-500"
+                        >↑↓</span
+                    > Navigate</span
+                >
+                <span class="flex items-center gap-1"
+                    ><span
+                        class="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-slate-500"
+                        >Enter</span
+                    > Select</span
+                >
+            </div>
+            <div class="flex items-center gap-1">
+                Continuum Command Center
+            </div>
+        </div>
+    </div>
+</div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/ui/CommandCenter.svelte:222:1
+Warn: `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions (svelte)
+
+<div
+    class="fixed inset-0 z-[200] flex items-start justify-center pt-24 px-4 bg-slate-900/40 backdrop-blur-sm"
+    on:click|self={() => dispatch("close")}
+    transition:fade={{ duration: 200 }}
+>
+    <div
+        class="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200"
+        transition:scale={{ start: 0.95, easing: quintOut }}
+        on:keydown={handleKeydown}
+    >
+        <!-- Search Header -->
+        <div
+            class="px-6 py-4 flex items-center gap-4 border-b border-slate-100"
+        >
+            <Search class="text-slate-400" size={20} />
+            <input
+                bind:this={inputElement}
+                bind:value={query}
+                placeholder="Search modules, features, or tools... (e.g. 'Will')"
+                class="flex-1 bg-transparent border-none outline-none text-lg font-medium text-slate-800 placeholder:text-slate-300"
+            />
+            <div
+                class="flex items-center gap-1 px-2 py-1 bg-slate-100 rounded-md border border-slate-200 text-[10px] font-bold text-slate-400 uppercase"
+            >
+                Esc
+            </div>
+        </div>
+
+        <!-- Results List -->
+        <div class="max-h-[400px] overflow-y-auto p-2 custom-scrollbar">
+            {#if filteredItems.length > 0}
+                <div
+                    class="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest"
+                >
+                    Quick Navigation
+                </div>
+                {#each filteredItems as item, i}
+                    <button
+                        class="w-full flex items-center gap-4 px-4 py-3 rounded-2xl transition-all text-left
+                        {i === selectedIndex
+                            ? 'bg-indigo-50 text-indigo-700'
+                            : 'text-slate-600 hover:bg-slate-50'}"
+                        on:click={() => navigate(item.href)}
+                        on:mouseenter={() => (selectedIndex = i)}
+                    >
+                        <div
+                            class="p-2 rounded-xl {i === selectedIndex
+                                ? 'bg-white shadow-sm'
+                                : 'bg-slate-100 text-slate-500'}"
+                        >
+                            <svelte:component this={item.icon} size={18} />
+                        </div>
+                        <span class="flex-1 font-bold">{item.label}</span>
+                        {#if i === selectedIndex}
+                            <ArrowRight size={14} class="opacity-50" />
+                        {/if}
+                    </button>
+                {/each}
+            {:else}
+                <div
+                    class="flex flex-col items-center justify-center py-12 text-slate-400 space-y-4"
+                >
+                    <div class="p-4 bg-slate-50 rounded-full">
+                        <Command size={32} />
+                    </div>
+                    <div class="text-center">
+                        <p class="font-bold">No results found for "{query}"</p>
+                        <p class="text-sm">
+                            Try searching for 'Digital', 'Executor', or 'Will'
+                        </p>
+                    </div>
+                </div>
+            {/if}
+        </div>
+
+        <!-- Footer -->
+        <div
+            class="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider"
+        >
+            <div class="flex items-center gap-4">
+                <span class="flex items-center gap-1"
+                    ><span
+                        class="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-slate-500"
+                        >↑↓</span
+                    > Navigate</span
+                >
+                <span class="flex items-center gap-1"
+                    ><span
+                        class="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-slate-500"
+                        >Enter</span
+                    > Select</span
+                >
+            </div>
+            <div class="flex items-center gap-1">
+                Continuum Command Center
+            </div>
+        </div>
+    </div>
+</div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/ui/CommandCenter.svelte:227:5
+Warn: `<div>` with a keydown handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions (svelte)
+>
+    <div
+        class="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200"
+        transition:scale={{ start: 0.95, easing: quintOut }}
+        on:keydown={handleKeydown}
+    >
+        <!-- Search Header -->
+        <div
+            class="px-6 py-4 flex items-center gap-4 border-b border-slate-100"
+        >
+            <Search class="text-slate-400" size={20} />
+            <input
+                bind:this={inputElement}
+                bind:value={query}
+                placeholder="Search modules, features, or tools... (e.g. 'Will')"
+                class="flex-1 bg-transparent border-none outline-none text-lg font-medium text-slate-800 placeholder:text-slate-300"
+            />
+            <div
+                class="flex items-center gap-1 px-2 py-1 bg-slate-100 rounded-md border border-slate-200 text-[10px] font-bold text-slate-400 uppercase"
+            >
+                Esc
+            </div>
+        </div>
+
+        <!-- Results List -->
+        <div class="max-h-[400px] overflow-y-auto p-2 custom-scrollbar">
+            {#if filteredItems.length > 0}
+                <div
+                    class="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest"
+                >
+                    Quick Navigation
+                </div>
+                {#each filteredItems as item, i}
+                    <button
+                        class="w-full flex items-center gap-4 px-4 py-3 rounded-2xl transition-all text-left
+                        {i === selectedIndex
+                            ? 'bg-indigo-50 text-indigo-700'
+                            : 'text-slate-600 hover:bg-slate-50'}"
+                        on:click={() => navigate(item.href)}
+                        on:mouseenter={() => (selectedIndex = i)}
+                    >
+                        <div
+                            class="p-2 rounded-xl {i === selectedIndex
+                                ? 'bg-white shadow-sm'
+                                : 'bg-slate-100 text-slate-500'}"
+                        >
+                            <svelte:component this={item.icon} size={18} />
+                        </div>
+                        <span class="flex-1 font-bold">{item.label}</span>
+                        {#if i === selectedIndex}
+                            <ArrowRight size={14} class="opacity-50" />
+                        {/if}
+                    </button>
+                {/each}
+            {:else}
+                <div
+                    class="flex flex-col items-center justify-center py-12 text-slate-400 space-y-4"
+                >
+                    <div class="p-4 bg-slate-50 rounded-full">
+                        <Command size={32} />
+                    </div>
+                    <div class="text-center">
+                        <p class="font-bold">No results found for "{query}"</p>
+                        <p class="text-sm">
+                            Try searching for 'Digital', 'Executor', or 'Will'
+                        </p>
+                    </div>
+                </div>
+            {/if}
+        </div>
+
+        <!-- Footer -->
+        <div
+            class="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider"
+        >
+            <div class="flex items-center gap-4">
+                <span class="flex items-center gap-1"
+                    ><span
+                        class="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-slate-500"
+                        >↑↓</span
+                    > Navigate</span
+                >
+                <span class="flex items-center gap-1"
+                    ><span
+                        class="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-slate-500"
+                        >Enter</span
+                    > Select</span
+                >
+            </div>
+            <div class="flex items-center gap-1">
+                Continuum Command Center
+            </div>
+        </div>
+    </div>
+</div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/ui/MediaGallery.svelte:151:21
+Warn: Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events (svelte)
+                {#each items as item (item.id)}
+                    <div
+                        class="group relative aspect-square bg-slate-100 rounded-xl overflow-hidden cursor-pointer hover:shadow-lg transition-all {selectedIds.includes(
+                            item.id,
+                        )
+                            ? 'ring-4 ring-indigo-500 ring-offset-2'
+                            : ''}"
+                        on:click={() => handleCardClick(item)}
+                    >
+                        {#if item.type === "video"}
+                            <div
+                                class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none"
+                            >
+                                <div
+                                    class="w-12 h-12 bg-black/40 backdrop-blur rounded-full flex items-center justify-center text-white"
+                                >
+                                    <Play size={24} fill="white" class="ml-1" />
+                                </div>
+                            </div>
+                            {#if item.thumbnailUrl}
+                                <img
+                                    src={item.thumbnailUrl}
+                                    alt={item.name}
+                                    class="w-full h-full object-cover"
+                                />
+                            {:else}
+                                <video
+                                    src={item.url}
+                                    class="w-full h-full object-cover"
+                                    muted
+                                    playsinline
+                                ></video>
+                            {/if}
+                        {:else}
+                            <img
+                                src={item.url}
+                                alt={item.name}
+                                class="w-full h-full object-cover transition-transform duration-500 {isSelectionMode
+                                    ? 'scale-100'
+                                    : 'group-hover:scale-105'}"
+                                loading="lazy"
+                            />
+                        {/if}
+
+                        <!-- Selection Overlay -->
+                        {#if isSelectionMode}
+                            <div
+                                class="absolute inset-0 bg-black/10 flex items-start justify-end p-2 transition-opacity"
+                            >
+                                <div
+                                    class="h-6 w-6 rounded-full border-2 border-white flex items-center justify-center transition-colors {selectedIds.includes(
+                                        item.id,
+                                    )
+                                        ? 'bg-indigo-500 border-indigo-500'
+                                        : 'bg-black/30'}"
+                                >
+                                    {#if selectedIds.includes(item.id)}
+                                        <div
+                                            class="w-2.5 h-2.5 bg-white rounded-full"
+                                        ></div>
+                                    {/if}
+                                </div>
+                            </div>
+                        {/if}
+
+                        <!-- Overlay Actions -->
+                        {#if !isSelectionMode}
+                            <div
+                                class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4"
+                            >
+                                <div
+                                    class="text-white font-medium truncate text-sm"
+                                >
+                                    {item.name}
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="absolute top-2 right-2 flex gap-1">
+                                    {#if allowFavorites}
+                                        <button
+                                            class="p-1.5 bg-white/80 backdrop-blur rounded-full hover:bg-white text-slate-500 hover:text-red-500 transition-colors"
+                                            on:click={(e) =>
+                                                toggleFavorite(item.id, e)}
+                                            title="Favorite"
+                                        >
+                                            <Heart
+                                                size={14}
+                                                class={item.isFavorite
+                                                    ? "fill-red-500 text-red-500"
+                                                    : ""}
+                                            />
+                                        </button>
+                                    {/if}
+                                    {#if allowDelete}
+                                        <button
+                                            class="p-1.5 bg-white/80 backdrop-blur rounded-full hover:bg-white text-slate-500 hover:text-rose-500 transition-colors"
+                                            on:click={(e) =>
+                                                handleDelete(item.id, e)}
+                                            title="Delete"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    {/if}
+                                </div>
+                                <!-- Cover Action -->
+                                {#if !selectedIds.includes(item.id) && item.type === "image"}
+                                    <div
+                                        class="flex gap-2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity delay-75"
+                                    >
+                                        <button
+                                            class="text-[10px] bg-white/20 backdrop-blur px-2 py-0.5 rounded-full text-white hover:bg-white/40"
+                                            on:click={(e) =>
+                                                handleSetCover(item, e)}
+                                        >
+                                            Set Cover
+                                        </button>
+                                    </div>
+                                {/if}
+                            </div>
+                        {/if}
+                    </div>
+                {/each}
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/ui/MediaGallery.svelte:151:21
+Warn: `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions (svelte)
+                {#each items as item (item.id)}
+                    <div
+                        class="group relative aspect-square bg-slate-100 rounded-xl overflow-hidden cursor-pointer hover:shadow-lg transition-all {selectedIds.includes(
+                            item.id,
+                        )
+                            ? 'ring-4 ring-indigo-500 ring-offset-2'
+                            : ''}"
+                        on:click={() => handleCardClick(item)}
+                    >
+                        {#if item.type === "video"}
+                            <div
+                                class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none"
+                            >
+                                <div
+                                    class="w-12 h-12 bg-black/40 backdrop-blur rounded-full flex items-center justify-center text-white"
+                                >
+                                    <Play size={24} fill="white" class="ml-1" />
+                                </div>
+                            </div>
+                            {#if item.thumbnailUrl}
+                                <img
+                                    src={item.thumbnailUrl}
+                                    alt={item.name}
+                                    class="w-full h-full object-cover"
+                                />
+                            {:else}
+                                <video
+                                    src={item.url}
+                                    class="w-full h-full object-cover"
+                                    muted
+                                    playsinline
+                                ></video>
+                            {/if}
+                        {:else}
+                            <img
+                                src={item.url}
+                                alt={item.name}
+                                class="w-full h-full object-cover transition-transform duration-500 {isSelectionMode
+                                    ? 'scale-100'
+                                    : 'group-hover:scale-105'}"
+                                loading="lazy"
+                            />
+                        {/if}
+
+                        <!-- Selection Overlay -->
+                        {#if isSelectionMode}
+                            <div
+                                class="absolute inset-0 bg-black/10 flex items-start justify-end p-2 transition-opacity"
+                            >
+                                <div
+                                    class="h-6 w-6 rounded-full border-2 border-white flex items-center justify-center transition-colors {selectedIds.includes(
+                                        item.id,
+                                    )
+                                        ? 'bg-indigo-500 border-indigo-500'
+                                        : 'bg-black/30'}"
+                                >
+                                    {#if selectedIds.includes(item.id)}
+                                        <div
+                                            class="w-2.5 h-2.5 bg-white rounded-full"
+                                        ></div>
+                                    {/if}
+                                </div>
+                            </div>
+                        {/if}
+
+                        <!-- Overlay Actions -->
+                        {#if !isSelectionMode}
+                            <div
+                                class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4"
+                            >
+                                <div
+                                    class="text-white font-medium truncate text-sm"
+                                >
+                                    {item.name}
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="absolute top-2 right-2 flex gap-1">
+                                    {#if allowFavorites}
+                                        <button
+                                            class="p-1.5 bg-white/80 backdrop-blur rounded-full hover:bg-white text-slate-500 hover:text-red-500 transition-colors"
+                                            on:click={(e) =>
+                                                toggleFavorite(item.id, e)}
+                                            title="Favorite"
+                                        >
+                                            <Heart
+                                                size={14}
+                                                class={item.isFavorite
+                                                    ? "fill-red-500 text-red-500"
+                                                    : ""}
+                                            />
+                                        </button>
+                                    {/if}
+                                    {#if allowDelete}
+                                        <button
+                                            class="p-1.5 bg-white/80 backdrop-blur rounded-full hover:bg-white text-slate-500 hover:text-rose-500 transition-colors"
+                                            on:click={(e) =>
+                                                handleDelete(item.id, e)}
+                                            title="Delete"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    {/if}
+                                </div>
+                                <!-- Cover Action -->
+                                {#if !selectedIds.includes(item.id) && item.type === "image"}
+                                    <div
+                                        class="flex gap-2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity delay-75"
+                                    >
+                                        <button
+                                            class="text-[10px] bg-white/20 backdrop-blur px-2 py-0.5 rounded-full text-white hover:bg-white/40"
+                                            on:click={(e) =>
+                                                handleSetCover(item, e)}
+                                        >
+                                            Set Cover
+                                        </button>
+                                    </div>
+                                {/if}
+                            </div>
+                        {/if}
+                    </div>
+                {/each}
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/ui/EvidenceGalleryUploader.svelte:112:5
+Warn: Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events (svelte)
+    <!-- Drag & Drop Area -->
+    <div
+        class="relative border-2 border-dashed rounded-2xl p-8 text-center transition-all duration-300 group cursor-pointer
+        {isDragging
+            ? 'border-blue-500 bg-blue-50'
+            : 'border-slate-200 hover:border-blue-400 hover:bg-slate-50'}"
+        on:dragover={handleDragOver}
+        on:dragleave={handleDragLeave}
+        on:drop={handleDrop}
+        on:click={() => fileInput.click()}
+    >
+        <input
+            type="file"
+            multiple
+            accept="image/*,video/*"
+            class="hidden"
+            bind:this={fileInput}
+            on:change={handleFileSelect}
+        />
+
+        {#if isProcessing}
+            <div class="flex flex-col items-center justify-center py-4">
+                <Loader2 size={32} class="animate-spin text-blue-500 mb-2" />
+                <p class="text-sm font-bold text-slate-500">
+                    Processing media...
+                </p>
+            </div>
+        {:else}
+            <div class="flex flex-col items-center gap-3">
+                <div
+                    class="p-4 bg-white rounded-full shadow-sm text-blue-500 group-hover:scale-110 transition-transform"
+                >
+                    <Upload size={24} />
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-700">
+                        Click to Upload Evidence
+                    </h4>
+                    <p class="text-xs text-slate-400 mt-1">
+                        Support for Images (JPG, PNG) and Video (MP4)
+                    </p>
+                </div>
+            </div>
+        {/if}
+    </div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/ui/EvidenceGalleryUploader.svelte:112:5
+Warn: `<div>` with a dragover, dragleave, drop or click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions (svelte)
+    <!-- Drag & Drop Area -->
+    <div
+        class="relative border-2 border-dashed rounded-2xl p-8 text-center transition-all duration-300 group cursor-pointer
+        {isDragging
+            ? 'border-blue-500 bg-blue-50'
+            : 'border-slate-200 hover:border-blue-400 hover:bg-slate-50'}"
+        on:dragover={handleDragOver}
+        on:dragleave={handleDragLeave}
+        on:drop={handleDrop}
+        on:click={() => fileInput.click()}
+    >
+        <input
+            type="file"
+            multiple
+            accept="image/*,video/*"
+            class="hidden"
+            bind:this={fileInput}
+            on:change={handleFileSelect}
+        />
+
+        {#if isProcessing}
+            <div class="flex flex-col items-center justify-center py-4">
+                <Loader2 size={32} class="animate-spin text-blue-500 mb-2" />
+                <p class="text-sm font-bold text-slate-500">
+                    Processing media...
+                </p>
+            </div>
+        {:else}
+            <div class="flex flex-col items-center gap-3">
+                <div
+                    class="p-4 bg-white rounded-full shadow-sm text-blue-500 group-hover:scale-110 transition-transform"
+                >
+                    <Upload size={24} />
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-700">
+                        Click to Upload Evidence
+                    </h4>
+                    <p class="text-xs text-slate-400 mt-1">
+                        Support for Images (JPG, PNG) and Video (MP4)
+                    </p>
+                </div>
+            </div>
+        {/if}
+    </div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/ui/Modal.svelte:42:9
+Warn: Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events (svelte)
+        <!-- Backdrop -->
+        <div
+            class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+            transition:fade={{ duration: 200 }}
+            on:click={close}
+        ></div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/lib/components/ui/Modal.svelte:42:9
+Warn: `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions (svelte)
+        <!-- Backdrop -->
+        <div
+            class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+            transition:fade={{ duration: 200 }}
+            on:click={close}
+        ></div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/+layout.svelte:393:2
+Warn: Unused CSS selector ".custom-scrollbar::-webkit-scrollbar"
+https://svelte.dev/e/css_unused_selector (svelte)
+	/* Custom scrollbar for sidebar navigation */
+	.custom-scrollbar::-webkit-scrollbar {
+		width: 4px;
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/+layout.svelte:396:2
+Warn: Unused CSS selector ".custom-scrollbar::-webkit-scrollbar-track"
+https://svelte.dev/e/css_unused_selector (svelte)
+	}
+	.custom-scrollbar::-webkit-scrollbar-track {
+		background: transparent;
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/+layout.svelte:399:2
+Warn: Unused CSS selector ".custom-scrollbar::-webkit-scrollbar-thumb"
+https://svelte.dev/e/css_unused_selector (svelte)
+	}
+	.custom-scrollbar::-webkit-scrollbar-thumb {
+		background-color: rgba(255, 255, 255, 0.1);
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/+layout.svelte:403:2
+Warn: Unused CSS selector ".custom-scrollbar::-webkit-scrollbar-thumb:hover"
+https://svelte.dev/e/css_unused_selector (svelte)
+	}
+	.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+		background-color: rgba(255, 255, 255, 0.2);
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/admin/ui-audit/+page.svelte:59:25
+Warn: `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions (svelte)
+                        <!-- svelte-ignore a11y-click-events-have-key-events - Admin tool -->
+                        <div
+                            class="flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-all
+                            {check.checked
+                                ? 'bg-emerald-500/5 border-emerald-500/20'
+                                : 'bg-slate-950 border-slate-800 hover:border-slate-700'}"
+                            onclick={() => toggle(check.id)}
+                        >
+                            <span
+                                class={check.checked
+                                    ? "text-emerald-400"
+                                    : "text-slate-400"}>{check.label}</span
+                            >
+                            {#if check.checked}
+                                <Check size={18} class="text-emerald-400" />
+                            {/if}
+                        </div>
+                    {/each}
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/binder/+page.svelte:216:13
+Warn: Also define the standard property 'print-color-adjust' for compatibility (css)
+        :global(body) {
+            -webkit-print-color-adjust: exact;
+        }
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/binder/+page.svelte:97:18
+Error: Cannot find name 'EmptyStateGuide'. (ts)
+            <div class="p-20 flex items-center justify-center h-[1100px]">
+                <EmptyStateGuide
+                    type="binder"
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/marketing/+page.svelte:66:9
+Warn: Avoid declaring classes below the top level scope
+https://svelte.dev/e/perf_avoid_nested_class (svelte)
+
+        class Particle {
+            x: number;
+            y: number;
+            vx: number;
+            vy: number;
+            originX: number;
+            originY: number;
+            size: number;
+            color: string;
+            friction: number = 0.95;
+            ease: number = 0.05;
+
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.originX = this.x;
+                this.originY = this.y;
+                this.vx = (Math.random() - 0.5) * 1;
+                this.vy = (Math.random() - 0.5) * 1;
+                this.size = Math.random() * 2 + 0.5;
+                // Warm Gold / Teal mix
+                this.color =
+                    Math.random() > 0.6
+                        ? `rgba(245, 158, 11, ${Math.random() * 0.7})`
+                        : `rgba(45, 212, 191, ${Math.random() * 0.7})`;
+            }
+
+            update() {
+                // Return to origin (Orbit feel)
+                this.vx += (this.originX - this.x) * 0.001;
+                this.vy += (this.originY - this.y) * 0.001;
+
+                // Mouse interaction (Repulsion)
+                const dx = mouseX - this.x;
+                const dy = mouseY - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const force = 100; // Interaction radius
+
+                if (dist < force) {
+                    const angle = Math.atan2(dy, dx);
+                    const push = (force - dist) * 0.02; // Strength
+                    this.vx -= Math.cos(angle) * push;
+                    this.vy -= Math.sin(angle) * push;
+                }
+
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Friction
+                this.vx *= this.friction;
+                this.vy *= this.friction;
+            }
+
+            draw() {
+                if (!ctx) return;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+        }
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/marketing/+page.svelte:351:9
+Warn: `<div>` with a mousemove or mouseleave handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions (svelte)
+
+        <div
+            class="relative group perspective-container"
+            use:reveal
+            on:mousemove={handleTilt}
+            on:mouseleave={resetTilt}
+        >
+            <div
+                class="holo-card relative rounded-[1rem] overflow-hidden transform-gpu transition-transform border border-white/20 shadow-2xl bg-[#0F1115]"
+            >
+                <!-- Removed overlay for pure product look -->
+                <img
+                    src={assets.legacy}
+                    alt="Heirlooms Interface"
+                    class="w-full h-auto object-cover hover:scale-105 transition-all duration-1000"
+                />
+                <!-- Shine Effect -->
+                <div class="shine"></div>
+            </div>
+        </div>
+    </div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/marketing/+page.svelte:389:13
+Warn: `<div>` with a mousemove or mouseleave handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions (svelte)
+            <!-- Pillar 1: The Vault -->
+            <div
+                class="group holo-card relative bg-[#0F1115] rounded-3xl overflow-hidden border border-white/10 shadow-xl"
+                on:mousemove={handleTilt}
+                on:mouseleave={resetTilt}
+                use:reveal
+            >
+                <div class="h-64 overflow-hidden relative">
+                    <img
+                        src={assets.vault}
+                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 object-top"
+                        alt="Vault Interface"
+                    />
+                </div>
+                <div class="p-8">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div
+                            class="p-3 bg-teal-500/20 text-teal-400 rounded-xl"
+                        >
+                            <Shield size={24} />
+                        </div>
+                        <h3 class="text-2xl font-bold text-white">
+                            {$mt.vaultTitle}
+                        </h3>
+                    </div>
+                    <p class="text-slate-400 leading-relaxed text-lg">
+                        {$mt.vaultDesc}
+                    </p>
+                </div>
+                <div class="shine"></div>
+            </div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/marketing/+page.svelte:421:13
+Warn: `<div>` with a mousemove or mouseleave handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions (svelte)
+            <!-- Pillar 2: The Signal -->
+            <div
+                class="group holo-card relative bg-[#0F1115] rounded-3xl overflow-hidden border border-white/10 shadow-xl"
+                on:mousemove={handleTilt}
+                on:mouseleave={resetTilt}
+                use:reveal
+            >
+                <div class="h-64 overflow-hidden relative">
+                    <img
+                        src={assets.letters}
+                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 object-top"
+                        alt="Letters Interface"
+                    />
+                </div>
+                <div class="p-8 text-right flex flex-col items-end">
+                    <div class="flex items-center gap-3 mb-6">
+                        <h3 class="text-2xl font-bold text-white">
+                            {$mt.lettersTitle}
+                        </h3>
+                        <div
+                            class="p-3 bg-amber-500/20 text-amber-400 rounded-xl"
+                        >
+                            <Heart size={24} />
+                        </div>
+                    </div>
+                    <p class="text-slate-400 leading-relaxed text-lg">
+                        {$mt.lettersDesc}
+                    </p>
+                </div>
+                <div class="shine"></div>
+            </div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/marketing/+page.svelte:453:13
+Warn: `<div>` with a mousemove or mouseleave handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions (svelte)
+            <!-- Pillar 3: The Guardian -->
+            <div
+                class="group holo-card relative bg-[#0F1115] rounded-3xl overflow-hidden border border-white/10 shadow-xl"
+                on:mousemove={handleTilt}
+                on:mouseleave={resetTilt}
+                use:reveal
+            >
+                <div class="h-64 overflow-hidden relative">
+                    <img
+                        src={assets.guardian}
+                        class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
+                        alt="Guardian"
+                    />
+                </div>
+                <div class="p-8">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div
+                            class="p-3 bg-blue-500/20 text-blue-400 rounded-xl"
+                        >
+                            <Sparkles size={24} />
+                        </div>
+                        <h3 class="text-2xl font-bold text-white">
+                            {$mt.guideTitle}
+                        </h3>
+                    </div>
+                    <p class="text-slate-400 leading-relaxed text-lg">
+                        {$mt.guideDesc}
+                    </p>
+                </div>
+                <div class="shine"></div>
+            </div>
+        </div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/marketing/+page.svelte:520:13
+Warn: `<div>` with a mousemove or mouseleave handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions (svelte)
+            <!-- AI Card 1: Visual Archivist -->
+            <div
+                class="group relative p-8 rounded-3xl bg-[#0F1115] border border-white/5 hover:border-indigo-500/30 transition-all duration-500"
+                on:mousemove={handleTilt}
+                on:mouseleave={resetTilt}
+                use:reveal
+            >
+                <div
+                    class="w-12 h-12 bg-indigo-500/10 rounded-xl flex items-center justify-center text-indigo-400 mb-6 group-hover:scale-110 transition-transform"
+                >
+                    <ScanEye size={24} />
+                </div>
+                <div class="space-y-4">
+                    <h3 class="text-2xl font-bold text-white">
+                        {$mt.archivistTitle}
+                    </h3>
+                    <p class="text-slate-400 leading-relaxed">
+                        {$mt.archivistDesc}
+                    </p>
+                </div>
+                <div class="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                    <div
+                        class="h-full bg-indigo-500 w-0 group-hover:w-full transition-all duration-1000 ease-out"
+                    ></div>
+                </div>
+                <div class="shine"></div>
+            </div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/marketing/+page.svelte:548:13
+Warn: `<div>` with a mousemove or mouseleave handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions (svelte)
+            <!-- AI Card 2: Empathy Engine -->
+            <div
+                class="group relative p-8 rounded-3xl bg-[#0F1115] border border-white/5 hover:border-emerald-500/30 transition-all duration-500 delay-100"
+                on:mousemove={handleTilt}
+                on:mouseleave={resetTilt}
+                use:reveal
+            >
+                <div
+                    class="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-400 mb-6 group-hover:scale-110 transition-transform"
+                >
+                    <Sparkles size={24} />
+                </div>
+                <div class="space-y-4">
+                    <h3 class="text-2xl font-bold text-white">
+                        {$mt.empathyTitle}
+                    </h3>
+                    <p class="text-slate-400 leading-relaxed">
+                        {$mt.empathyDesc}
+                    </p>
+                </div>
+                <div class="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                    <div
+                        class="h-full bg-emerald-500 w-0 group-hover:w-full transition-all duration-1000 ease-out"
+                    ></div>
+                </div>
+                <div class="shine"></div>
+            </div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/marketing/+page.svelte:576:13
+Warn: `<div>` with a mousemove or mouseleave handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions (svelte)
+            <!-- AI Card 3: Jargon Slayer -->
+            <div
+                class="group relative p-8 rounded-3xl bg-[#0F1115] border border-white/5 hover:border-amber-500/30 transition-all duration-500 delay-200"
+                on:mousemove={handleTilt}
+                on:mouseleave={resetTilt}
+                use:reveal
+            >
+                <div
+                    class="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-400 mb-6 group-hover:scale-110 transition-transform"
+                >
+                    <FileText size={24} />
+                </div>
+                <div class="space-y-4">
+                    <h3 class="text-2xl font-bold text-white">
+                        {$mt.jargonTitle}
+                    </h3>
+                    <p class="text-slate-400 leading-relaxed">
+                        {$mt.jargonDesc}
+                    </p>
+                </div>
+                <div class="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                    <div
+                        class="h-full bg-amber-500 w-0 group-hover:w-full transition-all duration-1000 ease-out"
+                    ></div>
+                </div>
+                <div class="shine"></div>
+            </div>
+        </div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/digital-guardian/+page.svelte:159:25
+Warn: Using `on:click` to listen to the click event is deprecated. Use the event attribute `onclick` instead
+https://svelte.dev/e/event_directive_deprecated (svelte)
+                            : 'bg-white border-rose-200 hover:shadow-md'}"
+                        on:click={() => toggleDrill("key")}
+                    >
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/digital-guardian/+page.svelte:182:25
+Warn: Using `on:click` to listen to the click event is deprecated. Use the event attribute `onclick` instead
+https://svelte.dev/e/event_directive_deprecated (svelte)
+                            : 'bg-white border-rose-200 hover:shadow-md'}"
+                        on:click={() => toggleDrill("twoFactor")}
+                    >
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/digital-guardian/+page.svelte:205:25
+Warn: Using `on:click` to listen to the click event is deprecated. Use the event attribute `onclick` instead
+https://svelte.dev/e/event_directive_deprecated (svelte)
+                            : 'bg-white border-rose-200 hover:shadow-md'}"
+                        on:click={() => toggleDrill("login")}
+                    >
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/digital-guardian/+page.svelte:228:25
+Warn: Using `on:click` to listen to the click event is deprecated. Use the event attribute `onclick` instead
+https://svelte.dev/e/event_directive_deprecated (svelte)
+                            : 'bg-white border-rose-200 hover:shadow-md'}"
+                        on:click={() => toggleDrill("phone")}
+                    >
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/digital-guardian/+page.svelte:251:25
+Warn: Using `on:click` to listen to the click event is deprecated. Use the event attribute `onclick` instead
+https://svelte.dev/e/event_directive_deprecated (svelte)
+                            : 'bg-white border-rose-200 hover:shadow-md'}"
+                        on:click={() => toggleDrill("email")}
+                    >
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/digital-guardian/+page.svelte:274:25
+Warn: Using `on:click` to listen to the click event is deprecated. Use the event attribute `onclick` instead
+https://svelte.dev/e/event_directive_deprecated (svelte)
+                            : 'bg-white border-rose-200 hover:shadow-md'}"
+                        on:click={() => toggleDrill("will")}
+                    >
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/digital-guardian/+page.svelte:305:17
+Warn: Using `on:click` to listen to the click event is deprecated. Use the event attribute `onclick` instead
+https://svelte.dev/e/event_directive_deprecated (svelte)
+                class="w-full text-left p-6 flex items-start gap-4 cursor-pointer"
+                on:click={() => toggleGuide("apple")}
+            >
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/digital-guardian/+page.svelte:372:29
+Warn: Using `on:click` to listen to the click event is deprecated. Use the event attribute `onclick` instead
+https://svelte.dev/e/event_directive_deprecated (svelte)
+                        <button
+                            on:click={() => markComplete("apple")}
+                            class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-gray-300 hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors"
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/digital-guardian/+page.svelte:390:17
+Warn: Using `on:click` to listen to the click event is deprecated. Use the event attribute `onclick` instead
+https://svelte.dev/e/event_directive_deprecated (svelte)
+                class="w-full text-left p-6 flex items-start gap-4 cursor-pointer"
+                on:click={() => toggleGuide("google")}
+            >
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/digital-guardian/+page.svelte:455:29
+Warn: Using `on:click` to listen to the click event is deprecated. Use the event attribute `onclick` instead
+https://svelte.dev/e/event_directive_deprecated (svelte)
+                        <button
+                            on:click={() => markComplete("google")}
+                            class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-gray-300 hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors"
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/digital-guardian/+page.svelte:473:17
+Warn: Using `on:click` to listen to the click event is deprecated. Use the event attribute `onclick` instead
+https://svelte.dev/e/event_directive_deprecated (svelte)
+                class="w-full text-left p-6 flex items-start gap-4 cursor-pointer"
+                on:click={() => toggleGuide("passwordManager")}
+            >
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/digital-guardian/+page.svelte:543:29
+Warn: Using `on:click` to listen to the click event is deprecated. Use the event attribute `onclick` instead
+https://svelte.dev/e/event_directive_deprecated (svelte)
+                        <button
+                            on:click={() => markComplete("passwordManager")}
+                            class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-gray-300 hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors"
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/digital-guardian/+page.svelte:561:17
+Warn: Using `on:click` to listen to the click event is deprecated. Use the event attribute `onclick` instead
+https://svelte.dev/e/event_directive_deprecated (svelte)
+                class="w-full text-left p-6 flex items-start gap-4 cursor-pointer"
+                on:click={() => toggleGuide("facebook")}
+            >
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/digital-guardian/+page.svelte:609:29
+Warn: Using `on:click` to listen to the click event is deprecated. Use the event attribute `onclick` instead
+https://svelte.dev/e/event_directive_deprecated (svelte)
+                        <button
+                            on:click={() => markComplete("facebook")}
+                            class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-gray-300 hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors"
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/digital-guardian/+page.svelte:626:17
+Warn: Using `on:click` to listen to the click event is deprecated. Use the event attribute `onclick` instead
+https://svelte.dev/e/event_directive_deprecated (svelte)
+                class="w-full text-left p-6 flex items-start gap-4 cursor-pointer"
+                on:click={() => toggleGuide("linkedin")}
+            >
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/digital-guardian/+page.svelte:682:29
+Warn: Using `on:click` to listen to the click event is deprecated. Use the event attribute `onclick` instead
+https://svelte.dev/e/event_directive_deprecated (svelte)
+                        <button
+                            on:click={() => markComplete("linkedin")}
+                            class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-gray-300 hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors"
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/family-hub/+page.svelte:305:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold uppercase text-gray-400"
+                            >Title</label
+                        >
+                        <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/family-hub/+page.svelte:323:37
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                                <div class="space-y-1">
+                                    <label
+                                        class="text-xs font-bold uppercase text-gray-400"
+                                        >Or Paste URL</label
+                                    >
+                                    <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/family-hub/+page.svelte:336:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-2">
+                            <label
+                                class="text-xs font-bold uppercase text-gray-400"
+                                >Date / Year</label
+                            >
+                            <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/family-hub/+page.svelte:348:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-2">
+                            <label
+                                class="text-xs font-bold uppercase text-gray-400"
+                                >Description / Ingredients</label
+                            >
+                            <textarea
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/family-hub/+page.svelte:360:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-2">
+                            <label
+                                class="text-xs font-bold uppercase text-gray-400"
+                                >Quote Text</label
+                            >
+                            <textarea
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/family-hub/+page.svelte:371:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-2">
+                            <label
+                                class="text-xs font-bold uppercase text-gray-400"
+                                >Attribution</label
+                            >
+                            <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/family-hub/+page.svelte:582:17
+Warn: Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events (svelte)
+                <!-- Educational Resources Widget -->
+                <div
+                    class="bg-[#304743] rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group cursor-pointer"
+                    on:click={() =>
+                        document
+                            .getElementById("educational-section")
+                            ?.scrollIntoView({ behavior: "smooth" })}
+                >
+                    <div
+                        class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform duration-500"
+                    >
+                        <PlayCircle size={120} />
+                    </div>
+                    <div class="relative z-10">
+                        <h3 class="font-serif font-bold text-xl mb-2">
+                            Learning Center
+                        </h3>
+                        <p
+                            class="text-emerald-100/80 text-sm mb-4 line-clamp-2"
+                        >
+                            Watch our guide videos to understand your role in
+                            the estate plan.
+                        </p>
+                        <span
+                            class="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider bg-white/10 px-3 py-1 rounded-full"
+                        >
+                            5 Videos Available
+                        </span>
+                    </div>
+                </div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/family-hub/+page.svelte:582:17
+Warn: `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions (svelte)
+                <!-- Educational Resources Widget -->
+                <div
+                    class="bg-[#304743] rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group cursor-pointer"
+                    on:click={() =>
+                        document
+                            .getElementById("educational-section")
+                            ?.scrollIntoView({ behavior: "smooth" })}
+                >
+                    <div
+                        class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform duration-500"
+                    >
+                        <PlayCircle size={120} />
+                    </div>
+                    <div class="relative z-10">
+                        <h3 class="font-serif font-bold text-xl mb-2">
+                            Learning Center
+                        </h3>
+                        <p
+                            class="text-emerald-100/80 text-sm mb-4 line-clamp-2"
+                        >
+                            Watch our guide videos to understand your role in
+                            the estate plan.
+                        </p>
+                        <span
+                            class="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider bg-white/10 px-3 py-1 rounded-full"
+                        >
+                            5 Videos Available
+                        </span>
+                    </div>
+                </div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/funeral/+page.svelte:504:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-2">
+                            <label
+                                class="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                                >Item Name</label
+                            >
+                            <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/funeral/+page.svelte:515:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-2">
+                            <label
+                                class="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                                >Cost ($)</label
+                            >
+                            <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/heirlooms/+page.svelte:389:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div>
+                        <label
+                            class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                            >Item Name</label
+                        >
+                        <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/heirlooms/+page.svelte:402:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div>
+                        <label
+                            class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                            >Intended Recipient</label
+                        >
+                        <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/heirlooms/+page.svelte:415:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div>
+                        <label
+                            class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                            >The Story</label
+                        >
+                        <textarea
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/heirlooms/+page.svelte:436:33
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                            <div class="mt-2">
+                                <label
+                                    class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                                    >Or paste a URL</label
+                                >
+                                <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/insurance/+page.svelte:595:9
+Warn: Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events (svelte)
+    >
+        <div
+            class="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+            on:click={resetForm}
+        ></div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/insurance/+page.svelte:595:9
+Warn: `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions (svelte)
+    >
+        <div
+            class="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+            on:click={resetForm}
+        ></div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/insurance/+page.svelte:642:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-3">
+                            <label
+                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+                                >Policy Title</label
+                            >
+                            <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/insurance/+page.svelte:654:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-3">
+                            <label
+                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+                                >Insurance Classification</label
+                            >
+                            <select
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/insurance/+page.svelte:668:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-3">
+                            <label
+                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+                                >Insurance Carrier</label
+                            >
+                            <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/insurance/+page.svelte:695:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-3">
+                            <label
+                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-mono"
+                                >Premium Amount ($)</label
+                            >
+                            <div class="relative">
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/insurance/+page.svelte:712:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-3">
+                            <label
+                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+                                >Billing Interval</label
+                            >
+                            <select
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/insurance/+page.svelte:726:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-3">
+                            <label
+                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+                                >Status Tracking</label
+                            >
+                            <div
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/insurance/+page.svelte:762:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-3">
+                            <label
+                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+                                >Designated Beneficiaries</label
+                            >
+                            <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/insurance/+page.svelte:774:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-3">
+                            <label
+                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+                                >Agent / Point of Contact</label
+                            >
+                            <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/insurance/+page.svelte:786:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-3 md:col-span-2">
+                            <label
+                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 flex items-center gap-2"
+                            >
+                                Claims Filing Instructions
+                                <span
+                                    class="bg-rose-100 text-rose-600 px-2 py-0.5 rounded-lg text-[8px] font-black tracking-[0.2em]"
+                                    >CRITICAL</span
+                                >
+                            </label>
+                            <textarea
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/insurance/+page.svelte:845:9
+Warn: Also define the standard property 'appearance' for compatibility (css)
+    select {
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236366f1' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/letters/+page.svelte:589:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-3">
+                            <label
+                                class="block text-[11px] font-black text-slate-800 uppercase tracking-widest pl-1"
+                                >{variable}</label
+                            >
+                            <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/letters/+page.svelte:861:33
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                            <div class="space-y-2">
+                                <label
+                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+                                    >Specific Release Date</label
+                                >
+                                <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/letters/+page.svelte:872:33
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                            <div class="space-y-2">
+                                <label
+                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+                                    >Or Lifecycle Milestone</label
+                                >
+                                <select
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/letters/+page.svelte:1144:5
+Warn: Unused CSS selector "textarea::placeholder"
+https://svelte.dev/e/css_unused_selector (svelte)
+
+    textarea::placeholder {
+        opacity: 0.3;
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/medical/+page.svelte:242:33
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                            <div>
+                                <label
+                                    class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                                    >Blood Type</label
+                                >
+                                <select
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/medical/+page.svelte:262:33
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                            <div>
+                                <label
+                                    class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                                    >Critical Allergies</label
+                                >
+                                <textarea
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/medical/+page.svelte:457:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div>
+                        <label
+                            class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                            >Directive Type</label
+                        >
+                        <select
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/medical/+page.svelte:477:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div>
+                        <label
+                            class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                            >Title</label
+                        >
+                        <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/medical/+page.svelte:491:21
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                <div>
+                    <label
+                        class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                        >Summary of Wishes</label
+                    >
+                    <textarea
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/medical/+page.svelte:505:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div>
+                        <label
+                            class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                            >Primary Proxy/Contact</label
+                        >
+                        <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/medical/+page.svelte:517:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div>
+                        <label
+                            class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                            >Contact Phone</label
+                        >
+                        <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/medical/+page.svelte:531:21
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                <div>
+                    <label
+                        class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                        >Location of Original Document</label
+                    >
+                    <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/pets/+page.svelte:282:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div>
+                        <label
+                            class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                            >Name</label
+                        >
+                        <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/pets/+page.svelte:296:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div>
+                            <label
+                                class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                                >Type</label
+                            >
+                            <select
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/pets/+page.svelte:310:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div>
+                            <label
+                                class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                                >Breed / Species</label
+                            >
+                            <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/pets/+page.svelte:324:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div>
+                        <label
+                            class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                            >Designated Guardian</label
+                        >
+                        <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/pets/+page.svelte:337:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div>
+                        <label
+                            class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                            >Vet Name</label
+                        >
+                        <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/pets/+page.svelte:349:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div>
+                        <label
+                            class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                            >Vet Phone</label
+                        >
+                        <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/pets/+page.svelte:363:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div>
+                            <label
+                                class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                                >Food Instructions</label
+                            >
+                            <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/pets/+page.svelte:375:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div>
+                            <label
+                                class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                                >Medical Needs</label
+                            >
+                            <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/property/+page.svelte:621:9
+Warn: Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events (svelte)
+    >
+        <div
+            class="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+            on:click={resetForm}
+        ></div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/property/+page.svelte:621:9
+Warn: `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions (svelte)
+    >
+        <div
+            class="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+            on:click={resetForm}
+        ></div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/property/+page.svelte:667:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-3">
+                            <label
+                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-sans"
+                                >Asset Name</label
+                            >
+                            <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/property/+page.svelte:679:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-3">
+                            <label
+                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-sans"
+                                >Asset Type</label
+                            >
+                            <select
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/property/+page.svelte:693:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-3">
+                            <label
+                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-sans"
+                                >Primary Location</label
+                            >
+                            <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/property/+page.svelte:720:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-3">
+                            <label
+                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-sans"
+                                >Current Valuation ($)</label
+                            >
+                            <div class="relative">
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/property/+page.svelte:737:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-3">
+                            <label
+                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-sans"
+                                >Current Status</label
+                            >
+                            <div
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/property/+page.svelte:760:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-3">
+                            <label
+                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-sans"
+                                >Purchase/Acquisition Date</label
+                            >
+                            <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/property/+page.svelte:784:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-3">
+                            <label
+                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-sans"
+                                >Title / Ownership Group</label
+                            >
+                            <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/property/+page.svelte:796:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-3">
+                            <label
+                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-sans"
+                                >Critical Documents</label
+                            >
+                            <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/property/+page.svelte:808:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-3 md:col-span-2">
+                            <label
+                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-sans"
+                                >Inventory Notes</label
+                            >
+                            <textarea
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/property/+page.svelte:879:9
+Warn: Also define the standard property 'appearance' for compatibility (css)
+    select {
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/subscriptions/+page.svelte:397:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div>
+                        <label
+                            class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                            >Service Name</label
+                        >
+                        <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/subscriptions/+page.svelte:406:29
+Warn: Avoid using autofocus
+https://svelte.dev/e/a11y_autofocus (svelte)
+                            placeholder="e.g. Netflix"
+                            autoFocus
+                        />
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/subscriptions/+page.svelte:412:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div>
+                            <label
+                                class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                                >Cost</label
+                            >
+                            <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/subscriptions/+page.svelte:425:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div>
+                            <label
+                                class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                                >Cycle</label
+                            >
+                            <select
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/subscriptions/+page.svelte:440:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div>
+                        <label
+                            class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                            >Difficulty to Cancel</label
+                        >
+                        <div class="flex gap-2">
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/subscriptions/+page.svelte:464:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div>
+                        <label
+                            class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                            >Cancellation Instructions</label
+                        >
+                        <textarea
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/subscriptions/+page.svelte:476:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div>
+                        <label
+                            class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                            >Payment Method (Optional)</label
+                        >
+                        <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/time-capsule/+page.svelte:315:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div class="space-y-1">
+                        <label
+                            class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] pl-1"
+                            >Message Title</label
+                        >
+                        <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/time-capsule/+page.svelte:326:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div class="space-y-1">
+                        <label
+                            class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] pl-1"
+                            >Who is this for?</label
+                        >
+                        <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/time-capsule/+page.svelte:340:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div class="space-y-1">
+                        <label
+                            class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] pl-1"
+                            >Release Type</label
+                        >
+                        <div class="flex gap-2">
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/time-capsule/+page.svelte:368:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div class="space-y-1">
+                        <label
+                            class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] pl-1"
+                            >Release Condition</label
+                        >
+                        {#if newMessage.triggerType === "date"}
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/time-capsule/+page.svelte:394:21
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                <div class="space-y-4">
+                    <label
+                        class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] pl-1"
+                        >Legacy Content</label
+                    >
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/time-capsule/+page.svelte:494:17
+Warn: `<video>` elements must have a `<track kind="captions">`
+https://svelte.dev/e/a11y_media_has_caption (svelte)
+            >
+                <video
+                    src={activeVideoUrl}
+                    controls
+                    autoplay
+                    class="w-full h-full"
+                ></video>
+            </div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/timeline/+page.svelte:193:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold uppercase text-gray-400"
+                            >Label</label
+                        >
+                        <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/timeline/+page.svelte:215:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-1">
+                            <label
+                                class="text-xs font-bold uppercase text-gray-400"
+                                >Date</label
+                            >
+                            <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/timeline/+page.svelte:238:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-1">
+                            <label
+                                class="text-xs font-bold uppercase text-gray-400"
+                                >Type</label
+                            >
+                            <select
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/timeline/+page.svelte:261:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold uppercase text-gray-400"
+                            >Designated Contact</label
+                        >
+                        <select
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/timeline/+page.svelte:282:33
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                            <div class="space-y-1">
+                                <label
+                                    class="text-xs font-bold uppercase text-gray-400"
+                                    >Category</label
+                                >
+                                <select
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/timeline/+page.svelte:387:21
+Warn: Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events (svelte)
+                {#each lifeEvents.filter((e) => e.type === "accomplishment") as trophy}
+                    <div
+                        class="bg-white border border-amber-100 p-6 rounded-2xl relative group cursor-pointer hover:shadow-xl hover:border-amber-300 transition-all flex flex-col h-full"
+                        on:click={() => editEvent(trophy)}
+                    >
+                        <div
+                            class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2"
+                        >
+                            <button
+                                on:click|stopPropagation={() =>
+                                    editEvent(trophy)}
+                                class="p-2 bg-amber-50 text-amber-600 rounded-full hover:bg-amber-100"
+                            >
+                                <Pencil size={14} />
+                            </button>
+                        </div>
+
+                        <div class="flex items-center gap-2 mb-4">
+                            <div
+                                class="px-3 py-1 bg-amber-50 text-amber-700 text-[10px] font-black uppercase tracking-tighter rounded-full border border-amber-100"
+                            >
+                                {trophy.category || "General"}
+                            </div>
+                            <div
+                                class="text-xs font-bold text-stone-400 capitalize"
+                            >
+                                {trophy.year}
+                            </div>
+                        </div>
+
+                        <h4
+                            class="font-serif font-bold text-xl text-[#304743] mb-2 group-hover:text-amber-700 transition-colors"
+                        >
+                            {trophy.label}
+                        </h4>
+
+                        {#if trophy.description}
+                            <p class="text-sm text-stone-500 mb-4 line-clamp-2">
+                                {trophy.description}
+                            </p>
+                        {/if}
+
+                        {#if trophy.assignedContactId}
+                            {@const contact = getContactById(
+                                trophy.assignedContactId,
+                            )}
+                            <div
+                                class="mt-4 pt-4 border-t border-stone-100 flex items-center justify-between"
+                            >
+                                <div class="flex items-center gap-2">
+                                    <div
+                                        class="w-6 h-6 rounded-full bg-stone-100 flex items-center justify-center overflow-hidden border border-stone-200"
+                                    >
+                                        {#if contact?.avatar}
+                                            <img
+                                                src={contact.avatar}
+                                                alt={contact.name}
+                                                class="w-full h-full object-cover"
+                                            />
+                                        {:else}
+                                            <span
+                                                class="text-[8px] font-bold text-stone-400"
+                                                >{contact?.name
+                                                    ?.slice(0, 2)
+                                                    .toUpperCase() ||
+                                                    "??"}</span
+                                            >
+                                        {/if}
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span
+                                            class="text-[10px] font-bold text-stone-600 leading-tight"
+                                            >{contact?.name || "Unknown"}</span
+                                        >
+                                        <span
+                                            class="text-[8px] text-stone-400 leading-tight capitalize"
+                                            >{contact?.role || "Contact"}</span
+                                        >
+                                    </div>
+                                </div>
+
+                                {#if contact?.email}
+                                    <button
+                                        on:click|stopPropagation={() =>
+                                            alert(
+                                                `Mock Notification: Email sent to ${contact.email} regarding "${trophy.label}"`,
+                                            )}
+                                        class="p-2 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-colors shadow-sm"
+                                        title="Notify via Email"
+                                    >
+                                        <Mail size={12} />
+                                    </button>
+                                {/if}
+                            </div>
+                        {/if}
+
+                        {#if trophy.reflection}
+                            <div class="mt-4 pt-4 border-t border-stone-100">
+                                <p
+                                    class="text-xs text-stone-400 italic line-clamp-3"
+                                >
+                                    "{trophy.reflection}"
+                                </p>
+                            </div>
+                        {/if}
+                    </div>
+                {/each}
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/timeline/+page.svelte:387:21
+Warn: `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions (svelte)
+                {#each lifeEvents.filter((e) => e.type === "accomplishment") as trophy}
+                    <div
+                        class="bg-white border border-amber-100 p-6 rounded-2xl relative group cursor-pointer hover:shadow-xl hover:border-amber-300 transition-all flex flex-col h-full"
+                        on:click={() => editEvent(trophy)}
+                    >
+                        <div
+                            class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2"
+                        >
+                            <button
+                                on:click|stopPropagation={() =>
+                                    editEvent(trophy)}
+                                class="p-2 bg-amber-50 text-amber-600 rounded-full hover:bg-amber-100"
+                            >
+                                <Pencil size={14} />
+                            </button>
+                        </div>
+
+                        <div class="flex items-center gap-2 mb-4">
+                            <div
+                                class="px-3 py-1 bg-amber-50 text-amber-700 text-[10px] font-black uppercase tracking-tighter rounded-full border border-amber-100"
+                            >
+                                {trophy.category || "General"}
+                            </div>
+                            <div
+                                class="text-xs font-bold text-stone-400 capitalize"
+                            >
+                                {trophy.year}
+                            </div>
+                        </div>
+
+                        <h4
+                            class="font-serif font-bold text-xl text-[#304743] mb-2 group-hover:text-amber-700 transition-colors"
+                        >
+                            {trophy.label}
+                        </h4>
+
+                        {#if trophy.description}
+                            <p class="text-sm text-stone-500 mb-4 line-clamp-2">
+                                {trophy.description}
+                            </p>
+                        {/if}
+
+                        {#if trophy.assignedContactId}
+                            {@const contact = getContactById(
+                                trophy.assignedContactId,
+                            )}
+                            <div
+                                class="mt-4 pt-4 border-t border-stone-100 flex items-center justify-between"
+                            >
+                                <div class="flex items-center gap-2">
+                                    <div
+                                        class="w-6 h-6 rounded-full bg-stone-100 flex items-center justify-center overflow-hidden border border-stone-200"
+                                    >
+                                        {#if contact?.avatar}
+                                            <img
+                                                src={contact.avatar}
+                                                alt={contact.name}
+                                                class="w-full h-full object-cover"
+                                            />
+                                        {:else}
+                                            <span
+                                                class="text-[8px] font-bold text-stone-400"
+                                                >{contact?.name
+                                                    ?.slice(0, 2)
+                                                    .toUpperCase() ||
+                                                    "??"}</span
+                                            >
+                                        {/if}
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span
+                                            class="text-[10px] font-bold text-stone-600 leading-tight"
+                                            >{contact?.name || "Unknown"}</span
+                                        >
+                                        <span
+                                            class="text-[8px] text-stone-400 leading-tight capitalize"
+                                            >{contact?.role || "Contact"}</span
+                                        >
+                                    </div>
+                                </div>
+
+                                {#if contact?.email}
+                                    <button
+                                        on:click|stopPropagation={() =>
+                                            alert(
+                                                `Mock Notification: Email sent to ${contact.email} regarding "${trophy.label}"`,
+                                            )}
+                                        class="p-2 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-colors shadow-sm"
+                                        title="Notify via Email"
+                                    >
+                                        <Mail size={12} />
+                                    </button>
+                                {/if}
+                            </div>
+                        {/if}
+
+                        {#if trophy.reflection}
+                            <div class="mt-4 pt-4 border-t border-stone-100">
+                                <p
+                                    class="text-xs text-stone-400 italic line-clamp-3"
+                                >
+                                    "{trophy.reflection}"
+                                </p>
+                            </div>
+                        {/if}
+                    </div>
+                {/each}
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/timeline/+page.svelte:522:13
+Warn: `<div>` with a mouseleave or mousemove handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions (svelte)
+
+            <div
+                class="flex flex-wrap gap-1 justify-center max-h-[600px] overflow-y-auto p-4 custom-scrollbar relative"
+                on:mouseleave={() => (hoveredWeek = null)}
+                on:mousemove={handleMouseMove}
+            >
+                {#each weeksData as week (week.index)}
+                    <div
+                        class="w-2 h-2 rounded-[1px] transition-colors cursor-pointer relative group
+                        {week.hasEvent
+                            ? 'bg-amber-400 hover:bg-amber-500 ring-2 ring-amber-200 z-10'
+                            : ''}
+                        {!week.hasEvent && week.isLived
+                            ? 'bg-[#304743]/80 hover:bg-[#304743]'
+                            : ''}
+                        {!week.hasEvent && !week.isLived
+                            ? 'bg-gray-100 hover:bg-purple-200'
+                            : ''}"
+                        on:mouseenter={() => (hoveredWeek = week)}
+                    ></div>
+                {/each}
+            </div>
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/timeline/+page.svelte:528:21
+Warn: `<div>` with a mouseenter handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions (svelte)
+                {#each weeksData as week (week.index)}
+                    <div
+                        class="w-2 h-2 rounded-[1px] transition-colors cursor-pointer relative group
+                        {week.hasEvent
+                            ? 'bg-amber-400 hover:bg-amber-500 ring-2 ring-amber-200 z-10'
+                            : ''}
+                        {!week.hasEvent && week.isLived
+                            ? 'bg-[#304743]/80 hover:bg-[#304743]'
+                            : ''}
+                        {!week.hasEvent && !week.isLived
+                            ? 'bg-gray-100 hover:bg-purple-200'
+                            : ''}"
+                        on:mouseenter={() => (hoveredWeek = week)}
+                    ></div>
+                {/each}
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/timeline/+page.svelte:795:5
+Warn: Unused CSS selector ".custom-scrollbar-x::-webkit-scrollbar"
+https://svelte.dev/e/css_unused_selector (svelte)
+
+    .custom-scrollbar-x::-webkit-scrollbar {
+        height: 8px;
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/timeline/+page.svelte:798:5
+Warn: Unused CSS selector ".custom-scrollbar-x::-webkit-scrollbar-track"
+https://svelte.dev/e/css_unused_selector (svelte)
+    }
+    .custom-scrollbar-x::-webkit-scrollbar-track {
+        background: #f1f1f1;
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/timeline/+page.svelte:802:5
+Warn: Unused CSS selector ".custom-scrollbar-x::-webkit-scrollbar-thumb"
+https://svelte.dev/e/css_unused_selector (svelte)
+    }
+    .custom-scrollbar-x::-webkit-scrollbar-thumb {
+        background: #d1d5db;
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/visual-memories/+page.svelte:168:21
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                <div class="space-y-2">
+                    <label
+                        class="text-xs font-bold uppercase text-slate-500 tracking-wider"
+                        >Platform / Device Name</label
+                    >
+                    <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/visual-memories/+page.svelte:181:21
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                <div class="space-y-2">
+                    <label
+                        class="text-xs font-bold uppercase text-slate-500 tracking-wider"
+                        >Access Instructions</label
+                    >
+                    <textarea
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/visual-memories/+page.svelte:193:21
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                <div class="space-y-2">
+                    <label
+                        class="text-xs font-bold uppercase text-slate-500 tracking-wider"
+                        >Direct URL (Optional)</label
+                    >
+                    <div class="relative">
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/visual-memories/+page.svelte:325:29
+Error: Object literal may only specify known properties, and '"icon"' does not exist in type '{ type?: "subscriptions" | "heirlooms" | "contacts" | "funeral" | "binder" | "default" | "legal" | "financial" | "home" | undefined; onAdd: () => void; }'. (ts)
+                        <EmptyStateGuide
+                            icon={Image}
+                            title="Start Your Collection"
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/modules/visual-memories/+page.svelte:370:25
+Error: Object literal may only specify known properties, and '"icon"' does not exist in type '{ type?: "subscriptions" | "heirlooms" | "contacts" | "funeral" | "binder" | "default" | "legal" | "financial" | "home" | undefined; onAdd: () => void; }'. (ts)
+                    <EmptyStateGuide
+                        icon={ExternalLink}
+                        title="Map Your Digital Legacy"
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/wizard/+page.svelte:231:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div class="space-y-2">
+                        <label
+                            class="text-xs uppercase tracking-widest text-slate-500 font-bold ml-1"
+                            >Full Name</label
+                        >
+                        <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/wizard/+page.svelte:243:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div class="space-y-2">
+                        <label
+                            class="text-xs uppercase tracking-widest text-slate-500 font-bold ml-1"
+                            >Email (Optional)</label
+                        >
+                        <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/wizard/+page.svelte:300:25
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                    <div class="space-y-2">
+                        <label
+                            class="text-xs uppercase tracking-widest text-slate-500 font-bold ml-1"
+                            >Their Name</label
+                        >
+                        <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/wizard/+page.svelte:313:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-2">
+                            <label
+                                class="text-xs uppercase tracking-widest text-slate-500 font-bold ml-1"
+                                >Relation</label
+                            >
+                            <input
+
+/Users/jonathanhollander/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/frontend/src/routes/wizard/+page.svelte:325:29
+Warn: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+                        <div class="space-y-2">
+                            <label
+                                class="text-xs uppercase tracking-widest text-slate-500 font-bold ml-1"
+                                >Email (Optional)</label
+                            >
+                            <input
+
+====================================
+svelte-check found 5 errors and 204 warnings in 47 files

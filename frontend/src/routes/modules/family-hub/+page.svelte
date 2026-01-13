@@ -18,12 +18,16 @@
     import FileUploader from "$lib/components/ui/FileUploader.svelte";
     import EducationalResources from "$lib/components/family/EducationalResources.svelte";
     import FamilyTreeGraph from "$lib/components/family/FamilyTreeGraph.svelte";
+    import BlueprintCard from "$lib/components/ui/BlueprintCard.svelte";
+    import GhostRow from "$lib/components/ui/GhostRow.svelte";
+    import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
     import { onMount } from "svelte";
     import { estateProfile } from "$lib/stores/estateStore";
     import { activityLog } from "$lib/stores/activityLog";
 
     // --- State & Types ---
     type MemoryType = "photo" | "recipe" | "quote";
+    let viewMode: "dashboard" | "concierge" = "dashboard"; // Default to dashboard for now, or check memories later
 
     interface Memory {
         id: number;
@@ -56,32 +60,44 @@
     const STORAGE_KEY = "family_memories";
 
     onMount(() => {
-        // Default Seed Data
+        // Default Seed Data (DISABLED FOR GHOST ROW TEST - UNCOMMENT TO RESTORE)
+        /*
         const defaults: Memory[] = [
-            {
-                id: 1,
-                type: "photo",
-                title: "Summer at the Lake House",
-                date: "July 1998",
-                image: "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=800&q=80",
-            },
-            {
-                id: 2,
-                type: "recipe",
-                title: "Grandma's Apple Pie",
-                desc: "The secret is in the cinnamon ratio...",
-            },
-            {
-                id: 3,
-                type: "quote",
-                title: "Words of Wisdom",
-                text: "Always be kind to strangers, for they might be angels in disguise.",
-                author: "Dad",
-            },
+           ...
         ];
+        */
 
-        memories = getStored<Memory[]>(STORAGE_KEY, defaults);
+        memories = getStored<Memory[]>(STORAGE_KEY, []); // Start empty to test Ghost Rows
+        if (memories.length === 0) {
+            viewMode = "concierge";
+        }
     });
+
+    function handleConciergeAnswer(e: CustomEvent) {
+        // Logic to handle intermediate answers if needed
+    }
+
+    function handleConciergeComplete(e: CustomEvent) {
+        const answers = e.detail;
+
+        // Auto-create a memory from the concierge answer
+        if (answers.fav_memory) {
+            const newId = Date.now();
+            memories = [
+                {
+                    id: newId,
+                    type: "quote",
+                    title: "My Favorite Memory",
+                    text: answers.fav_memory,
+                    author: "Me",
+                },
+                ...memories,
+            ];
+            save();
+        }
+
+        viewMode = "dashboard";
+    }
 
     function save() {
         setStored(STORAGE_KEY, memories);
@@ -445,240 +461,336 @@
         </div>
     </section>
 
-    <div class="max-w-6xl mx-auto px-6 pb-20 relative z-30">
-        <!-- Quick Access Collections -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
-            {#each collections as item}
+    {#if viewMode === "concierge"}
+        <div class="max-w-4xl mx-auto px-6 py-12" in:fade>
+            <ConciergeFlow
+                steps={[
+                    {
+                        id: "intro",
+                        question:
+                            "Welcome to the Family Hub. Let's start with a simple question.",
+                        type: "text",
+                        placeholder: "Press Enter...",
+                        required: false,
+                    },
+                    {
+                        id: "fav_memory",
+                        question:
+                            "What is one favorite memory you want to preserve right now?",
+                        type: "textarea",
+                        placeholder: "I remember when...",
+                        required: true,
+                    },
+                    {
+                        id: "role",
+                        question: "Who are you preserving this legacy for?",
+                        type: "select",
+                        options: [
+                            "My Children",
+                            "My Spouse",
+                            "Myself",
+                            "Future Generations",
+                        ],
+                        required: true,
+                    },
+                ]}
+                on:complete={handleConciergeComplete}
+            />
+            <div class="text-center mt-8">
                 <button
-                    class="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-all hover:-translate-y-1 group text-center"
+                    on:click={() => (viewMode = "dashboard")}
+                    class="text-slate-400 hover:text-slate-600 underline text-sm"
                 >
-                    <div
-                        class="w-12 h-12 rounded-full {item.color} flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform"
-                    >
-                        <svelte:component this={item.icon} class="w-6 h-6" />
-                    </div>
-                    <h3 class="font-bold text-slate-800 mb-1">{item.title}</h3>
-                    <div
-                        class="text-xs text-slate-400 font-medium uppercase tracking-wider"
-                    >
-                        {item.count} Items
-                    </div>
+                    Skip tour, go to dashboard
                 </button>
-            {/each}
+            </div>
         </div>
+    {:else}
+        <div class="max-w-6xl mx-auto px-6 pb-20 relative z-30" in:fade>
+            <!-- BLUEPRINT HEADER -->
+            <div class="mb-12">
+                ...
+                <BlueprintCard
+                    title="Establish Your Family Network"
+                    description="Your estate plan relies on trusted people. Identify your key players to unlock the full power of the Continuum."
+                    timeEstimate="5 mins"
+                    steps={[
+                        {
+                            label: "Connect 3 Family Members",
+                            completed: memories.length >= 3,
+                        } /* Using memories.length as proxy for now, but should be Family Members */,
+                        { label: "Designate an Executor", completed: false },
+                        {
+                            label: "Upload a Shared Memory",
+                            completed: memories.length > 0,
+                        },
+                    ]}
+                />
+            </div>
 
-        <!-- Latest Memories Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <!-- Feed Column -->
-            <div class="md:col-span-2 space-y-8">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-4">
-                        <h2 class="font-serif text-3xl text-slate-800">
-                            Latest Memories
-                        </h2>
-                        <button
-                            on:click={startSlideshow}
-                            class="text-xs font-bold text-[#4A7C74] bg-[#4A7C74]/10 px-3 py-1.5 rounded-full hover:bg-[#4A7C74]/20 transition-colors flex items-center gap-1"
-                        >
-                            <PlayCircle size={14} /> Slideshow
-                        </button>
-                    </div>
+            <!-- Quick Access Collections -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
+                {#each collections as item}
                     <button
-                        on:click={() => (showAddModal = true)}
-                        class="flex items-center gap-2 px-4 py-2 bg-rose-100 text-rose-700 rounded-full font-bold hover:bg-rose-200 transition-colors"
+                        class="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-all hover:-translate-y-1 group text-center"
                     >
-                        <Plus size={18} /> Add Memory
-                    </button>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    {#each memories as memory (memory.id)}
                         <div
-                            class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group relative"
-                            in:fade
+                            class="w-12 h-12 rounded-full {item.color} flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform"
                         >
-                            <!-- Delete Button (Hover) -->
-                            <button
-                                on:click={() => editMemory(memory)}
-                                class="absolute top-2 right-10 p-1.5 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-blue-100 text-blue-500"
-                                title="Edit Memory"
-                            >
-                                <Pencil size={14} />
-                            </button>
-                            <button
-                                on:click={() => deleteMemory(memory.id)}
-                                class="absolute top-2 right-2 p-1.5 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-red-100 text-red-500"
-                                title="Delete Memory"
-                            >
-                                <X size={14} />
-                            </button>
+                            <svelte:component
+                                this={item.icon}
+                                class="w-6 h-6"
+                            />
+                        </div>
+                        <h3 class="font-bold text-slate-800 mb-1">
+                            {item.title}
+                        </h3>
+                        <div
+                            class="text-xs text-slate-400 font-medium uppercase tracking-wider"
+                        >
+                            {item.count} Items
+                        </div>
+                    </button>
+                {/each}
+            </div>
 
-                            {#if memory.type === "photo"}
-                                <div
-                                    class="aspect-[4/3] overflow-hidden bg-gray-100"
+            <!-- Latest Memories Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Feed Column -->
+                <div class="md:col-span-2 space-y-8">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <h2 class="font-serif text-3xl text-slate-800">
+                                Latest Memories
+                            </h2>
+                            {#if memories.length > 0}
+                                <button
+                                    on:click={startSlideshow}
+                                    class="text-xs font-bold text-[#4A7C74] bg-[#4A7C74]/10 px-3 py-1.5 rounded-full hover:bg-[#4A7C74]/20 transition-colors flex items-center gap-1"
                                 >
-                                    <img
-                                        src={memory.image}
-                                        alt={memory.title}
-                                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                    />
-                                </div>
-                                <div class="p-4">
-                                    <h3
-                                        class="font-bold text-slate-800 text-lg leading-tight group-hover:text-rose-600 transition-colors"
-                                    >
-                                        {memory.title}
-                                    </h3>
-                                    <p
-                                        class="text-xs text-slate-400 mt-2 font-medium tracking-wide uppercase"
-                                    >
-                                        {memory.date}
-                                    </p>
-                                </div>
-                            {:else if memory.type === "recipe"}
-                                <div
-                                    class="p-6 bg-amber-50 h-full flex flex-col"
-                                >
-                                    <div
-                                        class="w-10 h-10 bg-white rounded-full flex items-center justify-center mb-4 text-amber-500 shadow-sm"
-                                    >
-                                        <Scroll class="w-5 h-5" />
-                                    </div>
-                                    <h3
-                                        class="font-serif text-xl text-amber-900 font-bold mb-2"
-                                    >
-                                        {memory.title}
-                                    </h3>
-                                    <p
-                                        class="text-sm text-amber-800/80 leading-relaxed italic"
-                                    >
-                                        "{memory.desc}"
-                                    </p>
-                                </div>
-                            {:else if memory.type === "quote"}
-                                <div
-                                    class="p-8 bg-slate-800 h-full flex flex-col justify-center text-center items-center"
-                                >
-                                    <p
-                                        class="font-serif text-xl text-white leading-relaxed mb-4"
-                                    >
-                                        "{memory.text}"
-                                    </p>
-                                    <div
-                                        class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-                                    >
-                                        — {memory.author}
-                                    </div>
-                                </div>
+                                    <PlayCircle size={14} /> Slideshow
+                                </button>
                             {/if}
                         </div>
-                    {/each}
-                </div>
-            </div>
-
-            <!-- Sidebar / Timeline Preview -->
-            <div class="space-y-8">
-                <!-- Educational Resources Widget -->
-                <div
-                    class="bg-[#304743] rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group cursor-pointer"
-                    on:click={() =>
-                        document
-                            .getElementById("educational-section")
-                            ?.scrollIntoView({ behavior: "smooth" })}
-                >
-                    <div
-                        class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform duration-500"
-                    >
-                        <PlayCircle size={120} />
+                        <button
+                            on:click={() => (showAddModal = true)}
+                            class="flex items-center gap-2 px-4 py-2 bg-rose-100 text-rose-700 rounded-full font-bold hover:bg-rose-200 transition-colors"
+                        >
+                            <Plus size={18} /> Add Memory
+                        </button>
                     </div>
-                    <div class="relative z-10">
-                        <h3 class="font-serif font-bold text-xl mb-2">
-                            Learning Center
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        {#if memories.length === 0}
+                            <!-- GHOST ROWS -->
+                            <GhostRow
+                                type="Memory"
+                                onClick={() => (showAddModal = true)}
+                            />
+                            <GhostRow
+                                type="Memory"
+                                onClick={() => (showAddModal = true)}
+                            />
+                            <GhostRow
+                                type="Memory"
+                                onClick={() => (showAddModal = true)}
+                            />
+                        {:else}
+                            {#each memories as memory (memory.id)}
+                                <div
+                                    class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group relative"
+                                    in:fade
+                                >
+                                    <!-- Delete Button (Hover) -->
+                                    <button
+                                        on:click={() => editMemory(memory)}
+                                        class="absolute top-2 right-10 p-1.5 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-blue-100 text-blue-500"
+                                        title="Edit Memory"
+                                    >
+                                        <Pencil size={14} />
+                                    </button>
+                                    <button
+                                        on:click={() => deleteMemory(memory.id)}
+                                        class="absolute top-2 right-2 p-1.5 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-red-100 text-red-500"
+                                        title="Delete Memory"
+                                    >
+                                        <X size={14} />
+                                    </button>
+
+                                    {#if memory.type === "photo"}
+                                        <div
+                                            class="aspect-[4/3] overflow-hidden bg-gray-100"
+                                        >
+                                            <img
+                                                src={memory.image}
+                                                alt={memory.title}
+                                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                            />
+                                        </div>
+                                        <div class="p-4">
+                                            <h3
+                                                class="font-bold text-slate-800 text-lg leading-tight group-hover:text-rose-600 transition-colors"
+                                            >
+                                                {memory.title}
+                                            </h3>
+                                            <p
+                                                class="text-xs text-slate-400 mt-2 font-medium tracking-wide uppercase"
+                                            >
+                                                {memory.date}
+                                            </p>
+                                        </div>
+                                    {:else if memory.type === "recipe"}
+                                        <div
+                                            class="p-6 bg-amber-50 h-full flex flex-col"
+                                        >
+                                            <div
+                                                class="w-10 h-10 bg-white rounded-full flex items-center justify-center mb-4 text-amber-500 shadow-sm"
+                                            >
+                                                <Scroll class="w-5 h-5" />
+                                            </div>
+                                            <h3
+                                                class="font-serif text-xl text-amber-900 font-bold mb-2"
+                                            >
+                                                {memory.title}
+                                            </h3>
+                                            <p
+                                                class="text-sm text-amber-800/80 leading-relaxed italic"
+                                            >
+                                                "{memory.desc}"
+                                            </p>
+                                        </div>
+                                    {:else if memory.type === "quote"}
+                                        <div
+                                            class="p-8 bg-slate-800 h-full flex flex-col justify-center text-center items-center"
+                                        >
+                                            <p
+                                                class="font-serif text-xl text-white leading-relaxed mb-4"
+                                            >
+                                                "{memory.text}"
+                                            </p>
+                                            <div
+                                                class="text-xs font-bold text-slate-400 uppercase tracking-widest"
+                                            >
+                                                — {memory.author}
+                                            </div>
+                                        </div>
+                                    {/if}
+                                </div>
+                            {/each}
+                        {/if}
+                    </div>
+                </div>
+
+                <!-- Sidebar / Timeline Preview -->
+                <div class="space-y-8">
+                    <!-- Educational Resources Widget -->
+                    <div
+                        class="bg-[#304743] rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group cursor-pointer"
+                        on:click={() =>
+                            document
+                                .getElementById("educational-section")
+                                ?.scrollIntoView({ behavior: "smooth" })}
+                    >
+                        <div
+                            class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform duration-500"
+                        >
+                            <PlayCircle size={120} />
+                        </div>
+                        <div class="relative z-10">
+                            <h3 class="font-serif font-bold text-xl mb-2">
+                                Learning Center
+                            </h3>
+                            <p
+                                class="text-emerald-100/80 text-sm mb-4 line-clamp-2"
+                            >
+                                Watch our guide videos to understand your role
+                                in the estate plan.
+                            </p>
+                            <span
+                                class="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider bg-white/10 px-3 py-1 rounded-full"
+                            >
+                                5 Videos Available
+                            </span>
+                        </div>
+                    </div>
+
+                    <div
+                        class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100"
+                    >
+                        <h3
+                            class="font-bold text-slate-800 mb-4 flex items-center gap-2"
+                        >
+                            <MapPin class="w-4 h-4 text-emerald-500" />
+                            Our Journey
                         </h3>
-                        <p
-                            class="text-emerald-100/80 text-sm mb-4 line-clamp-2"
+                        <div
+                            class="space-y-6 relative pl-4 border-l-2 border-slate-100"
                         >
-                            Watch our guide videos to understand your role in
-                            the estate plan.
-                        </p>
-                        <span
-                            class="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider bg-white/10 px-3 py-1 rounded-full"
-                        >
-                            5 Videos Available
-                        </span>
-                    </div>
-                </div>
-
-                <div
-                    class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100"
-                >
-                    <h3
-                        class="font-bold text-slate-800 mb-4 flex items-center gap-2"
-                    >
-                        <MapPin class="w-4 h-4 text-emerald-500" />
-                        Our Journey
-                    </h3>
-                    <div
-                        class="space-y-6 relative pl-4 border-l-2 border-slate-100"
-                    >
-                        <div class="relative">
-                            <div
-                                class="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white shadow-sm"
-                            ></div>
-                            <div class="text-xs font-bold text-slate-400 mb-1">
-                                2024
+                            <div class="relative">
+                                <div
+                                    class="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white shadow-sm"
+                                ></div>
+                                <div
+                                    class="text-xs font-bold text-slate-400 mb-1"
+                                >
+                                    2024
+                                </div>
+                                <div class="font-medium text-slate-800">
+                                    Moved to Seattle
+                                </div>
                             </div>
-                            <div class="font-medium text-slate-800">
-                                Moved to Seattle
+                            <div class="relative">
+                                <div
+                                    class="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-slate-300 border-2 border-white"
+                                ></div>
+                                <div
+                                    class="text-xs font-bold text-slate-400 mb-1"
+                                >
+                                    2018
+                                </div>
+                                <div class="font-medium text-slate-800">
+                                    Trip to Italy
+                                </div>
+                            </div>
+                            <div class="relative">
+                                <div
+                                    class="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-slate-300 border-2 border-white"
+                                ></div>
+                                <div
+                                    class="text-xs font-bold text-slate-400 mb-1"
+                                >
+                                    2010
+                                </div>
+                                <div class="font-medium text-slate-800">
+                                    Bought the Cabin
+                                </div>
                             </div>
                         </div>
-                        <div class="relative">
-                            <div
-                                class="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-slate-300 border-2 border-white"
-                            ></div>
-                            <div class="text-xs font-bold text-slate-400 mb-1">
-                                2018
-                            </div>
-                            <div class="font-medium text-slate-800">
-                                Trip to Italy
-                            </div>
-                        </div>
-                        <div class="relative">
-                            <div
-                                class="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-slate-300 border-2 border-white"
-                            ></div>
-                            <div class="text-xs font-bold text-slate-400 mb-1">
-                                2010
-                            </div>
-                            <div class="font-medium text-slate-800">
-                                Bought the Cabin
-                            </div>
-                        </div>
-                    </div>
-                    <div
-                        class="mt-4 pt-4 border-t border-slate-100 text-center"
-                    >
-                        <a
-                            href="/modules/timeline"
-                            class="text-xs font-bold text-[#4A7C74] hover:underline"
-                            >Manage Full Timeline →</a
+                        <div
+                            class="mt-4 pt-4 border-t border-slate-100 text-center"
                         >
+                            <a
+                                href="/modules/timeline"
+                                class="text-xs font-bold text-[#4A7C74] hover:underline"
+                                >Manage Full Timeline →</a
+                            >
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Educational Resources Section -->
-        <div
-            id="educational-section"
-            class="mt-20 pt-10 border-t border-slate-200"
-        >
-            <h2 class="font-serif text-3xl text-slate-800 mb-8 text-center">
-                Family Learning Center
-            </h2>
-            <EducationalResources />
+            <!-- Educational Resources Section -->
+            <div
+                id="educational-section"
+                class="mt-20 pt-10 border-t border-slate-200"
+            >
+                <h2 class="font-serif text-3xl text-slate-800 mb-8 text-center">
+                    Family Learning Center
+                </h2>
+                <EducationalResources />
+            </div>
         </div>
-    </div>
+    {/if}
 
     <!-- Slideshow Overlay -->
     {#if showSlideshow && photoMemories.length > 0}

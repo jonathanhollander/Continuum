@@ -1,0 +1,1 @@
+import{y as t,E as p}from"./CC-cBgEA.js";import{B as l}from"./D9YebcQ4.js";function m(n,o,...r){var a=new l(n);t(()=>{const s=o()??null;a.ensure(s,s&&(e=>s(e,...r)))},p)}const u=""+new URL("../assets/logo.OhRXLMvu.png",import.meta.url).href;export{u as l,m as s};

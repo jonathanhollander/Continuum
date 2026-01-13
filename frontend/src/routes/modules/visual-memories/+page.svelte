@@ -326,7 +326,7 @@
                             title="Start Your Collection"
                             description="Upload your most precious photos and videos here. This is your curated 'Best Of' collection."
                             actionLabel="Add Memories"
-                            on:action={triggerUpload}
+                            onAdd={triggerUpload}
                         />
                     </div>
                 {:else}
@@ -371,7 +371,7 @@
                         title="Map Your Digital Legacy"
                         description="Tell your executors where to find your photo libraries (e.g. iCloud, Google Photos, Hard Drives)."
                         actionLabel="Add Archive Location"
-                        on:action={() => openArchiveModal()}
+                        onAdd={() => openArchiveModal()}
                     />
                 </div>
             {:else}

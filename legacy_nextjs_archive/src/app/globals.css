@@ -1,0 +1,164 @@
+@import "tailwindcss";
+
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Museum Collection Palette (Heirloom Interface) */
+  --color-verdigris: #4A7C74;
+  --color-umber-script: #3E3127;
+  --color-cartographer-gold: #B8956A;
+  --color-blueprint-cyan: #527B84;
+  --color-parchment: #F4F0E6;
+
+  --color-dawn-rose: #C4A584;
+  --color-twilight-violet: #6B5B73;
+  --color-moss-stone: #696F5C;
+  --color-pearl-gray: #B8B5AD;
+
+  /* Standard Shadcn Design Tokens */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  /* Font Families */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui;
+  --font-serif: var(--font-cinzel), ui-serif, Georgia;
+  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular;
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+
+  @keyframes accordion-down {
+    from {
+      height: 0
+    }
+
+    to {
+      height: var(--radix-accordion-content-height)
+    }
+  }
+
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height)
+    }
+
+    to {
+      height: 0
+    }
+  }
+}
+
+/* Base Variables */
+:root {
+  /* Default to Light Mode (Parchment) */
+  --background: hsl(40 33% 93%);
+  /* #F4F0E6 Parchment */
+  --foreground: hsl(26 23% 20%);
+  /* #3E3127 Umber */
+
+  --card: hsl(40 33% 95%);
+  --card-foreground: hsl(26 23% 20%);
+
+  --popover: hsl(40 33% 95%);
+  --popover-foreground: hsl(26 23% 20%);
+
+  --primary: hsl(172 25% 39%);
+  /* Verdigris */
+  --primary-foreground: hsl(40 33% 93%);
+
+  --secondary: hsl(35 34% 57%);
+  /* Cartographer Gold */
+  --secondary-foreground: hsl(26 23% 20%);
+
+  --muted: hsl(42 6% 70%);
+  /* Pearl Gray */
+  --muted-foreground: hsl(26 23% 35%);
+
+  --accent: hsl(191 23% 42%);
+  /* Blueprint Cyan */
+  --accent-foreground: hsl(40 33% 93%);
+
+  --destructive: hsl(0 84% 60%);
+  --destructive-foreground: hsl(0 0% 98%);
+
+  --border: hsl(35 34% 57%);
+  --input: hsl(35 34% 57%);
+  --ring: hsl(172 25% 39%);
+
+  --radius: 0.25rem;
+
+  /* Fonts will be injected via layout.tsx */
+}
+
+/* Dark Mode (The Vault) */
+.dark {
+  --background: hsl(26 23% 10%);
+  /* Deep Umber */
+  --foreground: hsl(40 33% 90%);
+
+  --card: hsl(26 23% 13%);
+  --card-foreground: hsl(40 33% 90%);
+
+  --popover: hsl(26 23% 13%);
+  --popover-foreground: hsl(40 33% 90%);
+
+  --primary: hsl(172 25% 45%);
+  --primary-foreground: hsl(26 23% 10%);
+
+  --secondary: hsl(35 34% 65%);
+  --secondary-foreground: hsl(26 23% 10%);
+
+  --muted: hsl(26 23% 25%);
+  --muted-foreground: hsl(40 33% 70%);
+
+  --accent: hsl(191 23% 50%);
+  --accent-foreground: hsl(40 33% 90%);
+
+  --destructive: hsl(0 62.8% 30.6%);
+  --destructive-foreground: hsl(0 0% 98%);
+
+  --border: hsl(35 34% 30%);
+  --input: hsl(35 34% 30%);
+  --ring: hsl(172 25% 45%);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}

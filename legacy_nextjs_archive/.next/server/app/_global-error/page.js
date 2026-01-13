@@ -1,0 +1,11 @@
+var R=require("../../chunks/ssr/[turbopack]_runtime.js")("server/app/_global-error/page.js")
+R.c("server/chunks/ssr/[root-of-the-server]__3ce6d865._.js")
+R.c("server/chunks/ssr/AI Code_Notion Template_NOTION Template - ANTIGRAVITY_95df790d._.js")
+R.c("server/chunks/ssr/71ce1_next_dist_9e1f2a4d._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__6a73266e._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__9b33f56e._.js")
+R.c("server/chunks/ssr/71ce1_next_dist_81300502._.js")
+R.c("server/chunks/ssr/AI Code_Notion Template_NOTION Template - ANTIGRAVITY_src_app_e8d81588._.js")
+R.c("server/chunks/ssr/82f39__next-internal_server_app__global-error_page_actions_a670fa3b.js")
+R.m(50938)
+module.exports=R.m(50938).exports

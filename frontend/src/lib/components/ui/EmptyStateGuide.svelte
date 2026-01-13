@@ -27,6 +27,12 @@
         | "default" = "default";
     export let onAdd: () => void;
 
+    // Custom Overrides (Optional)
+    export let title: string | undefined = undefined;
+    export let description: string | undefined = undefined;
+    export let icon: any = undefined;
+    export let actionLabel: string | undefined = undefined;
+
     const guides = {
         contacts: {
             title: "Your Circle of Trust",
@@ -151,6 +157,11 @@
     };
 
     $: config = guides[type] || guides.default;
+
+    $: displayTitle = title || config.title;
+    $: displayDesc = description || config.description;
+    $: displayIcon = icon || config.icon;
+    $: displayAction = actionLabel || "Add First Item";
 </script>
 
 <div class="py-12 px-4 max-w-3xl mx-auto text-center" in:fade>
@@ -159,12 +170,12 @@
         <div
             class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400"
         >
-            <svelte:component this={config.icon} size={32} />
+            <svelte:component this={displayIcon} size={32} />
         </div>
         <h3 class="font-serif font-bold text-2xl text-slate-700 mb-2">
-            {config.title}
+            {displayTitle}
         </h3>
-        <p class="text-slate-500 max-w-md mx-auto">{config.description}</p>
+        <p class="text-slate-500 max-w-md mx-auto">{displayDesc}</p>
     </div>
 
     <!-- Ghost Cards -->
@@ -205,6 +216,6 @@
         class="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2 mx-auto"
     >
         <Plus size={20} />
-        Add First Item
+        {displayAction}
     </button>
 </div>

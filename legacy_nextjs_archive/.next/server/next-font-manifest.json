@@ -1,0 +1,17 @@
+{
+  "app": {
+    "[project]/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/src/app/_not-found/page": [
+      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2",
+      "static/media/cc014fcb166cf364-s.p.e32417d2.woff2",
+      "static/media/70bc3e132a0a741e-s.p.15008bfb.woff2"
+    ],
+    "[project]/AI Code/Notion Template/NOTION Template - ANTIGRAVITY/src/app/page": [
+      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2",
+      "static/media/cc014fcb166cf364-s.p.e32417d2.woff2",
+      "static/media/70bc3e132a0a741e-s.p.15008bfb.woff2"
+    ]
+  },
+  "appUsingSizeAdjust": true,
+  "pages": {},
+  "pagesUsingSizeAdjust": false
+}
