@@ -35,6 +35,7 @@
         QrCode,
     } from "lucide-svelte";
     import EvidenceGalleryUploader from "$lib/components/ui/EvidenceGalleryUploader.svelte";
+    import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
 
     let showAddModal = false;
     let isEditing = false;
@@ -584,29 +585,30 @@
                 </div>
             </div>
         {:else}
-            <div
-                class="col-span-full py-32 text-center bg-white rounded-[3rem] border-4 border-dashed border-slate-100 flex flex-col items-center justify-center gap-6"
-            >
-                <div
-                    class="w-24 h-24 bg-slate-50 rounded-[2rem] flex items-center justify-center text-slate-200"
-                >
-                    <Home size={48} />
+            <!-- GHOST ROW IMPLEMENTATION -->
+            <div class="col-span-full space-y-4">
+                <GhostRow
+                    type="Property"
+                    onClick={() => (showAddModal = true)}
+                />
+                <GhostRow
+                    type="Property"
+                    onClick={() => (showAddModal = true)}
+                />
+                <GhostRow
+                    type="Property"
+                    onClick={() => (showAddModal = true)}
+                />
+
+                <div class="flex justify-center mt-6">
+                    <button
+                        on:click={() => (showAddModal = true)}
+                        class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg shadow-blue-600/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                    >
+                        <Plus size={18} />
+                        Register First Asset
+                    </button>
                 </div>
-                <div>
-                    <h3 class="text-2xl font-black text-slate-900 mb-2">
-                        Portfolio Empty
-                    </h3>
-                    <p class="text-slate-400 max-w-sm mx-auto font-medium">
-                        No property assets found. Record your real estate,
-                        vehicles, and valuables for a complete estate overview.
-                    </p>
-                </div>
-                <button
-                    on:click={() => (showAddModal = true)}
-                    class="bg-blue-600 text-white px-10 py-5 rounded-3xl font-black shadow-2xl shadow-blue-600/30 hover:scale-105 active:scale-95 transition-all"
-                >
-                    Register First Asset
-                </button>
             </div>
         {/each}
     </div>

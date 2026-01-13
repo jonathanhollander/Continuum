@@ -10,6 +10,7 @@
     } from "lucide-svelte";
     import SubscriptionRow from "$lib/components/modules/subscriptions/SubscriptionRow.svelte";
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
+    import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import { onMount, tick } from "svelte";
     import { estateProfile } from "$lib/stores/estateStore";
     import { activityLog } from "$lib/stores/activityLog";
@@ -260,10 +261,31 @@
 
     <!-- Content -->
     {#if subscriptions.length === 0}
-        <EmptyStateGuide
-            type="subscriptions"
-            onAdd={() => (showAddForm = true)}
-        />
+        <!-- GHOST ROW IMPLEMENTATION -->
+        <div class="space-y-4">
+            <GhostRow
+                type="Subscription"
+                onClick={() => (showAddForm = true)}
+            />
+            <GhostRow
+                type="Subscription"
+                onClick={() => (showAddForm = true)}
+            />
+            <GhostRow
+                type="Subscription"
+                onClick={() => (showAddForm = true)}
+            />
+
+            <div class="flex justify-center mt-6">
+                <button
+                    on:click={() => (showAddForm = true)}
+                    class="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-slate-900/10 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                >
+                    <Plus size={18} />
+                    Add First Service
+                </button>
+            </div>
+        </div>
     {:else}
         <!-- Stats Grid -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
