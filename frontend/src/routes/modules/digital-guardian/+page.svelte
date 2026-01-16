@@ -15,10 +15,16 @@
         ChevronRight,
         UserCheck,
         FingerprintPattern as Fingerprint,
+        X,
     } from "lucide-svelte";
     import { onMount } from "svelte";
     import { estateProfile } from "$lib/stores/estateStore";
     import { getStored, setStored } from "$lib/stores/persistence";
+    import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW
+    import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte"; // NEW
+    import { t, language } from "$lib/stores/localization"; // NEW
+    import { getSmartSamples } from "$lib/data/smartSamples"; // NEW
+    import { activityLog } from "$lib/stores/activityLog"; // NEW
 
     let activeGuide = $state<string | null>(null);
     let setupStatus = $state({
@@ -29,10 +35,91 @@
         passwordManager: false,
     });
 
+    // Asset Types
+    interface DigitalAsset {
+        id: number;
+        type: string;
+        name: string;
+        description: string;
+    }
+    let assets = $state<DigitalAsset[]>([]); // New inventory state
+    let showWizard = $state(false);
+
     onMount(() => {
         setupStatus = getStored("digital_guardian", setupStatus);
         fireDrill = getStored("digital_guardian_drill", fireDrill);
+        assets = getStored("digital_assets", []);
     });
+
+    const wizardSteps = [
+        {
+            id: "intro",
+            question: "wizard.start",
+            type: "boolean" as const,
+            logic: {
+                yes: "password_manager",
+                no: "cancel",
+                next: "password_manager",
+            },
+        },
+        {
+            id: "password_manager",
+            question:
+                "Do you use a Password Manager (like 1Password, LastPass)?",
+            type: "boolean" as const,
+            logic: { yes: "email", no: "email", next: "email" },
+        },
+        {
+            id: "email",
+            question: "What is your primary email provider?",
+            type: "select" as const,
+            options: ["Gmail", "Outlook", "Yahoo", "iCloud", "Other"],
+            logic: { next: "finish" },
+        },
+    ];
+
+    function handleWizardComplete(e: CustomEvent) {
+        const answers = e.detail;
+        if (answers.intro === false) {
+            showWizard = false;
+            return;
+        }
+
+        if (answers.password_manager) {
+            setupStatus.passwordManager = true;
+            addAsset("Password Manager", "Master Key Access", "Access");
+        }
+
+        if (answers.email) {
+            addAsset(
+                `${answers.email} Account`,
+                "Primary Email Recovery",
+                "Email",
+            );
+        }
+
+        showWizard = false;
+        setStored("digital_guardian", setupStatus);
+    }
+
+    function addAsset(name: string, description: string, type: string) {
+        const newAsset = { id: Date.now(), name, description, type };
+        assets = [...assets, newAsset];
+        setStored("digital_assets", assets);
+        activityLog.logEvent({
+            module: "Digital Guardian",
+            action: "CREATE",
+            entityType: "Digital Asset",
+            entityId: String(newAsset.id),
+            entityName: name,
+            userContext: $estateProfile.ownerName || "User",
+        });
+    }
+
+    function deleteAsset(id: number) {
+        assets = assets.filter((a) => a.id !== id);
+        setStored("digital_assets", assets);
+    }
 
     function toggleGuide(id: string) {
         if (activeGuide === id) {
@@ -156,7 +243,7 @@
                         class="text-left p-4 rounded-xl border transition-all group {fireDrill.key
                             ? 'bg-rose-500 border-rose-600 text-white shadow-md transform scale-[1.02]'
                             : 'bg-white border-rose-200 hover:shadow-md'}"
-                        on:click={() => toggleDrill("key")}
+                        onclick={() => toggleDrill("key")}
                     >
                         <span
                             class="block text-xs font-bold uppercase tracking-wide mb-1 {fireDrill.key
@@ -179,7 +266,7 @@
                         class="text-left p-4 rounded-xl border transition-all group {fireDrill.twoFactor
                             ? 'bg-rose-500 border-rose-600 text-white shadow-md transform scale-[1.02]'
                             : 'bg-white border-rose-200 hover:shadow-md'}"
-                        on:click={() => toggleDrill("twoFactor")}
+                        onclick={() => toggleDrill("twoFactor")}
                     >
                         <span
                             class="block text-xs font-bold uppercase tracking-wide mb-1 {fireDrill.twoFactor
@@ -202,7 +289,7 @@
                         class="text-left p-4 rounded-xl border transition-all group {fireDrill.login
                             ? 'bg-rose-500 border-rose-600 text-white shadow-md transform scale-[1.02]'
                             : 'bg-white border-rose-200 hover:shadow-md'}"
-                        on:click={() => toggleDrill("login")}
+                        onclick={() => toggleDrill("login")}
                     >
                         <span
                             class="block text-xs font-bold uppercase tracking-wide mb-1 {fireDrill.login
@@ -225,7 +312,7 @@
                         class="text-left p-4 rounded-xl border transition-all group {fireDrill.phone
                             ? 'bg-rose-500 border-rose-600 text-white shadow-md transform scale-[1.02]'
                             : 'bg-white border-rose-200 hover:shadow-md'}"
-                        on:click={() => toggleDrill("phone")}
+                        onclick={() => toggleDrill("phone")}
                     >
                         <span
                             class="block text-xs font-bold uppercase tracking-wide mb-1 {fireDrill.phone
@@ -248,7 +335,7 @@
                         class="text-left p-4 rounded-xl border transition-all group {fireDrill.email
                             ? 'bg-rose-500 border-rose-600 text-white shadow-md transform scale-[1.02]'
                             : 'bg-white border-rose-200 hover:shadow-md'}"
-                        on:click={() => toggleDrill("email")}
+                        onclick={() => toggleDrill("email")}
                     >
                         <span
                             class="block text-xs font-bold uppercase tracking-wide mb-1 {fireDrill.email
@@ -271,7 +358,7 @@
                         class="text-left p-4 rounded-xl border transition-all group {fireDrill.will
                             ? 'bg-rose-500 border-rose-600 text-white shadow-md transform scale-[1.02]'
                             : 'bg-white border-rose-200 hover:shadow-md'}"
-                        on:click={() => toggleDrill("will")}
+                        onclick={() => toggleDrill("will")}
                     >
                         <span
                             class="block text-xs font-bold uppercase tracking-wide mb-1 {fireDrill.will
@@ -302,7 +389,7 @@
         >
             <button
                 class="w-full text-left p-6 flex items-start gap-4 cursor-pointer"
-                on:click={() => toggleGuide("apple")}
+                onclick={() => toggleGuide("apple")}
             >
                 <div
                     class="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center shrink-0"
@@ -369,7 +456,7 @@
                             Official Guide <ExternalLink size={12} />
                         </a>
                         <button
-                            on:click={() => markComplete("apple")}
+                            onclick={() => markComplete("apple")}
                             class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-gray-300 hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors"
                         >
                             {setupStatus.apple
@@ -387,7 +474,7 @@
         >
             <button
                 class="w-full text-left p-6 flex items-start gap-4 cursor-pointer"
-                on:click={() => toggleGuide("google")}
+                onclick={() => toggleGuide("google")}
             >
                 <div
                     class="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center shrink-0"
@@ -452,7 +539,7 @@
                             Direct Link <ExternalLink size={12} />
                         </a>
                         <button
-                            on:click={() => markComplete("google")}
+                            onclick={() => markComplete("google")}
                             class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-gray-300 hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors"
                         >
                             {setupStatus.google
@@ -470,7 +557,7 @@
         >
             <button
                 class="w-full text-left p-6 flex items-start gap-4 cursor-pointer"
-                on:click={() => toggleGuide("passwordManager")}
+                onclick={() => toggleGuide("passwordManager")}
             >
                 <div
                     class="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center shrink-0"
@@ -540,7 +627,7 @@
                         class="flex items-center gap-4 pt-4 border-t border-gray-200"
                     >
                         <button
-                            on:click={() => markComplete("passwordManager")}
+                            onclick={() => markComplete("passwordManager")}
                             class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-gray-300 hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors"
                         >
                             {setupStatus.passwordManager
@@ -558,7 +645,7 @@
         >
             <button
                 class="w-full text-left p-6 flex items-start gap-4 cursor-pointer"
-                on:click={() => toggleGuide("facebook")}
+                onclick={() => toggleGuide("facebook")}
             >
                 <div
                     class="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center shrink-0"
@@ -606,7 +693,7 @@
                         class="flex items-center gap-4 pt-4 border-t border-gray-200"
                     >
                         <button
-                            on:click={() => markComplete("facebook")}
+                            onclick={() => markComplete("facebook")}
                             class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-gray-300 hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors"
                         >
                             {setupStatus.facebook
@@ -623,7 +710,7 @@
         >
             <button
                 class="w-full text-left p-6 flex items-start gap-4 cursor-pointer"
-                on:click={() => toggleGuide("linkedin")}
+                onclick={() => toggleGuide("linkedin")}
             >
                 <div
                     class="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center shrink-0"
@@ -679,7 +766,7 @@
                         class="flex items-center gap-4 pt-4 border-t border-gray-200"
                     >
                         <button
-                            on:click={() => markComplete("linkedin")}
+                            onclick={() => markComplete("linkedin")}
                             class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-gray-300 hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors"
                         >
                             {setupStatus.linkedin
@@ -688,6 +775,109 @@
                         </button>
                     </div>
                 </div>
+            {/if}
+        </div>
+    </div>
+
+    <!-- Digital Assets Inventory -->
+    <div
+        class="mt-12 mb-20 animate-in fade-in slide-in-from-bottom-4 duration-700"
+    >
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h2 class="font-serif font-bold text-2xl text-[#304743]">
+                    Digital Asset Inventory
+                </h2>
+                <p class="text-slate-500 text-sm">
+                    Key accounts your executor needs access to.
+                </p>
+            </div>
+            <button
+                onclick={() => (showWizard = true)}
+                class="bg-[#304743] text-white px-4 py-2 rounded-full font-bold hover:bg-[#2a3f3b] transition-colors flex items-center gap-2 text-sm"
+            >
+                <Siren size={16} /> Run Discovery Wizard
+            </button>
+        </div>
+
+        <div class="space-y-3">
+            {#if showWizard}
+                <div
+                    class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+                    transition:fade
+                >
+                    <div
+                        class="w-full max-w-2xl relative bg-white rounded-2xl shadow-2xl overflow-hidden"
+                        transition:slide
+                    >
+                        <button
+                            class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10"
+                            onclick={() => (showWizard = false)}
+                        >
+                            <X size={20} />
+                        </button>
+                        <ConciergeFlow
+                            steps={wizardSteps}
+                            on:complete={handleWizardComplete}
+                        />
+                    </div>
+                </div>
+            {/if}
+
+            {#if assets.length === 0}
+                <!-- Ghost Rows -->
+                {#each getSmartSamples($language).digital || [] as sample}
+                    <GhostRow
+                        name={sample.name}
+                        subtitle={sample.description}
+                        type="Access"
+                        onClick={() =>
+                            addAsset(
+                                sample.name,
+                                sample.description || "",
+                                sample.type,
+                            )}
+                    >
+                        <svelte:fragment slot="icon">
+                            <Key size={20} class="text-slate-400" />
+                        </svelte:fragment>
+                    </GhostRow>
+                {/each}
+            {:else}
+                {#each assets as asset (asset.id)}
+                    <div
+                        class="bg-white p-4 rounded-xl border border-slate-100 flex justify-between items-center shadow-sm"
+                        transition:slide
+                    >
+                        <div class="flex items-center gap-4">
+                            <div
+                                class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600"
+                            >
+                                {#if asset.type === "Email"}
+                                    <Mail size={18} />
+                                {:else}
+                                    <Key size={18} />
+                                {/if}
+                            </div>
+                            <div>
+                                <div class="font-bold text-slate-800">
+                                    {asset.name}
+                                </div>
+                                <div
+                                    class="text-xs text-slate-500 uppercase tracking-wider"
+                                >
+                                    {asset.description}
+                                </div>
+                            </div>
+                        </div>
+                        <button
+                            onclick={() => deleteAsset(asset.id)}
+                            class="text-red-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-full transition-colors"
+                        >
+                            <X size={16} />
+                        </button>
+                    </div>
+                {/each}
             {/if}
         </div>
     </div>
