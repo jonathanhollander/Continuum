@@ -15,8 +15,8 @@
         ? registryData
         : Object.values(registryData).filter((x) => typeof x === "object");
 
-    $: moduleId = $page.params.id;
-    $: module = registry.find((m) => m.id === moduleId);
+    const moduleId = $derived($page.params.id);
+    const module = $derived(registry.find((m) => m.id === moduleId));
 </script>
 
 <div class="min-h-screen bg-background pb-20">

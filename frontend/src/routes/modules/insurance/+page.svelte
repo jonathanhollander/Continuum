@@ -40,13 +40,13 @@
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
 
-    let showAddModal = false;
-    let isEditing = false;
-    let searchQuery = "";
-    let filterType: string = "All";
-    let showWizard = false;
+    let showAddModal = $state(false);
+    let isEditing = $state(false);
+    let searchQuery = $state("");
+    let filterType = $state("All");
+    let showWizard = $state(false);
 
-    let newPolicy: Partial<InsurancePolicy> = {
+    let newPolicy = $state<Partial<InsurancePolicy>>({
         policyName: "",
         insuranceType: "Life",
         insurer: "",
@@ -60,7 +60,7 @@
         status: "Active",
         policyDocuments: "",
         notes: "",
-    };
+    });
 
     const wizardSteps = [
         {
@@ -136,18 +136,30 @@
         });
     }
 
-    $: policies = $insuranceStore;
-    $: filteredPolicies = policies.filter((p) => {
-        const matchesSearch =
-            p.policyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            p.insurer.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesFilter =
-            filterType === "All" || p.insuranceType === filterType;
-        return matchesSearch && matchesFilter;
-    });
+    const policies = $derived($insuranceStore);
+    const filteredPolicies = $derived(
+        policies.filter((p) => {
+            const matchesSearch =
+                p.policyName
+                    .toLowerCase()
+                    .includes(searchQuery.toLowerCase()) ||
+                p.insurer.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesFilter =
+                filterType === "All" || p.insuranceType === filterType;
+            return matchesSearch && matchesFilter;
+        }),
+    );
 
-    $: stats = insuranceStore.getTotalPremiums();
-    $: types = ["All", "Life", "Health", "Auto", "Home", "Disability", "Other"];
+    const stats = $derived(insuranceStore.getTotalPremiums());
+    const types = [
+        "All",
+        "Life",
+        "Health",
+        "Auto",
+        "Home",
+        "Disability",
+        "Other",
+    ];
 
     function resetForm() {
         newPolicy = {

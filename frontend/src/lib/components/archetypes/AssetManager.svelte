@@ -31,7 +31,7 @@
     import { getStored, setStored } from "$lib/stores/persistence";
     import { getSmartSamples } from "$lib/data/smartSamples";
 
-    export let module: any;
+    let { module } = $props<{ module: any }>();
 
     type AssetType =
         | "Property"
@@ -58,10 +58,10 @@
         closureNotes?: string;
     }
 
-    let assets: Asset[] = [];
-    let showAddForm = false;
+    let assets = $state<Asset[]>([]);
+    let showAddForm = $state(false);
 
-    let newAsset: Partial<Asset> & { id?: string } = {
+    let newAsset = $state<Partial<Asset> & { id?: string }>({
         name: "",
         type: "Financial",
         value: 0,
@@ -74,7 +74,7 @@
         loginUrl: "",
         beneficiaryEmail: "",
         closureNotes: "",
-    };
+    });
 
     const storageKey = `assets_${module.id}`;
 
@@ -342,10 +342,12 @@
         save();
     }
 
-    $: totalValue = assets.reduce(
-        (sum, asset) =>
-            sum + asset.value * ((asset.ownershipPercentage || 100) / 100),
-        0,
+    const totalValue = $derived(
+        assets.reduce(
+            (sum, asset) =>
+                sum + asset.value * ((asset.ownershipPercentage || 100) / 100),
+            0,
+        ),
     );
 
     function exportToCSV() {

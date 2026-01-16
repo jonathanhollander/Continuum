@@ -7,8 +7,8 @@
     import { t } from "$lib/stores/localization";
     import { fade, fly } from "svelte/transition";
 
-    let showWizard = false;
-    let reloadKey = 0;
+    let showWizard = $state(false);
+    let reloadKey = $state(0);
 
     const wizardSteps = [
         {

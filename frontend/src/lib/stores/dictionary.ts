@@ -526,8 +526,8 @@ export const dictionary = {
             keeperDesc: "Where should we send your secure access key?",
             btnCommit: "Secure My Legacy",
             welcomeTitle: "Welcome, ",
-            sequenceSent: "Your secure initialization sequence has been sent to ",
-            btnEnterVault: "Entrer dans la Voûte",
+            sequenceSent: "Votre séquence d'initialisation sécurisée a été envoyée à ",
+            btnEnterVault: "Entrer dans le Coffre-fort",
             login: "Connexion"
         }
     },
@@ -699,7 +699,7 @@ export const dictionary = {
             keeperDesc: "Where should we send your secure access key?",
             btnCommit: "Secure My Legacy",
             welcomeTitle: "Welcome, ",
-            sequenceSent: "Your secure initialization sequence has been sent to ",
+            sequenceSent: "Ihre sichere Initialisierungssequenz wurde gesendet an ",
             btnEnterVault: "Den Tresor betreten",
             login: "Anmelden"
         }
