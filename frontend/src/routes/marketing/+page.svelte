@@ -259,53 +259,78 @@
 
 <!-- Hero Section -->
 <section
-    class="relative h-screen flex items-center justify-center overflow-hidden"
+    class="relative min-h-[120vh] flex items-center justify-center overflow-hidden pt-32 pb-20"
 >
-    <!-- Hero Background Image (Blended) -->
-    <div class="absolute inset-0 z-0">
-        <img
-            src={assets.heroBg}
-            alt=""
-            class="w-full h-full object-cover opacity-20 mix-blend-screen scale-110"
-        />
-    </div>
+    <!-- Living Background Dust -->
+    <canvas bind:this={canvas} class="absolute inset-0 z-0 opacity-40"></canvas>
 
-    <canvas bind:this={canvas} class="absolute inset-0 z-0 opacity-60"></canvas>
-
-    <!-- Gradient Overlay -->
+    <!-- Gradient Underlay -->
     <div
-        class="absolute inset-0 bg-gradient-to-b from-transparent via-[#0F1115]/20 to-[#0F1115] z-0"
+        class="absolute inset-0 bg-gradient-to-b from-[#0F1115] via-transparent to-[#0F1115] z-0 opacity-80"
     ></div>
 
     {#if introVisible}
         <div
-            class="relative z-10 text-center px-4 max-w-5xl mx-auto space-y-12"
+            class="relative z-10 text-center px-4 max-w-6xl mx-auto flex flex-col items-center"
             in:fade={{ duration: 2000 }}
         >
+            <!-- The Main Title -->
             <h1
-                class="text-4xl md:text-8xl font-serif font-medium text-white leading-tight tracking-tight drop-shadow-2xl"
+                class="text-5xl md:text-[7rem] font-serif font-medium text-white leading-[0.9] tracking-tighter drop-shadow-2xl mb-8"
             >
                 {$mt.heroTitle} <br />
                 <span
-                    class="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-200 to-amber-500 italic relative"
+                    class="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-500 italic relative"
                 >
                     {$mt.heroSubtitle}
                     <div
-                        class="absolute inset-0 blur-xl bg-amber-400/20 -z-10 animate-pulse"
+                        class="absolute inset-0 blur-3xl bg-amber-400/10 -z-10 animate-pulse"
                     ></div>
                 </span>
             </h1>
+
             <p
-                class="text-lg md:text-2xl text-slate-200 max-w-2xl mx-auto font-light leading-relaxed tracking-wide"
+                class="text-lg md:text-2xl text-slate-300 max-w-2xl mx-auto font-light leading-relaxed tracking-wide mb-16 px-4"
                 in:fly={{ y: 20, duration: 1500, delay: 500 }}
             >
                 {$mt.heroDesc}
             </p>
 
-            <div class="pt-8" in:fade={{ delay: 1000, duration: 1000 }}>
+            <!-- The Primary Graphic: The Hidden Shoebox -->
+            <div
+                class="relative group perspective-container w-full max-w-4xl mx-auto px-4"
+                in:fly={{ y: 40, duration: 2000, delay: 800 }}
+                on:mousemove={handleTilt}
+                on:mouseleave={resetTilt}
+            >
+                <div
+                    class="holo-card relative rounded-[2.5rem] overflow-hidden border border-white/20 shadow-[0_40px_100px_-15px_rgba(0,0,0,0.8)] bg-black transition-all duration-700"
+                >
+                    <img
+                        src="/images/hero_shoebox.png"
+                        alt="The Hidden Shoebox Discovery"
+                        class="w-full h-auto object-cover opacity-90 group-hover:opacity-100 group-hover:scale-[1.02] transition-all duration-1000"
+                    />
+
+                    <!-- Atmospheric Overlay (Matches the glow in the image) -->
+                    <div
+                        class="absolute inset-0 bg-gradient-to-tr from-amber-500/10 via-transparent to-transparent pointer-events-none"
+                    ></div>
+
+                    <!-- Shine effect -->
+                    <div class="shine"></div>
+                </div>
+
+                <!-- Ground Reflection / Glow -->
+                <div
+                    class="absolute -bottom-10 left-1/2 -translate-x-1/2 w-[90%] h-20 bg-amber-500/10 blur-[80px] rounded-full -z-10"
+                ></div>
+            </div>
+
+            <div class="pt-24" in:fade={{ delay: 1500, duration: 1000 }}>
                 <div class="animate-bounce">
                     <ArrowRight
-                        class="text-white/30 rotate-90 mx-auto"
+                        class="text-white/20 rotate-90 mx-auto"
                         size={32}
                     />
                 </div>
