@@ -384,6 +384,11 @@
 	<CommandCenter on:close={() => (showCommandCenter = false)} />
 {/if}
 
+<CompassPanel
+	bind:isOpen={isCompassOpen}
+	onClose={() => (isCompassOpen = false)}
+/>
+
 {#if $magicTrigger}
 	<SuccessParticles />
 {/if}
