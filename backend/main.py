@@ -94,20 +94,31 @@ def save_estate(estate_data: dict, user_id: int, session: Session = Depends(get_
 app.mount("/_app", StaticFiles(directory="frontend/dist/_app"), name="_app")
 app.mount("/images", StaticFiles(directory="frontend/dist/images"), name="images")
 
+# Handle root specifically to avoid 404s
+@app.get("/")
+async def serve_root():
+    return FileResponse("frontend/dist/index.html")
+
 # Catch-all route to serve index.html for client-side routing
 @app.get("/{full_path:path}")
 async def serve_spa(full_path: str):
+    print(f"DEBUG: Catch-all route hit for path: '{full_path}'")
+
     # If the path starts with api, it should have been caught by the routes above.
     # If we are here, it means the API route doesn't exist.
     if full_path.startswith("api"):
         raise HTTPException(status_code=404, detail="API endpoint not found")
     
     # Check if the file exists in dist (e.g. /favicon.ico, /robots.txt)
-    file_path = os.path.join("frontend", "dist", full_path)
+    # Ensure full_path does not start with / to work with os.path.join correctly
+    clean_path = full_path.lstrip("/")
+    file_path = os.path.join("frontend", "dist", clean_path)
+    
     if os.path.isfile(file_path):
         return FileResponse(file_path)
     
     # Otherwise, serve the index.html for the frontend to handle routing
+    print(f"DEBUG: Falling back to index.html for path: '{full_path}'")
     return FileResponse("frontend/dist/index.html")
 
 if __name__ == "__main__":

@@ -13,6 +13,9 @@
         Pencil,
     } from "lucide-svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
+    import GhostRow from "$lib/components/ui/GhostRow.svelte";
+    import { t, language } from "$lib/stores/localization";
+    import { getSmartSamples } from "$lib/data/smartSamples";
     import { petStore, type PetEntry } from "$lib/stores/petStore";
     import { onMount } from "svelte";
     import { estateProfile } from "$lib/stores/estateStore";
@@ -231,10 +234,32 @@
 
         <!-- Empty State / Add Placeholder -->
         {#if $petStore.length === 0}
-            <div
-                class="col-span-full text-center py-20 border-2 border-dashed border-gray-200 rounded-3xl"
-            >
-                <p class="text-muted-foreground">No pets added yet.</p>
+            <div class="col-span-full space-y-4">
+                {#each getSmartSamples($language).pets || [] as sample}
+                    <GhostRow
+                        name={sample.name}
+                        subtitle={`${sample.breed} • ${sample.guardian}`}
+                        type="Pet"
+                        onClick={() => {
+                            newPet = {
+                                ...newPet,
+                                name: sample.name,
+                                breed: sample.breed,
+                                type: sample.type as "dog" | "cat" | "other",
+                                guardian: sample.guardian,
+                            };
+                            showAddForm = true;
+                        }}
+                    >
+                        <svelte:fragment slot="icon">
+                            {#if sample.type === "cat"}
+                                <Cat size={20} class="text-slate-400" />
+                            {:else}
+                                <Dog size={20} class="text-slate-400" />
+                            {/if}
+                        </svelte:fragment>
+                    </GhostRow>
+                {/each}
             </div>
         {/if}
     </div>

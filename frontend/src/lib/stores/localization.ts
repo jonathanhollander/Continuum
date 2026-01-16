@@ -1,50 +1,23 @@
 import { writable, derived } from "svelte/store";
+import { dictionary } from "$lib/stores/dictionary";
 
-export const activeLanguage = writable<"en" | "es">("en");
+export const activeLanguage = writable("en");
+// Alias for compatibility
+export const language = activeLanguage;
 
-const dictionary = {
-    en: {
-        "dashboard.welcome": "Good Morning",
-        "dashboard.protection": "Protection Score",
-        "dashboard.concierge": "Concierge",
-        "nav.dashboard": "Dashboard",
-        "nav.assets": "Assets",
-        "nav.vault": "Legal Vault",
-        "nav.family": "Family Hub",
-        "nav.timeline": "Timeline",
-        "nav.executor": "Executor Toolkit",
-        "common.add": "Add",
-        "common.save": "Save",
-        "common.cancel": "Cancel",
-        "common.delete": "Delete",
-        "common.edit": "Edit",
-        "welcome.subtitle": "Your legacy is secure. Here is your daily briefing.",
-        "status.healthy": "Healthy",
-        "status.action_needed": "Action Needed"
-    },
-    es: {
-        "dashboard.welcome": "Buenos Días",
-        "dashboard.protection": "Nivel de Protección",
-        "dashboard.concierge": "Conserje",
-        "nav.dashboard": "Panel Principal",
-        "nav.assets": "Activos",
-        "nav.vault": "Bóveda Legal",
-        "nav.family": "Centro Familiar",
-        "nav.timeline": "Línea de Tiempo",
-        "nav.executor": "Herramientas de Ejecutor",
-        "common.add": "Agregar",
-        "common.save": "Guardar",
-        "common.cancel": "Cancelar",
-        "common.delete": "Eliminar",
-        "common.edit": "Editar",
-        "welcome.subtitle": "Tu legado está seguro. Aquí está tu informe diario.",
-        "status.healthy": "Saludable",
-        "status.action_needed": "Acción Necesaria"
-    }
-};
+function getNestedValue(obj: any, path: string): string {
+    return path.split('.').reduce((prev, curr) => {
+        return prev ? prev[curr] : null;
+    }, obj) || path;
+}
 
 export const t = derived(activeLanguage, ($lang) => {
     return (key: string) => {
-        return (dictionary[$lang] as any)[key] || key;
+        const langDict = (dictionary as any)[$lang] || dictionary['en'];
+        // Try direct access first (for flat keys)
+        if (langDict[key]) return langDict[key];
+
+        // Try nested access
+        return getNestedValue(langDict, key);
     };
 });

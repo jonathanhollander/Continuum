@@ -17,6 +17,8 @@
     import { fade, scale } from "svelte/transition";
     import { FileText, Download, Printer } from "lucide-svelte";
     import { getStored, setStored } from "$lib/stores/persistence";
+    import { t, language } from "$lib/stores/localization";
+    import { getSmartSamples } from "$lib/data/smartSamples";
 
     type Subscription = {
         id: string;
@@ -262,19 +264,25 @@
     <!-- Content -->
     {#if subscriptions.length === 0}
         <!-- GHOST ROW IMPLEMENTATION -->
+        <!-- GHOST ROW IMPLEMENTATION -->
         <div class="space-y-4">
-            <GhostRow
-                type="Subscription"
-                onClick={() => (showAddForm = true)}
-            />
-            <GhostRow
-                type="Subscription"
-                onClick={() => (showAddForm = true)}
-            />
-            <GhostRow
-                type="Subscription"
-                onClick={() => (showAddForm = true)}
-            />
+            {#each getSmartSamples($language).subscriptions || [] as sample}
+                <GhostRow
+                    name={sample.name}
+                    subtitle={`${sample.cost}/mo • ${sample.cycle}`}
+                    type="Subscription"
+                    onClick={() => {
+                        newSub = {
+                            ...newSub,
+                            name: sample.name,
+                            cost: sample.cost,
+                            cycle: sample.cycle as "Monthly" | "Yearly",
+                            difficulty: "Medium",
+                        };
+                        showAddForm = true;
+                    }}
+                />
+            {/each}
 
             <div class="flex justify-center mt-6">
                 <button

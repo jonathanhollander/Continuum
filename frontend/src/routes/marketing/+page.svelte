@@ -285,11 +285,11 @@
             <h1
                 class="text-4xl md:text-8xl font-serif font-medium text-white leading-tight tracking-tight drop-shadow-2xl"
             >
-                The most important box <br />
+                {$mt.heroTitle} <br />
                 <span
                     class="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-200 to-amber-500 italic relative"
                 >
-                    you'll never open.
+                    {$mt.heroSubtitle}
                     <div
                         class="absolute inset-0 blur-xl bg-amber-400/20 -z-10 animate-pulse"
                     ></div>
@@ -299,10 +299,7 @@
                 class="text-lg md:text-2xl text-slate-200 max-w-2xl mx-auto font-light leading-relaxed tracking-wide"
                 in:fly={{ y: 20, duration: 1500, delay: 500 }}
             >
-                Your parents had a shoebox under the bed. You have <span
-                    class="text-amber-300 font-normal">Continuum</span
-                >. The digital sanctuary for your legacy, ensuring your loved
-                ones have exactly what they need, the moment they need it.
+                {$mt.heroDesc}
             </p>
 
             <div class="pt-8" in:fade={{ delay: 1000, duration: 1000 }}>

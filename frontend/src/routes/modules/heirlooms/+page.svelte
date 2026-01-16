@@ -1,6 +1,14 @@
 <script lang="ts">
-    import { fade } from "svelte/transition";
-    import { Gift, Heart, Plus, Search, X, QrCode } from "lucide-svelte";
+    import { fade, fly } from "svelte/transition";
+    import {
+        Gift,
+        Heart,
+        Plus,
+        Search,
+        X,
+        QrCode,
+        Sparkles,
+    } from "lucide-svelte";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import HeirloomCard from "$lib/components/modules/heirlooms/HeirloomCard.svelte";
     import VisionUploader from "$lib/components/modules/heirlooms/VisionUploader.svelte";
@@ -13,7 +21,74 @@
     import { goto } from "$app/navigation";
     import { heirloomStore, type Heirloom } from "$lib/stores/heirloomStore";
     import { REFLECTION_POOLS } from "$lib/data/reflectionPools";
-    import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
+    import GhostRow from "$lib/components/ui/GhostRow.svelte";
+    import { t, language } from "$lib/stores/localization";
+    import { getSmartSamples } from "$lib/data/smartSamples";
+    import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
+
+    let showWizard = $state(false);
+
+    const wizardSteps = [
+        {
+            id: "intro",
+            question: "Do you have any family heirlooms or sentimental items?",
+            type: "boolean" as const,
+            logic: { yes: "jewelry", no: "EXIT", next: "jewelry" },
+        },
+        {
+            id: "jewelry",
+            question: "Do you want to catalog family jewelry (rings, watches)?",
+            type: "boolean" as const,
+            logic: { next: "photos" },
+        },
+        {
+            id: "photos",
+            question: "Do you have old family photos that need preserving?",
+            type: "boolean" as const,
+        },
+    ];
+
+    function handleWizardComplete(event: CustomEvent) {
+        const answers = event.detail;
+
+        if (answers.intro === false) {
+            showWizard = false;
+            return;
+        }
+
+        const samples = getSmartSamples($language).heirlooms;
+        const newItems: Heirloom[] = [];
+
+        // Jewelry -> Watch
+        if (answers.jewelry) {
+            const watch = samples.find(
+                (s) => s.name?.includes("Rolex") || s.name?.includes("Reloj"),
+            );
+            if (watch)
+                newItems.push({
+                    ...watch,
+                    id: crypto.randomUUID(),
+                } as Heirloom);
+        }
+
+        // Photos -> Old Photos
+        if (answers.photos) {
+            const photos = samples.find(
+                (s) => s.name?.includes("Photos") || s.name?.includes("Fotos"),
+            );
+            if (photos)
+                newItems.push({
+                    ...photos,
+                    id: crypto.randomUUID(),
+                } as Heirloom);
+        }
+
+        if (newItems.length > 0) {
+            heirloomStore.update((current) => [...current, ...newItems]);
+        }
+
+        showWizard = false;
+    }
 
     onMount(() => {
         // Migration: Fix broken/legacy Unsplash URLs in existing data
@@ -47,7 +122,6 @@
         }
     }
 
-    // Default placeholder images for items without photos
     // Default placeholder images mapped to keywords
     const HEIRLOOM_THEMES = [
         {
@@ -138,11 +212,11 @@
         ].url;
     }
 
-    let showAddForm = false;
+    let showAddForm = $state(false);
 
-    let newHeirloom: Partial<Heirloom> = {
+    let newHeirloom: Partial<Heirloom> = $state({
         image: "", // Default to empty to show upload state
-    };
+    });
 
     function addHeirloom() {
         if (!newHeirloom.name) return;
@@ -174,9 +248,9 @@
     }
 
     // QR Logic
-    let showQrModal = false;
-    let qrTarget: Heirloom | null = null;
-    let qrUrl = "";
+    let showQrModal = $state(false);
+    let qrTarget: Heirloom | null = $state(null);
+    let qrUrl = $state("");
 
     function openQrModal(item: Heirloom) {
         qrTarget = item;
@@ -202,15 +276,30 @@
             entityName: item.name,
             userContext: $estateProfile.ownerName || "User",
         });
-
-        // alert("QR Label generated! Redirecting to QR Access Center...");
-        // goto("/modules/qr-codes");
     }
 
     function printLabel() {
         window.print();
     }
 </script>
+
+{#if showWizard}
+    <div
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+        transition:fade
+    >
+        <div class="w-full max-w-2xl relative" in:fly={{ y: 20 }}>
+            <button
+                class="absolute -top-12 right-0 text-white/50 hover:text-white"
+                onclick={() => (showWizard = false)}>Close</button
+            >
+            <ConciergeFlow
+                steps={wizardSteps}
+                on:complete={handleWizardComplete}
+            />
+        </div>
+    </div>
+{/if}
 
 <div class="max-w-7xl mx-auto p-8 animate-in fade-in duration-500">
     <!-- Hero / Header -->
@@ -252,12 +341,21 @@
                 class="w-full pl-10 pr-4 py-3 rounded-2xl border border-stone-200 focus:border-[#4A7C74] focus:ring-0 shadow-sm"
             />
         </div>
-        <button
-            class="bg-[#304743] leading-none text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 shadow-lg hover:shadow-xl hover:bg-[#20302d] transition-all"
-            on:click={() => (showAddForm = true)}
-        >
-            <Plus size={20} /> Add Heirloom
-        </button>
+        <div class="flex gap-3">
+            <button
+                onclick={() => (showWizard = true)}
+                class="px-5 py-3 bg-indigo-600 text-white rounded-2xl font-bold shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2"
+            >
+                <Sparkles size={18} />
+                Start Concierge
+            </button>
+            <button
+                class="bg-[#304743] leading-none text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 shadow-lg hover:shadow-xl hover:bg-[#20302d] transition-all"
+                onclick={() => (showAddForm = true)}
+            >
+                <Plus size={20} /> Add Heirloom
+            </button>
+        </div>
     </div>
 
     <!-- Grid -->
@@ -265,13 +363,30 @@
         <div
             class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
         >
-            <GhostRow type="Heirloom" onClick={() => (showAddForm = true)} />
-            <GhostRow type="Heirloom" onClick={() => (showAddForm = true)} />
-            <GhostRow type="Heirloom" onClick={() => (showAddForm = true)} />
+            {#each getSmartSamples($language).heirlooms || [] as sample}
+                <GhostRow
+                    name={sample.name}
+                    subtitle={`${sample.story}. For: ${sample.recipient}`}
+                    type="Heirloom"
+                    onClick={() => {
+                        newHeirloom = {
+                            ...newHeirloom,
+                            name: sample.name,
+                            story: sample.story,
+                            recipient: sample.recipient,
+                        };
+                        showAddForm = true;
+                    }}
+                >
+                    <svelte:fragment slot="icon">
+                        <Gift size={20} class="text-slate-400" />
+                    </svelte:fragment>
+                </GhostRow>
+            {/each}
 
             <button
                 class="border-2 border-dashed border-stone-200 rounded-xl flex flex-col items-center justify-center text-stone-400 hover:border-[#4A7C74] hover:text-[#4A7C74] hover:bg-[#4A7C74]/5 transition-all h-[88px] group"
-                on:click={() => (showAddForm = true)}
+                onclick={() => (showAddForm = true)}
             >
                 <div class="flex items-center gap-2">
                     <Plus size={20} />
@@ -281,7 +396,7 @@
         </div>
         <div class="flex justify-center mt-6">
             <button
-                on:click={() => (showAddForm = true)}
+                onclick={() => (showAddForm = true)}
                 class="text-sm font-bold text-[#4A7C74] hover:bg-[#4A7C74]/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
             >
                 <Gift size={14} /> Start Heirloom Registry
@@ -298,7 +413,7 @@
                         onPrintQr={() => openQrModal(heirloom)}
                     />
                     <button
-                        on:click={() => removeHeirloom(heirloom.id)}
+                        onclick={() => removeHeirloom(heirloom.id)}
                         class="absolute top-2 right-2 p-2 bg-white/90 text-rose-600 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all hover:bg-rose-50"
                         title="Remove"
                     >
@@ -310,7 +425,7 @@
             <!-- Add New Placeholder -->
             <button
                 class="border-2 border-dashed border-stone-200 rounded-2xl flex flex-col items-center justify-center text-stone-400 hover:border-[#4A7C74] hover:text-[#4A7C74] hover:bg-[#4A7C74]/5 transition-all min-h-[350px] group"
-                on:click={() => (showAddForm = true)}
+                onclick={() => (showAddForm = true)}
             >
                 <div
                     class="w-16 h-16 rounded-full bg-stone-100 group-hover:bg-[#4A7C74]/10 flex items-center justify-center mb-4 transition-colors"
@@ -372,13 +487,13 @@
                     <!-- Actions -->
                     <div class="mt-8 flex gap-3 justify-center print:hidden">
                         <button
-                            on:click={() => (showQrModal = false)}
+                            onclick={() => (showQrModal = false)}
                             class="px-5 py-2 rounded-xl font-bold text-stone-500 hover:bg-stone-100"
                         >
                             Close
                         </button>
                         <button
-                            on:click={printLabel}
+                            onclick={printLabel}
                             class="px-5 py-2 rounded-xl font-bold bg-[#304743] text-white hover:bg-[#20302d] flex items-center gap-2"
                         >
                             <QrCode size={18} /> Print Label
@@ -404,7 +519,7 @@
                         Add Heirloom
                     </h3>
                     <button
-                        on:click={() => (showAddForm = false)}
+                        onclick={() => (showAddForm = false)}
                         class="text-gray-400 hover:text-gray-600">Close</button
                     >
                 </div>
@@ -476,12 +591,12 @@
 
                 <div class="p-6 bg-gray-50 flex justify-end gap-3">
                     <button
-                        on:click={() => (showAddForm = false)}
+                        onclick={() => (showAddForm = false)}
                         class="px-6 py-2 rounded-xl font-bold text-gray-500 hover:bg-gray-200"
                         >Cancel</button
                     >
                     <button
-                        on:click={addHeirloom}
+                        onclick={addHeirloom}
                         disabled={!newHeirloom.name}
                         class="px-6 py-2 rounded-xl font-bold bg-[#304743] text-white hover:bg-[#20302d] disabled:opacity-50"
                         >Save Item</button

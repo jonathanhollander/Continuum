@@ -23,11 +23,13 @@
     } from "lucide-svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
+    import { language } from "$lib/stores/localization";
     import { encouragementMode, userRole } from "$lib/stores/concierge";
     import { estateProfile } from "$lib/stores/estateStore";
     import { activityLog } from "$lib/stores/activityLog";
     import { fly, scale, slide, fade } from "svelte/transition";
     import { getStored, setStored } from "$lib/stores/persistence";
+    import { getSmartSamples } from "$lib/data/smartSamples";
 
     export let module: any;
 
@@ -684,9 +686,42 @@
         <!-- Smart Default Empty State -->
         <!-- Smart Default Empty State -->
         {#if assets.length === 0}
-            <GhostRow type="Asset" onClick={() => (showAddForm = true)} />
-            <GhostRow type="Asset" onClick={() => (showAddForm = true)} />
-            <GhostRow type="Asset" onClick={() => (showAddForm = true)} />
+            <div
+                class="col-span-full border border-amber-200 bg-amber-50/50 rounded-xl p-4 mb-4 flex items-center gap-3 text-amber-800"
+            >
+                <Sparkles size={20} />
+                <p class="text-sm font-medium">
+                    Concierge Mode: Showing examples based on your region.
+                </p>
+            </div>
+
+            {#each getSmartSamples($language)[module.id === "assets-main" ? "financial" : "property"] || [] as sample}
+                {@const sampleValue =
+                    (sample as any).valuation ?? (sample as any).value ?? 0}
+                <GhostRow
+                    name={sample.name}
+                    subtitle={sample.type}
+                    value={sampleValue}
+                    type="Asset"
+                    onClick={() => {
+                        newAsset = {
+                            ...newAsset,
+                            name: sample.name,
+                            type: sample.type as AssetType,
+                            value: sampleValue,
+                        };
+                        showAddForm = true;
+                    }}
+                >
+                    <svelte:fragment slot="icon">
+                        <svelte:component
+                            this={getIcon(sample.type as AssetType)}
+                            size={20}
+                            class="text-slate-400"
+                        />
+                    </svelte:fragment>
+                </GhostRow>
+            {/each}
 
             <div class="col-span-full flex justify-center mt-4">
                 {#if $userRole !== "Family"}

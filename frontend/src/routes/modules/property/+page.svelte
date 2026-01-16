@@ -37,10 +37,17 @@
     import EvidenceGalleryUploader from "$lib/components/ui/EvidenceGalleryUploader.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
 
+    // Concierge Imports
+    import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
+    import { t, language } from "$lib/stores/localization";
+    import { getSmartSamples } from "$lib/data/smartSamples";
+    import { fly } from "svelte/transition"; // Ensure fly is imported
+
     let showAddModal = false;
     let isEditing = false;
     let searchQuery = "";
     let filterType: string = "All";
+    let showWizard = false;
 
     let newItem: Partial<PropertyItem> = {
         name: "",
@@ -54,6 +61,71 @@
         evidence: [],
         thumbnail: "",
     };
+
+    const wizardSteps = [
+        {
+            id: "intro",
+            question: "wizard.start",
+            type: "boolean" as const,
+            logic: { yes: "real", no: "cancel", next: "real" },
+        },
+        {
+            id: "real",
+            question: "wizard.property_real",
+            type: "boolean" as const,
+            logic: { next: "vehicle" },
+        },
+        {
+            id: "vehicle",
+            question: "wizard.property_vehicle",
+            type: "boolean" as const,
+            logic: { next: "personal" },
+        },
+        {
+            id: "personal",
+            question: "wizard.property_personal",
+            type: "boolean" as const,
+        },
+    ];
+
+    function handleWizardComplete(event: CustomEvent) {
+        const answers = event.detail;
+        if (answers.intro === false) {
+            showWizard = false;
+            return;
+        }
+
+        if (answers.real) addWizardItem("Primary Residence", "Real Estate");
+        if (answers.vehicle) addWizardItem("Daily Driver", "Vehicle");
+        if (answers.personal)
+            addWizardItem("Jewelry / Watch Collection", "Valuable");
+
+        showWizard = false;
+    }
+
+    function addWizardItem(name: string, type: any) {
+        const created = propertyStore.addItem({
+            name: name,
+            type: type,
+            location: "TBD",
+            valuation: 0,
+            status: "Owned",
+            ownershipDetails: "",
+            documents: "",
+            notes: "Added via Concierge Wizard",
+            evidence: [],
+            thumbnail: "",
+        });
+
+        activityLog.logEvent({
+            module: "Property",
+            action: "CREATE",
+            entityType: "Asset",
+            entityId: created.id,
+            entityName: created.name,
+            userContext: "Concierge",
+        });
+    }
 
     $: items = $propertyStore;
     $: filteredItems = items.filter((i) => {
@@ -223,6 +295,25 @@
 <div
     class="p-8 max-w-[1400px] mx-auto space-y-8 animate-in fade-in duration-700"
 >
+    <!-- Wizard Modal -->
+    {#if showWizard}
+        <div
+            class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+            transition:fade
+        >
+            <div class="w-full max-w-2xl relative" in:fly={{ y: 20 }}>
+                <button
+                    class="absolute -top-12 right-0 text-white/50 hover:text-white"
+                    on:click={() => (showWizard = false)}>Close</button
+                >
+                <ConciergeFlow
+                    steps={wizardSteps}
+                    on:complete={handleWizardComplete}
+                />
+            </div>
+        </div>
+    {/if}
+
     <!-- Header Section -->
     <header
         class="flex flex-col xl:flex-row xl:items-end justify-between gap-6 pb-2"
@@ -252,6 +343,13 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
+            <button
+                on:click={() => (showWizard = true)}
+                class="flex items-center gap-2 px-5 py-3 border border-blue-100 text-blue-700 font-bold rounded-2xl hover:bg-blue-50 transition-colors"
+            >
+                <Info size={18} />
+                {$t("wizard.start")}
+            </button>
             <div
                 class="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm"
             >
@@ -586,30 +684,51 @@
             </div>
         {:else}
             <!-- GHOST ROW IMPLEMENTATION -->
-            <div class="col-span-full space-y-4">
-                <GhostRow
-                    type="Property"
-                    onClick={() => (showAddModal = true)}
-                />
-                <GhostRow
-                    type="Property"
-                    onClick={() => (showAddModal = true)}
-                />
-                <GhostRow
-                    type="Property"
-                    onClick={() => (showAddModal = true)}
-                />
-
-                <div class="flex justify-center mt-6">
-                    <button
-                        on:click={() => (showAddModal = true)}
-                        class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg shadow-blue-600/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+            {#if filteredItems.length === 0 && searchQuery === ""}
+                <div class="col-span-full space-y-4">
+                    <div
+                        class="border border-blue-200 bg-blue-50/50 rounded-xl p-4 mb-4 flex items-center gap-3 text-blue-800"
                     >
-                        <Plus size={18} />
-                        Register First Asset
-                    </button>
+                        <Info size={20} />
+                        <p class="text-sm font-medium">
+                            Concierge Mode: Showing examples based on your
+                            region.
+                        </p>
+                    </div>
+
+                    {#each getSmartSamples($language).property || [] as sample}
+                        <GhostRow
+                            name={sample.name}
+                            subtitle={sample.type}
+                            value={sample.valuation}
+                            type="Property"
+                            onClick={() => {
+                                newItem = {
+                                    ...newItem,
+                                    name: sample.name,
+                                    type: sample.type as any,
+                                    valuation: sample.valuation || 0,
+                                };
+                                showAddModal = true;
+                            }}
+                        >
+                            <svelte:fragment slot="icon">
+                                <Building size={20} class="text-slate-400" />
+                            </svelte:fragment>
+                        </GhostRow>
+                    {/each}
+
+                    <div class="flex justify-center mt-6">
+                        <button
+                            on:click={() => (showAddModal = true)}
+                            class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg shadow-blue-600/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                        >
+                            <Plus size={18} />
+                            Register First Asset
+                        </button>
+                    </div>
                 </div>
-            </div>
+            {/if}
         {/each}
     </div>
 </div>

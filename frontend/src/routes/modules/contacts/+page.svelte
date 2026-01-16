@@ -14,7 +14,9 @@
     } from "lucide-svelte";
     import { onMount } from "svelte";
     import ContactRow from "$lib/components/modules/contacts/ContactRow.svelte";
-    import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
+    import GhostRow from "$lib/components/ui/GhostRow.svelte";
+    import { t, language } from "$lib/stores/localization";
+    import { getSmartSamples } from "$lib/data/smartSamples";
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
     import { getStored, setStored } from "$lib/stores/persistence";
@@ -209,18 +211,29 @@
     <div class="min-h-[500px]">
         {#if contacts.length === 0}
             <div class="max-w-3xl mx-auto space-y-4">
-                <GhostRow
-                    type="Contact"
-                    onClick={() => (showAddModal = true)}
-                />
-                <GhostRow
-                    type="Contact"
-                    onClick={() => (showAddModal = true)}
-                />
-                <GhostRow
-                    type="Contact"
-                    onClick={() => (showAddModal = true)}
-                />
+                {#each getSmartSamples($language).contacts || [] as sample}
+                    <GhostRow
+                        name={sample.name}
+                        subtitle={`${sample.role} • ${sample.relation}`}
+                        type="Contact"
+                        onClick={() => {
+                            newContact = {
+                                ...newContact,
+                                name: sample.name,
+                                role: sample.role as ContactRole,
+                                relation: sample.relation,
+                                phone: sample.phone,
+                                email: sample.email,
+                                tier: "2_SameDay",
+                            };
+                            showAddModal = true;
+                        }}
+                    >
+                        <svelte:fragment slot="icon">
+                            <User size={20} class="text-slate-400" />
+                        </svelte:fragment>
+                    </GhostRow>
+                {/each}
 
                 <div class="flex justify-center mt-4">
                     <button

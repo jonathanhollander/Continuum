@@ -30,6 +30,8 @@ export interface SmartSampleCollection {
     medical: MedicalDirective[];
     pets: PetEntry[];
     subscriptions: any[]; // Subscriptions use a simpler generic structure often
+    contacts: any[];
+    memories: any[];
 }
 
 const dictionaries = {
@@ -99,6 +101,12 @@ const dictionaries = {
             cat_shop: "Shopping",
             notes_netflix: "Family plan shared with kids.",
             notes_amazon: "Primary account for household."
+        },
+        memories: {
+            beach: "Family Beach Trip 2023",
+            wedding: "Our Wedding Day",
+            notes_beach: "Beautiful sunset at Cancun.",
+            notes_wedding: "The best day of our lives."
         }
     },
     es: {
@@ -167,6 +175,12 @@ const dictionaries = {
             cat_shop: "Compras",
             notes_netflix: "Plan familiar compartido con los niños.",
             notes_amazon: "Cuenta principal del hogar."
+        },
+        memories: {
+            beach: "Viaje Familiar a la Playa 2023",
+            wedding: "El Día de Nuestra Boda",
+            notes_beach: "Hermoso atardecer en Cancún.",
+            notes_wedding: "El mejor día de nuestras vidas."
         }
     }
     // Add other languages as needed, default to EN
@@ -414,6 +428,26 @@ export const getSmartSamples = (locale: string = 'en'): SmartSampleCollection =>
                 tier: '2_SameDay',
                 notificationStatus: 'Pending',
                 notes: dict.contacts.notes
+            }
+        ],
+        memories: [
+            {
+                id: commonId('mem-1'),
+                title: dict.memories.beach,
+                date: '2023-07-15',
+                location: 'Cancun, Mexico',
+                description: dict.memories.notes_beach,
+                tags: ['vacation', 'family'],
+                mediaUrl: 'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=400&q=80'
+            },
+            {
+                id: commonId('mem-2'),
+                title: dict.memories.wedding,
+                date: '2010-06-20',
+                location: 'New York, NY',
+                description: dict.memories.notes_wedding,
+                tags: ['milestone', 'wedding'],
+                mediaUrl: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=400&q=80'
             }
         ]
     };

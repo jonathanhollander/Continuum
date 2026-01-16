@@ -24,6 +24,8 @@
     import { onMount } from "svelte";
     import { estateProfile } from "$lib/stores/estateStore";
     import { activityLog } from "$lib/stores/activityLog";
+    import { t, language } from "$lib/stores/localization";
+    import { getSmartSamples } from "$lib/data/smartSamples";
 
     // --- State & Types ---
     type MemoryType = "photo" | "recipe" | "quote";
@@ -282,7 +284,7 @@
                         Preserve a Memory
                     </h3>
                     <button
-                        on:click={resetForm}
+                        onclick={resetForm}
                         class="p-2 hover:bg-gray-200 rounded-full transition-colors"
                     >
                         <X size={20} class="text-gray-500" />
@@ -296,7 +298,7 @@
                             'photo'
                                 ? 'bg-white shadow text-[#4A7C74]'
                                 : 'text-gray-500 hover:text-gray-700'}"
-                            on:click={() => (newMemory.type = "photo")}
+                            onclick={() => (newMemory.type = "photo")}
                             >Photo</button
                         >
                         <button
@@ -304,7 +306,7 @@
                             'recipe'
                                 ? 'bg-white shadow text-[#4A7C74]'
                                 : 'text-gray-500 hover:text-gray-700'}"
-                            on:click={() => (newMemory.type = "recipe")}
+                            onclick={() => (newMemory.type = "recipe")}
                             >Recipe</button
                         >
                         <button
@@ -312,20 +314,22 @@
                             'quote'
                                 ? 'bg-white shadow text-[#4A7C74]'
                                 : 'text-gray-500 hover:text-gray-700'}"
-                            on:click={() => (newMemory.type = "quote")}
+                            onclick={() => (newMemory.type = "quote")}
                             >Quote</button
                         >
                     </div>
 
                     <div class="space-y-2">
-                        <label class="text-xs font-bold uppercase text-gray-400"
-                            >Title</label
+                        <label
+                            class="text-xs font-bold uppercase text-gray-400"
                         >
-                        <input
-                            bind:value={newMemory.title}
-                            class="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4A7C74] focus:ring-0 outline-none font-serif text-lg"
-                            placeholder="e.g. Summer Vacation 2005"
-                        />
+                            Title
+                            <input
+                                bind:value={newMemory.title}
+                                class="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4A7C74] focus:ring-0 outline-none font-serif text-lg mt-1"
+                                placeholder="e.g. Summer Vacation 2005"
+                            />
+                        </label>
                     </div>
 
                     {#if newMemory.type === "photo"}
@@ -338,66 +342,71 @@
                                 <div class="space-y-1">
                                     <label
                                         class="text-xs font-bold uppercase text-gray-400"
-                                        >Or Paste URL</label
                                     >
-                                    <input
-                                        bind:value={newMemory.image}
-                                        class="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4A7C74] outline-none text-sm"
-                                        placeholder="https://..."
-                                    />
+                                        Or Paste URL
+                                        <input
+                                            bind:value={newMemory.image}
+                                            class="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4A7C74] outline-none text-sm mt-1"
+                                            placeholder="https://..."
+                                        />
+                                    </label>
                                 </div>
                             {/if}
                         </div>
                         <div class="space-y-2">
                             <label
                                 class="text-xs font-bold uppercase text-gray-400"
-                                >Date / Year</label
                             >
-                            <input
-                                bind:value={newMemory.date}
-                                class="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4A7C74] outline-none"
-                                placeholder="e.g. July 2005"
-                            />
+                                Date / Year
+                                <input
+                                    bind:value={newMemory.date}
+                                    class="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4A7C74] outline-none mt-1"
+                                    placeholder="e.g. July 2005"
+                                />
+                            </label>
                         </div>
                     {:else if newMemory.type === "recipe"}
                         <div class="space-y-2">
                             <label
                                 class="text-xs font-bold uppercase text-gray-400"
-                                >Description / Ingredients</label
                             >
-                            <textarea
-                                bind:value={newMemory.desc}
-                                class="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4A7C74] outline-none h-24 resize-none"
-                                placeholder="Secret ingredients..."
-                            ></textarea>
+                                Description / Ingredients
+                                <textarea
+                                    bind:value={newMemory.desc}
+                                    class="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4A7C74] outline-none h-24 resize-none mt-1"
+                                    placeholder="Secret ingredients..."
+                                ></textarea>
+                            </label>
                         </div>
                     {:else if newMemory.type === "quote"}
                         <div class="space-y-2">
                             <label
                                 class="text-xs font-bold uppercase text-gray-400"
-                                >Quote Text</label
                             >
-                            <textarea
-                                bind:value={newMemory.text}
-                                class="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4A7C74] outline-none h-24 resize-none font-serif italic text-lg"
-                                placeholder="'Stay hungry, stay foolish...'"
-                            ></textarea>
+                                Quote Text
+                                <textarea
+                                    bind:value={newMemory.text}
+                                    class="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4A7C74] outline-none h-24 resize-none font-serif italic text-lg mt-1"
+                                    placeholder="'Stay hungry, stay foolish...'"
+                                ></textarea>
+                            </label>
                         </div>
                         <div class="space-y-2">
                             <label
                                 class="text-xs font-bold uppercase text-gray-400"
-                                >Attribution</label
                             >
-                            <input
-                                bind:value={newMemory.author}
-                                class="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4A7C74] outline-none"
-                                placeholder="e.g. Grandma"
-                            />
+                                Attribution
+                                <input
+                                    bind:value={newMemory.author}
+                                    class="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4A7C74] outline-none mt-1"
+                                    placeholder="e.g. Grandma"
+                                />
+                            </label>
                         </div>
                     {/if}
 
                     <button
-                        on:click={saveMemory}
+                        onclick={saveMemory}
                         class="w-full py-4 bg-[#4A7C74] text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:bg-[#3b635d] transition-all transform active:scale-95"
                     >
                         {newMemory.id ? "Update Memory" : "Save Memory"}
@@ -467,8 +476,7 @@
                 steps={[
                     {
                         id: "intro",
-                        question:
-                            "Welcome to the Family Hub. Let's start with a simple question.",
+                        question: $t("wizard.start"),
                         type: "text",
                         placeholder: "Press Enter...",
                         required: false,
@@ -498,7 +506,7 @@
             />
             <div class="text-center mt-8">
                 <button
-                    on:click={() => (viewMode = "dashboard")}
+                    onclick={() => (viewMode = "dashboard")}
                     class="text-slate-400 hover:text-slate-600 underline text-sm"
                 >
                     Skip tour, go to dashboard
@@ -565,7 +573,7 @@
                             </h2>
                             {#if memories.length > 0}
                                 <button
-                                    on:click={startSlideshow}
+                                    onclick={startSlideshow}
                                     class="text-xs font-bold text-[#4A7C74] bg-[#4A7C74]/10 px-3 py-1.5 rounded-full hover:bg-[#4A7C74]/20 transition-colors flex items-center gap-1"
                                 >
                                     <PlayCircle size={14} /> Slideshow
@@ -573,7 +581,7 @@
                             {/if}
                         </div>
                         <button
-                            on:click={() => (showAddModal = true)}
+                            onclick={() => (showAddModal = true)}
                             class="flex items-center gap-2 px-4 py-2 bg-rose-100 text-rose-700 rounded-full font-bold hover:bg-rose-200 transition-colors"
                         >
                             <Plus size={18} /> Add Memory
@@ -585,25 +593,47 @@
                             <!-- GHOST ROWS -->
                             <div class="col-span-full flex justify-center mb-4">
                                 <button
-                                    on:click={() => (viewMode = "concierge")}
+                                    onclick={() => (viewMode = "concierge")}
                                     class="text-sm font-bold text-indigo-600 bg-indigo-50 px-4 py-2 rounded-full hover:bg-indigo-100 transition-colors flex items-center gap-2"
                                 >
-                                    <Pencil size={16} /> Start Guided Setup
+                                    <Pencil size={16} />
+                                    {$t("wizard.start")}
                                 </button>
                             </div>
 
-                            <GhostRow
-                                type="Memory"
-                                onClick={() => (showAddModal = true)}
-                            />
-                            <GhostRow
-                                type="Memory"
-                                onClick={() => (showAddModal = true)}
-                            />
-                            <GhostRow
-                                type="Memory"
-                                onClick={() => (showAddModal = true)}
-                            />
+                            {#each getSmartSamples($language).memories || [] as sample}
+                                <GhostRow
+                                    name={sample.name}
+                                    subtitle={sample.description}
+                                    type="Memory"
+                                    onClick={() => {
+                                        newMemory = {
+                                            ...newMemory,
+                                            title: sample.name,
+                                            desc: sample.description,
+                                            type:
+                                                sample.type === "Recipe"
+                                                    ? "recipe"
+                                                    : sample.type === "Quote"
+                                                      ? "quote"
+                                                      : "photo",
+                                        };
+                                        showAddModal = true;
+                                    }}
+                                >
+                                    <svelte:fragment slot="icon">
+                                        <svelte:component
+                                            this={sample.type === "Recipe"
+                                                ? Scroll
+                                                : sample.type === "Quote"
+                                                  ? Plus
+                                                  : Image}
+                                            size={20}
+                                            class="text-slate-400"
+                                        />
+                                    </svelte:fragment>
+                                </GhostRow>
+                            {/each}
                         {:else}
                             {#each memories as memory (memory.id)}
                                 <div
@@ -612,14 +642,14 @@
                                 >
                                     <!-- Delete Button (Hover) -->
                                     <button
-                                        on:click={() => editMemory(memory)}
+                                        onclick={() => editMemory(memory)}
                                         class="absolute top-2 right-10 p-1.5 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-blue-100 text-blue-500"
                                         title="Edit Memory"
                                     >
                                         <Pencil size={14} />
                                     </button>
                                     <button
-                                        on:click={() => deleteMemory(memory.id)}
+                                        onclick={() => deleteMemory(memory.id)}
                                         class="absolute top-2 right-2 p-1.5 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-red-100 text-red-500"
                                         title="Delete Memory"
                                     >
@@ -693,9 +723,9 @@
                 <!-- Sidebar / Timeline Preview -->
                 <div class="space-y-8">
                     <!-- Educational Resources Widget -->
-                    <div
-                        class="bg-[#304743] rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group cursor-pointer"
-                        on:click={() =>
+                    <button
+                        class="bg-[#304743] rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group cursor-pointer text-left w-full"
+                        onclick={() =>
                             document
                                 .getElementById("educational-section")
                                 ?.scrollIntoView({ behavior: "smooth" })}
@@ -721,7 +751,7 @@
                                 5 Videos Available
                             </span>
                         </div>
-                    </div>
+                    </button>
 
                     <div
                         class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100"
@@ -852,7 +882,7 @@
             >
                 <div class="flex justify-end pointer-events-auto">
                     <button
-                        on:click={closeSlideshow}
+                        onclick={closeSlideshow}
                         class="p-4 bg-black/20 hover:bg-white/20 rounded-full text-white backdrop-blur-md transition-all"
                     >
                         <X size={24} />
@@ -863,14 +893,14 @@
                     class="flex items-center justify-center gap-8 pointer-events-auto pb-8"
                 >
                     <button
-                        on:click={prevSlide}
+                        onclick={prevSlide}
                         class="p-4 hover:bg-white/10 rounded-full text-white/50 hover:text-white transition-all"
                     >
                         <ChevronLeft size={32} />
                     </button>
 
                     <button
-                        on:click={togglePlay}
+                        onclick={togglePlay}
                         class="p-6 bg-white/10 hover:bg-white/20 rounded-full text-white backdrop-blur-md transition-all scale-100 hover:scale-110"
                     >
                         {#if isPlaying}
@@ -881,7 +911,7 @@
                     </button>
 
                     <button
-                        on:click={nextSlide}
+                        onclick={nextSlide}
                         class="p-4 hover:bg-white/10 rounded-full text-white/50 hover:text-white transition-all"
                     >
                         <ChevronRight size={32} />

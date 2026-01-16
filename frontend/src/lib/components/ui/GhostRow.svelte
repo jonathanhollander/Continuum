@@ -3,6 +3,9 @@
     import { fade } from "svelte/transition";
 
     export let type: string = "Item"; // e.g. "Family Member", "Asset"
+    export let name: string = "";
+    export let subtitle: string = "";
+    export let value: number | null = null;
     export let onClick: () => void;
 </script>
 
@@ -20,26 +23,44 @@
     >
         <!-- Pseudo Icon Placeholder -->
         <div
-            class="w-10 h-10 rounded-full bg-slate-200 group-hover:bg-indigo-100 transition-colors flex items-center justify-center"
+            class="w-10 h-10 rounded-full bg-slate-200 group-hover:bg-indigo-100 transition-colors flex items-center justify-center shrink-0"
         >
-            <Plus
-                size={20}
-                class="text-slate-400 group-hover:text-indigo-500"
-            />
+            <slot name="icon">
+                <Plus
+                    size={20}
+                    class="text-slate-400 group-hover:text-indigo-500"
+                />
+            </slot>
         </div>
 
-        <div class="flex-1 space-y-2">
-            <!-- Pseudo Text Lines -->
-            <div class="h-4 w-1/3 bg-slate-200 rounded animate-pulse"></div>
-            <div class="h-3 w-1/2 bg-slate-100 rounded"></div>
+        <div class="flex-1 space-y-1">
+            {#if name}
+                <!-- Smart Sample Data -->
+                <div class="font-bold text-slate-700">{name}</div>
+                {#if subtitle}
+                    <div class="text-xs text-slate-500">{subtitle}</div>
+                {/if}
+            {:else}
+                <!-- Skeleton Fallback -->
+                <div class="h-4 w-1/3 bg-slate-200 rounded animate-pulse"></div>
+                <div class="h-3 w-1/2 bg-slate-100 rounded"></div>
+            {/if}
         </div>
 
-        <!-- Call to Action Badge -->
-        <div
-            class="px-3 py-1 rounded-full bg-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider group-hover:bg-indigo-500 group-hover:text-white transition-colors shadow-sm"
-        >
-            Example {type}
-        </div>
+        {#if value !== null}
+            <div
+                class="font-serif font-bold text-slate-400 group-hover:text-indigo-600 transition-colors"
+            >
+                ${value.toLocaleString()}
+            </div>
+        {:else}
+            <!-- Call to Action Badge -->
+            <div
+                class="px-3 py-1 rounded-full bg-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider group-hover:bg-indigo-500 group-hover:text-white transition-colors shadow-sm"
+            >
+                Example {type}
+            </div>
+        {/if}
     </div>
 
     <!-- Hover Overlay Text -->

@@ -2,7 +2,7 @@
     import "../../app.css";
     import { onMount } from "svelte";
     import { writable, derived } from "svelte/store";
-    import { marketingDictionary } from "$lib/stores/marketingDictionary";
+    import { dictionary } from "$lib/stores/dictionary";
     import { Globe } from "lucide-svelte";
     import { page } from "$app/stores";
     import { setContext } from "svelte";
@@ -10,9 +10,8 @@
     // Marketing Language State (Independent of App Store for Landing)
     export const mLanguage = writable<string>("en");
     export const mt = derived(mLanguage, ($mLanguage) => {
-        return (
-            (marketingDictionary as any)[$mLanguage] || marketingDictionary.en
-        );
+        const lang = $mLanguage as keyof typeof dictionary;
+        return (dictionary[lang] || dictionary.en).marketing;
     });
 
     setContext("marketingTranslations", { mLanguage, mt });

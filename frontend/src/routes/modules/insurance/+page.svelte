@@ -5,7 +5,7 @@
     } from "$lib/stores/insuranceStore";
     import { activityLog } from "$lib/stores/activityLog";
     import { estateProfile } from "$lib/stores/estateStore";
-    import { fade, slide, scale } from "svelte/transition";
+    import { fade, slide, scale, fly } from "svelte/transition";
     import { quintOut } from "svelte/easing";
     import {
         Shield,
@@ -31,13 +31,20 @@
         ArrowRight,
         Filter,
         Download,
+        Sparkles,
     } from "lucide-svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
+
+    // Concierge Imports
+    import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
+    import { t, language } from "$lib/stores/localization";
+    import { getSmartSamples } from "$lib/data/smartSamples";
 
     let showAddModal = false;
     let isEditing = false;
     let searchQuery = "";
     let filterType: string = "All";
+    let showWizard = false;
 
     let newPolicy: Partial<InsurancePolicy> = {
         policyName: "",
@@ -51,8 +58,83 @@
         agentContact: "",
         claimsProcedure: "",
         status: "Active",
+        policyDocuments: "",
         notes: "",
     };
+
+    const wizardSteps = [
+        {
+            id: "intro",
+            question: "wizard.start",
+            type: "boolean" as const,
+            logic: { yes: "life", no: "cancel", next: "life" },
+        },
+        {
+            id: "life",
+            question: "wizard.insurance_life",
+            type: "boolean" as const,
+            logic: { next: "auto" },
+        },
+        {
+            id: "auto",
+            question: "wizard.insurance_auto",
+            type: "boolean" as const,
+            logic: { next: "home" },
+        },
+        {
+            id: "home",
+            question: "wizard.insurance_home",
+            type: "boolean" as const,
+        },
+    ];
+
+    function handleWizardComplete(event: CustomEvent) {
+        const answers = event.detail;
+        if (answers.intro === false) {
+            showWizard = false;
+            return;
+        }
+
+        if (answers.life)
+            addWizardPolicy("Life Insurance", "Life", "Term Life");
+        if (answers.auto)
+            addWizardPolicy("Auto Insurance", "Auto", "Comprehensive");
+        if (answers.home)
+            addWizardPolicy(
+                "Home/Renters Insurance",
+                "Home",
+                "Standard Fire & Theft",
+            );
+
+        showWizard = false;
+    }
+
+    function addWizardPolicy(name: string, type: any, insurer = "TBD") {
+        const created = insuranceStore.addPolicy({
+            policyName: name,
+            insuranceType: type,
+            insurer: insurer,
+            policyNumber: "PENDING",
+            premiumAmount: 0,
+            premiumFrequency: "Monthly",
+            beneficiaries: $estateProfile.primaryBeneficiary || "",
+            agentName: "",
+            agentContact: "",
+            claimsProcedure: "",
+            status: "Pending",
+            policyDocuments: "",
+            notes: "Added via Concierge Wizard",
+        });
+
+        activityLog.logEvent({
+            module: "Insurance",
+            action: "CREATE",
+            entityType: "Policy",
+            entityId: created.id,
+            entityName: created.policyName,
+            userContext: "Concierge",
+        });
+    }
 
     $: policies = $insuranceStore;
     $: filteredPolicies = policies.filter((p) => {
@@ -192,6 +274,25 @@
 <div
     class="p-8 max-w-[1400px] mx-auto space-y-8 animate-in fade-in duration-700"
 >
+    <!-- Wizard Modal -->
+    {#if showWizard}
+        <div
+            class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+            transition:fade
+        >
+            <div class="w-full max-w-2xl relative" in:fly={{ y: 20 }}>
+                <button
+                    class="absolute -top-12 right-0 text-white/50 hover:text-white"
+                    on:click={() => (showWizard = false)}>Close</button
+                >
+                <ConciergeFlow
+                    steps={wizardSteps}
+                    on:complete={handleWizardComplete}
+                />
+            </div>
+        </div>
+    {/if}
+
     <!-- Header Section -->
     <header
         class="flex flex-col xl:flex-row xl:items-end justify-between gap-6 pb-2"
@@ -222,6 +323,14 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
+            <button
+                on:click={() => (showWizard = true)}
+                class="flex items-center gap-2 px-5 py-3 border border-indigo-100 text-indigo-700 font-bold rounded-2xl hover:bg-indigo-50 transition-colors"
+            >
+                <Sparkles size={18} />
+                {$t("wizard.start")}
+            </button>
+
             <div
                 class="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm"
             >
@@ -560,21 +669,53 @@
             </div>
         {:else}
             <!-- GHOST ROW IMPLEMENTATION -->
-            <div class="col-span-full space-y-4">
-                <GhostRow type="Policy" onClick={() => (showAddModal = true)} />
-                <GhostRow type="Policy" onClick={() => (showAddModal = true)} />
-                <GhostRow type="Policy" onClick={() => (showAddModal = true)} />
-
-                <div class="flex justify-center mt-6">
-                    <button
-                        on:click={() => (showAddModal = true)}
-                        class="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg shadow-indigo-600/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+            {#if filteredPolicies.length === 0 && searchQuery === ""}
+                <div class="col-span-full space-y-4">
+                    <div
+                        class="border border-amber-200 bg-amber-50/50 rounded-xl p-4 mb-4 flex items-center gap-3 text-amber-800"
                     >
-                        <Plus size={18} />
-                        Initialize Portfolio
-                    </button>
+                        <Sparkles size={20} />
+                        <p class="text-sm font-medium">
+                            Concierge Mode: Showing examples based on your
+                            region.
+                        </p>
+                    </div>
+
+                    {#each getSmartSamples($language).insurance || [] as sample}
+                        <GhostRow
+                            name={sample.policyName}
+                            subtitle={`${sample.insurer} • ${sample.insuranceType}`}
+                            value={sample.premiumAmount}
+                            type="Policy"
+                            onClick={() => {
+                                newPolicy = {
+                                    ...newPolicy,
+                                    policyName: sample.policyName,
+                                    insuranceType: sample.insuranceType as any,
+                                    insurer: sample.insurer,
+                                    premiumAmount: sample.premiumAmount,
+                                    policyDocuments: "",
+                                };
+                                showAddModal = true;
+                            }}
+                        >
+                            <svelte:fragment slot="icon">
+                                <Shield size={20} class="text-slate-400" />
+                            </svelte:fragment>
+                        </GhostRow>
+                    {/each}
+
+                    <div class="flex justify-center mt-6">
+                        <button
+                            on:click={() => (showAddModal = true)}
+                            class="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg shadow-indigo-600/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                        >
+                            <Plus size={18} />
+                            Initialize Portfolio
+                        </button>
+                    </div>
                 </div>
-            </div>
+            {/if}
         {/each}
     </div>
 </div>

@@ -39,7 +39,8 @@
     interface DigitalAsset {
         id: number;
         type: string;
-        name: string;
+        platform: string;
+        username: string;
         description: string;
     }
     let assets = $state<DigitalAsset[]>([]); // New inventory state
@@ -87,23 +88,25 @@
 
         if (answers.password_manager) {
             setupStatus.passwordManager = true;
-            addAsset("Password Manager", "Master Key Access", "Access");
+            addAsset("1Password", "Master Account", "Access");
         }
 
         if (answers.email) {
-            addAsset(
-                `${answers.email} Account`,
-                "Primary Email Recovery",
-                "Email",
-            );
+            addAsset(answers.email, "Primary Account", "Email");
         }
 
         showWizard = false;
         setStored("digital_guardian", setupStatus);
     }
 
-    function addAsset(name: string, description: string, type: string) {
-        const newAsset = { id: Date.now(), name, description, type };
+    function addAsset(platform: string, username: string, type: string) {
+        const newAsset: DigitalAsset = {
+            id: Date.now(),
+            platform,
+            username,
+            description: `${type} Account`,
+            type,
+        };
         assets = [...assets, newAsset];
         setStored("digital_assets", assets);
         activityLog.logEvent({
@@ -111,7 +114,7 @@
             action: "CREATE",
             entityType: "Digital Asset",
             entityId: String(newAsset.id),
-            entityName: name,
+            entityName: platform,
             userContext: $estateProfile.ownerName || "User",
         });
     }
@@ -828,15 +831,12 @@
                 <!-- Ghost Rows -->
                 {#each getSmartSamples($language).digital || [] as sample}
                     <GhostRow
-                        name={sample.name}
-                        subtitle={sample.description}
-                        type="Access"
-                        onClick={() =>
-                            addAsset(
-                                sample.name,
-                                sample.description || "",
-                                sample.type,
-                            )}
+                        name={sample.platform}
+                        subtitle={`${sample.username} - ${sample.instructions}`}
+                        type="Security"
+                        onClick={() => {
+                            addAsset(sample.platform, sample.username, "Vault");
+                        }}
                     >
                         <svelte:fragment slot="icon">
                             <Key size={20} class="text-slate-400" />
@@ -861,12 +861,12 @@
                             </div>
                             <div>
                                 <div class="font-bold text-slate-800">
-                                    {asset.name}
+                                    {asset.platform}
                                 </div>
                                 <div
                                     class="text-xs text-slate-500 uppercase tracking-wider"
                                 >
-                                    {asset.description}
+                                    {asset.username} - {asset.description}
                                 </div>
                             </div>
                         </div>

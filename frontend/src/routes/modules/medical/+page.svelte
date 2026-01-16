@@ -17,6 +17,9 @@
         medicalStore,
         type MedicalDirective,
     } from "$lib/stores/medicalStore";
+    import { t, language } from "$lib/stores/localization";
+    import { getSmartSamples } from "$lib/data/smartSamples";
+    import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import { estateProfile } from "$lib/stores/estateStore";
     import { activityLog } from "$lib/stores/activityLog";
     import LegalDisclaimer from "$lib/components/common/LegalDisclaimer.svelte";
@@ -394,23 +397,31 @@
             {/each}
 
             {#if $medicalStore.directives.length === 0}
-                <div
-                    class="text-center py-20 border-2 border-dashed border-gray-100 rounded-3xl"
-                >
-                    <div
-                        class="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-300"
-                    >
-                        <FileText size={32} />
-                    </div>
-                    <p class="text-gray-500 font-medium">
-                        No medical directives registered yet.
-                    </p>
-                    <button
-                        on:click={() => (showAddForm = true)}
-                        class="text-red-600 font-bold mt-2 hover:underline"
-                    >
-                        Click here to add your first directive
-                    </button>
+                <!-- GHOST ROWS -->
+                <div class="mb-6 space-y-4">
+                    {#each getSmartSamples($language).medical || [] as sample}
+                        <GhostRow
+                            name={sample.title}
+                            subtitle={sample.summary}
+                            type={sample.type === "dnr" ? "DNR" : "Proxy"}
+                            onClick={() => {
+                                newDirective = {
+                                    ...newDirective,
+                                    title: sample.title,
+                                    summary: sample.summary,
+                                    type:
+                                        sample.type === "dnr"
+                                            ? "dnr"
+                                            : "healthcare_proxy",
+                                };
+                                showAddForm = true;
+                            }}
+                        >
+                            <svelte:fragment slot="icon">
+                                <FileText size={20} class="text-slate-400" />
+                            </svelte:fragment>
+                        </GhostRow>
+                    {/each}
                 </div>
             {/if}
         </div>

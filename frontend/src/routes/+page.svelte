@@ -8,6 +8,9 @@
     import { fade, fly } from "svelte/transition";
     import { Shield, Users, Sparkles, BrainCircuit } from "lucide-svelte";
 
+    import { t } from "$lib/stores/localization";
+    import { browser } from "$app/environment";
+
     // "The Pulse" State
     let pulseStatus: "secure" | "active" | "critical" | "standby" = "standby";
     let score = 0;
@@ -23,7 +26,11 @@
 
     // Greeting Typewriter
     let greeting = "";
-    let fullGreeting = "Initializing System Interface..."; // Default for new users
+    // Reactive greeting target based on state
+    $: fullGreeting =
+        $estateAudit.totalScore > 0
+            ? $t("system.analyzing")
+            : $t("system.initializing");
 
     import { familyMembers } from "$lib/stores/familyStore";
     import { digitalAssetsStore } from "$lib/stores/digitalAssetsStore";
@@ -47,15 +54,14 @@
     onMount(() => {
         estateAudit.runAudit();
 
-        // Check if we have data to determine greeting
         if ($estateAudit.totalScore > 0) {
-            fullGreeting = "Analyzing Estate Integrity...";
             pulseStatus = "active";
         }
 
         // Simulate "System Boot"
         let i = 0;
         const interval = setInterval(() => {
+            // Check against current fullGreeting length (it might change if lang swaps, but that's edge case)
             if (i < fullGreeting.length) {
                 greeting += fullGreeting[i];
                 i++;
@@ -103,7 +109,7 @@
                 typeof localStorage !== "undefined" &&
                 localStorage.getItem("continuum_setup_skipped") === "true";
 
-            if (!skipped && !hasAutoRedirected) {
+            if (browser && !skipped && !hasAutoRedirected) {
                 hasAutoRedirected = true;
                 window.location.href = "/wizard";
                 return;
