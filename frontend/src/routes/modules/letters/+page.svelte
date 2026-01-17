@@ -56,9 +56,9 @@
         isLocked?: boolean;
     };
 
-    let savedLetters: SavedLetter[] = [];
-    let searchQuery = "";
-    let filterCategory: string = "All";
+    let savedLetters = $state<SavedLetter[]>([]);
+    let searchQuery = $state("");
+    let filterCategory = $state("All");
 
     import { getStored, setStored } from "$lib/stores/persistence";
     // ...
@@ -149,23 +149,24 @@
         }
     }
 
-    let mode:
+    let mode = $state<
         | "menu"
         | "emotional_interview"
         | "drafting"
         | "review"
         | "transactional_preview"
-        | "variable_input" = "menu";
+        | "variable_input"
+    >("menu");
 
     // Emotional State
-    let emotionalFlow: "spouse" | "ethical_will" | null = null;
-    let emotionalReflections = {
+    let emotionalFlow = $state<"spouse" | "ethical_will" | null>(null);
+    let emotionalReflections = $state({
         memory: "",
         values: "",
         hopes: "",
-    };
-    let currentPromptIndex = 0;
-    let currentQuestion = "";
+    });
+    let currentPromptIndex = $state(0);
+    let currentQuestion = $state("");
 
     function refreshQuestion() {
         if (!emotionalFlow) return;
@@ -187,16 +188,16 @@
     }
 
     // Transactional State
-    let selectedTemplate: LetterTemplate | null = null;
-    let templateVariables: Record<string, string> = {};
-    let detectedVariables: string[] = [];
+    let selectedTemplate = $state<LetterTemplate | null>(null);
+    let templateVariables = $state<Record<string, string>>({});
+    let detectedVariables = $state<string[]>([]);
 
     // Editor Content
-    let generatedLetter = "";
+    let generatedLetter = $state("");
 
     // Trigger Settings for current draft
-    let letterTriggerDate = "";
-    let letterTriggerMilestone = "";
+    let letterTriggerDate = $state("");
+    let letterTriggerMilestone = $state("");
 
     function startEmotionalFlow(flow: "spouse" | "ethical_will") {
         emotionalFlow = flow;
@@ -316,7 +317,7 @@
         Identity: ShieldCheck,
     };
 
-    let isRecording = false;
+    let isRecording = $state(false);
     let recordingTimer: any;
 
     function simulateVoiceToText() {
@@ -334,14 +335,16 @@
         isRecording = false;
     }
 
-    $: filteredTemplates = LETTER_TEMPLATES.filter((t) => {
-        const matchesSearch =
-            t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            t.subject.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesCategory =
-            filterCategory === "All" || t.category === filterCategory;
-        return matchesSearch && matchesCategory;
-    });
+    let filteredTemplates = $derived(
+        LETTER_TEMPLATES.filter((t) => {
+            const matchesSearch =
+                t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                t.subject.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesCategory =
+                filterCategory === "All" || t.category === filterCategory;
+            return matchesSearch && matchesCategory;
+        }),
+    );
 </script>
 
 <div
@@ -400,7 +403,7 @@
                         </p>
                     </div>
                     <button
-                        on:click={() => {
+                        onclick={() => {
                             if (savedLetters.length > 0)
                                 viewLetter(savedLetters[0]);
                         }}
@@ -415,7 +418,7 @@
         <!-- Essential Actions Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
             <button
-                on:click={() => startEmotionalFlow("ethical_will")}
+                onclick={() => startEmotionalFlow("ethical_will")}
                 class="group relative overflow-hidden bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 text-left flex gap-8 items-center"
             >
                 <div
@@ -445,7 +448,7 @@
             </button>
 
             <button
-                on:click={() => startEmotionalFlow("spouse")}
+                onclick={() => startEmotionalFlow("spouse")}
                 class="group relative overflow-hidden bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 text-left flex gap-8 items-center"
             >
                 <div
@@ -483,7 +486,7 @@
                 <div class="flex flex-wrap items-center gap-2">
                     {#each categories as cat}
                         <button
-                            on:click={() => (filterCategory = cat)}
+                            onclick={() => (filterCategory = cat)}
                             class="px-5 py-2.5 rounded-2xl text-xs font-bold tracking-wider transition-all {filterCategory ===
                             cat
                                 ? 'bg-slate-900 text-white shadow-xl'
@@ -511,7 +514,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {#each filteredTemplates as template (template.id)}
                     <button
-                        on:click={() => selectTransactional(template)}
+                        onclick={() => selectTransactional(template)}
                         class="group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 text-left flex flex-col justify-between min-h-[160px]"
                     >
                         <div>
@@ -557,7 +560,7 @@
         <div class="max-w-3xl mx-auto space-y-12" in:fade>
             <div class="flex items-center justify-between">
                 <button
-                    on:click={resetSelection}
+                    onclick={resetSelection}
                     class="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors"
                 >
                     <ArrowLeft size={16} /> Back to Library
@@ -602,7 +605,7 @@
 
                 <div class="pt-8 flex items-center justify-center gap-6">
                     <button
-                        on:click={() => {
+                        onclick={() => {
                             generatedLetter = selectedTemplate?.body || "";
                             mode = "transactional_preview";
                         }}
@@ -611,7 +614,7 @@
                         Skip & Modify Draft
                     </button>
                     <button
-                        on:click={applyVariables}
+                        onclick={applyVariables}
                         class="px-12 py-5 bg-[#4A7C74] text-white rounded-[2rem] font-black hover:bg-[#3b635d] shadow-2xl shadow-[#4A7C74]/20 transition-all hover:scale-105"
                     >
                         Generate Document
@@ -629,7 +632,7 @@
             <div class="lg:col-span-2 space-y-8">
                 <div class="flex items-center justify-between gap-4">
                     <button
-                        on:click={() => (mode = "menu")}
+                        onclick={() => (mode = "menu")}
                         class="p-4 bg-white border border-slate-100 rounded-2xl text-slate-400 hover:text-slate-900 transition-all"
                     >
                         <ArrowLeft size={20} />
@@ -647,7 +650,7 @@
                         </p>
                     </div>
                     <button
-                        on:click={saveToVault}
+                        onclick={saveToVault}
                         class="p-4 bg-[#4A7C74] text-white rounded-2xl shadow-xl shadow-[#4A7C74]/20"
                     >
                         <ArrowRight size={20} />
@@ -741,7 +744,7 @@
                 {/if}
 
                 <button
-                    on:click={saveToVault}
+                    onclick={saveToVault}
                     class="w-full bg-slate-900 text-white p-6 rounded-[2rem] font-black flex items-center justify-center gap-3 shadow-2xl shadow-slate-900/30 hover:scale-105 active:scale-95 transition-all"
                 >
                     Finalize & Save <ArrowRight size={20} />
@@ -782,7 +785,7 @@
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-4">
                     <button
-                        on:click={() => (mode = "menu")}
+                        onclick={() => (mode = "menu")}
                         class="p-3 bg-white border border-slate-100 rounded-xl text-slate-400 hover:text-slate-900"
                     >
                         <ArrowLeft size={18} />
@@ -803,7 +806,7 @@
 
                 <div class="flex items-center gap-3">
                     <button
-                        on:click={isRecording
+                        onclick={isRecording
                             ? stopRecording
                             : simulateVoiceToText}
                         class="flex items-center gap-3 px-6 py-3 rounded-2xl font-black text-sm transition-all
@@ -832,7 +835,7 @@
                         {/if}
                     </button>
                     <button
-                        on:click={saveToVault}
+                        onclick={saveToVault}
                         class="flex items-center gap-2 px-8 py-3 bg-[#4A7C74] text-white rounded-2xl font-black shadow-xl shadow-[#4A7C74]/20 hover:scale-105 active:scale-95 transition-all"
                     >
                         <Save size={18} />
@@ -921,7 +924,8 @@
                 <div class="space-y-6">
                     <LetterAssistant
                         currentContent={generatedLetter}
-                        on:update={(e) => (generatedLetter = e.detail)}
+                        onupdate={(content: string) =>
+                            (generatedLetter = content)}
                     />
 
                     <!-- Status Cards Stacked -->
@@ -1010,7 +1014,7 @@
                     {/each}
                 </div>
                 <button
-                    on:click={resetSelection}
+                    onclick={resetSelection}
                     class="text-xs font-black uppercase tracking-widest text-slate-400 hover:text-rose-500 transition-colors"
                 >
                     Cancel Interview
@@ -1096,7 +1100,7 @@
 
             <div class="flex items-center justify-center pt-8">
                 <button
-                    on:click={nextEmotionalPrompt}
+                    onclick={nextEmotionalPrompt}
                     disabled={!emotionalReflections[
                         currentPromptIndex === 0
                             ? "memory"

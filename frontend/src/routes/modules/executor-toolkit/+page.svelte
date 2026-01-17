@@ -16,40 +16,42 @@
     import { executorTasks } from "$lib/data/executorTasks";
     import { currentScenario } from "$lib/stores/scenario";
 
-    let activeTab = "checklist";
-    let selectedTask: any = null;
+    let activeTab = $state("checklist");
+    let selectedTask = $state<any>(null);
 
     // Use local state for completion status to persist across views
-    let completionStatus: Record<string, boolean> = {};
+    let completionStatus = $state<Record<string, boolean>>({});
 
     function toggleCompletion(id: string) {
         completionStatus[id] = !completionStatus[id];
     }
 
     // Reactive filtering based on Scenario Mode
-    $: filteredTasks = [...executorTasks]
-        .filter((task) => {
-            if ($currentScenario === "Sudden") {
-                // In Sudden Passing, only show immediate tasks (Phase 1/2) and anything urgent
-                return (
-                    task.phase === "Immediate" ||
-                    task.phase === "Foundation" ||
-                    task.urgent
-                );
-            }
-            if ($currentScenario === "Planned") {
-                // In Planned, show administrative and asset tasks
-                return task.phase !== "Expert";
-            }
-            return true; // General shows all
-        })
-        .sort((a, b) => {
-            if ($currentScenario === "Sudden") {
-                // Sort Urgent first for Sudden Passing
-                return (b.urgent ? 1 : 0) - (a.urgent ? 1 : 0);
-            }
-            return 0; // Default chronological
-        });
+    let filteredTasks = $derived(
+        [...executorTasks]
+            .filter((task) => {
+                if ($currentScenario === "Sudden") {
+                    // In Sudden Passing, only show immediate tasks (Phase 1/2) and anything urgent
+                    return (
+                        task.phase === "Immediate" ||
+                        task.phase === "Foundation" ||
+                        task.urgent
+                    );
+                }
+                if ($currentScenario === "Planned") {
+                    // In Planned, show administrative and asset tasks
+                    return task.phase !== "Expert";
+                }
+                return true; // General shows all
+            })
+            .sort((a, b) => {
+                if ($currentScenario === "Sudden") {
+                    // Sort Urgent first for Sudden Passing
+                    return (b.urgent ? 1 : 0) - (a.urgent ? 1 : 0);
+                }
+                return 0; // Default chronological
+            }),
+    );
 </script>
 
 <div class="max-w-6xl mx-auto p-6 animate-in fade-in duration-500">
@@ -105,7 +107,7 @@
     {#if !selectedTask}
         <div class="flex flex-wrap justify-center gap-2 mb-8" in:fade>
             <button
-                on:click={() => (activeTab = "checklist")}
+                onclick={() => (activeTab = "checklist")}
                 class="px-5 py-2 rounded-full font-bold text-sm transition-all {activeTab ===
                 'checklist'
                     ? 'bg-[#304743] text-white shadow-md'
@@ -114,7 +116,7 @@
                 <Clock size={16} class="inline mr-2" /> First 48 Hours
             </button>
             <button
-                on:click={() => (activeTab = "bureau")}
+                onclick={() => (activeTab = "bureau")}
                 class="px-5 py-2 rounded-full font-bold text-sm transition-all {activeTab ===
                 'bureau'
                     ? 'bg-[#304743] text-white shadow-md'
@@ -133,7 +135,7 @@
             <!-- Task Detail View -->
             <div in:slide={{ axis: "x", duration: 300 }}>
                 <button
-                    on:click={() => (selectedTask = null)}
+                    onclick={() => (selectedTask = null)}
                     class="flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-[#304743] mb-6 transition-colors"
                 >
                     <ArrowLeft size={16} /> Back to Checklist
@@ -143,7 +145,7 @@
 
                 <div class="mt-12 pt-8 border-t flex justify-end">
                     <button
-                        on:click={() => {
+                        onclick={() => {
                             toggleCompletion(selectedTask.id);
                             selectedTask = null;
                         }}
@@ -167,15 +169,17 @@
                         role="button"
                         tabindex="0"
                         class="w-full text-left group flex items-center gap-4 p-4 rounded-xl border border-transparent hover:border-gray-200 hover:bg-gray-50 transition-all cursor-pointer outline-none focus:ring-2 focus:ring-[#4A7C74]/20"
-                        on:click={() => (selectedTask = task)}
-                        on:keydown={(e) =>
+                        onclick={() => (selectedTask = task)}
+                        onkeydown={(e) =>
                             (e.key === "Enter" || e.key === " ") &&
                             (selectedTask = task)}
                     >
                         <button
                             type="button"
-                            on:click|stopPropagation={() =>
-                                toggleCompletion(task.id)}
+                            onclick={(e) => {
+                                e.stopPropagation();
+                                toggleCompletion(task.id);
+                            }}
                             class="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center border-2 transition-colors
                              {completionStatus[task.id]
                                 ? 'bg-green-500 border-green-500 text-white'

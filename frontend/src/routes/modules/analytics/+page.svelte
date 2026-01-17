@@ -15,9 +15,9 @@
     import FireDrill from "$lib/components/modules/analytics/FireDrill.svelte";
 
     // Computed derived values for easier access
-    $: health = $estateAnalytics.overallHealth;
-    $: pillars = $estateAnalytics.pillars;
-    $: gaps = $estateAnalytics.gaps.filter((g) => !!g);
+    let health = $derived($estateAnalytics.overallHealth);
+    let pillars = $derived($estateAnalytics.pillars);
+    let gaps = $derived($estateAnalytics.gaps.filter((g) => !!g));
 
     let showFireDrill = false;
 
@@ -38,7 +38,7 @@
     class="min-h-screen bg-slate-950 text-slate-100 p-8 relative overflow-hidden"
 >
     {#if showFireDrill}
-        <FireDrill on:close={() => (showFireDrill = false)} />
+        <FireDrill onclose={() => (showFireDrill = false)} />
     {/if}
 
     <!-- Background Gradient -->
@@ -64,8 +64,8 @@
                     three core pillars: Legal, Financial, and Legacy.
                 </p>
                 <button
-                    on:click={() => (showFireDrill = true)}
-                    class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-lg font-medium transition-colors border border-indigo-400/20 shadow-lg shadow-indigo-900/20"
+                    class="flex items-center gap-2 bg-slate-900 border border-slate-700 text-white px-6 py-3 rounded-2xl transition-all shadow-xl shadow-slate-900/40 hover:scale-105 active:scale-95 font-bold"
+                    onclick={() => (showFireDrill = true)}
                 >
                     <Flame size={18} />
                     Check System Integrity

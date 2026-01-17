@@ -9,20 +9,19 @@
     } from "lucide-svelte";
     import { draftFromBullets, softenTone } from "$lib/services/writerService";
 
-    export let currentContent: string = "";
-
-    const dispatch = createEventDispatcher<{
-        update: string;
+    let { currentContent = "", onupdate } = $props<{
+        currentContent?: string;
+        onupdate?: (content: string) => void;
     }>();
 
-    let isProcessing = false;
-    let mode: "refine" | "draft" = "refine";
+    let isProcessing = $state(false);
+    let mode = $state<"refine" | "draft">("refine");
 
     // Draft Mode
-    let bullets = ["", "", ""];
+    let bullets = $state(["", "", ""]);
 
     // Refine Mode
-    let sentimentValue = 50; // 0 = Direct, 100 = Poetic/Soft
+    let sentimentValue = $state(50); // 0 = Direct, 100 = Poetic/Soft
 
     async function handleDraft() {
         if (bullets.every((b) => !b)) return;
@@ -30,7 +29,7 @@
         isProcessing = true;
         try {
             const result = await draftFromBullets(bullets);
-            dispatch("update", result);
+            if (onupdate) onupdate(result);
         } catch (e) {
             console.error(e);
         } finally {
@@ -45,7 +44,7 @@
         try {
             // Mock logic: if high sentiment, soften tone
             const result = await softenTone(currentContent);
-            dispatch("update", result);
+            if (onupdate) onupdate(result);
         } catch (e) {
             console.error(e);
         } finally {
@@ -69,7 +68,7 @@
                 class="px-3 py-1 rounded-md transition-all {mode === 'draft'
                     ? 'bg-white text-[#4A7C74] shadow-sm'
                     : 'text-white/70 hover:text-white'}"
-                on:click={() => (mode = "draft")}
+                onclick={() => (mode = "draft")}
             >
                 Draft
             </button>
@@ -77,7 +76,7 @@
                 class="px-3 py-1 rounded-md transition-all {mode === 'refine'
                     ? 'bg-white text-[#4A7C74] shadow-sm'
                     : 'text-white/70 hover:text-white'}"
-                on:click={() => (mode = "refine")}
+                onclick={() => (mode = "refine")}
             >
                 Refine
             </button>
@@ -112,7 +111,7 @@
                     {/each}
                 </div>
                 <button
-                    on:click={handleDraft}
+                    onclick={handleDraft}
                     disabled={isProcessing}
                     class="w-full py-3 bg-slate-900 text-white rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-800 disabled:opacity-50 transition-all"
                 >
@@ -160,7 +159,7 @@
                 </div>
 
                 <button
-                    on:click={handleRefine}
+                    onclick={handleRefine}
                     disabled={isProcessing || !currentContent}
                     class="w-full py-3 bg-[#4A7C74] text-white rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#3b635d] disabled:opacity-50 transition-all"
                 >

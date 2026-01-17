@@ -349,7 +349,7 @@
                         on:keydown={handleKeydown}
                         placeholder={$conciergeEngine.isListening
                             ? "Listening..."
-                            : "Tell me what's on your mind..."}
+                            : "Provide your details here..."}
                         class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-5 pr-12 {fontSizeClass} text-white focus:outline-none focus:border-indigo-500/50 transition-all resize-none min-h-[60px] max-h-[120px]"
                         disabled={$conciergeEngine.isListening}
                     ></textarea>

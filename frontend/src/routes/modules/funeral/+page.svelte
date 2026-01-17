@@ -32,17 +32,15 @@
     } from "$lib/stores/funeralStore";
     import LegalDisclaimer from "$lib/components/common/LegalDisclaimer.svelte";
 
-    let activeTab = "wishes"; // 'wishes' | 'budget'
-
-    $: wishes = $funeralStore.wishes;
-    $: budgetItems = $funeralStore.budget;
-
-    // Local state for UI forms (not persisted directly)
-    let showAddExpense = false;
-    let newExpense: Partial<FuneralBudgetItem> = {
+    let activeTab = $state("wishes"); // 'wishes' | 'budget'
+    let showAddExpense = $state(false);
+    let newExpense = $state<Partial<FuneralBudgetItem>>({
         name: "",
         cost: 0,
-    };
+    });
+
+    let wishes = $derived($funeralStore.wishes);
+    let budgetItems = $derived($funeralStore.budget);
 
     // Quick Edit Helpers for Wishes
     function editWish(field: keyof FuneralWishes, label: string) {
@@ -161,15 +159,16 @@
     }
 
     // Reactive Updates
-    $: totalBudget = $funeralStore.budget.reduce(
-        (acc, item) => acc + item.cost,
-        0,
+    let totalBudget = $derived(
+        $funeralStore.budget.reduce((acc, item) => acc + item.cost, 0),
     );
-    $: totalEstimated = $funeralStore.budget.reduce(
-        (acc, item) => acc + (item.estimated || item.cost),
-        0,
+    let totalEstimated = $derived(
+        $funeralStore.budget.reduce(
+            (acc, item) => acc + (item.estimated || item.cost),
+            0,
+        ),
     );
-    $: variance = totalEstimated - totalBudget;
+    let variance = $derived(totalEstimated - totalBudget);
 
     function prefillEstimates() {
         if (
@@ -246,7 +245,7 @@
                 'wishes'
                     ? 'bg-white shadow-sm text-[#304743]'
                     : 'text-gray-500 hover:text-gray-900'}"
-                on:click={() => (activeTab = "wishes")}
+                onclick={() => (activeTab = "wishes")}
             >
                 My Wishes & Vibe
             </button>
@@ -255,7 +254,7 @@
                 'budget'
                     ? 'bg-white shadow-sm text-[#304743]'
                     : 'text-gray-500 hover:text-gray-900'}"
-                on:click={() => (activeTab = "budget")}
+                onclick={() => (activeTab = "budget")}
             >
                 Budget Calculator
             </button>
@@ -350,13 +349,13 @@
                         </p>
                         <div class="flex justify-center gap-4">
                             <button
-                                on:click={prefillEstimates}
+                                onclick={prefillEstimates}
                                 class="text-[#4A7C74] font-bold text-sm bg-[#4A7C74]/10 px-4 py-2 rounded-lg hover:bg-[#4A7C74]/20 transition-colors"
                             >
                                 Auto-Fill Common Costs
                             </button>
                             <button
-                                on:click={() => {
+                                onclick={() => {
                                     newExpense = {
                                         name: "New Expense",
                                         cost: 0,
@@ -440,13 +439,13 @@
                             </h3>
                             <div class="flex gap-2">
                                 <button
-                                    on:click={prefillEstimates}
+                                    onclick={prefillEstimates}
                                     class="text-xs font-bold text-stone-500 hover:text-[#4A7C74] px-3 py-1.5 rounded-lg hover:bg-stone-50 transition-colors"
                                 >
                                     Auto-Fill Common Costs
                                 </button>
                                 <button
-                                    on:click={() => {
+                                    onclick={() => {
                                         newExpense = { name: "", cost: 0 };
                                         showAddExpense = true;
                                     }}
@@ -478,14 +477,14 @@
                                             class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
                                         >
                                             <button
-                                                on:click={() =>
+                                                onclick={() =>
                                                     editExpense(item)}
                                                 class="p-2 text-stone-400 hover:text-[#4A7C74] bg-white border border-stone-200 rounded-full shadow-sm"
                                             >
                                                 <Pencil size={14} />
                                             </button>
                                             <button
-                                                on:click={() =>
+                                                onclick={() =>
                                                     removeExpense(item.id)}
                                                 class="p-2 text-stone-400 hover:text-red-500 bg-white border border-stone-200 rounded-full shadow-sm"
                                             >
@@ -523,7 +522,7 @@
                             </p>
                         </div>
                         <button
-                            on:click={resetExpenseForm}
+                            onclick={resetExpenseForm}
                             class="text-white/50 hover:text-white transition-colors"
                         >
                             <X size={24} />
@@ -554,7 +553,7 @@
                             />
                         </div>
                         <button
-                            on:click={saveExpense}
+                            onclick={saveExpense}
                             disabled={!newExpense.name}
                             class="w-full py-4 bg-[#4A7C74] hover:bg-[#3b635d] text-white font-bold rounded-xl shadow-lg shadow-[#4A7C74]/20 transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                         >

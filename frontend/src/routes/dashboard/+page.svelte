@@ -19,37 +19,41 @@
     import { browser } from "$app/environment";
 
     // "The Pulse" State
-    let pulseStatus: "secure" | "active" | "critical" | "standby" = "standby";
-    let score = 0;
-    let loading = true;
+    let pulseStatus = $state<"secure" | "active" | "critical" | "standby">(
+        "standby",
+    );
+    let score = $state(0);
+    let loading = $state(true);
 
     // "The Focus" Logic
-    let focusItem: {
+    let focusItem = $state<{
         title: string;
         description: string;
         link: string;
         type: "critical" | "insight";
-    } | null = null;
+    } | null>(null);
 
     // Greeting Typewriter
-    let greeting = "";
+    let greeting = $state("");
     // Reactive greeting target based on state
-    $: fullGreeting =
+    let fullGreeting = $derived(
         $estateAudit.totalScore > 0
             ? $t("system.analyzing")
-            : $t("system.initializing");
+            : $t("system.initializing"),
+    );
 
     import { familyMembers } from "$lib/stores/familyStore";
     import { digitalAssetsStore } from "$lib/stores/digitalAssetsStore";
     import { insuranceStore } from "$lib/stores/insuranceStore";
 
     // Dynamic Metrics
-    $: totalValue = $estateProfile.totalValue || 0;
-    $: networkSize = $familyMembers.length;
-    $: coverageCount =
+    let totalValue = $derived($estateProfile.totalValue || 0);
+    let networkSize = $derived($familyMembers.length);
+    let coverageCount = $derived(
         $digitalAssetsStore.length +
-        $insuranceStore.length +
-        ($estateAudit.moduleScores["financial"] ? 1 : 0);
+            $insuranceStore.length +
+            ($estateAudit.moduleScores["financial"] ? 1 : 0),
+    );
 
     // Formatter
     const currency = new Intl.NumberFormat("en-US", {
@@ -82,7 +86,7 @@
         return () => clearInterval(interval);
     });
 
-    $: {
+    $effect(() => {
         if ($estateAudit.percentage !== undefined) {
             score = $estateAudit.percentage;
 
@@ -100,7 +104,7 @@
             // Always recalculate focus when audit updates
             determineFocus();
         }
-    }
+    });
 
     let hasAutoRedirected = false;
 

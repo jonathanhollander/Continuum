@@ -127,22 +127,26 @@
         });
     }
 
-    $: items = $propertyStore;
-    $: filteredItems = items.filter((i) => {
-        const matchesSearch =
-            i.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            i.location.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesFilter = filterType === "All" || i.type === filterType;
-        return matchesSearch && matchesFilter;
-    });
+    let items = $derived($propertyStore);
+    let filteredItems = $derived(
+        items.filter((i) => {
+            const matchesSearch =
+                i.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                i.location.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesFilter = filterType === "All" || i.type === filterType;
+            return matchesSearch && matchesFilter;
+        }),
+    );
 
-    $: totalValuation = propertyStore.getTotalValuation();
-    $: typeCounts = items.reduce(
-        (acc, item) => {
-            acc[item.type] = (acc[item.type] || 0) + 1;
-            return acc;
-        },
-        {} as Record<string, number>,
+    let totalValuation = $derived(propertyStore.getTotalValuation());
+    let typeCounts = $derived(
+        items.reduce(
+            (acc: Record<string, number>, item: PropertyItem) => {
+                acc[item.type] = (acc[item.type] || 0) + 1;
+                return acc;
+            },
+            {} as Record<string, number>,
+        ),
     );
 
     const types = [
@@ -304,11 +308,11 @@
             <div class="w-full max-w-2xl relative" in:fly={{ y: 20 }}>
                 <button
                     class="absolute -top-12 right-0 text-white/50 hover:text-white"
-                    on:click={() => (showWizard = false)}>Close</button
+                    onclick={() => (showWizard = false)}>Close</button
                 >
                 <ConciergeFlow
                     steps={wizardSteps}
-                    on:complete={handleWizardComplete}
+                    oncomplete={handleWizardComplete}
                 />
             </div>
         </div>
@@ -344,7 +348,7 @@
 
         <div class="flex flex-wrap items-center gap-3">
             <button
-                on:click={() => (showWizard = true)}
+                onclick={() => (showWizard = true)}
                 class="flex items-center gap-2 px-5 py-3 border border-blue-100 text-blue-700 font-bold rounded-2xl hover:bg-blue-50 transition-colors"
             >
                 <Info size={18} />
@@ -355,7 +359,7 @@
             >
                 {#each types as type}
                     <button
-                        on:click={() => (filterType = type)}
+                        onclick={() => (filterType = type)}
                         class="px-4 py-2 rounded-xl text-xs font-bold tracking-wider transition-all {filterType ===
                         type
                             ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
@@ -367,7 +371,7 @@
             </div>
 
             <button
-                on:click={() => (showAddModal = true)}
+                onclick={() => (showAddModal = true)}
                 class="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-2xl transition-all shadow-xl shadow-slate-900/10 font-bold"
             >
                 <Plus size={20} />
@@ -564,20 +568,20 @@
                             class="flex items-center gap-1 opacity-10 md:opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0 bg-white/50 backdrop-blur rounded-2xl p-1"
                         >
                             <button
-                                on:click={() => generateQR(item)}
+                                onclick={() => generateQR(item)}
                                 class="p-3 bg-slate-50 hover:bg-amber-50 text-slate-400 hover:text-amber-600 rounded-2xl transition-all"
                                 title="Generate QR Label"
                             >
                                 <QrCode size={18} />
                             </button>
                             <button
-                                on:click={() => editItem(item)}
+                                onclick={() => editItem(item)}
                                 class="p-3 bg-slate-50 hover:bg-blue-50 text-slate-400 hover:text-blue-600 rounded-2xl transition-all"
                             >
                                 <Pencil size={18} />
                             </button>
                             <button
-                                on:click={() => deleteItem(item.id, item.name)}
+                                onclick={() => deleteItem(item.id, item.name)}
                                 class="p-3 bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-2xl transition-all"
                             >
                                 <Trash2 size={18} />
@@ -720,7 +724,7 @@
 
                     <div class="flex justify-center mt-6">
                         <button
-                            on:click={() => (showAddModal = true)}
+                            onclick={() => (showAddModal = true)}
                             class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg shadow-blue-600/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
                         >
                             <Plus size={18} />
@@ -741,7 +745,7 @@
     >
         <div
             class="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
-            on:click={resetForm}
+            onclick={resetForm}
         ></div>
 
         <div
@@ -764,7 +768,7 @@
                     </h2>
                 </div>
                 <button
-                    on:click={resetForm}
+                    onclick={resetForm}
                     class="w-14 h-14 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:rotate-90 transition-all duration-500"
                 >
                     <X size={24} strokeWidth={3} />
@@ -865,7 +869,7 @@
                                 {#each ["Owned", "Mortgaged", "Leased"] as status}
                                     <button
                                         type="button"
-                                        on:click={() =>
+                                        onclick={() =>
                                             (newItem.status = status as any)}
                                         class="flex-1 py-3 text-[10px] font-black uppercase tracking-tighter rounded-xl transition-all {newItem.status ===
                                         status
@@ -952,8 +956,7 @@
 
                     <EvidenceGalleryUploader
                         bind:evidence={newItem.evidence}
-                        on:setCover={(e: CustomEvent<string>) =>
-                            (newItem.thumbnail = e.detail)}
+                        onsetCover={(e: any) => (newItem.thumbnail = e.detail)}
                     />
                 </section>
             </div>
@@ -963,13 +966,13 @@
                 class="p-10 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-6"
             >
                 <button
-                    on:click={resetForm}
+                    onclick={resetForm}
                     class="text-sm font-black text-slate-400 hover:text-slate-900 uppercase tracking-[0.2em] transition-colors"
                 >
                     Discard Changes
                 </button>
                 <button
-                    on:click={handleAddItem}
+                    onclick={handleAddItem}
                     disabled={!newItem.name || !newItem.location}
                     class="bg-blue-600 text-white px-12 py-5 rounded-3xl font-black shadow-2xl shadow-blue-600/30 hover:scale-[1.03] active:scale-[0.98] transition-all disabled:opacity-30"
                 >

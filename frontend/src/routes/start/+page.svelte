@@ -15,14 +15,15 @@
     import { goto } from "$app/navigation";
 
     // Accessibility scale
-    $: fontSizeClass =
+    const fontSizeClass = $derived(
         $accessibilityStore.fontSize === "normal"
             ? "text-lg"
             : $accessibilityStore.fontSize === "large"
               ? "text-xl"
               : $accessibilityStore.fontSize === "xlarge"
                 ? "text-2xl"
-                : "text-3xl";
+                : "text-3xl",
+    );
 
     let ready = $state(false);
 

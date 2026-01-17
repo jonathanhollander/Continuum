@@ -29,26 +29,26 @@
     import MemoryGallery from "$lib/components/modules/visual-memories/MemoryGallery.svelte";
     import BulkActionBar from "$lib/components/modules/visual-memories/BulkActionBar.svelte";
 
-    let activeTab: "gallery" | "archives" = "gallery";
+    let activeTab = $state<"gallery" | "archives">("gallery");
 
     // Gallery State
-    let viewMode: "grid" | "carousel" = "grid";
+    let viewMode = $state<"grid" | "carousel">("grid");
     let fileInput: HTMLInputElement;
-    let isSelectionMode = false;
-    let selectedIds: string[] = [];
+    let isSelectionMode = $state(false);
+    let selectedIds = $state<string[]>([]);
 
     // Archive Management State
-    let showArchiveModal = false;
-    let editingArchive: ExternalArchive | null = null;
-    let archiveForm = {
+    let showArchiveModal = $state(false);
+    let editingArchive = $state<ExternalArchive | null>(null);
+    let archiveForm = $state({
         platform: "",
         locationDetails: "",
         accessUrl: "",
-    };
+    });
 
-    $: hasMemories = $visualMemories.length > 0;
-    $: hasArchives = $externalArchives.length > 0;
-    $: selectedCount = selectedIds.length;
+    let hasMemories = $derived($visualMemories.length > 0);
+    let hasArchives = $derived($externalArchives.length > 0);
+    let selectedCount = $derived(selectedIds.length);
 
     // --- Archive Functions ---
 
@@ -157,7 +157,7 @@
                     {editingArchive ? "Edit Location" : "Add Legacy Location"}
                 </h3>
                 <button
-                    on:click={() => (showArchiveModal = false)}
+                    onclick={() => (showArchiveModal = false)}
                     class="text-slate-400 hover:text-slate-600"
                 >
                     <X size={20} />
@@ -214,13 +214,13 @@
                 class="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3"
             >
                 <button
-                    on:click={() => (showArchiveModal = false)}
+                    onclick={() => (showArchiveModal = false)}
                     class="px-4 py-2 font-bold text-slate-500 hover:text-slate-700 text-sm"
                 >
                     Cancel
                 </button>
                 <button
-                    on:click={saveArchive}
+                    onclick={saveArchive}
                     disabled={!archiveForm.platform ||
                         !archiveForm.locationDetails}
                     class="px-6 py-2 bg-[#4A7C74] text-white rounded-lg font-bold text-sm shadow-sm hover:bg-[#3b635d] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
@@ -265,7 +265,7 @@
                 'gallery'
                     ? 'bg-white text-[#4A7C74] shadow-sm'
                     : 'text-slate-500 hover:text-[#4A7C74]'}"
-                on:click={() => (activeTab = "gallery")}
+                onclick={() => (activeTab = "gallery")}
             >
                 Curated Gallery
             </button>
@@ -274,7 +274,7 @@
                 'archives'
                     ? 'bg-white text-[#4A7C74] shadow-sm'
                     : 'text-slate-500 hover:text-[#4A7C74]'}"
-                on:click={() => (activeTab = "archives")}
+                onclick={() => (activeTab = "archives")}
             >
                 External Archives
             </button>
@@ -282,14 +282,14 @@
 
         {#if activeTab === "archives"}
             <button
-                on:click={() => openArchiveModal()}
+                onclick={() => openArchiveModal()}
                 class="flex items-center gap-2 px-4 py-2 bg-[#4A7C74] text-white rounded-lg font-bold text-sm hover:bg-[#3b635d] transition-colors shadow-sm"
             >
                 <Plus size={16} /> Add Location
             </button>
         {:else}
             <button
-                on:click={triggerUpload}
+                onclick={triggerUpload}
                 class="flex items-center gap-2 px-4 py-2 bg-[#4A7C74] text-white rounded-lg font-bold text-sm hover:bg-[#3b635d] transition-colors shadow-sm"
             >
                 <Plus size={16} /> Add Memories
@@ -309,7 +309,7 @@
                             class="text-sm font-bold px-3 py-1.5 rounded-lg transition-colors {isSelectionMode
                                 ? 'bg-indigo-100 text-indigo-700'
                                 : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}"
-                            on:click={toggleSelectionMode}
+                            onclick={toggleSelectionMode}
                         >
                             {isSelectionMode
                                 ? "Done Selecting"
@@ -327,7 +327,7 @@
                         </div>
                         <div class="flex justify-center mt-6">
                             <button
-                                on:click={triggerUpload}
+                                onclick={triggerUpload}
                                 class="text-sm font-bold text-[#4A7C74] hover:bg-[#4A7C74]/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
                             >
                                 <Image size={14} /> Upload First Memory
@@ -353,14 +353,14 @@
             multiple
             accept="image/*,video/*"
             class="hidden"
-            on:change={handleFileUpload}
+            onchange={handleFileUpload}
         />
 
         <BulkActionBar
             {selectedCount}
-            on:delete={handleBulkDeleteSubmit}
-            on:tag={handleBulkTag}
-            on:clear={() => {
+            ondelete={handleBulkDeleteSubmit}
+            ontag={handleBulkTag}
+            onclear={() => {
                 selectedIds = [];
                 isSelectionMode = false;
             }}
@@ -386,14 +386,16 @@
                     {#each $externalArchives as archive (archive.id)}
                         <ExternalArchiveCard
                             {archive}
-                            on:edit={(e) => openArchiveModal(e.detail)}
-                            on:delete={(e) => handleDeleteArchive(e.detail)}
+                            onedit={(e: CustomEvent) =>
+                                openArchiveModal(e.detail)}
+                            ondelete={(e: CustomEvent) =>
+                                handleDeleteArchive(e.detail)}
                         />
                     {/each}
 
                     <!-- Add Card -->
                     <button
-                        on:click={() => openArchiveModal()}
+                        onclick={() => openArchiveModal()}
                         class="border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-slate-400 hover:border-[#4A7C74]/50 hover:bg-[#4A7C74]/5 hover:text-[#4A7C74] transition-all min-h-[160px] group"
                     >
                         <div

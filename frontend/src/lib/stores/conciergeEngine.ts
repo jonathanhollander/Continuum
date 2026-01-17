@@ -22,23 +22,20 @@ interface ConciergeState {
     lastExtractedData: any | null;
     currentRoute: string;
     currentContextName: string;
+    hasInteracted: boolean;
 }
 
 function createConciergeEngine() {
     const { subscribe, set, update } = writable<ConciergeState>({
         isOpen: false,
-        messages: [{
-            id: '1',
-            role: 'assistant',
-            content: "Welcome to Continuum. I am your AI Concierge, here to help. You can provide your data through conversation using text or speech. We will start by listing your family and emergency contacts. What is the full name of your primary contact?",
-            timestamp: Date.now()
-        }],
+        messages: [],
         isThinking: false,
         isListening: false,
         isSpeaking: false,
         lastExtractedData: null,
         currentRoute: '',
-        currentContextName: 'Continuum Dashboard'
+        currentContextName: 'Continuum Dashboard',
+        hasInteracted: false
     });
 
     return {
@@ -56,13 +53,47 @@ function createConciergeEngine() {
         setContext: (route: string) => {
             const allItems = navGroups.flatMap(g => g.items);
             const item = allItems.find(i => i.href === route);
-            const contextName = item ? item.label : (route === '/' ? 'Marketing' : 'Continuum');
+            const contextName = item ? item.label : (route === '/' ? 'Marketing' : (route.startsWith('/modules') ? route.split('/').pop()?.replace('-', ' ') : 'Continuum'));
+
+            const state = get(conciergeEngine);
+            const oldContext = state.currentContextName;
 
             update(s => ({
                 ...s,
                 currentRoute: route,
                 currentContextName: contextName
             }));
+
+            // Proactive Pivot: If panel is open and context changes, interject
+            if (state.isOpen && oldContext !== contextName && state.messages.length >= 1) {
+                // Get the proactive greeting for this context to lead immediately
+                const contextGreetings: Record<string, string> = {
+                    'Real Estate': "I see we're looking at your properties. Do you own any acreage or vehicles we should document first?",
+                    'Financial Accounts': "Securing these accounts is vital. Which bank holds your primary checking or savings?",
+                    'Document Vault': "Let's secure your digital life. Do you have a password manager we should record the location of?",
+                    'Health & Medical': "Medical clarity is essential. Have you designated a healthcare proxy yet?",
+                    'Family & Contacts': "Legacy is about people. Who is the first person you'd like to include in your circle of trust?",
+                    'Legacy Letters': "Your voice matters. Who would you like to write your first legacy letter to?",
+                    'Life Timeline': "What is a major life milestone we should record on your timeline?",
+                    'Insurance Portfolio': "Protection is key. Do you have any active life or property insurance policies?",
+                    'Digital Guardian': "The Pulse system ensures you're okay. Who should be your primary responder if you don't check in?",
+                    'Heirloom Registry': "What's a valuable heirloom you'd like to register today?",
+                    'Legal Documents': "Legal foundations are critical. Do you have a copy of your Will or Trust ready?"
+                };
+
+                const leadQuestion = contextGreetings[contextName] || `Shall we start securing the details for ${contextName}?`;
+                const pivotMsg = `We've moved into ${contextName}. ${leadQuestion}`;
+
+                const assistantMsg: Message = {
+                    id: Math.random().toString(36).substring(7),
+                    role: 'assistant',
+                    content: pivotMsg,
+                    timestamp: Date.now()
+                };
+                update(s => ({ ...s, messages: [...s.messages, assistantMsg] }));
+            } else if (state.isOpen && state.messages.length === 0) {
+                conciergeEngine.updateInitialGreeting();
+            }
         },
 
         sendMessage: async (content: string, isDictated: boolean = false) => {
@@ -74,7 +105,12 @@ function createConciergeEngine() {
                 isDictated
             };
 
-            update(s => ({ ...s, messages: [...s.messages, userMsg], isThinking: true }));
+            update(s => ({
+                ...s,
+                messages: [...s.messages, userMsg],
+                isThinking: true,
+                hasInteracted: true
+            }));
 
             try {
                 const state = get(conciergeEngine);
@@ -98,7 +134,7 @@ function createConciergeEngine() {
                         // Contextual Navigation
                         if (browser && parsed.intent) {
                             const intentMap: Record<string, string> = {
-                                'add_family': '/modules/contacts',
+                                'add_contact': '/modules/contacts',
                                 'add_property': '/modules/property',
                                 'add_financial': '/modules/financial-accounts',
                                 'add_insurance': '/modules/insurance',
@@ -143,10 +179,6 @@ function createConciergeEngine() {
             const data = get(conciergeEngine).lastExtractedData;
             if (!data) return;
 
-            console.log('[Concierge] Committing data to profile:', data);
-
-            // In a real implementation, we would route these to propertyStore, estateStore, etc.
-            // For now, we update the profile context which is used globally.
             import('./persistence').then(({ setStored }) => {
                 Object.entries(data).forEach(([key, value]) => {
                     setStored(key, value);
@@ -158,24 +190,54 @@ function createConciergeEngine() {
 
         clearHistory: () => {
             update(s => ({ ...s, messages: [], lastExtractedData: null }));
+            conciergeEngine.updateInitialGreeting();
         },
 
         updateInitialGreeting: () => {
             const state = get(conciergeEngine);
-            if (state.messages.length <= 1) {
-                const contextName = state.currentContextName || 'Continuum Dashboard';
-                const newGreeting = `Welcome to Continuum. I am your AI Concierge, focusing on "${contextName}". I'm here to help secure your legacy. Where shall we begin?`;
+            if (state.messages.length > 0) return;
 
-                update(s => ({
-                    ...s,
-                    messages: [{
-                        id: '1',
-                        role: 'assistant',
-                        content: newGreeting,
-                        timestamp: Date.now()
-                    }]
-                }));
+            const contextName = state.currentContextName || 'Continuum Dashboard';
+            const isHome = contextName === 'Continuum Dashboard' || contextName === 'Marketing';
+
+            // Proactive Contextual Greetings
+            const contextGreetings: Record<string, string> = {
+                'Real Estate': "I'm ready to catalog your assets. Do you own any properties or vehicles we should document first?",
+                'Financial Accounts': "Let's secure your financial legacy. Which bank or financial institution holds your primary accounts?",
+                'Document Vault': "Your digital legacy is vital. Do you have a password manager or a list of priority digital accounts to secure?",
+                'Health & Medical': "Medical clarity is essential. Have you designated a healthcare proxy or created a living will yet?",
+                'Family & Contacts': "Legacy is about people. Who is the first person you'd like to include in your circle of trust?",
+                'Legacy Letters': "Your voice matters. Who would you like to write your first legacy letter to?",
+                'Life Timeline': "Every life is a story. What is a major life milestone we should record on your timeline?",
+                'Insurance Portfolio': "Protection is key. Do you have any active life or property insurance policies we should track?",
+                'Digital Guardian': "The Pulse system ensures you're okay. Who should be your primary responder if you don't check in?",
+                'Heirloom Registry': "Every object has a story. What's a valuable heirloom you'd like to register today?",
+                'Legal Documents': "Legal foundations are critical. Do you have a copy of your Will or Trust ready to upload?"
+            };
+
+            let prefix = "";
+            if (!state.hasInteracted) {
+                prefix = "Welcome to Continuum. I'm here to help you secure your legacy. ";
+            } else {
+                prefix = "Ready to continue. ";
             }
+
+            const greetingBody = contextGreetings[contextName] ||
+                (isHome ? "To begin, we need to secure your legacy by identifying your circle of trust. Who is your primary emergency contact?" : `What's the first detail we should record here in ${contextName}?`);
+
+            const newGreeting = `${prefix}${greetingBody}`;
+
+            update(s => ({
+                ...s,
+                messages: [{
+                    id: '1',
+                    role: 'assistant',
+                    content: newGreeting,
+                    timestamp: Date.now()
+                }],
+                // Mark as interacted once they've seen the first greeting
+                hasInteracted: true
+            }));
         }
     };
 }

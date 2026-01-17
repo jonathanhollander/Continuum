@@ -25,8 +25,9 @@
     // --- State & Types ---
     // LifeEvent imported from store
 
-    $: getContactById = (id: string | undefined) =>
-        $familyMembers.find((m) => m.id === id);
+    let getContactById = $derived((id: string | undefined) =>
+        $familyMembers.find((m) => m.id === id),
+    );
 
     let showMemento = false;
     let birthYear = 1990;
@@ -34,7 +35,7 @@
     let lifeExpectancy = 85;
 
     // Use store directly
-    $: lifeEvents = $timelineStore;
+    let lifeEvents = $derived($timelineStore);
 
     let showAddModal = false;
     let newEvent: Partial<LifeEvent> & { id?: number } = {
@@ -91,12 +92,13 @@
     let weeksLived = (currentYear - birthYear) * 52;
 
     // Dynamic Grid Sizing: Furthest event OR Current Year + 3
-    $: maxEventYear =
+    let maxEventYear = $derived(
         lifeEvents.length > 0
-            ? Math.max(currentYear, ...lifeEvents.map((e) => e.year))
-            : currentYear;
-    $: endYear = Math.max(maxEventYear, currentYear + 3);
-    $: totalWeeks = (endYear - birthYear) * 52;
+            ? Math.max(...lifeEvents.map((e) => new Date(e.date).getFullYear()))
+            : currentYear,
+    );
+    let endYear = $derived(Math.max(maxEventYear, currentYear + 3));
+    let totalWeeks = $derived((endYear - birthYear) * 52);
 
     // Zoom State
     let pixelsPerYear = 20;
@@ -129,24 +131,26 @@
         }
     }
 
-    $: weeksData = Array.from({ length: totalWeeks }, (_, i) => {
-        const isLived = i < weeksLived;
+    let weeksData = $derived(
+        Array.from({ length: totalWeeks }, (_, i) => {
+            const isLived = i < weeksLived;
 
-        // Find events that happened in this week (approximate)
-        // We broadly map events to the specific week index corresponding to the start of their year
-        const weekEvents = lifeEvents.filter((e) => {
-            const eventWeekStart = (e.year - birthYear) * 52;
-            // Match if the current week index 'i' is the one we calculated for this event's year
-            return Math.floor(eventWeekStart) === i;
-        });
+            // Find events that happened in this week (approximate)
+            // We broadly map events to the specific week index corresponding to the start of their year
+            const weekEvents = lifeEvents.filter((e) => {
+                const eventWeekStart = (e.year - birthYear) * 52;
+                // Match if the current week index 'i' is the one we calculated for this event's year
+                return Math.floor(eventWeekStart) === i;
+            });
 
-        return {
-            index: i,
-            isLived,
-            events: weekEvents,
-            hasEvent: weekEvents.length > 0,
-        };
-    });
+            return {
+                index: i,
+                isLived,
+                events: weekEvents,
+                hasEvent: weekEvents.length > 0,
+            };
+        }),
+    );
 
     function getIcon(type: string) {
         switch (type) {
@@ -181,7 +185,7 @@
                     class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50"
                 >
                     <h3 class="font-bold text-[#304743]">New Life Event</h3>
-                    <button on:click={resetForm}
+                    <button onclick={resetForm}
                         ><X
                             size={20}
                             class="text-gray-400 hover:text-gray-600"
@@ -222,7 +226,7 @@
                                     (newEvent.year
                                         ? `${newEvent.year}-01-01`
                                         : "")}
-                                on:input={(e) => {
+                                oninput={(e) => {
                                     const val = e.currentTarget.value;
                                     newEvent.date = val;
                                     if (val) {
@@ -309,7 +313,7 @@
                         </div>
                     {/if}
                     <button
-                        on:click={saveEvent}
+                        onclick={saveEvent}
                         class="w-full py-3 bg-[#4A7C74] text-white rounded-xl font-bold mt-2"
                     >
                         {newEvent.id ? "Update Event" : "Add to Timeline"}
@@ -342,7 +346,7 @@
             <div class="flex gap-4">
                 <button
                     class="px-4 py-2 rounded-lg text-sm font-bold bg-[#4A7C74] text-white shadow-md flex items-center gap-2 hover:bg-[#3b635d]"
-                    on:click={() => (showAddModal = true)}
+                    onclick={() => (showAddModal = true)}
                 >
                     <Plus size={16} /> Add Event
                 </button>
@@ -354,7 +358,7 @@
                         class="px-4 py-2 rounded-lg text-sm font-bold transition-all {showMemento
                             ? 'text-gray-500 hover:bg-gray-50'
                             : 'bg-stone-100 text-stone-800'}"
-                        on:click={() => (showMemento = false)}
+                        onclick={() => (showMemento = false)}
                     >
                         Timeline
                     </button>
@@ -362,7 +366,7 @@
                         class="px-4 py-2 rounded-lg text-sm font-bold transition-all {showMemento
                             ? 'bg-purple-600 text-white shadow-md'
                             : 'text-gray-500 hover:bg-gray-50'}"
-                        on:click={() => (showMemento = true)}
+                        onclick={() => (showMemento = true)}
                     >
                         Memento Mori
                     </button>
@@ -386,14 +390,16 @@
                 {#each lifeEvents.filter((e) => e.type === "accomplishment") as trophy}
                     <div
                         class="bg-white border border-amber-100 p-6 rounded-2xl relative group cursor-pointer hover:shadow-xl hover:border-amber-300 transition-all flex flex-col h-full"
-                        on:click={() => editEvent(trophy)}
+                        onclick={() => editEvent(trophy)}
                     >
                         <div
                             class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2"
                         >
                             <button
-                                on:click|stopPropagation={() =>
-                                    editEvent(trophy)}
+                                onclick={(e) => {
+                                    e.stopPropagation();
+                                    editEvent(trophy);
+                                }}
                                 class="p-2 bg-amber-50 text-amber-600 rounded-full hover:bg-amber-100"
                             >
                                 <Pencil size={14} />
@@ -466,10 +472,12 @@
 
                                 {#if contact?.email}
                                     <button
-                                        on:click|stopPropagation={() =>
+                                        onclick={(e) => {
+                                            e.stopPropagation();
                                             alert(
                                                 `Mock Notification: Email sent to ${contact.email} regarding "${trophy.label}"`,
-                                            )}
+                                            );
+                                        }}
                                         class="p-2 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-colors shadow-sm"
                                         title="Notify via Email"
                                     >
@@ -521,8 +529,8 @@
 
             <div
                 class="flex flex-wrap gap-1 justify-center max-h-[600px] overflow-y-auto p-4 custom-scrollbar relative"
-                on:mouseleave={() => (hoveredWeek = null)}
-                on:mousemove={handleMouseMove}
+                onmouseleave={() => (hoveredWeek = null)}
+                onmousemove={handleMouseMove}
             >
                 {#each weeksData as week (week.index)}
                     <div
@@ -536,7 +544,7 @@
                         {!week.hasEvent && !week.isLived
                             ? 'bg-gray-100 hover:bg-purple-200'
                             : ''}"
-                        on:mouseenter={() => (hoveredWeek = week)}
+                        onmouseenter={() => (hoveredWeek = week)}
                     ></div>
                 {/each}
             </div>
@@ -702,16 +710,20 @@
                                     class="absolute -top-3 -right-3 flex gap-1 z-20 opacity-0 group-hover:opacity-100 transition-opacity"
                                 >
                                     <button
-                                        on:click|stopPropagation={() =>
-                                            editEvent(event)}
+                                        onclick={(e) => {
+                                            e.stopPropagation();
+                                            editEvent(event);
+                                        }}
                                         class="bg-blue-100 text-blue-500 p-1 rounded-full hover:scale-110 shadow-sm"
                                         title="Edit Event"
                                     >
                                         <Pencil size={12} />
                                     </button>
                                     <button
-                                        on:click|stopPropagation={() =>
-                                            removeEvent(event.id)}
+                                        onclick={(e) => {
+                                            e.stopPropagation();
+                                            removeEvent(event.id);
+                                        }}
                                         class="bg-red-100 text-red-500 p-1 rounded-full hover:scale-110 shadow-sm"
                                         title="Delete Event"
                                     >

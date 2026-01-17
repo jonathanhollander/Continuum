@@ -29,7 +29,7 @@
 
     // --- State & Types ---
     type MemoryType = "photo" | "recipe" | "quote";
-    let viewMode: "dashboard" | "concierge" = "dashboard"; // Default to dashboard for now, or check memories later
+    let viewMode = $state<"dashboard" | "concierge">("dashboard"); // Default to dashboard for now, or check memories later
 
     interface Memory {
         id: number;
@@ -42,18 +42,18 @@
         author?: string;
     }
 
-    let memories: Memory[] = [];
-    let showAddModal = false;
+    let memories = $state<Memory[]>([]);
+    let showAddModal = $state(false);
 
     // Form Mock-Model
-    let newMemory: Partial<Memory> & { id?: number } = {
+    let newMemory = $state<Partial<Memory> & { id?: number }>({
         type: "photo",
         title: "",
         desc: "",
         image: "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800&q=80", // Default placeholder
         author: $estateProfile.ownerName || "Me",
         date: new Date().getFullYear().toString(),
-    };
+    });
 
     import { getStored, setStored } from "$lib/stores/persistence";
 
@@ -220,12 +220,12 @@
     ];
 
     // Slideshow Logic
-    let showSlideshow = false;
-    let currentSlide = 0;
-    let isPlaying = true;
+    let showSlideshow = $state(false);
+    let currentSlide = $state(0);
+    let isPlaying = $state(true);
     let slideInterval: any;
 
-    $: photoMemories = memories.filter((m) => m.type === "photo");
+    let photoMemories = $derived(memories.filter((m) => m.type === "photo"));
 
     function startSlideshow() {
         if (photoMemories.length === 0) return alert("Add some photos first!");
@@ -502,7 +502,7 @@
                         required: true,
                     },
                 ]}
-                on:complete={handleConciergeComplete}
+                oncomplete={handleConciergeComplete}
             />
             <div class="text-center mt-8">
                 <button

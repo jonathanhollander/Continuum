@@ -77,6 +77,7 @@
 	let { children } = $props();
 
 	let isSidebarOpen = $state(false);
+	let isCompassOpen = $state(false);
 	let showSettings = $state(false);
 	let showCommandCenter = $state(false);
 
@@ -384,13 +385,13 @@
 <Modal
 	open={showSettings}
 	title="Concierge Settings"
-	on:close={() => (showSettings = false)}
+	onClose={() => (showSettings = false)}
 >
 	<ConciergeSettings />
 </Modal>
 
 {#if showCommandCenter}
-	<CommandCenter on:close={() => (showCommandCenter = false)} />
+	<CommandCenter onClose={() => (showCommandCenter = false)} />
 {/if}
 
 <ConciergePanel

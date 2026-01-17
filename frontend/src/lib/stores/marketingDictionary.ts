@@ -26,7 +26,7 @@ export const marketingDictionary = {
         jargonDesc: "Upload complex trusts or insurance policies, and we translate them into plain English summaries your beneficiaries can actually understand.",
         pactTitle: "Make the Pact.",
         pactDesc: "Continuum is for those who take responsibility for their legacy. Are you ready?",
-        placeholderSign: "Sign your name",
+        placeholderSign: "Enter your Full Name here",
         btnNext: "Next",
         keeperTitle: "The Keeper of Key.",
         keeperDesc: "Where should we send your secure initialization sequence?",

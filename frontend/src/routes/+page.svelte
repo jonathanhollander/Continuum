@@ -373,9 +373,9 @@
     });
 
     // --- Commitment CTA Logic ---
-    let signature = "";
-    let email = "";
-    let step = 0; // 0: Name, 1: Email, 2: Signed
+    let signature = $state("");
+    let email = $state("");
+    let step = $state(0); // 0: Name, 1: Email, 2: Signed
 
     function handleNameSubmit() {
         if (signature.length > 2) {
@@ -562,8 +562,8 @@
                         translateY({heroProgress * 60}px)
                         rotateX({heroProgress * 3}deg);
                 "
-                    on:mousemove={handleTilt}
-                    on:mouseleave={resetTilt}
+                    onmousemove={handleTilt}
+                    onmouseleave={resetTilt}
                 >
                     <!-- Device Frame -->
                     <div
@@ -672,8 +672,8 @@
                 class="relative group perspective-container reveal-card"
                 style="transition-delay: 0.3s"
                 use:reveal
-                on:mousemove={handleTilt}
-                on:mouseleave={resetTilt}
+                onmousemove={handleTilt}
+                onmouseleave={resetTilt}
             >
                 <div
                     class="holo-card relative rounded-[1rem] overflow-hidden transform-gpu transition-transform border border-white/20 shadow-2xl bg-[#0F1115]"
@@ -1231,7 +1231,7 @@
                             type="text"
                             bind:value={signature}
                             placeholder={$mt.placeholderSign}
-                            on:keydown={(e) =>
+                            onkeydown={(e) =>
                                 e.key === "Enter" && handleNameSubmit()}
                             class="w-full bg-white/5 border-b border-white/20 p-6 text-3xl font-serif italic text-amber-200 outline-none focus:border-amber-500 transition-all text-center"
                         />
@@ -1240,7 +1240,7 @@
                     <div class="mt-12 h-16">
                         {#if signature.length > 2}
                             <button
-                                on:click={handleNameSubmit}
+                                onclick={handleNameSubmit}
                                 in:fly={{ y: 20 }}
                                 class="group flex items-center gap-4 bg-white text-black px-10 py-5 rounded-full font-bold uppercase tracking-widest hover:scale-105 transition-all text-sm mt-8 mx-auto"
                             >
@@ -1270,13 +1270,13 @@
                             type="email"
                             bind:value={email}
                             placeholder="email@address.com"
-                            on:keydown={(e) =>
+                            onkeydown={(e) =>
                                 e.key === "Enter" && handleEmailSubmit()}
                             class="w-full bg-white/5 border border-white/10 rounded-2xl p-6 text-xl text-white outline-none focus:border-amber-500 transition-all text-center"
                         />
                         {#if email.includes("@") && email.includes(".")}
                             <button
-                                on:click={handleEmailSubmit}
+                                onclick={handleEmailSubmit}
                                 class="w-full mt-6 bg-amber-500 hover:bg-amber-600 text-black py-5 rounded-2xl font-bold uppercase tracking-widest transition-all shadow-xl shadow-amber-500/20 active:scale-95"
                             >
                                 {$mt.btnCommit}
@@ -1284,7 +1284,7 @@
                         {/if}
                     </div>
                     <button
-                        on:click={() => (step = 0)}
+                        onclick={() => (step = 0)}
                         class="mt-8 text-slate-500 text-sm hover:text-white transition"
                         >{$mt.wizBtnBack}</button
                     >

@@ -174,7 +174,7 @@ export const dictionary = {
             jargonDesc: "Translates complex legal documents into plain 5th-grade English.",
             pactTitle: "Make the Pact.",
             pactDesc: "Sign your name. Commit to spending 15 minutes this weekend securing your family's future.",
-            placeholderSign: "Sign Your Name of Honor",
+            placeholderSign: "Enter your Full Name here",
             btnNext: "I Accept This Mission",
             keeperTitle: "The Keeper",
             keeperDesc: "Where should we send your secure access key?",
