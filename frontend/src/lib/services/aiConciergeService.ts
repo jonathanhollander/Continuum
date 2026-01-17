@@ -39,7 +39,7 @@ function sanitizeInput(content: string): string {
     return sanitized;
 }
 
-async function chat(content: string, history: any[]): Promise<AIResponse> {
+async function chat(content: string, history: any[], contextName: string = 'Continuum Dashboard'): Promise<AIResponse> {
     const sanitizedContent = sanitizeInput(content);
 
     try {
@@ -57,6 +57,9 @@ async function chat(content: string, history: any[]): Promise<AIResponse> {
                     {
                         "role": "system",
                         "content": `You are the AI Concierge for Continuum.estate. Your SOLE MISSION is to gather data for the user's estate plan. 
+                        
+                        CURRENT CONTEXT: The user is currently viewing the "${contextName}" section of the application. 
+                        If the user sounds stuck or asks where they are, acknowledge this context.
                         
                         STRICT DATA UTILITY: Every response MUST lead directly to a piece of data required for an estate plan. No small talk. No patronizing language. Be factual and efficient.
                         

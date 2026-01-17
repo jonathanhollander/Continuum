@@ -42,6 +42,8 @@ export type NavItem = {
 export type NavGroup = {
     groupLabel: string;
     groupKey: string;
+    groupDescription?: string;
+    isCollapsedByDefault?: boolean;
     items: NavItem[];
 };
 
@@ -49,6 +51,7 @@ export const navGroups: NavGroup[] = [
     {
         groupLabel: "Estate Overview",
         groupKey: "groupOverview",
+        groupDescription: "Your central command and situation reports.",
         items: [
             {
                 label: "Dashboard",
@@ -76,6 +79,7 @@ export const navGroups: NavGroup[] = [
     {
         groupLabel: "Assets & Wealth",
         groupKey: "groupAssets",
+        groupDescription: "Manage your properties, accounts, and portfolio.",
         items: [
             {
                 label: "Financial Accounts",
@@ -110,6 +114,7 @@ export const navGroups: NavGroup[] = [
     {
         groupLabel: "Life & Legacy",
         groupKey: "groupLegacy",
+        groupDescription: "Preserve your memories, letters, and wishes.",
         items: [
             {
                 label: "Legacy Journal",
@@ -172,6 +177,7 @@ export const navGroups: NavGroup[] = [
     {
         groupLabel: "Logistics & Security",
         groupKey: "groupLogistics",
+        groupDescription: "The vital essentials for your survivors.",
         items: [
             {
                 label: "The Red Binder",
@@ -220,6 +226,8 @@ export const navGroups: NavGroup[] = [
     {
         groupLabel: "Admin & Tools",
         groupKey: "groupAdmin",
+        groupDescription: "System settings and advanced controls.",
+        isCollapsedByDefault: true,
         items: [
             {
                 label: "Executor Toolkit",
@@ -268,6 +276,8 @@ export const navGroups: NavGroup[] = [
     {
         groupLabel: "Pulse & Wellness",
         groupKey: "groupPulse",
+        groupDescription: "Monitoring your well-being and guardianship.",
+        isCollapsedByDefault: true,
         items: [
             {
                 label: "The Pulse Dashboard",

@@ -10,6 +10,7 @@
         Sparkles,
         AlertCircle,
         CheckCircle2,
+        Target,
     } from "lucide-svelte";
     import { conciergeEngine, type Message } from "$lib/stores/conciergeEngine";
     import { voiceService } from "$lib/services/voiceService";
@@ -121,6 +122,17 @@
                             class="text-[10px] uppercase tracking-widest text-white/40 font-bold"
                             >Active Assistant</span
                         >
+                        {#if $conciergeEngine.currentContextName}
+                            <div
+                                class="flex items-center gap-1.5 px-2 py-0.5 bg-indigo-500/20 rounded-full border border-indigo-500/30"
+                            >
+                                <Target size={10} class="text-indigo-400" />
+                                <span
+                                    class="text-[9px] font-bold uppercase tracking-wider text-indigo-300"
+                                    >{$conciergeEngine.currentContextName}</span
+                                >
+                            </div>
+                        {/if}
                     </div>
                 </div>
             </div>

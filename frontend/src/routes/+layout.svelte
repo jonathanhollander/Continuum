@@ -123,6 +123,11 @@
 			$page.url.pathname === "/",
 	);
 
+	// Update concierge context on route change
+	$effect(() => {
+		conciergeEngine.setContext($page.url.pathname);
+	});
+
 	onMount(() => {
 		// Run audit on load and periodically
 		estateAudit.runAudit();

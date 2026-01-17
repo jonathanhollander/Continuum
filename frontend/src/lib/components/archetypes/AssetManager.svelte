@@ -30,6 +30,7 @@
     import { fly, scale, slide, fade } from "svelte/transition";
     import { getStored, setStored } from "$lib/stores/persistence";
     import { getSmartSamples } from "$lib/data/smartSamples";
+    import { conciergeEngine } from "$lib/stores/conciergeEngine";
 
     let { module } = $props<{ module: any }>();
 
@@ -74,6 +75,42 @@
         loginUrl: "",
         beneficiaryEmail: "",
         closureNotes: "",
+    });
+
+    // AI Intake Mirroring (True Simulation)
+    $effect(() => {
+        const data =
+            $conciergeEngine.lastExtractedData?.asset ||
+            $conciergeEngine.lastExtractedData?.financial_account ||
+            $conciergeEngine.lastExtractedData;
+
+        if (data && (data.name || data.value || data.location)) {
+            // Open form if not already open
+            if (!showAddForm) showAddForm = true;
+
+            // Sync form state
+            newAsset = {
+                ...newAsset,
+                name: data.name || newAsset.name,
+                type: (data.type || newAsset.type) as AssetType,
+                value: data.value || newAsset.value,
+                location: data.location || newAsset.location,
+                accountNumber: data.accountNumber || newAsset.accountNumber,
+                beneficiaries: data.beneficiaries || newAsset.beneficiaries,
+                notes: data.notes || newAsset.notes,
+            };
+        }
+    });
+
+    // Detect when AI commits data
+    let previousDataWasPresent = false;
+    $effect(() => {
+        const hasData = !!$conciergeEngine.lastExtractedData;
+        if (previousDataWasPresent && !hasData && showAddForm) {
+            console.log("[AI Mirror] Commit detected, saving asset...");
+            saveAsset();
+        }
+        previousDataWasPresent = hasData;
     });
 
     const storageKey = `assets_${module.id}`;
@@ -469,7 +506,13 @@
                             type="text"
                             bind:value={newAsset.name}
                             placeholder="e.g. Chase Checking, Tesla Model Y"
-                            class="w-full p-2 rounded-lg border bg-secondary/20 focus:ring-2 focus:ring-[#4A7C74] outline-none transition-all"
+                            class="w-full p-2 rounded-lg border transition-all {$conciergeEngine
+                                .lastExtractedData?.name ||
+                            $conciergeEngine.lastExtractedData?.asset?.name ||
+                            $conciergeEngine.lastExtractedData
+                                ?.financial_account?.name
+                                ? 'amber-glow border-amber-500/50'
+                                : 'bg-secondary/20 focus:ring-2 focus:ring-[#4A7C74] focus:border-[#4A7C74] outline-none'}"
                         />
                     </div>
                     <div class="space-y-2">

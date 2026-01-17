@@ -3,6 +3,7 @@ import { aiConciergeService } from '../services/aiConciergeService';
 import { activeAccountId } from './keyringStore';
 import { goto } from '$app/navigation';
 import { browser } from '$app/environment';
+import { navGroups } from '../config/navigation';
 
 export interface Message {
     id: string;
@@ -19,6 +20,8 @@ interface ConciergeState {
     isListening: boolean;
     isSpeaking: boolean;
     lastExtractedData: any | null;
+    currentRoute: string;
+    currentContextName: string;
 }
 
 function createConciergeEngine() {
@@ -33,17 +36,34 @@ function createConciergeEngine() {
         isThinking: false,
         isListening: false,
         isSpeaking: false,
-        lastExtractedData: null
+        lastExtractedData: null,
+        currentRoute: '',
+        currentContextName: 'Continuum Dashboard'
     });
 
     return {
         subscribe,
         toggle: () => update(s => ({ ...s, isOpen: !s.isOpen })),
-        open: () => update(s => ({ ...s, isOpen: true })),
+        open: () => {
+            update(s => ({ ...s, isOpen: true }));
+            conciergeEngine.updateInitialGreeting();
+        },
         close: () => update(s => ({ ...s, isOpen: false })),
 
         setListening: (val: boolean) => update(s => ({ ...s, isListening: val })),
         setSpeaking: (val: boolean) => update(s => ({ ...s, isSpeaking: val })),
+
+        setContext: (route: string) => {
+            const allItems = navGroups.flatMap(g => g.items);
+            const item = allItems.find(i => i.href === route);
+            const contextName = item ? item.label : (route === '/' ? 'Marketing' : 'Continuum');
+
+            update(s => ({
+                ...s,
+                currentRoute: route,
+                currentContextName: contextName
+            }));
+        },
 
         sendMessage: async (content: string, isDictated: boolean = false) => {
             const userMsg: Message = {
@@ -57,8 +77,8 @@ function createConciergeEngine() {
             update(s => ({ ...s, messages: [...s.messages, userMsg], isThinking: true }));
 
             try {
-                // Call AI Service
-                const response = await aiConciergeService.chat(content, get(conciergeEngine).messages);
+                const state = get(conciergeEngine);
+                const response = await aiConciergeService.chat(content, state.messages, state.currentContextName);
 
                 // Parse response if it's JSON
                 let displayContent = response.content;
@@ -138,6 +158,24 @@ function createConciergeEngine() {
 
         clearHistory: () => {
             update(s => ({ ...s, messages: [], lastExtractedData: null }));
+        },
+
+        updateInitialGreeting: () => {
+            const state = get(conciergeEngine);
+            if (state.messages.length <= 1) {
+                const contextName = state.currentContextName || 'Continuum Dashboard';
+                const newGreeting = `Welcome to Continuum. I am your AI Concierge, focusing on "${contextName}". I'm here to help secure your legacy. Where shall we begin?`;
+
+                update(s => ({
+                    ...s,
+                    messages: [{
+                        id: '1',
+                        role: 'assistant',
+                        content: newGreeting,
+                        timestamp: Date.now()
+                    }]
+                }));
+            }
         }
     };
 }
