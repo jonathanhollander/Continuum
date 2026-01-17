@@ -2,9 +2,17 @@
     import { onMount } from "svelte";
     import { conciergeEngine } from "$lib/stores/conciergeEngine";
     import { fade, fly } from "svelte/transition";
-    import { Sparkles, ArrowRight, ShieldCheck } from "lucide-svelte";
+    import {
+        Sparkles,
+        ArrowRight,
+        ShieldCheck,
+        UserCog,
+        BrainCircuit,
+    } from "lucide-svelte";
     import logo from "$lib/assets/logo.png";
     import { accessibilityStore } from "$lib/stores/accessibilityStore";
+    import { preferenceStore } from "$lib/stores/preferenceStore";
+    import { goto } from "$app/navigation";
 
     // Accessibility scale
     $: fontSizeClass =
@@ -16,9 +24,25 @@
                 ? "text-2xl"
                 : "text-3xl";
 
+    let ready = $state(false);
+
     onMount(() => {
-        // Concierge is opened via explicit user action now
+        // Simple boot sequence for visual polish
+        setTimeout(() => {
+            ready = true;
+        }, 1200);
     });
+
+    function startGuided() {
+        preferenceStore.setExpertMode(false);
+        conciergeEngine.open();
+    }
+
+    function startExpert() {
+        preferenceStore.setExpertMode(true);
+        preferenceStore.setOnboardingComplete(true);
+        goto("/dashboard");
+    }
 </script>
 
 <div
@@ -57,7 +81,7 @@
         </div>
 
         <!-- Initializing Indicator -->
-        {#if !$conciergeEngine.isOpen}
+        {#if !ready}
             <div class="flex flex-col items-center gap-4" transition:fade>
                 <div class="flex gap-2">
                     <div
@@ -75,10 +99,80 @@
                 </div>
                 <span
                     class="text-xs font-bold uppercase tracking-[0.3em] text-indigo-400/60"
-                    >Initializing AI Concierge</span
+                    >System Booting</span
                 >
             </div>
+        {:else if !$conciergeEngine.isOpen}
+            <div
+                class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full"
+                transition:fly={{ y: 20 }}
+            >
+                <!-- Guided Choice -->
+                <button
+                    onclick={startGuided}
+                    class="group relative p-8 bg-indigo-600/10 border border-indigo-500/30 rounded-3xl text-left hover:bg-indigo-600/20 transition-all hover:scale-[1.02] active:scale-95 overflow-hidden"
+                >
+                    <div class="flex flex-col h-full space-y-4 relative z-10">
+                        <div
+                            class="w-12 h-12 bg-indigo-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/40"
+                        >
+                            <BrainCircuit size={24} />
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white">
+                                Guided Journey
+                            </h3>
+                            <p class="text-sm text-slate-400 mt-2">
+                                Talk with the AI Concierge to build your estate
+                                plan through conversation.
+                            </p>
+                        </div>
+                        <div
+                            class="mt-auto flex items-center gap-2 text-indigo-400 font-bold text-xs uppercase tracking-widest pt-4"
+                        >
+                            <span>Begin Intro</span>
+                            <ArrowRight
+                                size={14}
+                                class="group-hover:translate-x-1 transition-transform"
+                            />
+                        </div>
+                    </div>
+                </button>
+
+                <!-- Expert Choice -->
+                <button
+                    onclick={startExpert}
+                    class="group relative p-8 bg-white/5 border border-white/10 rounded-3xl text-left hover:bg-white/10 transition-all hover:scale-[1.02] active:scale-95"
+                >
+                    <div class="flex flex-col h-full space-y-4">
+                        <div
+                            class="w-12 h-12 bg-slate-700 rounded-2xl flex items-center justify-center text-slate-300"
+                        >
+                            <UserCog size={24} />
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white">
+                                Expert Control
+                            </h3>
+                            <p class="text-sm text-slate-400 mt-2">
+                                Bypass the guide and go straight to the
+                                Dashboard. Best for returning experts.
+                            </p>
+                        </div>
+                        <div
+                            class="mt-auto flex items-center gap-2 text-slate-500 font-bold text-xs uppercase tracking-widest pt-4 group-hover:text-white transition-colors"
+                        >
+                            <span>Skip to Dashboard</span>
+                            <ArrowRight
+                                size={14}
+                                class="group-hover:translate-x-1 transition-transform"
+                            />
+                        </div>
+                    </div>
+                </button>
+            </div>
         {:else}
+            <!-- AI Concierge Active States -->
             <div class="space-y-6" transition:fly={{ y: 20 }}>
                 <div
                     class="p-6 bg-white/5 border border-white/10 rounded-3xl flex items-center gap-4 text-left"
@@ -89,29 +183,18 @@
                         <ShieldCheck size={32} />
                     </div>
                     <div>
-                        <h3 class="text-white font-bold">Privacy First</h3>
+                        <h3 class="text-white font-bold">Privacy Secured</h3>
                         <p class="text-sm text-slate-400">
-                            Your sensitive data is encrypted locally. I never
-                            see your actual account numbers.
+                            Your session is now active. I am ready to document
+                            your family and core estate details.
                         </p>
                     </div>
                 </div>
 
-                <div class="flex flex-col gap-4">
-                    <button
-                        on:click={() => conciergeEngine.open()}
-                        class="w-full py-5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl text-xl font-bold flex items-center justify-center gap-3 transition-all shadow-xl shadow-indigo-600/20"
-                    >
-                        <span>Start Talking</span>
-                        <ArrowRight size={24} />
-                    </button>
-
-                    <a
-                        href="/"
-                        class="text-sm font-bold uppercase tracking-widest text-slate-500 hover:text-white transition-colors"
-                    >
-                        I'd like to look around first
-                    </a>
+                <div class="flex justify-center">
+                    <p class="text-slate-500 text-sm italic">
+                        The AI Concierge panel is open. Speak or type to begin.
+                    </p>
                 </div>
             </div>
         {/if}

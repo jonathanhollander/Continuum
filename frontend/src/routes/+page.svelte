@@ -14,6 +14,12 @@
         Sparkles,
         FileText,
     } from "lucide-svelte";
+    import {
+        keyringEmails,
+        registerAccount,
+        switchAccount,
+    } from "$lib/stores/keyringStore";
+    import { get } from "svelte/store";
     import type { Writable, Readable } from "svelte/store";
 
     // Assets from notion-assets & screenshots
@@ -379,7 +385,25 @@
 
     function handleEmailSubmit() {
         if (email.includes("@") && email.includes(".")) {
-            step = 2;
+            const existingEmails = get(keyringEmails);
+
+            if (existingEmails.includes(email)) {
+                console.log(
+                    "[Enrollment] Returning user detected. Switching account.",
+                );
+                switchAccount(email);
+                return;
+            }
+
+            console.log("[Enrollment] New user. Registering...");
+            registerAccount(email);
+
+            // Save initial owner name
+            import("$lib/stores/persistence").then((m) => {
+                m.setStored("owner", { name: signature, id: "owner" });
+            });
+
+            step = 2; // Success state/Celebration
         }
     }
 </script>

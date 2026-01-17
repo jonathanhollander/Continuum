@@ -6,7 +6,14 @@
     import { estateAudit } from "$lib/stores/auditStore";
     import { estateProfile } from "$lib/stores/estateStore";
     import { fade, fly } from "svelte/transition";
-    import { Shield, Users, Sparkles, BrainCircuit } from "lucide-svelte";
+    import {
+        Shield,
+        Users,
+        Sparkles,
+        BrainCircuit,
+        UserCog,
+    } from "lucide-svelte";
+    import { preferenceStore } from "$lib/stores/preferenceStore";
 
     import { t } from "$lib/stores/localization";
     import { browser } from "$app/environment";
@@ -109,7 +116,13 @@
                 typeof localStorage !== "undefined" &&
                 localStorage.getItem("continuum_setup_skipped") === "true";
 
-            if (browser && !skipped && !hasAutoRedirected) {
+            if (
+                browser &&
+                !skipped &&
+                !hasAutoRedirected &&
+                !$preferenceStore.expertMode &&
+                !$preferenceStore.onboardingComplete
+            ) {
                 hasAutoRedirected = true;
                 window.location.href = "/start";
                 return;
@@ -217,9 +230,24 @@
                 <div class="mb-6 flex items-center gap-3 opacity-60">
                     <BrainCircuit size={18} class="text-indigo-400" />
                     <span class="text-xs font-bold uppercase tracking-widest"
-                        >AI Concierge Priority</span
+                        >{$preferenceStore.expertMode
+                            ? "Expert Dashboard"
+                            : "AI Concierge Priority"}</span
                     >
                 </div>
+
+                {#if $preferenceStore.expertMode}
+                    <div
+                        class="mb-6 p-4 bg-white/5 border border-white/10 rounded-2xl flex items-center gap-4 text-xs text-slate-400"
+                        in:fade
+                    >
+                        <UserCog size={16} class="text-slate-500" />
+                        <p>
+                            Expert Mode Active: Proactive AI guidance is
+                            disabled. You have full manual control.
+                        </p>
+                    </div>
+                {/if}
 
                 <FocusCard
                     title={focusItem.title}

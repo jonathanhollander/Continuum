@@ -15,34 +15,44 @@
     import { conciergeEngine, type Message } from "$lib/stores/conciergeEngine";
     import { voiceService } from "$lib/services/voiceService";
     import { accessibilityStore } from "$lib/stores/accessibilityStore";
-    import { onMount, afterUpdate } from "svelte";
+    import { preferenceStore } from "$lib/stores/preferenceStore";
+    import { onMount } from "svelte";
 
-    export let isOpen = false;
-    export let onClose: () => void;
+    const { isOpen = false, onClose } = $props<{
+        isOpen?: boolean;
+        onClose: () => void;
+    }>();
 
-    let input = "";
-    let scrollContainer: HTMLElement;
+    let input = $state("");
+    let scrollContainer = $state<HTMLElement | null>(null);
 
-    // Accessibility Classes
-    $: fontSizeClass =
+    // Accessibility Derived
+    const fontSizeClass = $derived(
         $accessibilityStore.fontSize === "normal"
             ? "text-base"
             : $accessibilityStore.fontSize === "large"
               ? "text-lg"
               : $accessibilityStore.fontSize === "xlarge"
                 ? "text-xl"
-                : "text-2xl";
+                : "text-2xl",
+    );
 
-    $: contrastClass = $accessibilityStore.highContrast
-        ? "border-indigo-500 border-2"
-        : "border-white/10";
+    const contrastClass = $derived(
+        $accessibilityStore.highContrast
+            ? "border-indigo-500 border-2"
+            : "border-white/10",
+    );
 
     onMount(() => {
         scrollToBottom();
     });
 
-    afterUpdate(() => {
-        scrollToBottom();
+    // Replace legacy afterUpdate with $effect for scrolling
+    $effect(() => {
+        // This effect runs whenever messages change, triggering the scroll
+        if ($conciergeEngine.messages) {
+            scrollToBottom();
+        }
     });
 
     function scrollToBottom() {
@@ -73,18 +83,30 @@
         }
     }
 
+    // Handle auto-open suppression logic
+    $effect(() => {
+        if ($preferenceStore.expertMode && $conciergeEngine.isOpen) {
+            // In expert mode, we don't do anything special here yet,
+            // but we ensure the engine doesn't proactively pop up.
+        }
+    });
+
     // Auto-TTS for assistant messages
-    $: lastMessage =
-        $conciergeEngine.messages[$conciergeEngine.messages.length - 1];
-    $: if (
-        isOpen &&
-        lastMessage?.role === "assistant" &&
-        !$conciergeEngine.isSpeaking &&
-        lastMessage.timestamp > Date.now() - 1000
-    ) {
-        // Only read if it's new (within last second)
-        voiceService.speak(lastMessage.content);
-    }
+    const lastMessage = $derived(
+        $conciergeEngine.messages[$conciergeEngine.messages.length - 1],
+    );
+
+    $effect(() => {
+        if (
+            isOpen &&
+            lastMessage?.role === "assistant" &&
+            !$conciergeEngine.isSpeaking &&
+            lastMessage.timestamp > Date.now() - 1000
+        ) {
+            // Only read if it's new (within last second)
+            voiceService.speak(lastMessage.content);
+        }
+    });
 </script>
 
 {#if isOpen}

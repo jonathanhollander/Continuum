@@ -26,8 +26,8 @@
     let { isOpen = $bindable(false), onClose } = $props();
     const dispatch = createEventDispatcher();
 
-    // Accordion State: Set of keys for open groups
-    let openGroups = $state(new Set<string>());
+    // Accordion State: Key of the currently open group
+    let openGroupKey = $state<string | null>(null);
 
     // Filter Nav Items
     let filteredNavGroups = $derived(
@@ -44,23 +44,29 @@
     // Effect: Auto-open the group containing the current page
     $effect(() => {
         const path = $page.url.pathname;
-        filteredNavGroups.forEach((group) => {
-            if (group.items.some((item) => item.href === path)) {
-                openGroups.add(group.groupKey);
-            } else if (!group.isCollapsedByDefault && openGroups.size === 0) {
-                // Initial load: Open non-collapsed groups if none are open
-                openGroups.add(group.groupKey);
-            }
-        });
+
+        // Find the group that should be open
+        const activeGroup = filteredNavGroups.find((group) =>
+            group.items.some((item) => item.href === path),
+        );
+
+        if (activeGroup) {
+            openGroupKey = activeGroup.groupKey;
+        } else if (!openGroupKey) {
+            // Default to first non-collapsed group if none open
+            const defaultGroup = filteredNavGroups.find(
+                (g) => !g.isCollapsedByDefault,
+            );
+            if (defaultGroup) openGroupKey = defaultGroup.groupKey;
+        }
     });
 
     function toggleGroup(key: string) {
-        if (openGroups.has(key)) {
-            openGroups.delete(key);
+        if (openGroupKey === key) {
+            openGroupKey = null;
         } else {
-            // "Accordion Mode": Close other groups
-            openGroups.clear();
-            openGroups.add(key);
+            // "Accordion Mode": Close others, open this one
+            openGroupKey = key;
         }
     }
 
@@ -115,11 +121,11 @@
                 <!-- Group Header (Accordion Toggle) -->
                 <button
                     class="w-full flex flex-col items-start px-4 py-3 rounded-xl transition-all hover:bg-white/5 group border border-transparent
-                    {openGroups.has(group.groupKey)
+                    {openGroupKey === group.groupKey
                         ? 'bg-white/5 border-white/5'
                         : ''}"
                     onclick={() => toggleGroup(group.groupKey)}
-                    aria-expanded={openGroups.has(group.groupKey)}
+                    aria-expanded={openGroupKey === group.groupKey}
                 >
                     <div class="w-full flex items-center justify-between">
                         <span
@@ -127,7 +133,7 @@
                         >
                             {$t[group.groupKey] || group.groupLabel}
                         </span>
-                        {#if openGroups.has(group.groupKey)}
+                        {#if openGroupKey === group.groupKey}
                             <ChevronDown
                                 size={14}
                                 class="text-primary-foreground/40"
@@ -139,7 +145,7 @@
                             />
                         {/if}
                     </div>
-                    {#if group.groupDescription && !openGroups.has(group.groupKey)}
+                    {#if group.groupDescription && openGroupKey !== group.groupKey}
                         <p
                             class="text-[10px] text-primary-foreground/40 mt-1 line-clamp-1 italic"
                         >
@@ -149,7 +155,7 @@
                 </button>
 
                 <!-- Group Items -->
-                {#if openGroups.has(group.groupKey)}
+                {#if openGroupKey === group.groupKey}
                     <div
                         class="mt-1 space-y-1"
                         transition:slide={{ duration: 300 }}
