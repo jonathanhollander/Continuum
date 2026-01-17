@@ -25,7 +25,7 @@ export const currentProfileId = writable<string>('owner');
 export const profiles = writable<Profile[]>([]);
 
 const defaultProfiles: Profile[] = [
-    { id: 'owner', name: 'Original User', role: 'Owner', created: Date.now() }
+    { id: 'owner', name: 'Me', role: 'Owner', created: Date.now() }
 ];
 
 // Safe Parse Helper

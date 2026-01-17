@@ -13,13 +13,7 @@ export interface DigitalAccount {
     closureDate?: string;
 }
 
-const DEFAULT_ACCOUNTS: Omit<DigitalAccount, 'id'>[] = [
-    { platform: 'Google / Gmail', username: '', preference: 'none', instructions: 'Use Inactive Account Manager.', priority: 'high', isClosed: false },
-    { platform: 'Facebook', username: '', preference: 'memorialize', instructions: 'Request memorialization through help center.', priority: 'medium', isClosed: false },
-    { platform: 'LinkedIn', username: '', preference: 'memorialize', instructions: 'Submit death certificate for memorial profile.', priority: 'low', isClosed: false },
-    { platform: 'Twitter / X', username: '', preference: 'delete', instructions: 'Executor must contact support with certified ID.', priority: 'medium', isClosed: false },
-    { platform: 'Instagram', username: '', preference: 'memorialize', instructions: 'Memorialization is preferred for family access.', priority: 'medium', isClosed: false }
-];
+const DEFAULT_ACCOUNTS: Omit<DigitalAccount, 'id'>[] = [];
 
 // Migration / Initialization Logic
 const getInitialData = (): DigitalAccount[] => {

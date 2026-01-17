@@ -50,7 +50,9 @@
     let totalValue = $derived($estateProfile.totalValue || 0);
     let networkSize = $derived($familyMembers.length);
     let coverageCount = $derived(
-        $digitalAssetsStore.length +
+        $digitalAssetsStore.filter(
+            (a) => !a.isClosed && a.platform !== "Example",
+        ).length +
             $insuranceStore.length +
             ($estateAudit.moduleScores["financial"] ? 1 : 0),
     );

@@ -92,7 +92,10 @@
             <p
                 class="text-xs text-slate-400 font-medium uppercase tracking-wider"
             >
-                {$t.planningFor}
+                {activeProfile.name === "Me" ||
+                activeProfile.name === "New User"
+                    ? "Secure Your Legacy"
+                    : $t.planningFor}
             </p>
             <p class="text-sm font-bold text-white truncate">
                 {activeProfile.name}

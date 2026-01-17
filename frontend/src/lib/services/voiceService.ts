@@ -56,6 +56,33 @@ class VoiceService {
         this.synthesis.cancel();
 
         const utterance = new SpeechSynthesisUtterance(text);
+
+        // --- 2026 Voice Tuning (Natural & Friendly) ---
+        const voices = this.synthesis.getVoices();
+
+        // Priority list for more natural/friendly voices
+        const preferredVoices = [
+            "Google US English", // Chrome (Very natural)
+            "Samantha",          // macOS (Classic friendly)
+            "Microsoft Zira",    // Windows
+            "en-US"              // Fallback
+        ];
+
+        let selectedVoice = null;
+        for (const name of preferredVoices) {
+            selectedVoice = voices.find(v => v.name.includes(name) || v.lang === name);
+            if (selectedVoice) break;
+        }
+
+        if (selectedVoice) {
+            utterance.voice = selectedVoice;
+        }
+
+        // Tuning for "Supportive Expert" persona
+        utterance.rate = 1.05;  // Slightly faster for fluidity
+        utterance.pitch = 1.1;  // Slightly higher for warmth (~ +1 semitone)
+        // ----------------------------------------------
+
         utterance.onstart = () => conciergeEngine.setSpeaking(true);
         utterance.onend = () => conciergeEngine.setSpeaking(false);
         utterance.onerror = () => conciergeEngine.setSpeaking(false);
