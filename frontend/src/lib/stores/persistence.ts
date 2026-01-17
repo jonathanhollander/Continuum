@@ -32,13 +32,14 @@ export const setStored = <T>(key: string, value: T, profileId?: string) => {
     const fullKey = `continuum_acc_${accId}_prof_${pid}_${key}`;
 
     const valToStore = typeof value === 'string' ? value : JSON.stringify(value);
+
+    // 1. Local Persistence (LocalStorage)
     localStorage.setItem(fullKey, valToStore);
 
-    // Trigger background sync if not anonymous
+    // 2. Remote Persistence (Railway PostgreSQL via FastAPI)
+    // Always attempt sync if we have a valid account or if it's the 'owner' profile
     if (accId !== 'anonymous') {
-        // Collect all related profile data for the active account to sync
-        // For simplicity in this concierge demo, we sync the individual key update
-        // In a full implementation, we'd sync the entire transparent state object
+        console.log(`[Dual Persistence] Syncing ${key} to Railway...`);
         syncWithBackend({ [key]: value });
     }
 };

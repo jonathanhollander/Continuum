@@ -23,7 +23,10 @@ import {
     Sparkles,
     Library,
     Siren,
-    Image
+    Image,
+    Info,
+    MessageSquare,
+    Settings
 } from "lucide-svelte";
 
 export type UserRole = "Owner" | "Executor" | "Family";
@@ -50,7 +53,7 @@ export const navGroups: NavGroup[] = [
             {
                 label: "Dashboard",
                 key: "dashboard",
-                href: "/",
+                href: "/dashboard",
                 icon: LayoutDashboard,
                 allowedRoles: ["Owner", "Executor", "Family"],
             },
@@ -258,6 +261,47 @@ export const navGroups: NavGroup[] = [
                 key: "simulator",
                 href: "/modules/simulator",
                 icon: Siren,
+                allowedRoles: ["Owner"],
+            },
+        ],
+    },
+    {
+        groupLabel: "Pulse & Wellness",
+        groupKey: "groupPulse",
+        items: [
+            {
+                label: "The Pulse Dashboard",
+                key: "pulseDashboard",
+                href: "/modules/pulse",
+                icon: Heart,
+                allowedRoles: ["Owner", "Executor", "Family"],
+            },
+            {
+                label: "Security Instructions",
+                key: "pulseVault",
+                href: "/modules/pulse/vault",
+                icon: ShieldCheck,
+                allowedRoles: ["Owner"],
+            },
+            {
+                label: "Data Transparency",
+                key: "pulseTransparency",
+                href: "/modules/pulse/transparency",
+                icon: Info,
+                allowedRoles: ["Owner", "Executor", "Family"],
+            },
+            {
+                label: "Message Center",
+                key: "pulseMessages",
+                href: "/modules/pulse/messages",
+                icon: MessageSquare,
+                allowedRoles: ["Owner", "Executor", "Family"],
+            },
+            {
+                label: "Pulse Settings",
+                key: "pulseSettings",
+                href: "/modules/pulse/settings",
+                icon: Settings,
                 allowedRoles: ["Owner"],
             },
         ],

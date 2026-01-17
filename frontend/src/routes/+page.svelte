@@ -1,289 +1,1468 @@
 <script lang="ts">
-    import { onMount, onDestroy } from "svelte";
-    import ThePulse from "$lib/components/dashboard/ThePulse.svelte";
-    import HolographicGrid from "$lib/components/dashboard/HolographicGrid.svelte";
-    import FocusCard from "$lib/components/dashboard/FocusCard.svelte";
-    import { estateAudit } from "$lib/stores/auditStore";
-    import { estateProfile } from "$lib/stores/estateStore";
-    import { fade, fly } from "svelte/transition";
-    import { Shield, Users, Sparkles, BrainCircuit } from "lucide-svelte";
+    import { onMount } from "svelte";
+    import MarketingLayout from "$lib/components/layout/MarketingLayout.svelte";
+    import { mLanguage, mt } from "$lib/stores/marketing";
+    import { fade, fly, scale } from "svelte/transition";
+    import { cubicOut } from "svelte/easing";
+    import {
+        ArrowRight,
+        Shield,
+        Heart,
+        Infinity as InfinityIcon,
+        Fingerprint,
+        ScanEye,
+        Sparkles,
+        FileText,
+    } from "lucide-svelte";
+    import type { Writable, Readable } from "svelte/store";
 
-    import { t } from "$lib/stores/localization";
-    import { browser } from "$app/environment";
+    // Assets from notion-assets & screenshots
+    const assets = {
+        vault: "/Marketing/product_shots/shot_vault.png",
+        letters: "/Marketing/product_shots/shot_letters.png",
+        guardian: "/Marketing/product_shots/shot_guardian.png",
+        legacy: "/Marketing/product_shots/shot_heirlooms.png",
+        heroBg: "/Marketing/notion-assets/assets/covers_default/digital_legacy_management_cover.png",
+    };
 
-    // "The Pulse" State
-    let pulseStatus: "secure" | "active" | "critical" | "standby" = "standby";
-    let score = 0;
-    let loading = true;
+    let scrollY = $state(0);
+    let innerHeight = $state(0);
+    let innerWidth = $state(0);
+    let canvas: HTMLCanvasElement;
+    let mouseX = $state(0);
+    let mouseY = $state(0);
 
-    // "The Focus" Logic
-    let focusItem: {
-        title: string;
-        description: string;
-        link: string;
-        type: "critical" | "insight";
-    } | null = null;
+    // --- Kinetic Progress (Apple-style) ---
+    const heroProgress = $derived(
+        Math.max(0, Math.min(scrollY / (innerHeight || 1), 1)),
+    );
 
-    // Greeting Typewriter
-    let greeting = "";
-    // Reactive greeting target based on state
-    $: fullGreeting =
-        $estateAudit.totalScore > 0
-            ? $t("system.analyzing")
-            : $t("system.initializing");
+    // Smooth Velocity Tracking
+    let scrollVelocity = $state(0);
+    let lastScrollY = 0;
+    let lastTime = 0;
 
-    import { familyMembers } from "$lib/stores/familyStore";
-    import { digitalAssetsStore } from "$lib/stores/digitalAssetsStore";
-    import { insuranceStore } from "$lib/stores/insuranceStore";
-
-    // Dynamic Metrics
-    $: totalValue = $estateProfile.totalValue || 0;
-    $: networkSize = $familyMembers.length;
-    $: coverageCount =
-        $digitalAssetsStore.length +
-        $insuranceStore.length +
-        ($estateAudit.moduleScores["financial"] ? 1 : 0);
-
-    // Formatter
-    const currency = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-        maximumFractionDigits: 0,
-    });
+    // --- Speed Guardian (Performance Layer) ---
+    let actualFps = $state(60);
+    let lastFrameTime = performance.now();
+    let frameCount = 0;
+    let speedGuardianActive = $state(false);
 
     onMount(() => {
-        estateAudit.runAudit();
-
-        if ($estateAudit.totalScore > 0) {
-            pulseStatus = "active";
-        }
-
-        // Simulate "System Boot"
-        let i = 0;
-        const interval = setInterval(() => {
-            // Check against current fullGreeting length (it might change if lang swaps, but that's edge case)
-            if (i < fullGreeting.length) {
-                greeting += fullGreeting[i];
-                i++;
-            } else {
-                clearInterval(interval);
-                loading = false;
-                determineFocus();
+        const updateVelocity = (time: number) => {
+            const dt = time - lastTime;
+            if (dt > 0) {
+                const dy = scrollY - lastScrollY;
+                scrollVelocity = (dy / dt) * 10; // Normalized scale
+                lastScrollY = scrollY;
+                lastTime = time;
             }
-        }, 30); // Typewriter speed
-
-        return () => clearInterval(interval);
+            requestAnimationFrame(updateVelocity);
+        };
+        requestAnimationFrame(updateVelocity);
     });
 
-    $: {
-        if ($estateAudit.percentage !== undefined) {
-            score = $estateAudit.percentage;
+    // --- Atmospheric Mesh State ---
+    const meshState = $derived.by(() => {
+        if (scrollY < innerHeight * 0.5)
+            return {
+                primary: "rgba(245, 158, 11, 0.12)", // Amber
+                secondary: "rgba(15, 17, 21, 1)",
+                accent: "rgba(251, 191, 36, 0.05)",
+            };
+        if (scrollY < innerHeight * 1.5)
+            return {
+                primary: "rgba(31, 22, 16, 1)", // Warm Espresso
+                secondary: "rgba(15, 17, 21, 1)",
+                accent: "rgba(245, 158, 11, 0.08)",
+            };
+        return {
+            primary: "rgba(8, 13, 18, 1)", // Midnight Navy
+            secondary: "rgba(13, 43, 39, 0.15)", // Teal accents
+            accent: "rgba(45, 212, 191, 0.05)",
+        };
+    });
 
-            // Logic for Pulse Status
-            if (score === 0) {
-                pulseStatus = "standby";
-            } else if (score > 80) {
-                pulseStatus = "secure";
-            } else if (score < 40) {
-                pulseStatus = "critical";
-            } else {
-                pulseStatus = "active";
+    // --- Hero Animation: Interactive Digital Dust ---
+    onMount(() => {
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        let width = (canvas.width = window.innerWidth);
+        let height = (canvas.height = window.innerHeight);
+
+        const particles: Particle[] = [];
+        const particleCount = 200; // Increased count
+
+        // Mouse interaction
+        window.addEventListener("mousemove", (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        class Particle {
+            x: number;
+            y: number;
+            vx: number;
+            vy: number;
+            originX: number;
+            originY: number;
+            size: number;
+            color: string;
+            depth: number;
+            isSpark: boolean;
+            life: number = 1;
+
+            constructor(isSpark = false) {
+                this.isSpark = isSpark;
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.originX = this.x;
+                this.originY = this.y;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+
+                if (isSpark) {
+                    this.depth = 0.3;
+                    this.size = Math.random() * 2 + 1;
+                    this.color = "rgba(255, 255, 255, 0.9)";
+                    this.vy = (Math.random() - 0.5) * 10;
+                    this.life = 1;
+                } else {
+                    this.depth = Math.random() * 1.5 + 0.5; // 0.5 (front) to 2 (back)
+                    this.size = (Math.random() * 1.5 + 0.5) / this.depth;
+                    this.color =
+                        Math.random() > 0.6
+                            ? `rgba(245, 158, 11, ${0.5 / this.depth})`
+                            : `rgba(45, 212, 191, ${0.5 / this.depth})`;
+                }
             }
 
-            // Always recalculate focus when audit updates
-            determineFocus();
+            update() {
+                // Parallax based on scroll
+                const parallaxY = scrollY * (0.05 / this.depth);
+                const currentY = (this.originY + parallaxY) % height;
+
+                if (this.isSpark) {
+                    this.y += this.vy;
+                    this.life -= 0.02;
+                    if (this.life <= 0) {
+                        this.life = 0;
+                    }
+                } else {
+                    // Return to origin (Orbit feel)
+                    this.vx += (this.originX - this.x) * 0.0005;
+                    this.vy += (currentY - this.y) * 0.005;
+
+                    // Mouse interaction (Repulsion)
+                    const dx = mouseX - this.x;
+                    const dy = mouseY - this.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const force = 150 / this.depth;
+
+                    if (dist < force) {
+                        const angle = Math.atan2(dy, dx);
+                        const push = (force - dist) * 0.005;
+                        this.vx -= Math.cos(angle) * push;
+                        this.vy -= Math.sin(angle) * push;
+                    }
+
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.vx *= 0.98;
+                    this.vy *= 0.98;
+                }
+            }
+
+            draw() {
+                if (!ctx || this.life <= 0) return;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.isSpark
+                    ? `rgba(255, 255, 255, ${this.life})`
+                    : this.color;
+                if (this.depth > 1.5) ctx.filter = "blur(1px)";
+                ctx.fill();
+                ctx.filter = "none";
+            }
+        }
+
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+
+        function animate(time: number) {
+            if (!ctx) return;
+
+            // Speed Guardian: Track Framerate
+            const now = performance.now();
+            const frameDelta = now - lastFrameTime;
+            lastFrameTime = now;
+            frameCount++;
+
+            if (frameCount % 60 === 0) {
+                actualFps = Math.round(1000 / frameDelta);
+                if (actualFps < 45 && !speedGuardianActive) {
+                    speedGuardianActive = true;
+                    console.warn(
+                        "Continuum Performance Warning: Activating Speed Guardian",
+                    );
+                } else if (actualFps > 55 && speedGuardianActive) {
+                    speedGuardianActive = false;
+                }
+            }
+
+            ctx.clearRect(0, 0, width, height);
+
+            // Velocity-based streaking effect
+            const velocityEffect = Math.min(Math.abs(scrollVelocity) * 1.5, 15);
+
+            // Spawn Sparks on high velocity (Dynamic based on performance)
+            const maxParticles = speedGuardianActive ? 80 : 400;
+            if (
+                Math.abs(scrollVelocity) > 20 &&
+                particles.length < maxParticles
+            ) {
+                for (let i = 0; i < (speedGuardianActive ? 2 : 5); i++) {
+                    particles.push(new Particle(true));
+                }
+            }
+
+            for (let i = 0; i < particles.length; i++) {
+                const p = particles[i];
+                p.update();
+                p.draw();
+
+                if (p.isSpark && p.life <= 0) {
+                    particles.splice(i, 1);
+                    i--;
+                    continue;
+                }
+
+                // Streaking
+                if (velocityEffect > 2) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = p.color;
+                    ctx.lineWidth = p.size;
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(
+                        p.x,
+                        p.y +
+                            (scrollVelocity > 0
+                                ? -velocityEffect
+                                : velocityEffect),
+                    );
+                    ctx.stroke();
+                }
+
+                // Connections (only for deeper particles)
+                if (p.depth > 0.8 && !p.isSpark) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const p2 = particles[j];
+                        if (p2.isSpark || p2.depth < 1) continue;
+                        const dx = p.x - p2.x;
+                        const dy = p.y - p2.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+
+                        if (distance < 100) {
+                            ctx.beginPath();
+                            ctx.strokeStyle = `rgba(255, 255, 255, ${0.1 - distance / 1000})`;
+                            ctx.lineWidth = 0.3;
+                            ctx.moveTo(p.x, p.y);
+                            ctx.lineTo(p2.x, p2.y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        requestAnimationFrame(animate);
+
+        const handleResize = () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        };
+
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    });
+
+    // --- Holographic Tilt Logic ---
+    function handleTilt(e: MouseEvent) {
+        // Disable on touch devices to prevent sticky tilt
+        if (
+            typeof window !== "undefined" &&
+            window.matchMedia("(hover: none)").matches
+        )
+            return;
+
+        const card = e.currentTarget as HTMLElement;
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+
+        const rotateX = ((y - centerY) / centerY) * -8;
+        const rotateY = ((x - centerX) / centerX) * 8;
+
+        // Dynamic Specular Elongation logic
+        const distFromCenter = Math.sqrt(
+            Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2),
+        );
+        const elongation = Math.min(1.5, 1 + distFromCenter / 500);
+
+        card.style.setProperty("--rx", `${rotateX}deg`);
+        card.style.setProperty("--ry", `${rotateY}deg`);
+        card.style.setProperty("--mx", `${x}px`);
+        card.style.setProperty("--my", `${y}px`);
+        card.style.setProperty("--elongation", `${elongation}`);
+    }
+
+    function resetTilt(e: MouseEvent) {
+        const card = e.currentTarget as HTMLElement;
+        card.style.setProperty("--rx", `0deg`);
+        card.style.setProperty("--ry", `0deg`);
+    }
+
+    // --- Intersection Observer (Blur Reveal) ---
+    function reveal(node: HTMLElement) {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        node.classList.add("in-view");
+                    }
+                });
+            },
+            {
+                threshold: 0.05,
+                rootMargin: "0px 0px 100px 0px", // Trigger earlier for fluid continuity
+            },
+        );
+
+        observer.observe(node);
+        return {
+            destroy() {
+                observer.disconnect();
+            },
+        };
+    }
+
+    // --- Intro Sequence State ---
+    let introVisible = false;
+    onMount(() => {
+        // Force scroll to top on reload
+        if (typeof window !== "undefined") {
+            window.scrollTo(0, 0);
+            if (history.scrollRestoration) {
+                history.scrollRestoration = "manual";
+            }
+        }
+        setTimeout(() => (introVisible = true), 500);
+    });
+
+    // --- Commitment CTA Logic ---
+    let signature = "";
+    let email = "";
+    let step = 0; // 0: Name, 1: Email, 2: Signed
+
+    function handleNameSubmit() {
+        if (signature.length > 2) {
+            step = 1;
         }
     }
 
-    let hasAutoRedirected = false;
-
-    function determineFocus() {
-        // "The Algorithm" - Simple Simulation for now
-        const issues = $estateAudit.issues || [];
-        const profile = $estateProfile;
-
-        if (score === 0) {
-            // New User / System Initialization Mode
-            // Only redirect if they haven't explicitly skipped setup
-            const skipped =
-                typeof localStorage !== "undefined" &&
-                localStorage.getItem("continuum_setup_skipped") === "true";
-
-            if (browser && !skipped && !hasAutoRedirected) {
-                hasAutoRedirected = true;
-                window.location.href = "/wizard";
-                return;
-            }
-
-            // If they skipped, the focus card should STILL point to initialization
-            focusItem = {
-                title: "System Initialization Required",
-                description:
-                    "Your digital estate is currently unconfigured. The wizard will guide you through core setup in 30 seconds.",
-                link: "/wizard?force=true",
-                type: "critical",
-            };
-            return;
-        }
-
-        if (issues.length > 0) {
-            // Pick highest priority issue
-            const issue = issues[0]; // Issues are usually sorted by impact in the store (or should be)
-            let title = issue;
-            let link = "/modules/timeline";
-
-            // Map issues to routes (Concierge Logic)
-            // Map issues to routes (Concierge Logic)
-            if (
-                issue.includes("Will") ||
-                issue.includes("Executor") ||
-                issue.includes("Legal")
-            ) {
-                title = "Legal Core Missing";
-                link = "/modules/legal-documents";
-            } else if (
-                issue.includes("Beneficiary") ||
-                issue.includes("financial") ||
-                issue.includes("account")
-            ) {
-                title = "Asset Security Gap";
-                link = "/modules/financial-accounts";
-            } else if (issue.includes("Proxy") || issue.includes("Health")) {
-                title = "Healthcare Vulnerability";
-                link = "/modules/medical-directives";
-            } else if (
-                issue.includes("Digital") ||
-                issue.includes("Password") ||
-                issue.includes("Phone")
-            ) {
-                title = "Digital Access Risk";
-                link = "/modules/digital-guardian";
-            } else if (
-                issue.includes("Insurance") ||
-                issue.includes("policy")
-            ) {
-                title = "Insurance Coverage Gap";
-                link = "/modules/insurance";
-            } else if (issue.includes("Family") || issue.includes("contact")) {
-                title = "Notification Network Empty";
-                link = "/modules/contacts";
-            }
-
-            focusItem = {
-                title: title.replace(/\[.*?\]\s/, ""), // Clean raw strings
-                description:
-                    "This is the single highest-impact action you can take to secure your legacy right now.",
-                link: link,
-                type: "critical",
-            };
-        } else {
-            // All Good
-            focusItem = {
-                title: "Legacy Secured",
-                description:
-                    "All core systems are nominal. Consider adding a personal touch to your timeline.",
-                link: "/modules/letters",
-                type: "insight",
-            };
-            pulseStatus = "secure";
+    function handleEmailSubmit() {
+        if (email.includes("@") && email.includes(".")) {
+            step = 2;
         }
     }
 </script>
 
-<div class="min-h-screen text-slate-200 font-sans selection:bg-indigo-500/30">
-    <HolographicGrid />
-
-    <main
-        class="relative container mx-auto px-6 py-12 flex flex-col lg:flex-row items-center justify-center min-h-[80vh] gap-12 lg:gap-24"
+<svelte:window bind:scrollY bind:innerHeight bind:innerWidth />
+<MarketingLayout>
+    <!-- Living Mesh Atmosphere (The Apple Standard) -->
+    <div
+        class="fixed inset-0 z-[-3] overflow-hidden pointer-events-none transition-colors duration-1000 bg-[#020408]"
     >
-        <!-- Left: The Visual Core -->
-        <div class="flex-1 flex flex-col items-center relative">
-            <ThePulse status={pulseStatus} {score} />
+        <!-- Deep Parallax Stars -->
+        <div
+            class="absolute inset-0 opacity-[0.4]"
+            style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 100px 100px; transform: translateY({scrollY *
+                -0.05}px);"
+        ></div>
 
-            <!-- System Status Text -->
+        <!-- Grainy Noise Overlay -->
+        <div
+            class="fixed inset-0 z-10 opacity-[0.15] mix-blend-overlay pointer-events-none"
+            style="background-image: url('https://grainy-gradients.vercel.app/noise.svg');"
+        ></div>
+
+        <!-- The Morphing Mesh -->
+        <div
+            class="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] opacity-40 blur-[160px] animate-slow-spin transition-all duration-[2000ms]"
+            style="
+            background: radial-gradient(circle at center, {meshState.primary} 0%, transparent 50%),
+                        radial-gradient(circle at 30% 30%, {meshState.accent} 0%, transparent 40%),
+                        radial-gradient(circle at 70% 70%, {meshState.secondary} 0%, transparent 60%);
+            transform: rotate({scrollY * 0.04}deg) scale({1.1 +
+                Math.abs(scrollVelocity) * 0.02});
+        "
+        ></div>
+    </div>
+
+    <!-- Global Digital Grid Underlay -->
+    <div
+        class="fixed inset-0 pointer-events-none z-[-2] opacity-[0.05]"
+        style="background-image: linear-gradient(rgba(45, 212, 191, 0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(45, 212, 191, 0.2) 1px, transparent 1px); background-size: 50px 50px; transform: perspective(1000px) rotateX(60deg) translateY({scrollY *
+            -0.1}px);"
+    >
+        <!-- Scanning Beam -->
+        <div
+            class="absolute inset-0 bg-gradient-to-b from-transparent via-teal-500/20 to-transparent h-40 w-full animate-scan"
+        ></div>
+    </div>
+
+    <!-- Digital Threads (Connecting Sections) -->
+    <svg
+        class="fixed inset-0 pointer-events-none z-[-2] w-full h-full opacity-30"
+    >
+        <defs>
+            <linearGradient id="threadGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="transparent" />
+                <stop offset="50%" stop-color="#F59E0B" />
+                <stop offset="100%" stop-color="transparent" />
+            </linearGradient>
+            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="blur1" />
+                <feGaussianBlur stdDeviation="8" result="blur2" />
+                <feGaussianBlur stdDeviation="1" result="blur3" />
+                <feMerge>
+                    <feMergeNode in="blur2" />
+                    <feMergeNode in="blur1" />
+                    <feMergeNode in="SourceGraphic" />
+                    <feMergeNode in="blur3" />
+                </feMerge>
+            </filter>
+        </defs>
+        <!-- Dynamic Thread Lines -->
+        <path
+            d="M {innerWidth * 0.2} 0 Q {innerWidth * 0.3} {innerHeight *
+                0.5} {innerWidth * 0.1} {innerHeight}"
+            stroke="url(#threadGrad)"
+            stroke-width="2"
+            fill="none"
+            filter="url(#glow)"
+            style="stroke-dasharray: 1000; stroke-dashoffset: {(scrollY *
+                (1 + Math.abs(scrollVelocity) * 0.05)) %
+                1000}"
+        />
+        <path
+            d="M {innerWidth * 0.8} 0 Q {innerWidth * 0.7} {innerHeight *
+                0.5} {innerWidth * 0.9} {innerHeight}"
+            stroke="url(#threadGrad)"
+            stroke-width="2"
+            fill="none"
+            filter="url(#glow)"
+            style="stroke-dasharray: 1000; stroke-dashoffset: {(-scrollY *
+                (1 + Math.abs(scrollVelocity) * 0.05)) %
+                1000}"
+        />
+    </svg>
+
+    <!-- Hero Section (Extended Track for Persistence) -->
+    <section class="relative h-[130vh] overflow-visible">
+        <!-- Sticky Portal for Animations -->
+        <div
+            class="sticky top-0 h-screen w-full flex flex-col items-center justify-start pt-[22vh] overflow-hidden"
+        >
+            <!-- Background Dust (Speed up with scroll) -->
+            <canvas
+                bind:this={canvas}
+                class="absolute inset-0 z-0 opacity-40"
+                style="transform: translateY({scrollY * 0.2}px)"
+            ></canvas>
+
+            <!-- The Morphing Landscape -->
             <div
-                class="mt-8 font-mono text-sm text-indigo-300/60 uppercase tracking-[0.2em]"
+                class="relative z-10 w-full max-w-7xl mx-auto px-6 flex flex-col items-center transition-all duration-300"
+                style="
+                opacity: {1 - heroProgress * 1.5};
+                transform: translateY({-scrollY * 0.1}px);
+            "
             >
-                {greeting}<span class="animate-pulse">_</span>
+                <!-- Text Suite (Staggered Clip-Reveal) -->
+                <div class="text-center mb-8 md:mb-12 z-20">
+                    <div class="overflow-visible mb-1 py-1">
+                        <h1
+                            class="text-4xl md:text-[5rem] lg:text-[5.5rem] font-serif font-medium text-white leading-tight tracking-[0.2em] drop-shadow-2xl hero-clip-reveal uppercase"
+                            style="--delay: 0.1s"
+                        >
+                            {$mt.heroTitle}
+                        </h1>
+                    </div>
+                    <div class="overflow-visible mb-2 py-1">
+                        <h1
+                            class="text-4xl md:text-[5rem] lg:text-[5.5rem] font-serif font-medium leading-tight tracking-[0.2em] hero-clip-reveal uppercase"
+                            style="--delay: 0.3s"
+                        >
+                            <span
+                                class="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-500 italic relative"
+                            >
+                                {$mt.heroSubtitle}
+                            </span>
+                        </h1>
+                    </div>
+                    <div class="overflow-visible py-1">
+                        <p
+                            class="text-base md:text-xl text-slate-300 max-w-xl mx-auto font-light leading-relaxed tracking-wide px-4 hero-clip-reveal"
+                            style="--delay: 0.5s"
+                        >
+                            {$mt.heroDesc}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- The Anchor: The Device (Apple-esque Display Frame) -->
+                <div
+                    class="relative group perspective-container w-full transition-all duration-300 px-4 md:px-0"
+                    style="
+                    max-width: min(800px, 85vw);
+                    transform: 
+                        scale({1.05 - heroProgress * 0.1}) 
+                        translateY({heroProgress * 60}px)
+                        rotateX({heroProgress * 3}deg);
+                "
+                    on:mousemove={handleTilt}
+                    on:mouseleave={resetTilt}
+                >
+                    <!-- Device Frame -->
+                    <div
+                        class="relative rounded-[2.5rem] md:rounded-[4rem] p-2 md:p-3 bg-gradient-to-br from-slate-400 via-slate-700 to-slate-900 border border-white/20 shadow-[0_50px_100px_-20px_rgba(0,0,0,1)] transition-all duration-700 overflow-hidden"
+                    >
+                        <!-- Bezel -->
+                        <div
+                            class="relative rounded-[2rem] md:rounded-[3.5rem] bg-black overflow-hidden aspect-[16/10] shadow-inner border border-black/40"
+                        >
+                            <img
+                                src="/images/premium_hero_shoebox_under_bed_cinematic.png"
+                                alt="The Hidden Shoebox Discovery"
+                                class="w-full h-full object-cover opacity-90 transition-all duration-1000 group-hover:scale-[1.02]"
+                                style="filter: brightness({1 -
+                                    (1 - heroProgress) * 0.5})"
+                            />
+
+                            <!-- Glossy Glass Overlay -->
+                            <div
+                                class="absolute inset-0 pointer-events-none z-20 opacity-40 bg-gradient-to-tr from-white/10 via-transparent to-white/5"
+                                style="transform: translate(calc(var(--mx, 50%) * 0.05px), calc(var(--my, 50%) * 0.05px)) scale(1.5);"
+                            ></div>
+
+                            <!-- Internal Shine (Tracking) -->
+                            <div class="shine opacity-40"></div>
+
+                            <!-- Screen Overlay Gradient -->
+                            <div
+                                class="absolute inset-0 bg-gradient-to-tr from-amber-500/10 via-transparent to-transparent pointer-events-none"
+                            ></div>
+                        </div>
+
+                        <!-- Camera Dot -->
+                        <div
+                            class="absolute top-4 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-slate-800 shadow-inner"
+                        ></div>
+                    </div>
+
+                    <!-- Ground Reflection (Parallax) -->
+                    <div
+                        class="absolute -bottom-16 left-1/2 -translate-x-1/2 w-[95%] bg-amber-500/10 blur-[100px] rounded-full -z-10 transition-all duration-500"
+                        style="
+                        height: {60 + heroProgress * 60}px;
+                        opacity: {heroProgress * 0.8};
+                    "
+                    ></div>
+                </div>
+            </div>
+
+            <!-- Scroll Indicator (Fades out quickly) -->
+            <div
+                class="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 transition-opacity duration-500 z-0"
+                style="opacity: {1 - heroProgress * 4}"
+            >
+                <span
+                    class="text-white/40 text-[10px] font-bold uppercase tracking-[0.4em]"
+                    >{$mt.scrollIndicator}</span
+                >
+                <div
+                    class="w-px h-8 bg-gradient-to-b from-white/30 to-transparent"
+                ></div>
             </div>
         </div>
+    </section>
 
-        <!-- Right: The Singular Focus -->
-        {#if !loading && focusItem}
-            <div
-                class="flex-1 w-full max-w-xl"
-                in:fly={{ x: 50, duration: 1000 }}
-            >
-                <div class="mb-6 flex items-center gap-3 opacity-60">
-                    <BrainCircuit size={18} class="text-indigo-400" />
-                    <span class="text-xs font-bold uppercase tracking-widest"
-                        >AI Concierge Priority</span
-                    >
+    <!-- The Gap (Emotional Core) -->
+    <section class="py-8 md:py-16 px-4 md:px-6 relative overflow-hidden">
+        <!-- Visible Background Texture -->
+        <div
+            class="absolute inset-0 z-0 opacity-30"
+            style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 40px 40px; mask-image: linear-gradient(to bottom, transparent, black, transparent);"
+        ></div>
+        <div
+            class="absolute inset-0 bg-gradient-to-b from-indigo-500/5 via-transparent to-transparent pointer-events-none"
+        ></div>
+        <div
+            class="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 md:gap-24 items-center"
+        >
+            <div class="space-y-8" use:reveal>
+                <div
+                    class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-900/20 border border-amber-800/50 text-xs font-mono uppercase tracking-widest text-amber-500 shadow-glow"
+                >
+                    <Heart size={12} fill="currentColor" />
+                    {$mt.giftTag}
                 </div>
 
-                <FocusCard
-                    title={focusItem.title}
-                    description={focusItem.description}
-                    actionLink={focusItem.link}
-                    type={focusItem.type}
-                    actionLabel={score === 0
-                        ? "Initialize System"
-                        : "Resolve Now"}
-                />
+                <h2
+                    class="text-4xl md:text-6xl font-serif font-bold text-white mb-8"
+                >
+                    {$mt.giftTitle}
+                </h2>
 
-                <!-- Dynamic secondary stats -->
                 <div
-                    class="mt-8 grid grid-cols-2 gap-4 opacity-50 hover:opacity-100 transition-opacity"
+                    class="text-xl md:text-2xl text-slate-400 space-y-6 max-w-3xl mx-auto leading-relaxed"
+                >
+                    <p>
+                        {$mt.giftDesc1}
+                    </p>
+                    <p>
+                        {$mt.giftDesc2}
+                    </p>
+                </div>
+            </div>
+
+            <div
+                class="relative group perspective-container reveal-card"
+                style="transition-delay: 0.3s"
+                use:reveal
+                on:mousemove={handleTilt}
+                on:mouseleave={resetTilt}
+            >
+                <div
+                    class="holo-card relative rounded-[1rem] overflow-hidden transform-gpu transition-transform border border-white/20 shadow-2xl bg-[#0F1115]"
+                >
+                    <!-- Removed overlay for pure product look -->
+                    <img
+                        src={assets.legacy}
+                        alt="Heirlooms Interface"
+                        class="w-full h-auto object-cover hover:scale-105 transition-all duration-1000"
+                    />
+                    <!-- Shine Effect -->
+                    <div class="shine"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- The Feature Gallery (Bento Grid) -->
+    <section class="py-16 px-4 md:px-6 relative overflow-hidden">
+        <div class="max-w-7xl mx-auto">
+            <div class="mb-20 text-center" use:reveal>
+                <h2
+                    class="text-xs font-bold uppercase tracking-[0.3em] text-amber-500 mb-4"
+                >
+                    {$mt.toolkitTitle}
+                </h2>
+                <p
+                    class="text-4xl md:text-6xl font-serif font-bold text-white max-w-4xl mx-auto leading-tight"
+                >
+                    Everything you need to leave <span
+                        class="italic text-amber-500">more than money.</span
+                    >
+                </p>
+            </div>
+
+            <!-- The Grid -->
+            <div
+                class="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 auto-rows-[300px] md:auto-rows-[400px]"
+            >
+                <!-- Vault: Large Focus (8 cols) -->
+                <div
+                    class="md:col-span-8 md:row-span-1 relative rounded-[2rem] overflow-hidden group reveal"
+                    use:reveal
+                    style="--item-index: 1"
                 >
                     <div
-                        class="p-4 rounded-2xl bg-white/5 border border-white/5 backdrop-blur-sm flex items-center gap-3"
-                    >
-                        <Shield size={20} class="text-emerald-400" />
-                        <div>
-                            <div
-                                class="text-[10px] uppercase font-bold text-slate-400"
+                        class="absolute inset-0 bg-[#0F1115] border border-white/10 group-hover:border-amber-500/30 transition-colors z-0"
+                    ></div>
+                    <img
+                        src={assets.vault}
+                        class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-all duration-1000 group-hover:scale-105"
+                        alt="Vault"
+                    />
+                    <div
+                        class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent z-10"
+                    ></div>
+
+                    <div class="absolute bottom-8 left-8 right-8 z-20">
+                        <div class="w-10 h-px bg-amber-500/50 mb-4"></div>
+                        <h3
+                            class="text-3xl font-serif font-bold text-white mb-2"
+                        >
+                            {$mt.vaultTitle}
+                        </h3>
+                        <p class="text-slate-400 max-w-lg">{$mt.vaultDesc}</p>
+                    </div>
+                </div>
+
+                <!-- Letters: Tall Side (4 cols) -->
+                <div
+                    class="md:col-span-4 md:row-span-2 relative rounded-[2rem] overflow-hidden group reveal"
+                    use:reveal
+                    style="--item-index: 2"
+                >
+                    <div
+                        class="absolute inset-0 bg-[#0F1115] border border-white/10 group-hover:border-amber-500/30 transition-colors z-0"
+                    ></div>
+                    <img
+                        src={assets.letters}
+                        class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-all duration-1000 group-hover:scale-105"
+                        alt="Letters"
+                    />
+                    <div
+                        class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent z-10"
+                    ></div>
+
+                    <div class="absolute bottom-8 left-8 right-8 z-20">
+                        <div class="w-10 h-px bg-amber-500/50 mb-4"></div>
+                        <h3
+                            class="text-3xl font-serif font-bold text-white mb-2"
+                        >
+                            {$mt.lettersTitle}
+                        </h3>
+                        <p class="text-slate-400">{$mt.lettersDesc}</p>
+                    </div>
+                </div>
+
+                <!-- Heirlooms: Center Wide (8 cols) -->
+                <div
+                    class="md:col-span-8 md:row-span-1 relative rounded-[2rem] overflow-hidden group reveal"
+                    use:reveal
+                    style="--item-index: 3"
+                >
+                    <div
+                        class="absolute inset-0 bg-[#0F1115] border border-white/10 group-hover:border-amber-500/30 transition-colors z-0"
+                    ></div>
+                    <div
+                        class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent z-0"
+                    ></div>
+
+                    <div class="grid md:grid-cols-2 h-full z-10 relative">
+                        <div class="p-8 flex flex-col justify-center">
+                            <div class="w-10 h-px bg-teal-500/50 mb-4"></div>
+                            <h3
+                                class="text-3xl font-serif font-bold text-white mb-2"
                             >
-                                Estate Value
+                                {$mt.archivistBentoTitle}
+                            </h3>
+                            <p class="text-slate-400">
+                                {$mt.archivistBentoDesc}
+                            </p>
+                        </div>
+                        <div
+                            class="relative overflow-hidden p-6 md:p-8 flex items-center justify-center"
+                        >
+                            <img
+                                src={assets.legacy}
+                                class="w-full h-full object-contain rounded-2xl shadow-2xl transition-all duration-1000 group-hover:scale-110"
+                                alt="Heirlooms"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: The Guardian (Center Immersive) -->
+            <div class="relative py-16" use:reveal style="--item-index: 4">
+                <div
+                    class="absolute inset-0 bg-blue-500/5 blur-[120px] rounded-full"
+                ></div>
+                <div
+                    class="relative z-10 max-w-4xl mx-auto text-center space-y-8"
+                >
+                    <div
+                        class="inline-flex p-4 bg-blue-500/10 text-blue-400 rounded-3xl mb-4"
+                    >
+                        <Sparkles size={32} />
+                    </div>
+                    <h3
+                        class="text-4xl md:text-6xl font-serif font-bold text-white"
+                    >
+                        {$mt.guideTitle}
+                    </h3>
+                    <p
+                        class="text-xl md:text-2xl text-slate-400 leading-relaxed"
+                    >
+                        {$mt.guideDesc}
+                    </p>
+                    <div class="relative mt-12 group">
+                        <img
+                            src={assets.guardian}
+                            class="w-full h-auto rounded-[3rem] shadow-2xl border border-white/10 group-hover:border-blue-500/30 transition-all duration-700"
+                            alt="Guardian"
+                        />
+                        <div
+                            class="absolute inset-0 rounded-[3rem] bg-gradient-to-t from-black/80 via-transparent to-transparent"
+                        ></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- The Secret: AI Concierge -->
+    <section class="py-16 relative bg-black/40 border-t border-white/5">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="mb-20 text-center">
+                <div use:reveal>
+                    <div
+                        class="reveal-text inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-bold uppercase tracking-widest mb-6"
+                    >
+                        <span
+                            class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"
+                        ></span>
+                        {$mt.aiTag}
+                    </div>
+                    <h1
+                        class="split-reveal text-6xl md:text-9xl font-serif font-black tracking-tighter leading-[0.85] text-white perspective-1000"
+                    >
+                        <span class="block overflow-hidden">
+                            <span class="block">{$mt.aiTitle}</span>
+                        </span>
+                        <span class="block overflow-hidden text-[#F59E0B]">
+                            <span class="block" style="transition-delay: 0.1s"
+                                >{$mt.aiEmpathy}</span
+                            >
+                        </span>
+                    </h1>
+                    <p
+                        class="mt-8 text-xl md:text-2xl text-slate-400 max-w-2xl mx-auto font-light leading-relaxed"
+                    >
+                        {$mt.aiDesc}
+                    </p>
+                </div>
+            </div>
+
+            <!-- AI Concierge Expanded (Zig-Zag) -->
+            <div class="space-y-32 mt-16">
+                <!-- AI Card 1 -->
+                <div
+                    class="grid md:grid-cols-12 gap-12 items-center"
+                    use:reveal
+                    style="--item-index: 5"
+                >
+                    <div
+                        class="md:col-span-6 order-2 md:order-1 space-y-8 reveal"
+                    >
+                        <div
+                            class="w-16 h-16 bg-indigo-500/10 rounded-3xl flex items-center justify-center text-indigo-400"
+                        >
+                            <ScanEye size={32} />
+                        </div>
+                        <h3
+                            class="text-3xl md:text-5xl font-serif font-bold text-white"
+                        >
+                            {$mt.archivistTitle}
+                        </h3>
+                        <p class="text-xl text-slate-400 leading-relaxed">
+                            {$mt.archivistDesc}
+                        </p>
+                    </div>
+                    <div class="md:col-span-6 order-1 md:order-2">
+                        <div
+                            class="aspect-square bg-gradient-to-br from-indigo-500/10 to-transparent rounded-[4rem] border border-white/5 flex items-center justify-center relative group overflow-hidden"
+                        >
+                            <div
+                                class="absolute inset-0 blur-[60px] bg-indigo-500/5 group-hover:bg-indigo-500/10 transition-all"
+                            ></div>
+                            <div class="relative w-full h-full p-12">
+                                <!-- Memories Stack -->
+                                <div
+                                    class="relative w-full h-full flex items-center justify-center"
+                                >
+                                    <div
+                                        class="absolute w-48 h-56 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl rotate-[-12deg] -translate-x-8 translate-y-4 shadow-2xl overflow-hidden group-hover:rotate-[-15deg] transition-transform duration-700"
+                                    >
+                                        <div
+                                            class="w-full h-40 bg-indigo-500/20"
+                                        ></div>
+                                        <div class="p-3 space-y-2">
+                                            <div
+                                                class="h-2 w-2/3 bg-white/20 rounded"
+                                            ></div>
+                                            <div
+                                                class="h-2 w-1/2 bg-white/10 rounded"
+                                            ></div>
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="absolute w-48 h-56 bg-white/10 backdrop-blur-2xl border border-white/20 rounded-xl rotate-[8deg] translate-x-8 -translate-y-4 shadow-2xl overflow-hidden group-hover:rotate-[12deg] transition-transform duration-700"
+                                    >
+                                        <img
+                                            src={assets.legacy}
+                                            class="w-full h-40 object-cover grayscale opacity-50 contrast-125"
+                                            alt="Memory"
+                                        />
+                                        <div class="p-3 space-y-2">
+                                            <div
+                                                class="h-2 w-3/4 bg-amber-500/40 rounded"
+                                            ></div>
+                                            <div
+                                                class="h-2 w-1/4 bg-white/10 rounded"
+                                            ></div>
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="z-10 w-48 h-56 bg-white backdrop-blur-sm border border-white p-2 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transform group-hover:scale-110 transition-transform duration-700 rotate-[-2deg]"
+                                    >
+                                        <img
+                                            src={assets.vault}
+                                            class="w-full h-40 object-cover"
+                                            alt="Focus Memory"
+                                        />
+                                        <div
+                                            class="p-3 font-serif italic text-slate-800 text-xs text-center font-bold"
+                                        >
+                                            {$mt.summer1984}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="font-bold text-white tracking-tight">
-                                {currency.format(totalValue)}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Card 2 -->
+                <div
+                    class="grid md:grid-cols-12 gap-12 items-center"
+                    use:reveal
+                    style="--item-index: 6"
+                >
+                    <div class="md:col-span-6 reveal">
+                        <div
+                            class="aspect-square bg-gradient-to-br from-emerald-500/10 to-transparent rounded-[4rem] border border-white/5 flex items-center justify-center relative group overflow-hidden"
+                        >
+                            <div
+                                class="absolute inset-0 blur-[60px] bg-emerald-500/5 group-hover:bg-emerald-500/10 transition-all"
+                            ></div>
+                            <!-- Letter Preview -->
+                            <div
+                                class="relative w-full h-full p-12 flex items-center justify-center"
+                            >
+                                <div
+                                    class="w-64 h-80 bg-[#fdfbf7] shadow-2xl p-8 rotate-3 group-hover:rotate-0 transition-transform duration-700 border border-black/5 relative"
+                                >
+                                    <div
+                                        class="absolute top-0 left-0 w-full h-full opacity-[0.03] pointer-events-none"
+                                        style="background-image: url('https://www.transparenttextures.com/patterns/cream-paper.png')"
+                                    ></div>
+                                    <div class="space-y-4">
+                                        <div
+                                            class="h-px w-12 bg-emerald-800/30 mb-8"
+                                        ></div>
+                                        <h4
+                                            class="font-serif text-emerald-950 text-xl font-bold leading-tight"
+                                            dir="auto"
+                                        >
+                                            {$mt.letterGreeting}
+                                        </h4>
+                                        <p
+                                            class="font-serif text-emerald-900/70 text-sm leading-relaxed"
+                                            dir="auto"
+                                        >
+                                            {$mt.letterBody}
+                                        </p>
+                                        <div class="pt-8 flex justify-end">
+                                            <div
+                                                class="font-serif italic text-emerald-950 text-lg opacity-40"
+                                            >
+                                                {$mt.letterSignOff}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Tone Slider Visual -->
+                                    <div
+                                        class="absolute bottom-4 left-8 right-8 h-1 bg-black/5 rounded-full overflow-hidden"
+                                    >
+                                        <div
+                                            class="absolute left-0 top-0 h-full w-2/3 bg-emerald-500"
+                                        ></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                     <div
-                        class="p-4 rounded-2xl bg-white/5 border border-white/5 backdrop-blur-sm flex items-center gap-3"
+                        class="md:col-span-6 space-y-8 text-right flex flex-col items-end reveal"
                     >
-                        <Users size={20} class="text-indigo-400" />
-                        <div>
-                            <div
-                                class="text-[10px] uppercase font-bold text-slate-400"
-                            >
-                                Registered
-                            </div>
-                            <div class="font-bold text-white">
-                                {networkSize} Member{networkSize !== 1
-                                    ? "s"
-                                    : ""}
-                            </div>
+                        <div
+                            class="w-16 h-16 bg-emerald-500/10 rounded-3xl flex items-center justify-center text-emerald-400"
+                        >
+                            <Sparkles size={32} />
                         </div>
+                        <h3
+                            class="text-3xl md:text-5xl font-serif font-bold text-white"
+                        >
+                            {$mt.empathyTitle}
+                        </h3>
+                        <p class="text-xl text-slate-400 leading-relaxed">
+                            {$mt.empathyDesc}
+                        </p>
                     </div>
+                </div>
+
+                <!-- AI Card 3 -->
+                <div
+                    class="grid md:grid-cols-12 gap-12 items-center"
+                    use:reveal
+                    style="--item-index: 7"
+                >
                     <div
-                        class="p-4 rounded-2xl bg-white/5 border border-white/5 backdrop-blur-sm flex items-center gap-3"
+                        class="md:col-span-6 order-2 md:order-1 space-y-8 reveal"
                     >
-                        <Sparkles size={20} class="text-amber-400" />
-                        <div>
+                        <div
+                            class="w-16 h-16 bg-amber-500/10 rounded-3xl flex items-center justify-center text-amber-400"
+                        >
+                            <FileText size={32} />
+                        </div>
+                        <h3
+                            class="text-3xl md:text-5xl font-serif font-bold text-white"
+                        >
+                            {$mt.jargonTitle}
+                        </h3>
+                        <p class="text-xl text-slate-400 leading-relaxed">
+                            {$mt.jargonDesc}
+                        </p>
+                    </div>
+                    <div class="md:col-span-6 order-1 md:order-2">
+                        <div
+                            class="aspect-square bg-gradient-to-br from-amber-500/10 to-transparent rounded-[4rem] border border-white/5 flex items-center justify-center relative group overflow-hidden"
+                        >
                             <div
-                                class="text-[10px] uppercase font-bold text-slate-400"
+                                class="absolute inset-0 blur-[60px] bg-amber-500/5 group-hover:bg-amber-500/10 transition-all"
+                            ></div>
+                            <!-- Legal Clarity Module -->
+                            <div
+                                class="relative w-full h-full p-8 flex items-center justify-center"
                             >
-                                Registry Coverage
-                            </div>
-                            <div class="font-bold text-white">
-                                {coverageCount} Cataloged
+                                <div
+                                    class="w-full h-64 bg-slate-950/50 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col relative"
+                                >
+                                    <div class="flex-1 grid grid-cols-2">
+                                        <div
+                                            class="p-6 border-r border-white/5 space-y-3 bg-white/5"
+                                        >
+                                            <div
+                                                class="text-[10px] uppercase tracking-widest text-slate-500"
+                                            >
+                                                {$mt.jargonOriginal}
+                                            </div>
+                                            <p
+                                                class="text-[11px] text-slate-400 font-mono leading-relaxed"
+                                                dir="ltr"
+                                            >
+                                                {$mt.jargonOriginalText}
+                                            </p>
+                                        </div>
+                                        <div
+                                            class="p-6 space-y-3 bg-amber-500/5"
+                                        >
+                                            <div
+                                                class="text-[10px] uppercase tracking-widest text-amber-500"
+                                            >
+                                                {$mt.jargonContinuum}
+                                            </div>
+                                            <p
+                                                class="text-[11px] text-amber-200 leading-relaxed font-bold"
+                                                dir="ltr"
+                                            >
+                                                {$mt.jargonContinuumText}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <!-- Scan Line Animation -->
+                                    <div
+                                        class="absolute inset-x-0 top-0 h-full pointer-events-none overflow-hidden"
+                                    >
+                                        <div
+                                            class="h-full w-[2px] bg-gradient-to-b from-transparent via-amber-500 to-transparent absolute top-0 left-1/2 -translate-x-1/2 animate-scan-horizontal shadow-[0_0_10px_rgba(245,158,11,0.5)]"
+                                        ></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        {/if}
-    </main>
-</div>
+        </div>
+    </section>
+
+    <!-- The Continuum Ecosystem (Deep Dive) -->
+    <section
+        class="py-16 relative overflow-hidden bg-black/60 border-y border-white/5"
+    >
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid md:grid-cols-3 gap-12">
+                <div class="space-y-4" use:reveal style="--item-index: 1">
+                    <div
+                        class="w-12 h-12 bg-rose-500/10 rounded-2xl flex items-center justify-center text-rose-400"
+                    >
+                        <Heart size={24} />
+                    </div>
+                    <h4 class="text-2xl font-serif font-bold text-white">
+                        {$mt.healthSecurityTitle}
+                    </h4>
+                    <p class="text-slate-400 leading-relaxed text-sm">
+                        {$mt.healthSecurityDesc}
+                    </p>
+                </div>
+                <div class="space-y-4" use:reveal style="--item-index: 2">
+                    <div
+                        class="w-12 h-12 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-400"
+                    >
+                        <InfinityIcon size={24} />
+                    </div>
+                    <h4 class="text-2xl font-serif font-bold text-white">
+                        {$mt.lifeTimelineTitle}
+                    </h4>
+                    <p class="text-slate-400 leading-relaxed text-sm">
+                        {$mt.lifeTimelineDesc}
+                    </p>
+                </div>
+                <div class="space-y-4" use:reveal style="--item-index: 3">
+                    <div
+                        class="w-12 h-12 bg-teal-500/10 rounded-2xl flex items-center justify-center text-teal-400"
+                    >
+                        <Shield size={24} />
+                    </div>
+                    <h4 class="text-2xl font-serif font-bold text-white">
+                        {$mt.circleTrustTitle}
+                    </h4>
+                    <p class="text-slate-400 leading-relaxed text-sm">
+                        {$mt.circleTrustDesc}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Legal Disclaimer Trust Signal -->
+    <section class="py-12 border-b border-white/5 bg-black/40">
+        <div class="max-w-4xl mx-auto px-6 text-center" use:reveal>
+            <div class="inline-flex items-center gap-2 mb-4 text-slate-500">
+                <Shield size={16} />
+                <span class="text-xs font-bold uppercase tracking-widest"
+                    >{$mt.complianceTitle}</span
+                >
+            </div>
+            <p class="text-slate-400 text-sm leading-relaxed max-w-2xl mx-auto">
+                {$mt.complianceDesc}
+            </p>
+        </div>
+    </section>
+
+    <!-- Signature Commitment CTA -->
+    <section
+        class="min-h-[80vh] flex items-center justify-center relative overflow-hidden"
+    >
+        <!-- Background Glow -->
+        <div
+            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-amber-500/5 blur-[120px] rounded-full pointer-events-none"
+        ></div>
+
+        <div
+            class="relative z-10 text-center space-y-12 max-w-3xl px-6"
+            use:reveal
+        >
+            {#if step === 0}
+                <!-- Step 1: Name -->
+                <div
+                    in:scale={{ duration: 500, start: 0.95 }}
+                    out:fade={{ duration: 200 }}
+                >
+                    <h2
+                        class="text-5xl md:text-8xl font-serif font-black text-white mb-6"
+                    >
+                        {$mt.pactTitle}
+                    </h2>
+                    <p class="text-xl text-slate-400 max-w-xl mx-auto">
+                        {$mt.pactDesc}
+                    </p>
+
+                    <div class="relative group max-w-md mx-auto">
+                        <input
+                            type="text"
+                            bind:value={signature}
+                            placeholder={$mt.placeholderSign}
+                            on:keydown={(e) =>
+                                e.key === "Enter" && handleNameSubmit()}
+                            class="w-full bg-white/5 border-b border-white/20 p-6 text-3xl font-serif italic text-amber-200 outline-none focus:border-amber-500 transition-all text-center"
+                        />
+                    </div>
+
+                    <div class="mt-12 h-16">
+                        {#if signature.length > 2}
+                            <button
+                                on:click={handleNameSubmit}
+                                in:fly={{ y: 20 }}
+                                class="group flex items-center gap-4 bg-white text-black px-10 py-5 rounded-full font-bold uppercase tracking-widest hover:scale-105 transition-all text-sm mt-8 mx-auto"
+                            >
+                                {$mt.btnNext}
+                                <ArrowRight
+                                    size={20}
+                                    class="group-hover:translate-x-1 transition-transform"
+                                />
+                            </button>
+                        {/if}
+                    </div>
+                </div>
+            {:else if step === 1}
+                <!-- Step 2: Email -->
+                <div
+                    in:scale={{ duration: 500, start: 0.95 }}
+                    out:fade={{ duration: 200 }}
+                >
+                    <h3 class="text-2xl font-bold text-white mb-2">
+                        {$mt.keeperTitle}
+                    </h3>
+                    <p class="text-slate-400 mb-8">
+                        {$mt.keeperDesc}
+                    </p>
+                    <div class="relative max-w-md mx-auto">
+                        <input
+                            type="email"
+                            bind:value={email}
+                            placeholder="email@address.com"
+                            on:keydown={(e) =>
+                                e.key === "Enter" && handleEmailSubmit()}
+                            class="w-full bg-white/5 border border-white/10 rounded-2xl p-6 text-xl text-white outline-none focus:border-amber-500 transition-all text-center"
+                        />
+                        {#if email.includes("@") && email.includes(".")}
+                            <button
+                                on:click={handleEmailSubmit}
+                                class="w-full mt-6 bg-amber-500 hover:bg-amber-600 text-black py-5 rounded-2xl font-bold uppercase tracking-widest transition-all shadow-xl shadow-amber-500/20 active:scale-95"
+                            >
+                                {$mt.btnCommit}
+                            </button>
+                        {/if}
+                    </div>
+                    <button
+                        on:click={() => (step = 0)}
+                        class="mt-8 text-slate-500 text-sm hover:text-white transition"
+                        >{$mt.wizBtnBack}</button
+                    >
+                </div>
+            {:else}
+                <!-- Step 3: Success/Signed State -->
+                <div in:scale={{ duration: 800, start: 0.8 }} class="space-y-8">
+                    <div
+                        class="w-24 h-24 bg-teal-500/10 rounded-full flex items-center justify-center mx-auto border border-teal-500/50 shadow-[0_0_50px_rgba(45,212,191,0.3)]"
+                    >
+                        <Fingerprint size={48} class="text-teal-400" />
+                    </div>
+                    <h3 class="text-3xl font-serif font-bold text-white mb-2">
+                        {$mt.welcomeTitle}
+                        {signature}.
+                    </h3>
+                    <p class="text-slate-400 mb-8">
+                        {$mt.sequenceSent}
+                        <span class="text-amber-200">{email}</span>
+                    </p>
+                    <a
+                        href="/start?email={email}&lang={$mLanguage}"
+                        class="inline-flex items-center gap-4 bg-teal-500 hover:bg-teal-600 text-white px-10 py-5 rounded-2xl font-bold uppercase tracking-widest transition-all shadow-xl shadow-teal-500/20"
+                    >
+                        {$mt.btnEnterVault}
+                        <ArrowRight size={20} />
+                    </a>
+                </div>
+            {/if}
+        </div>
+    </section>
+</MarketingLayout>
+
+<style>
+    /* Hero Clip Reveal */
+    .hero-clip-reveal {
+        animation: clip-up 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+        animation-delay: var(--delay, 0s);
+        will-change: transform, opacity;
+    }
+
+    @keyframes clip-up {
+        from {
+            transform: translateY(120%);
+            opacity: 0;
+            clip-path: inset(100% 0 0 0);
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+            clip-path: inset(0 0 0 0);
+        }
+    }
+
+    /* Scroll Reveal Animation System */
+    :global(.reveal) {
+        opacity: 0;
+        transform: translateY(20px) scale(0.99);
+        filter: blur(10px);
+        transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+        will-change: transform, opacity, filter;
+    }
+
+    :global(.reveal.in-view) {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
+
+    /* Staggered Reveals */
+    :global(.reveal.in-view) {
+        transition-delay: calc(var(--item-index, 0) * 0.1s);
+    }
+
+    /* Enhanced Holographic Card Logic */
+    .perspective-container {
+        perspective: 1200px;
+    }
+    .holo-card {
+        transform-style: preserve-3d;
+        transform: perspective(1200px) rotateX(var(--rx, 0deg))
+            rotateY(var(--ry, 0deg));
+        transition:
+            transform 0.1s cubic-bezier(0.2, 0, 0.2, 1),
+            border-color 0.5s ease;
+        background: rgba(15, 17, 21, 0.7);
+        backdrop-filter: blur(32px) saturate(200%);
+        -webkit-backdrop-filter: blur(32px) saturate(200%);
+        will-change: transform;
+    }
+
+    /* Specular Reflection Layer */
+    .holo-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+            800px circle at var(--mx, 50%) var(--my, 50%),
+            rgba(255, 255, 255, 0.1) 0%,
+            transparent 60%
+        );
+        transform: scaleX(var(--elongation, 1));
+        opacity: 0;
+        transition: opacity 0.5s ease;
+        pointer-events: none;
+        z-index: 20;
+    }
+    .holo-card:hover::before {
+        opacity: 1;
+    }
+
+    /* Light Sweep Effect */
+    .holo-card::after {
+        content: "";
+        position: absolute;
+        inset: -1px;
+        background: linear-gradient(
+            125deg,
+            transparent 0%,
+            transparent 35%,
+            rgba(255, 255, 255, 0.25) 48%,
+            /* Brighter peak */ rgba(255, 255, 255, 0.1) 52%,
+            transparent 65%,
+            transparent 100%
+        );
+        background-size: 250% 250%;
+        background-position: 200% 200%;
+        transition: background-position 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        z-index: 10;
+        pointer-events: none;
+        border-radius: inherit;
+        mix-blend-mode: overlay; /* Better blending */
+    }
+    .holo-card:hover::after {
+        background-position: -100% -100%;
+    }
+
+    .shine {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(
+            circle at var(--mx, 50%) var(--my, 50%),
+            rgba(255, 255, 255, 0.12) 0%,
+            transparent 40%
+        );
+        pointer-events: none;
+        z-index: 30;
+    }
+
+    /* Floating Shards Polish */
+    .floating-shard {
+        backdrop-filter: blur(30px);
+        -webkit-backdrop-filter: blur(30px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        will-change: transform;
+    }
+
+    /* Animations */
+    @keyframes slow-spin {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    @keyframes scan {
+        from {
+            transform: translateY(-100%);
+        }
+        to {
+            transform: translateY(1200%);
+        }
+    }
+
+    .animate-slow-spin {
+        animation: slow-spin 40s linear infinite;
+    }
+
+    @keyframes scan-horizontal {
+        0%,
+        100% {
+            transform: translateX(-150px);
+        }
+        50% {
+            transform: translateX(150px);
+        }
+    }
+
+    .animate-scan-horizontal {
+        animation: scan-horizontal 4s ease-in-out infinite;
+    }
+
+    .animate-scan {
+        animation: scan 12s linear infinite;
+    }
+
+    .shadow-glow {
+        box-shadow: 0 0 50px -10px rgba(245, 158, 11, 0.4);
+    }
+</style>

@@ -7,7 +7,8 @@
 	import { goto } from "$app/navigation";
 	import { estateAudit } from "$lib/stores/auditStore";
 	import ConciergeSettings from "$lib/components/concierge/ConciergeSettings.svelte";
-	import CompassPanel from "$lib/components/layout/CompassPanel.svelte";
+	import ConciergePanel from "$lib/components/layout/ConciergePanel.svelte";
+	import { conciergeEngine } from "$lib/stores/conciergeEngine";
 	import { language, userRole, type UserRole } from "$lib/stores/concierge";
 	import { dictionary } from "$lib/stores/dictionary";
 
@@ -78,7 +79,6 @@
 	let isSidebarOpen = $state(false);
 	let showSettings = $state(false);
 	let showCommandCenter = $state(false);
-	let isCompassOpen = $state(false);
 
 	// Derived: Are we in Focus Mode? (Active Block + NOT God Mode)
 	// Note: We also exclude the actual /wizard route from this logic as it has its own layout
@@ -114,9 +114,13 @@
 	});
 
 	// Derived: Is this the Wizard or Marketing Landing?
-	let isWizardRoute = $derived($page.url.pathname.startsWith("/wizard"));
+	let isWizardRoute = $derived(
+		$page.url.pathname.startsWith("/wizard") ||
+			$page.url.pathname.startsWith("/start"),
+	);
 	let isMarketingRoute = $derived(
-		$page.url.pathname.startsWith("/marketing"),
+		$page.url.pathname.startsWith("/marketing") ||
+			$page.url.pathname === "/",
 	);
 
 	onMount(() => {
@@ -256,7 +260,7 @@
 							<span
 								class="font-serif text-slate-800 font-medium text-lg"
 							>
-								{$page.url.pathname === "/"
+								{$page.url.pathname === "/dashboard"
 									? $t.dashboard
 									: $page.url.pathname.includes("catalog")
 										? $t.catalog
@@ -317,15 +321,15 @@
 								</select>
 							</div>
 
-							<!-- Compass Trigger -->
+							<!-- AI Concierge Trigger -->
 							<button
-								onclick={toggleCompass}
-								class="flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 rounded-lg transition-colors border border-amber-500/20"
-								title="Open Strategy Guide"
+								onclick={() => conciergeEngine.open()}
+								class="flex items-center gap-2 px-3 py-1.5 bg-indigo-500/10 text-indigo-600 hover:bg-indigo-500/20 rounded-lg transition-colors border border-indigo-500/20"
+								title="Open AI Concierge"
 							>
-								<Compass size={18} />
+								<Sparkles size={18} />
 								<span class="text-sm font-bold hidden sm:inline"
-									>{$t.compass}</span
+									>AI Concierge</span
 								>
 							</button>
 
@@ -384,9 +388,9 @@
 	<CommandCenter on:close={() => (showCommandCenter = false)} />
 {/if}
 
-<CompassPanel
-	bind:isOpen={isCompassOpen}
-	onClose={() => (isCompassOpen = false)}
+<ConciergePanel
+	isOpen={$conciergeEngine.isOpen}
+	onClose={() => conciergeEngine.close()}
 />
 
 {#if $magicTrigger}

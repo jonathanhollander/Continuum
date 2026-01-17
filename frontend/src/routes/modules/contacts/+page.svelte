@@ -20,6 +20,7 @@
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
     import { getStored, setStored } from "$lib/stores/persistence";
+    import { conciergeEngine } from "$lib/stores/conciergeEngine";
 
     type ContactRole =
         | "Family"
@@ -47,21 +48,57 @@
         notes: string;
     };
 
-    let activeTab = "call-list"; // call-list | directory
-    let contacts: Contact[] = [];
-    let showAddModal = false;
+    let activeTab = $state("call-list"); // call-list | directory
+    let contacts = $state<Contact[]>([]);
+    let showAddModal = $state(false);
 
     // Contact Form Stub
-    let newContact: Partial<Contact> = {
+    let newContact = $state<Partial<Contact>>({
         role: "Family",
         tier: "2_SameDay",
         notificationStatus: "Pending",
-    };
+    });
 
     // Derived
-    $: tier1 = contacts.filter((c) => c.tier === "1_Immediate");
-    $: tier2 = contacts.filter((c) => c.tier === "2_SameDay");
-    $: tier3 = contacts.filter((c) => c.tier === "3_Service");
+    let tier1 = $derived(contacts.filter((c) => c.tier === "1_Immediate"));
+    let tier2 = $derived(contacts.filter((c) => c.tier === "2_SameDay"));
+    let tier3 = $derived(contacts.filter((c) => c.tier === "3_Service"));
+
+    // AI Intake Mirroring (True Simulation)
+    // We watch the concierge store and populate the ACTUAL form state
+    $effect(() => {
+        const data =
+            $conciergeEngine.lastExtractedData?.family_member ||
+            $conciergeEngine.lastExtractedData;
+
+        if (data && (data.name || data.relationship || data.phone)) {
+            // Open modal if not already open
+            if (!showAddModal) showAddModal = true;
+
+            // Sync form state
+            newContact = {
+                ...newContact,
+                name: data.name || newContact.name,
+                relation: data.relationship || newContact.relation,
+                role: (data.relationship || newContact.role) as ContactRole,
+                phone: data.phone || newContact.phone,
+                email: data.email || newContact.email,
+                tier: (data.tier || newContact.tier) as NotificationTier,
+                notes: data.notes || newContact.notes,
+            };
+        }
+    });
+
+    // Detect when AI commits data (lastExtractedData becomes null while modal is open)
+    let previousDataWasPresent = false;
+    $effect(() => {
+        const hasData = !!$conciergeEngine.lastExtractedData;
+        if (previousDataWasPresent && !hasData && showAddModal) {
+            console.log("[AI Mirror] Commit detected, saving contact...");
+            addContact();
+        }
+        previousDataWasPresent = hasData;
+    });
 
     onMount(() => {
         contacts = getStored<Contact[]>("contacts", []);
@@ -73,40 +110,43 @@
 
     function addContact() {
         if (!newContact.name) return;
-        contacts = [
-            ...contacts,
-            {
-                id: crypto.randomUUID(),
-                name: newContact.name,
-                role: newContact.role || "Friend",
-                relation: newContact.relation || "",
-                phone: newContact.phone || "",
-                email: newContact.email || "",
-                tier: newContact.tier || "3_Service",
-                notificationStatus: "Pending",
-                notes: newContact.notes || "",
-            } as Contact,
-        ];
+        contacts.push({
+            id: crypto.randomUUID(),
+            name: newContact.name,
+            role: newContact.role || "Friend",
+            relation: newContact.relation || "",
+            phone: newContact.phone || "",
+            email: newContact.email || "",
+            tier: newContact.tier || "3_Service",
+            notificationStatus: "Pending",
+            notes: newContact.notes || "",
+        } as Contact);
         save();
         showAddModal = false;
-        newContact = {
-            role: "Family",
-            tier: "2_SameDay",
-            notificationStatus: "Pending",
-        };
+        newContact.name = "";
+        newContact.role = "Family";
+        newContact.tier = "2_SameDay";
+        newContact.relation = "";
+        newContact.phone = "";
+        newContact.email = "";
+        newContact.notes = "";
     }
 
     function updateStatus(id: string, status: string) {
-        contacts = contacts.map((c) =>
-            c.id === id ? { ...c, notificationStatus: status as any } : c,
-        );
-        save();
+        const contact = contacts.find((c) => c.id === id);
+        if (contact) {
+            contact.notificationStatus = status as any;
+            save();
+        }
     }
 
     function deleteContact(id: string) {
         if (!confirm("Remove this contact?")) return;
-        contacts = contacts.filter((c) => c.id !== id);
-        save();
+        const index = contacts.findIndex((c) => c.id === id);
+        if (index !== -1) {
+            contacts.splice(index, 1);
+            save();
+        }
     }
 </script>
 
@@ -278,6 +318,7 @@
                             No immediate contacts set.
                         </div>
                     {/if}
+
                     {#each tier1 as contact}
                         <ContactRow {contact} {updateStatus} />
                     {/each}
@@ -300,6 +341,7 @@
                             No Tier 2 contacts found.
                         </div>
                     {/if}
+
                     {#each tier2 as contact}
                         <ContactRow {contact} {updateStatus} />
                     {/each}
@@ -416,21 +458,47 @@
                     >
                 </div>
                 <div class="p-6 space-y-4">
-                    <input
-                        bind:value={newContact.name}
-                        class="w-full px-4 py-3 rounded-xl border border-gray-200"
-                        placeholder="Full Name"
-                    />
+                    <div class="relative group">
+                        <input
+                            bind:value={newContact.name}
+                            class="w-full px-4 py-3 rounded-xl border border-gray-200 transition-all {$conciergeEngine
+                                .lastExtractedData?.name ||
+                            $conciergeEngine.lastExtractedData?.family_member
+                                ?.name
+                                ? 'amber-glow border-amber-500/50'
+                                : 'focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900'}"
+                            placeholder="Full Name"
+                        />
+                        {#if $conciergeEngine.lastExtractedData?.name || $conciergeEngine.lastExtractedData?.family_member?.name}
+                            <div
+                                class="absolute -top-2 -right-2 bg-amber-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded shadow-sm animate-bounce"
+                            >
+                                AI
+                            </div>
+                        {/if}
+                    </div>
 
                     <div class="grid grid-cols-2 gap-4">
-                        <input
-                            bind:value={newContact.relation}
-                            class="w-full px-4 py-3 rounded-xl border border-gray-200"
-                            placeholder="Relation (e.g. Spouse)"
-                        />
+                        <div class="relative group">
+                            <input
+                                bind:value={newContact.relation}
+                                class="w-full px-4 py-3 rounded-xl border border-gray-200 transition-all {$conciergeEngine
+                                    .lastExtractedData?.relationship ||
+                                $conciergeEngine.lastExtractedData
+                                    ?.family_member?.relationship
+                                    ? 'amber-glow border-amber-500/50'
+                                    : ''}"
+                                placeholder="Relation (e.g. Spouse)"
+                            />
+                        </div>
                         <select
                             bind:value={newContact.role}
-                            class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white"
+                            class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white transition-all {$conciergeEngine
+                                .lastExtractedData?.relationship ||
+                            $conciergeEngine.lastExtractedData?.family_member
+                                ?.relationship
+                                ? 'amber-glow border-amber-500/50'
+                                : ''}"
                         >
                             <option>Family</option>
                             <option>Friend</option>
@@ -443,12 +511,22 @@
                     <div class="grid grid-cols-2 gap-4">
                         <input
                             bind:value={newContact.phone}
-                            class="w-full px-4 py-3 rounded-xl border border-gray-200"
+                            class="w-full px-4 py-3 rounded-xl border border-gray-200 transition-all {$conciergeEngine
+                                .lastExtractedData?.phone ||
+                            $conciergeEngine.lastExtractedData?.family_member
+                                ?.phone
+                                ? 'amber-glow border-amber-500/50'
+                                : ''}"
                             placeholder="Phone"
                         />
                         <input
                             bind:value={newContact.email}
-                            class="w-full px-4 py-3 rounded-xl border border-gray-200"
+                            class="w-full px-4 py-3 rounded-xl border border-gray-200 transition-all {$conciergeEngine
+                                .lastExtractedData?.email ||
+                            $conciergeEngine.lastExtractedData?.family_member
+                                ?.email
+                                ? 'amber-glow border-amber-500/50'
+                                : ''}"
                             placeholder="Email"
                         />
                     </div>

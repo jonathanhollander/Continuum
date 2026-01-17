@@ -21,7 +21,7 @@
 
     <div class="flex items-center gap-4">
         <button
-            onclick={() => goto("/wizard")}
+            onclick={() => goto("/dashboard")}
             class="flex items-center gap-2 px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-sm transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
         >
             <CircleCheck size={16} />

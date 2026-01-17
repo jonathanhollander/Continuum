@@ -12,7 +12,7 @@
     export let blueprint: string = "Setting Foundation";
     export let why: string = "To ensure stability.";
     export let tip: string = "Start small.";
-    export let backLink: string = "/wizard";
+    export let backLink: string = "/dashboard";
     export let backLabel: string = "Return";
 </script>
 

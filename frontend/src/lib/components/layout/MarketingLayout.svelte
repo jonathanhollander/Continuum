@@ -1,20 +1,9 @@
 <script lang="ts">
-    import "../../app.css";
     import { onMount } from "svelte";
-    import { writable, derived } from "svelte/store";
-    import { dictionary } from "$lib/stores/dictionary";
     import { Globe } from "lucide-svelte";
-    import { page } from "$app/stores";
-    import { setContext } from "svelte";
+    import { mLanguage, mt } from "$lib/stores/marketing";
 
-    // Marketing Language State (Independent of App Store for Landing)
-    export const mLanguage = writable<string>("en");
-    export const mt = derived(mLanguage, ($mLanguage) => {
-        const lang = $mLanguage as keyof typeof dictionary;
-        return (dictionary[lang] || dictionary.en).marketing;
-    });
-
-    setContext("marketingTranslations", { mLanguage, mt });
+    let { children } = $props();
 
     const languages = [
         { code: "en", label: "English", flag: "🇺🇸" },
@@ -25,7 +14,7 @@
         { code: "he", label: "עברית", flag: "🇮🇱" },
     ];
 
-    $: isRTL = $mLanguage === "he";
+    let isRTL = $derived($mLanguage === "he");
 </script>
 
 <div
@@ -36,7 +25,7 @@
 >
     <!-- Marketing Header -->
     <header
-        class="fixed top-0 left-0 right-0 z-50 p-4 md:p-6 flex justify-between items-center mix-blend-difference text-white pointer-events-none"
+        class="fixed top-0 left-0 right-0 z-50 p-4 md:p-6 flex justify-between items-center mix-blend-difference text-white pointer-events-none backdrop-blur-[2px]"
     >
         <div
             class="font-serif font-black text-2xl tracking-tighter pointer-events-auto"
@@ -75,7 +64,7 @@
         </div>
     </header>
 
-    <slot />
+    {@render children?.()}
 
     <footer class="py-24 bg-black text-center text-slate-600 text-sm">
         <p>

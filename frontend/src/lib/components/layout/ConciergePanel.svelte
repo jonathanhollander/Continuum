@@ -1,0 +1,361 @@
+<script lang="ts">
+    import { fly, fade, slide } from "svelte/transition";
+    import {
+        X,
+        Mic,
+        MicOff,
+        Send,
+        RefreshCw,
+        ChevronDown,
+        Sparkles,
+        AlertCircle,
+        CheckCircle2,
+    } from "lucide-svelte";
+    import { conciergeEngine, type Message } from "$lib/stores/conciergeEngine";
+    import { voiceService } from "$lib/services/voiceService";
+    import { accessibilityStore } from "$lib/stores/accessibilityStore";
+    import { onMount, afterUpdate } from "svelte";
+
+    export let isOpen = false;
+    export let onClose: () => void;
+
+    let input = "";
+    let scrollContainer: HTMLElement;
+
+    // Accessibility Classes
+    $: fontSizeClass =
+        $accessibilityStore.fontSize === "normal"
+            ? "text-base"
+            : $accessibilityStore.fontSize === "large"
+              ? "text-lg"
+              : $accessibilityStore.fontSize === "xlarge"
+                ? "text-xl"
+                : "text-2xl";
+
+    $: contrastClass = $accessibilityStore.highContrast
+        ? "border-indigo-500 border-2"
+        : "border-white/10";
+
+    onMount(() => {
+        scrollToBottom();
+    });
+
+    afterUpdate(() => {
+        scrollToBottom();
+    });
+
+    function scrollToBottom() {
+        if (scrollContainer) {
+            scrollContainer.scrollTop = scrollContainer.scrollHeight;
+        }
+    }
+
+    async function handleSend() {
+        if (!input.trim()) return;
+        const msg = input;
+        input = "";
+        await conciergeEngine.sendMessage(msg);
+    }
+
+    function toggleVoice() {
+        if ($conciergeEngine.isListening) {
+            voiceService.stopListening();
+        } else {
+            voiceService.startListening();
+        }
+    }
+
+    function handleKeydown(e: KeyboardEvent) {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            handleSend();
+        }
+    }
+
+    // Auto-TTS for assistant messages
+    $: lastMessage =
+        $conciergeEngine.messages[$conciergeEngine.messages.length - 1];
+    $: if (
+        isOpen &&
+        lastMessage?.role === "assistant" &&
+        !$conciergeEngine.isSpeaking &&
+        lastMessage.timestamp > Date.now() - 1000
+    ) {
+        // Only read if it's new (within last second)
+        voiceService.speak(lastMessage.content);
+    }
+</script>
+
+{#if isOpen}
+    <!-- Backdrop -->
+    <div
+        class="fixed inset-0 {$conciergeEngine.lastExtractedData
+            ? 'bg-slate-950/40 backdrop-blur-[2px]'
+            : 'bg-slate-950/60 backdrop-blur-sm'} z-40 transition-all duration-500"
+        on:click={onClose}
+        transition:fade={{ duration: 200 }}
+    ></div>
+
+    <!-- Panel -->
+    <div
+        class="fixed top-0 right-0 h-full w-full md:w-[480px] bg-slate-900 border-l {contrastClass} shadow-2xl z-50 flex flex-col overflow-hidden"
+        transition:fly={{ x: 400, duration: 400, opacity: 1 }}
+    >
+        <!-- Header -->
+        <div
+            class="p-6 border-b border-white/10 bg-black/20 backdrop-blur flex items-center justify-between"
+        >
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-indigo-500/20 rounded-xl text-indigo-400">
+                    <Sparkles size={20} />
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold text-white tracking-tight">
+                        AI Concierge
+                    </h2>
+                    <div class="flex items-center gap-2">
+                        <span
+                            class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"
+                        ></span>
+                        <span
+                            class="text-[10px] uppercase tracking-widest text-white/40 font-bold"
+                            >Active Assistant</span
+                        >
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button
+                    on:click={() => conciergeEngine.clearHistory()}
+                    class="p-2 text-white/40 hover:text-white hover:bg-white/5 rounded-full transition-colors"
+                    title="Reset Conversation"
+                >
+                    <RefreshCw size={18} />
+                </button>
+                <button
+                    on:click={onClose}
+                    class="p-2 text-white/40 hover:text-white hover:bg-white/5 rounded-full transition-colors"
+                >
+                    <X size={20} />
+                </button>
+            </div>
+        </div>
+
+        <!-- Chat Rail -->
+        <div
+            bind:this={scrollContainer}
+            class="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth"
+        >
+            {#each $conciergeEngine.messages as msg (msg.id)}
+                <div
+                    class="flex {msg.role === 'user'
+                        ? 'justify-end'
+                        : 'justify-start'}"
+                    transition:fly={{ y: 20, duration: 300 }}
+                >
+                    <div class="max-w-[85%] space-y-2">
+                        <div
+                            class="p-4 rounded-2xl {msg.role === 'user'
+                                ? msg.isDictated
+                                    ? 'bg-amber-500/10 border border-amber-500/30 text-amber-50'
+                                    : 'bg-indigo-600 text-white'
+                                : 'bg-white/5 border border-white/10 text-slate-200'}"
+                        >
+                            <p class="{fontSizeClass} leading-relaxed">
+                                {msg.content}
+                            </p>
+
+                            {#if msg.isDictated}
+                                <div
+                                    class="mt-2 flex items-center gap-1 opacity-50"
+                                >
+                                    <Mic size={10} />
+                                    <span
+                                        class="text-[9px] uppercase font-bold tracking-tighter"
+                                        >Dictated - Please verify</span
+                                    >
+                                </div>
+                            {/if}
+                        </div>
+                    </div>
+                </div>
+            {/each}
+
+            {#if $conciergeEngine.isThinking}
+                <div class="flex justify-start" transition:fade>
+                    <div
+                        class="bg-white/5 border border-white/10 p-4 rounded-2xl flex items-center gap-2"
+                    >
+                        <div class="flex gap-1">
+                            <span
+                                class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce"
+                                style="animation-delay: 0s"
+                            ></span>
+                            <span
+                                class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce"
+                                style="animation-delay: 0.1s"
+                            ></span>
+                            <span
+                                class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce"
+                                style="animation-delay: 0.2s"
+                            ></span>
+                        </div>
+                    </div>
+                </div>
+            {/if}
+
+            <!-- Extracted Card (Placeholder/Pattern) -->
+            {#if $conciergeEngine.lastExtractedData}
+                <div class="mt-4" transition:slide>
+                    <div
+                        class="bg-indigo-500/10 border border-indigo-500/20 rounded-2xl p-5 space-y-4"
+                    >
+                        <div
+                            class="flex items-center gap-2 text-indigo-300 font-bold text-sm uppercase tracking-wide"
+                        >
+                            <CheckCircle2 size={16} />
+                            <span>Extracted Details</span>
+                        </div>
+                        <div
+                            class="bg-black/20 rounded-xl p-3 border border-white/5 space-y-2"
+                        >
+                            {#each Object.entries($conciergeEngine.lastExtractedData) as [key, value]}
+                                <div class="flex flex-col gap-1 text-sm">
+                                    <span
+                                        class="text-white/40 capitalize text-[10px]"
+                                        >{key.replace("_", " ")}</span
+                                    >
+                                    {#if typeof value === "object" && value !== null}
+                                        <div
+                                            class="space-y-1 pl-2 border-l border-white/10"
+                                        >
+                                            {#each Object.entries(value) as [k, v]}
+                                                <div
+                                                    class="flex justify-between"
+                                                >
+                                                    <span
+                                                        class="text-white/30 text-[10px] capitalize"
+                                                        >{k}</span
+                                                    >
+                                                    <span
+                                                        class="text-white font-medium text-[10px]"
+                                                        >{v}</span
+                                                    >
+                                                </div>
+                                            {/each}
+                                        </div>
+                                    {:else}
+                                        <span class="text-white font-medium"
+                                            >{value}</span
+                                        >
+                                    {/if}
+                                </div>
+                            {/each}
+                        </div>
+                        <p class="text-[10px] text-white/50 italic">
+                            I've parsed these details from our conversation. Are
+                            they correct?
+                        </p>
+                        <div class="flex gap-2">
+                            <button
+                                on:click={() =>
+                                    conciergeEngine.confirmExtractedData()}
+                                class="flex-1 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-500 transition-colors"
+                            >
+                                Yes, Confirm
+                            </button>
+                            <button
+                                on:click={() => conciergeEngine.clearHistory()}
+                                class="px-4 py-2 bg-white/5 text-white/60 rounded-lg text-xs font-bold hover:bg-white/10 transition-colors"
+                            >
+                                Edit
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            {/if}
+        </div>
+
+        <!-- Footer / Input -->
+        <div class="p-6 border-t border-white/10 bg-black/40 space-y-4">
+            <!-- Voice Pulse Visualizer -->
+            {#if $conciergeEngine.isListening || $conciergeEngine.isSpeaking}
+                <div
+                    class="h-8 flex items-center justify-center gap-1"
+                    transition:fade
+                >
+                    {#each Array(8) as _, i}
+                        <div
+                            class="w-1 bg-indigo-400/60 rounded-full animate-pulse"
+                            style="height: {20 +
+                                Math.random() * 60}%; animation-delay: {i *
+                                0.1}s"
+                        ></div>
+                    {/each}
+                </div>
+            {/if}
+
+            <div class="flex gap-2">
+                <button
+                    on:click={toggleVoice}
+                    class="p-4 rounded-2xl transition-all shadow-lg {$conciergeEngine.isListening
+                        ? 'bg-rose-500 text-white animate-pulse shadow-rose-500/20'
+                        : 'bg-slate-800 text-indigo-400 hover:bg-slate-700 shadow-black/20'}"
+                >
+                    {#if $conciergeEngine.isListening}
+                        <MicOff size={24} />
+                    {:else}
+                        <Mic size={24} />
+                    {/if}
+                </button>
+
+                <div class="flex-1 relative">
+                    <textarea
+                        bind:value={input}
+                        on:keydown={handleKeydown}
+                        placeholder={$conciergeEngine.isListening
+                            ? "Listening..."
+                            : "Tell me what's on your mind..."}
+                        class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-5 pr-12 {fontSizeClass} text-white focus:outline-none focus:border-indigo-500/50 transition-all resize-none min-h-[60px] max-h-[120px]"
+                        disabled={$conciergeEngine.isListening}
+                    ></textarea>
+                    <button
+                        on:click={handleSend}
+                        disabled={!input.trim() || $conciergeEngine.isThinking}
+                        class="absolute right-3 bottom-3 p-2 text-indigo-400 hover:text-white disabled:opacity-30 transition-colors"
+                    >
+                        <Send size={20} />
+                    </button>
+                </div>
+            </div>
+
+            <div
+                class="flex items-center justify-between text-[11px] font-bold uppercase tracking-widest text-white/30 px-1"
+            >
+                <span>Start Talking</span>
+                <button
+                    on:click={onClose}
+                    class="hover:text-white transition-colors"
+                    >Look Around First</button
+                >
+            </div>
+        </div>
+    </div>
+{/if}
+
+<style>
+    /* Spectral Pulse Custom Scrollbar */
+    div::-webkit-scrollbar {
+        width: 4px;
+    }
+    div::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    div::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+    }
+    div::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+</style>

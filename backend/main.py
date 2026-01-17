@@ -9,13 +9,26 @@ from pydantic import BaseModel
 from sqlmodel import Session
 from backend.database import engine, create_db_and_tables, get_session, User, Estate
 from backend.security import get_registration_options, verify_registration, get_authentication_options, verify_authentication
+from backend.routers import pulse
+from backend.pulse_models import (
+    PulseSettings, PulseCheckin, PulseVault, PulseEscalationLog,
+    PulseEscalationTier, PulseContact, PulseMessage
+)
+from backend.pulse_scheduler import start_scheduler, stop_scheduler
 
-app = FastAPI(title="Continuum SaaS API", version="4.0.0")
+app = FastAPI(title="Continuum SaaS API", version="0.5.0")
+
+app.include_router(pulse.router)
 
 # Initialize database on startup
 @app.on_event("startup")
 def on_startup():
     create_db_and_tables()
+    start_scheduler()
+
+@app.on_event("shutdown")
+def on_shutdown():
+    stop_scheduler()
 
 # Configure CORS
 origins = [
@@ -25,7 +38,7 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

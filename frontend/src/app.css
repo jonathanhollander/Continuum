@@ -32,9 +32,9 @@
     --color-input: #e2e8f0;
 
     /* Typography */
-    --font-serif: "Playfair Display",
+    --font-serif: "EB Garamond",
         serif;
-    --font-sans: "Lato",
+    --font-sans: "Inter",
         sans-serif;
 
     /* Radius */
@@ -184,6 +184,10 @@
 
     .glass-card {
         @apply bg-white/60 backdrop-blur-sm border border-black/5 shadow-sm hover:shadow-md transition-all duration-300 min-h-fit;
+    }
+
+    .amber-glow {
+        @apply ring-4 ring-amber-500/40 shadow-[0_0_25px_#f59e0b4d] animate-pulse border-amber-500/50;
     }
 
     .text-gold {

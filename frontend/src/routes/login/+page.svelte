@@ -47,7 +47,7 @@
     }
 
     function createNew() {
-        window.location.href = "/wizard";
+        window.location.href = "/start";
     }
 
     async function sendMagicLink() {

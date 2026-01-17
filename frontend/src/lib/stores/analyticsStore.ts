@@ -7,10 +7,11 @@ import { digitalAssetsStore } from './digitalAssetsStore';
 import { estateAudit } from './auditStore';
 import { heirloomStore } from './heirloomStore';
 import { funeralStore } from './funeralStore';
+import { pulse } from './pulse';
 
 export const estateAnalytics = derived(
-    [estateProfile, petStore, medicalStore, advancedAssetStore, digitalAssetsStore, estateAudit, heirloomStore, funeralStore],
-    ([$profile, $pets, $medical, $advanced, $digital, $audit, $heirlooms, $funeral]) => {
+    [estateProfile, petStore, medicalStore, advancedAssetStore, digitalAssetsStore, estateAudit, heirloomStore, funeralStore, pulse],
+    ([$profile, $pets, $medical, $advanced, $digital, $audit, $heirlooms, $funeral, $pulse]) => {
 
         // --- 1. Legal Readiness ---
         const hasExecutor = !!$profile?.executorName;
@@ -42,8 +43,16 @@ export const estateAnalytics = derived(
         if (wishesDefined) legacyScore += 40;
         if (petGuardians) legacyScore += 20;
 
+        // --- 4. Operational Wellness (Pulse) ---
+        const pulseEnabled = $pulse?.enabled;
+        const hasPulseContacts = ($pulse?.contacts || []).length > 0;
+
+        let operationalScore = 0;
+        if (pulseEnabled) operationalScore += 50;
+        if (hasPulseContacts) operationalScore += 50;
+
         // --- Overall Pulse ---
-        const overallHealth = Math.round((legalScore + financialScore + legacyScore) / 3);
+        const overallHealth = Math.round((legalScore + financialScore + legacyScore + operationalScore) / 4);
 
         return {
             overallHealth,
@@ -78,7 +87,9 @@ export const estateAnalytics = derived(
                 !hasMedicalProxy && { type: 'legal', message: "Missing Medical Proxy", link: "/modules/medical" },
                 !hasBeneficiary && { type: 'financial', message: "No Primary Beneficiary", link: "/modules/contacts" },
                 heirloomCount === 0 && { type: 'legacy', message: "No Heirlooms Cataloged", link: "/modules/heirlooms" },
-                !wishesDefined && { type: 'legacy', message: "Funeral Wishes Undefined", link: "/modules/funeral" }
+                !wishesDefined && { type: 'legacy', message: "Funeral Wishes Undefined", link: "/modules/funeral" },
+                !pulseEnabled && { type: 'pulse', message: "Pulse Heartbeat Disabled", link: "/modules/pulse/settings" },
+                !hasPulseContacts && { type: 'pulse', message: "No Pulse Guardians", link: "/modules/pulse/settings" }
             ].filter(Boolean)
         };
     }

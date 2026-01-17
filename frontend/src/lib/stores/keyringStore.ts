@@ -55,8 +55,8 @@ export function switchAccount(email: string) {
     const emails = get(keyringEmails);
     if (emails.includes(email)) {
         activeAccountId.set(email);
-        // Refresh page to ensure all stores reload with new namespace
-        window.location.reload();
+        // Redirect to dashboard to ensure all stores reload with new namespace
+        window.location.href = '/dashboard';
     }
 }
 
