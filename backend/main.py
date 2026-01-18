@@ -12,7 +12,7 @@ from backend.security import get_registration_options, verify_registration, get_
 from backend.routers import pulse, contacts, estate_data
 from backend.pulse_scheduler import start_scheduler, stop_scheduler
 
-app = FastAPI(title="Continuum SaaS API", version="0.5.0")
+app = FastAPI(title="Continuum SaaS API", version="0.7.0")
 
 app.include_router(pulse.router)
 app.include_router(contacts.router)
