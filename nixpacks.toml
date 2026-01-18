@@ -1,6 +1,2 @@
-[build]
-install = 'python -m venv /opt/venv && /opt/venv/bin/pip install -r backend/requirements.txt && cd frontend && npm install --no-engine-strict'
-build = 'cd frontend && npm run build'
-
 [variables]
-NIXPACKS_NODE_VERSION = "22"
+NIXPACKS_NODE_VERSION = "24"
