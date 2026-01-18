@@ -165,13 +165,13 @@ function createConciergeEngine() {
 
             // Check Capability for Option B (Document PiP)
             // @ts-ignore - Document PiP is a new API
-            const hasPiP = 'documentPictureInPicture' in window;
+            const hasPiP = typeof window !== 'undefined' && 'documentPictureInPicture' in window;
 
             update(s => {
                 const newState = {
                     ...s,
                     isPoppedOut: true,
-                    popOutMode: 'floating', // Forced for verification
+                    popOutMode: hasPiP ? 'pip' : 'floating',
                     isOpen: true
                 };
                 broadcastState(newState);

@@ -228,14 +228,16 @@
     }
 </script>
 
-{#if (isOpen && !isActuallyPoppedOut) || (isActuallyPoppedOut && isOpen)}
-    <!-- Backdrop -->
+{#if isOpen && !isActuallyPoppedOut}
+    <!-- Backdrop: Only show in sidebar mode, not in floating/pip -->
     <div
-        class="fixed inset-0 bg-transparent z-40 transition-all duration-500"
+        class="fixed inset-0 bg-black/10 backdrop-blur-sm z-40 transition-all duration-500"
         onclick={onClose}
         transition:fade={{ duration: 200 }}
     ></div>
+{/if}
 
+{#if isOpen || isActuallyPoppedOut}
     <!-- Panel -->
     <div
         bind:this={panelRef}
