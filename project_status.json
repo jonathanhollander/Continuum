@@ -1,0 +1,231 @@
+{
+  "id": "25d74db2-ed30-4e38-a6cd-3e52ae9399bf",
+  "name": "continuum-saas",
+  "deletedAt": null,
+  "team": null,
+  "environments": {
+    "edges": [
+      {
+        "node": {
+          "id": "9fbb046e-a376-411a-949b-e7c3409615b7",
+          "name": "production",
+          "deletedAt": null
+        }
+      }
+    ]
+  },
+  "services": {
+    "edges": [
+      {
+        "node": {
+          "id": "1a96d157-aa0a-4df8-9aa6-445ea288917f",
+          "name": "Continuum",
+          "serviceInstances": {
+            "edges": [
+              {
+                "node": {
+                  "id": "6f76506c-7dc5-4aad-84d1-511d65b8f702",
+                  "serviceId": "1a96d157-aa0a-4df8-9aa6-445ea288917f",
+                  "serviceName": "Continuum",
+                  "environmentId": "9fbb046e-a376-411a-949b-e7c3409615b7",
+                  "latestDeployment": {
+                    "canRedeploy": true,
+                    "id": "d503838a-6c3e-46aa-b018-dcbc402f1039",
+                    "meta": {
+                      "buildOnly": false,
+                      "configFile": "railway.toml",
+                      "fileServiceManifest": {
+                        "build": {
+                          "builder": "DOCKERFILE"
+                        },
+                        "deploy": {
+                          "healthcheckPath": "/api/health"
+                        }
+                      },
+                      "logsV2": true,
+                      "nixpacksProviders": [],
+                      "propertyFileMapping": {
+                        "build.builder": "$.build.builder",
+                        "deploy.healthcheckPath": "$.deploy.healthcheckPath"
+                      },
+                      "reason": "deploy",
+                      "rootDirectory": null,
+                      "runtime": "V2",
+                      "serviceManifest": {
+                        "build": {
+                          "buildCommand": null,
+                          "buildEnvironment": null,
+                          "builder": "DOCKERFILE",
+                          "dockerfilePath": "Dockerfile",
+                          "nixpacksConfigPath": null,
+                          "nixpacksPlan": null,
+                          "watchPatterns": []
+                        },
+                        "deploy": {
+                          "cronSchedule": null,
+                          "drainingSeconds": null,
+                          "healthcheckPath": "/api/health",
+                          "healthcheckTimeout": null,
+                          "limitOverride": null,
+                          "multiRegionConfig": {
+                            "us-east4-eqdc4a": {
+                              "numReplicas": 1
+                            }
+                          },
+                          "numReplicas": 1,
+                          "overlapSeconds": null,
+                          "preDeployCommand": null,
+                          "region": null,
+                          "registryCredentials": null,
+                          "requiredMountPath": null,
+                          "restartPolicyMaxRetries": 10,
+                          "restartPolicyType": "ON_FAILURE",
+                          "runtime": "V2",
+                          "sleepApplication": true,
+                          "startCommand": null,
+                          "useLegacyStacker": false
+                        }
+                      },
+                      "volumeMounts": []
+                    },
+                    "status": "DEPLOYING",
+                    "deploymentStopped": true
+                  },
+                  "source": {
+                    "repo": "jonathanhollander/Continuum",
+                    "image": null
+                  },
+                  "domains": {
+                    "serviceDomains": [
+                      {
+                        "id": "adb3edf7-ba1b-4a3e-bcfb-4fd2d5b2c00a",
+                        "domain": "continuum-production-5eb1.up.railway.app",
+                        "targetPort": 8080
+                      }
+                    ],
+                    "customDomains": [
+                      {
+                        "id": "07584e5a-54b6-422b-bcd4-61028e5a4742",
+                        "domain": "continuum.estate",
+                        "targetPort": 8080
+                      }
+                    ]
+                  },
+                  "cronSchedule": null,
+                  "nextCronRunAt": null,
+                  "startCommand": null
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "node": {
+          "id": "2e64e516-6efb-4410-8ec5-2e7fdd86dbbb",
+          "name": "Postgres",
+          "serviceInstances": {
+            "edges": [
+              {
+                "node": {
+                  "id": "a53362bd-b775-441c-b004-22d0d863c1f7",
+                  "serviceId": "2e64e516-6efb-4410-8ec5-2e7fdd86dbbb",
+                  "serviceName": "Postgres",
+                  "environmentId": "9fbb046e-a376-411a-949b-e7c3409615b7",
+                  "latestDeployment": {
+                    "canRedeploy": true,
+                    "id": "514177fc-48fb-46e8-adc8-a00efa4a15b2",
+                    "meta": {
+                      "image": "ghcr.io/railwayapp-templates/postgres-ssl:17",
+                      "imageDigest": "sha256:180a5b610123b032e0078629e872304405a66e49b8b808c530dc3f7140691277",
+                      "logsV2": true,
+                      "patchId": "b8a4ee42-df0e-4ef0-ba08-da043d97d940",
+                      "reason": "deploy",
+                      "runtime": "V2",
+                      "serviceManifest": {
+                        "build": {
+                          "buildCommand": null,
+                          "buildEnvironment": null,
+                          "builder": "RAILPACK",
+                          "dockerfilePath": null,
+                          "nixpacksConfigPath": null,
+                          "nixpacksPlan": null,
+                          "watchPatterns": []
+                        },
+                        "deploy": {
+                          "cronSchedule": null,
+                          "drainingSeconds": null,
+                          "healthcheckPath": null,
+                          "healthcheckTimeout": null,
+                          "limitOverride": null,
+                          "multiRegionConfig": {
+                            "us-east4-eqdc4a": {
+                              "numReplicas": 1
+                            }
+                          },
+                          "numReplicas": 1,
+                          "overlapSeconds": null,
+                          "preDeployCommand": null,
+                          "region": null,
+                          "registryCredentials": null,
+                          "requiredMountPath": null,
+                          "restartPolicyMaxRetries": 10,
+                          "restartPolicyType": "ON_FAILURE",
+                          "runtime": "V2",
+                          "sleepApplication": true,
+                          "startCommand": null,
+                          "useLegacyStacker": false
+                        }
+                      },
+                      "volumeMounts": [
+                        "/var/lib/postgresql/data"
+                      ]
+                    },
+                    "status": "SLEEPING",
+                    "deploymentStopped": true
+                  },
+                  "source": {
+                    "repo": null,
+                    "image": "ghcr.io/railwayapp-templates/postgres-ssl:17"
+                  },
+                  "domains": {
+                    "serviceDomains": [],
+                    "customDomains": []
+                  },
+                  "cronSchedule": null,
+                  "nextCronRunAt": null,
+                  "startCommand": null
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "volumes": {
+    "edges": [
+      {
+        "node": {
+          "volumeInstances": {
+            "edges": [
+              {
+                "node": {
+                  "serviceId": "2e64e516-6efb-4410-8ec5-2e7fdd86dbbb",
+                  "mountPath": "/var/lib/postgresql/data",
+                  "environmentId": "9fbb046e-a376-411a-949b-e7c3409615b7",
+                  "currentSizeMB": 1105.567744,
+                  "sizeMB": 50000,
+                  "volume": {
+                    "name": "postgres-volume",
+                    "id": "e797bcea-e333-4efd-b9f2-93b317f988f1"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}
