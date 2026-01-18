@@ -1,11 +1,9 @@
-providers = ["python", "node"]
+[phases.setup]
+nixPkgs = ["python311", "nodejs-22_x", "libpq", "gcc"]
 
 [variables]
-NIXPACKS_NODE_VERSION = "24"
+NIXPACKS_NODE_VERSION = "22"
 PYTHONPATH = "/app"
-
-[phases.setup]
-aptPkgs = ["libpq-dev", "build-essential"]
 
 [phases.install]
 cmds = [
