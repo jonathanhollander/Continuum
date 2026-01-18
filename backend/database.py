@@ -41,9 +41,26 @@ if "postgresql" in DATABASE_URL:
 
 engine = create_engine(DATABASE_URL, connect_args=connect_args)
 
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
+
+import time
+from sqlalchemy.exc import OperationalError
+
 def create_db_and_tables():
-    SQLModel.metadata.create_all(engine)
-    migrate_db()
+    retries = 5
+    for i in range(retries):
+        try:
+            print(f"🔄 Attempting Database Connection ({i+1}/{retries})...")
+            SQLModel.metadata.create_all(engine)
+            migrate_db()
+            print("✅ Database Connected & Initialized!")
+            break
+        except OperationalError as e:
+            if i == retries - 1:
+                print(f"❌ Database Connection Failed after {retries} attempts: {e}")
+                raise e
+            print(f"⚠️ Connection Refused. Database might be sleeping. Retrying in 3s...")
+            time.sleep(3)
 
 def migrate_db():
     """Simple migration helper to add missing columns for SQLite/Postgres"""
