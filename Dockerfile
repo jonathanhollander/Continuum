@@ -33,4 +33,4 @@ COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 
 # The start command will be handled by railway.toml or CMD
 # We'll use CMD for redundancy
-CMD ["sh", "-c", "uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["python", "-m", "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8080"]
