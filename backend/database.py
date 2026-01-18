@@ -33,7 +33,13 @@ from backend.estate_models import (
 
 # Database Engine
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./continuum_saas.db")
-engine = create_engine(DATABASE_URL)
+
+# Force SSL for Postgres (Railway)
+connect_args = {}
+if "postgresql" in DATABASE_URL:
+    connect_args["sslmode"] = "require"
+
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
 
 def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
