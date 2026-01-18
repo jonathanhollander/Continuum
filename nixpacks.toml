@@ -1,5 +1,7 @@
+providers = ["python", "node"]
+
 [phases.setup]
-nixPkgs = ["python311", "gcc", "nodejs_24"]
+nixPkgs = ["python311", "gcc", "nodejs_22"]
 
 [phases.install]
 cmds = [
