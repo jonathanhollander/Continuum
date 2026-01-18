@@ -5,6 +5,20 @@ import { goto } from '$app/navigation';
 import { browser } from '$app/environment';
 import { navGroups } from '../config/navigation';
 
+const PIVOT_GREETINGS: Record<string, string> = {
+    'Real Estate': "I see we're looking at your properties. Do you own any acreage or vehicles we should document first?",
+    'Financial Accounts': "Securing these accounts is vital. Which bank holds your primary checking or savings?",
+    'Document Vault': "Let's secure your digital life. Do you have a password manager we should record the location of?",
+    'Health & Medical': "Medical clarity is essential. Have you designated a healthcare proxy yet?",
+    'Family & Contacts': "Legacy is about people. Who is the first person you'd like to include in your circle of trust?",
+    'Legacy Letters': "Your voice matters. Who would you like to write your first legacy letter to?",
+    'Life Timeline': "What is a major life milestone we should record on your timeline?",
+    'Insurance Portfolio': "Protection is key. Do you have any active life or property insurance policies?",
+    'Digital Guardian': "The Pulse system ensures you're okay. Who should be your primary responder if you don't check in?",
+    'Heirloom Registry': "What's a valuable heirloom you'd like to register today?",
+    'Legal Documents': "Legal foundations are critical. Do you have a copy of your Will or Trust ready?"
+};
+
 export interface Message {
     id: string;
     role: 'user' | 'assistant';
@@ -23,10 +37,14 @@ interface ConciergeState {
     currentRoute: string;
     currentContextName: string;
     hasInteracted: boolean;
+    hasPendingContextSwitch: boolean;
+    isPoppedOut: boolean;
+    floatingPosition: { x: number; y: number } | null;
+    floatingSize: { width: number; height: number } | null;
 }
 
 function createConciergeEngine() {
-    const { subscribe, set, update } = writable<ConciergeState>({
+    const initialState: ConciergeState = {
         isOpen: false,
         messages: [],
         isThinking: false,
@@ -35,17 +53,155 @@ function createConciergeEngine() {
         lastExtractedData: null,
         currentRoute: '',
         currentContextName: 'Continuum Dashboard',
-        hasInteracted: false
-    });
+        hasInteracted: false,
+        hasPendingContextSwitch: false,
+        isPoppedOut: false,
+        popOutMode: null,
+        floatingPosition: { x: 50, y: 50 }, // Default top-right-ish
+        floatingSize: { width: 340, height: 580 }
+    };
+
+    // Load from localStorage if browser
+    let savedState = initialState;
+    if (browser) {
+        const saved = localStorage.getItem('continuum_concierge_state');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                savedState = {
+                    ...initialState,
+                    ...parsed,
+                    isOpen: false,
+                    isPoppedOut: false,
+                    popOutMode: null
+                };
+            } catch (e) {
+                console.error("Failed to load concierge state:", e);
+            }
+        }
+    }
+
+    const { subscribe, set, update } = writable<ConciergeState>(savedState);
+
+    let syncChannel: BroadcastChannel | null = null;
+
+    const broadcastState = (state: ConciergeState) => {
+        if (browser) {
+            localStorage.setItem('continuum_concierge_state', JSON.stringify(state));
+        }
+        if (syncChannel) {
+            syncChannel.postMessage({ type: 'STATE_UPDATE', state });
+        }
+    };
+
+    if (browser) {
+        syncChannel = new BroadcastChannel('continuum-concierge');
+        syncChannel.onmessage = (event) => {
+            const { type, state: remoteState } = event.data;
+            if (type === 'STATE_UPDATE') {
+                update(s => {
+                    const newState = { ...s, ...remoteState };
+                    // Persist locally too
+                    localStorage.setItem('continuum_concierge_state', JSON.stringify(newState));
+                    return newState;
+                });
+            } else if (type === 'POPUP_CLOSED') {
+                update(s => {
+                    const newState = { ...s, isPoppedOut: false, isOpen: true };
+                    broadcastState(newState);
+                    return newState;
+                });
+            }
+        };
+    }
 
     return {
         subscribe,
-        toggle: () => update(s => ({ ...s, isOpen: !s.isOpen })),
+        toggle: () => update(s => {
+            const newState = { ...s, isOpen: !s.isOpen };
+            broadcastState(newState);
+            return newState;
+        }),
         open: () => {
-            update(s => ({ ...s, isOpen: true }));
-            conciergeEngine.updateInitialGreeting();
+            update(s => {
+                const newState = { ...s, isOpen: true };
+                broadcastState(newState);
+                return newState;
+            });
+
+            // Check for pending context switch (Delayed Pivot)
+            const state = get(conciergeEngine);
+            if (state.hasPendingContextSwitch) {
+                const contextName = state.currentContextName;
+                const leadQuestion = PIVOT_GREETINGS[contextName] || `Shall we start securing the details for ${contextName}?`;
+                const pivotMsg = `We've moved into ${contextName}. ${leadQuestion}`;
+
+                const assistantMsg: Message = {
+                    id: Math.random().toString(36).substring(7),
+                    role: 'assistant',
+                    content: pivotMsg,
+                    timestamp: Date.now()
+                };
+
+                update(s => ({
+                    ...s,
+                    messages: [...s.messages, assistantMsg],
+                    hasPendingContextSwitch: false
+                }));
+            } else {
+                conciergeEngine.updateInitialGreeting();
+            }
         },
-        close: () => update(s => ({ ...s, isOpen: false })),
+        close: () => {
+            update(s => {
+                const newState = { ...s, isOpen: false };
+                broadcastState(newState);
+                return newState;
+            });
+        },
+
+        popOut: async () => {
+            if (!browser) return;
+
+            // Check Capability for Option B (Document PiP)
+            // @ts-ignore - Document PiP is a new API
+            const hasPiP = 'documentPictureInPicture' in window;
+
+            update(s => {
+                const newState = {
+                    ...s,
+                    isPoppedOut: true,
+                    popOutMode: 'floating', // Forced for verification
+                    isOpen: true
+                };
+                broadcastState(newState);
+                return newState;
+            });
+        },
+
+        setFloatingPosition: (pos: { x: number; y: number }) => {
+            update(s => {
+                const newState = { ...s, floatingPosition: pos };
+                broadcastState(newState);
+                return newState;
+            });
+        },
+
+        setFloatingSize: (size: { width: number; height: number }) => {
+            update(s => {
+                const newState = { ...s, floatingSize: size };
+                broadcastState(newState);
+                return newState;
+            });
+        },
+
+        popIn: () => {
+            update(s => {
+                const newState = { ...s, isPoppedOut: false, popOutMode: null, isOpen: true };
+                broadcastState(newState);
+                return newState;
+            });
+        },
 
         setListening: (val: boolean) => update(s => ({ ...s, isListening: val })),
         setSpeaking: (val: boolean) => update(s => ({ ...s, isSpeaking: val })),
@@ -58,39 +214,33 @@ function createConciergeEngine() {
             const state = get(conciergeEngine);
             const oldContext = state.currentContextName;
 
-            update(s => ({
-                ...s,
-                currentRoute: route,
-                currentContextName: contextName
-            }));
+            update(s => {
+                const newState = {
+                    ...s,
+                    currentRoute: route,
+                    currentContextName: contextName
+                };
+                broadcastState(newState);
+                return newState;
+            });
 
             // Proactive Pivot: If panel is open and context changes, interject
-            if (state.isOpen && oldContext !== contextName && state.messages.length >= 1) {
-                // Get the proactive greeting for this context to lead immediately
-                const contextGreetings: Record<string, string> = {
-                    'Real Estate': "I see we're looking at your properties. Do you own any acreage or vehicles we should document first?",
-                    'Financial Accounts': "Securing these accounts is vital. Which bank holds your primary checking or savings?",
-                    'Document Vault': "Let's secure your digital life. Do you have a password manager we should record the location of?",
-                    'Health & Medical': "Medical clarity is essential. Have you designated a healthcare proxy yet?",
-                    'Family & Contacts': "Legacy is about people. Who is the first person you'd like to include in your circle of trust?",
-                    'Legacy Letters': "Your voice matters. Who would you like to write your first legacy letter to?",
-                    'Life Timeline': "What is a major life milestone we should record on your timeline?",
-                    'Insurance Portfolio': "Protection is key. Do you have any active life or property insurance policies?",
-                    'Digital Guardian': "The Pulse system ensures you're okay. Who should be your primary responder if you don't check in?",
-                    'Heirloom Registry': "What's a valuable heirloom you'd like to register today?",
-                    'Legal Documents': "Legal foundations are critical. Do you have a copy of your Will or Trust ready?"
-                };
+            if (oldContext !== contextName && state.messages.length >= 1) {
+                if (state.isOpen) {
+                    const leadQuestion = PIVOT_GREETINGS[contextName] || `Shall we start securing the details for ${contextName}?`;
+                    const pivotMsg = `We've moved into ${contextName}. ${leadQuestion}`;
 
-                const leadQuestion = contextGreetings[contextName] || `Shall we start securing the details for ${contextName}?`;
-                const pivotMsg = `We've moved into ${contextName}. ${leadQuestion}`;
-
-                const assistantMsg: Message = {
-                    id: Math.random().toString(36).substring(7),
-                    role: 'assistant',
-                    content: pivotMsg,
-                    timestamp: Date.now()
-                };
-                update(s => ({ ...s, messages: [...s.messages, assistantMsg] }));
+                    const assistantMsg: Message = {
+                        id: Math.random().toString(36).substring(7),
+                        role: 'assistant',
+                        content: pivotMsg,
+                        timestamp: Date.now()
+                    };
+                    update(s => ({ ...s, messages: [...s.messages, assistantMsg] }));
+                } else {
+                    // Panel is closed, mark for pending pivot on next open
+                    update(s => ({ ...s, hasPendingContextSwitch: true }));
+                }
             } else if (state.isOpen && state.messages.length === 0) {
                 conciergeEngine.updateInitialGreeting();
             }
@@ -105,12 +255,16 @@ function createConciergeEngine() {
                 isDictated
             };
 
-            update(s => ({
-                ...s,
-                messages: [...s.messages, userMsg],
-                isThinking: true,
-                hasInteracted: true
-            }));
+            update(s => {
+                const newState = {
+                    ...s,
+                    messages: [...s.messages, userMsg],
+                    isThinking: true,
+                    hasInteracted: true
+                };
+                broadcastState(newState);
+                return newState;
+            });
 
             try {
                 const state = get(conciergeEngine);
@@ -160,12 +314,16 @@ function createConciergeEngine() {
                     timestamp: new Date().getTime()
                 };
 
-                update(s => ({
-                    ...s,
-                    messages: [...s.messages, assistantMsg],
-                    isThinking: false,
-                    lastExtractedData: extractedDataFromResponse
-                }));
+                update(s => {
+                    const newState = {
+                        ...s,
+                        messages: [...s.messages, assistantMsg],
+                        isThinking: false,
+                        lastExtractedData: extractedDataFromResponse
+                    };
+                    broadcastState(newState);
+                    return newState;
+                });
 
                 return response;
             } catch (error) {
@@ -198,7 +356,7 @@ function createConciergeEngine() {
             if (state.messages.length > 0) return;
 
             const contextName = state.currentContextName || 'Continuum Dashboard';
-            const isHome = contextName === 'Continuum Dashboard' || contextName === 'Marketing';
+            const isHome = contextName === 'Continuum Dashboard' || contextName === 'Marketing' || contextName === 'Continuum';
 
             // Proactive Contextual Greetings
             const contextGreetings: Record<string, string> = {

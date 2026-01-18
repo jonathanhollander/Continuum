@@ -3,40 +3,51 @@
     import { fade, slide } from "svelte/transition";
     import { Save, Heart, Anchor, Shield, Sun, Edit3 } from "lucide-svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
+    import { registerSync } from "$lib/services/sync.svelte"; // Added
+    import { activityLog } from "$lib/stores/activityLog";
 
     // --- State ---
-    let coreValues = [
+    interface CoreValue {
+        id: number;
+        title: string;
+        desc: string;
+        iconName: string; // Svelte component serialization issue - store name
+        color: string;
+    }
+
+    // Default Values
+    const DEFAULT_VALUES: CoreValue[] = [
         {
             id: 1,
             title: "Integrity",
             desc: "Doing the right thing, even when no one is watching.",
-            icon: Shield,
+            iconName: "Shield",
             color: "bg-blue-100 text-blue-700",
         },
         {
             id: 2,
             title: "Curiosity",
             desc: "Never stop learning and asking questions.",
-            icon: Sun,
+            iconName: "Sun",
             color: "bg-yellow-100 text-yellow-700",
         },
         {
             id: 3,
             title: "Kindness",
             desc: "Everyone is fighting a battle you know nothing about.",
-            icon: Heart,
+            iconName: "Heart",
             color: "bg-pink-100 text-pink-700",
         },
         {
             id: 4,
             title: "Resilience",
             desc: "It's not about how hard you fall, but how you get up.",
-            icon: Anchor,
+            iconName: "Anchor",
             color: "bg-slate-100 text-slate-700",
         },
     ];
 
-    let ethicalWillText = `To my dearest family,
+    const DEFAULT_TEXT = `To my dearest family,
 
 More than my possessions, I want to leave you with the beliefs that have guided my life. I have tried my best to live with integrity and love.
 
@@ -49,19 +60,82 @@ I am so proud of the people you have become.
 With all my love,
 [Your Name]`;
 
-    let activeSection = "values"; // 'values' | 'letter'
+    interface EthicalWillData {
+        id: string;
+        text: string;
+        values: CoreValue[];
+    }
 
-    // Persistence
-    import { getStored, setStored } from "$lib/stores/persistence";
-    const STORAGE_KEY = "ethical_will";
+    // Sync Registration
+    const willSync = registerSync<EthicalWillData>(
+        "ethical_will",
+        "ethical_will",
+    );
 
-    onMount(() => {
-        ethicalWillText = getStored(STORAGE_KEY, ethicalWillText);
+    // Derived State
+    let willData = $derived(willSync.items.find((i) => i.id === "main"));
+
+    // Local editable state (mirrors sync state but allows binding)
+    let ethicalWillText = $state(DEFAULT_TEXT);
+    let coreValues = $state<CoreValue[]>(DEFAULT_VALUES);
+
+    // Initialization Effect
+    $effect(() => {
+        if (willSync.status === "synced" || willSync.status === "idle") {
+            if (willSync.items.length === 0) {
+                // Initialize default
+                console.log("Initializing Ethical Will defaults...");
+                willSync.create({
+                    id: "main",
+                    text: DEFAULT_TEXT,
+                    values: DEFAULT_VALUES,
+                });
+            } else if (willData) {
+                // Load into local state
+                ethicalWillText = willData.text;
+                coreValues =
+                    willData.values && willData.values.length > 0
+                        ? willData.values
+                        : DEFAULT_VALUES;
+            }
+        }
     });
 
-    function save() {
-        setStored(STORAGE_KEY, ethicalWillText);
-        alert("Ethical Will saved to device storage.");
+    let activeSection = "values"; // 'values' | 'letter'
+
+    async function save() {
+        if (willData) {
+            await willSync.update("main", {
+                text: ethicalWillText,
+                values: coreValues,
+            });
+            // alert("Ethical Will saved."); // Removed alert for smoother UX
+        } else {
+            // Should not happen if effect runs
+            await willSync.create({
+                id: "main",
+                text: ethicalWillText,
+                values: coreValues,
+            });
+        }
+
+        activityLog.logEvent({
+            module: "Ethical Will",
+            action: "UPDATE",
+            entityType: "Document",
+            entityId: "main",
+            entityName: "Ethical Will",
+            userContext: "User",
+        });
+    }
+
+    // Icon helper maps
+    function getIcon(name: string) {
+        if (name === "Shield") return Shield;
+        if (name === "Sun") return Sun;
+        if (name === "Heart") return Heart;
+        if (name === "Anchor") return Anchor;
+        return Sun;
     }
 </script>
 
@@ -146,7 +220,10 @@ With all my love,
                             <div
                                 class="inline-flex p-3 rounded-xl {value.color} mb-4"
                             >
-                                <svelte:component this={value.icon} size={20} />
+                                <svelte:component
+                                    this={getIcon(value.iconName)}
+                                    size={20}
+                                />
                             </div>
                             <h3 class="font-bold text-lg text-[#304743] mb-1">
                                 {value.title}

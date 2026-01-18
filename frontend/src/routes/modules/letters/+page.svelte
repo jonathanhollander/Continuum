@@ -56,18 +56,24 @@
         isLocked?: boolean;
     };
 
-    let savedLetters = $state<SavedLetter[]>([]);
+    import { registerSync } from "$lib/services/sync.svelte";
+
+    // Sync Manager for Letters
+    const letterSync = registerSync<SavedLetter>(
+        "saved_letters",
+        "future_letters",
+    );
+    let savedLetters = $derived(letterSync.items);
+
     let searchQuery = $state("");
     let filterCategory = $state("All");
 
-    import { getStored, setStored } from "$lib/stores/persistence";
-    // ...
-    // ...
-    onMount(() => {
-        savedLetters = getStored<SavedLetter[]>("saved_letters", []);
-    });
+    // Removal of old persistence
+    // import { getStored, setStored } from "$lib/stores/persistence";
 
-    function saveToVault() {
+    // onMount removed
+
+    async function saveToVault() {
         if (!generatedLetter) {
             alert(
                 "Error: The letter content appears to be empty. Please go back and try again.",
@@ -81,8 +87,7 @@
                 : "Ethical Will"
             : selectedTemplate?.title || "Draft Letter";
 
-        const newLetter: SavedLetter = {
-            id: crypto.randomUUID(),
+        const newLetter = await letterSync.create({
             title: `${title} (${new Date().toLocaleDateString()})`,
             content: generatedLetter,
             date: new Date().toLocaleDateString(),
@@ -90,10 +95,7 @@
             triggerDate: letterTriggerDate,
             triggerMilestone: letterTriggerMilestone,
             isLocked: !!(letterTriggerDate || letterTriggerMilestone),
-        };
-
-        savedLetters = [newLetter, ...savedLetters];
-        setStored("saved_letters", savedLetters);
+        });
 
         activityLog.logEvent({
             module: "Letters",
@@ -119,8 +121,7 @@
 
     function deleteLetter(id: string, name: string) {
         if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
-        savedLetters = savedLetters.filter((l) => l.id !== id);
-        setStored("saved_letters", savedLetters);
+        letterSync.delete(id);
 
         activityLog.logEvent({
             module: "Letters",

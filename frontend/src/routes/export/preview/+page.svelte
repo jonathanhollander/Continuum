@@ -8,14 +8,18 @@
     } from "$lib/services/exportService";
     import { Download, ArrowLeft, Loader2 } from "lucide-svelte";
 
-    let pdfUrl: string | null = null;
-    let loading = true;
-    let error: string | null = null;
-    let blob: Blob | null = null;
+    let pdfUrl = $state<string | null>(null);
+    let loading = $state(true);
+    let error = $state<string | null>(null);
+    let blob = $state<Blob | null>(null);
 
     // Read params
-    $: scope = ($page.url.searchParams.get("scope") as ExportScope) || "full";
-    $: includeImages = $page.url.searchParams.get("images") === "true";
+    let scope = $derived(
+        ($page.url.searchParams.get("scope") as ExportScope) || "full",
+    );
+    let includeImages = $derived(
+        $page.url.searchParams.get("images") === "true",
+    );
 
     onMount(async () => {
         try {
@@ -55,7 +59,7 @@
     >
         <div class="flex items-center gap-4">
             <button
-                on:click={goBack}
+                onclick={goBack}
                 class="p-2 hover:bg-slate-100 rounded-full text-slate-600 transition-colors"
                 title="Back to Dashboard"
             >
@@ -85,7 +89,7 @@
                 </div>
             {:else}
                 <button
-                    on:click={downloadPDF}
+                    onclick={downloadPDF}
                     class="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-colors shadow-sm"
                 >
                     <Download size={18} />
@@ -124,7 +128,7 @@
                     </div>
                     <p class="text-slate-600 mb-6">{error}</p>
                     <button
-                        on:click={goBack}
+                        onclick={goBack}
                         class="text-slate-500 hover:text-slate-800 underline"
                         >Return to Dashboard</button
                     >

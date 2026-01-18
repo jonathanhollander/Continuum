@@ -3,9 +3,9 @@ import { estateProfile } from './estateStore';
 import { petStore } from './petStore';
 import { medicalStore } from './medicalStore';
 import { advancedAssetStore } from './advancedAssetStore';
-import { digitalAssetsStore } from './digitalAssetsStore';
+import { digitalAssetsStore } from "./digitalAssetsStore.svelte";
 import { estateAudit } from './auditStore';
-import { heirloomStore } from './heirloomStore';
+import { heirloomStore } from './heirloomStore.svelte';
 import { funeralStore } from './funeralStore';
 import { pulse } from './pulse';
 

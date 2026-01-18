@@ -2,7 +2,7 @@
     import {
         propertyStore,
         type PropertyItem,
-    } from "$lib/stores/propertyStore";
+    } from "$lib/stores/propertyStore.svelte";
     import { activityLog } from "$lib/stores/activityLog";
     import { estateProfile } from "$lib/stores/estateStore";
     import { fade, slide, scale } from "svelte/transition";
@@ -127,7 +127,7 @@
         });
     }
 
-    let items = $derived($propertyStore);
+    let items = $derived(propertyStore.items); // Updated to access property directly
     let filteredItems = $derived(
         items.filter((i) => {
             const matchesSearch =

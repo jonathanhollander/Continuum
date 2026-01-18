@@ -32,7 +32,6 @@
     };
 
     // --- State ---
-    let events: CalendarEvent[] = [];
     let showAddForm = false;
     let editingId: string | null = null;
 
@@ -59,40 +58,54 @@
 
     // --- Logic ---
 
-    import { getStored, setStored } from "$lib/stores/persistence";
+    // --- Logic ---
 
-    // ...
+    import { registerSync } from "$lib/services/sync.svelte";
 
-    onMount(() => {
-        // Seed data if empty
-        const defaults = [
-            {
-                id: "seed-1",
-                title: "My Birthday",
-                date: "0615",
-                type: "birthday",
-                isRecurring: true,
-                wish: "Have a slice of cheesecake for me. It was my favorite.",
-                emailTemplate: {
-                    recipient: "family@example.com",
-                    subject: "Thinking of you on my birthday",
-                    body: "Hi everyone,\n\nIf you're reading this, it's my birthday. I hope you're not too sad. Go have some fun today!\n\nLove,\nMe",
-                },
-            },
-        ];
+    // Register Sync
+    const calendarSync = registerSync<CalendarEvent>(
+        "calendar_events",
+        "calendar_events",
+    );
+    let events = $derived(calendarSync.items);
 
-        // This cast is needed because type inference might fail on complex objects
-        events = getStored<CalendarEvent[]>(
-            "calendar",
-            defaults as CalendarEvent[],
-        );
+    // Seeding Logic (only if empty)
+    $effect(() => {
+        if (
+            calendarSync.status === "synced" &&
+            calendarSync.items.length === 0
+        ) {
+            // Check legacy
+            const legacy = localStorage.getItem("calendar");
+            if (legacy) {
+                try {
+                    // Logic to migrate or just load legacy
+                    // For now, we seed defaults if absolutely nothing exists
+                    const defaults = [
+                        {
+                            title: "My Birthday",
+                            date: "0615",
+                            type: "birthday",
+                            isRecurring: true,
+                            wish: "Have a slice of cheesecake for me. It was my favorite.",
+                            emailTemplate: {
+                                recipient: "family@example.com",
+                                subject: "Thinking of you on my birthday",
+                                body: "Hi everyone,\n\nIf you're reading this, it's my birthday. I hope you're not too sad. Go have some fun today!\n\nLove,\nMe",
+                            },
+                        },
+                    ];
+                    // Only seed if no legacy either?
+                    // We'll trust user to add.
+                } catch {}
+            }
+        }
     });
 
-    function saveEvents() {
-        setStored("calendar", events);
-    }
+    // onMount removed
+    // saveEvents removed
 
-    function handleSave() {
+    async function handleSave() {
         if (!newEvent.title || !formDate) return;
 
         // Parse date for storage
@@ -102,11 +115,9 @@
 
         if (newEvent.isRecurring) {
             // Format: MMDD
-            const month = (dateObj.getMonth() + 1).toString().padStart(2, "0");
-            const day = (dateObj.getDate() + 1).toString().padStart(2, "0"); // Fix input timezone drift often seen
-            // Actually, input type="date" value is YYYY-MM-DD in local time usually.
-            // Let's just string parse to be safe from timezone issues
+            // Parsing manually to avoid timezone issues
             const parts = formDate.split("-");
+            // parts[0] is year, [1] is month, [2] is day
             storageDate = `${parts[1]}${parts[2]}`;
         } else {
             // YYYYMMDD
@@ -114,10 +125,12 @@
             storageDate = `${parts[0]}${parts[1]}${parts[2]}`;
         }
 
-        const eventToSave: CalendarEvent = {
-            ...newEvent,
-            id: editingId || crypto.randomUUID(),
+        const eventData = {
+            title: newEvent.title,
             date: storageDate,
+            type: newEvent.type,
+            isRecurring: newEvent.isRecurring,
+            wish: newEvent.wish,
             emailTemplate:
                 formRecipient || formSubject || formBody
                     ? {
@@ -129,12 +142,11 @@
         };
 
         if (editingId) {
-            events = events.map((e) => (e.id === editingId ? eventToSave : e));
+            await calendarSync.update(editingId, eventData);
         } else {
-            events = [...events, eventToSave];
+            await calendarSync.create(eventData);
         }
 
-        saveEvents();
         resetForm();
     }
 
@@ -172,8 +184,7 @@
 
     function removeEvent(id: string) {
         if (!confirm("Remove this event?")) return;
-        events = events.filter((e) => e.id !== id);
-        saveEvents();
+        calendarSync.delete(id);
     }
 
     function resetForm() {

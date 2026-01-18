@@ -79,9 +79,17 @@ async function chat(content: string, history: any[], contextName: string = 'Cont
                         5. Digital Legacy
                         6. Healthcare Directives
                         
+                        VALID INTENTS (Use exactly one if data is gathered):
+                        - "add_contact" (Family, Friends, Medical, Legal)
+                        - "add_property" (Real Estate, Vehicles)
+                        - "add_financial" (Bank Accounts, Investments)
+                        - "add_insurance" (Policies)
+                        - "add_healthcare" (Directives)
+                        - "add_digital" (Passwords, Accounts)
+                        
                         OUTPUT FORMAT:
                         Return a JSON structure.
-                        Example: { "message": "Sarah recorded as daughter. What is her mailing address?", "extractedData": { "family_member": { "name": "Sarah", "relation": "daughter" } }, "intent": "add_family" }`
+                        Example: { "message": "Sarah recorded as daughter. What is her mailing address?", "extractedData": { "family_member": { "name": "Sarah", "relation": "daughter" } }, "intent": "add_contact" }`
                     },
                     ...history.slice(-10).map(m => ({
                         role: m.role,

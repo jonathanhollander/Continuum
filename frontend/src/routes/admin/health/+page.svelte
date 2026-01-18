@@ -7,7 +7,7 @@
         estateAudit.runAudit();
     });
 
-    $: audit = $estateAudit;
+    let audit = $derived($estateAudit);
 </script>
 
 <div class="space-y-8">

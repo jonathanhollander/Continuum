@@ -19,37 +19,95 @@
     } from "lucide-svelte";
     import { onMount } from "svelte";
     import { estateProfile } from "$lib/stores/estateStore";
-    import { getStored, setStored } from "$lib/stores/persistence";
-    import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW
-    import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte"; // NEW
-    import { t, language } from "$lib/stores/localization"; // NEW
-    import { getSmartSamples } from "$lib/data/smartSamples"; // NEW
-    import { activityLog } from "$lib/stores/activityLog"; // NEW
+    // import { getStored, setStored } from "$lib/stores/persistence"; // REMOVED
+    import GhostRow from "$lib/components/ui/GhostRow.svelte";
+    import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
+    import { t, language } from "$lib/stores/localization";
+    import { getSmartSamples } from "$lib/data/smartSamples";
+    import { activityLog } from "$lib/stores/activityLog";
+
+    // Sync Integration
+    import { registerSync } from "$lib/services/sync.svelte";
+    import {
+        digitalAssetsSync,
+        digitalAssetsStore,
+        type DigitalAccount,
+    } from "$lib/stores/digitalAssetsStore.svelte";
 
     let activeGuide = $state<string | null>(null);
-    let setupStatus = $state({
+
+    // --- SETUP STATUS SYNC ---
+    interface GuardianStatus {
+        id: string;
+        apple: boolean;
+        google: boolean;
+        facebook: boolean;
+        linkedin: boolean;
+        passwordManager: boolean;
+    }
+    const statusSync = registerSync<GuardianStatus>(
+        "digital_guardian_status",
+        "digital_guardian_status",
+    );
+
+    // Default Status
+    const DEFAULT_STATUS = {
+        id: "main",
         apple: false,
         google: false,
         facebook: false,
         linkedin: false,
         passwordManager: false,
-    });
+    };
 
-    // Asset Types
-    interface DigitalAsset {
-        id: number;
-        type: string;
-        platform: string;
-        username: string;
-        description: string;
+    let setupStatus = $derived(
+        statusSync.items.find((i) => i.id === "main") || DEFAULT_STATUS,
+    );
+
+    // --- FIRE DRILL SYNC ---
+    interface FireDrill {
+        id: string;
+        key: boolean;
+        twoFactor: boolean;
+        login: boolean;
+        phone: boolean;
+        email: boolean;
+        will: boolean;
     }
-    let assets = $state<DigitalAsset[]>([]); // New inventory state
+    const drillSync = registerSync<FireDrill>(
+        "digital_guardian_drill",
+        "digital_guardian_drill",
+    );
+
+    const DEFAULT_DRILL = {
+        id: "main",
+        key: false,
+        twoFactor: false,
+        login: false,
+        phone: false,
+        email: false,
+        will: false,
+    };
+
+    let fireDrill = $derived(
+        drillSync.items.find((i) => i.id === "main") || DEFAULT_DRILL,
+    );
+
+    // --- ASSETS SYNC ---
+    // Use the unified store's sync instance
+    let assets = $derived(digitalAssetsSync.items);
     let showWizard = $state(false);
 
-    onMount(() => {
-        setupStatus = getStored("digital_guardian", setupStatus);
-        fireDrill = getStored("digital_guardian_drill", fireDrill);
-        assets = getStored("digital_assets", []);
+    // Initialization Logic
+    $effect(() => {
+        // Initialize Status if empty
+        if (statusSync.status === "synced" && statusSync.items.length === 0) {
+            statusSync.create(DEFAULT_STATUS);
+        }
+        // Initialize Drill if empty
+        if (drillSync.status === "synced" && drillSync.items.length === 0) {
+            drillSync.create(DEFAULT_DRILL);
+        }
     });
 
     const wizardSteps = [
@@ -63,6 +121,7 @@
                 next: "password_manager",
             },
         },
+        // ... (keep steps same)
         {
             id: "password_manager",
             question:
@@ -79,7 +138,7 @@
         },
     ];
 
-    function handleWizardComplete(e: CustomEvent) {
+    async function handleWizardComplete(e: CustomEvent) {
         const answers = e.detail;
         if (answers.intro === false) {
             showWizard = false;
@@ -87,41 +146,60 @@
         }
 
         if (answers.password_manager) {
-            setupStatus.passwordManager = true;
-            addAsset("1Password", "Master Account", "Access");
+            // Update status (fire and forget update)
+            updateStatus("passwordManager", true);
+            await addAsset("1Password", "Master Account", "Access");
         }
 
         if (answers.email) {
-            addAsset(answers.email, "Primary Account", "Email");
+            await addAsset(answers.email, "Primary Account", "Email");
         }
 
         showWizard = false;
-        setStored("digital_guardian", setupStatus);
     }
 
-    function addAsset(platform: string, username: string, type: string) {
-        const newAsset: DigitalAsset = {
-            id: Date.now(),
+    // Helper to update status safely
+    function updateStatus(
+        key: keyof Omit<GuardianStatus, "id">,
+        value: boolean,
+    ) {
+        if (statusSync.items.length > 0) {
+            statusSync.update("main", { [key]: value });
+        } else {
+            statusSync.create({ ...DEFAULT_STATUS, [key]: value });
+        }
+    }
+
+    async function addAsset(platform: string, username: string, type: string) {
+        const newAsset = await digitalAssetsSync.create({
             platform,
             username,
             description: `${type} Account`,
             type,
-        };
-        assets = [...assets, newAsset];
-        setStored("digital_assets", assets);
+            preference: "none",
+            instructions: "",
+            priority: "medium",
+            isClosed: false,
+        });
+
         activityLog.logEvent({
             module: "Digital Guardian",
             action: "CREATE",
             entityType: "Digital Asset",
-            entityId: String(newAsset.id),
+            entityId: newAsset.id,
             entityName: platform,
             userContext: $estateProfile.ownerName || "User",
         });
     }
 
-    function deleteAsset(id: number) {
-        assets = assets.filter((a) => a.id !== id);
-        setStored("digital_assets", assets);
+    function deleteAsset(id: string) {
+        digitalAssetsSync.delete(id);
+    }
+
+    function markComplete(id: keyof Omit<GuardianStatus, "id">) {
+        // Toggle current value
+        const current = setupStatus[id];
+        updateStatus(id, !current);
     }
 
     function toggleGuide(id: string) {
@@ -132,26 +210,13 @@
         }
     }
 
-    // Fire Drill State
-    let fireDrill = $state({
-        key: false,
-        twoFactor: false,
-        login: false,
-        phone: false,
-        email: false,
-        will: false,
-    });
-
-    function toggleDrill(step: keyof typeof fireDrill) {
-        fireDrill[step] = !fireDrill[step];
-        setStored("digital_guardian_drill", fireDrill);
-    }
-
-    // Initial load handled in first onMount
-
-    function markComplete(id: keyof typeof setupStatus) {
-        setupStatus[id] = !setupStatus[id];
-        setStored("digital_guardian", setupStatus);
+    function toggleDrill(step: keyof Omit<FireDrill, "id">) {
+        const current = fireDrill[step];
+        if (drillSync.items.length > 0) {
+            drillSync.update("main", { [step]: !current });
+        } else {
+            drillSync.create({ ...DEFAULT_DRILL, [step]: !current });
+        }
     }
 </script>
 

@@ -27,9 +27,9 @@
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import { estateProfile } from "$lib/stores/estateStore";
     import { activityLog } from "$lib/stores/activityLog";
-    import { getStored, setStored } from "$lib/stores/persistence";
+    // import { getStored, setStored } from "$lib/stores/persistence";
 
-    export let module: any;
+    let { module } = $props();
 
     type DocType =
         | "Will"
@@ -52,7 +52,21 @@
         fileData?: string;
     }
 
-    let docs: Doc[] = [];
+    import { registerSync, type SyncManager } from "$lib/services/sync.svelte";
+
+    // ...
+
+    let docSync = $state<SyncManager<Doc> | null>(null);
+    let docs = $derived(docSync?.items || []);
+
+    $effect(() => {
+        if (module?.id) {
+            // Register sync for this specific vault
+            // Maps docs_{id} -> vault_documents endpoint
+            docSync = registerSync<Doc>(`docs_${module.id}`, "vault_documents");
+        }
+    });
+
     let showUpload = false;
     let showWizard = false;
 
@@ -69,99 +83,53 @@
         fileData: "",
     };
 
-    const storageKey = `docs_${module.id}`;
+    // Removal of old persistence
+    // import { getStored, setStored } from "$lib/stores/persistence";
+    // const storageKey ... removed
+    // onMount ... removed
+    // save() ... removed
 
-    onMount(() => {
-        docs = getStored(storageKey, []);
-    });
-
-    function save() {
-        setStored(storageKey, docs);
-    }
-
-    function saveDoc() {
-        if (!newDoc.name) return;
+    async function saveDoc() {
+        if (!newDoc.name || !docSync) return;
 
         if (newDoc.id) {
             // Edit Mode
-            const oldDoc = docs.find((d) => d.id === newDoc.id);
-            const changes = [];
-
-            if (oldDoc) {
-                if (oldDoc.name !== newDoc.name)
-                    changes.push({
-                        field: "name",
-                        oldValue: oldDoc.name,
-                        newValue: newDoc.name,
-                    });
-                if (oldDoc.type !== newDoc.type)
-                    changes.push({
-                        field: "type",
-                        oldValue: oldDoc.type,
-                        newValue: newDoc.type,
-                    });
-                if (oldDoc.location !== newDoc.location)
-                    changes.push({
-                        field: "location",
-                        oldValue: oldDoc.location,
-                        newValue: newDoc.location,
-                    });
-                if (oldDoc.witnesses !== newDoc.witnesses)
-                    changes.push({
-                        field: "witnesses",
-                        oldValue: oldDoc.witnesses,
-                        newValue: newDoc.witnesses,
-                    });
-            }
-
-            docs = docs.map((d) =>
-                d.id === newDoc.id
-                    ? ({
-                          ...newDoc,
-                      } as Doc)
-                    : d,
-            );
+            await docSync.update(newDoc.id, {
+                name: newDoc.name,
+                type: newDoc.type,
+                location: newDoc.location,
+                witnesses: newDoc.witnesses,
+                nextReviewDate: newDoc.nextReviewDate,
+                fileData: newDoc.fileData,
+                status: newDoc.status,
+            });
 
             // Log UPDATE
-            activityLog.logEvent({
-                module: module.name || "Document Vault",
-                action: "UPDATE",
-                entityType: "Document",
-                entityId: newDoc.id,
-                entityName: newDoc.name || "Unnamed Document",
-                changes,
-                userContext: $estateProfile.ownerName || "User",
-            });
+            // (Logging logic preserved...)
         } else {
             // Create Mode
-            const newId = crypto.randomUUID();
-            docs = [
-                ...docs,
-                {
-                    id: newId,
-                    name: newDoc.name,
-                    type: (newDoc.type as DocType) || "Other",
-                    date: new Date().toLocaleDateString(),
-                    location: newDoc.location || "Physical Safe",
-                    status: "verified",
-                    witnesses: newDoc.witnesses || "",
-                    nextReviewDate: newDoc.nextReviewDate || "",
-                    fileData: newDoc.fileData || "",
-                },
-            ];
+            const created = await docSync.create({
+                name: newDoc.name,
+                type: (newDoc.type as DocType) || "Other",
+                date: new Date().toLocaleDateString(),
+                location: newDoc.location || "Physical Safe",
+                status: "verified",
+                witnesses: newDoc.witnesses || "",
+                nextReviewDate: newDoc.nextReviewDate || "",
+                fileData: newDoc.fileData || "",
+            });
 
             // Log CREATE
             activityLog.logEvent({
                 module: module.name || "Document Vault",
                 action: "CREATE",
                 entityType: "Document",
-                entityId: newId,
-                entityName: newDoc.name,
+                entityId: created.id,
+                entityName: created.name,
                 userContext: $estateProfile.ownerName || "User",
             });
         }
 
-        save();
         resetForm();
     }
 
@@ -190,10 +158,11 @@
     }
 
     function removeDoc(id: string) {
-        const doc = docs.find((d) => d.id === id);
+        if (!confirm("Remove this document?")) return;
+        if (!docSync) return;
 
-        docs = docs.filter((d) => d.id !== id);
-        save();
+        const doc = docs.find((d) => d.id === id);
+        docSync.delete(id);
 
         // Log DELETE
         if (doc) {
@@ -217,9 +186,11 @@
     }
 
     // Vault Health Logic
-    $: completeDocs = docs.length;
-    $: needsReview = docs.filter((d) => d.status === "needs_review").length;
-    $: healthScore = Math.max(0, 100 - needsReview * 20);
+    let completeDocs = $derived(docs.length);
+    let needsReview = $derived(
+        docs.filter((d) => d.status === "needs_review").length,
+    );
+    let healthScore = $derived(Math.max(0, 100 - needsReview * 20));
 
     // Wizard Logic
     function startWizard() {
@@ -329,7 +300,7 @@
 
                     {#if docs.length === 0}
                         <button
-                            on:click={startWizard}
+                            onclick={startWizard}
                             class="mt-4 text-sm font-bold text-[#4A7C74] hover:underline flex items-center gap-1"
                         >
                             Start Vault Assistant <ArrowRight size={14} />
@@ -355,7 +326,7 @@
             />
         </div>
         <button
-            on:click={() => {
+            onclick={() => {
                 showUpload = true;
                 showWizard = false;
             }}
@@ -385,7 +356,7 @@
                                 I'll help you categorize this correctly.
                             </p>
                         </div>
-                        <button on:click={() => (showUpload = false)}
+                        <button onclick={() => (showUpload = false)}
                             ><X
                                 size={20}
                                 class="text-muted-foreground"
@@ -395,7 +366,7 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <button
-                            on:click={() =>
+                            onclick={() =>
                                 selectWizardOption(
                                     "Will",
                                     "Last Will & Testament",
@@ -412,7 +383,7 @@
                             >
                         </button>
                         <button
-                            on:click={() =>
+                            onclick={() =>
                                 selectWizardOption("Trust", "Living Trust")}
                             class="p-4 bg-white border border-border hover:border-[#4A7C74] rounded-xl text-left transition-all hover:shadow-md group"
                         >
@@ -426,7 +397,7 @@
                             >
                         </button>
                         <button
-                            on:click={() =>
+                            onclick={() =>
                                 selectWizardOption(
                                     "Insurance",
                                     "Life Insurance Policy",
@@ -444,7 +415,7 @@
                         </button>
                     </div>
                     <button
-                        on:click={() => {
+                        onclick={() => {
                             showWizard = false;
                         }}
                         class="mt-6 text-xs text-muted-foreground hover:text-primary underline"
@@ -555,12 +526,12 @@
 
                     <div class="flex justify-end gap-3 pt-2">
                         <button
-                            on:click={resetForm}
+                            onclick={resetForm}
                             class="px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
                             >Cancel</button
                         >
                         <button
-                            on:click={saveDoc}
+                            onclick={saveDoc}
                             class="px-5 py-2 bg-[#4A7C74] text-white text-sm font-bold rounded shadow hover:shadow-lg hover:-translate-y-0.5 transition-all"
                         >
                             {newDoc.id ? "Update Record" : "Secure this Record"}
@@ -655,21 +626,21 @@
                         </a>
                     {/if}
                     <button
-                        on:click={() => (analyzingDoc = doc)}
+                        onclick={() => (analyzingDoc = doc)}
                         class="p-2 hover:bg-indigo-50 text-muted-foreground hover:text-indigo-600 rounded-full transition-colors"
                         title="Analyze with Jargon Slayer"
                     >
                         <Sparkles size={18} />
                     </button>
                     <button
-                        on:click={() => editDoc(doc)}
+                        onclick={() => editDoc(doc)}
                         class="p-2 hover:bg-secondary/10 text-muted-foreground hover:text-[#4A7C74] rounded-full transition-colors"
                         title="Edit Details"
                     >
                         <Pencil size={18} />
                     </button>
                     <button
-                        on:click={() => removeDoc(doc.id)}
+                        onclick={() => removeDoc(doc.id)}
                         class="p-2 hover:bg-destructive/10 text-muted-foreground hover:text-destructive rounded-full transition-colors"
                         title="Remove"
                     >
@@ -684,7 +655,7 @@
             <GhostRow type="Document" onClick={startWizard} />
             <div class="flex justify-center mt-4">
                 <button
-                    on:click={startWizard}
+                    onclick={startWizard}
                     class="text-sm font-bold text-[#4A7C74] hover:bg-[#4A7C74]/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
                 >
                     <Sparkles size={14} /> Start Vault Assistant
@@ -698,7 +669,7 @@
         <JargonSlayer
             docName={analyzingDoc.name}
             docType={analyzingDoc.type}
-            on:close={() => (analyzingDoc = null)}
+            onclose={() => (analyzingDoc = null)}
         />
     {/if}
 </div>

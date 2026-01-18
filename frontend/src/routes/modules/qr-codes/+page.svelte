@@ -31,9 +31,9 @@
     import { estateProfile } from "$lib/stores/estateStore";
     import { onMount } from "svelte";
 
-    let selectedPack: AccessPack | null = null;
-    let showGenerateModal = false;
-    let searchQuery = "";
+    let selectedPack = $state<AccessPack | null>(null);
+    let showGenerateModal = $state(false);
+    let searchQuery = $state("");
 
     function generatePack(packId: string) {
         qrStore.generatePackQR(packId);
@@ -78,10 +78,12 @@
         });
     }
 
-    $: filteredAssets = $qrStore.assetLabels.filter(
-        (a) =>
-            a.assetName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            a.assetType.toLowerCase().includes(searchQuery.toLowerCase()),
+    let filteredAssets = $derived(
+        $qrStore.assetLabels.filter(
+            (a) =>
+                a.assetName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                a.assetType.toLowerCase().includes(searchQuery.toLowerCase()),
+        ),
     );
 </script>
 
@@ -200,20 +202,20 @@
                         <div class="pt-4 flex items-center gap-4">
                             {#if !pack.qrUrl}
                                 <button
-                                    on:click={() => generatePack(pack.id)}
+                                    onclick={() => generatePack(pack.id)}
                                     class="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-sm flex items-center gap-3 hover:scale-105 transition-all shadow-xl shadow-slate-900/20"
                                 >
                                     <Sparkles size={18} /> Generate Secure Key
                                 </button>
                             {:else}
                                 <button
-                                    on:click={() => printPack(pack)}
+                                    onclick={() => printPack(pack)}
                                     class="px-8 py-4 bg-[#4A7C74] text-white rounded-2xl font-black text-sm flex items-center gap-3 hover:scale-105 transition-all shadow-xl shadow-[#4A7C74]/20"
                                 >
                                     <Printer size={18} /> Print for Red Binder
                                 </button>
                                 <button
-                                    on:click={() => generatePack(pack.id)}
+                                    onclick={() => generatePack(pack.id)}
                                     class="p-4 bg-slate-50 text-slate-400 hover:text-slate-900 rounded-2xl transition-all"
                                     title="Regenerate Key"
                                 >
@@ -336,7 +338,7 @@
                                         >{label.assetType}</span
                                     >
                                     <button
-                                        on:click={() =>
+                                        onclick={() =>
                                             deleteAssetQR(
                                                 label.assetId,
                                                 label.assetName,
@@ -363,7 +365,7 @@
                             </div>
                         </div>
                         <button
-                            on:click={() => window.print()}
+                            onclick={() => window.print()}
                             class="w-full py-3 bg-slate-50 hover:bg-slate-900 hover:text-white text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
                         >
                             <Printer size={14} /> Print Label

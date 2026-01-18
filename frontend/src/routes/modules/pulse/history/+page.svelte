@@ -7,11 +7,18 @@
 
     let history = $state<any[]>([]);
     let loading = $state(true);
+    let filterMethod = $state("all");
+
+    // Reactive derived helper (simple filter)
+    function getFilteredHistory() {
+        if (filterMethod === "all") return history;
+        return history.filter((h) => h.method === filterMethod);
+    }
 
     onMount(async () => {
         try {
             const res = await fetch(
-                `${import.meta.env.VITE_API_BASE || "http://localhost:8000"}/api/pulse/history?user_id=${USER_ID}&limit=20`,
+                `${import.meta.env.VITE_API_BASE || ""}/api/pulse/history?user_id=${USER_ID}&limit=50`,
             );
             if (res.ok) {
                 history = await res.json();
@@ -27,6 +34,8 @@
                 return Smartphone;
             case "web":
                 return Globe;
+            case "biometric":
+                return Smartphone; // Use smartphone for bio too for now
             case "email":
                 return Mail;
             default:
@@ -35,8 +44,8 @@
     }
 </script>
 
-<div class="max-w-4xl mx-auto p-4 md:p-8">
-    <div class="flex items-center justify-between mb-8">
+<div class="max-w-4xl mx-auto p-4 md:p-8 space-y-8">
+    <div class="flex items-center justify-between">
         <h1 class="text-2xl font-serif text-slate-100 flex items-center gap-2">
             <Clock class="text-teal-400" />
             Check-in History
@@ -48,6 +57,53 @@
         >
     </div>
 
+    <!-- Filters -->
+    <div
+        class="bg-slate-900/50 p-4 rounded-xl border border-slate-800 flex flex-wrap gap-4 items-center"
+    >
+        <label
+            class="text-xs text-slate-500 font-bold uppercase tracking-widest"
+            >Filter By:</label
+        >
+
+        <button
+            onclick={() => (filterMethod = "all")}
+            class="px-3 py-1 rounded-full text-xs font-medium transition-colors {filterMethod ===
+            'all'
+                ? 'bg-teal-500 text-white'
+                : 'bg-slate-800 text-slate-400 hover:text-white'}"
+        >
+            All
+        </button>
+        <button
+            onclick={() => (filterMethod = "manual")}
+            class="px-3 py-1 rounded-full text-xs font-medium transition-colors {filterMethod ===
+            'manual'
+                ? 'bg-teal-500 text-white'
+                : 'bg-slate-800 text-slate-400 hover:text-white'}"
+        >
+            Manual
+        </button>
+        <button
+            onclick={() => (filterMethod = "web")}
+            class="px-3 py-1 rounded-full text-xs font-medium transition-colors {filterMethod ===
+            'web'
+                ? 'bg-teal-500 text-white'
+                : 'bg-slate-800 text-slate-400 hover:text-white'}"
+        >
+            Web
+        </button>
+        <button
+            onclick={() => (filterMethod = "email")}
+            class="px-3 py-1 rounded-full text-xs font-medium transition-colors {filterMethod ===
+            'email'
+                ? 'bg-teal-500 text-white'
+                : 'bg-slate-800 text-slate-400 hover:text-white'}"
+        >
+            Email
+        </button>
+    </div>
+
     {#if loading}
         <div class="space-y-4">
             {#each Array(3) as _}
@@ -56,9 +112,9 @@
                 ></div>
             {/each}
         </div>
-    {:else if history.length > 0}
+    {:else if getFilteredHistory().length > 0}
         <div class="space-y-4">
-            {#each history as checkin (checkin.id)}
+            {#each getFilteredHistory() as checkin (checkin.id)}
                 <div
                     class="bg-slate-900/50 border border-slate-800 rounded-xl p-4 flex items-center justify-between hover:bg-slate-800/80 transition-colors"
                     in:fade

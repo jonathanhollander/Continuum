@@ -3,12 +3,15 @@
     import { Wallet, Search, ExternalLink, Sparkles } from "lucide-svelte";
     import LegalDisclaimer from "$lib/components/common/LegalDisclaimer.svelte";
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte"; // Moved inside
-    import { getStored, setStored } from "$lib/stores/persistence";
+    import { registerSync } from "$lib/services/sync.svelte";
     import { t } from "$lib/stores/localization";
     import { fade, fly } from "svelte/transition";
 
     let showWizard = $state(false);
     let reloadKey = $state(0);
+
+    // Initialize Sync Service for Financial Assets
+    const assetSync = registerSync("financial_assets", "financial_assets");
 
     const wizardSteps = [
         {
@@ -39,35 +42,44 @@
             id: "crypto",
             question: "wizard.financial_crypto",
             type: "boolean" as const,
+            logic: { next: "crypto" },
         },
     ];
 
-    function handleWizardComplete(event: CustomEvent) {
+    async function handleWizardComplete(event: CustomEvent) {
         const answers = event.detail;
-
-        // Load current assets
-        const currentAssets = getStored("assets_assets-main", []);
-        const newAssets = [];
 
         if (answers.intro === false) {
             showWizard = false;
             return;
         }
 
-        // Logic Mapping
+        const promises = [];
+
+        // Logic Mapping - now using SyncManager
         if (answers.check)
-            newAssets.push(createAsset("Checking Account", "Financial"));
+            promises.push(
+                assetSync.create(createAsset("Checking Account", "Financial")),
+            );
         if (answers.savings)
-            newAssets.push(createAsset("High Yield Savings", "Financial"));
+            promises.push(
+                assetSync.create(
+                    createAsset("High Yield Savings", "Financial"),
+                ),
+            );
         if (answers.retirement)
-            newAssets.push(createAsset("401(k) / IRA", "Financial"));
+            promises.push(
+                assetSync.create(createAsset("401(k) / IRA", "Financial")),
+            );
         if (answers.crypto)
-            newAssets.push(
-                createAsset("Hardware Wallet", "Financial", "Crypto"),
+            promises.push(
+                assetSync.create(
+                    createAsset("Hardware Wallet", "Financial", "Crypto"),
+                ),
             );
 
-        if (newAssets.length > 0) {
-            setStored("assets_assets-main", [...currentAssets, ...newAssets]);
+        if (promises.length > 0) {
+            await Promise.all(promises);
             reloadKey++; // Force refresh
         }
 
@@ -76,7 +88,6 @@
 
     function createAsset(name: string, type: string, note = "") {
         return {
-            id: crypto.randomUUID(),
             name,
             type,
             value: 0,

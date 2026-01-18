@@ -26,6 +26,10 @@ class Estate(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 from sqlalchemy import inspect, text
+from backend.estate_models import (
+    Asset, FinancialAccount, Vendor, HomeAccess, Utility, 
+    Document, Letter, JournalEntry, Subscription, CalendarEvent
+)
 
 # Database Engine
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./continuum_saas.db")
@@ -39,6 +43,41 @@ def migrate_db():
     """Simple migration helper to add missing columns for SQLite/Postgres"""
     inspector = inspect(engine)
     with Session(engine) as session:
+        # Generic Migration for all models
+        table_cols = {
+            "assets": {
+                "valuation": "FLOAT",
+                "status": "TEXT",
+                "ownershipDetails": "TEXT",
+                "documents": "TEXT"
+            },
+            "subscriptions": {
+                "cycle": "TEXT",
+                "difficulty": "TEXT",
+                "paymentMethod": "TEXT"
+            },
+            "documents": {
+                "name": "TEXT",
+                "status": "TEXT",
+                "location": "TEXT"
+            },
+            "utilities": {
+                "location": "TEXT"
+            }
+        }
+
+        for table, cols in table_cols.items():
+            try:
+                # Ensure table exists
+                inspector.get_columns(table)
+                existing = [c["name"] for c in inspector.get_columns(table)]
+                for col_name, col_type in cols.items():
+                    if col_name not in existing:
+                        print(f"🔧 Migrating: Adding {col_name} to {table}")
+                        session.execute(text(f"ALTER TABLE {table} ADD COLUMN {col_name} {col_type}"))
+            except Exception as e:
+                print(f"⚠️ Migration skipping {table}: {e}")
+
         # Check pulse_settings columns
         columns = [c["name"] for c in inspector.get_columns("pulse_settings")]
         
@@ -63,10 +102,40 @@ def migrate_db():
             if col_name not in columns:
                 print(f"🔧 Migrating: Adding column {col_name} to pulse_settings")
                 try:
-                    # SQLModel / SQLAlchemy 2.0 style text execution
                     session.execute(text(f"ALTER TABLE pulse_settings ADD COLUMN {col_name} {col_type}"))
                 except Exception as e:
                     print(f"⚠️ Migration Error adding {col_name}: {e}")
+
+        # Check pulse_contacts columns
+        try:
+             # Verify table exists first
+            inspector.get_columns("pulse_contacts")
+            contact_columns = [c["name"] for c in inspector.get_columns("pulse_contacts")]
+            
+            contact_new_cols = {
+                "individual_delay_hours": "INTEGER",
+                "notify_on_safety_timer": "BOOLEAN DEFAULT 1",
+                "role": "TEXT DEFAULT 'Family'",
+                "relation": "TEXT",
+                "notes": "TEXT",
+                "avatar": "TEXT"
+            }
+            
+            for col_name, col_type in contact_new_cols.items():
+                if col_name not in contact_columns:
+                    print(f"🔧 Migrating: Adding column {col_name} to pulse_contacts")
+                    try:
+                        session.execute(text(f"ALTER TABLE pulse_contacts ADD COLUMN {col_name} {col_type}"))
+                    except Exception as e:
+                        print(f"⚠️ Migration Error adding {col_name}: {e}")
+            
+            # Note: Making tier_id nullable is harder in SQLite (requires recreate). 
+            # ideally we would do: session.execute(text("ALTER TABLE pulse_contacts ALTER COLUMN tier_id DROP NOT NULL"))
+            # For now in Dev, if we insert without tier_id it might fail if schema enforces it. 
+            # We will assume SQLite logic allows null if not stricter defined or we might need a workaround for dev.
+            # (SQLModel by default doesn't enforce NOT NULL on DB level for Optional fields unless specified, so we might be safe for new rows)
+        except Exception:
+            pass # Table might not exist yet
         
         session.commit()
 

@@ -19,107 +19,137 @@
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import { onMount } from "svelte";
-    import { estateProfile } from "$lib/stores/estateStore";
-    import { activityLog } from "$lib/stores/activityLog";
+    import { registerSync } from "$lib/services/sync.svelte";
+    import { getStored } from "$lib/stores/persistence";
 
-    let activeTab = "vendors"; // vendors | access | utilities
+    const USER_ID = 1;
 
+    // MAPPERS
+    // Maps local/legacy objects to backend schema
+    const vendorMapper = (item: any) => {
+        const payload = { ...item };
+        if (item.category === undefined && item.role)
+            payload.category = item.role;
+        // Backend requires 'category'
+        payload.category = payload.category || "Other";
+        delete payload.id;
+        return payload;
+    };
+
+    const accessMapper = (item: any) => {
+        const payload = { ...item };
+        if (item.label && !item.location) payload.location = item.label;
+        if (item.code && !item.code_encrypted)
+            payload.code_encrypted = item.code;
+        if (item.notes && !item.instructions) payload.instructions = item.notes;
+
+        payload.location = payload.location || "Unknown";
+        payload.code_encrypted = payload.code_encrypted || "****";
+        delete payload.id;
+        return payload;
+    };
+
+    const utilityMapper = (item: any) => {
+        const payload = { ...item };
+        if (item.type && !item.service_type) payload.service_type = item.type;
+        if (item.shutoffInstructions && !item.instructions)
+            payload.instructions = item.shutoffInstructions;
+        delete payload.id;
+        return payload;
+    };
+
+    // Interfaces (Frontend View)
     interface Vendor {
-        id: string;
-        role: string;
+        id: number | string;
+        category: string;
         name: string;
-        company: string;
-        phone: string;
-        notes: string;
+        phone?: string;
+        company?: string;
+        notes?: string;
     }
-
     interface AccessCode {
-        id: string;
-        label: string;
-        code: string;
-        notes: string;
-    }
-
-    interface Utility {
-        id: string;
-        type: string;
+        id: number | string;
         location: string;
-        shutoffInstructions: string;
+        code_encrypted: string;
+        instructions?: string;
+    }
+    interface Utility {
+        id: number | string;
+        service_type: string;
         provider: string;
+        location?: string;
+        shutoffInstructions?: string;
     }
 
-    let vendors: Vendor[] = [];
+    // Initialize Services
+    const vendorSync = registerSync<Vendor>(
+        "home_vendors",
+        "vendors",
+        vendorMapper,
+    );
+    const accessSync = registerSync<AccessCode>(
+        "home_access",
+        "home_access",
+        accessMapper,
+    );
+    const utilitySync = registerSync<Utility>(
+        "home_utilities",
+        "utilities",
+        utilityMapper,
+    );
 
-    let accessCodes: AccessCode[] = [];
+    let activeTab = "vendors";
 
-    let utilities: Utility[] = [];
-
-    import { getStored, setStored } from "$lib/stores/persistence";
-
-    // ...
-
-    onMount(() => {
-        vendors = getStored<Vendor[]>("home_vendors", []);
-        accessCodes = getStored<AccessCode[]>("home_access", []);
-        utilities = getStored<Utility[]>("home_utilities", []);
+    onMount(async () => {
+        await Promise.all([
+            vendorSync.init(),
+            accessSync.init(),
+            utilitySync.init(),
+        ]);
     });
 
-    function save() {
-        setStored("home_vendors", vendors);
-        setStored("home_access", accessCodes);
-        setStored("home_utilities", utilities);
-    }
-
-    // Generic Add Handlers (Simplified for speed)
-    function addVendor() {
-        const role = prompt("Vendor Role (e.g. Plumber):");
-        if (!role) return;
+    // Handlers
+    async function addVendor() {
+        const category = prompt("Vendor Role (e.g. Plumber):");
+        if (!category) return;
         const name = prompt("Name/Company:");
         const phone = prompt("Phone:");
-        vendors = [
-            ...vendors,
-            {
-                id: crypto.randomUUID(),
-                role,
-                name: name || "",
-                company: "",
-                phone: phone || "",
-                notes: "",
-            },
-        ];
-        save();
+        await vendorSync.create({ category, name: name || "Unknown", phone });
     }
 
-    function addCode() {
-        const label = prompt("Code Label (e.g. Gate Code):");
-        if (!label) return;
+    async function deleteVendor(id: number | string) {
+        if (!confirm("Delete?")) return;
+        await vendorSync.delete(id);
+    }
+
+    async function addCode() {
+        const location = prompt("Code Label (e.g. Gate):");
+        if (!location) return;
         const code = prompt("Code:");
-        accessCodes = [
-            ...accessCodes,
-            { id: crypto.randomUUID(), label, code: code || "****", notes: "" },
-        ];
-        save();
+        await accessSync.create({ location, code_encrypted: code || "****" });
     }
 
-    function addUtility() {
-        const type = prompt("Utility Type (Water, Gas, Electric):");
-        if (!type) return;
-        const location = prompt("Shutoff Location:");
-        utilities = [
-            ...utilities,
-            {
-                id: crypto.randomUUID(),
-                type: type as any,
-                location: location || "",
-                shutoffInstructions: "",
-                provider: "",
-            },
-        ];
-        save();
+    async function deleteCode(id: number | string) {
+        if (!confirm("Delete?")) return;
+        await accessSync.delete(id);
+    }
+
+    async function addUtility() {
+        const service_type = prompt("Utility Type (Water, Gas, Electric):");
+        if (!service_type) return;
+        const provider = prompt("Provider Name:");
+        await utilitySync.create({
+            service_type,
+            provider: provider || "Unknown",
+        });
+    }
+
+    async function deleteUtility(id: number | string) {
+        if (!confirm("Delete?")) return;
+        await utilitySync.delete(id);
     }
 </script>
 
-```html
 <div class="max-w-6xl mx-auto p-6 md:p-8 animate-in fade-in duration-500">
     <!-- Header -->
     <div class="mb-8">
@@ -176,7 +206,7 @@
     <div class="min-h-[400px]">
         {#if activeTab === "vendors"}
             <div in:fade class="h-full">
-                {#if vendors.length === 0}
+                {#if vendorSync.items.length === 0}
                     <EmptyStateGuide type="home" onAdd={addVendor} />
                 {:else}
                     <div class="space-y-6">
@@ -195,7 +225,7 @@
                         <div
                             class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
                         >
-                            {#each vendors as vendor}
+                            {#each vendorSync.items as vendor}
                                 <div
                                     class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:border-orange-200 transition-all group"
                                 >
@@ -204,15 +234,11 @@
                                     >
                                         <span
                                             class="px-2 py-1 bg-orange-100 text-orange-700 text-[10px] font-bold uppercase rounded-md tracking-wider"
-                                            >{vendor.role}</span
+                                            >{vendor.category}</span
                                         >
                                         <button
-                                            on:click={() => {
-                                                vendors = vendors.filter(
-                                                    (v) => v.id !== vendor.id,
-                                                );
-                                                save();
-                                            }}
+                                            on:click={() =>
+                                                deleteVendor(vendor.id)}
                                             class="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                                         >
                                             &times;
@@ -260,7 +286,7 @@
             </div>
         {:else if activeTab === "access"}
             <div in:fade class="h-full">
-                {#if accessCodes.length === 0}
+                {#if accessSync.items.length === 0}
                     <EmptyStateGuide type="home" onAdd={addCode} />
                 {:else}
                     <div class="space-y-6">
@@ -277,7 +303,7 @@
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {#each accessCodes as item}
+                            {#each accessSync.items as item}
                                 <div
                                     class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between"
                                 >
@@ -291,29 +317,24 @@
                                             <h3
                                                 class="font-bold text-slate-700"
                                             >
-                                                {item.label}
+                                                {item.location}
                                             </h3>
                                             <div
                                                 class="font-mono text-xl tracking-widest text-slate-900 bg-slate-100 px-2 py-0.5 rounded inline-block mt-1"
                                             >
-                                                {item.code}
+                                                {item.code_encrypted}
                                             </div>
                                         </div>
                                     </div>
-                                    {#if item.notes}
+                                    {#if item.instructions}
                                         <div
                                             class="text-xs text-slate-400 max-w-[150px] text-right"
                                         >
-                                            {item.notes}
+                                            {item.instructions}
                                         </div>
                                     {/if}
                                     <button
-                                        on:click={() => {
-                                            accessCodes = accessCodes.filter(
-                                                (c) => c.id !== item.id,
-                                            );
-                                            save();
-                                        }}
+                                        on:click={() => deleteCode(item.id)}
                                         class="text-slate-300 hover:text-red-500 p-2"
                                     >
                                         &times;
@@ -326,7 +347,7 @@
             </div>
         {:else if activeTab === "utilities"}
             <div in:fade class="h-full">
-                {#if utilities.length === 0}
+                {#if utilitySync.items.length === 0}
                     <EmptyStateGuide type="home" onAdd={addUtility} />
                 {:else}
                     <div class="space-y-6">
@@ -343,17 +364,12 @@
                         </div>
 
                         <div class="grid grid-cols-1 gap-4">
-                            {#each utilities as item}
+                            {#each utilitySync.items as item}
                                 <div
                                     class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-6 items-start relative group"
                                 >
                                     <button
-                                        on:click={() => {
-                                            utilities = utilities.filter(
-                                                (u) => u.id !== item.id,
-                                            );
-                                            save();
-                                        }}
+                                        on:click={() => deleteUtility(item.id)}
                                         class="absolute top-4 right-4 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                                     >
                                         &times;
@@ -361,11 +377,11 @@
                                     <div
                                         class="p-4 bg-sky-50 text-sky-600 rounded-2xl shrink-0"
                                     >
-                                        {#if item.type === "Water"}
+                                        {#if item.service_type === "Water"}
                                             <Droplets size={32} />
-                                        {:else if item.type === "Electric"}
+                                        {:else if item.service_type === "Electric"}
                                             <Zap size={32} />
-                                        {:else if item.type === "Gas"}
+                                        {:else if item.service_type === "Gas"}
                                             <Thermometer size={32} />
                                         {:else}
                                             <Wifi size={32} />
@@ -377,7 +393,7 @@
                                             <h3
                                                 class="font-bold text-xl text-slate-800"
                                             >
-                                                {item.type} Shutoff
+                                                {item.service_type} Shutoff
                                             </h3>
                                             <p class="text-slate-500 text-sm">
                                                 Provider: {item.provider ||

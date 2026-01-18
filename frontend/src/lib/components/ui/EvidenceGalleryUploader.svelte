@@ -2,7 +2,7 @@
     import { createEventDispatcher } from "svelte";
     import { Upload, Loader2, Video, Image as ImageIcon } from "lucide-svelte";
     import MediaGallery, { type GalleryItem } from "./MediaGallery.svelte";
-    import type { EvidenceItem } from "$lib/stores/propertyStore";
+    import type { EvidenceItem } from "$lib/stores/propertyStore.svelte";
     import { analyzeAssetImage } from "$lib/services/visionService";
 
     export let evidence: EvidenceItem[] = [];

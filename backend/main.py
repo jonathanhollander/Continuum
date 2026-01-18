@@ -9,22 +9,36 @@ from pydantic import BaseModel
 from sqlmodel import Session
 from backend.database import engine, create_db_and_tables, get_session, User, Estate
 from backend.security import get_registration_options, verify_registration, get_authentication_options, verify_authentication
-from backend.routers import pulse
-from backend.pulse_models import (
-    PulseSettings, PulseCheckin, PulseVault, PulseEscalationLog,
-    PulseEscalationTier, PulseContact, PulseMessage
-)
+from backend.routers import pulse, contacts, estate_data
 from backend.pulse_scheduler import start_scheduler, stop_scheduler
 
 app = FastAPI(title="Continuum SaaS API", version="0.5.0")
 
 app.include_router(pulse.router)
+app.include_router(contacts.router)
+app.include_router(estate_data.router)
 
 # Initialize database on startup
 @app.on_event("startup")
 def on_startup():
     create_db_and_tables()
+    seed_dev_user()
     start_scheduler()
+
+def seed_dev_user():
+    with Session(engine) as session:
+        # Check if user 1 exists
+        user = session.get(User, 1)
+        if not user:
+            print("🌱 Seeding default dev user (ID 1)...")
+            user = User(
+                id=1,
+                external_id="dev-user-1",
+                email="dev@continuum.im",
+                public_key="PK_DEMO"
+            )
+            session.add(user)
+            session.commit()
 
 @app.on_event("shutdown")
 def on_shutdown():

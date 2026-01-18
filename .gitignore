@@ -45,3 +45,6 @@ next-env.d.ts
 /dev.db
 /continuum_saas.db
 *.log
+__pycache__/
+*.py[cod]
+*$py.class

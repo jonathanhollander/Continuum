@@ -8,6 +8,8 @@
         X,
         QrCode,
         Sparkles,
+        Download,
+        Share2,
     } from "lucide-svelte";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import HeirloomCard from "$lib/components/modules/heirlooms/HeirloomCard.svelte";
@@ -15,84 +17,86 @@
     import type { AnalyzedHeirloom } from "$lib/services/visionService";
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import { onMount } from "svelte";
+    import {
+        heirloomSync,
+        type Heirloom,
+    } from "$lib/stores/heirloomStore.svelte";
     import { qrStore } from "$lib/stores/qrStore";
     import { activityLog } from "$lib/stores/activityLog";
     import { estateProfile } from "$lib/stores/estateStore";
-    import { goto } from "$app/navigation";
-    import { heirloomStore, type Heirloom } from "$lib/stores/heirloomStore";
-    import { REFLECTION_POOLS } from "$lib/data/reflectionPools";
+    import EvidenceGalleryUploader from "$lib/components/ui/EvidenceGalleryUploader.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
-    import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
+    import { language } from "$lib/stores/localization";
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
 
-    let showWizard = $state(false);
+    let showAddModal = false;
+    let selectedImage: string | null = null;
+    let showWizard = false;
+
+    let newHeirloom: Partial<Heirloom> = $state({
+        name: "",
+        recipient: "",
+        story: "",
+        image: "",
+    });
+
+    // Derived items from SyncManager
+    let items = $derived(heirloomSync.items);
 
     const wizardSteps = [
         {
             id: "intro",
-            question: "Do you have any family heirlooms or sentimental items?",
+            question: "wizard.heirloom_start",
             type: "boolean" as const,
-            logic: { yes: "jewelry", no: "EXIT", next: "jewelry" },
+            logic: { yes: "watch", no: "cancel", next: "watch" },
+        },
+        {
+            id: "watch",
+            question: "wizard.heirloom_watch",
+            type: "boolean" as const,
+            logic: { next: "jewelry" },
         },
         {
             id: "jewelry",
-            question: "Do you want to catalog family jewelry (rings, watches)?",
-            type: "boolean" as const,
-            logic: { next: "photos" },
+            question: "wizard.heirloom_jewelry",
+            type: "boolean" as const, // Fixed type
+            logic: { next: "furniture" },
         },
         {
-            id: "photos",
-            question: "Do you have old family photos that need preserving?",
+            id: "furniture",
+            question: "wizard.heirloom_furniture",
             type: "boolean" as const,
         },
     ];
 
     function handleWizardComplete(event: CustomEvent) {
         const answers = event.detail;
-
         if (answers.intro === false) {
             showWizard = false;
             return;
         }
 
-        const samples = getSmartSamples($language).heirlooms;
-        const newItems: Heirloom[] = [];
-
-        // Jewelry -> Watch
-        if (answers.jewelry) {
-            const watch = samples.find(
-                (s) => s.name?.includes("Rolex") || s.name?.includes("Reloj"),
-            );
-            if (watch)
-                newItems.push({
-                    ...watch,
-                    id: crypto.randomUUID(),
-                } as Heirloom);
-        }
-
-        // Photos -> Old Photos
-        if (answers.photos) {
-            const photos = samples.find(
-                (s) => s.name?.includes("Photos") || s.name?.includes("Fotos"),
-            );
-            if (photos)
-                newItems.push({
-                    ...photos,
-                    id: crypto.randomUUID(),
-                } as Heirloom);
-        }
-
-        if (newItems.length > 0) {
-            heirloomStore.update((current) => [...current, ...newItems]);
-        }
+        if (answers.watch) addWizardItem("Vintage Watch", "Grandson");
+        if (answers.jewelry)
+            addWizardItem("Wedding Ring", "Spouse / Eldest Child");
+        if (answers.furniture) addWizardItem("Antique Desk", "Home Office");
 
         showWizard = false;
     }
 
+    function addWizardItem(name: string, recipient: string) {
+        heirloomSync.create({
+            name,
+            recipient,
+            story: "Family heirloom passed down...",
+            image: "",
+        });
+    }
+
     onMount(() => {
         // Migration: Fix broken/legacy Unsplash URLs in existing data
-        heirloomStore.update((items) => {
+        heirloomSync.update((items) => {
             let hasChanges = false;
             const updated = items.map((item) => {
                 if (item.image && item.image.includes("unsplash.com")) {
@@ -213,10 +217,6 @@
     }
 
     let showAddForm = $state(false);
-
-    let newHeirloom: Partial<Heirloom> = $state({
-        image: "", // Default to empty to show upload state
-    });
 
     function addHeirloom() {
         if (!newHeirloom.name) return;
@@ -359,7 +359,7 @@
     </div>
 
     <!-- Grid -->
-    {#if $heirloomStore.length === 0}
+    {#if items.length === 0}
         <div
             class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
         >
@@ -406,7 +406,7 @@
         <div
             class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
         >
-            {#each $heirloomStore as heirloom (heirloom.id)}
+            {#each items as heirloom (heirloom.id)}
                 <div in:fade={{ duration: 400 }} class="relative group">
                     <HeirloomCard
                         {heirloom}

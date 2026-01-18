@@ -9,7 +9,7 @@
         digitalAssetsStore,
         type DigitalAccount,
         type ClosurePreference,
-    } from "$lib/stores/digitalAssetsStore";
+    } from "$lib/stores/digitalAssetsStore.svelte";
     import {
         Layers,
         Repeat,
@@ -33,38 +33,40 @@
     } from "lucide-svelte";
     import { fade, slide, scale } from "svelte/transition";
 
-    let activeTab: "transactions" | "maintenance" | "claims" | "killswitch" =
-        "transactions";
-    let searchQuery = "";
+    let activeTab = $state<
+        "transactions" | "maintenance" | "claims" | "killswitch"
+    >("transactions");
+    let searchQuery = $state("");
 
     // Modals
-    let showAddModal = false;
-    let addType: "transaction" | "maintenance" | "claim" | "account" =
-        "transaction";
+    let showAddModal = $state(false);
+    let addType = $state<"transaction" | "maintenance" | "claim" | "account">(
+        "transaction",
+    );
 
     // Temp Form States
-    let newTx: Partial<AssetTransaction> = {
+    let newTx = $state<Partial<AssetTransaction>>({
         type: "purchase",
         amount: 0,
         description: "",
         date: new Date().toISOString().split("T")[0],
-    };
-    let newMaint: Partial<MaintenanceLog> = {
+    });
+    let newMaint = $state<Partial<MaintenanceLog>>({
         item: "",
         cost: 0,
         date: new Date().toISOString().split("T")[0],
-    };
-    let newClaim: Partial<InsuranceClaim> = {
+    });
+    let newClaim = $state<Partial<InsuranceClaim>>({
         status: "pending",
         amountClaimed: 0,
         dateFiled: new Date().toISOString().split("T")[0],
-    };
-    let newAccount: Partial<DigitalAccount> = {
+    });
+    let newAccount = $state<Partial<DigitalAccount>>({
         platform: "",
         username: "",
         preference: "memorialize",
         priority: "medium",
-    };
+    });
 
     function handleAdd() {
         if (addType === "transaction")
@@ -91,19 +93,29 @@
         { id: "killswitch", label: "Kill Switch", icon: Skull },
     ];
 
-    $: filteredTransactions = $advancedAssetStore.transactions.filter((t) =>
-        t.description.toLowerCase().includes(searchQuery.toLowerCase()),
+    let filteredTransactions = $derived(
+        $advancedAssetStore.transactions.filter((t) =>
+            t.description.toLowerCase().includes(searchQuery.toLowerCase()),
+        ),
     );
-    $: filteredMaintenance = $advancedAssetStore.maintenance.filter((m) =>
-        m.item.toLowerCase().includes(searchQuery.toLowerCase()),
+    let filteredMaintenance = $derived(
+        $advancedAssetStore.maintenance.filter((m) =>
+            m.item.toLowerCase().includes(searchQuery.toLowerCase()),
+        ),
     );
-    $: filteredClaims = $advancedAssetStore.claims.filter(
-        (c) =>
-            c.claimNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            c.note.toLowerCase().includes(searchQuery.toLowerCase()),
+    let filteredClaims = $derived(
+        $advancedAssetStore.claims.filter(
+            (c) =>
+                c.claimNumber
+                    ?.toLowerCase()
+                    .includes(searchQuery.toLowerCase()) ||
+                c.note.toLowerCase().includes(searchQuery.toLowerCase()),
+        ),
     );
-    $: filteredAccounts = $digitalAssetsStore.filter((a) =>
-        a.platform.toLowerCase().includes(searchQuery.toLowerCase()),
+    let filteredAccounts = $derived(
+        $digitalAssetsStore.filter((a) =>
+            a.platform.toLowerCase().includes(searchQuery.toLowerCase()),
+        ),
     );
 </script>
 
@@ -140,7 +152,7 @@
                 />
             </div>
             <button
-                on:click={() => {
+                onclick={() => {
                     addType =
                         activeTab === "killswitch"
                             ? "account"
@@ -161,7 +173,7 @@
     >
         {#each tabs as tab}
             <button
-                on:click={() => (activeTab = tab.id as any)}
+                onclick={() => (activeTab = tab.id as any)}
                 class="flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all {activeTab ===
                 tab.id
                     ? 'bg-white text-slate-900 shadow-md'
@@ -244,7 +256,7 @@
                                 </td>
                                 <td class="px-8 py-5 text-right">
                                     <button
-                                        on:click={() =>
+                                        onclick={() =>
                                             advancedAssetStore.removeTransaction(
                                                 tx.id,
                                             )}
@@ -372,7 +384,7 @@
                                     </p>
                                 </div>
                                 <button
-                                    on:click={() =>
+                                    onclick={() =>
                                         advancedAssetStore.removeClaim(
                                             claim.id,
                                         )}
@@ -451,7 +463,7 @@
                                         {acc.priority} Priority
                                     </span>
                                     <button
-                                        on:click={() =>
+                                        onclick={() =>
                                             digitalAssetsStore.toggleClosure(
                                                 acc.id,
                                             )}
@@ -544,7 +556,7 @@
                     Add {addType}
                 </h3>
                 <button
-                    on:click={() => (showAddModal = false)}
+                    onclick={() => (showAddModal = false)}
                     class="text-slate-400 hover:text-slate-900 transition-colors"
                 >
                     <Trash2 size={24} />
@@ -790,13 +802,13 @@
 
                 <div class="pt-6 flex items-center gap-4">
                     <button
-                        on:click={handleAdd}
+                        onclick={handleAdd}
                         class="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black shadow-xl shadow-slate-900/20 hover:scale-[1.02] active:scale-[0.98] transition-all uppercase tracking-widest text-xs"
                     >
                         Confirm Registry Entry
                     </button>
                     <button
-                        on:click={() => (showAddModal = false)}
+                        onclick={() => (showAddModal = false)}
                         class="px-8 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black hover:bg-slate-200 transition-all uppercase tracking-widest text-xs"
                     >
                         Cancel

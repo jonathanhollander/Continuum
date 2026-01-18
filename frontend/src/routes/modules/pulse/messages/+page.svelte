@@ -21,8 +21,7 @@
 
     async function refreshData() {
         try {
-            const baseUrl =
-                import.meta.env.VITE_API_BASE || "http://localhost:8000";
+            const baseUrl = import.meta.env.VITE_API_BASE || "";
             const [msgRes, contactsRes] = await Promise.all([
                 fetch(`${baseUrl}/api/pulse/messages?user_id=${USER_ID}`),
                 fetch(`${baseUrl}/api/pulse/contacts?user_id=${USER_ID}`),
@@ -49,17 +48,45 @@
             );
             if (res.ok) {
                 newMessage.text = "";
-                composerOpen = false;
                 await refreshData();
+                // Scroll to bottom logic could go here
             }
         } catch (e) {
             console.error(e);
         }
     }
+
+    function getMessagesForContact(contactId: number | null) {
+        if (!contactId) return [];
+        return messages
+            .filter((m) => m.contact_id === contactId)
+            .sort(
+                (a, b) =>
+                    new Date(a.sent_at).getTime() -
+                    new Date(b.sent_at).getTime(),
+            );
+    }
+
+    function getLatestMessageTime(contactId: number) {
+        const msgs = getMessagesForContact(contactId);
+        return msgs.length > 0 ? msgs[msgs.length - 1].sent_at : null;
+    }
+
+    function getLastMessagePreview(contactId: number) {
+        const msgs = getMessagesForContact(contactId);
+        if (msgs.length === 0) return "";
+        const last = msgs[msgs.length - 1];
+        return (
+            (last.direction === "contact_to_user" ? "Them: " : "You: ") +
+            last.message
+        );
+    }
 </script>
 
-<div class="max-w-4xl mx-auto p-4 md:p-8 pb-32">
-    <div class="flex items-center justify-between mb-8">
+<div
+    class="max-w-6xl mx-auto p-4 md:p-8 pb-32 h-[calc(100vh-100px)] flex flex-col"
+>
+    <div class="flex items-center justify-between mb-6 shrink-0">
         <div>
             <h1
                 class="text-2xl font-serif text-slate-100 flex items-center gap-2"
@@ -71,122 +98,193 @@
                 Bi-directional contact notes.
             </p>
         </div>
-        <div class="flex gap-4">
-            <button
-                onclick={() => (composerOpen = !composerOpen)}
-                class="bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 px-4 py-2 rounded-full border border-teal-500/20 text-sm font-medium transition-colors"
-            >
-                {composerOpen ? "Cancel" : "New Message"}
-            </button>
-            <a
-                href="/modules/pulse"
-                class="text-sm text-teal-400 hover:text-teal-300 transition-colors flex items-center h-full"
-                >Back to Dashboard</a
-            >
-        </div>
+        <a
+            href="/modules/pulse"
+            class="text-sm text-teal-400 hover:text-teal-300"
+            >Back to Dashboard</a
+        >
     </div>
 
-    <!-- Composer -->
-    {#if composerOpen}
+    <div
+        class="flex-1 bg-slate-900/40 border border-slate-800 rounded-2xl overflow-hidden flex shadow-2xl backdrop-blur-sm"
+    >
+        <!-- LEFT: Contact List -->
         <div
-            class="bg-slate-900/60 backdrop-blur-md rounded-2xl border border-teal-500/30 p-6 mb-8"
-            transition:slide
+            class="w-1/3 border-r border-slate-800 flex flex-col bg-slate-950/30"
         >
-            <h3 class="text-sm font-medium text-slate-300 mb-4">
-                Compose Note
-            </h3>
-
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs text-slate-500 mb-1"
-                        >Recipient</label
-                    >
-                    <select
-                        bind:value={newMessage.contact_id}
-                        class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-slate-200 text-sm"
-                    >
-                        <option value={null}>Select a Contact...</option>
-                        {#each contacts as contact}
-                            <option value={contact.id}
-                                >{contact.name} (Tier {contact.tier_id})</option
-                            >
-                        {/each}
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-xs text-slate-500 mb-1"
-                        >Message</label
-                    >
-                    <textarea
-                        bind:value={newMessage.text}
-                        rows={3}
-                        class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-slate-200 text-sm focus:ring-1 focus:ring-teal-500/50 outline-none"
-                        placeholder="Thinking of you..."
-                    ></textarea>
-                </div>
-
-                <div class="flex justify-end">
+            <div class="p-4 border-b border-slate-800">
+                <h3
+                    class="text-xs font-bold text-slate-500 uppercase tracking-widest"
+                >
+                    Conversations
+                </h3>
+            </div>
+            <div class="flex-1 overflow-y-auto">
+                {#each contacts as contact}
                     <button
-                        onclick={sendMessage}
-                        disabled={!newMessage.contact_id || !newMessage.text}
-                        class="bg-teal-600 hover:bg-teal-500 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                        class="w-full text-left p-4 hover:bg-slate-800/50 transition-colors flex items-center gap-3 border-b border-slate-800/50 {newMessage.contact_id ===
+                        contact.id
+                            ? 'bg-indigo-500/10 border-l-2 border-l-indigo-500'
+                            : ''}"
+                        onclick={() => {
+                            newMessage.contact_id = contact.id;
+                            composerOpen = true; // Always show composer in thread view
+                        }}
                     >
-                        Send Message
+                        <div
+                            class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 font-bold border border-slate-700"
+                        >
+                            {contact.name.charAt(0)}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-baseline">
+                                <span
+                                    class="font-medium text-slate-200 truncate"
+                                    >{contact.name}</span
+                                >
+                                {#if getLatestMessageTime(contact.id)}
+                                    <span class="text-[10px] text-slate-500"
+                                        >{new Date(
+                                            getLatestMessageTime(contact.id),
+                                        ).toLocaleDateString(undefined, {
+                                            month: "short",
+                                            day: "numeric",
+                                        })}</span
+                                    >
+                                {/if}
+                            </div>
+                            <p class="text-xs text-slate-500 truncate">
+                                {getLastMessagePreview(contact.id) ||
+                                    "No messages yet"}
+                            </p>
+                        </div>
                     </button>
-                </div>
+                {/each}
+                {#if contacts.length === 0}
+                    <div class="p-8 text-center text-slate-500 text-sm">
+                        No contacts available.
+                    </div>
+                {/if}
             </div>
         </div>
-    {/if}
 
-    <!-- Message List -->
-    <div class="space-y-4">
-        {#each messages as msg}
-            <div
-                class="bg-slate-900/40 border border-slate-800 rounded-xl p-4 flex gap-4 hover:border-slate-700 transition-colors"
-                in:fade
-            >
-                <div class="shrink-0 mt-1">
-                    {#if msg.direction === "user_to_contact"}
+        <!-- RIGHT: Thread View -->
+        <div class="flex-1 flex flex-col bg-slate-900/20">
+            {#if newMessage.contact_id}
+                {@const activeContact = contacts.find(
+                    (c) => c.id === newMessage.contact_id,
+                )}
+                <!-- Thread Header -->
+                <div
+                    class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950/50"
+                >
+                    <div class="font-medium text-slate-200">
+                        {activeContact?.name}
+                    </div>
+                    <span class="text-xs text-slate-500"
+                        >Tier {activeContact?.tier_id}</span
+                    >
+                </div>
+
+                <!-- Messages Area -->
+                <div
+                    class="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col-reverse"
+                >
+                    <!-- Flex-col-reverse keeps scroll at bottom usually, but map order matters. Let's stick to standard order. -->
+                    {#each getMessagesForContact(newMessage.contact_id) as msg}
                         <div
-                            class="w-8 h-8 rounded-full bg-teal-500/20 flex items-center justify-center"
+                            class="flex gap-3 max-w-[80%] {msg.direction ===
+                            'user_to_contact'
+                                ? 'ml-auto flex-row-reverse'
+                                : ''}"
                         >
-                            <Reply class="w-4 h-4 text-teal-400" />
+                            <div
+                                class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 {msg.direction ===
+                                'user_to_contact'
+                                    ? 'bg-indigo-500/20 text-indigo-400'
+                                    : 'bg-teal-500/20 text-teal-400'}"
+                            >
+                                {#if msg.direction === "user_to_contact"}
+                                    <User class="w-4 h-4" />
+                                {:else}
+                                    <Reply class="w-4 h-4" />
+                                {/if}
+                            </div>
+                            <div
+                                class="p-3 rounded-2xl text-sm leading-relaxed max-w-full {msg.message.startsWith(
+                                    '[System Alert',
+                                )
+                                    ? 'bg-amber-900/20 border border-amber-500/30 text-amber-100 rounded-tr-2xl rounded-tl-2xl w-full text-center italic'
+                                    : msg.direction === 'user_to_contact'
+                                      ? 'bg-indigo-600/20 text-indigo-100 rounded-tr-none'
+                                      : 'bg-slate-800 text-slate-300 rounded-tl-none'}"
+                            >
+                                {#if msg.message.startsWith("[System Alert")}
+                                    <span
+                                        class="text-[10px] font-bold uppercase tracking-widest text-amber-500 block mb-1"
+                                        >Automated System Log</span
+                                    >
+                                {/if}
+                                {msg.message
+                                    .replace("[System Alert Tier 1] ", "")
+                                    .replace("[System Alert Tier 2] ", "")
+                                    .replace("[System Alert Tier 3] ", "")
+                                    .replace("[System Alert Tier 4] ", "")}
+                                <div
+                                    class="mt-1 text-[10px] opacity-50 {msg.message.startsWith(
+                                        '[System Alert',
+                                    )
+                                        ? 'text-center'
+                                        : 'text-right'}"
+                                >
+                                    {new Date(msg.sent_at).toLocaleTimeString(
+                                        [],
+                                        { hour: "2-digit", minute: "2-digit" },
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     {:else}
                         <div
-                            class="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center"
+                            class="flex-1 flex items-center justify-center text-slate-500 text-sm italic"
                         >
-                            <User class="w-4 h-4 text-indigo-400" />
+                            No conversation history. Start chatting below.
                         </div>
-                    {/if}
+                    {/each}
                 </div>
 
-                <div class="flex-1">
-                    <div class="flex justify-between items-start">
-                        <h4 class="text-sm font-medium text-slate-300">
-                            {msg.direction === "user_to_contact"
-                                ? "You sent to"
-                                : "From"}
-                            <span class="text-slate-200">
-                                {contacts.find((c) => c.id === msg.contact_id)
-                                    ?.name || "Unknown"}
-                            </span>
-                        </h4>
-                        <span class="text-xs text-slate-600 font-mono"
-                            >{new Date(msg.sent_at).toLocaleDateString()}</span
+                <!-- Composer Input -->
+                <div class="p-4 border-t border-slate-800 bg-slate-950/50">
+                    <form
+                        class="flex gap-2"
+                        onsubmit={(e) => {
+                            e.preventDefault();
+                            sendMessage();
+                        }}
+                    >
+                        <input
+                            type="text"
+                            bind:value={newMessage.text}
+                            placeholder="Type a secure note..."
+                            class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500/50 transition-colors"
+                        />
+                        <button
+                            type="submit"
+                            disabled={!newMessage.text}
+                            class="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white p-3 rounded-xl transition-all"
                         >
-                    </div>
-                    <p class="text-slate-400 text-sm mt-1">{msg.message}</p>
+                            <Send class="w-5 h-5" />
+                        </button>
+                    </form>
                 </div>
-            </div>
-        {:else}
-            {#if !loading}
-                <div class="text-center py-12 text-slate-500">
-                    <MessageSquare class="w-10 h-10 mx-auto mb-3 opacity-30" />
-                    <p>No messages yet.</p>
+            {:else}
+                <div
+                    class="flex-1 flex flex-col items-center justify-center text-slate-500"
+                >
+                    <MessageSquare class="w-16 h-16 opacity-20 mb-4" />
+                    <p>Select a conversation to view secured notes.</p>
                 </div>
             {/if}
-        {/each}
+        </div>
     </div>
 </div>

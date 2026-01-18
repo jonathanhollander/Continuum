@@ -27,6 +27,15 @@ export const dictionary = {
         anniversary: "Anniversary Manager",
         catalog: "Module Catalog",
         simulator: "Fire Drill",
+        // Pulse
+        pulseDashboard: "Pulse Dashboard",
+        pulseVault: "Security Vault",
+        pulseTransparency: "Transparency Hub",
+        pulseMessages: "Message Center",
+        pulseHistory: "Check-in History",
+        pulseContacts: "Trusted Contacts",
+        pulseEscalation: "Escalation Plan",
+        pulseSettings: "Pulse Settings",
         // Groups
         groupOverview: "Estate Overview",
         groupAssets: "Assets & Wealth",

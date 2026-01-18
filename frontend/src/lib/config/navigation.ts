@@ -26,7 +26,8 @@ import {
     Image,
     Info,
     MessageSquare,
-    Settings
+    Settings,
+    Database
 } from "lucide-svelte";
 
 export type UserRole = "Owner" | "Executor" | "Family";
@@ -271,6 +272,13 @@ export const navGroups: NavGroup[] = [
                 icon: Siren,
                 allowedRoles: ["Owner"],
             },
+            {
+                label: "Data Confidence",
+                key: "data-confidence",
+                href: "/settings/data",
+                icon: Database,
+                allowedRoles: ["Owner"],
+            },
         ],
     },
     {
@@ -306,6 +314,27 @@ export const navGroups: NavGroup[] = [
                 href: "/modules/pulse/messages",
                 icon: MessageSquare,
                 allowedRoles: ["Owner", "Executor", "Family"],
+            },
+            {
+                label: "Check-in History",
+                key: "pulseHistory",
+                href: "/modules/pulse/history",
+                icon: History,
+                allowedRoles: ["Owner", "Executor"],
+            },
+            {
+                label: "Trusted Contacts",
+                key: "pulseContacts",
+                href: "/modules/pulse/contacts",
+                icon: Users,
+                allowedRoles: ["Owner"],
+            },
+            {
+                label: "Escalation Plan",
+                key: "pulseEscalation",
+                href: "/modules/pulse/escalation",
+                icon: Activity,
+                allowedRoles: ["Owner"],
             },
             {
                 label: "Pulse Settings",

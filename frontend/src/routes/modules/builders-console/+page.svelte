@@ -28,28 +28,35 @@
     import { fade, slide, scale } from "svelte/transition";
     import { quintOut } from "svelte/easing";
 
-    let searchQuery = "";
-    let selectedSection = "all";
-    let showComplexitySettings = false;
+    let searchQuery = $state("");
+    let selectedSection = $state("all");
+    let showComplexitySettings = $state(false);
 
-    $: sections = ["all", ...new Set($acceptanceTasks.map((t) => t.section))];
+    let sections = $derived([
+        "all",
+        ...new Set($acceptanceTasks.map((t) => t.section)),
+    ]);
 
-    $: displayTasks = $filteredTasks.filter((task) => {
-        const matchesSearch =
-            task.page.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            task.check.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesSection =
-            selectedSection === "all" || task.section === selectedSection;
-        return matchesSearch && matchesSection;
-    });
+    let displayTasks = $derived(
+        $filteredTasks.filter((task) => {
+            const matchesSearch =
+                task.page.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                task.check.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesSection =
+                selectedSection === "all" || task.section === selectedSection;
+            return matchesSearch && matchesSection;
+        }),
+    );
 
-    $: groupedTasks = displayTasks.reduce(
-        (acc, task) => {
-            if (!acc[task.section]) acc[task.section] = [];
-            acc[task.section].push(task);
-            return acc;
-        },
-        {} as Record<string, AcceptanceTask[]>,
+    let groupedTasks = $derived(
+        displayTasks.reduce(
+            (acc, task) => {
+                if (!acc[task.section]) acc[task.section] = [];
+                acc[task.section].push(task);
+                return acc;
+            },
+            {} as Record<string, AcceptanceTask[]>,
+        ),
     );
 
     function formatTime(minutes: number): string {
@@ -93,7 +100,7 @@
 
         <div class="flex items-center gap-4">
             <button
-                on:click={() =>
+                onclick={() =>
                     (showComplexitySettings = !showComplexitySettings)}
                 class="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-600 font-bold hover:bg-slate-50 transition-all shadow-sm"
             >
@@ -126,7 +133,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {#each ["simple", "moderate", "complex"] as level}
                         <button
-                            on:click={() =>
+                            onclick={() =>
                                 acceptanceStore.setComplexity(
                                     level as EstateComplexity,
                                 )}
@@ -275,7 +282,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {#each tasks as task (task.id)}
                         <button
-                            on:click={() => acceptanceStore.toggleTask(task.id)}
+                            onclick={() => acceptanceStore.toggleTask(task.id)}
                             class="group relative text-left p-5 rounded-2xl border transition-all duration-300 hover:shadow-lg hover:translate-y-[-2px] {task.status ===
                             'Complete'
                                 ? 'bg-emerald-50/30 border-emerald-200'

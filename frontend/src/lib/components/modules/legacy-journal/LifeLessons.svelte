@@ -2,23 +2,25 @@
     import { fade, scale } from "svelte/transition";
     import { Tag, Plus, Filter, Search, X } from "lucide-svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
-    import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
-    import { onMount } from "svelte";
+    import GhostRow from "$lib/components/ui/GhostRow.svelte";
+    import { registerSync } from "$lib/services/sync.svelte";
+    import { activityLog } from "$lib/stores/activityLog";
 
     // --- Types ---
     interface Lesson {
-        id: number;
+        id: string; // Changed from number to string for consistency
         title: string;
         category: string;
         preview: string;
         tags: string[];
     }
 
+    const lessonSync = registerSync<Lesson>("life_lessons", "life_lessons");
+
     let tags = ["All", "Career", "Love", "Money", "Parenting", "Resilience"];
     let activeTag = $state("All");
-
-    let lessons = $state<Lesson[]>([]);
     let showAddModal = $state(false);
+
     let newLesson = $state<Partial<Lesson>>({
         title: "",
         category: "Life",
@@ -26,25 +28,19 @@
         tags: ["Life"],
     });
 
-    import { getStored, setStored } from "$lib/stores/persistence";
+    let lessons = $derived(lessonSync.items);
 
-    // ... imports
-
-    const STORAGE_KEY = "life_lessons";
-
-    onMount(() => {
-        // REMOVED DEFAULT DATA FOR GHOST ROW IMPLEMENTATION
-        lessons = getStored(STORAGE_KEY, []);
-    });
-
-    function save() {
-        setStored(STORAGE_KEY, lessons);
-    }
-
-    function addLesson() {
+    async function addLesson() {
         if (!newLesson.title) return;
-        lessons = [{ ...newLesson, id: Date.now() } as Lesson, ...lessons];
-        save();
+
+        await lessonSync.create({
+            title: newLesson.title,
+            category: newLesson.category || "Life",
+            preview: newLesson.preview || "",
+            tags: ["Life"],
+            id: newLesson.id, // create will gen ID if missing
+        });
+
         showAddModal = false;
         newLesson = {
             title: "",
@@ -52,14 +48,24 @@
             preview: "",
             tags: ["Life"],
         };
+
+        activityLog.logEvent({
+            module: "Life Lessons",
+            action: "CREATE",
+            entityType: "Lesson",
+            entityId: "new",
+            entityName: newLesson.title,
+            userContext: "User",
+        });
     }
 
-    function removeLesson(id: number) {
+    function removeLesson(id: string) {
+        // Updated type
         if (!confirm("Delete this lesson?")) return;
-        lessons = lessons.filter((l) => l.id !== id);
-        save();
+        lessonSync.delete(id);
     }
 
+    // Filter Logic
     let filteredLessons = $derived(
         activeTag === "All"
             ? lessons

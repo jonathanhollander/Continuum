@@ -73,10 +73,18 @@ class PulseContact(SQLModel, table=True):
     __tablename__ = "pulse_contacts"
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="users.id")
-    tier_id: int = Field(foreign_key="pulse_escalation_tiers.id")
+    
+    # Global Contact Fields
     name: str
-    email: str
+    role: str = Field(default="Family") # Family, Friend, Medical, Legal, Other
+    relation: Optional[str] = Field(default=None)
+    email: Optional[str] = Field(default=None)
     phone: Optional[str] = Field(default=None)
+    notes: Optional[str] = Field(default=None)
+    avatar: Optional[str] = Field(default=None)
+
+    # Pulse Specific (Optional - only if they are a Guardian)
+    tier_id: Optional[int] = Field(default=None, foreign_key="pulse_escalation_tiers.id")
     priority: int = Field(default=1)
     portal_token: Optional[str] = Field(default=None)
     portal_token_expires: Optional[datetime] = Field(default=None)
@@ -104,3 +112,12 @@ class PulseMessage(SQLModel, table=True):
     message: str
     sent_at: datetime = Field(default_factory=datetime.utcnow)
     read_at: Optional[datetime] = Field(default=None)
+
+class PulseCredential(SQLModel, table=True):
+    __tablename__ = "pulse_credentials"
+    id: Optional[str] = Field(default=None, primary_key=True)  # Credential ID (base64url)
+    user_id: int = Field(foreign_key="users.id")
+    public_key: str  # COSE Key (base64url)
+    sign_count: int = Field(default=0)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    transports: Optional[str] = Field(default=None) # JSON list string

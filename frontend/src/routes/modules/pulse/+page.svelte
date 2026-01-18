@@ -35,8 +35,7 @@
     });
 
     async function fetchSafetyStatus() {
-        const baseUrl =
-            import.meta.env.VITE_API_BASE || "http://localhost:8000";
+        const baseUrl = import.meta.env.VITE_API_BASE || "";
         try {
             const res = await fetch(
                 `${baseUrl}/api/pulse/safety/status?user_id=${USER_ID}`,
@@ -70,8 +69,7 @@
     }
 
     async function startSafety() {
-        const baseUrl =
-            import.meta.env.VITE_API_BASE || "http://localhost:8000";
+        const baseUrl = import.meta.env.VITE_API_BASE || "";
         try {
             const res = await fetch(
                 `${baseUrl}/api/pulse/safety/start?user_id=${USER_ID}&minutes=${localStatus.safetyInput}&purpose=${localStatus.purpose}`,
@@ -89,8 +87,7 @@
     }
 
     async function cancelSafety() {
-        const baseUrl =
-            import.meta.env.VITE_API_BASE || "http://localhost:8000";
+        const baseUrl = import.meta.env.VITE_API_BASE || "";
         try {
             const res = await fetch(
                 `${baseUrl}/api/pulse/safety/cancel?user_id=${USER_ID}`,

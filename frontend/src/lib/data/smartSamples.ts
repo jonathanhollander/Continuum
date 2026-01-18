@@ -1,9 +1,9 @@
 
 import type { FamilyMember } from '$lib/stores/familyStore';
 import type { InsurancePolicy } from '$lib/stores/insuranceStore';
-import type { PropertyItem } from '$lib/stores/propertyStore';
-import type { DigitalAccount } from '$lib/stores/digitalAssetsStore';
-import type { Heirloom } from '$lib/stores/heirloomStore';
+import type { PropertyItem } from '$lib/stores/propertyStore.svelte';
+import { digitalAssetsStore } from "../stores/digitalAssetsStore.svelte";
+import type { Heirloom } from '$lib/stores/heirloomStore.svelte';
 import type { MedicalDirective } from '$lib/stores/medicalStore';
 import type { PetEntry } from '$lib/stores/petStore';
 

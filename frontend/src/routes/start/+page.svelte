@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { page } from "$app/stores";
     import { onMount } from "svelte";
     import { conciergeEngine } from "$lib/stores/conciergeEngine";
     import { fade, fly } from "svelte/transition";
@@ -28,10 +29,16 @@
     let ready = $state(false);
 
     onMount(() => {
-        // Simple boot sequence for visual polish
+        // Ensure concierge is closed on mount so user must choose
+        conciergeEngine.close();
+
+        const params = new URLSearchParams(window.location.search);
+        const force = params.get("force");
+        const delay = force ? 100 : 1200;
+
         setTimeout(() => {
             ready = true;
-        }, 1200);
+        }, delay);
     });
 
     function startGuided() {
@@ -121,7 +128,7 @@
                         </div>
                         <div>
                             <h3 class="text-xl font-bold text-white">
-                                Guided Journey
+                                AI Guided Journey
                             </h3>
                             <p class="text-sm text-slate-400 mt-2">
                                 Talk with the AI Concierge to build your estate

@@ -28,11 +28,20 @@
     import { estateProfile } from "$lib/stores/estateStore";
     import { activityLog } from "$lib/stores/activityLog";
     import { fly, scale, slide, fade } from "svelte/transition";
-    import { getStored, setStored } from "$lib/stores/persistence";
+    // import { getStored, setStored } from "$lib/stores/persistence"; // REMOVED
+    import { registerSync } from "$lib/services/sync.svelte"; // ADDDED
     import { getSmartSamples } from "$lib/data/smartSamples";
     import { conciergeEngine } from "$lib/stores/conciergeEngine";
 
     let { module } = $props<{ module: any }>();
+
+    // Determine sync key based on module ID
+    // Financial Accounts passes 'assets-main', so we map it to 'financial_assets'
+    const syncKey =
+        module.id === "assets-main"
+            ? "financial_assets"
+            : `assets_${module.id}`;
+    const assetSync = registerSync<Asset>(syncKey, syncKey);
 
     type AssetType =
         | "Property"
@@ -59,7 +68,7 @@
         closureNotes?: string;
     }
 
-    let assets = $state<Asset[]>([]);
+    let assets = $derived(assetSync.items);
     let showAddForm = $state(false);
 
     let newAsset = $state<Partial<Asset> & { id?: string }>({
@@ -113,15 +122,7 @@
         previousDataWasPresent = hasData;
     });
 
-    const storageKey = `assets_${module.id}`;
-
-    onMount(() => {
-        assets = getStored(storageKey, []);
-    });
-
-    function save() {
-        setStored(storageKey, assets);
-    }
+    // Removed manual onMount getStored logic as registerSync handles it
 
     function generateMockHistory(currentValue: number): number[] {
         const history = [];
@@ -134,53 +135,18 @@
         return history;
     }
 
-    function saveAsset() {
+    async function saveAsset() {
         if (!newAsset.name) return;
 
         if (newAsset.id) {
-            // Edit Mode
-            const oldAsset = assets.find((a) => a.id === newAsset.id);
-            const changes = [];
+            // Edit Mode - update via SyncManager
+            const updates = {
+                ...newAsset,
+                value: Number(newAsset.value) || 0,
+                ownershipPercentage: Number(newAsset.ownershipPercentage),
+            };
 
-            if (oldAsset) {
-                if (oldAsset.name !== newAsset.name)
-                    changes.push({
-                        field: "name",
-                        oldValue: oldAsset.name,
-                        newValue: newAsset.name,
-                    });
-                if (oldAsset.value !== newAsset.value)
-                    changes.push({
-                        field: "value",
-                        oldValue: oldAsset.value,
-                        newValue: newAsset.value,
-                    });
-                if (oldAsset.beneficiaries !== newAsset.beneficiaries)
-                    changes.push({
-                        field: "beneficiaries",
-                        oldValue: oldAsset.beneficiaries,
-                        newValue: newAsset.beneficiaries,
-                    });
-                if (oldAsset.location !== newAsset.location)
-                    changes.push({
-                        field: "location",
-                        oldValue: oldAsset.location,
-                        newValue: newAsset.location,
-                    });
-            }
-
-            assets = assets.map((a) =>
-                a.id === newAsset.id
-                    ? ({
-                          ...newAsset,
-                          value: Number(newAsset.value) || 0,
-                          ownershipPercentage: Number(
-                              newAsset.ownershipPercentage,
-                          ),
-                          valueHistory: a.valueHistory,
-                      } as Asset)
-                    : a,
-            );
+            await assetSync.update(newAsset.id, updates);
 
             // Log UPDATE
             activityLog.logEvent({
@@ -189,45 +155,38 @@
                 entityType: "Asset",
                 entityId: newAsset.id,
                 entityName: newAsset.name || "Unnamed Asset",
-                changes,
+                changes: [], // Simplified for now
                 userContext: $estateProfile.ownerName || "User",
             });
         } else {
-            // Create Mode
-            const newId = crypto.randomUUID();
-            assets = [
-                ...assets,
-                {
-                    id: newId,
-                    name: newAsset.name!,
-                    type: (newAsset.type as AssetType) || "Other",
-                    value: Number(newAsset.value) || 0,
-                    location: newAsset.location || "",
-                    accountNumber: newAsset.accountNumber,
-                    ownershipPercentage: Number(newAsset.ownershipPercentage),
-                    beneficiaries: newAsset.beneficiaries || "",
-                    notes: newAsset.notes || "",
-                    loginUrl: newAsset.loginUrl || "",
-                    beneficiaryEmail: newAsset.beneficiaryEmail || "",
-                    closureNotes: newAsset.closureNotes || "",
-                    valueHistory: generateMockHistory(
-                        Number(newAsset.value) || 0,
-                    ),
-                },
-            ];
+            // Create Mode - create via SyncManager
+            const created = await assetSync.create({
+                name: newAsset.name!,
+                type: (newAsset.type as AssetType) || "Other",
+                value: Number(newAsset.value) || 0,
+                location: newAsset.location || "",
+                accountNumber: newAsset.accountNumber,
+                ownershipPercentage: Number(newAsset.ownershipPercentage),
+                beneficiaries: newAsset.beneficiaries || "",
+                notes: newAsset.notes || "",
+                loginUrl: newAsset.loginUrl || "",
+                beneficiaryEmail: newAsset.beneficiaryEmail || "",
+                closureNotes: newAsset.closureNotes || "",
+                valueHistory: generateMockHistory(Number(newAsset.value) || 0),
+            });
 
             // Log CREATE
             activityLog.logEvent({
                 module: module.name || "Asset Manager",
                 action: "CREATE",
                 entityType: "Asset",
-                entityId: newId,
-                entityName: newAsset.name!,
+                entityId: created.id,
+                entityName: created.name,
                 userContext: $estateProfile.ownerName || "User",
             });
         }
 
-        save();
+        // save(); // SyncManager handles persistence
         resetForm();
     }
 
@@ -259,8 +218,8 @@
         if (!confirm("Are you sure you want to delete this asset?")) return;
         const asset = assets.find((a) => a.id === id);
 
-        assets = assets.filter((a) => a.id !== id);
-        save();
+        // SyncManager delete
+        assetSync.delete(id);
 
         // Log DELETE
         if (asset) {
@@ -323,7 +282,7 @@
         }
     }
 
-    function addStarterPack() {
+    async function addStarterPack() {
         const address =
             $estateProfile.legalAddress ||
             $estateProfile.legalCityState ||
@@ -359,24 +318,25 @@
             },
         ];
 
-        const newAssets = starterItems.map((item) => ({
-            id: crypto.randomUUID(),
-            name: item.name,
-            type: item.type as AssetType,
-            value: 0,
-            location: item.location,
-            accountNumber: item.accountNumber || "",
-            ownershipPercentage: 100,
-            beneficiaries: $estateProfile.primaryBeneficiary || "",
-            notes: item.notes || "",
-            valueHistory: [],
-            loginUrl: "",
-            beneficiaryEmail: "",
-            closureNotes: "",
-        }));
-
-        assets = [...assets, ...newAssets];
-        save();
+        // Create all in parallel
+        await Promise.all(
+            starterItems.map((item) =>
+                assetSync.create({
+                    name: item.name,
+                    type: item.type as AssetType,
+                    value: 0,
+                    location: item.location,
+                    accountNumber: item.accountNumber || "",
+                    ownershipPercentage: 100,
+                    beneficiaries: $estateProfile.primaryBeneficiary || "",
+                    notes: item.notes || "",
+                    valueHistory: [],
+                    loginUrl: "",
+                    beneficiaryEmail: "",
+                    closureNotes: "",
+                }),
+            ),
+        );
     }
 
     const totalValue = $derived(

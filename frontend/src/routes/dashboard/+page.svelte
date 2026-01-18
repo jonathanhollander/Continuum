@@ -43,14 +43,14 @@
     );
 
     import { familyMembers } from "$lib/stores/familyStore";
-    import { digitalAssetsStore } from "$lib/stores/digitalAssetsStore";
+    import { digitalAssetsStore } from "$lib/stores/digitalAssetsStore.svelte";
     import { insuranceStore } from "$lib/stores/insuranceStore";
 
     // Dynamic Metrics
     let totalValue = $derived($estateProfile.totalValue || 0);
     let networkSize = $derived($familyMembers.length);
     let coverageCount = $derived(
-        $digitalAssetsStore.filter(
+        digitalAssetsStore.items.filter(
             (a) => !a.isClosed && a.platform !== "Example",
         ).length +
             $insuranceStore.length +

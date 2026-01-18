@@ -126,11 +126,51 @@ def trigger_escalation(session: Session, user_id: int, tier_number: int, referen
     ).all()
     
     for contact in contacts:
-        send_notification(contact, tier_number)
+        send_notification(session, contact, tier_number)
         
     session.commit()
 
-def send_notification(contact: PulseContact, tier_number: int):
-    # Stub for Email/SMS service
-    print(f"   --> 📧 Sending Tier {tier_number} Alert to {contact.name} ({contact.email})")
-    # In real impl, calling SendGrid/Twilio here
+from backend.email_service import email_service
+import os
+
+def send_notification(session: Session, contact: PulseContact, tier_number: int):
+    print(f"   --> 📧 Generating Tier {tier_number} Alert for {contact.name}...")
+    
+    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+    portal_link = f"{frontend_url}/portal/{contact.portal_token}"
+    
+    subject = ""
+    body = ""
+    
+    if tier_number == 1:
+        subject = "Continuum Pulse: Standard Welfare Check"
+        body = f"We have not received a check-in from the user within the standard timeframe. As a Tier 1 contact, simply confirming you have heard from them recently will reset the timer."
+    elif tier_number == 2:
+        subject = "Continuum Pulse: Level 2 Escalation"
+        body = f"The user has missed the standard check-in window by a significant margin. Please attempt to contact them directly."
+    elif tier_number == 3:
+        subject = "Continuum Pulse: URGENT - Medical/Legal Release"
+        body = f"We have escalated to Tier 3. Critical medical directives and entry codes have now been unlocked for your viewing in the Guardian Portal."
+    elif tier_number == 4:
+        subject = "Continuum Pulse: EMERGENCY - Full Vault Access"
+        body = f"This is a Tier 4 Emergency. Full access to the digital vault has been granted. Please verify the user's safety immediately."
+
+    # 1. Send Real Email
+    email_service.send_email(
+        to_email=contact.email, 
+        recipient_name=contact.name,
+        subject=subject,
+        body=body,
+        user_id=contact.user_id,
+        action_url=portal_link,
+        action_label="Open Guardian Portal"
+    )
+
+    # 2. Log Communication
+    log_msg = PulseMessage(
+        user_id=contact.user_id,
+        contact_id=contact.id,
+        direction="user_to_contact", # System acting on behalf of user
+        message=f"[System Alert Tier {tier_number}] {subject}"
+    )
+    session.add(log_msg)

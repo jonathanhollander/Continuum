@@ -37,19 +37,21 @@
         },
     ];
 
-    let activeScenarioId = "sudden_disability";
-    $: activeScenario =
-        scenarios.find((s) => s.id === activeScenarioId) || scenarios[0];
+    let activeScenarioId = $state("sudden_disability");
+    let activeScenario = $derived(
+        scenarios.find((s) => s.id === activeScenarioId) || scenarios[0],
+    );
 
     // Readiness logic for scenarios
-    $: readiness = {
+    // Readiness logic for scenarios
+    let readiness = $derived({
         hasExecutor: !!$estateProfile.executorName,
         hasProxy: $estateAnalytics.pillars.legal.metrics.hasMedicalProxy,
         hasLivingWill: $estateAnalytics.pillars.legal.metrics.hasLivingWill,
         hasHeirlooms: $estateAnalytics.pillars.legacy.metrics.heirloomCount > 0,
         hasDigital: $estateAnalytics.pillars.financial.metrics.digitalCount > 0,
         score: $estateAnalytics.overallHealth,
-    };
+    });
 </script>
 
 <div class="max-w-6xl mx-auto space-y-8 p-4 md:p-8">
@@ -89,7 +91,7 @@
         <div class="lg:col-span-4 space-y-4">
             {#each scenarios as sc}
                 <button
-                    on:click={() => (activeScenarioId = sc.id)}
+                    onclick={() => (activeScenarioId = sc.id)}
                     class="w-full p-6 text-left rounded-[32px] border transition-all relative overflow-hidden group
                     {activeScenarioId === sc.id
                         ? 'bg-white border-red-200 shadow-xl ring-1 ring-red-100'

@@ -8,6 +8,9 @@
   let error = null;
   let data = null;
 
+  let actionLoading = false;
+  let actionMessage = "";
+
   onMount(async () => {
     try {
       const res = await fetch(
@@ -24,6 +27,47 @@
       loading = false;
     }
   });
+
+  async function sendNudge() {
+    if (!data) return;
+    actionLoading = true;
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_BASE || "http://localhost:8000"}/api/pulse/nudge?contact_id=${data.contact_id}`,
+        { method: "POST" },
+      );
+      if (res.ok) {
+        actionMessage = "Message sent! We've notified them you're checking in.";
+        setTimeout(() => (actionMessage = ""), 5000);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      actionLoading = false;
+    }
+  }
+
+  async function confirmContact() {
+    if (!token) return;
+    actionLoading = true;
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_BASE || "http://localhost:8000"}/api/pulse/confirm/${token}`,
+        { method: "POST" },
+      );
+      if (res.ok) {
+        actionMessage = "Confirmed! The pulse timer has been reset.";
+        // Optimistically update UI
+        data.user_status = "active";
+        data.last_checkin = new Date().toISOString();
+        setTimeout(() => (actionMessage = ""), 5000);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      actionLoading = false;
+    }
+  }
 </script>
 
 <div
@@ -113,16 +157,29 @@
       <!-- Actions -->
       <div class="p-4 bg-slate-900/50 flex gap-4">
         <button
-          class="flex-1 bg-slate-800 hover:bg-slate-700 text-white py-3 rounded-xl font-medium transition-colors border border-slate-700"
+          onclick={sendNudge}
+          disabled={actionLoading}
+          class="flex-1 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-white py-3 rounded-xl font-medium transition-colors border border-slate-700"
         >
-          Send Nudge
+          {actionLoading ? "Sending..." : "Send Nudge"}
         </button>
         <button
-          class="flex-1 bg-teal-600 hover:bg-teal-500 text-white py-3 rounded-xl font-medium transition-colors"
+          onclick={confirmContact}
+          disabled={actionLoading}
+          class="flex-1 bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white py-3 rounded-xl font-medium transition-colors"
         >
-          I've Spoken to Them
+          {actionLoading ? "Verifying..." : "I've Spoken to Them"}
         </button>
       </div>
+
+      {#if actionMessage}
+        <div
+          class="p-4 text-center text-sm font-bold text-teal-400 bg-teal-900/20 border-t border-teal-500/20"
+          in:fade
+        >
+          {actionMessage}
+        </div>
+      {/if}
     </div>
   {/if}
 </div>

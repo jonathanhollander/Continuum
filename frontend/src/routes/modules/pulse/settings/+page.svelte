@@ -13,12 +13,16 @@
         Loader2,
         Settings2,
         BellRing,
+        Pencil,
+        Check,
+        X,
     } from "lucide-svelte";
 
     const USER_ID = 1;
 
     let saving = $state(false);
     let connectingBio = $state(false);
+    let editingTierId = $state<number | null>(null);
 
     let settings = $state({
         enabled: false,
@@ -36,10 +40,11 @@
         await loadData();
     });
 
+    // ... loadData ...
+
     async function loadData() {
         try {
-            const baseUrl =
-                import.meta.env.VITE_API_BASE || "http://localhost:8000";
+            const baseUrl = import.meta.env.VITE_API_BASE || "";
             const [settingsRes, tiersRes, contactsRes] = await Promise.all([
                 fetch(`${baseUrl}/api/pulse/settings?user_id=${USER_ID}`),
                 fetch(`${baseUrl}/api/pulse/tiers?user_id=${USER_ID}`),
@@ -54,6 +59,7 @@
             if (contactsRes.ok) contacts = await contactsRes.json();
 
             if (tiers.length === 0) {
+                // ... defaults ...
                 tiers = [
                     {
                         id: 1,
@@ -89,8 +95,7 @@
     async function saveSettings() {
         saving = true;
         try {
-            const baseUrl =
-                import.meta.env.VITE_API_BASE || "http://localhost:8000";
+            const baseUrl = import.meta.env.VITE_API_BASE || "";
             const res = await fetch(
                 `${baseUrl}/api/pulse/settings?user_id=${USER_ID}`,
                 {
@@ -108,10 +113,26 @@
         }
     }
 
+    async function updateTier(tier: any) {
+        try {
+            const baseUrl = import.meta.env.VITE_API_BASE || "";
+            await fetch(
+                `${baseUrl}/api/pulse/tiers/${tier.id}?user_id=${USER_ID}`,
+                {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(tier),
+                },
+            );
+            editingTierId = null;
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
     async function updateContact(contact: any) {
         try {
-            const baseUrl =
-                import.meta.env.VITE_API_BASE || "http://localhost:8000";
+            const baseUrl = import.meta.env.VITE_API_BASE || "";
             const res = await fetch(
                 `${baseUrl}/api/pulse/contacts/${contact.id}?user_id=${USER_ID}`,
                 {
@@ -120,6 +141,13 @@
                     body: JSON.stringify(contact),
                 },
             );
+            // Refresh contacts to ensure list updates if tier changed
+            if (res.ok) {
+                // Verify if we need to manually trigger reactivity or if $state handles it
+                // With Svelte 5 deep reactivity on array objects, this might be fine,
+                // but 'getContactsForTier' needs to see the change.
+                contacts = [...contacts]; // Force refresh
+            }
         } catch (e) {
             console.error(e);
         }
@@ -136,17 +164,50 @@
         saveSettings();
     }
 
-    function toggleBiometric() {
-        if (!settings.biometric_extension_enabled) {
-            connectingBio = true;
-            setTimeout(() => {
-                settings.biometric_extension_enabled = true;
-                connectingBio = false;
-                saveSettings();
-            }, 1500);
-        } else {
+    async function toggleBiometric() {
+        if (settings.biometric_extension_enabled) {
+            // Disable simply
             settings.biometric_extension_enabled = false;
-            saveSettings();
+            await saveSettings();
+            return;
+        }
+
+        // Start Real Enrollment Flow
+        try {
+            connectingBio = true;
+            const baseUrl = import.meta.env.VITE_API_BASE || "";
+
+            // 1. Get Options
+            const optsRes = await fetch(
+                `${baseUrl}/api/pulse/auth/webauthn/register/start?user_id=${USER_ID}`,
+                { method: "POST" },
+            );
+            const options = await optsRes.json();
+
+            // 2. Browser Interaction
+            const attResp = await startRegistration(options);
+
+            // 3. Verify
+            const verifyRes = await fetch(
+                `${baseUrl}/api/pulse/auth/webauthn/register/finish?user_id=${USER_ID}`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(attResp),
+                },
+            );
+
+            if (verifyRes.ok) {
+                settings.biometric_extension_enabled = true;
+                await saveSettings();
+            } else {
+                alert("Biometric verification failed.");
+            }
+        } catch (e) {
+            console.error("WebAuthn Failed", e);
+            alert("Could not register biometric device. See console.");
+        } finally {
+            connectingBio = false;
         }
     }
 
@@ -161,8 +222,7 @@
         if (!email) return;
 
         try {
-            const baseUrl =
-                import.meta.env.VITE_API_BASE || "http://localhost:8000";
+            const baseUrl = import.meta.env.VITE_API_BASE || "";
             const res = await fetch(
                 `${baseUrl}/api/pulse/contacts?user_id=${USER_ID}`,
                 {
@@ -185,8 +245,7 @@
     async function deleteContact(contactId: number) {
         if (!confirm("Remove this contact?")) return;
         try {
-            const baseUrl =
-                import.meta.env.VITE_API_BASE || "http://localhost:8000";
+            const baseUrl = import.meta.env.VITE_API_BASE || "";
             await fetch(
                 `${baseUrl}/api/pulse/contacts/${contactId}?user_id=${USER_ID}`,
                 { method: "DELETE" },
@@ -240,7 +299,7 @@
         </div>
 
         <!-- ESCALATION PROTOCOL (PER-CONTACT INDIVIDUALIZATION) -->
-        <div class="space-y-4">
+        <div class="space-y-4" id="contacts-section">
             <div class="flex items-center justify-between">
                 <h3
                     class="text-lg font-medium text-slate-200 flex items-center gap-2"
@@ -268,10 +327,35 @@
                                     class="text-xs font-bold text-teal-500 uppercase tracking-wider"
                                     >Tier {tier.tier_number}</span
                                 >
-                                <span
-                                    class="text-[10px] text-slate-500 uppercase tracking-widest bg-slate-900/50 px-2 py-0.5 rounded border border-slate-700"
-                                    >+{tier.delay_hours}h default</span
-                                >
+                                {#if editingTierId === tier.id}
+                                    <div class="flex items-center gap-2">
+                                        <input
+                                            type="number"
+                                            class="w-12 bg-slate-900 border border-teal-500/50 rounded px-1 py-0.5 text-xs text-white"
+                                            bind:value={tier.delay_hours}
+                                        />
+                                        <span class="text-[10px] text-slate-500"
+                                            >hours</span
+                                        >
+                                        <button
+                                            onclick={() => updateTier(tier)}
+                                            class="text-emerald-400 hover:text-emerald-300"
+                                        >
+                                            <Check class="w-3 h-3" />
+                                        </button>
+                                    </div>
+                                {:else}
+                                    <span
+                                        class="text-[10px] text-slate-500 uppercase tracking-widest bg-slate-900/50 px-2 py-0.5 rounded border border-slate-700 flex items-center gap-2 group/edit cursor-pointer hover:border-teal-500/30 transition-colors"
+                                        onclick={() =>
+                                            (editingTierId = tier.id)}
+                                    >
+                                        +{tier.delay_hours}h default
+                                        <Pencil
+                                            class="w-2 h-2 opacity-0 group-hover/edit:opacity-100 transition-opacity"
+                                        />
+                                    </span>
+                                {/if}
                             </div>
                             <button
                                 onclick={() => addContact(tier.id)}

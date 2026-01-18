@@ -1,8 +1,8 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { get } from 'svelte/store';
-import { propertyStore } from '$lib/stores/propertyStore';
-import { heirloomStore } from '$lib/stores/heirloomStore';
+import { writable, get } from 'svelte/store';
+import { propertyStore } from '$lib/stores/propertyStore.svelte';
+import { heirloomStore } from '$lib/stores/heirloomStore.svelte';
 import { timelineStore } from '$lib/stores/timelineStore';
 import { medicalStore } from '$lib/stores/medicalStore';
 import { insuranceStore } from '$lib/stores/insuranceStore';
@@ -68,8 +68,8 @@ export async function createPDFBlob(
 
             doc.setFontSize(14);
             doc.setTextColor(100);
-            doc.text(`Scope: ${scope.charAt(0).toUpperCase() + scope.slice(1)}`, pageWidth / 2, 50, { align: 'center' });
-            doc.text(`Generated: ${new Date().toLocaleDateString()}`, pageWidth / 2, 60, { align: 'center' });
+            doc.text(`Scope: ${scope.charAt(0).toUpperCase() + scope.slice(1)} `, pageWidth / 2, 50, { align: 'center' });
+            doc.text(`Generated: ${new Date().toLocaleDateString()} `, pageWidth / 2, 60, { align: 'center' });
 
             doc.addPage();
 
@@ -78,7 +78,7 @@ export async function createPDFBlob(
             // --- 2. Property & Assets ---
             if (scope === 'full' || scope === 'insurance') {
                 onProgress("Processing Assets...");
-                const assets = get(propertyStore) || [];
+                const assets = propertyStore.items || [];
 
                 currentY = addSectionTitle("Property & Assets", currentY);
 
@@ -89,7 +89,7 @@ export async function createPDFBlob(
                         item.name,
                         item.type,
                         item.location,
-                        `$${item.valuation.toLocaleString()}`,
+                        `$${item.valuation.toLocaleString()} `,
                         item.status
                     ]);
 
@@ -143,7 +143,7 @@ export async function createPDFBlob(
                 onProgress("Processing Heirlooms...");
                 if (currentY > 250) { doc.addPage(); currentY = 20; }
 
-                const heirlooms = get(heirloomStore) || [];
+                const heirlooms = heirloomStore.items || [];
                 currentY = addSectionTitle("Family Heirlooms", currentY);
 
                 if (heirlooms.length === 0) {

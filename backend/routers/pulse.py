@@ -201,6 +201,61 @@ def delete_vault_item(item_id: int, user_id: int, session: Session = Depends(get
         session.commit()
     return {"status": "deleted"}
 
+@router.put("/vault/{item_id}")
+def update_vault_item(item_id: int, updated: PulseVault, user_id: int, session: Session = Depends(get_session)):
+    item = session.get(PulseVault, item_id)
+    if not item or item.user_id != user_id:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    item.name = updated.name
+    item.content = updated.content
+    item.unlock_condition = updated.unlock_condition
+    
+    session.add(item)
+    session.commit()
+    session.refresh(item)
+    return item
+
+@router.post("/nudge")
+def send_nudge(contact_id: int, session: Session = Depends(get_session)):
+    # In a real app, this would trigger an email/SMS to the user
+    # For now, we'll log it or perhaps create a system message
+    contact = session.get(PulseContact, contact_id)
+    if not contact:
+        raise HTTPException(status_code=404, detail="Contact not found")
+        
+    print(f"--- NUDGE SENT from {contact.name} to User {contact.user_id} ---")
+    
+    # Optional: ensure we log a message
+    msg = PulseMessage(
+        user_id=contact.user_id, 
+        contact_id=contact.id, 
+        direction="contact_to_user", 
+        message="Thinking of you! Just sending a quick nudge."
+    )
+    session.add(msg)
+    session.commit()
+    
+    return {"status": "nudge_sent"}
+
+@router.post("/confirm/{token}")
+def confirm_contact(token: str, session: Session = Depends(get_session)):
+    contact = session.exec(select(PulseContact).where(PulseContact.portal_token == token)).first()
+    if not contact:
+        raise HTTPException(status_code=404, detail="Invalid token")
+    
+    # Resetting the user's safety timer or logging a 'spoken to' event
+    # This effectively acts as a proxy check-in
+    checkin = PulseCheckin(
+        user_id=contact.user_id, 
+        method="guardian_confirmation", 
+        note=f"Confirmed by {contact.name}"
+    )
+    session.add(checkin)
+    session.commit()
+    
+    return {"status": "confirmed"}
+
 # --- Safety & Monitoring ---
 
 @router.post("/safety/start")
@@ -241,4 +296,95 @@ def verify_checkin_token(token: str, session: Session = Depends(get_session)):
 
 @router.get("/tiers")
 def get_tiers(user_id: int, session: Session = Depends(get_session)):
-    return session.exec(select(PulseEscalationTier).where(PulseEscalationTier.user_id == user_id).order_by(PulseEscalationTier.tier_number)).all()
+    tiers = session.exec(select(PulseEscalationTier).where(PulseEscalationTier.user_id == user_id).order_by(PulseEscalationTier.tier_number)).all()
+    if not tiers:
+        # Auto-initialize defaults
+        defaults = [
+            PulseEscalationTier(user_id=user_id, tier_number=1, delay_hours=0, notification_method="email"),
+            PulseEscalationTier(user_id=user_id, tier_number=2, delay_hours=6, notification_method="both"),
+            PulseEscalationTier(user_id=user_id, tier_number=3, delay_hours=12, notification_method="both"),
+            PulseEscalationTier(user_id=user_id, tier_number=4, delay_hours=24, notification_method="both"),
+        ]
+        for t in defaults:
+            session.add(t)
+        session.commit()
+        # Refresh to get IDs
+        tiers = session.exec(select(PulseEscalationTier).where(PulseEscalationTier.user_id == user_id).order_by(PulseEscalationTier.tier_number)).all()
+    
+    return tiers
+
+@router.put("/tiers/{tier_id}")
+def update_tier(user_id: int, tier_id: int, updated: PulseEscalationTier, session: Session = Depends(get_session)):
+    tier = session.get(PulseEscalationTier, tier_id)
+    if not tier or tier.user_id != user_id:
+        raise HTTPException(status_code=404, detail="Tier not found")
+    
+    tier.delay_hours = updated.delay_hours
+    tier.notification_method = updated.notification_method
+    
+    session.add(tier)
+    session.commit()
+    return tier
+
+from backend.security import get_registration_options, verify_registration
+from backend.pulse_models import PulseCredential
+
+# Simple in-memory challenge store (Use Redis in production)
+PENDING_CHALLENGES = {} 
+
+@router.post("/auth/webauthn/register/start")
+def register_webauthn_start(user_id: int, session: Session = Depends(get_session)):
+    user = session.get(User, user_id)
+    if not user:
+         # Fallback for dev mode if User table not populated or using fake ID
+         email = "user@example.com"
+    else:
+         email = user.email
+
+    options = get_registration_options(str(user_id), email)
+    
+    # Store challenge temporarily
+    PENDING_CHALLENGES[str(user_id)] = options.challenge
+    
+    # Convert to JSON-compatible dict (webauthn helper does this but we ensure dict)
+    return options.to_dict()
+
+@router.post("/auth/webauthn/register/finish")
+def register_webauthn_finish(user_id: int, payload: dict, session: Session = Depends(get_session)):
+    challenge = PENDING_CHALLENGES.pop(str(user_id), None)
+    if not challenge:
+        raise HTTPException(status_code=400, detail="Challenge expired or not found")
+        
+    try:
+        # 1. Verify
+        # We need to reconstruct the original options dict partially for validation
+        verification = verify_registration(
+            options={"challenge": challenge},
+            response=payload
+        )
+        
+        # 2. Save Credential
+        cred_id = verification.credential_id
+        # Convert bytes to base64 or used provided ID from library
+        
+        # Check if exists
+        existing = session.get(PulseCredential, str(cred_id)) # Casting ID to string if needed
+        if existing:
+            # Overwrite or error? Let's overwrite for dev friendliness
+            session.delete(existing)
+            session.commit()
+            
+        new_cred = PulseCredential(
+            id=str(cred_id), # Ensure string
+            user_id=user_id,
+            public_key=str(verification.credential_public_key), # Store as string representation
+            sign_count=verification.sign_count
+        )
+        session.add(new_cred)
+        session.commit()
+        
+        return {"status": "verified", "credential_id": str(cred_id)}
+        
+    except Exception as e:
+        print(f"WebAuthn Error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))

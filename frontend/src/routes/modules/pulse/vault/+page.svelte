@@ -35,8 +35,7 @@
 
     async function loadVault() {
         try {
-            const baseUrl =
-                import.meta.env.VITE_API_BASE || "http://localhost:8000";
+            const baseUrl = import.meta.env.VITE_API_BASE || "";
             const res = await fetch(
                 `${baseUrl}/api/pulse/vault?user_id=${USER_ID}`,
             );
@@ -50,19 +49,38 @@
         if (!newItem.name || !newItem.content) return;
         saving = true;
         try {
-            const baseUrl =
-                import.meta.env.VITE_API_BASE || "http://localhost:8000";
-            const res = await fetch(
-                `${baseUrl}/api/pulse/vault?user_id=${USER_ID}`,
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(newItem),
-                },
-            );
+            const baseUrl = import.meta.env.VITE_API_BASE || "";
+
+            let res;
+            if (newItem.id) {
+                // Update implementation
+                res = await fetch(
+                    `${baseUrl}/api/pulse/vault/${newItem.id}?user_id=${USER_ID}`,
+                    {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(newItem),
+                    },
+                );
+            } else {
+                // Create implementation
+                res = await fetch(
+                    `${baseUrl}/api/pulse/vault?user_id=${USER_ID}`,
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(newItem),
+                    },
+                );
+            }
+
             if (res.ok) {
-                const added = await res.json();
-                items = [...items, added];
+                const saved = await res.json();
+                if (newItem.id) {
+                    items = items.map((i) => (i.id === saved.id ? saved : i));
+                } else {
+                    items = [...items, saved];
+                }
                 newItem = {
                     name: "",
                     content: "",
@@ -239,6 +257,34 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
+                        <button
+                            onclick={() => {
+                                // Populate edit state
+                                newItem = {
+                                    id: item.id,
+                                    name: item.name,
+                                    content: item.content,
+                                    unlock_condition: item.unlock_condition,
+                                };
+                                window.scrollTo({ top: 0, behavior: "smooth" });
+                            }}
+                            class="p-2 text-slate-500 hover:text-indigo-400 opacity-0 group-hover:opacity-100 transition-all"
+                        >
+                            <span class="sr-only">Edit</span>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="w-4 h-4"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                ><path
+                                    d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"
+                                /><path d="m15 5 4 4" /></svg
+                            >
+                        </button>
                         <button
                             onclick={() =>
                                 (showSecrets[item.id] = !showSecrets[item.id])}
