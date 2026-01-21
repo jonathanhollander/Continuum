@@ -657,6 +657,14 @@ Ref: CODEBASE_REVIEW_REPORT.md issue #3
 
 ## NOTES
 
+### Railway PostgreSQL Database:
+- **This agent will use your EXISTING Railway PostgreSQL database**
+- No need to set up a new database - it's already running
+- All new tables (family, insurance, medical, etc.) will be created in your existing Railway PostgreSQL
+- The `DATABASE_URL` is automatically provided by Railway
+- SQLModel will create tables on first run or via Alembic migrations (see Agent 11)
+
+### Critical Notes:
 - This is a CRITICAL fix preventing major data loss
 - Must implement ALL 11 modules to reach production readiness
 - Consider creating a data migration script to import existing localStorage data

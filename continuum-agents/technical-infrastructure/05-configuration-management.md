@@ -787,6 +787,20 @@ Ref: CODEBASE_REVIEW_REPORT.md issue #8
 - Add configuration validation on application startup
 - Document all environment variables in README
 
+### Railway PostgreSQL (IMPORTANT):
+- **PostgreSQL is ALREADY RUNNING on Railway**
+- Railway automatically provides `DATABASE_URL` environment variable
+- No need to create a new database - use the existing one
+- The `DATABASE_URL` value is automatically injected by Railway
+- For local development, use the Railway connection string or local PostgreSQL
+- To get your Railway database URL:
+  ```bash
+  railway variables
+  # Shows: DATABASE_URL=postgresql://postgres:...@...railway.app:5432/railway
+  ```
+- The config system will automatically use Railway's `DATABASE_URL` in production
+- All database agents (02, 11) will use this existing PostgreSQL database
+
 ### Security Best Practices:
 - Rotate secrets regularly
 - Use different secrets for each environment

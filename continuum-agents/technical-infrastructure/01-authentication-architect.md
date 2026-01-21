@@ -867,6 +867,14 @@ Ref: CODEBASE_REVIEW_REPORT.md issue #1
 
 ## NOTES
 
+### Railway PostgreSQL Database:
+- **This agent will use your EXISTING Railway PostgreSQL database**
+- The User table will be created in your existing Railway PostgreSQL
+- No need to set up a new database - it's already running
+- SQLModel will create the `user` table on first run or via Alembic migration
+- The `DATABASE_URL` is automatically provided by Railway
+
+### Critical Implementation Notes:
 - This is a CRITICAL security fix
 - All endpoints must be updated to use get_current_active_user dependency
 - JWT secret should be changed in production via environment variable

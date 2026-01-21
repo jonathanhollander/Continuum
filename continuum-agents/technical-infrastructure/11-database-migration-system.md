@@ -153,4 +153,25 @@ Closes: Database migration system
 
 ---
 
+## NOTES
+
+### Railway PostgreSQL Database:
+- **This agent will use your EXISTING Railway PostgreSQL database**
+- Alembic migrations will run against your Railway PostgreSQL instance
+- The `DATABASE_URL` from Railway will be used for all migrations
+- All migrations will be tracked in the `alembic_version` table in your Railway database
+- No need to create a new database - migrations will modify the existing one
+- For local development, you can:
+  - Use `railway run alembic upgrade head` to run migrations against Railway database
+  - Or configure a local PostgreSQL instance for testing migrations first
+
+### Migration Safety:
+- Always test migrations locally before production
+- Create backups before running migrations in production
+- Use Railway's built-in PostgreSQL backups
+- Review auto-generated migrations carefully before committing
+- Test both `upgrade` and `downgrade` paths
+
+---
+
 **READY TO EXECUTE**

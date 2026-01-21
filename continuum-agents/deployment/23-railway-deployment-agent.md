@@ -218,4 +218,38 @@ Closes: Railway deployment setup
 
 ---
 
+## NOTES
+
+### Your Existing Railway Setup:
+- ✅ **PostgreSQL is ALREADY RUNNING on Railway** - No need to create it
+- ✅ Railway automatically provides `DATABASE_URL` environment variable
+- ✅ Your existing database will be used by the application
+- ✅ Just need to configure other environment variables (secrets, SMTP, AI keys)
+
+### What This Agent Does:
+- Configures deployment settings (railway.json, Procfile)
+- Sets up health check endpoint
+- Configures environment variables (JWT secrets, SMTP, etc.)
+- Sets up automated migrations on deploy
+- Does NOT create a new database - uses your existing Railway PostgreSQL
+
+### Environment Variables to Set:
+You'll need to set these in Railway dashboard (Database URL is already set):
+- `JWT_SECRET_KEY` - Generate with `openssl rand -hex 32`
+- `SECRET_KEY` - Generate with `openssl rand -hex 32`
+- `SMTP_SERVER`, `SMTP_USERNAME`, `SMTP_PASSWORD` - Your email provider
+- `OPENROUTER_API_KEY` - Your AI API key
+- `CORS_ORIGINS` - Your production domain
+
+### Railway Dashboard:
+```bash
+# Check your existing setup
+railway variables
+
+# Should show:
+DATABASE_URL=postgresql://postgres:...@...railway.app:5432/railway  ✅ Already set
+```
+
+---
+
 **READY TO EXECUTE**
