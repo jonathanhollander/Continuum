@@ -2,6 +2,10 @@
     import { pulse } from "$lib/stores/pulse";
     import { onMount } from "svelte";
     import {
+        startRegistration,
+        startAuthentication,
+    } from "@simplewebauthn/browser";
+    import {
         Shield,
         Activity,
         Clock,
