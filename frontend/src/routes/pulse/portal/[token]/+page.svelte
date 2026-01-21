@@ -2,6 +2,7 @@
     import { pulse } from "$lib/stores/pulse";
     import { onMount } from "svelte";
     import { page } from "$app/stores";
+    import { API_BASE_URL } from "$lib/config";
     import {
         ShieldCheck,
         Clock,
@@ -34,7 +35,7 @@
     async function fetchPortal(token: string) {
         try {
             const baseUrl =
-                import.meta.env.VITE_API_BASE || "http://localhost:8000";
+                API_BASE_URL;
             const res = await fetch(`${baseUrl}/api/pulse/portal/${token}`);
             if (res.ok) {
                 state.data = await res.json();
@@ -56,8 +57,7 @@
 
     async function sendHug() {
         const token = $page.params.token;
-        const baseUrl =
-            import.meta.env.VITE_API_BASE || "http://localhost:8000";
+        const baseUrl = API_BASE_URL;
         await fetch(`${baseUrl}/api/pulse/messages`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },

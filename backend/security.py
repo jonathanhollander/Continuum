@@ -1,4 +1,5 @@
 import os
+from backend.config import settings
 from webauthn import (
     generate_registration_options,
     verify_registration_response,
@@ -14,9 +15,9 @@ from webauthn.helpers.structs import (
     ResidentKeyRequirement,
 )
 
-RP_ID = os.getenv("RP_ID", "localhost")
-RP_NAME = "Continuum Estate"
-ORIGIN = os.getenv("ORIGIN", "http://localhost:5173")
+RP_ID = settings.RP_ID
+RP_NAME = settings.RP_NAME
+ORIGIN = settings.ORIGIN
 
 def get_registration_options(user_id: str, email: str):
     """Generates options for WebAuthn registration (Passkey creation)."""

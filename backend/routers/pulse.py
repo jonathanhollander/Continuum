@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 from datetime import datetime, timedelta
 from backend.database import get_session, User
+from backend.auth import get_current_user
 import secrets
 from backend.pulse_models import (
     PulseSettings, PulseCheckin, PulseVault, 
@@ -12,21 +13,21 @@ from backend.pulse_models import (
 router = APIRouter(prefix="/api/pulse", tags=["pulse"])
 
 @router.post("/checkin")
-def checkin(user_id: int, method: str = "manual", note: str = None, session: Session = Depends(get_session)):
-    checkin = PulseCheckin(user_id=user_id, method=method, note=note)
+def checkin(method: str = "manual", note: str = None, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    checkin = PulseCheckin(user_id=user.id, method=method, note=note)
     session.add(checkin)
     session.commit()
     return {"status": "success", "timestamp": checkin.timestamp}
 
 @router.get("/status")
-def get_status(user_id: int, session: Session = Depends(get_session)):
-    settings = session.get(PulseSettings, user_id)
+def get_status(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    settings = session.get(PulseSettings, user.id)
     if not settings:
         return {"status": "not_configured"}
     if not settings.enabled:
         return {"status": "disabled"}
 
-    statement = select(PulseCheckin).where(PulseCheckin.user_id == user_id).order_by(PulseCheckin.timestamp.desc())
+    statement = select(PulseCheckin).where(PulseCheckin.user_id == user.id).order_by(PulseCheckin.timestamp.desc())
     last_checkin = session.exec(statement).first()
     
     # Calculate next expected (simplified)
@@ -40,10 +41,10 @@ def get_status(user_id: int, session: Session = Depends(get_session)):
     }
 
 @router.get("/settings")
-def get_settings(user_id: int, session: Session = Depends(get_session)):
-    settings = session.get(PulseSettings, user_id)
+def get_settings(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    settings = session.get(PulseSettings, user.id)
     if not settings:
-        settings = PulseSettings(user_id=user_id, checkin_token=secrets.token_urlsafe(16))
+        settings = PulseSettings(user_id=user.id, checkin_token=secrets.token_urlsafe(16))
         session.add(settings)
         session.commit()
     elif not settings.checkin_token:
@@ -53,10 +54,10 @@ def get_settings(user_id: int, session: Session = Depends(get_session)):
     return settings
 
 @router.post("/settings")
-def update_settings(user_id: int, new_settings: PulseSettings, session: Session = Depends(get_session)):
-    settings = session.get(PulseSettings, user_id)
+def update_settings(new_settings: PulseSettings, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    settings = session.get(PulseSettings, user.id)
     if not settings:
-        settings = PulseSettings(user_id=user_id)
+        settings = PulseSettings(user_id=user.id)
         session.add(settings)
     
     settings_data = new_settings.dict(exclude_unset=True)
@@ -68,18 +69,18 @@ def update_settings(user_id: int, new_settings: PulseSettings, session: Session 
     return {"status": "updated"}
 
 @router.get("/history")
-def get_history(user_id: int, limit: int = 10, session: Session = Depends(get_session)):
-    statement = select(PulseCheckin).where(PulseCheckin.user_id == user_id).order_by(PulseCheckin.timestamp.desc()).limit(limit)
+def get_history(limit: int = 10, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    statement = select(PulseCheckin).where(PulseCheckin.user_id == user.id).order_by(PulseCheckin.timestamp.desc()).limit(limit)
     return session.exec(statement).all()
 
 @router.get("/contacts")
-def get_contacts(user_id: int, session: Session = Depends(get_session)):
-    statement = select(PulseContact).where(PulseContact.user_id == user_id)
+def get_contacts(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    statement = select(PulseContact).where(PulseContact.user_id == user.id)
     return session.exec(statement).all()
 
 @router.post("/contacts")
-def create_contact(user_id: int, contact: PulseContact, session: Session = Depends(get_session)):
-    contact.user_id = user_id
+def create_contact(contact: PulseContact, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    contact.user_id = user.id
     contact.portal_token = secrets.token_urlsafe(32) # Grant portal access immediately
     session.add(contact)
     session.commit()
@@ -87,9 +88,9 @@ def create_contact(user_id: int, contact: PulseContact, session: Session = Depen
     return contact
 
 @router.put("/contacts/{contact_id}")
-def update_contact(user_id: int, contact_id: int, updated: PulseContact, session: Session = Depends(get_session)):
+def update_contact(contact_id: int, updated: PulseContact, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     contact = session.get(PulseContact, contact_id)
-    if not contact or contact.user_id != user_id:
+    if not contact or contact.user_id != user.id:
         raise HTTPException(status_code=404, detail="Contact not found")
     
     data = updated.dict(exclude_unset=True)
@@ -101,9 +102,9 @@ def update_contact(user_id: int, contact_id: int, updated: PulseContact, session
     return contact
 
 @router.delete("/contacts/{contact_id}")
-def delete_contact(user_id: int, contact_id: int, session: Session = Depends(get_session)):
+def delete_contact(contact_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     contact = session.get(PulseContact, contact_id)
-    if not contact or contact.user_id != user_id:
+    if not contact or contact.user_id != user.id:
         raise HTTPException(status_code=404, detail="Contact not found")
     session.delete(contact)
     session.commit()
@@ -165,17 +166,17 @@ def guardian_respond(token: str, action: str, session: Session = Depends(get_ses
 # --- Messaging ---
 
 @router.get("/messages")
-def get_messages(user_id: int, session: Session = Depends(get_session)):
-    statement = select(PulseMessage).where(PulseMessage.user_id == user_id).order_by(PulseMessage.sent_at.desc())
+def get_messages(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    statement = select(PulseMessage).where(PulseMessage.user_id == user.id).order_by(PulseMessage.sent_at.desc())
     return session.exec(statement).all()
 
 @router.post("/messages")
-def send_message(user_id: int, contact_id: int, message: str, session: Session = Depends(get_session)):
+def send_message(contact_id: int, message: str, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     contact = session.get(PulseContact, contact_id)
-    if not contact or contact.user_id != user_id:
+    if not contact or contact.user_id != user.id:
         raise HTTPException(status_code=404, detail="Contact not found")
         
-    msg = PulseMessage(user_id=user_id, contact_id=contact_id, direction="user_to_contact", message=message)
+    msg = PulseMessage(user_id=user.id, contact_id=contact_id, direction="user_to_contact", message=message)
     session.add(msg)
     session.commit()
     return {"status": "sent"}
@@ -183,8 +184,8 @@ def send_message(user_id: int, contact_id: int, message: str, session: Session =
 # --- Vault & Instructions ---
 
 @router.get("/vault")
-def get_vault(user_id: int, session: Session = Depends(get_session)):
-    return session.exec(select(PulseVault).where(PulseVault.user_id == user_id)).all()
+def get_vault(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    return session.exec(select(PulseVault).where(PulseVault.user_id == user.id)).all()
 
 @router.post("/vault")
 def add_vault_item(item: PulseVault, session: Session = Depends(get_session)):
@@ -202,9 +203,9 @@ def delete_vault_item(item_id: int, user_id: int, session: Session = Depends(get
     return {"status": "deleted"}
 
 @router.put("/vault/{item_id}")
-def update_vault_item(item_id: int, updated: PulseVault, user_id: int, session: Session = Depends(get_session)):
+def update_vault_item(item_id: int, updated: PulseVault, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     item = session.get(PulseVault, item_id)
-    if not item or item.user_id != user_id:
+    if not item or item.user_id != user.id:
         raise HTTPException(status_code=404, detail="Item not found")
     
     item.name = updated.name
@@ -259,23 +260,23 @@ def confirm_contact(token: str, session: Session = Depends(get_session)):
 # --- Safety & Monitoring ---
 
 @router.post("/safety/start")
-def start_safety_timer(user_id: int, minutes: int, purpose: str = "Walking home", session: Session = Depends(get_session)):
-    existing = session.exec(select(PulseSafetyTimer).where(PulseSafetyTimer.user_id == user_id, PulseSafetyTimer.is_active == True)).all()
+def start_safety_timer(minutes: int, purpose: str = "Walking home", user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    existing = session.exec(select(PulseSafetyTimer).where(PulseSafetyTimer.user_id == user.id, PulseSafetyTimer.is_active == True)).all()
     for t in existing: t.is_active = False; session.add(t)
         
     expires = datetime.utcnow() + timedelta(minutes=minutes)
-    timer = PulseSafetyTimer(user_id=user_id, expires_at=expires, purpose=purpose)
+    timer = PulseSafetyTimer(user_id=user.id, expires_at=expires, purpose=purpose)
     session.add(timer)
     session.commit()
     return timer
 
 @router.get("/safety/status")
-def get_safety_status(user_id: int, session: Session = Depends(get_session)):
-    return session.exec(select(PulseSafetyTimer).where(PulseSafetyTimer.user_id == user_id, PulseSafetyTimer.is_active == True)).first()
+def get_safety_status(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    return session.exec(select(PulseSafetyTimer).where(PulseSafetyTimer.user_id == user.id, PulseSafetyTimer.is_active == True)).first()
 
 @router.post("/safety/cancel")
-def cancel_safety_timer(user_id: int, session: Session = Depends(get_session)):
-    timer = session.exec(select(PulseSafetyTimer).where(PulseSafetyTimer.user_id == user_id, PulseSafetyTimer.is_active == True)).first()
+def cancel_safety_timer(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    timer = session.exec(select(PulseSafetyTimer).where(PulseSafetyTimer.user_id == user.id, PulseSafetyTimer.is_active == True)).first()
     if timer:
         timer.is_active = False
         session.add(timer)
@@ -295,28 +296,28 @@ def verify_checkin_token(token: str, session: Session = Depends(get_session)):
     return {"status": "success", "user_id": settings.user_id}
 
 @router.get("/tiers")
-def get_tiers(user_id: int, session: Session = Depends(get_session)):
-    tiers = session.exec(select(PulseEscalationTier).where(PulseEscalationTier.user_id == user_id).order_by(PulseEscalationTier.tier_number)).all()
+def get_tiers(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    tiers = session.exec(select(PulseEscalationTier).where(PulseEscalationTier.user_id == user.id).order_by(PulseEscalationTier.tier_number)).all()
     if not tiers:
         # Auto-initialize defaults
         defaults = [
-            PulseEscalationTier(user_id=user_id, tier_number=1, delay_hours=0, notification_method="email"),
-            PulseEscalationTier(user_id=user_id, tier_number=2, delay_hours=6, notification_method="both"),
-            PulseEscalationTier(user_id=user_id, tier_number=3, delay_hours=12, notification_method="both"),
-            PulseEscalationTier(user_id=user_id, tier_number=4, delay_hours=24, notification_method="both"),
+            PulseEscalationTier(user_id=user.id, tier_number=1, delay_hours=0, notification_method="email"),
+            PulseEscalationTier(user_id=user.id, tier_number=2, delay_hours=6, notification_method="both"),
+            PulseEscalationTier(user_id=user.id, tier_number=3, delay_hours=12, notification_method="both"),
+            PulseEscalationTier(user_id=user.id, tier_number=4, delay_hours=24, notification_method="both"),
         ]
         for t in defaults:
             session.add(t)
         session.commit()
         # Refresh to get IDs
-        tiers = session.exec(select(PulseEscalationTier).where(PulseEscalationTier.user_id == user_id).order_by(PulseEscalationTier.tier_number)).all()
+        tiers = session.exec(select(PulseEscalationTier).where(PulseEscalationTier.user_id == user.id).order_by(PulseEscalationTier.tier_number)).all()
     
     return tiers
 
 @router.put("/tiers/{tier_id}")
-def update_tier(user_id: int, tier_id: int, updated: PulseEscalationTier, session: Session = Depends(get_session)):
+def update_tier(tier_id: int, updated: PulseEscalationTier, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     tier = session.get(PulseEscalationTier, tier_id)
-    if not tier or tier.user_id != user_id:
+    if not tier or tier.user_id != user.id:
         raise HTTPException(status_code=404, detail="Tier not found")
     
     tier.delay_hours = updated.delay_hours

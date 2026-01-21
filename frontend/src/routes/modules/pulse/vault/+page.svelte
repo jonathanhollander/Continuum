@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
+    import { API_BASE_URL } from "$lib/config";
     import {
         ShieldAlert,
         Lock,
@@ -35,9 +36,8 @@
 
     async function loadVault() {
         try {
-            const baseUrl = import.meta.env.VITE_API_BASE || "";
             const res = await fetch(
-                `${baseUrl}/api/pulse/vault?user_id=${USER_ID}`,
+                `${API_BASE_URL}/api/pulse/vault?user_id=${USER_ID}`,
             );
             if (res.ok) items = await res.json();
         } finally {
@@ -49,13 +49,11 @@
         if (!newItem.name || !newItem.content) return;
         saving = true;
         try {
-            const baseUrl = import.meta.env.VITE_API_BASE || "";
-
             let res;
             if (newItem.id) {
                 // Update implementation
                 res = await fetch(
-                    `${baseUrl}/api/pulse/vault/${newItem.id}?user_id=${USER_ID}`,
+                    `${API_BASE_URL}/api/pulse/vault/${newItem.id}?user_id=${USER_ID}`,
                     {
                         method: "PUT",
                         headers: { "Content-Type": "application/json" },
@@ -65,7 +63,7 @@
             } else {
                 // Create implementation
                 res = await fetch(
-                    `${baseUrl}/api/pulse/vault?user_id=${USER_ID}`,
+                    `${API_BASE_URL}/api/pulse/vault?user_id=${USER_ID}`,
                     {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -95,8 +93,7 @@
     async function deleteItem(id: number) {
         if (!confirm("Permanently delete these instructions from the vault?"))
             return;
-        const baseUrl =
-            import.meta.env.VITE_API_BASE || "http://localhost:8000";
+        const baseUrl = API_BASE_URL;
         await fetch(`${baseUrl}/api/pulse/vault/${id}?user_id=${USER_ID}`, {
             method: "DELETE",
         });

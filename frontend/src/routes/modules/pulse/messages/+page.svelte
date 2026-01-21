@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
+    import { API_BASE_URL } from "$lib/config";
     import { MessageSquare, Send, User, Reply, Inbox } from "lucide-svelte";
     import { slide, fade } from "svelte/transition";
 
@@ -21,10 +22,9 @@
 
     async function refreshData() {
         try {
-            const baseUrl = import.meta.env.VITE_API_BASE || "";
             const [msgRes, contactsRes] = await Promise.all([
-                fetch(`${baseUrl}/api/pulse/messages?user_id=${USER_ID}`),
-                fetch(`${baseUrl}/api/pulse/contacts?user_id=${USER_ID}`),
+                fetch(`${API_BASE_URL}/api/pulse/messages?user_id=${USER_ID}`),
+                fetch(`${API_BASE_URL}/api/pulse/contacts?user_id=${USER_ID}`),
             ]);
 
             if (msgRes.ok) messages = await msgRes.json();
@@ -41,7 +41,7 @@
 
         try {
             const res = await fetch(
-                `${import.meta.env.VITE_API_BASE || "http://localhost:8000"}/api/pulse/messages?user_id=${USER_ID}&contact_id=${newMessage.contact_id}&message=${encodeURIComponent(newMessage.text)}`,
+                `${API_BASE_URL}/api/pulse/messages?user_id=${USER_ID}&contact_id=${newMessage.contact_id}&message=${encodeURIComponent(newMessage.text)}`,
                 {
                     method: "POST",
                 },

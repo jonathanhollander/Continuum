@@ -27,9 +27,16 @@
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
 
+    import {
+        familyMemories,
+        addFamilyMemory,
+        updateFamilyMemory,
+        removeFamilyMemory,
+    } from "$lib/stores/visualMemoryStore";
+
     // --- State & Types ---
     type MemoryType = "photo" | "recipe" | "quote";
-    let viewMode = $state<"dashboard" | "concierge">("dashboard"); // Default to dashboard for now, or check memories later
+    let viewMode = $state<"dashboard" | "concierge">("dashboard");
 
     interface Memory {
         id: number;
@@ -40,9 +47,10 @@
         desc?: string;
         text?: string;
         author?: string;
+        is_favorite?: boolean;
     }
 
-    let memories = $state<Memory[]>([]);
+    let memories = $derived(familyMemories.items);
     let showAddModal = $state(false);
 
     // Form Mock-Model
@@ -50,29 +58,13 @@
         type: "photo",
         title: "",
         desc: "",
-        image: "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800&q=80", // Default placeholder
+        image: "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800&q=80",
         author: $estateProfile.ownerName || "Me",
         date: new Date().getFullYear().toString(),
     });
 
-    import { getStored, setStored } from "$lib/stores/persistence";
-
-    // ... imports
-
-    const STORAGE_KEY = "family_memories";
-
     onMount(() => {
-        // Default Seed Data (DISABLED FOR GHOST ROW TEST - UNCOMMENT TO RESTORE)
-        /*
-        const defaults: Memory[] = [
-           ...
-        ];
-        */
-
-        memories = getStored<Memory[]>(STORAGE_KEY, []); // Start empty to test Ghost Rows
-        // if (memories.length === 0) {
-        //     viewMode = "concierge";
-        // }
+        familyMemories.sync();
     });
 
     function handleConciergeAnswer(e: CustomEvent) {
@@ -84,25 +76,16 @@
 
         // Auto-create a memory from the concierge answer
         if (answers.fav_memory) {
-            const newId = Date.now();
-            memories = [
-                {
-                    id: newId,
-                    type: "quote",
-                    title: "My Favorite Memory",
-                    text: answers.fav_memory,
-                    author: "Me",
-                },
-                ...memories,
-            ];
-            save();
+            addFamilyMemory({
+                type: "quote",
+                title: "My Favorite Memory",
+                text: answers.fav_memory,
+                author: "Me",
+                is_favorite: false,
+            });
         }
 
         viewMode = "dashboard";
-    }
-
-    function save() {
-        setStored(STORAGE_KEY, memories);
     }
 
     function saveMemory() {
@@ -110,7 +93,9 @@
 
         if (newMemory.id) {
             // Edit Mode
-            const oldMemory = memories.find((m) => m.id === newMemory.id);
+            const oldMemory = memories.find(
+                (m: Memory) => m.id === newMemory.id,
+            );
             const changes = [];
 
             if (oldMemory) {
@@ -134,9 +119,7 @@
                     });
             }
 
-            memories = memories.map((m) =>
-                m.id === newMemory.id ? ({ ...newMemory } as Memory) : m,
-            );
+            updateFamilyMemory(newMemory.id, newMemory as any);
 
             // Log UPDATE
             activityLog.logEvent({
@@ -150,21 +133,22 @@
             });
         } else {
             // Create Mode
-            const newId = Date.now();
-            memories = [{ ...newMemory, id: newId } as Memory, ...memories];
+            addFamilyMemory({
+                ...newMemory,
+                is_favorite: false,
+            } as any);
 
             // Log CREATE
             activityLog.logEvent({
                 module: "Family Hub",
                 action: "CREATE",
                 entityType: "Memory",
-                entityId: String(newId),
+                entityId: "new",
                 entityName: newMemory.title || "Unnamed Memory",
                 userContext: $estateProfile.ownerName || "User",
             });
         }
 
-        save();
         resetForm();
     }
 
@@ -188,8 +172,7 @@
 
     function deleteMemory(id: number) {
         if (!confirm("Remove this memory?")) return;
-        memories = memories.filter((m) => m.id !== id);
-        save();
+        removeFamilyMemory(id);
     }
 
     const collections = [

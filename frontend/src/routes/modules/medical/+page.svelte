@@ -29,17 +29,17 @@
     let newDirective: Partial<MedicalDirective> = {
         type: "healthcare_proxy",
         title: "",
-        locationOfOriginal: "",
-        primaryContact: "",
-        contactPhone: "",
+        location_of_original: "",
+        primary_contact: "",
+        contact_phone: "",
         summary: "",
     };
 
     let showProfileEdit = false;
     let tempProfile = {
-        organDonor: $medicalStore.organDonor,
-        bloodType: $medicalStore.bloodType,
-        allergies: $medicalStore.allergies,
+        organ_donor: $medicalStore.profile.organ_donor,
+        blood_type: $medicalStore.profile.blood_type,
+        allergies: $medicalStore.profile.allergies,
     };
 
     function saveProfile() {
@@ -95,14 +95,14 @@
         newDirective = {
             type: "healthcare_proxy",
             title: "",
-            locationOfOriginal: "",
-            primaryContact: "",
-            contactPhone: "",
+            location_of_original: "",
+            primary_contact: "",
+            contact_phone: "",
             summary: "",
         };
     }
 
-    function removeDirective(id: string) {
+    function removeDirective(id: number) {
         if (
             !confirm(
                 "Remove this directive? This should only be done if the document is revoked.",
@@ -182,13 +182,16 @@
                                         Blood Type
                                     </p>
                                     <p class="text-xl font-bold text-gray-900">
-                                        {$medicalStore.bloodType || "Not Set"}
+                                        {$medicalStore.profile.blood_type ||
+                                            "Not Set"}
                                     </p>
                                 </div>
                                 <div
                                     class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center font-bold"
                                 >
-                                    {$medicalStore.bloodType?.includes("+")
+                                    {$medicalStore.profile.blood_type?.includes(
+                                        "+",
+                                    )
                                         ? "+"
                                         : "-"}
                                 </div>
@@ -203,14 +206,15 @@
                                     Critical Allergies
                                 </p>
                                 <p class="text-sm font-medium text-orange-900">
-                                    {$medicalStore.allergies || "None reported"}
+                                    {$medicalStore.profile.allergies ||
+                                        "None reported"}
                                 </p>
                             </div>
 
                             <div
                                 class="flex items-center gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-100"
                             >
-                                {#if $medicalStore.organDonor}
+                                {#if $medicalStore.profile.organ_donor}
                                     <CircleCheck
                                         class="text-blue-600"
                                         size={20}
@@ -231,7 +235,7 @@
 
                             <button
                                 on:click={() => {
-                                    tempProfile = { ...$medicalStore };
+                                    tempProfile = { ...$medicalStore.profile };
                                     showProfileEdit = true;
                                 }}
                                 class="w-full py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors font-bold text-sm"
@@ -247,7 +251,7 @@
                                     >Blood Type</label
                                 >
                                 <select
-                                    bind:value={tempProfile.bloodType}
+                                    bind:value={tempProfile.blood_type}
                                     class="w-full px-4 py-2 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-red-500"
                                 >
                                     <option value="">Unknown</option>
@@ -276,7 +280,7 @@
                             <div class="flex items-center gap-2">
                                 <input
                                     type="checkbox"
-                                    bind:checked={tempProfile.organDonor}
+                                    bind:checked={tempProfile.organ_donor}
                                     id="donor-check"
                                 />
                                 <label
@@ -372,13 +376,13 @@
                                 >Primary Contact / Proxy</span
                             >
                             <p class="text-sm font-bold text-gray-900">
-                                {dir.primaryContact}
+                                {dir.primary_contact}
                             </p>
                             <p
                                 class="text-xs text-gray-500 flex items-center gap-1 mt-1"
                             >
                                 <Phone size={12} />
-                                {dir.contactPhone}
+                                {dir.contact_phone}
                             </p>
                         </div>
                         <div
@@ -389,7 +393,7 @@
                                 >Location of Original</span
                             >
                             <p class="text-sm font-bold text-gray-900">
-                                {dir.locationOfOriginal}
+                                {dir.location_of_original}
                             </p>
                         </div>
                     </div>
@@ -519,7 +523,7 @@
                         >
                         <input
                             type="text"
-                            bind:value={newDirective.primaryContact}
+                            bind:value={newDirective.primary_contact}
                             placeholder="Name"
                             class="w-full px-4 py-2 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-red-500"
                         />
@@ -531,7 +535,7 @@
                         >
                         <input
                             type="text"
-                            bind:value={newDirective.contactPhone}
+                            bind:value={newDirective.contact_phone}
                             placeholder="(xxx) xxx-xxxx"
                             class="w-full px-4 py-2 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-red-500"
                         />
@@ -545,7 +549,7 @@
                     >
                     <input
                         type="text"
-                        bind:value={newDirective.locationOfOriginal}
+                        bind:value={newDirective.location_of_original}
                         placeholder="e.g. Top drawer in office safe"
                         class="w-full px-4 py-2 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-red-500"
                     />

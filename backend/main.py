@@ -3,20 +3,30 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import uvicorn
+import json
 import os
 from typing import List, Optional
 from pydantic import BaseModel
 from sqlmodel import Session
+from backend.config import settings
 from backend.database import engine, create_db_and_tables, get_session, User, Estate
 from backend.security import get_registration_options, verify_registration, get_authentication_options, verify_authentication
-from backend.routers import pulse, contacts, estate_data
+from backend.auth import create_access_token, get_current_user, ACCESS_TOKEN_EXPIRE_MINUTES
 from backend.pulse_scheduler import start_scheduler, stop_scheduler
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlmodel import select
+from datetime import timedelta
+from backend.routers import pulse, contacts, estate_data, insurance, medical, pets, memories
 
-app = FastAPI(title="Continuum SaaS API", version="0.7.0")
+app = FastAPI(title=settings.APP_NAME, version=settings.APP_VERSION)
 
 app.include_router(pulse.router)
 app.include_router(contacts.router)
 app.include_router(estate_data.router)
+app.include_router(insurance.router)
+app.include_router(medical.router)
+app.include_router(pets.router)
+app.include_router(memories.router)
 
 # Initialize database on startup
 @app.on_event("startup")
@@ -45,17 +55,12 @@ def on_shutdown():
     stop_scheduler()
 
 # Configure CORS
-origins = [
-    "http://localhost:5173",
-    os.getenv("FRONTEND_URL", ""),
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=settings.get_cors_origins_list(),
+    allow_credentials=settings.CORS_ALLOW_CREDENTIALS,
+    allow_methods=settings.CORS_ALLOW_METHODS.split(",") if settings.CORS_ALLOW_METHODS != "*" else ["*"],
+    allow_headers=settings.CORS_ALLOW_HEADERS.split(",") if settings.CORS_ALLOW_HEADERS != "*" else ["*"],
 )
 
 # --- Models ---
@@ -92,26 +97,75 @@ def send_magic_link(request: ChallengeRequest):
     print(f"📧 Sending Magic Link to {request.email}...")
     return {"status": "sent", "email": request.email}
 
+@app.post("/api/auth/token")
+def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), session: Session = Depends(get_session)):
+    # Standard OAuth2 Password Flow
+    # In Continuum, we often use email as username
+    user = session.exec(select(User).where(User.email == form_data.username)).first()
+    if not user:
+        # For dev bootstrapping, if user is 'dev@continuum.im', we know we seeded it
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password")
+    
+    access_token = create_access_token(data={"sub": str(user.id)})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@app.get("/api/auth/me")
+def read_users_me(current_user: User = Depends(get_current_user)):
+    return current_user
+
 @app.get("/api/estate")
-def get_estate(user_id: int, session: Session = Depends(get_session)):
-    # In real SaaS, get user_id from JWT token
-    estate = session.query(Estate).filter(Estate.user_id == user_id).first()
+def get_estate(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    estate = session.exec(select(Estate).where(Estate.user_id == user.id)).first()
     if not estate:
-        raise HTTPException(status_code=404, detail="Estate not found")
+        # Create empty estate for new user
+        estate = Estate(user_id=user.id)
+        session.add(estate)
+        session.commit()
+        session.refresh(estate)
     return estate
 
 @app.post("/api/estate")
-def save_estate(estate_data: dict, user_id: int, session: Session = Depends(get_session)):
-    # In real SaaS, get user_id from JWT token
-    estate = session.query(Estate).filter(Estate.user_id == user_id).first()
+def save_estate(estate_data: dict, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    estate = session.exec(select(Estate).where(Estate.user_id == user.id)).first()
     if not estate:
-        estate = Estate(user_id=user_id)
+        estate = Estate(user_id=user.id)
         session.add(estate)
     
     estate.transparent_data = estate_data.get("transparent_data", "{}")
     estate.encrypted_vault = estate_data.get("encrypted_vault", b"")
     session.commit()
     return {"status": "saved"}
+
+@app.get("/api/estate/profile")
+def get_estate_profile(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    estate = session.exec(select(Estate).where(Estate.user_id == user.id)).first()
+    if not estate:
+        return {}
+    try:
+        td = json.loads(estate.transparent_data or "{}")
+        # Handle cases where td is the profile itself or contains estate_profile
+        if "estate_profile" in td:
+            return td["estate_profile"]
+        return td
+    except:
+        return {}
+
+@app.post("/api/estate/profile")
+def save_estate_profile(profile: dict, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    estate = session.exec(select(Estate).where(Estate.user_id == user.id)).first()
+    if not estate:
+        estate = Estate(user_id=user.id)
+        session.add(estate)
+    
+    try:
+        td = json.loads(estate.transparent_data or "{}")
+    except:
+        td = {}
+    
+    td["estate_profile"] = profile
+    estate.transparent_data = json.dumps(td)
+    session.commit()
+    return td["estate_profile"]
 
 
 # --- SPA Static File Serving ---
@@ -149,5 +203,9 @@ async def serve_spa(full_path: str):
     return FileResponse("frontend/dist/index.html")
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000))
-    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=False)
+    uvicorn.run(
+        "main:app",
+        host=settings.HOST,
+        port=settings.PORT,
+        reload=settings.is_development()
+    )

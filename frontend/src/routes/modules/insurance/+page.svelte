@@ -47,18 +47,18 @@
     let showWizard = $state(false);
 
     let newPolicy = $state<Partial<InsurancePolicy>>({
-        policyName: "",
-        insuranceType: "Life",
+        policy_name: "",
+        insurance_type: "Life",
         insurer: "",
-        policyNumber: "",
-        premiumAmount: 0,
-        premiumFrequency: "Monthly",
+        policy_number: "",
+        premium_amount: 0,
+        premium_frequency: "Monthly",
         beneficiaries: "",
-        agentName: "",
-        agentContact: "",
-        claimsProcedure: "",
+        agent_name: "",
+        agent_contact: "",
+        claims_procedure: "",
         status: "Active",
-        policyDocuments: "",
+        policy_documents: "",
         notes: "",
     });
 
@@ -111,18 +111,18 @@
 
     function addWizardPolicy(name: string, type: any, insurer = "TBD") {
         const created = insuranceStore.addPolicy({
-            policyName: name,
-            insuranceType: type,
+            policy_name: name,
+            insurance_type: type,
             insurer: insurer,
-            policyNumber: "PENDING",
-            premiumAmount: 0,
-            premiumFrequency: "Monthly",
-            beneficiaries: $estateProfile.primaryBeneficiary || "",
-            agentName: "",
-            agentContact: "",
-            claimsProcedure: "",
+            policy_number: "PENDING",
+            premium_amount: 0,
+            premium_frequency: "Monthly",
+            beneficiaries: $estateProfile.primary_beneficiary || "",
+            agent_name: "",
+            agent_contact: "",
+            claims_procedure: "",
             status: "Pending",
-            policyDocuments: "",
+            policy_documents: "",
             notes: "Added via Concierge Wizard",
         });
 
@@ -130,8 +130,8 @@
             module: "Insurance",
             action: "CREATE",
             entityType: "Policy",
-            entityId: created.id,
-            entityName: created.policyName,
+            entityId: created!.id!,
+            entityName: created!.policy_name,
             userContext: "Concierge",
         });
     }
@@ -140,12 +140,12 @@
     const filteredPolicies = $derived(
         policies.filter((p) => {
             const matchesSearch =
-                p.policyName
+                p.policy_name
                     .toLowerCase()
                     .includes(searchQuery.toLowerCase()) ||
                 p.insurer.toLowerCase().includes(searchQuery.toLowerCase());
             const matchesFilter =
-                filterType === "All" || p.insuranceType === filterType;
+                filterType === "All" || p.insurance_type === filterType;
             return matchesSearch && matchesFilter;
         }),
     );
@@ -163,16 +163,16 @@
 
     function resetForm() {
         newPolicy = {
-            policyName: "",
-            insuranceType: "Life",
+            policy_name: "",
+            insurance_type: "Life",
             insurer: "",
-            policyNumber: "",
-            premiumAmount: 0,
-            premiumFrequency: "Monthly",
+            policy_number: "",
+            premium_amount: 0,
+            premium_frequency: "Monthly",
             beneficiaries: "",
-            agentName: "",
-            agentContact: "",
-            claimsProcedure: "",
+            agent_name: "",
+            agent_contact: "",
+            claims_procedure: "",
             status: "Active",
             notes: "",
         };
@@ -181,24 +181,24 @@
     }
 
     function handleAddPolicy() {
-        if (!newPolicy.policyName || !newPolicy.insurer) return;
+        if (!newPolicy.policy_name || !newPolicy.insurer) return;
 
         if (isEditing && newPolicy.id) {
             const oldPolicy = insuranceStore.getPolicy(newPolicy.id);
             const changes = [];
 
             if (oldPolicy) {
-                if (oldPolicy.policyName !== newPolicy.policyName)
+                if (oldPolicy.policy_name !== newPolicy.policy_name)
                     changes.push({
-                        field: "policyName",
-                        oldValue: oldPolicy.policyName,
-                        newValue: newPolicy.policyName,
+                        field: "policy_name",
+                        oldValue: oldPolicy.policy_name,
+                        newValue: newPolicy.policy_name,
                     });
-                if (oldPolicy.premiumAmount !== newPolicy.premiumAmount)
+                if (oldPolicy.premium_amount !== newPolicy.premium_amount)
                     changes.push({
-                        field: "premiumAmount",
-                        oldValue: oldPolicy.premiumAmount,
-                        newValue: newPolicy.premiumAmount,
+                        field: "premium_amount",
+                        oldValue: oldPolicy.premium_amount,
+                        newValue: newPolicy.premium_amount,
                     });
                 if (oldPolicy.status !== newPolicy.status)
                     changes.push({
@@ -215,9 +215,9 @@
                 action: "UPDATE",
                 entityType: "Policy",
                 entityId: newPolicy.id,
-                entityName: newPolicy.policyName,
+                entityName: newPolicy.policy_name!,
                 changes,
-                userContext: $estateProfile.ownerName || "User",
+                userContext: $estateProfile.owner_name || "User",
             });
         } else {
             const created = insuranceStore.addPolicy(
@@ -228,9 +228,9 @@
                 module: "Insurance",
                 action: "CREATE",
                 entityType: "Policy",
-                entityId: created.id,
-                entityName: created.policyName,
-                userContext: $estateProfile.ownerName || "User",
+                entityId: created!.id!,
+                entityName: created!.policy_name,
+                userContext: $estateProfile.owner_name || "User",
             });
         }
 
@@ -251,9 +251,9 @@
                 module: "Insurance",
                 action: "DELETE",
                 entityType: "Policy",
-                entityId: id,
+                entityId: Number(id),
                 entityName: name,
-                userContext: $estateProfile.ownerName || "User",
+                userContext: $estateProfile.owner_name || "User",
             });
         }
     }
@@ -517,11 +517,11 @@
                         <div class="flex items-center gap-4">
                             <div
                                 class="w-14 h-14 rounded-2xl shadow-inner flex items-center justify-center transition-all duration-500 {typeColors[
-                                    policy.insuranceType
+                                    policy.insurance_type
                                 ]}"
                             >
                                 <svelte:component
-                                    this={typeIcons[policy.insuranceType] ||
+                                    this={typeIcons[policy.insurance_type] ||
                                         Shield}
                                     size={28}
                                     strokeWidth={2.5}
@@ -531,7 +531,7 @@
                                 <h3
                                     class="text-xl font-black text-slate-900 leading-tight group-hover:text-indigo-600 transition-colors"
                                 >
-                                    {policy.policyName}
+                                    {policy.policy_name}
                                 </h3>
                                 <p
                                     class="text-slate-400 text-sm font-bold tracking-tight"
@@ -551,7 +551,10 @@
                             </button>
                             <button
                                 on:click={() =>
-                                    deletePolicy(policy.id, policy.policyName)}
+                                    deletePolicy(
+                                        String(policy.id),
+                                        policy.policy_name,
+                                    )}
                                 class="p-3 bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-2xl transition-all"
                             >
                                 <Trash2 size={18} />
@@ -572,7 +575,7 @@
                             <p
                                 class="text-sm font-black text-slate-700 tracking-tight"
                             >
-                                ${policy.premiumAmount}
+                                ${policy.premium_amount}
                             </p>
                         </div>
                         <div
@@ -586,7 +589,7 @@
                             <p
                                 class="text-sm font-black text-slate-700 tracking-tight"
                             >
-                                {policy.premiumFrequency}
+                                {policy.premium_frequency}
                             </p>
                         </div>
                         <div
@@ -649,7 +652,7 @@
                                 <p
                                     class="text-sm font-bold text-slate-700 tracking-wider font-mono uppercase"
                                 >
-                                    {policy.policyNumber || "MISSING-ID"}
+                                    {policy.policy_number || "MISSING-ID"}
                                 </p>
                             </div>
                         </div>
@@ -702,11 +705,11 @@
                             onClick={() => {
                                 newPolicy = {
                                     ...newPolicy,
-                                    policyName: sample.policyName,
-                                    insuranceType: sample.insuranceType as any,
+                                    policy_name: sample.policyName,
+                                    insurance_type: sample.insuranceType as any,
                                     insurer: sample.insurer,
-                                    premiumAmount: sample.premiumAmount,
-                                    policyDocuments: "",
+                                    premium_amount: sample.premiumAmount,
+                                    policy_documents: "",
                                 };
                                 showAddModal = true;
                             }}
@@ -791,7 +794,7 @@
                             >
                             <input
                                 type="text"
-                                bind:value={newPolicy.policyName}
+                                bind:value={newPolicy.policy_name}
                                 placeholder="e.g. Master Life Policy"
                                 class="w-full bg-slate-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all"
                             />
@@ -802,7 +805,7 @@
                                 >Insurance Classification</label
                             >
                             <select
-                                bind:value={newPolicy.insuranceType}
+                                bind:value={newPolicy.insurance_type}
                                 class="w-full bg-slate-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all appearance-none cursor-pointer"
                             >
                                 {#each types.filter((t) => t !== "All") as type}
@@ -849,7 +852,7 @@
                                 />
                                 <input
                                     type="number"
-                                    bind:value={newPolicy.premiumAmount}
+                                    bind:value={newPolicy.premium_amount}
                                     class="w-full bg-white border-2 border-transparent focus:border-indigo-600 rounded-2xl p-4 pl-10 text-sm font-black outline-none transition-all shadow-sm"
                                 />
                             </div>
@@ -860,7 +863,7 @@
                                 >Billing Interval</label
                             >
                             <select
-                                bind:value={newPolicy.premiumFrequency}
+                                bind:value={newPolicy.premium_frequency}
                                 class="w-full bg-white border-2 border-transparent focus:border-indigo-600 rounded-2xl p-4 text-sm font-black outline-none transition-all shadow-sm appearance-none cursor-pointer"
                             >
                                 <option>Monthly</option>
@@ -923,7 +926,7 @@
                             >
                             <input
                                 type="text"
-                                bind:value={newPolicy.agentName}
+                                bind:value={newPolicy.agent_name}
                                 placeholder="Full name and company name"
                                 class="w-full bg-slate-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all"
                             />
@@ -939,7 +942,7 @@
                                 >
                             </label>
                             <textarea
-                                bind:value={newPolicy.claimsProcedure}
+                                bind:value={newPolicy.claims_procedure}
                                 rows="3"
                                 placeholder="Detailed step-by-step for the family..."
                                 class="w-full bg-slate-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl p-6 text-sm font-bold outline-none transition-all resize-none leading-relaxed"
@@ -961,7 +964,7 @@
                 </button>
                 <button
                     on:click={handleAddPolicy}
-                    disabled={!newPolicy.policyName || !newPolicy.insurer}
+                    disabled={!newPolicy.policy_name || !newPolicy.insurer}
                     class="bg-indigo-600 text-white px-12 py-5 rounded-3xl font-black shadow-2xl shadow-indigo-600/30 hover:scale-[1.03] active:scale-[0.98] transition-all disabled:opacity-30 disabled:hover:scale-100"
                 >
                     Commit to Vault

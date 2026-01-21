@@ -1,13 +1,13 @@
 import os
 from datetime import datetime
 from jinja2 import Template
-
-OUTBOX_DIR = "backend/outbox"
+from backend.config import settings
 
 class LocalEmailService:
     def __init__(self):
-        if not os.path.exists(OUTBOX_DIR):
-            os.makedirs(OUTBOX_DIR)
+        self.outbox_dir = settings.OUTBOX_DIR
+        if not os.path.exists(self.outbox_dir):
+            os.makedirs(self.outbox_dir)
             
         # Basic HTML Template
         self.template = """
@@ -65,7 +65,7 @@ class LocalEmailService:
         timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
         safe_subject = subject.replace(" ", "_").lower()[:30]
         filename = f"{timestamp}_{safe_subject}_{to_email}.html"
-        filepath = os.path.join(OUTBOX_DIR, filename)
+        filepath = os.path.join(self.outbox_dir, filename)
         
         with open(filepath, "w") as f:
             f.write(html_content)

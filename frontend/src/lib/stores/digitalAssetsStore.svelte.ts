@@ -59,13 +59,8 @@ if (typeof window !== 'undefined') {
         const legacy = migrateDigitalAssets();
         if (legacy.length > 0) {
             console.log("Migrating digital assets...", legacy);
-            // We ideally want to batch create. 
-            // For now, relies on user manually saving or we push them? 
-            // SyncManager doesn't auto-ingest return values.
-            // We'll leave it empty in SyncManager for now, letting the UI handle "if empty, check legacy?"
-            // OR simpler: we don't migrate automatically here because we can't `create` easily without async.
-            // Actually, we can just let the consuming page handle the merge if needed, OR:
-            // The `migrateDigitalAssets` function is available.
+            digitalAssetsSync.items = legacy;
+            // SyncManager will auto-migrate these to cloud on next syncAll()
         }
     }
 }

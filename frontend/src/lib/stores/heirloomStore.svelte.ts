@@ -62,11 +62,11 @@ if (typeof window !== 'undefined') {
         const legacyData = migrateLegacyHeirlooms();
         if (legacyData.length > 0) {
             console.log("Migrating legacy heirlooms...", legacyData);
-            // We can use a batch add if available, or just re-save.
-            // But simpler: just populate items. 
-            // Since we can't easily bulk set via public API if not exposed, we might need to loop create.
-            // OR, better: SyncManager likely mirrors to localStorage. We can just set it.
-            // But SyncManager owns the source of truth.
+            heirloomSync.items = legacyData.map(item => ({
+                ...item,
+                id: String(item.id) // Ensure string IDs for local phase
+            }));
+            // Note: SyncManager will auto-migrate these to cloud on next syncAll()
         }
     }
 }

@@ -4,6 +4,8 @@
         switchAccount,
         activeAccountId,
     } from "$lib/stores/keyringStore";
+    import { auth } from "$lib/stores/auth";
+    import { API_BASE_URL } from "$lib/config";
     import { fade, fly, scale } from "svelte/transition";
     import { User, Plus, Shield, ArrowRight } from "lucide-svelte";
     import { onMount } from "svelte";
@@ -11,6 +13,7 @@
     let mounted = false;
     let hasAnonymous = false;
     let anonName = "";
+    let isLogingIn = false;
 
     onMount(() => {
         mounted = true;
@@ -41,6 +44,21 @@
         }
     });
 
+    async function handleSwitchAccount(email: string) {
+        isLogingIn = true;
+        try {
+            // Attempt JWT login
+            const success = await auth.login(email);
+            if (success) {
+                switchAccount(email);
+            } else {
+                alert("Login failed. Please check your connection.");
+            }
+        } finally {
+            isLogingIn = false;
+        }
+    }
+
     function enterAnonymous() {
         activeAccountId.set("anonymous");
         window.location.href = "/modules/family-hub";
@@ -56,7 +74,7 @@
         const email = $keyringEmails[0] || "user@example.com";
         try {
             const response = await fetch(
-                "http://localhost:8000/api/auth/magic-link",
+                `${API_BASE_URL}/api/auth/magic-link`,
                 {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -78,6 +96,24 @@
 >
     {#if mounted}
         <div class="max-w-xl w-full" in:fade={{ duration: 800 }}>
+            {#if isLogingIn}
+                <div
+                    class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center"
+                    transition:fade
+                >
+                    <div class="text-center">
+                        <div
+                            class="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"
+                        ></div>
+                        <p
+                            class="text-white font-bold tracking-widest uppercase text-sm"
+                        >
+                            Securing Connection...
+                        </p>
+                    </div>
+                </div>
+            {/if}
+
             <div class="text-center mb-12">
                 <div
                     class="inline-flex p-4 rounded-3xl bg-amber-500/10 text-amber-500 mb-6 border border-amber-500/20 shadow-2xl shadow-amber-500/10"
@@ -95,8 +131,9 @@
             <div class="grid gap-4">
                 {#each $keyringEmails as email}
                     <button
-                        onclick={() => switchAccount(email)}
-                        class="group p-6 bg-white/5 border border-white/10 rounded-2xl flex items-center gap-6 hover:bg-white/10 hover:border-amber-500/30 transition-all text-left relative overflow-hidden"
+                        onclick={() => handleSwitchAccount(email)}
+                        disabled={isLogingIn}
+                        class="group p-6 bg-white/5 border border-white/10 rounded-2xl flex items-center gap-6 hover:bg-white/10 hover:border-amber-500/30 transition-all text-left relative overflow-hidden disabled:opacity-50"
                         in:fly={{ y: 20, duration: 400 }}
                     >
                         <div
@@ -190,8 +227,7 @@
                     <div class="grid gap-4">
                         <button
                             class="w-full py-4 bg-amber-500 text-black font-black rounded-xl hover:bg-amber-400 transition-all shadow-xl shadow-amber-500/10 flex items-center justify-center gap-2 text-lg"
-                            onclick={() =>
-                                alert("Magic Link sent to Registered Email!")}
+                            onclick={sendMagicLink}
                         >
                             <User size={20} /> Quick Access via Email
                         </button>

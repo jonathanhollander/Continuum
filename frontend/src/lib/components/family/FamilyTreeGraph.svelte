@@ -70,11 +70,11 @@
             };
         });
 
-        const nodeMap = new Map(nodes.map((n) => [n.id, n]));
+        const nodeMap = new Map(nodes.map((n) => [String(n.id), n]));
         links = $relationships
             .map((r) => ({
-                source: nodeMap.get(r.sourceId),
-                target: nodeMap.get(r.targetId),
+                source: nodeMap.get(String(r.source_id)),
+                target: nodeMap.get(String(r.target_id)),
             }))
             .filter((l) => l.source && l.target) as SimLink[];
     }
@@ -224,11 +224,24 @@
                 {/if}
 
                 <!-- Role Icon Badge -->
-                {#if node.isExecutor || node.role === "spouse"}
+                {#if node.is_executor || (node as any).isExecutor || node.role === "spouse"}
                     <div
                         class="absolute bottom-0 right-0 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm"
                     >
-                        {#if node.isExecutor}<Shield
+                        {#if node.is_executor || (node as any).isExecutor}<Shield
+                                size={12}
+                                class="text-[#4A7C74]"
+                            />{/if}
+                        {#if node.role === "spouse"}<Heart
+                                size={12}
+                                class="text-rose-500"
+                            />{/if}
+                    </div>
+                {#if node.is_executor || (node as any).isExecutor || node.role === "spouse"}
+                    <div
+                        class="absolute bottom-0 right-0 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm"
+                    >
+                        {#if node.is_executor || (node as any).isExecutor}<Shield
                                 size={12}
                                 class="text-[#4A7C74]"
                             />{/if}
@@ -267,13 +280,13 @@
             class="flex items-center gap-2 px-6 py-3 bg-[#4A7C74] shadow-lg rounded-full font-bold text-white hover:bg-[#3a615b] transition-transform hover:scale-105 active:scale-95"
             on:click={() =>
                 (selectedNode = {
-                    id: "",
+                    id: undefined as any,
                     name: "New Member",
                     role: "child",
-                    relationToOwner: "",
-                    isExecutor: false,
-                    isBeneficiary: false,
-                    isEmergencyContact: false,
+                    relation: "",
+                    is_executor: false,
+                    is_beneficiary: false,
+                    is_emergency_contact: false,
                 } as any)}
         >
             <Plus size={20} />
@@ -346,7 +359,7 @@
                     >
                         <input
                             type="checkbox"
-                            bind:checked={selectedNode.isExecutor}
+                            bind:checked={selectedNode.is_executor}
                             class="text-[#4A7C74] focus:ring-[#4A7C74]"
                         />
                         <span class="text-sm font-medium"
@@ -359,7 +372,7 @@
                     >
                         <input
                             type="checkbox"
-                            bind:checked={selectedNode.isBeneficiary}
+                            bind:checked={selectedNode.is_beneficiary}
                             class="text-[#4A7C74] focus:ring-[#4A7C74]"
                         />
                         <span class="text-sm font-medium">Beneficiary</span>

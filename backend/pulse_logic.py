@@ -131,12 +131,13 @@ def trigger_escalation(session: Session, user_id: int, tier_number: int, referen
     session.commit()
 
 from backend.email_service import email_service
+from backend.config import settings
 import os
 
 def send_notification(session: Session, contact: PulseContact, tier_number: int):
     print(f"   --> 📧 Generating Tier {tier_number} Alert for {contact.name}...")
-    
-    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+    frontend_url = settings.get_frontend_url()
     portal_link = f"{frontend_url}/portal/{contact.portal_token}"
     
     subject = ""

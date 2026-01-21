@@ -1,82 +1,64 @@
-import { createProfileStore, getLegacy } from './persistence';
+import { registerSync, registerSingletonSync } from '../services/sync.svelte';
 
 export interface MedicalDirective {
-    id: string;
+    id?: number;
+    user_id?: number;
     type: 'healthcare_proxy' | 'living_will' | 'dnr' | 'palliative_care' | 'other';
     title: string;
-    locationOfOriginal: string;
-    primaryContact: string; // E.g. Dr. or Proxy Name
-    contactPhone: string;
+    location_of_original: string;
+    primary_contact: string;
+    contact_phone: string;
     summary: string;
-    organDonor: boolean;
-    bloodType: string;
+}
+
+export interface MedicalProfile {
+    user_id?: number;
+    organ_donor: boolean;
+    blood_type: string;
     allergies: string;
 }
 
-interface MedicalState {
-    organDonor: boolean;
-    bloodType: string;
-    allergies: string;
-    directives: MedicalDirective[];
-}
+// --- Mappers ---
+const profileMapper = (local: any): MedicalProfile => ({
+    ...local,
+    organ_donor: local.organ_donor ?? local.organDonor ?? false,
+    blood_type: local.blood_type ?? local.bloodType ?? '',
+    allergies: local.allergies ?? local.allergies ?? ''
+});
 
-const DEFAULT_MEDICAL: MedicalState = {
-    organDonor: false,
-    bloodType: '',
-    allergies: '',
-    directives: []
-};
+const directiveMapper = (local: any): MedicalDirective => ({
+    ...local,
+    location_of_original: local.location_of_original ?? local.locationOfOriginal ?? '',
+    primary_contact: local.primary_contact ?? local.primaryContact ?? '',
+    contact_phone: local.contact_phone ?? local.contactPhone ?? ''
+});
 
-// Migration / Initialization Logic
-const getInitialData = (): MedicalState => {
-    // Check for new unified data for owner
-    const unified = getLegacy('continuum_owner_medical_store');
-    if (unified) return DEFAULT_MEDICAL;
+const profileManager = registerSingletonSync<MedicalProfile>('medical_profile', 'medical_profiles', profileMapper);
+const directiveManager = registerSync<MedicalDirective>('medical_directives', 'medical_directives', directiveMapper);
 
-    // Fallback to legacy
-    const legacy = getLegacy('continuum_medical_store');
-    if (legacy) {
-        try {
-            const parsed = JSON.parse(legacy);
-            return {
-                ...DEFAULT_MEDICAL,
-                ...parsed
-            };
-        } catch (e) {
-            console.error("Migration failed for medical store", e);
+export const medicalStore = {
+    get profile() {
+        return profileManager.data || { organ_donor: false, blood_type: '', allergies: '' };
+    },
+    get directives() { return directiveManager.items; },
+    get status() { return profileManager.status === 'error' || directiveManager.status === 'error' ? 'error' : 'synced'; },
+
+    sync: async () => {
+        await Promise.all([profileManager.sync(), directiveManager.sync()]);
+    },
+
+    updateProfile: async (data: Partial<MedicalProfile>) => {
+        const current = profileManager.data || { organ_donor: false, blood_type: '', allergies: '' };
+        const merged = { ...current, ...data };
+        return profileManager.update(merged as MedicalProfile);
+    },
+
+    addDirective: (dir: Omit<MedicalDirective, 'id'>) => directiveManager.create(dir as MedicalDirective),
+    updateDirective: (id: number, updates: Partial<MedicalDirective>) => {
+        const dir = directiveManager.items.find(d => d.id === id);
+        if (dir) {
+            return directiveManager.update({ ...dir, ...updates });
         }
-    }
-    return DEFAULT_MEDICAL;
+    },
+    removeDirective: (id: number) => directiveManager.delete(id)
 };
-
-function createReactiveMedicalStore() {
-    const store = createProfileStore<MedicalState>('medical_store', getInitialData());
-    const { subscribe, update } = store;
-
-    return {
-        subscribe,
-        updateProfile: (data: { organDonor?: boolean, bloodType?: string, allergies?: string }) => {
-            update(store => ({ ...store, ...data }));
-        },
-        addDirective: (dir: Omit<MedicalDirective, 'id'>) => {
-            update(store => ({
-                ...store,
-                directives: [...store.directives, { ...dir, id: crypto.randomUUID() }]
-            }));
-        },
-        updateDirective: (id: string, data: Partial<MedicalDirective>) => {
-            update(store => ({
-                ...store,
-                directives: store.directives.map((d: MedicalDirective) => d.id === id ? { ...d, ...data } : d)
-            }));
-        },
-        removeDirective: (id: string) => {
-            update(store => ({
-                ...store,
-                directives: store.directives.filter((d: MedicalDirective) => d.id !== id)
-            }));
-        }
-    };
-}
-
-export const medicalStore = createReactiveMedicalStore();

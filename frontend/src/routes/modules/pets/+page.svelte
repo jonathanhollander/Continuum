@@ -27,11 +27,11 @@
         name: "",
         breed: "",
         guardian:
-            $estateProfile.spouseName || $estateProfile.executorName || "",
-        vetName: "",
-        vetPhone: "",
-        foodInstructions: "",
-        medicalNeeds: "",
+            $estateProfile.spouse_name || $estateProfile.executor_name || "",
+        vet_name: "",
+        vet_phone: "",
+        food_instructions: "",
+        medical_needs: "",
         notes: "",
     };
 
@@ -77,16 +77,18 @@
             name: "",
             breed: "",
             guardian:
-                $estateProfile.spouseName || $estateProfile.executorName || "",
-            vetName: "",
-            vetPhone: "",
-            foodInstructions: "",
-            medicalNeeds: "",
+                $estateProfile.spouse_name ||
+                $estateProfile.executor_name ||
+                "",
+            vet_name: "",
+            vet_phone: "",
+            food_instructions: "",
+            medical_needs: "",
             notes: "",
         };
     }
 
-    function removePet(id: string) {
+    function removePet(id: number) {
         if (!confirm("Remove this pet?")) return;
         petStore.removePet(id);
     }
@@ -187,8 +189,8 @@
                                     >Vet Contact</span
                                 >
                                 <div class="text-sm font-medium text-gray-700">
-                                    {pet.vetName} <br />
-                                    {pet.vetPhone}
+                                    {pet.vet_name} <br />
+                                    {pet.vet_phone}
                                 </div>
                             </div>
                         </div>
@@ -203,13 +205,13 @@
                                     >Food</span
                                 >
                                 <div class="text-sm font-medium text-gray-700">
-                                    {pet.foodInstructions}
+                                    {pet.food_instructions}
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {#if pet.medicalNeeds}
+                    {#if pet.medical_needs}
                         <div
                             class="flex items-start gap-2 pt-2 border-t border-gray-100"
                         >
@@ -223,7 +225,7 @@
                                     >Meds & Routine</span
                                 >
                                 <div class="text-sm font-medium text-gray-700">
-                                    {pet.medicalNeeds}
+                                    {pet.medical_needs}
                                 </div>
                             </div>
                         </div>
@@ -365,7 +367,7 @@
                         >
                         <input
                             type="text"
-                            bind:value={newPet.vetName}
+                            bind:value={newPet.vet_name}
                             class="w-full px-4 py-2 rounded-xl border border-gray-200"
                             placeholder="Dr. Name"
                         />
@@ -377,7 +379,7 @@
                         >
                         <input
                             type="text"
-                            bind:value={newPet.vetPhone}
+                            bind:value={newPet.vet_phone}
                             class="w-full px-4 py-2 rounded-xl border border-gray-200"
                             placeholder="(xxx) xxx-xxxx"
                         />
@@ -391,7 +393,7 @@
                             >
                             <input
                                 type="text"
-                                bind:value={newPet.foodInstructions}
+                                bind:value={newPet.food_instructions}
                                 class="w-full px-4 py-2 rounded-xl border border-gray-200"
                                 placeholder="Brand & Amount"
                             />
@@ -403,7 +405,7 @@
                             >
                             <input
                                 type="text"
-                                bind:value={newPet.medicalNeeds}
+                                bind:value={newPet.medical_needs}
                                 class="w-full px-4 py-2 rounded-xl border border-gray-200"
                                 placeholder="Dosage & Frequency"
                             />

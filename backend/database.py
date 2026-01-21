@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 from typing import Optional, List
 from sqlmodel import Field, SQLModel, create_engine, Session, select
+from backend.config import settings
 
 class User(SQLModel, table=True):
     __tablename__ = "users"
@@ -28,20 +29,21 @@ class Estate(SQLModel, table=True):
 from sqlalchemy import inspect, text
 from backend.estate_models import (
     Asset, FinancialAccount, Vendor, HomeAccess, Utility, 
-    Document, Letter, JournalEntry, Subscription, CalendarEvent
+    Document, Letter, JournalEntry, Subscription, CalendarEvent,
+    InsurancePolicy, MedicalProfile, MedicalDirective, Pet, ContactRelationship
 )
 
 # Database Engine
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./continuum_saas.db")
+DATABASE_URL = settings.DATABASE_URL
+connect_args = settings.get_database_connect_args()
 
-# Force SSL for Postgres (Railway)
-connect_args = {}
-if "postgresql" in DATABASE_URL:
-    connect_args["sslmode"] = "require"
-
-engine = create_engine(DATABASE_URL, connect_args=connect_args)
-
-engine = create_engine(DATABASE_URL, connect_args=connect_args)
+engine = create_engine(
+    DATABASE_URL,
+    connect_args=connect_args,
+    echo=settings.DB_ECHO,
+    pool_size=settings.DB_POOL_SIZE if "postgresql" in DATABASE_URL else 5,
+    max_overflow=settings.DB_MAX_OVERFLOW if "postgresql" in DATABASE_URL else 10,
+)
 
 import time
 from sqlalchemy.exc import OperationalError
@@ -141,7 +143,10 @@ def migrate_db():
                 "role": "TEXT DEFAULT 'Family'",
                 "relation": "TEXT",
                 "notes": "TEXT",
-                "avatar": "TEXT"
+                "avatar": "TEXT",
+                "is_executor": "BOOLEAN DEFAULT 0",
+                "is_beneficiary": "BOOLEAN DEFAULT 0",
+                "is_emergency_contact": "BOOLEAN DEFAULT 0"
             }
             
             for col_name, col_type in contact_new_cols.items():

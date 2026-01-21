@@ -1,5 +1,7 @@
-import { writable, derived } from 'svelte/store';
+import { writable, derived, get } from 'svelte/store';
 import { browser } from '$app/environment';
+import { auth } from './auth';
+import { API_BASE_URL } from '../config';
 
 // Types
 export interface PulseState {
@@ -24,10 +26,14 @@ function createPulseStore() {
 
     return {
         subscribe,
-        init: async (userId: number) => {
+        init: async () => {
+            const { token } = get(auth);
+            if (!token) return;
             // Fetch status from API
             try {
-                const res = await fetch(`${import.meta.env.VITE_API_BASE || 'http://localhost:8000'}/api/pulse/status?user_id=${userId}`);
+                const res = await fetch(`${API_BASE_URL}/api/pulse/status`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
                 if (res.ok) {
                     const data = await res.json();
                     update(s => ({ ...s, ...data }));
@@ -36,14 +42,17 @@ function createPulseStore() {
                 console.error("Failed to load Pulse status", e);
             }
         },
-        checkin: async (userId: number, note?: string) => {
+        checkin: async (note?: string) => {
+            const { token } = get(auth);
+            if (!token) return false;
             try {
                 // Correctly passing parameters as query params to match backend defaults
-                const params = new URLSearchParams({ user_id: userId.toString() });
+                const params = new URLSearchParams();
                 if (note) params.append('note', note);
 
-                const res = await fetch(`${import.meta.env.VITE_API_BASE || 'http://localhost:8000'}/api/pulse/checkin?${params.toString()}`, {
+                const res = await fetch(`${API_BASE_URL}/api/pulse/checkin?${params.toString()}`, {
                     method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
                     alias: 'checkin', // For identifying calls
                 });
 

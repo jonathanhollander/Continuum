@@ -83,6 +83,11 @@ class PulseContact(SQLModel, table=True):
     notes: Optional[str] = Field(default=None)
     avatar: Optional[str] = Field(default=None)
 
+    # Estate Networking Flags
+    is_executor: bool = Field(default=False)
+    is_beneficiary: bool = Field(default=False)
+    is_emergency_contact: bool = Field(default=False)
+
     # Pulse Specific (Optional - only if they are a Guardian)
     tier_id: Optional[int] = Field(default=None, foreign_key="pulse_escalation_tiers.id")
     priority: int = Field(default=1)

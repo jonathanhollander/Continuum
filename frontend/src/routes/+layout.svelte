@@ -98,8 +98,13 @@
 	});
 
 	import { registerAccount } from "$lib/stores/keyringStore";
+	import { auth } from "$lib/stores/auth";
+	import { syncAll } from "$lib/services/sync.svelte";
 
 	onMount(() => {
+		// Initialize auth store (load token from localStorage, fetch user)
+		auth.init();
+
 		// Handoff Pickup Logic
 		const email = $page.url.searchParams.get("email");
 		const lang = $page.url.searchParams.get("lang");
@@ -123,6 +128,16 @@
 		$page.url.pathname.startsWith("/marketing") ||
 			$page.url.pathname === "/",
 	);
+
+	// Sync Data when Auth is ready
+	let lastSyncedToken = $state<string | null>(null);
+	$effect(() => {
+		if ($auth.token && !$auth.loading && $auth.token !== lastSyncedToken) {
+			console.log("[Layout] Auth detected, starting global sync...");
+			lastSyncedToken = $auth.token;
+			syncAll();
+		}
+	});
 
 	// Update concierge context on route change
 	$effect(() => {
