@@ -28,6 +28,66 @@
         "color": "emerald"
     },
     {
+        "id": "counsel-1",
+        "title": "BetterHelp Grief Counseling",
+        "description": "Connect with a licensed therapist who specializes in grief and loss. Available online, on your schedule.",
+        "type": "external",
+        "url": "https://www.betterhelp.com/grief-counseling/",
+        "category": "Counseling",
+        "iconName": "LucideHeart",
+        "color": "violet"
+    },
+    {
+        "id": "counsel-2",
+        "title": "Talkspace Bereavement Support",
+        "description": "Text, audio, or video sessions with grief specialists. Start when you're ready.",
+        "type": "external",
+        "url": "https://www.talkspace.com/",
+        "category": "Counseling",
+        "iconName": "LucideHeart",
+        "color": "violet"
+    },
+    {
+        "id": "counsel-3",
+        "title": "Psychology Today Therapist Finder",
+        "description": "Search for grief counselors in your area. Filter by specialty, insurance, and approach.",
+        "type": "external",
+        "url": "https://www.psychologytoday.com/us/therapists/grief",
+        "category": "Counseling",
+        "iconName": "LucideHeart",
+        "color": "violet"
+    },
+    {
+        "id": "group-1",
+        "title": "GriefShare Support Groups",
+        "description": "Find a local or online support group. Weekly meetings with others who understand.",
+        "type": "external",
+        "url": "https://www.griefshare.org/",
+        "category": "Support Groups",
+        "iconName": "LucideUsers",
+        "color": "sky"
+    },
+    {
+        "id": "group-2",
+        "title": "The Dinner Party",
+        "description": "Peer support for 20-40 somethings who have experienced significant loss. Virtual and in-person gatherings.",
+        "type": "external",
+        "url": "https://www.thedinnerparty.org/",
+        "category": "Support Groups",
+        "iconName": "LucideUsers",
+        "color": "sky"
+    },
+    {
+        "id": "group-3",
+        "title": "Open to Hope Foundation",
+        "description": "Online community, articles, and podcasts from others who have walked this path.",
+        "type": "external",
+        "url": "https://www.opentohope.com/",
+        "category": "Support Groups",
+        "iconName": "LucideUsers",
+        "color": "sky"
+    },
+    {
         "id": "exec-1",
         "title": "The Executor's Practical Guide to Grief",
         "description": "How to manage administrative duties while honoring your emotional journey.",
@@ -139,5 +199,95 @@
         "category": "Family Support",
         "iconName": "LucideBookOpen",
         "color": "indigo"
+    },
+    {
+        "id": "conv-1",
+        "title": "Starting the Conversation",
+        "description": "Gentle scripts for beginning difficult conversations about end-of-life wishes with loved ones.",
+        "type": "guide",
+        "category": "Conversations",
+        "iconName": "LucideMessageCircle",
+        "color": "teal"
+    },
+    {
+        "id": "conv-2",
+        "title": "When They Don't Want to Talk",
+        "description": "How to honor someone's reluctance while keeping the door open for later.",
+        "type": "guide",
+        "category": "Conversations",
+        "iconName": "LucideMessageCircle",
+        "color": "teal"
+    },
+    {
+        "id": "conv-3",
+        "title": "Questions That Open Hearts",
+        "description": "Thoughtful prompts that invite meaningful sharing without feeling like an interrogation.",
+        "type": "guide",
+        "category": "Conversations",
+        "iconName": "LucideMessageCircle",
+        "color": "teal"
+    },
+    {
+        "id": "conv-4",
+        "title": "After a Diagnosis",
+        "description": "Finding words when someone you love receives difficult medical news.",
+        "type": "guide",
+        "category": "Conversations",
+        "iconName": "LucideMessageCircle",
+        "color": "teal"
+    },
+    {
+        "id": "talk-1",
+        "title": "Talking to Young Children (Ages 3-6)",
+        "description": "Simple, honest language for little ones. How to answer their questions with care.",
+        "type": "guide",
+        "category": "Talking to Family",
+        "iconName": "LucideHelpCircle",
+        "color": "amber"
+    },
+    {
+        "id": "talk-2",
+        "title": "Talking to School-Age Children (Ages 7-12)",
+        "description": "Balancing honesty with reassurance. Helping them understand without overwhelming.",
+        "type": "guide",
+        "category": "Talking to Family",
+        "iconName": "LucideHelpCircle",
+        "color": "amber"
+    },
+    {
+        "id": "talk-3",
+        "title": "Talking to Teenagers",
+        "description": "Respecting their need for independence while staying connected through difficult times.",
+        "type": "guide",
+        "category": "Talking to Family",
+        "iconName": "LucideHelpCircle",
+        "color": "amber"
+    },
+    {
+        "id": "talk-4",
+        "title": "When a Parent Has a Terminal Illness",
+        "description": "Guidance for families navigating anticipatory grief together.",
+        "type": "guide",
+        "category": "Talking to Family",
+        "iconName": "LucideHelpCircle",
+        "color": "amber"
+    },
+    {
+        "id": "talk-5",
+        "title": "Telling Elderly Parents",
+        "description": "How to share news of a loss with aging parents, including those with dementia.",
+        "type": "guide",
+        "category": "Talking to Family",
+        "iconName": "LucideHelpCircle",
+        "color": "amber"
+    },
+    {
+        "id": "talk-6",
+        "title": "Sibling Conversations",
+        "description": "Navigating family dynamics and differing grief styles among brothers and sisters.",
+        "type": "guide",
+        "category": "Talking to Family",
+        "iconName": "LucideHelpCircle",
+        "color": "amber"
     }
 ]

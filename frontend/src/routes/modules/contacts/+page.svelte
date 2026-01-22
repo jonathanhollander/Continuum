@@ -445,14 +445,19 @@
                 class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto"
             >
                 <div
-                    class="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-center"
+                    class="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-start"
                 >
-                    <h3 class="font-serif font-bold text-2xl text-slate-800">
-                        New Contact
-                    </h3>
+                    <div class="flex-1 pr-4">
+                        <h3 class="font-serif font-bold text-2xl text-slate-800">
+                            Add Someone Important
+                        </h3>
+                        <p class="text-slate-500 text-sm mt-2 leading-relaxed">
+                            This person matters to you. By adding them here, you're ensuring they'll be included when the time comes—whether that means being notified, consulted, or simply remembered.
+                        </p>
+                    </div>
                     <button
                         onclick={() => (showAddModal = false)}
-                        class="text-gray-400 hover:text-gray-600">Close</button
+                        class="text-gray-400 hover:text-gray-600 mt-1">Close</button
                     >
                 </div>
                 <div class="p-6 space-y-4">
@@ -537,7 +542,7 @@
                         <label
                             for="contact-tier"
                             class="block text-xs font-bold uppercase text-indigo-700 mb-2"
-                            >Notification Priority</label
+                            >When Should They Know?</label
                         >
                         <select
                             id="contact-tier"
@@ -545,19 +550,19 @@
                             class="w-full px-4 py-3 rounded-xl border border-indigo-200 bg-white"
                         >
                             <option value="1_Immediate"
-                                >Tier 1: Immediate (Critical)</option
+                                >First Call — Someone who should hear it from family, not others</option
                             >
                             <option value="2_SameDay"
-                                >Tier 2: Same Day (Inner Circle)</option
+                                >Same Day — Close enough to be told directly</option
                             >
                             <option value="3_Service"
-                                >Tier 3: Service Notice (Extended)</option
+                                >Extended Circle — Can learn through announcement</option
                             >
                             <option value="4_DNR">No Notification Needed</option
                             >
                         </select>
                         <p class="text-xs text-indigo-500 mt-2">
-                            Determines the order for the Executor call list.
+                            Think about how they'd want to hear the news. The people closest to you deserve to be told directly, not find out on social media.
                         </p>
                     </div>
 

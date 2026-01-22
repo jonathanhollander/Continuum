@@ -32,6 +32,7 @@
         Monitor,
     } from "lucide-svelte";
     import { fade, slide, scale } from "svelte/transition";
+    import EmptyState from "$lib/components/EmptyState.svelte";
 
     let activeTab = $state<
         "transactions" | "maintenance" | "claims" | "killswitch"
@@ -270,12 +271,15 @@
                     </tbody>
                 </table>
                 {#if filteredTransactions.length === 0}
-                    <div class="p-20 text-center space-y-4">
-                        <Repeat size={48} class="mx-auto text-slate-100" />
-                        <p class="text-slate-400 font-medium italic">
-                            No transactions recorded yet.
-                        </p>
-                    </div>
+                    <EmptyState
+                        title="Your financial story, documented"
+                        whyMatters="<strong>Asset transactions tell the story of your financial life—purchases, sales, transfers, and valuations.</strong> Without this record, your family may struggle to understand where assets came from, what they're worth, or who has claims to them.<br/><br/>Documenting these transactions creates a clear audit trail that protects your family from disputes and confusion during an already difficult time."
+                        encouragement="Start with your most significant assets. You can add more details as you remember them."
+                        icon={Repeat}
+                        iconClass="text-indigo-500"
+                        ctaLabel="Record first transaction"
+                        onAction={() => { addType = 'transaction'; showAddModal = true; }}
+                    />
                 {/if}
             </div>
         {:else if activeTab === "maintenance"}
@@ -320,12 +324,15 @@
                     {/each}
                 </div>
                 {#if filteredMaintenance.length === 0}
-                    <div class="p-20 text-center space-y-4">
-                        <Wrench size={48} class="mx-auto text-slate-100" />
-                        <p class="text-slate-400 font-medium italic">
-                            No maintenance logs found.
-                        </p>
-                    </div>
+                    <EmptyState
+                        title="Keep your property running smoothly"
+                        whyMatters="<strong>Maintenance records are invaluable for whoever inherits your property.</strong> Knowing when the roof was last inspected, who services the HVAC, or when the septic was pumped saves them thousands in unnecessary repairs and helps them maintain what you built.<br/><br/>These logs also ensure warranty coverage isn't lost and help identify recurring issues before they become emergencies."
+                        encouragement="Start with your most recent service call or inspection. The history will build over time."
+                        icon={Wrench}
+                        iconClass="text-amber-500"
+                        ctaLabel="Log first maintenance"
+                        onAction={() => { addType = 'maintenance'; showAddModal = true; }}
+                    />
                 {/if}
             </div>
         {:else if activeTab === "claims"}
@@ -395,6 +402,17 @@
                             </div>
                         </div>
                     {/each}
+                    {#if filteredClaims.length === 0}
+                        <EmptyState
+                            title="Track your insurance claims"
+                            whyMatters="<strong>Insurance claims can take months or even years to resolve.</strong> If something happens to you during that time, your family needs to know which claims are pending, what amounts are expected, and who to follow up with.<br/><br/>Documenting active claims ensures no money is left on the table and gives your family the information they need to continue advocating for what you're owed."
+                            encouragement="If you have any pending claims, add them here. Even resolved claims create a helpful history."
+                            icon={FileCheck}
+                            iconClass="text-emerald-500"
+                            ctaLabel="Track first claim"
+                            onAction={() => { addType = 'claim'; showAddModal = true; }}
+                        />
+                    {/if}
                 </div>
             </div>
         {:else if activeTab === "killswitch"}

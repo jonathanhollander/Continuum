@@ -6,10 +6,18 @@ const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || '';
 const SITE_URL = 'https://continuum.estate';
 const SITE_NAME = 'Continuum Estate';
 
+import { overwhelmState } from './overwhelmDetection';
+
 export interface AIResponse {
     content: string;
     extractedData?: any;
     intent?: string;
+    resources?: Array<{
+        title: string;
+        description: string;
+        link: string;
+        type: 'article' | 'video' | 'tool';
+    }>;
 }
 
 export interface AIContext {
@@ -62,6 +70,20 @@ async function chat(content: string, history: any[], contextName: string = 'Cont
         roleContext = '\n\n🌱 USER ROLE: OWNER (Planning their own estate)\n- Acknowledge the courage this takes\n- Be contemplative and values-focused\n- Help them see this as a gift to loved ones';
     }
 
+    // Check for overwhelm state
+    const currentOverwhelm = get(overwhelmState);
+    let emotionalContext = '';
+
+    if (context?.emotionalState === 'overwhelmed' || currentOverwhelm.isOverwhelmed) {
+        emotionalContext = `
+\n⚠️ USER EMOTIONAL STATE: OVERWHELMED
+- The user is showing signs of distress (rapid navigation, errors, or long inactivity).
+- SLOW DOWN. Be exceptionally gentle.
+- SUGGEST A BREAK: "You've been doing a lot. Would you like to pause for a moment?"
+- Set intent to "suggest_break" to offer a guided breathing exercise.
+`;
+    }
+
     try {
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
             method: "POST",
@@ -69,6 +91,7 @@ async function chat(content: string, history: any[], contextName: string = 'Cont
                 "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
                 "HTTP-Referer": `${SITE_URL}`,
                 "X-Title": `${SITE_NAME}`,
+                // "Content-Type": "application/json" // OpenRouter sometimes dislikes this with body? No, standard is fine.
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
@@ -78,7 +101,7 @@ async function chat(content: string, history: any[], contextName: string = 'Cont
                         "role": "system",
                         "content": `🕊️ CONTINUUM AI CONCIERGE - Death Planning Companion
 
-YOU ARE: A compassionate guide for people confronting mortality, grieving losses, or making end-of-life preparations. This is sacred, difficult work that requires the highest emotional intelligence.${roleContext}
+YOU ARE: A compassionate guide for people confronting mortality, grieving losses, or making end-of-life preparations. This is sacred, difficult work that requires the highest emotional intelligence.${roleContext}${emotionalContext}
 
 ⚠️ CRITICAL FOUNDATIONAL PRINCIPLE:
 EMPATHY IS YOUR PRIMARY FUNCTION. Data collection is secondary.
@@ -120,9 +143,10 @@ ESTATE PLANNING CHECKLIST (Priority Order):
 5. Legacy & Wishes (Voice and values)
 6. Healthcare (Care and dignity)
 
-VALID INTENTS: "add_contact", "add_property", "add_financial", "add_insurance", "add_healthcare", "add_digital".
+VALID INTENTS: "add_contact", "add_property", "add_financial", "add_insurance", "add_healthcare", "add_digital", "suggest_break", "provide_resource".
 
 OUTPUT FORMAT: Return ONLY JSON.
+Example: { "message": "I understand this is a difficult time. Here is a guide that might help.", "resources": [{ "title": "Understanding Grief", "description": "A compassionate guide to the grieving process.", "link": "https://continuum.estate/resources/grief", "type": "article" }], "intent": "provide_resource" }
 Example: { "message": "Sarah recorded as daughter—what a beautiful gift to have her support. When you're ready, could you share her mailing address so we can keep her in the loop?", "extractedData": { "family_member": { "name": "Sarah", "relation": "daughter" } }, "intent": "add_contact" }`
                     },
                     ...history.slice(-10).map(m => ({
@@ -146,7 +170,8 @@ Example: { "message": "Sarah recorded as daughter—what a beautiful gift to hav
             return {
                 content: parsed.message || rawContent,
                 extractedData: parsed.extractedData,
-                intent: parsed.intent
+                intent: parsed.intent,
+                resources: parsed.resources
             };
         } catch {
             return { content: rawContent };

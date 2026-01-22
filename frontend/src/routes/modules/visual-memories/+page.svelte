@@ -10,6 +10,7 @@
         Save,
     } from "lucide-svelte";
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
+    import EmptyState from "$lib/components/EmptyState.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import {
         visualMemories,
@@ -384,14 +385,16 @@
         <div in:fade>
             {#if !hasArchives}
                 <div
-                    class="bg-white rounded-2xl border border-slate-200 p-8 min-h-[400px] flex items-center justify-center"
+                    class="bg-white rounded-2xl border border-slate-200 p-4 min-h-[400px] flex items-center justify-center"
                 >
-                    <EmptyStateGuide
-                        icon={ExternalLink}
-                        title="Map Your Digital Legacy"
-                        description="Tell your executors where to find your photo libraries (e.g. iCloud, Google Photos, Hard Drives)."
-                        actionLabel="Add Archive Location"
-                        onAdd={() => openArchiveModal()}
+                    <EmptyState
+                        title="Your memories live in many places"
+                        whyMatters="<strong>Your family's most precious photos and videos are scattered across services they may not even know exist.</strong> iCloud, Google Photos, Dropbox, old hard drives, Facebook albums—each one holds irreplaceable memories that could be lost forever if no one knows where to look.<br/><br/>By mapping where your digital memories live, you're ensuring that future generations can access the visual story of your life. These aren't just files—they're birthdays, vacations, quiet moments, and family history."
+                        encouragement="Start with just one location—wherever you store most of your photos. You can add more as you remember them."
+                        icon={Image}
+                        iconClass="text-purple-500"
+                        ctaLabel="Add first archive location"
+                        onAction={() => openArchiveModal()}
                     />
                 </div>
             {:else}

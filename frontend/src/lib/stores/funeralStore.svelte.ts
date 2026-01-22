@@ -77,7 +77,7 @@ const funeralMapper = (data: any) => {
     }
 };
 
-export const funeralSync = registerSingletonSync<FuneralData>('funeral_data', 'funeral_data', funeralMapper, '/api/data');
+export const funeralSync = registerSingletonSync<FuneralData>('funeral_data', 'funeral_data', funeralMapper, '/api/data').setAffirmationContext('funeral');
 
 export const funeralStore = {
     get wishes() { return funeralSync.data?.wishes || DEFAULT_FUNERAL_DATA.wishes; },

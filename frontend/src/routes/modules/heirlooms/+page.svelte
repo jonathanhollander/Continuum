@@ -244,7 +244,12 @@
     }
 
     function removeHeirloom(id: string) {
-        if (!confirm("Remove this heirloom? Your story will be preserved in the activity log.")) return;
+        if (
+            !confirm(
+                "Remove this heirloom? Your story will be preserved in the activity log.",
+            )
+        )
+            return;
         heirloomStore.deleteItem(id);
     }
 
@@ -378,7 +383,9 @@
             onAction={() => (showAddForm = true)}
         />
         <!-- Hidden Ghost Rows for reference -->
-        <div class="hidden grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div
+            class="hidden grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+        >
             {#each getSmartSamples($language).heirlooms || [] as sample}
                 <GhostRow
                     name={sample.name}
@@ -399,10 +406,6 @@
                     </svelte:fragment>
                 </GhostRow>
             {/each}
-        </div>
-            >
-                <Gift size={14} /> Start Heirloom Registry
-            </button>
         </div>
     {:else}
         <div
@@ -515,14 +518,20 @@
                 class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto"
             >
                 <div
-                    class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50"
+                    class="p-6 border-b border-gray-100 flex justify-between items-start bg-gray-50"
                 >
-                    <h3 class="font-serif font-bold text-2xl text-slate-800">
-                        Add Heirloom
-                    </h3>
+                    <div class="flex-1 pr-4">
+                        <h3 class="font-serif font-bold text-2xl text-slate-800">
+                            Preserve a Treasure
+                        </h3>
+                        <p class="text-slate-500 text-sm mt-2 leading-relaxed">
+                            This object holds a story that only you can tell. By documenting it here, you're ensuring that story survives—transforming an object into an heirloom that connects generations.
+                        </p>
+                    </div>
                     <button
                         onclick={() => (showAddForm = false)}
-                        class="text-gray-400 hover:text-gray-600">Go back</button
+                        class="text-gray-400 hover:text-gray-600 mt-1"
+                        >Go back</button
                     >
                 </div>
 
@@ -530,33 +539,36 @@
                     <div>
                         <label
                             class="block text-xs font-bold uppercase text-gray-500 mb-1"
-                            >Item Name</label
+                            >What Is It?</label
                         >
                         <input
                             type="text"
                             bind:value={newHeirloom.name}
                             class="w-full px-4 py-3 rounded-xl border border-gray-200"
-                            placeholder="e.g. Grandma's Ring"
+                            placeholder="e.g. Grandma's wedding ring"
                         />
                     </div>
 
                     <div>
                         <label
                             class="block text-xs font-bold uppercase text-gray-500 mb-1"
-                            >Intended Recipient</label
+                            >Who Should Have This?</label
                         >
                         <input
                             type="text"
                             bind:value={newHeirloom.recipient}
                             class="w-full px-4 py-3 rounded-xl border border-gray-200"
-                            placeholder="Who should have this?"
+                            placeholder="The person who will cherish it"
                         />
+                        <p class="text-xs text-gray-400 mt-1.5">
+                            Think about who would treasure this item and honor its meaning.
+                        </p>
                     </div>
 
                     <div>
                         <label
                             class="block text-xs font-bold uppercase text-gray-500 mb-1"
-                            >The Story</label
+                            >The Story Behind It</label
                         >
                         <textarea
                             bind:value={newHeirloom.story}

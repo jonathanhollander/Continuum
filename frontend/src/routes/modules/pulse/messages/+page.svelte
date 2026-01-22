@@ -149,8 +149,14 @@
                     </button>
                 {/each}
                 {#if contacts.length === 0}
-                    <div class="p-8 text-center text-slate-500 text-sm">
-                        No contacts available.
+                    <div class="p-8 text-center">
+                        <Inbox class="w-10 h-10 text-slate-600 mx-auto mb-3" />
+                        <p class="text-slate-400 text-sm font-medium mb-2">
+                            No Pulse contacts yet
+                        </p>
+                        <p class="text-slate-500 text-xs leading-relaxed max-w-xs mx-auto">
+                            Add trusted contacts in Pulse Settings first. They'll appear here once you can message them.
+                        </p>
                     </div>
                 {/if}
             </div>

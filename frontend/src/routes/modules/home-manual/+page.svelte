@@ -18,6 +18,7 @@
     } from "lucide-svelte";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
+    import EmptyState from "$lib/components/EmptyState.svelte";
     import { onMount } from "svelte";
     import { registerSync } from "$lib/services/sync.svelte";
     import { getStored } from "$lib/stores/persistence";
@@ -205,7 +206,15 @@
         {#if activeTab === "vendors"}
             <div in:fade class="h-full">
                 {#if vendorSync.items.length === 0}
-                    <EmptyStateGuide type="home" onAdd={addVendor} />
+                    <EmptyState
+                        title="The people who keep your home running"
+                        whyMatters="<strong>When something breaks, your family won't know who to call.</strong> The plumber you trust, the electrician who knows your wiring, the HVAC tech who's serviced your system for years—these relationships took time to build.<br/><br/>Documenting your trusted vendors means your family won't have to start from scratch during a crisis. They'll have the direct numbers, the names to ask for, and the context of your history with each provider."
+                        encouragement="Start with whoever you'd call in an emergency—plumber, electrician, or handyman."
+                        icon={Phone}
+                        iconClass="text-orange-500"
+                        ctaLabel="Add first vendor"
+                        onAction={addVendor}
+                    />
                 {:else}
                     <div class="space-y-6">
                         <div class="flex justify-between items-center">
@@ -285,7 +294,15 @@
         {:else if activeTab === "access"}
             <div in:fade class="h-full">
                 {#if accessSync.items.length === 0}
-                    <EmptyStateGuide type="home" onAdd={addCode} />
+                    <EmptyState
+                        title="Keys to your kingdom"
+                        whyMatters="<strong>Alarm codes, garage door combinations, WiFi passwords, safe combinations—these are the invisible barriers that could lock your family out of their own home.</strong><br/><br/>Documenting access codes ensures your family can enter the house, disable alarms without triggering a police response, and access secured areas. It's one less thing for them to figure out during an already overwhelming time."
+                        encouragement="Start with your most critical code—the alarm system or front door."
+                        icon={Key}
+                        iconClass="text-indigo-500"
+                        ctaLabel="Add first code"
+                        onAction={addCode}
+                    />
                 {:else}
                     <div class="space-y-6">
                         <div class="flex justify-between items-center">
@@ -346,7 +363,15 @@
         {:else if activeTab === "utilities"}
             <div in:fade class="h-full">
                 {#if utilitySync.items.length === 0}
-                    <EmptyStateGuide type="home" onAdd={addUtility} />
+                    <EmptyState
+                        title="When seconds matter"
+                        whyMatters="<strong>A burst pipe at 2am. A gas leak. A tripped breaker during a storm.</strong> In emergencies, knowing exactly where to find the water shutoff, gas valve, or electrical panel can prevent thousands in damage—or even save lives.<br/><br/>Documenting these critical locations means your family won't be searching frantically in a crisis. They'll know exactly where to go and what to do."
+                        encouragement="Start with your water main shutoff—it's the most common emergency need."
+                        icon={Droplets}
+                        iconClass="text-sky-500"
+                        ctaLabel="Add first shutoff location"
+                        onAction={addUtility}
+                    />
                 {:else}
                     <div class="space-y-6">
                         <div class="flex justify-between items-center">

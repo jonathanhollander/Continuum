@@ -287,7 +287,7 @@ Before going live:
 - [ ] Review `SECURITY_AUDIT.md` for additional hardening
 - [ ] Run full E2E test suite
 - [ ] Verify all database migrations applied
-- [ ] Test login/signup flow
+- [x] Test login/signup flow
 - [ ] Test Pulse check-in flow
 - [ ] Test email delivery
 

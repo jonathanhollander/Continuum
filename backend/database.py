@@ -98,9 +98,11 @@ def migrate_db():
                 session.commit()
             # Make public_key nullable
             if "public_key" in user_columns:
-                # Note: Making columns nullable is complex in SQLite, so we skip this for SQLite
-                # PostgreSQL: session.execute(text("ALTER TABLE users ALTER COLUMN public_key DROP NOT NULL"))
-                pass
+                # Execute for PostgreSQL only
+                if engine.dialect.name == "postgresql":
+                    logger.info("Migrating: Making public_key nullable (PostgreSQL)")
+                    session.execute(text("ALTER TABLE users ALTER COLUMN public_key DROP NOT NULL"))
+                    session.commit()
         except Exception as e:
             logger.warning(f"Migration info for users table: {e}")
 
@@ -110,7 +112,16 @@ def migrate_db():
                 "valuation": "FLOAT",
                 "status": "TEXT",
                 "ownershipDetails": "TEXT",
-                "documents": "TEXT"
+                "documents": "TEXT",
+                "recipient": "TEXT",
+                "story": "TEXT",
+                "platform": "TEXT",
+                "username": "TEXT",
+                "instructions": "TEXT",
+                "priority": "TEXT",
+                "image": "TEXT",
+                "is_closed": "BOOLEAN DEFAULT FALSE",
+                "closure_date": "TEXT"
             },
             "subscriptions": {
                 "cycle": "TEXT",
@@ -135,9 +146,18 @@ def migrate_db():
                 for col_name, col_type in cols.items():
                     if col_name not in existing:
                         logger.info(f"Migrating: Adding {col_name} to {table}")
-                        session.execute(text(f"ALTER TABLE {table} ADD COLUMN {col_name} {col_type}"))
+                        try:
+                            session.execute(text(f"ALTER TABLE {table} ADD COLUMN {col_name} {col_type}"))
+                            session.commit()
+                            session.begin() # Start a new transaction for the next column
+                        except Exception as e:
+                            logger.warning(f"Migration Error adding {col_name} to {table}: {e}")
+                            session.rollback()
+                            session.begin()
             except Exception as e:
                 logger.warning(f"Migration skipping {table}: {e}")
+                session.rollback()
+                session.begin()
 
         # Check pulse_settings columns
         columns = [c["name"] for c in inspector.get_columns("pulse_settings")]
@@ -146,16 +166,16 @@ def migrate_db():
         new_cols = {
             "checkin_token": "TEXT",
             "ghost_mode_until": "DATETIME",
-            "pet_protocol_enabled": "BOOLEAN DEFAULT 0",
+            "pet_protocol_enabled": "BOOLEAN DEFAULT FALSE",
             "pet_details": "TEXT",
             "safety_timer_active_until": "DATETIME",
-            "legacy_heartbeat_enabled": "BOOLEAN DEFAULT 0",
-            "medical_safe_pass_enabled": "BOOLEAN DEFAULT 1",
-            "location_vault_enabled": "BOOLEAN DEFAULT 0",
+            "legacy_heartbeat_enabled": "BOOLEAN DEFAULT FALSE",
+            "medical_safe_pass_enabled": "BOOLEAN DEFAULT TRUE",
+            "location_vault_enabled": "BOOLEAN DEFAULT FALSE",
             "last_known_location_lat": "FLOAT",
             "last_known_location_lon": "FLOAT",
             "last_known_location_time": "DATETIME",
-            "biometric_extension_enabled": "BOOLEAN DEFAULT 0",
+            "biometric_extension_enabled": "BOOLEAN DEFAULT FALSE",
             "biometric_extension_hours": "INTEGER DEFAULT 24"
         }
         
@@ -164,8 +184,12 @@ def migrate_db():
                 logger.info(f"Migrating: Adding column {col_name} to pulse_settings")
                 try:
                     session.execute(text(f"ALTER TABLE pulse_settings ADD COLUMN {col_name} {col_type}"))
+                    session.commit()
+                    session.begin()
                 except Exception as e:
                     logger.warning(f"Migration Error adding {col_name}: {e}")
+                    session.rollback()
+                    session.begin()
 
         # Check pulse_contacts columns
         try:
@@ -175,14 +199,14 @@ def migrate_db():
 
             contact_new_cols = {
                 "individual_delay_hours": "INTEGER",
-                "notify_on_safety_timer": "BOOLEAN DEFAULT 1",
+                "notify_on_safety_timer": "BOOLEAN DEFAULT TRUE",
                 "role": "TEXT DEFAULT 'Family'",
                 "relation": "TEXT",
                 "notes": "TEXT",
                 "avatar": "TEXT",
-                "is_executor": "BOOLEAN DEFAULT 0",
-                "is_beneficiary": "BOOLEAN DEFAULT 0",
-                "is_emergency_contact": "BOOLEAN DEFAULT 0"
+                "is_executor": "BOOLEAN DEFAULT FALSE",
+                "is_beneficiary": "BOOLEAN DEFAULT FALSE",
+                "is_emergency_contact": "BOOLEAN DEFAULT FALSE"
             }
 
             for col_name, col_type in contact_new_cols.items():
@@ -190,8 +214,12 @@ def migrate_db():
                     logger.info(f"Migrating: Adding column {col_name} to pulse_contacts")
                     try:
                         session.execute(text(f"ALTER TABLE pulse_contacts ADD COLUMN {col_name} {col_type}"))
+                        session.commit()
+                        session.begin()
                     except Exception as e:
                         logger.warning(f"Migration Error adding {col_name}: {e}")
+                        session.rollback()
+                        session.begin()
 
             # Note: Making tier_id nullable is harder in SQLite (requires recreate).
             # ideally we would do: session.execute(text("ALTER TABLE pulse_contacts ALTER COLUMN tier_id DROP NOT NULL"))

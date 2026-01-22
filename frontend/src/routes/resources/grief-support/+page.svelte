@@ -8,10 +8,15 @@
         LucideMapPin,
         LucideShieldAlert,
         LucideArrowRight,
+        LucideUsers,
+        LucideMessageCircle,
+        LucideHelpCircle,
     } from "lucide-svelte";
     import GriefResourceCard from "$lib/components/GriefResourceCard.svelte";
     import GriefChecklist from "$lib/components/GriefChecklist.svelte";
+    import GuideViewer from "$lib/components/GuideViewer.svelte";
     import griefResources from "$lib/data/griefResources.json";
+    import { getGuideById, type Guide } from "$lib/data/familyGuides";
     import { userRole, language as languageStore } from "$lib/stores/concierge";
     import { t } from "$lib/stores/localization";
     import {
@@ -46,6 +51,22 @@
         },
     ]);
 
+    // Guide Viewer State
+    let selectedGuide = $state<Guide | null>(null);
+
+    function handleResourceClick(resource: any) {
+        if (resource.type === "guide") {
+            const guide = getGuideById(resource.id);
+            if (guide) {
+                selectedGuide = guide;
+            }
+        }
+    }
+
+    function closeGuide() {
+        selectedGuide = null;
+    }
+
     const countries = [
         { code: "US", name: "United States" },
         { code: "UK", name: "United Kingdom" },
@@ -65,6 +86,10 @@
     const filterCategories = [
         "All",
         "Self-Care",
+        "Counseling",
+        "Support Groups",
+        "Conversations",
+        "Talking to Family",
         "Executors",
         "Terminal Care",
         "Family Support",
@@ -74,6 +99,9 @@
         LucideShieldAlert,
         LucideHeart,
         LucideBookOpen,
+        LucideUsers,
+        LucideMessageCircle,
+        LucideHelpCircle,
     };
 
     // Language-to-country mapping for intelligent hotline defaults
@@ -210,11 +238,24 @@
                     <!-- Resources Grid -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {#each filteredResources as resource, i (resource.id)}
-                            <GriefResourceCard
-                                {...resource}
-                                icon={iconMap[resource.iconName]}
-                                delay={100 + i * 50}
-                            />
+                            {#if resource.type === "guide"}
+                                <button
+                                    onclick={() => handleResourceClick(resource)}
+                                    class="text-left w-full"
+                                >
+                                    <GriefResourceCard
+                                        {...resource}
+                                        icon={iconMap[resource.iconName]}
+                                        delay={100 + i * 50}
+                                    />
+                                </button>
+                            {:else}
+                                <GriefResourceCard
+                                    {...resource}
+                                    icon={iconMap[resource.iconName]}
+                                    delay={100 + i * 50}
+                                />
+                            {/if}
                         {/each}
 
                         <!-- Local Search Discovery -->
@@ -455,6 +496,9 @@
             </div>
         </div>
     {/if}
+
+    <!-- Guide Viewer Modal -->
+    <GuideViewer guide={selectedGuide} onClose={closeGuide} />
 </div>
 
 <style>

@@ -92,8 +92,8 @@ const relationshipMapper = (item: any) => {
     };
 };
 
-export const contactSync = registerSync<FamilyMember>('family_members', 'contacts', contactMapper, '/api');
-export const relationshipSync = registerSync<Relationship>('family_relationships', 'relationships', relationshipMapper, '/api/contacts');
+export const contactSync = registerSync<FamilyMember>('family_members', 'contacts', contactMapper, '/api').setAffirmationContext('contacts');
+export const relationshipSync = registerSync<Relationship>('family_relationships', 'relationships', relationshipMapper, '/api/contacts').setAffirmationContext('contacts');
 
 export const familyStore = {
     get members() { return contactSync.items; },

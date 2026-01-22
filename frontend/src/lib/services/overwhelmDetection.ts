@@ -39,8 +39,8 @@ class OverwhelmDetector {
     private inactivityCheckInterval?: number;
 
     // Configurable thresholds
-    private RAPID_NAV_COUNT = 3; // navigations
-    private RAPID_NAV_WINDOW = 30000; // 30 seconds (was 10, now more generous)
+    private RAPID_NAV_COUNT = 6; // navigations (increased from 3 to 6)
+    private RAPID_NAV_WINDOW = 60000; // 60 seconds (increased from 30 to 60)
     private ERROR_THRESHOLD = 5; // errors in a session
     private SESSION_LENGTH_THRESHOLD = 30 * 60 * 1000; // 30 minutes
     private HEAVY_PAGE_DWELL_TIME = 5 * 60 * 1000; // 5 minutes on heavy page without interaction
@@ -212,7 +212,7 @@ class OverwhelmDetector {
     /**
      * Trigger overwhelm state with specific signals and message
      */
-    private triggerOverwhelm(signals: string[], reason?: string) {
+    public triggerOverwhelm(signals: string[], reason?: string) {
         this.state.set({
             isOverwhelmed: true,
             signals,

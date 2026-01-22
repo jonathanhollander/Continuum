@@ -16,6 +16,7 @@
         EyeOff,
     } from "lucide-svelte";
     import { fade, slide } from "svelte/transition";
+    import EmptyState from "$lib/components/EmptyState.svelte";
 
     let items = $state<any[]>([]);
     let loading = $state(true);
@@ -296,12 +297,35 @@
 
         {#if items.length === 0 && !loading}
             <div
-                class="text-center py-20 bg-slate-900/10 border border-dashed border-slate-800 rounded-3xl"
+                class="text-center py-16 px-8 bg-slate-900/30 border border-dashed border-slate-700 rounded-3xl max-w-2xl mx-auto"
                 in:fade
             >
-                <Unlock class="w-12 h-12 text-slate-700 mx-auto mb-4" />
-                <p class="text-slate-500 text-sm">
-                    Your vault is empty. No backup protocols defined.
+                <div class="w-20 h-20 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <Lock class="w-10 h-10 text-indigo-400" />
+                </div>
+
+                <h3 class="font-serif font-bold text-2xl text-slate-200 mb-4">
+                    Secrets that reveal themselves when needed
+                </h3>
+
+                <div class="mb-6 bg-slate-800/50 rounded-xl p-5 border border-slate-700 text-left">
+                    <p class="text-slate-300 leading-relaxed">
+                        <strong class="text-indigo-300">Some information shouldn't be seen until it's truly needed.</strong>
+                        Gate codes, safe combinations, pet feeding instructions, or where you keep the spare key—these are things your trusted contacts
+                        only need access to in an emergency.
+                    </p>
+                    <p class="text-slate-400 mt-3 leading-relaxed">
+                        The Pulse Vault keeps these secrets encrypted and hidden until an escalation reaches the tier you specify.
+                        It's peace of mind that your sensitive information is protected, yet accessible when it matters most.
+                    </p>
+                </div>
+
+                <p class="text-slate-500 mb-6 text-sm italic">
+                    Start with something simple—like where you keep the house key.
+                </p>
+
+                <p class="text-xs text-slate-600 mt-4">
+                    Add protocols using the form above. They'll appear here once saved.
                 </p>
             </div>
         {/if}

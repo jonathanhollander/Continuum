@@ -262,15 +262,14 @@
                     ctaLabel="Write your first message"
                     onAction={() => (showAddModal = true)}
                 />
-                </div>
-                <button
-                    on:click={() => (showAddModal = true)}
-                    class="px-8 py-3.5 bg-indigo-600 text-white rounded-full font-bold shadow-lg hover:shadow-indigo-200 transition-all flex items-center mx-auto gap-2"
-                >
-                    <Plus size={20} />
-                    Begin a Legacy
-                </button>
             </div>
+            <button
+                on:click={() => (showAddModal = true)}
+                class="px-8 py-3.5 bg-indigo-600 text-white rounded-full font-bold shadow-lg hover:shadow-indigo-200 transition-all flex items-center mx-auto gap-2"
+            >
+                <Plus size={20} />
+                Begin a Legacy
+            </button>
         {/if}
     </div>
 
@@ -284,18 +283,23 @@
                 class="bg-white w-full max-w-2xl rounded-[3rem] p-10 shadow-2xl space-y-8"
                 transition:scale={{ start: 0.95, easing: quintOut }}
             >
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-4">
-                        <div
-                            class="p-3 bg-indigo-50 text-indigo-600 rounded-2xl"
-                        >
-                            <Plus size={24} />
+                <div class="flex items-start justify-between">
+                    <div class="flex-1 pr-6">
+                        <div class="flex items-center gap-4 mb-3">
+                            <div
+                                class="p-3 bg-indigo-50 text-indigo-600 rounded-2xl"
+                            >
+                                <Plus size={24} />
+                            </div>
+                            <h2
+                                class="font-serif text-3xl font-bold text-slate-900 tracking-tight"
+                            >
+                                Speak Across Time
+                            </h2>
                         </div>
-                        <h2
-                            class="font-serif text-3xl font-bold text-slate-900 tracking-tight"
-                        >
-                            New Legacy Message
-                        </h2>
+                        <p class="text-slate-500 text-sm leading-relaxed pl-16">
+                            These words will find their way to someone you love at exactly the right moment—a graduation, a wedding, a milestone you won't be there to witness. This is your presence, preserved.
+                        </p>
                     </div>
                     <button
                         on:click={() => (showAddModal = false)}

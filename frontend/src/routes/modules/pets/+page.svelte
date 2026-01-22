@@ -271,14 +271,21 @@
                 transition:slide
             >
                 <div
-                    class="p-6 border-b border-gray-100 flex justify-between items-center"
+                    class="p-6 border-b border-gray-100 flex justify-between items-start"
                 >
-                    <h3 class="font-serif font-bold text-2xl text-[#304743]">
-                        Add a Pet
-                    </h3>
+                    <div class="flex-1 pr-4">
+                        <h3 class="font-serif font-bold text-2xl text-[#304743]">
+                            {newPet.id ? "Update Their Care Plan" : "Protect Your Companion"}
+                        </h3>
+                        <p class="text-gray-500 text-sm mt-2 leading-relaxed">
+                            {newPet.id
+                                ? "Keep their information current so their next caregiver has everything they need."
+                                : "Your pet depends on you completely. This information ensures they'll be cared for by someone who truly understands them—their routines, their quirks, and their needs."}
+                        </p>
+                    </div>
                     <button
                         onclick={resetForm}
-                        class="text-gray-400 hover:text-gray-600"
+                        class="text-gray-400 hover:text-gray-600 mt-1"
                     >
                         <span class="sr-only">Close</span>
                         <svg
@@ -344,14 +351,17 @@
                     <div>
                         <label
                             class="block text-xs font-bold uppercase text-gray-500 mb-1"
-                            >Designated Guardian</label
+                            >Their Next Loving Home</label
                         >
                         <input
                             type="text"
                             bind:value={newPet.guardian}
                             class="w-full px-4 py-2 rounded-xl border border-gray-200"
-                            placeholder="Who will take them?"
+                            placeholder="Who will love them next?"
                         />
+                        <p class="text-xs text-gray-400 mt-1.5 leading-relaxed">
+                            Choose someone who already knows and loves them, if possible. This person will receive all the care details you provide here.
+                        </p>
                     </div>
 
                     <div>
@@ -383,25 +393,25 @@
                         <div>
                             <label
                                 class="block text-xs font-bold uppercase text-gray-500 mb-1"
-                                >Food Instructions</label
+                                >Their Daily Routine</label
                             >
                             <input
                                 type="text"
                                 bind:value={newPet.foodInstructions}
                                 class="w-full px-4 py-2 rounded-xl border border-gray-200"
-                                placeholder="Brand & Amount"
+                                placeholder="Food brand, amounts, schedule"
                             />
                         </div>
                         <div>
                             <label
                                 class="block text-xs font-bold uppercase text-gray-500 mb-1"
-                                >Medical Needs</label
+                                >Health & Medications</label
                             >
                             <input
                                 type="text"
                                 bind:value={newPet.medicalNeeds}
                                 class="w-full px-4 py-2 rounded-xl border border-gray-200"
-                                placeholder="Dosage & Frequency"
+                                placeholder="Any ongoing care needs"
                             />
                         </div>
                     </div>

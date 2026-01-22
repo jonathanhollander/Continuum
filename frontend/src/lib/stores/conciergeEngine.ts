@@ -1,5 +1,6 @@
 import { writable, get } from 'svelte/store';
 import { aiConciergeService } from '../services/aiConciergeService';
+import { overwhelmDetector } from '../services/overwhelmDetection';
 import { activeAccountId } from './keyringStore';
 import { goto } from '$app/navigation';
 import { browser } from '$app/environment';
@@ -25,6 +26,12 @@ export interface Message {
     content: string;
     timestamp: number;
     isDictated?: boolean;
+    resources?: Array<{
+        title: string;
+        description: string;
+        link: string;
+        type: 'article' | 'video' | 'tool';
+    }>;
 }
 
 interface ConciergeState {
@@ -41,6 +48,7 @@ interface ConciergeState {
     isPoppedOut: boolean;
     floatingPosition: { x: number; y: number } | null;
     floatingSize: { width: number; height: number } | null;
+    popOutMode: 'pip' | 'floating' | null;
 }
 
 function createConciergeEngine() {
@@ -115,6 +123,53 @@ function createConciergeEngine() {
         };
     }
 
+    const updateInitialGreeting = () => {
+        const state = get({ subscribe });
+        if (state.messages.length > 0) return;
+
+        const contextName = state.currentContextName || 'Continuum Dashboard';
+        const isHome = contextName === 'Continuum Dashboard' || contextName === 'Marketing' || contextName === 'Continuum';
+
+        // Proactive Contextual Greetings
+        const contextGreetings: Record<string, string> = {
+            'Real Estate': "I'm here to help you catalog your assets. Your home is the foundation of so much family history—where shall we begin?",
+            'Financial Accounts': "Let's secure your financial legacy. Thinking ahead about these resources is such a kind thing to do for your family. Which account is most important to record first?",
+            'Document Vault': "Your digital legacy is vital. Let's ensure your loved ones aren't locked out of the accounts that matter. Do you have a list of priority digital accounts to secure?",
+            'Health & Medical': "Medical clarity ensures your wishes are honored with dignity. Have you designated a healthcare proxy or created a living will yet?",
+            'Family & Contacts': "Legacy is all about the people you care for. Who is the first person you'd like to include in your circle of trust?",
+            'Legacy Letters': "Your voice is a treasure for those you leave behind. Who would you like to write your first legacy letter to?",
+            'Life Timeline': "Your life is a story worth telling. What is a major life milestone we should honor first on your timeline?",
+            'Insurance Portfolio': "Protection brings peace of mind. Do you have any active life or property insurance policies we should track to make sure your family is secure?",
+            'Digital Guardian': "The Pulse system is here to watch over you. Who should be your primary responder, the person you trust most to check in if we don't hear from you?",
+            'Heirloom Registry': "Every object has a story and a connection. What's a meaningful heirloom you'd like to register today?",
+            'Legal Documents': "Building a solid legal foundation is an act of great care. Do you have a copy of your Will or Trust ready to upload?"
+        };
+
+        let prefix = "";
+        if (!state.hasInteracted) {
+            prefix = "Welcome to Continuum. I'm here to help you secure your legacy. ";
+        } else {
+            prefix = "Ready to continue. ";
+        }
+
+        const greetingBody = contextGreetings[contextName] ||
+            (isHome ? "To begin, we need to secure your legacy by identifying your circle of trust. Who is your primary emergency contact?" : `What's the first detail we should record here in ${contextName}?`);
+
+        const newGreeting = `${prefix}${greetingBody}`;
+
+        update(s => ({
+            ...s,
+            messages: [{
+                id: '1',
+                role: 'assistant',
+                content: newGreeting,
+                timestamp: Date.now()
+            }],
+            // Mark as interacted once they've seen the first greeting
+            hasInteracted: true
+        }));
+    };
+
     return {
         subscribe,
         toggle: () => update(s => {
@@ -130,7 +185,7 @@ function createConciergeEngine() {
             });
 
             // Check for pending context switch (Delayed Pivot)
-            const state = get(conciergeEngine);
+            const state = get({ subscribe });
             if (state.hasPendingContextSwitch) {
                 const contextName = state.currentContextName;
                 const leadQuestion = PIVOT_GREETINGS[contextName] || `Shall we start securing the details for ${contextName}?`;
@@ -149,7 +204,7 @@ function createConciergeEngine() {
                     hasPendingContextSwitch: false
                 }));
             } else {
-                conciergeEngine.updateInitialGreeting();
+                updateInitialGreeting();
             }
         },
         close: () => {
@@ -211,7 +266,7 @@ function createConciergeEngine() {
             const item = allItems.find(i => i.href === route);
             const contextName = item ? item.label : (route === '/' ? 'Marketing' : (route.startsWith('/modules') ? route.split('/').pop()?.replace('-', ' ') : 'Continuum'));
 
-            const state = get(conciergeEngine);
+            const state = get({ subscribe });
             const oldContext = state.currentContextName;
 
             update(s => {
@@ -242,7 +297,7 @@ function createConciergeEngine() {
                     update(s => ({ ...s, hasPendingContextSwitch: true }));
                 }
             } else if (state.isOpen && state.messages.length === 0) {
-                conciergeEngine.updateInitialGreeting();
+                updateInitialGreeting();
             }
         },
 
@@ -267,12 +322,13 @@ function createConciergeEngine() {
             });
 
             try {
-                const state = get(conciergeEngine);
+                const state = get({ subscribe });
                 const response = await aiConciergeService.chat(content, state.messages, state.currentContextName);
 
                 // Parse response if it's JSON
                 let displayContent = response.content;
                 let extractedDataFromResponse: any | null = response.extractedData || null;
+                let resources: any[] = []; // Declare output variable here
 
                 if (response.content.includes('{') && (response.content.includes('message') || response.content.includes('extractedData'))) {
                     try {
@@ -285,33 +341,46 @@ function createConciergeEngine() {
                             extractedDataFromResponse = parsed.extractedData;
                         }
 
-                        // Contextual Navigation
-                        if (browser && parsed.intent) {
-                            const intentMap: Record<string, string> = {
-                                'add_contact': '/modules/contacts',
-                                'add_property': '/modules/property',
-                                'add_financial': '/modules/financial-accounts',
-                                'add_insurance': '/modules/insurance',
-                                'add_healthcare': '/modules/medical',
-                                'add_digital': '/modules/digital-guardian'
-                            };
+                        if (parsed.resources) {
+                            resources = parsed.resources;
+                        }
 
-                            const targetRoute = intentMap[parsed.intent];
-                            if (targetRoute && window.location.pathname !== targetRoute) {
-                                console.log(`[Concierge] Navigating to ${targetRoute} based on intent: ${parsed.intent}`);
-                                goto(targetRoute);
+                        // Contextual Navigation & Actions
+                        if (browser && parsed.intent) {
+                            if (parsed.intent === 'suggest_break') {
+                                console.log(`[Concierge] Triggering break suggestion based on intent`);
+                                overwhelmDetector.triggerOverwhelm(['AI_SUGGESTION'], 'The AI guide suggested a pause.');
+                            } else {
+                                const intentMap: Record<string, string> = {
+                                    'add_contact': '/modules/contacts',
+                                    'add_property': '/modules/property',
+                                    'add_financial': '/modules/financial-accounts',
+                                    'add_insurance': '/modules/insurance',
+                                    'add_healthcare': '/modules/medical',
+                                    'add_digital': '/modules/digital-guardian'
+                                };
+
+                                const targetRoute = intentMap[parsed.intent];
+                                if (targetRoute && window.location.pathname !== targetRoute) {
+                                    console.log(`[Concierge] Navigating to ${targetRoute} based on intent: ${parsed.intent}`);
+                                    goto(targetRoute);
+                                }
                             }
                         }
                     } catch (e) {
                         console.error("Failed to parse AI JSON response:", e);
                     }
+                } else if (response.resources) {
+                    // Handle case where resources come directly from response object not in JSON content string
+                    resources = response.resources;
                 }
 
                 const assistantMsg: Message = {
                     id: Math.random().toString(36).substring(7),
                     role: 'assistant',
                     content: displayContent,
-                    timestamp: new Date().getTime()
+                    timestamp: new Date().getTime(),
+                    resources: resources.length > 0 ? resources : undefined
                 };
 
                 update(s => {
@@ -334,7 +403,7 @@ function createConciergeEngine() {
         },
 
         confirmExtractedData: () => {
-            const data = get(conciergeEngine).lastExtractedData;
+            const data = get({ subscribe }).lastExtractedData;
             if (!data) return;
 
             import('./persistence').then(({ setStored }) => {
@@ -348,55 +417,10 @@ function createConciergeEngine() {
 
         clearHistory: () => {
             update(s => ({ ...s, messages: [], lastExtractedData: null }));
-            conciergeEngine.updateInitialGreeting();
+            updateInitialGreeting();
         },
 
-        updateInitialGreeting: () => {
-            const state = get(conciergeEngine);
-            if (state.messages.length > 0) return;
-
-            const contextName = state.currentContextName || 'Continuum Dashboard';
-            const isHome = contextName === 'Continuum Dashboard' || contextName === 'Marketing' || contextName === 'Continuum';
-
-            // Proactive Contextual Greetings
-            const contextGreetings: Record<string, string> = {
-                'Real Estate': "I'm here to help you catalog your assets. Your home is the foundation of so much family history—where shall we begin?",
-                'Financial Accounts': "Let's secure your financial legacy. Thinking ahead about these resources is such a kind thing to do for your family. Which account is most important to record first?",
-                'Document Vault': "Your digital legacy is vital. Let's ensure your loved ones aren't locked out of the accounts that matter. Do you have a list of priority digital accounts to secure?",
-                'Health & Medical': "Medical clarity ensures your wishes are honored with dignity. Have you designated a healthcare proxy or created a living will yet?",
-                'Family & Contacts': "Legacy is all about the people you care for. Who is the first person you'd like to include in your circle of trust?",
-                'Legacy Letters': "Your voice is a treasure for those you leave behind. Who would you like to write your first legacy letter to?",
-                'Life Timeline': "Your life is a story worth telling. What is a major life milestone we should honor first on your timeline?",
-                'Insurance Portfolio': "Protection brings peace of mind. Do you have any active life or property insurance policies we should track to make sure your family is secure?",
-                'Digital Guardian': "The Pulse system is here to watch over you. Who should be your primary responder, the person you trust most to check in if we don't hear from you?",
-                'Heirloom Registry': "Every object has a story and a connection. What's a meaningful heirloom you'd like to register today?",
-                'Legal Documents': "Building a solid legal foundation is an act of great care. Do you have a copy of your Will or Trust ready to upload?"
-            };
-
-            let prefix = "";
-            if (!state.hasInteracted) {
-                prefix = "Welcome to Continuum. I'm here to help you secure your legacy. ";
-            } else {
-                prefix = "Ready to continue. ";
-            }
-
-            const greetingBody = contextGreetings[contextName] ||
-                (isHome ? "To begin, we need to secure your legacy by identifying your circle of trust. Who is your primary emergency contact?" : `What's the first detail we should record here in ${contextName}?`);
-
-            const newGreeting = `${prefix}${greetingBody}`;
-
-            update(s => ({
-                ...s,
-                messages: [{
-                    id: '1',
-                    role: 'assistant',
-                    content: newGreeting,
-                    timestamp: Date.now()
-                }],
-                // Mark as interacted once they've seen the first greeting
-                hasInteracted: true
-            }));
-        }
+        updateInitialGreeting
     };
 }
 

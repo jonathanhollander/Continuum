@@ -33,7 +33,7 @@ const petMapper = (item: any) => {
     };
 };
 
-export const petSync = registerSync<PetEntry>('pets', 'pets', petMapper);
+export const petSync = registerSync<PetEntry>('pets', 'pets', petMapper).setAffirmationContext('pets');
 
 export const petStore = {
     get items() { return petSync.items; },

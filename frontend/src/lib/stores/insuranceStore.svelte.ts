@@ -47,7 +47,7 @@ const insuranceMapper = (item: any) => {
     };
 };
 
-export const insuranceSync = registerSync<InsurancePolicy>('insurance_policies', 'insurance_policies', insuranceMapper);
+export const insuranceSync = registerSync<InsurancePolicy>('insurance_policies', 'insurance_policies', insuranceMapper).setAffirmationContext('insurance');
 
 export const insuranceStore = {
     get policies() { return insuranceSync.items; },

@@ -404,14 +404,21 @@
                 class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto"
             >
                 <div
-                    class="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-center"
+                    class="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-start"
                 >
-                    <h3 class="font-serif font-bold text-2xl text-slate-800">
-                        Add Subscription
-                    </h3>
+                    <div class="flex-1 pr-4">
+                        <h3 class="font-serif font-bold text-2xl text-slate-800">
+                            {newSub.id ? "Update Subscription" : "Track a Recurring Charge"}
+                        </h3>
+                        <p class="text-slate-500 text-sm mt-2 leading-relaxed">
+                            {newSub.id
+                                ? "Keep this information current—it makes the cancellation process smoother."
+                                : "Subscriptions keep charging even when no one's watching. Documenting these helps your family avoid months of unnecessary charges and navigate the often-frustrating cancellation process."}
+                        </p>
+                    </div>
                     <button
                         onclick={resetForm}
-                        class="text-gray-400 hover:text-gray-600">Go back</button
+                        class="text-gray-400 hover:text-gray-600 mt-1">Go back</button
                     >
                 </div>
 
@@ -419,13 +426,13 @@
                     <div>
                         <label
                             class="block text-xs font-bold uppercase text-gray-500 mb-1"
-                            >Service Name</label
+                            >What Service?</label
                         >
                         <input
                             type="text"
                             bind:value={newSub.name}
                             class="w-full px-4 py-3 rounded-xl border border-gray-200"
-                            placeholder="e.g. Netflix"
+                            placeholder="e.g. Netflix, Spotify, gym membership"
                             autoFocus
                         />
                     </div>

@@ -9,9 +9,9 @@
  * Backend API Base URL
  *
  * - Development: http://localhost:8000
- * - Production: Set via VITE_API_URL environment variable
+ * - Production: Set via VITE_API_URL or defaults to relative path
  */
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:8000' : '');
 
 /**
  * Full API endpoint URL (with /api prefix)
@@ -42,11 +42,11 @@ export const APP_VERSION = '0.7.0';
 
 /**
  * Configuration validation
- * Logs warnings if required configuration is missing in production
+ * Logs info if using relative path in production
  */
 if (isProduction) {
     if (!import.meta.env.VITE_API_URL) {
-        console.warn('⚠️ VITE_API_URL is not set in production. Using default:', API_BASE_URL);
+        console.debug('ℹ️ VITE_API_URL not set. Using relative path for API requests.');
     }
 }
 

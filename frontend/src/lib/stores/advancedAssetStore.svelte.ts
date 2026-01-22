@@ -110,7 +110,7 @@ const betterMapper = (data: any) => {
     }
 };
 
-export const advancedAssetSync = registerSingletonSync<AdvancedAssetState>('advanced_assets', 'advanced_assets', betterMapper, '/api/data');
+export const advancedAssetSync = registerSingletonSync<AdvancedAssetState>('advanced_assets', 'advanced_assets', betterMapper, '/api/data').setAffirmationContext('general');
 
 export const advancedAssetStore = {
     get transactions() { return advancedAssetSync.data?.transactions || []; },

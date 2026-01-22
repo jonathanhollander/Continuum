@@ -483,17 +483,19 @@
                     <div
                         class="bg-[#304743] p-6 flex justify-between items-start text-white"
                     >
-                        <div>
+                        <div class="flex-1 pr-4">
                             <h3 class="font-serif font-bold text-xl">
-                                {newExpense.id ? "Edit Item" : "New Expense"}
+                                {newExpense.id ? "Update This Detail" : "Plan Ahead"}
                             </h3>
-                            <p class="text-emerald-100/80 text-sm mt-1">
-                                Add a line item to your funeral budget.
+                            <p class="text-emerald-100/80 text-sm mt-1 leading-relaxed">
+                                {newExpense.id
+                                    ? "Keep your estimates current—it helps your family plan with clarity."
+                                    : "By thinking through these costs now, you're protecting your family from difficult financial decisions during an already hard time."}
                             </p>
                         </div>
                         <button
                             onclick={resetExpenseForm}
-                            class="text-white/50 hover:text-white transition-colors"
+                            class="text-white/50 hover:text-white transition-colors mt-1"
                         >
                             <X size={24} />
                         </button>

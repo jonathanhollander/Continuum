@@ -6,7 +6,7 @@ import os
 import logging
 from typing import List, Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import field_validator, ValidationError
+from pydantic import field_validator, ValidationError, model_validator
 
 # Use standard library logging to avoid circular imports
 # (This module is imported by backend.utils.logger)
@@ -130,6 +130,40 @@ class Settings(BaseSettings):
         if isinstance(v, list):
             return ",".join(v)
         return v
+
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def fix_database_url(cls, v: Optional[str]) -> Optional[str]:
+        """
+        Fix SQLAlchemy 2.0 compatibility issue:
+        Replace 'postgres://' with 'postgresql://' as the former is deprecated/removed.
+        Railway often provides 'postgres://'.
+        """
+        if v and v.startswith("postgres://"):
+            # logger isn't fully configured here yet, so we use print if needed, or just rely on the fix
+            return v.replace("postgres://", "postgresql://", 1)
+        return v
+    
+    @model_validator(mode='after')
+    def configure_domain_settings(self) -> 'Settings':
+        """
+        Automatically configure RP_ID and ORIGIN based on Railway environment
+        if not explicitly provided.
+        """
+        if self.RAILWAY_PUBLIC_DOMAIN:
+            # If RP_ID is still default and we have a Railway domain, use it
+            if self.RP_ID == "localhost":
+                self.RP_ID = self.RAILWAY_PUBLIC_DOMAIN
+            
+            # If ORIGIN is still default and we have a Railway domain, use HTTPS
+            if self.ORIGIN == "http://localhost:5173":
+                self.ORIGIN = f"https://{self.RAILWAY_PUBLIC_DOMAIN}"
+                
+            # Also ensure Frontend URL matches
+            if self.FRONTEND_URL == "http://localhost:5173" and self.ENVIRONMENT == "production":
+                self.FRONTEND_URL = f"https://{self.RAILWAY_PUBLIC_DOMAIN}"
+                
+        return self
 
     def get_cors_origins_list(self) -> List[str]:
         """

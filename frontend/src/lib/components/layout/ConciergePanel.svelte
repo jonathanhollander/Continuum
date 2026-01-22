@@ -21,6 +21,7 @@
     import { onMount } from "svelte";
     import { browser } from "$app/environment";
     import { CheckCircle2 } from "lucide-svelte";
+    import ResourceCard from "$lib/components/concierge/ResourceCard.svelte";
 
     const {
         isOpen = false,
@@ -173,6 +174,18 @@
         }
     }
 
+    function handlePopIn() {
+        if (pipWindow) {
+            pipWindow.close();
+        } else {
+            conciergeEngine.popIn();
+            // If we are in the standalone concierge window, close it
+            if (browser && window.location.pathname === "/concierge-window") {
+                window.close();
+            }
+        }
+    }
+
     $effect(() => {
         if (popOutMode === "pip" && !pipWindow) {
             handlePiPToggle();
@@ -182,6 +195,9 @@
     // Dragging Logic
     function onPointerDown(e: PointerEvent) {
         if (popOutMode !== "floating") return;
+        // Don't start dragging if we clicked a button or interactive element
+        if ((e.target as HTMLElement).closest("button")) return;
+
         isDragging = true;
         dragStart = {
             x: e.clientX - floatingPos.x,
@@ -315,13 +331,7 @@
                     </button>
                 {:else}
                     <button
-                        onclick={() => {
-                            if (pipWindow) {
-                                pipWindow.close();
-                            } else {
-                                conciergeEngine.popIn();
-                            }
-                        }}
+                        onclick={handlePopIn}
                         class="p-1.5 px-3 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 rounded-full transition-colors flex items-center gap-1.5 border border-indigo-500/30"
                         title="Pop In"
                     >
@@ -374,6 +384,26 @@
                                         class="text-[9px] uppercase font-bold tracking-tighter"
                                         >Dictated - Please verify</span
                                     >
+                                </div>
+                            {/if}
+
+                            {#if msg.resources && msg.resources.length > 0}
+                                <div
+                                    class="mt-3 space-y-2 border-t border-white/10 pt-2"
+                                >
+                                    <div
+                                        class="text-[10px] uppercase font-bold tracking-wider text-white/40 mb-2"
+                                    >
+                                        Suggested Resources
+                                    </div>
+                                    {#each msg.resources as resource}
+                                        <ResourceCard
+                                            title={resource.title}
+                                            description={resource.description}
+                                            link={resource.link}
+                                            type={resource.type}
+                                        />
+                                    {/each}
                                 </div>
                             {/if}
                         </div>
