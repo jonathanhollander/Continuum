@@ -1,0 +1,45 @@
+{% extends "emails/base.html" %}
+
+{% block content %}
+<div class="greeting">Welcome to Continuum,</div>
+
+<h2>Your Digital Legacy is Now Protected</h2>
+
+<p>Thank you for creating your Continuum account. You've taken an important step in planning for the future and protecting what matters most.</p>
+
+<div class="cta-container">
+    <a href="{{ dashboard_url }}" class="cta-button">Go to Your Dashboard</a>
+</div>
+
+<div class="divider"></div>
+
+<p><strong>What's Next?</strong></p>
+<ol style="color: #475569; margin: 16px 0;">
+    <li><strong>Set Up Your Pulse</strong> - Configure your wellness check-in schedule</li>
+    <li><strong>Add Guardians</strong> - Designate trusted individuals for each escalation tier</li>
+    <li><strong>Upload Documents</strong> - Store important files and instructions</li>
+    <li><strong>Enable Passkeys</strong> - Set up secure, passwordless authentication</li>
+</ol>
+
+<div class="alert-box info">
+    <p style="margin: 0;"><strong>Privacy First:</strong> Your data is encrypted and only accessible by you and your designated guardians under specific conditions you control.</p>
+</div>
+
+<p style="margin-top: 24px;"><strong>Key Features:</strong></p>
+<ul style="color: #475569; margin: 16px 0;">
+    <li><strong>Pulse System</strong> - Automated wellness checks with escalating alerts</li>
+    <li><strong>Digital Vault</strong> - Secure storage for critical documents and information</li>
+    <li><strong>Guardian Network</strong> - Tiered access system for trusted contacts</li>
+    <li><strong>Final Messages</strong> - Time-released communications to loved ones</li>
+</ul>
+
+<div class="divider"></div>
+
+<p style="font-size: 14px; color: #64748b;">
+    We're here to help you navigate this process with compassion and clarity. Take your time setting up your account - this is about peace of mind, not pressure.
+</p>
+
+<p style="font-size: 13px; color: #94a3b8; margin-top: 24px;">
+    Questions? Visit our help center or reply to this email.
+</p>
+{% endblock %}
