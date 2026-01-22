@@ -220,9 +220,63 @@ class RegistrationResponse(BaseModel):
 
 # --- Endpoints ---
 
-@app.get("/api/health")
-def health_check():
-    return {"status": "healthy", "service": "continuum-saas"}
+@app.get("/api/health", summary="Perform a deep health check", tags=["monitoring"])
+async def health_check(session: Session = Depends(get_session)):
+    """
+    Perform a robust health check that verifies:
+    1. Database connectivity
+    2. Storage write permissions
+    3. Frontend availability (loopback)
+    """
+    import httpx
+    health = {
+        "status": "healthy",
+        "database": False,
+        "storage": False,
+        "frontend_reachable": False,
+        "environment": settings.ENVIRONMENT,
+        "version": settings.APP_VERSION
+    }
+
+    # 1. Verify Database
+    try:
+        from sqlmodel import text
+        session.exec(text("SELECT 1"))
+        health["database"] = True
+    except Exception as e:
+        logger.error(f"Health check failure: Database connection failed: {e}")
+        health["status"] = "unhealthy"
+
+    # 2. Verify Storage
+    try:
+        os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+        test_file = os.path.join(settings.UPLOAD_DIR, ".health_check")
+        with open(test_file, "w") as f:
+            f.write("ok")
+        os.remove(test_file)
+        health["storage"] = True
+    except Exception as e:
+        logger.error(f"Health check failure: Storage is not writable: {e}")
+        health["status"] = "unhealthy"
+
+    # 3. Verify Frontend Reachability
+    try:
+        async with httpx.AsyncClient() as client:
+            # Check for 200 OK or 301/302 from the frontend
+            response = await client.head(settings.FRONTEND_URL, timeout=2.0, follow_redirects=True)
+            if response.status_code < 400:
+                health["frontend_reachable"] = True
+            else:
+                logger.warning(f"Health check: Frontend returned status {response.status_code}")
+    except Exception as e:
+        logger.warning(f"Health check: Frontend loopback check failed: {e}")
+        # Note: We don't mark the API as unhealthy just because the FE is slow/down,
+        # but we do report it in the response.
+
+    if health["status"] != "healthy":
+        return JSONResponse(status_code=503, content=health)
+    
+    return health
 
 @app.post("/api/auth/register/challenge")
 def register_challenge(request: ChallengeRequest):

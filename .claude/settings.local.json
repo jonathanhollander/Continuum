@@ -32,6 +32,8 @@
       "Bash(chmod:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr merge:*)",
       "Bash(gh label:*)",
       "Bash(gh label create:*)",
       "Bash(./CREATE_LABELS.sh:*)",
