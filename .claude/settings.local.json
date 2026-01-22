@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(claude --version:*)",
+      "Bash(claude skills:*)",
+      "mcp__github__list_pull_requests",
+      "Bash(gh pr list:*)",
+      "Bash(cd /Users/jonathanhollander/AI\\\\ Code/Notion\\\\ Template/Continuum_SaaS && gh pr view:*)",
+      "mcp__filesystem__fast_list_directory",
+      "Bash(cd /Users/jonathanhollander/AI Code/Notion Template/Continuum_SaaS && gh pr view:*)",
+      "Bash(git fetch:*)",
+      "Bash(git ls-tree -r --name-only origin/claude/review-codebase-suggestions-NjAZY)",
+      "Bash(for file in \"continuum-agents/technical-infrastructure/02-data-persistence-unifier.md\" \"continuum-agents/technical-infrastructure/03-media-upload-infrastructure.md\" \"continuum-agents/technical-infrastructure/04-email-integration.md\" \"continuum-agents/technical-infrastructure/05-configuration-management.md\")",
+      "Bash(do echo \"=== $file ===\")",
+      "Bash(for:*)",
+      "Bash(ls:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(cat:*)",
+      "Bash(gh pr view:*)",
+      "Bash(cd:*)",
+      "Bash(cd /Users/jonathanhollander/AI Code/Notion Template/Continuum_SaaS && python3 -m pip install pydantic-settings:*)",
+      "Bash(python3 -c \"from backend.config import settings; print\\(f''Config loaded successfully!''\\); print\\(f''Environment: {settings.ENVIRONMENT}''\\); print\\(f''Database: {settings.DATABASE_URL}''\\); print\\(f''Frontend URL: {settings.get_frontend_url\\(\\)}''\\); print\\(f''CORS Origins: {settings.get_cors_origins_list\\(\\)}''\\)\")",
+      "Bash(python3 -c \"from backend.config import settings; print\\(''✅ Config loads successfully''\\); print\\(f''DATABASE_URL: {settings.DATABASE_URL}''\\); print\\(f''FRONTEND_URL: {settings.get_frontend_url\\(\\)}''\\); print\\(f''CORS_ORIGINS: {settings.get_cors_origins_list\\(\\)}''\\)\")",
+      "Bash(ENVIRONMENT=production python3 -c \"from backend.config import Settings; s = Settings\\(ENVIRONMENT=''production''\\); errors = s.validate_production_config\\(\\); print\\(''Production errors:'', len\\(errors\\)\\); [print\\(f''  - {e}''\\) for e in errors]\")",
+      "Bash(python3:*)",
+      "Bash(python -c \"from backend.models.media import MediaFile; print\\(''MediaFile model imported successfully''\\)\")",
+      "Bash(python -c \"from backend.utils.file_storage import storage; print\\(f''Storage base dir: {storage.base_dir}''\\)\")",
+      "Bash(python -c \"from backend.routers.media import router; print\\(f''Media router registered with {len\\(router.routes\\)} routes''\\)\")",
+      "Bash(chmod:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "task-master-ai",
+    "chrome-devtools"
+  ]
+}
