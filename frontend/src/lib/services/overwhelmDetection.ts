@@ -8,11 +8,13 @@
  * - Abandoned form submissions
  * - Repeated back-button usage
  */
-import { writable, type Writable } from 'svelte/store';
+import { writable, type Writable, get } from 'svelte/store';
 import { logger } from '../utils/logger';
+import { API_BASE_URL } from '../config';
 
 export interface OverwhelmState {
     isOverwhelmed: boolean;
+    isPermanentlyMuted: boolean;
     signals: string[];
     triggerReason?: string;
 }
@@ -37,25 +39,43 @@ class OverwhelmDetector {
     private backButtonCount: number = 0;
     private formAbandonments: Map<string, number> = new Map();
     private inactivityCheckInterval?: number;
+    private lastTriggerTime: number = 0;
+    private isMuted: boolean = false;
 
     // Configurable thresholds
-    private RAPID_NAV_COUNT = 6; // navigations (increased from 3 to 6)
-    private RAPID_NAV_WINDOW = 60000; // 60 seconds (increased from 30 to 60)
-    private ERROR_THRESHOLD = 5; // errors in a session
-    private SESSION_LENGTH_THRESHOLD = 30 * 60 * 1000; // 30 minutes
-    private HEAVY_PAGE_DWELL_TIME = 5 * 60 * 1000; // 5 minutes on heavy page without interaction
+    private RAPID_NAV_COUNT = 12; // navigations (increased from 6 to 12)
+    private RAPID_NAV_WINDOW = 60000; // 60 seconds
+    private ERROR_THRESHOLD = 8; // errors in a session (increased from 5 to 8)
+    private SESSION_LENGTH_THRESHOLD = 45 * 60 * 1000; // 45 minutes (increased from 30)
+    private HEAVY_PAGE_DWELL_TIME = 10 * 60 * 1000; // 10 minutes on heavy page (increased from 5)
     private INACTIVITY_CHECK_INTERVAL = 60000; // Check every minute
-    private BACK_BUTTON_THRESHOLD = 3; // 3+ back navigations in quick succession
-    private FORM_ABANDON_THRESHOLD = 2; // abandoning same form twice
-
-    public state: Writable<OverwhelmState> = writable({
-        isOverwhelmed: false,
-        signals: []
-    });
+    private BACK_BUTTON_THRESHOLD = 5; // 5+ back navigations (increased from 3)
+    private FORM_ABANDON_THRESHOLD = 3; // abandoning same form 3 times (increased from 2)
+    private TRIGGER_COOLDOWN = 15 * 60 * 1000; // 15 minutes cooldown between triggers
 
     constructor() {
-        logger.debug('OverwhelmDetector initialized');
+        // Initial state from localStorage (fallback)
+        if (typeof window !== 'undefined') {
+            this.isMuted = localStorage.getItem('continuum_overwhelm_muted') === 'true';
+        }
+
+        this.state = writable({
+            isOverwhelmed: false,
+            isPermanentlyMuted: this.isMuted,
+            signals: []
+        });
+
+        logger.debug('OverwhelmDetector initialized', { isMuted: this.isMuted });
         this.startInactivityMonitoring();
+    }
+
+    /**
+     * Initialize from user preferences (backend sync)
+     */
+    public initialize(isMuted: boolean) {
+        this.isMuted = isMuted;
+        this.state.update(s => ({ ...s, isPermanentlyMuted: isMuted }));
+        logger.debug('OverwhelmDetector synced with user preferences', { isMuted });
     }
 
     /**
@@ -115,6 +135,9 @@ class OverwhelmDetector {
 
         // Update current path and reset page timers
         if (path) {
+            // Ignore if same path (accidental double nav)
+            if (this.currentPath === path) return;
+
             this.currentPath = path;
             this.pageEntryTime = now;
             this.lastInteractionTime = now;
@@ -213,11 +236,62 @@ class OverwhelmDetector {
      * Trigger overwhelm state with specific signals and message
      */
     public triggerOverwhelm(signals: string[], reason?: string) {
+        // Permanent mute check
+        if (this.isMuted) {
+            return;
+        }
+
+        const now = Date.now();
+
+        // Cooldown check: Don't trigger if we've shown the offer recently
+        if (now - this.lastTriggerTime < this.TRIGGER_COOLDOWN) {
+            logger.debug('Overwhelm trigger suppressed due to cooldown', {
+                signals,
+                timeLeft: Math.round((this.TRIGGER_COOLDOWN - (now - this.lastTriggerTime)) / 1000) + 's'
+            });
+            return;
+        }
+
+        this.lastTriggerTime = now;
         this.state.set({
             isOverwhelmed: true,
             signals,
             triggerReason: reason
         });
+    }
+
+    /**
+     * Permanent suppression of the overwhelm support
+     */
+    public async mutePermanently() {
+        this.isMuted = true;
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('continuum_overwhelm_muted', 'true');
+        }
+        this.state.update(s => ({ ...s, isPermanentlyMuted: true, isOverwhelmed: false }));
+        logger.info('Overwhelm support permanently muted by user');
+
+        // Sync to backend if authenticated
+        try {
+            const token = typeof window !== 'undefined' ? localStorage.getItem('continuum_auth_token') : null;
+            if (token) {
+                const res = await fetch(`${API_BASE_URL}/api/auth/preferences`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ overwhelm_muted: true })
+                });
+                if (!res.ok) {
+                    logger.error('Failed to sync overwhelm preference to backend');
+                } else {
+                    logger.info('Overwhelm preference synced to backend');
+                }
+            }
+        } catch (e) {
+            logger.error('Error syncing overwhelm preference', e);
+        }
     }
 
     /**

@@ -12,6 +12,7 @@ from backend.database import User, get_session
 SECRET_KEY = settings.JWT_SECRET_KEY
 ALGORITHM = settings.JWT_ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
+REFRESH_TOKEN_EXPIRE_DAYS = settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS
 
 # Fix for passlib + bcrypt 4.0.0+ crashing on 72 byte limit check during initialization
 # This applies even if only using argon2 because passlib tries to load all handlers
@@ -92,3 +93,149 @@ def optional_current_user(token: str = Depends(oauth2_scheme), session: Session 
         return session.get(User, user_id)
     except jwt.PyJWTError:
         return None
+
+
+# --- Refresh Token Functions ---
+
+def create_refresh_token(user_id: int, session: Session, device_info: Optional[str] = None) -> str:
+    """
+    Create a new refresh token for the user.
+    Stores token hash in database for revocation support.
+    Returns the raw token to be sent to client.
+    """
+    import secrets
+    from backend.database import RefreshToken
+
+    # Generate a secure random token
+    raw_token = secrets.token_urlsafe(64)
+
+    # Hash the token for storage (never store raw tokens)
+    token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
+
+    # Calculate expiration
+    expires_at = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+
+    # Store in database
+    refresh_token = RefreshToken(
+        user_id=user_id,
+        token_hash=token_hash,
+        expires_at=expires_at,
+        device_info=device_info
+    )
+    session.add(refresh_token)
+    session.commit()
+
+    logger.info(f"Created refresh token for user {user_id}")
+    return raw_token
+
+
+def verify_refresh_token(raw_token: str, session: Session) -> Optional[User]:
+    """
+    Verify a refresh token and return the associated user.
+    Returns None if token is invalid, expired, or revoked.
+    """
+    from backend.database import RefreshToken
+
+    # Hash the provided token
+    token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
+
+    # Find the token in database
+    token_record = session.exec(
+        select(RefreshToken).where(
+            RefreshToken.token_hash == token_hash,
+            RefreshToken.revoked == False,
+            RefreshToken.expires_at > datetime.utcnow()
+        )
+    ).first()
+
+    if not token_record:
+        logger.warning("Invalid or expired refresh token used")
+        return None
+
+    # Get the user
+    user = session.get(User, token_record.user_id)
+    if not user:
+        logger.warning(f"Refresh token user not found: {token_record.user_id}")
+        return None
+
+    return user
+
+
+def revoke_refresh_token(raw_token: str, session: Session) -> bool:
+    """
+    Revoke a specific refresh token.
+    Returns True if revoked, False if not found.
+    """
+    from backend.database import RefreshToken
+
+    token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
+
+    token_record = session.exec(
+        select(RefreshToken).where(RefreshToken.token_hash == token_hash)
+    ).first()
+
+    if token_record:
+        token_record.revoked = True
+        session.commit()
+        logger.info(f"Revoked refresh token for user {token_record.user_id}")
+        return True
+
+    return False
+
+
+def revoke_all_user_tokens(user_id: int, session: Session) -> int:
+    """
+    Revoke all refresh tokens for a user (logout from all devices).
+    Returns count of revoked tokens.
+    """
+    from backend.database import RefreshToken
+
+    tokens = session.exec(
+        select(RefreshToken).where(
+            RefreshToken.user_id == user_id,
+            RefreshToken.revoked == False
+        )
+    ).all()
+
+    count = 0
+    for token in tokens:
+        token.revoked = True
+        count += 1
+
+    session.commit()
+    logger.info(f"Revoked {count} refresh tokens for user {user_id}")
+    return count
+
+
+def rotate_refresh_token(old_token: str, session: Session, device_info: Optional[str] = None) -> Optional[tuple]:
+    """
+    Rotate a refresh token (revoke old, create new).
+    Returns (new_token, user) tuple or None if old token is invalid.
+    """
+    from backend.database import RefreshToken
+
+    # Verify the old token
+    token_hash = hashlib.sha256(old_token.encode()).hexdigest()
+
+    token_record = session.exec(
+        select(RefreshToken).where(
+            RefreshToken.token_hash == token_hash,
+            RefreshToken.revoked == False,
+            RefreshToken.expires_at > datetime.utcnow()
+        )
+    ).first()
+
+    if not token_record:
+        return None
+
+    user = session.get(User, token_record.user_id)
+    if not user:
+        return None
+
+    # Revoke the old token
+    token_record.revoked = True
+
+    # Create a new token
+    new_token = create_refresh_token(user.id, session, device_info)
+
+    return (new_token, user)

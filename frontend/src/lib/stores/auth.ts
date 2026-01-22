@@ -8,6 +8,7 @@ export interface User {
     external_id: string;
     user_role?: 'planning' | 'executor' | 'family' | 'advisor';
     emotional_context?: 'healthy' | 'terminal' | 'grieving';
+    overwhelm_muted?: boolean;
 }
 
 interface AuthState {

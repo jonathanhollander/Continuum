@@ -1,0 +1,52 @@
+# Continuum SaaS Python Configuration
+
+[project]
+name = "continuum-saas"
+version = "1.0.0"
+description = "Compassionate estate planning platform"
+requires-python = ">=3.10"
+
+[tool.bandit]
+# Security scanning configuration
+exclude_dirs = [
+    "backend/alembic/versions",
+    "tests",
+    "__pycache__",
+    ".venv",
+    "venv",
+]
+skips = [
+    "B101",  # assert_used - acceptable in non-production code
+    "B104",  # hardcoded_bind_all_interfaces - acceptable for local dev
+]
+
+[tool.bandit.assert_used]
+skips = ["*_test.py", "*test_*.py"]
+
+[tool.black]
+# Code formatter configuration
+line-length = 120
+target-version = ['py310', 'py311', 'py312']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | alembic/versions
+)/
+'''
+
+[tool.isort]
+# Import sorting configuration
+profile = "black"
+line_length = 120
+known_first_party = ["backend"]
+skip = ["alembic/versions"]

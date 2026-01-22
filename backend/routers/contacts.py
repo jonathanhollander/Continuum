@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlmodel import Session, select
 from typing import List
 from backend.database import get_session, User
 from backend.auth import get_current_user
 from backend.pulse_models import PulseContact
 from backend.estate_models import ContactRelationship
+from backend.utils.audit import log_audit, log_deletion
 
 router = APIRouter(prefix="/api/contacts", tags=["contacts"])
 
@@ -15,16 +16,27 @@ def get_contacts(user: User = Depends(get_current_user), session: Session = Depe
     return session.exec(statement).all()
 
 @router.post("/", response_model=PulseContact)
-def create_contact(contact: PulseContact, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+def create_contact(request: Request, contact: PulseContact, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     """Create a new global contact."""
     contact.user_id = user.id
     # Default to no tier if not provided
     if contact.tier_id == 0:
         contact.tier_id = None
-        
+
     session.add(contact)
     session.commit()
     session.refresh(contact)
+
+    # P1-High: Audit logging for contact creation
+    log_audit(
+        session=session,
+        request=request,
+        action="create_contact",
+        user_id=user.id,
+        user_email=user.email,
+        resource_type="contact",
+        resource_id=str(contact.id)
+    )
     return contact
 
 @router.put("/{contact_id}", response_model=PulseContact)
@@ -44,12 +56,22 @@ def update_contact(contact_id: int, updated: PulseContact, user: User = Depends(
     return contact
 
 @router.delete("/{contact_id}")
-def delete_contact(contact_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+def delete_contact(request: Request, contact_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     """Delete a contact."""
     contact = session.get(PulseContact, contact_id)
     if not contact or contact.user_id != user.id:
         raise HTTPException(status_code=404, detail="Contact not found")
-    
+
+    # P1-High: Audit logging for contact deletion
+    log_deletion(
+        session=session,
+        request=request,
+        user_id=user.id,
+        user_email=user.email,
+        resource_type="contact",
+        resource_id=contact_id
+    )
+
     session.delete(contact)
     session.commit()
     return {"status": "deleted"}

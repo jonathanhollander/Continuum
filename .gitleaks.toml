@@ -1,0 +1,42 @@
+# Gitleaks configuration for secret detection
+# Documentation: https://github.com/gitleaks/gitleaks
+
+title = "Continuum SaaS Gitleaks Configuration"
+
+[extend]
+# Use default ruleset
+useDefault = true
+
+[allowlist]
+description = "Allowlisted paths and patterns"
+
+# Allowlist specific paths (example files, tests, docs)
+paths = [
+    '''.env\.example$''',
+    '''\.md$''',
+    '''\.txt$''',
+    '''\.pre-commit-config\.yaml$''',
+    '''\.gitleaks\.toml$''',
+    '''CLAUDE\.md$''',
+    '''package-lock\.json$''',
+    '''pnpm-lock\.yaml$''',
+]
+
+# Allowlist specific regexes (placeholder values in docs/examples)
+regexes = [
+    '''your_.*_here''',
+    '''YOUR_.*_HERE''',
+    '''xxx.*xxx''',
+    '''<your-.*>''',
+    '''REPLACE_.*_VALUE''',
+    '''example\.com''',
+    '''continuum-dev-secret-key-change-in-production''',
+    '''continuum-secret-key-change-in-production''',
+]
+
+# Custom rules can be added here
+# [[rules]]
+# id = "custom-secret-rule"
+# description = "Custom rule for project-specific secrets"
+# regex = '''custom_secret_pattern'''
+# secretGroup = 1

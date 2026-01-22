@@ -15,6 +15,8 @@ from backend.auth import get_current_user
 from backend.models.media import MediaFile, MediaFileResponse, MediaUploadResponse
 from backend.utils.file_storage import storage
 from backend.config import settings
+from backend.utils.audit import log_audit, log_deletion
+from fastapi import Request
 
 router = APIRouter(prefix="/api/media", tags=["media"])
 
@@ -48,6 +50,7 @@ def get_download_url(media_id: int) -> str:
 
 @router.post("/upload", response_model=MediaUploadResponse)
 async def upload_media(
+    request: Request,
     file: UploadFile = File(...),
     module: str = Query(..., description="Module name: heirlooms, properties, visual_memories, time_capsules"),
     reference_id: Optional[str] = Query(None, description="ID of the item in the module"),
@@ -109,6 +112,17 @@ async def upload_media(
     session.add(media_record)
     session.commit()
     session.refresh(media_record)
+
+    # P1-High: Audit logging for media upload
+    log_audit(
+        session=session,
+        request=request,
+        action="upload_media",
+        user_id=user.id,
+        user_email=user.email,
+        resource_type="media",
+        resource_id=str(media_record.id)
+    )
 
     return MediaUploadResponse(
         id=media_record.id,
@@ -229,6 +243,7 @@ def get_media(
 
 @router.delete("/{media_id}")
 def delete_media(
+    request: Request,
     media_id: int,
     user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
@@ -244,6 +259,16 @@ def delete_media(
 
     if media.user_id != user.id:
         raise HTTPException(status_code=403, detail="Access denied")
+
+    # P1-High: Audit logging for media deletion
+    log_deletion(
+        session=session,
+        request=request,
+        user_id=user.id,
+        user_email=user.email,
+        resource_type="media",
+        resource_id=media_id
+    )
 
     # Soft delete
     from datetime import datetime

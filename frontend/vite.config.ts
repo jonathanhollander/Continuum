@@ -15,5 +15,17 @@ export default defineConfig({
 				secure: false,
 			}
 		}
+	},
+	build: {
+		rollupOptions: {
+			output: {
+				manualChunks: (id) => {
+					if (id.includes('node_modules')) {
+						if (id.includes('lucide-svelte')) return 'vendor-lucide';
+						return 'vendor';
+					}
+				}
+			}
+		}
 	}
 });
