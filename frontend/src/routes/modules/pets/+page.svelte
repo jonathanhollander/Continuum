@@ -21,19 +21,19 @@
     import { estateProfile } from "$lib/stores/estateStore";
     import { activityLog } from "$lib/stores/activityLog";
 
-    let showAddForm = false;
-    let newPet: Partial<PetEntry> = {
+    let showAddForm = $state(false);
+    let newPet: Partial<PetEntry> = $state({
         type: "dog",
         name: "",
         breed: "",
         guardian:
             $estateProfile.spouse_name || $estateProfile.executor_name || "",
-        vet_name: "",
-        vet_phone: "",
-        food_instructions: "",
-        medical_needs: "",
+        vetName: "",
+        vetPhone: "",
+        foodInstructions: "",
+        medicalNeeds: "",
         notes: "",
-    };
+    });
 
     function savePet() {
         if (!newPet.name) return;
@@ -44,19 +44,17 @@
                 module: "Pet Care",
                 action: "UPDATE",
                 entityType: "Pet",
-                entityId: newPet.id,
+                entityId: newPet.id as string,
                 entityName: newPet.name,
                 userContext: $estateProfile.ownerName || "User",
             });
         } else {
             petStore.addPet(newPet as Omit<PetEntry, "id">);
-            // We don't have the ID immediately for the log if it's generated in store,
-            // but for simplicity we log the create action.
             activityLog.logEvent({
                 module: "Pet Care",
                 action: "CREATE",
                 entityType: "Pet",
-                entityId: crypto.randomUUID(), // Temp ID for log since store handles true ID
+                entityId: crypto.randomUUID(),
                 entityName: newPet.name || "Unknown",
                 userContext: $estateProfile.ownerName || "User",
             });
@@ -80,10 +78,10 @@
                 $estateProfile.spouse_name ||
                 $estateProfile.executor_name ||
                 "",
-            vet_name: "",
-            vet_phone: "",
-            food_instructions: "",
-            medical_needs: "",
+            vetName: "",
+            vetPhone: "",
+            foodInstructions: "",
+            medicalNeeds: "",
             notes: "",
         };
     }
@@ -113,7 +111,7 @@
         </div>
         <button
             class="bg-[#304743] text-white px-6 py-2 rounded-xl font-bold hover:bg-[#2a3f3b] transition-colors flex items-center gap-2"
-            on:click={() => (showAddForm = !showAddForm)}
+            onclick={() => (showAddForm = !showAddForm)}
         >
             <Plus size={20} /> Add Pet
         </button>
@@ -121,7 +119,7 @@
 
     <!-- Pet Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {#each $petStore as PetEntry[] as pet}
+        {#each petStore.items as pet}
             <div
                 class="bg-white rounded-3xl border border-border shadow-sm overflow-hidden group hover:shadow-md transition-all"
             >
@@ -133,14 +131,20 @@
                         class="absolute top-4 left-4 flex gap-2 z-20 opacity-0 group-hover:opacity-100 transition-all"
                     >
                         <button
-                            on:click|stopPropagation={() => editPet(pet)}
+                            onclick={(e) => {
+                                e.stopPropagation();
+                                editPet(pet);
+                            }}
                             class="p-2 bg-white/50 hover:bg-white text-blue-400 hover:text-blue-600 rounded-full"
                             title="Edit Pet"
                         >
                             <Pencil size={16} />
                         </button>
                         <button
-                            on:click|stopPropagation={() => removePet(pet.id)}
+                            onclick={(e) => {
+                                e.stopPropagation();
+                                removePet(pet.id as number);
+                            }}
                             class="p-2 bg-white/50 hover:bg-white text-red-400 hover:text-red-600 rounded-full"
                             title="Remove Pet"
                         >
@@ -189,8 +193,8 @@
                                     >Vet Contact</span
                                 >
                                 <div class="text-sm font-medium text-gray-700">
-                                    {pet.vet_name} <br />
-                                    {pet.vet_phone}
+                                    {pet.vetName} <br />
+                                    {pet.vetPhone}
                                 </div>
                             </div>
                         </div>
@@ -205,7 +209,7 @@
                                     >Food</span
                                 >
                                 <div class="text-sm font-medium text-gray-700">
-                                    {pet.food_instructions}
+                                    {pet.foodInstructions}
                                 </div>
                             </div>
                         </div>
@@ -225,7 +229,7 @@
                                     >Meds & Routine</span
                                 >
                                 <div class="text-sm font-medium text-gray-700">
-                                    {pet.medical_needs}
+                                    {pet.medicalNeeds}
                                 </div>
                             </div>
                         </div>
@@ -235,7 +239,7 @@
         {/each}
 
         <!-- Empty State / Add Placeholder -->
-        {#if $petStore.length === 0}
+        {#if petStore.items.length === 0}
             <div class="col-span-full space-y-4">
                 {#each getSmartSamples($language).pets || [] as sample}
                     <GhostRow
@@ -283,7 +287,7 @@
                         Add a Pet
                     </h3>
                     <button
-                        on:click={resetForm}
+                        onclick={resetForm}
                         class="text-gray-400 hover:text-gray-600"
                     >
                         <span class="sr-only">Close</span>
@@ -367,7 +371,7 @@
                         >
                         <input
                             type="text"
-                            bind:value={newPet.vet_name}
+                            bind:value={newPet.vetName}
                             class="w-full px-4 py-2 rounded-xl border border-gray-200"
                             placeholder="Dr. Name"
                         />
@@ -379,7 +383,7 @@
                         >
                         <input
                             type="text"
-                            bind:value={newPet.vet_phone}
+                            bind:value={newPet.vetPhone}
                             class="w-full px-4 py-2 rounded-xl border border-gray-200"
                             placeholder="(xxx) xxx-xxxx"
                         />
@@ -393,7 +397,7 @@
                             >
                             <input
                                 type="text"
-                                bind:value={newPet.food_instructions}
+                                bind:value={newPet.foodInstructions}
                                 class="w-full px-4 py-2 rounded-xl border border-gray-200"
                                 placeholder="Brand & Amount"
                             />
@@ -405,7 +409,7 @@
                             >
                             <input
                                 type="text"
-                                bind:value={newPet.medical_needs}
+                                bind:value={newPet.medicalNeeds}
                                 class="w-full px-4 py-2 rounded-xl border border-gray-200"
                                 placeholder="Dosage & Frequency"
                             />
@@ -425,12 +429,12 @@
 
                 <div class="p-6 bg-gray-50 flex justify-end gap-3">
                     <button
-                        on:click={() => (showAddForm = false)}
+                        onclick={() => (showAddForm = false)}
                         class="px-6 py-2 rounded-xl font-bold text-gray-500 hover:bg-gray-200 transition-colors"
                         >Cancel</button
                     >
                     <button
-                        on:click={savePet}
+                        onclick={savePet}
                         disabled={!newPet.name}
                         class="px-6 py-2 rounded-xl font-bold bg-[#304743] text-white hover:bg-[#20302d] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >

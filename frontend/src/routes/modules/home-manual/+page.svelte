@@ -22,8 +22,6 @@
     import { registerSync } from "$lib/services/sync.svelte";
     import { getStored } from "$lib/stores/persistence";
 
-    const USER_ID = 1;
-
     // MAPPERS
     // Maps local/legacy objects to backend schema
     const vendorMapper = (item: any) => {

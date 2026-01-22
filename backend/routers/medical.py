@@ -18,17 +18,18 @@ def get_medical_profile(user: User = Depends(get_current_user), session: Session
         session.refresh(profile)
     return profile
 
+@router.post("/profile", response_model=MedicalProfile)
 @router.put("/profile", response_model=MedicalProfile)
 def update_medical_profile(updated: MedicalProfile, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     profile = session.get(MedicalProfile, user.id)
     if not profile:
         profile = MedicalProfile(user_id=user.id)
-    
+
     data = updated.dict(exclude_unset=True)
     for key, val in data.items():
         if key != "user_id":
             setattr(profile, key, val)
-    
+
     session.add(profile)
     session.commit()
     session.refresh(profile)

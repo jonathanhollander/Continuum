@@ -1,17 +1,26 @@
 <script lang="ts">
-    import { createEventDispatcher, onMount, onDestroy } from "svelte";
+    import { createEventDispatcher } from "svelte";
     import { X } from "lucide-svelte";
     import { fade, scale } from "svelte/transition";
     import { cubicOut } from "svelte/easing";
 
-    export let title: string = "";
-    export let open: boolean = false;
-    export let maxWidth: string = "max-w-md";
+    let {
+        title = "",
+        open = $bindable(false),
+        maxWidth = "max-w-md",
+        children,
+    } = $props<{
+        title?: string;
+        open: boolean;
+        maxWidth?: string;
+        children?: import("svelte").Snippet;
+    }>();
 
     const dispatch = createEventDispatcher();
 
     function close() {
         dispatch("close");
+        open = false;
     }
 
     function handleKeydown(e: KeyboardEvent) {
@@ -21,16 +30,18 @@
     }
 
     // Lock body scroll when open
-    $: if (typeof document !== "undefined") {
-        if (open) {
-            document.body.style.overflow = "hidden";
-        } else {
-            document.body.style.overflow = "";
+    $effect(() => {
+        if (typeof document !== "undefined") {
+            if (open) {
+                document.body.style.overflow = "hidden";
+            } else {
+                document.body.style.overflow = "";
+            }
         }
-    }
+    });
 </script>
 
-<svelte:window on:keydown={handleKeydown} />
+<svelte:window onkeydown={handleKeydown} />
 
 {#if open}
     <div
@@ -42,7 +53,11 @@
         <div
             class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
             transition:fade={{ duration: 200 }}
-            on:click={close}
+            onclick={close}
+            onkeydown={(e) => e.key === "Enter" && close()}
+            role="button"
+            tabindex="0"
+            aria-label="Close modal"
         ></div>
 
         <!-- Panel -->
@@ -57,7 +72,7 @@
                 <h2 class="text-lg font-semibold text-slate-800">{title}</h2>
                 <button
                     class="p-2 -mr-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
-                    on:click={close}
+                    onclick={close}
                     aria-label="Close"
                 >
                     <X class="w-5 h-5" />
@@ -66,7 +81,7 @@
 
             <!-- Content -->
             <div class="p-6 overflow-y-auto custom-scrollbar">
-                <slot />
+                {@render children?.()}
             </div>
         </div>
     </div>

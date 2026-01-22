@@ -7,31 +7,35 @@
         ThumbsDown,
     } from "lucide-svelte";
     import { fade, fly } from "svelte/transition";
-    import { createEventDispatcher } from "svelte";
     import { t } from "$lib/stores/localization";
+    let {
+        steps = [],
+        oncomplete,
+        onanswer,
+    } = $props<{
+        steps: {
+            id: string;
+            question: string;
+            placeholder?: string;
+            type?: "text" | "textarea" | "select" | "boolean";
+            options?: string[];
+            required?: boolean;
+            logic?: {
+                yes?: string;
+                no?: string;
+                next?: string;
+            };
+        }[];
+        oncomplete?: (answers: Record<string, any>) => void;
+        onanswer?: (detail: { id: string; value: any }) => void;
+    }>();
 
-    export let steps: {
-        id: string;
-        question: string; // Translation Key
-        placeholder?: string;
-        type?: "text" | "textarea" | "select" | "boolean";
-        options?: string[]; // for Select
-        required?: boolean;
-        logic?: {
-            yes?: string; // ID to jump to
-            no?: string; // ID to jump to
-            next?: string; // ID to jump to
-        };
-    }[] = [];
+    let currentStepIndex = $state(0);
+    let answers = $state<Record<string, any>>({});
+    let currentInput = $state<any>("");
 
-    const dispatch = createEventDispatcher();
-
-    let currentStepIndex = 0;
-    let answers: Record<string, any> = {};
-    let currentInput: any = "";
-
-    $: currentStep = steps[currentStepIndex];
-    $: progress = ((currentStepIndex + 1) / steps.length) * 100;
+    const currentStep = $derived(steps[currentStepIndex]);
+    const progress = $derived(((currentStepIndex + 1) / steps.length) * 100);
 
     function nextStep() {
         if (
@@ -56,7 +60,7 @@
 
         // Save Answer
         answers[currentStep.id] = currentInput;
-        dispatch("answer", { id: currentStep.id, value: currentInput });
+        onanswer?.({ id: currentStep.id, value: currentInput });
 
         // Logic Implementation
         let nextId = null;
@@ -80,7 +84,7 @@
                 complete();
                 return;
             }
-            const nextIndex = steps.findIndex((s) => s.id === nextId);
+            const nextIndex = steps.findIndex((s: any) => s.id === nextId);
             if (nextIndex !== -1) {
                 currentStepIndex = nextIndex;
                 restoreInput();
@@ -127,7 +131,7 @@
     }
 
     function complete() {
-        dispatch("complete", answers);
+        oncomplete?.(answers);
     }
 
     function handleKeydown(e: KeyboardEvent) {
@@ -152,7 +156,7 @@
     <!-- Navigation (Back) -->
     {#if currentStepIndex > 0}
         <button
-            on:click={prevStep}
+            onclick={prevStep}
             class="absolute top-6 left-6 text-slate-400 hover:text-slate-600 transition-colors"
         >
             <ArrowLeft size={24} />
@@ -180,7 +184,7 @@
                             true
                                 ? 'border-green-500 bg-green-50 text-green-700'
                                 : 'border-slate-200 hover:border-green-200 bg-white'}"
-                            on:click={() => {
+                            onclick={() => {
                                 currentInput = true;
                                 nextStep();
                             }}
@@ -195,7 +199,7 @@
                             false
                                 ? 'border-red-500 bg-red-50 text-red-700'
                                 : 'border-slate-200 hover:border-red-200 bg-white'}"
-                            on:click={() => {
+                            onclick={() => {
                                 currentInput = false;
                                 nextStep();
                             }}
@@ -209,7 +213,7 @@
                 {:else if currentStep.type === "textarea"}
                     <textarea
                         bind:value={currentInput}
-                        on:keydown={handleKeydown}
+                        onkeydown={handleKeydown}
                         placeholder={$t(currentStep.placeholder || "")}
                         class="w-full text-2xl bg-transparent border-b-2 border-slate-200 focus:border-indigo-500 outline-none py-2 placeholder:text-slate-300 min-h-[100px] resize-none"
                         autofocus
@@ -222,7 +226,7 @@
                                 option
                                     ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
                                     : 'border-slate-200 hover:border-indigo-200 bg-white'}"
-                                on:click={() => {
+                                onclick={() => {
                                     currentInput = option;
                                     nextStep();
                                 }}
@@ -235,7 +239,7 @@
                     <input
                         type="text"
                         bind:value={currentInput}
-                        on:keydown={handleKeydown}
+                        onkeydown={handleKeydown}
                         placeholder={$t(currentStep.placeholder || "")}
                         class="w-full text-3xl bg-transparent border-b-2 border-slate-200 focus:border-indigo-500 outline-none py-2 placeholder:text-slate-300"
                         autofocus
@@ -247,7 +251,7 @@
             {#if currentStep.type !== "boolean"}
                 <div class="pt-4 flex items-center gap-4">
                     <button
-                        on:click={nextStep}
+                        onclick={nextStep}
                         disabled={currentStep.required && !currentInput}
                         class="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-lg flex items-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-200"
                     >

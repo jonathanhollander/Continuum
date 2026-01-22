@@ -2,8 +2,7 @@
     import { onMount } from "svelte";
     import { Clock, Smartphone, Globe, Mail } from "lucide-svelte";
     import { fade } from "svelte/transition";
-
-    const USER_ID = 1;
+    import { apiGet } from "$lib/api/client";
 
     let history = $state<any[]>([]);
     let loading = $state(true);
@@ -17,12 +16,9 @@
 
     onMount(async () => {
         try {
-            const res = await fetch(
-                `${import.meta.env.VITE_API_BASE || ""}/api/pulse/history?user_id=${USER_ID}&limit=50`,
-            );
-            if (res.ok) {
-                history = await res.json();
-            }
+            history = await apiGet('/api/pulse/history?limit=50');
+        } catch (e) {
+            console.error("Failed to load check-in history", e);
         } finally {
             loading = false;
         }

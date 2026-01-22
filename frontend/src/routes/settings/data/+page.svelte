@@ -425,7 +425,7 @@
                         {#each manager.items as item}
                             {@const isTest = isTestRow(selectedModule, item.id)}
                             {@const inCloud = audit?.details?.remoteItems?.find(
-                                (r) => String(r.id) === String(item.id),
+                                (r: any) => String(r.id) === String(item.id),
                             )}
                             <tr
                                 class="hover:bg-slate-50 transition-colors {isTest

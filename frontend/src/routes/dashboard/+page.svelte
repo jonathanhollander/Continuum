@@ -3,8 +3,12 @@
     import ThePulse from "$lib/components/dashboard/ThePulse.svelte";
     import HolographicGrid from "$lib/components/dashboard/HolographicGrid.svelte";
     import FocusCard from "$lib/components/dashboard/FocusCard.svelte";
-    import { estateAudit } from "$lib/stores/auditStore";
-    import { estateProfile } from "$lib/stores/estateStore";
+    import { estateAudit } from "$lib/stores/auditStore.svelte";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
+    import { familyStore } from "$lib/stores/familyStore.svelte";
+    import { digitalAssetsStore } from "$lib/stores/digitalAssetsStore.svelte";
+    import { insuranceStore } from "$lib/stores/insuranceStore.svelte";
+    import { preferenceStore } from "$lib/stores/preferenceStore";
     import { fade, fly } from "svelte/transition";
     import {
         Shield,
@@ -13,8 +17,6 @@
         BrainCircuit,
         UserCog,
     } from "lucide-svelte";
-    import { preferenceStore } from "$lib/stores/preferenceStore";
-
     import { t } from "$lib/stores/localization";
     import { browser } from "$app/environment";
 
@@ -37,24 +39,20 @@
     let greeting = $state("");
     // Reactive greeting target based on state
     let fullGreeting = $derived(
-        $estateAudit.totalScore > 0
+        estateAudit.totalScore > 0
             ? $t("system.analyzing")
             : $t("system.initializing"),
     );
 
-    import { familyMembers } from "$lib/stores/familyStore";
-    import { digitalAssetsStore } from "$lib/stores/digitalAssetsStore.svelte";
-    import { insuranceStore } from "$lib/stores/insuranceStore";
-
     // Dynamic Metrics
-    let totalValue = $derived($estateProfile.totalValue || 0);
-    let networkSize = $derived($familyMembers.length);
+    let totalValue = $derived(estateProfile.current.totalValue || 0);
+    let networkSize = $derived(familyStore.members.length);
     let coverageCount = $derived(
         digitalAssetsStore.items.filter(
             (a) => !a.isClosed && a.platform !== "Example",
         ).length +
-            $insuranceStore.length +
-            ($estateAudit.moduleScores["financial"] ? 1 : 0),
+            insuranceStore.policies.length +
+            (estateAudit.moduleScores["financial"] ? 1 : 0),
     );
 
     // Formatter
@@ -67,7 +65,7 @@
     onMount(() => {
         estateAudit.runAudit();
 
-        if ($estateAudit.totalScore > 0) {
+        if (estateAudit.totalScore > 0) {
             pulseStatus = "active";
         }
 
@@ -89,8 +87,8 @@
     });
 
     $effect(() => {
-        if ($estateAudit.percentage !== undefined) {
-            score = $estateAudit.percentage;
+        if (estateAudit.percentage !== undefined) {
+            score = estateAudit.percentage;
 
             // Logic for Pulse Status
             if (score === 0) {
@@ -112,8 +110,8 @@
 
     function determineFocus() {
         // "The Algorithm" - Simple Simulation for now
-        const issues = $estateAudit.issues || [];
-        const profile = $estateProfile;
+        const issues = estateAudit.issues || [];
+        const profile = estateProfile.current;
 
         if (score === 0) {
             // New User / System Initialization Mode

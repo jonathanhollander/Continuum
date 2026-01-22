@@ -589,7 +589,7 @@
                                     name={sample.name}
                                     subtitle={sample.description}
                                     type="Memory"
-                                    onClick={() => {
+                                    onclick={() => {
                                         newMemory = {
                                             ...newMemory,
                                             title: sample.name,
@@ -604,7 +604,7 @@
                                         showAddModal = true;
                                     }}
                                 >
-                                    <svelte:fragment slot="icon">
+                                    {#snippet icon()}
                                         <svelte:component
                                             this={sample.type === "Recipe"
                                                 ? Scroll
@@ -614,7 +614,7 @@
                                             size={20}
                                             class="text-slate-400"
                                         />
-                                    </svelte:fragment>
+                                    {/snippet}
                                 </GhostRow>
                             {/each}
                         {:else}

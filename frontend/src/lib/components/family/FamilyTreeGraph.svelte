@@ -1,14 +1,6 @@
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
-    import {
-        familyMembers,
-        relationships,
-        type FamilyMember,
-        type Relationship,
-        updateMember,
-        removeMember,
-        addMember,
-    } from "$lib/stores/familyStore";
+    import { familyStore, type FamilyMember, type Relationship } from "$lib/stores/familyStore.svelte";
     import {
         User,
         Heart,
@@ -51,7 +43,7 @@
     const DAMPING = 0.8;
 
     // --- Reactivity ---
-    $: if ($familyMembers && $relationships) {
+    $: if (familyStore.members && familyStore.relationships) {
         syncSimulationFromStore();
     }
 
@@ -59,7 +51,7 @@
         // Map store data to simulation objects, preserving positions if they exist
         const oldNodeMap = new Map(nodes.map((n) => [n.id, n]));
 
-        nodes = $familyMembers.map((m) => {
+        nodes = familyStore.members.map((m) => {
             const old = oldNodeMap.get(m.id);
             return {
                 ...m,
@@ -71,7 +63,7 @@
         });
 
         const nodeMap = new Map(nodes.map((n) => [String(n.id), n]));
-        links = $relationships
+        links = familyStore.relationships
             .map((r) => ({
                 source: nodeMap.get(String(r.source_id)),
                 target: nodeMap.get(String(r.target_id)),
@@ -385,9 +377,9 @@
                         class="w-full py-3 bg-[#4A7C74] text-white rounded-xl font-bold hover:shadow-lg transition-transform active:scale-95"
                         on:click={() => {
                             if (selectedNode?.id) {
-                                updateMember(selectedNode.id, selectedNode);
+                                familyStore.updateMember(selectedNode.id, selectedNode);
                             } else if (selectedNode) {
-                                addMember(selectedNode);
+                                familyStore.addMember(selectedNode);
                             }
                             selectedNode = null;
                         }}
@@ -399,7 +391,7 @@
                             class="w-full mt-2 py-2 text-red-500 text-sm font-bold hover:bg-red-50 rounded-lg transition-colors"
                             on:click={() => {
                                 if (selectedNode && selectedNode.id)
-                                    removeMember(selectedNode.id);
+                                    familyStore.removeMember(selectedNode.id);
                                 selectedNode = null;
                             }}
                         >

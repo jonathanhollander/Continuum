@@ -2,11 +2,21 @@
     import { Plus } from "lucide-svelte";
     import { fade } from "svelte/transition";
 
-    export let type: string = "Item"; // e.g. "Family Member", "Asset"
-    export let name: string = "";
-    export let subtitle: string = "";
-    export let value: number | null = null;
-    export let onClick: () => void;
+    let {
+        type = "Item",
+        name = "",
+        subtitle = "",
+        value = null,
+        onclick,
+        icon,
+    } = $props<{
+        type?: string;
+        name?: string;
+        subtitle?: string;
+        value?: number | null;
+        onclick?: () => void;
+        icon?: import("svelte").Snippet;
+    }>();
 </script>
 
 <!-- 
@@ -14,7 +24,7 @@
     A clickable, empty-state placeholder that mimics a real data row but at lower opacity.
 -->
 <button
-    on:click={onClick}
+    {onclick}
     class="w-full text-left group relative overflow-hidden rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/50 hover:bg-slate-50 hover:border-indigo-300 transition-all duration-300"
     in:fade
 >
@@ -25,12 +35,14 @@
         <div
             class="w-10 h-10 rounded-full bg-slate-200 group-hover:bg-indigo-100 transition-colors flex items-center justify-center shrink-0"
         >
-            <slot name="icon">
+            {#if icon}
+                {@render icon()}
+            {:else}
                 <Plus
                     size={20}
                     class="text-slate-400 group-hover:text-indigo-500"
                 />
-            </slot>
+            {/if}
         </div>
 
         <div class="flex-1 space-y-1">

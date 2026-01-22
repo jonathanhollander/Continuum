@@ -130,48 +130,62 @@ def trigger_escalation(session: Session, user_id: int, tier_number: int, referen
         
     session.commit()
 
-from backend.email_service import email_service
+from backend.services.email_service import email_service
 from backend.config import settings
+from backend.database import User
 import os
 
 def send_notification(session: Session, contact: PulseContact, tier_number: int):
+    """
+    Send escalation notification to guardian contact.
+    Uses new template-based email service with proper delivery tracking.
+    """
     print(f"   --> 📧 Generating Tier {tier_number} Alert for {contact.name}...")
 
-    frontend_url = settings.get_frontend_url()
-    portal_link = f"{frontend_url}/portal/{contact.portal_token}"
-    
-    subject = ""
-    body = ""
-    
-    if tier_number == 1:
-        subject = "Continuum Pulse: Standard Welfare Check"
-        body = f"We have not received a check-in from the user within the standard timeframe. As a Tier 1 contact, simply confirming you have heard from them recently will reset the timer."
-    elif tier_number == 2:
-        subject = "Continuum Pulse: Level 2 Escalation"
-        body = f"The user has missed the standard check-in window by a significant margin. Please attempt to contact them directly."
-    elif tier_number == 3:
-        subject = "Continuum Pulse: URGENT - Medical/Legal Release"
-        body = f"We have escalated to Tier 3. Critical medical directives and entry codes have now been unlocked for your viewing in the Guardian Portal."
-    elif tier_number == 4:
-        subject = "Continuum Pulse: EMERGENCY - Full Vault Access"
-        body = f"This is a Tier 4 Emergency. Full access to the digital vault has been granted. Please verify the user's safety immediately."
+    # Get user information for personalization
+    user = session.get(User, contact.user_id)
+    user_name = user.email.split('@')[0].title() if user else "the user"
 
-    # 1. Send Real Email
-    email_service.send_email(
-        to_email=contact.email, 
+    # Generate guardian portal link
+    frontend_url = settings.get_frontend_url()
+    portal_url = f"{frontend_url}/portal/{contact.portal_token}"
+
+    # Additional context for templates
+    additional_context = {}
+    if tier_number >= 2:
+        # Add timeline information for tier 2+
+        from backend.pulse_models import PulseCheckin
+        from sqlmodel import select
+        last_checkin = session.exec(
+            select(PulseCheckin)
+            .where(PulseCheckin.user_id == contact.user_id)
+            .order_by(PulseCheckin.timestamp.desc())
+        ).first()
+
+        if last_checkin:
+            additional_context.update({
+                "last_checkin_date": last_checkin.timestamp.strftime("%B %d, %Y at %I:%M %p UTC"),
+                "expected_checkin_date": "See Guardian Portal for details",
+                "escalation_date": datetime.utcnow().strftime("%B %d, %Y at %I:%M %p UTC")
+            })
+
+    # Send email using new service with templates and logging
+    email_service.send_pulse_alert(
+        to_email=contact.email,
         recipient_name=contact.name,
-        subject=subject,
-        body=body,
+        tier_number=tier_number,
         user_id=contact.user_id,
-        action_url=portal_link,
-        action_label="Open Guardian Portal"
+        user_name=user_name,
+        portal_url=portal_url,
+        additional_context=additional_context,
+        db_session=session
     )
 
-    # 2. Log Communication
+    # Log communication in pulse system
     log_msg = PulseMessage(
         user_id=contact.user_id,
         contact_id=contact.id,
-        direction="user_to_contact", # System acting on behalf of user
-        message=f"[System Alert Tier {tier_number}] {subject}"
+        direction="user_to_contact",  # System acting on behalf of user
+        message=f"[System Alert Tier {tier_number}] Escalation notification sent via email"
     )
     session.add(log_msg)

@@ -16,10 +16,11 @@ from backend.pulse_scheduler import start_scheduler, stop_scheduler
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import select
 from datetime import timedelta
-from backend.routers import pulse, contacts, estate_data, insurance, medical, pets, memories
+from backend.routers import pulse, contacts, estate_data, insurance, medical, pets, memories, auth as auth_router, media
 
 app = FastAPI(title=settings.APP_NAME, version=settings.APP_VERSION)
 
+app.include_router(auth_router.router)
 app.include_router(pulse.router)
 app.include_router(contacts.router)
 app.include_router(estate_data.router)
@@ -27,6 +28,7 @@ app.include_router(insurance.router)
 app.include_router(medical.router)
 app.include_router(pets.router)
 app.include_router(memories.router)
+app.include_router(media.router)
 
 # Initialize database on startup
 @app.on_event("startup")
@@ -36,19 +38,21 @@ def on_startup():
     start_scheduler()
 
 def seed_dev_user():
+    """Seed a default dev user for development/testing."""
+    from backend.auth import get_password_hash
     with Session(engine) as session:
-        # Check if user 1 exists
-        user = session.get(User, 1)
-        if not user:
-            print("🌱 Seeding default dev user (ID 1)...")
+        # Check if dev user exists
+        existing = session.exec(select(User).where(User.email == "dev@continuum.im")).first()
+        if not existing:
+            print("🌱 Seeding default dev user (dev@continuum.im / password: dev123)...")
             user = User(
-                id=1,
                 external_id="dev-user-1",
                 email="dev@continuum.im",
-                public_key="PK_DEMO"
+                hashed_password=get_password_hash("dev123")
             )
             session.add(user)
             session.commit()
+            print("✅ Dev user created: dev@continuum.im / dev123")
 
 @app.on_event("shutdown")
 def on_shutdown():
@@ -79,39 +83,21 @@ def health_check():
 
 @app.post("/api/auth/register/challenge")
 def register_challenge(request: ChallengeRequest):
-    # In a real app, generate a unique ID for the user
-    user_id = "user-" + request.email 
+    # WebAuthn challenge endpoint (legacy - kept for compatibility)
+    user_id = "user-" + request.email
     options = get_registration_options(user_id, request.email)
-    # Store options in session or temp DB
     return options
 
 @app.post("/api/auth/register/verify")
 def register_verify(request: RegistrationResponse, session: Session = Depends(get_session)):
-    # Verification logic would go here
-    # After verification, save user to DB
+    # WebAuthn verification endpoint (legacy - kept for compatibility)
     return {"status": "success"}
 
 @app.post("/api/auth/magic-link")
 def send_magic_link(request: ChallengeRequest):
-    # In a real app, send a secure signed token via email provider (Postmark/SendGrid)
+    # Magic link endpoint (future feature)
     print(f"📧 Sending Magic Link to {request.email}...")
     return {"status": "sent", "email": request.email}
-
-@app.post("/api/auth/token")
-def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), session: Session = Depends(get_session)):
-    # Standard OAuth2 Password Flow
-    # In Continuum, we often use email as username
-    user = session.exec(select(User).where(User.email == form_data.username)).first()
-    if not user:
-        # For dev bootstrapping, if user is 'dev@continuum.im', we know we seeded it
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password")
-    
-    access_token = create_access_token(data={"sub": str(user.id)})
-    return {"access_token": access_token, "token_type": "bearer"}
-
-@app.get("/api/auth/me")
-def read_users_me(current_user: User = Depends(get_current_user)):
-    return current_user
 
 @app.get("/api/estate")
 def get_estate(user: User = Depends(get_current_user), session: Session = Depends(get_session)):

@@ -7,7 +7,8 @@ from backend.estate_models import (
     Asset, FinancialAccount, Vendor, HomeAccess, Utility, 
     Document, Letter, JournalEntry, Subscription, CalendarEvent,
     InsurancePolicy, MedicalDirective, Pet, ContactRelationship,
-    MedicalProfile
+    MedicalProfile, LifeEvent, TimeCapsuleMessage, FuneralData,
+    AdvancedAssetData
 )
 
 router = APIRouter(prefix="/api/data", tags=["estate_data"])
@@ -30,7 +31,11 @@ MODEL_MAP = {
     "journal_entries": JournalEntry,
     "subscriptions": Subscription,
     "medical_profiles": MedicalProfile,
-    "medical_directives": MedicalDirective
+    "medical_directives": MedicalDirective,
+    "timeline_events": LifeEvent,
+    "time_capsule": TimeCapsuleMessage,
+    "funeral_data": FuneralData,
+    "advanced_assets": AdvancedAssetData
 }
 
 @router.get("/{data_type}")

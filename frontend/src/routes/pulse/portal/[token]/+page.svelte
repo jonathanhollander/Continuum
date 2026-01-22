@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { pulse } from "$lib/stores/pulse";
+    import { pulse } from "$lib/stores/pulse.svelte";
     import { onMount } from "svelte";
     import { page } from "$app/stores";
     import { API_BASE_URL } from "$lib/config";
@@ -29,13 +29,17 @@
 
     onMount(async () => {
         const token = $page.params.token;
-        await fetchPortal(token);
+        if (token) {
+            await fetchPortal(token);
+        } else {
+            state.error = "Invalid or missing token.";
+            state.loading = false;
+        }
     });
 
     async function fetchPortal(token: string) {
         try {
-            const baseUrl =
-                API_BASE_URL;
+            const baseUrl = API_BASE_URL;
             const res = await fetch(`${baseUrl}/api/pulse/portal/${token}`);
             if (res.ok) {
                 state.data = await res.json();

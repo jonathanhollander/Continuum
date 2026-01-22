@@ -20,8 +20,7 @@
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
     import { conciergeEngine } from "$lib/stores/conciergeEngine";
-
-    const USER_ID = 1;
+    import { apiGet, apiPost, apiDelete } from "$lib/api/client";
 
     type ContactRole =
         | "Family"
@@ -126,20 +125,13 @@
     async function loadContacts() {
         // Try API first
         try {
-            const baseUrl = import.meta.env.VITE_API_BASE || "";
-            // Check if backend is likely available (skip if localhost and no port known, but here just try)
-            const res = await fetch(
-                `${baseUrl}/api/contacts?user_id=${USER_ID}`,
+            contacts = await apiGet('/api/contacts');
+            // Backup to local
+            localStorage.setItem(
+                "continuum_contacts_fallback",
+                JSON.stringify(contacts),
             );
-            if (res.ok) {
-                contacts = await res.json();
-                // Backup to local
-                localStorage.setItem(
-                    "continuum_contacts_fallback",
-                    JSON.stringify(contacts),
-                );
-                return;
-            }
+            return;
         } catch (e) {
             console.warn("API unavailable, falling back to local storage:", e);
         }
@@ -155,7 +147,6 @@
         if (!newContact.name) return;
 
         const payload = {
-            user_id: USER_ID,
             name: newContact.name,
             role: newContact.role || "Friend",
             relation: newContact.relation,
@@ -170,25 +161,9 @@
         // Try API
         let success = false;
         try {
-            const baseUrl = import.meta.env.VITE_API_BASE || "";
-            const res = await fetch(
-                `${baseUrl}/api/contacts?user_id=${USER_ID}`,
-            );
-            // Note: The original code had a POST here, but I need to duplicate the logic carefully.
-            // Let's rewrite this block to be cleaner in the next step or just do the fallback logic here.
-            // Re-implementing the fetch correctly:
-            const postRes = await fetch(
-                `${baseUrl}/api/contacts?user_id=${USER_ID}`,
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload),
-                },
-            );
-            if (postRes.ok) {
-                success = true;
-                await loadContacts();
-            }
+            await apiPost('/api/contacts', payload);
+            success = true;
+            await loadContacts();
         } catch (e) {
             console.warn("API add failed, saving locally:", e);
         }
@@ -219,10 +194,7 @@
         );
 
         try {
-            const baseUrl = import.meta.env.VITE_API_BASE || "";
-            await fetch(`${baseUrl}/api/contacts/${id}?user_id=${USER_ID}`, {
-                method: "DELETE",
-            });
+            await apiDelete(`/api/contacts/${id}`);
             await loadContacts(); // Re-sync if API works
         } catch (e) {
             console.warn("API delete failed, kept local change:", e);
@@ -258,7 +230,7 @@
         </div>
 
         <button
-            on:click={() => (showAddModal = true)}
+            onclick={() => (showAddModal = true)}
             class="px-5 py-2.5 bg-slate-900 text-white font-bold rounded-xl shadow-lg hover:bg-slate-800 transition-all flex items-center gap-2"
         >
             <Plus size={18} /> Add Contact
@@ -316,7 +288,7 @@
     <!-- Tabs -->
     <div class="flex gap-2 mb-8 border-b border-slate-200 pb-1">
         <button
-            on:click={() => (activeTab = "call-list")}
+            onclick={() => (activeTab = "call-list")}
             class="px-5 py-2.5 font-bold text-sm rounded-t-xl transition-all border-b-2
             {activeTab === 'call-list'
                 ? 'border-rose-500 text-rose-600 bg-rose-50'
@@ -325,7 +297,7 @@
             The Call List
         </button>
         <button
-            on:click={() => (activeTab = "directory")}
+            onclick={() => (activeTab = "directory")}
             class="px-5 py-2.5 font-bold text-sm rounded-t-xl transition-all border-b-2
             {activeTab === 'directory'
                 ? 'border-indigo-500 text-indigo-600 bg-indigo-50'
@@ -365,7 +337,7 @@
 
                 <div class="flex justify-center mt-4">
                     <button
-                        on:click={() => (showAddModal = true)}
+                        onclick={() => (showAddModal = true)}
                         class="text-sm font-bold text-[#4A7C74] hover:bg-[#4A7C74]/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
                     >
                         <Plus size={14} /> Create First Contact
@@ -467,7 +439,7 @@
                         class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:border-indigo-300 transition-all group relative"
                     >
                         <button
-                            on:click={() => deleteContact(contact.id)}
+                            onclick={() => deleteContact(contact.id)}
                             class="absolute top-4 right-4 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                             <Trash2 size={16} />
@@ -541,7 +513,7 @@
                         New Contact
                     </h3>
                     <button
-                        on:click={() => (showAddModal = false)}
+                        onclick={() => (showAddModal = false)}
                         class="text-gray-400 hover:text-gray-600">Close</button
                     >
                 </div>
@@ -660,7 +632,7 @@
                     </div>
 
                     <button
-                        on:click={addContact}
+                        onclick={addContact}
                         class="w-full py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800"
                         >Save Contact</button
                     >

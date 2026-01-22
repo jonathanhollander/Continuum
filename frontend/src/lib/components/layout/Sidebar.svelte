@@ -1,7 +1,7 @@
 <script lang="ts">
     import { page } from "$app/stores";
     import { t, userRole } from "$lib/stores/concierge";
-    import { estateProfile } from "$lib/stores/estateStore";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { navGroups } from "$lib/config/navigation";
     import {
         ChevronDown,

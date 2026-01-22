@@ -650,9 +650,9 @@
             </div>
         {/each}
         {#if docs.length === 0}
-            <GhostRow type="Document" onClick={startWizard} />
-            <GhostRow type="Document" onClick={startWizard} />
-            <GhostRow type="Document" onClick={startWizard} />
+            <GhostRow type="Document" onclick={startWizard} />
+            <GhostRow type="Document" onclick={startWizard} />
+            <GhostRow type="Document" onclick={startWizard} />
             <div class="flex justify-center mt-4">
                 <button
                     onclick={startWizard}

@@ -1,10 +1,8 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { API_BASE_URL } from "$lib/config";
+    import { apiGet, apiPost } from "$lib/api/client";
     import { MessageSquare, Send, User, Reply, Inbox } from "lucide-svelte";
     import { slide, fade } from "svelte/transition";
-
-    const USER_ID = 1;
 
     let messages = $state<any[]>([]);
     let contacts = $state<any[]>([]);
@@ -22,13 +20,10 @@
 
     async function refreshData() {
         try {
-            const [msgRes, contactsRes] = await Promise.all([
-                fetch(`${API_BASE_URL}/api/pulse/messages?user_id=${USER_ID}`),
-                fetch(`${API_BASE_URL}/api/pulse/contacts?user_id=${USER_ID}`),
+            [messages, contacts] = await Promise.all([
+                apiGet('/api/pulse/messages'),
+                apiGet('/api/pulse/contacts'),
             ]);
-
-            if (msgRes.ok) messages = await msgRes.json();
-            if (contactsRes.ok) contacts = await contactsRes.json();
         } catch (e) {
             console.error(e);
         } finally {
@@ -40,17 +35,10 @@
         if (!newMessage.contact_id || !newMessage.text) return;
 
         try {
-            const res = await fetch(
-                `${API_BASE_URL}/api/pulse/messages?user_id=${USER_ID}&contact_id=${newMessage.contact_id}&message=${encodeURIComponent(newMessage.text)}`,
-                {
-                    method: "POST",
-                },
-            );
-            if (res.ok) {
-                newMessage.text = "";
-                await refreshData();
-                // Scroll to bottom logic could go here
-            }
+            await apiPost(`/api/pulse/messages?contact_id=${newMessage.contact_id}&message=${encodeURIComponent(newMessage.text)}`);
+            newMessage.text = "";
+            await refreshData();
+            // Scroll to bottom logic could go here
         } catch (e) {
             console.error(e);
         }

@@ -188,18 +188,20 @@ def get_vault(user: User = Depends(get_current_user), session: Session = Depends
     return session.exec(select(PulseVault).where(PulseVault.user_id == user.id)).all()
 
 @router.post("/vault")
-def add_vault_item(item: PulseVault, session: Session = Depends(get_session)):
+def add_vault_item(item: PulseVault, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    item.user_id = user.id
     session.add(item)
     session.commit()
     session.refresh(item)
     return item
 
 @router.delete("/vault/{item_id}")
-def delete_vault_item(item_id: int, user_id: int, session: Session = Depends(get_session)):
+def delete_vault_item(item_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     item = session.get(PulseVault, item_id)
-    if item and item.user_id == user_id:
-        session.delete(item)
-        session.commit()
+    if not item or item.user_id != user.id:
+        raise HTTPException(status_code=404, detail="Item not found")
+    session.delete(item)
+    session.commit()
     return {"status": "deleted"}
 
 @router.put("/vault/{item_id}")
@@ -334,58 +336,50 @@ from backend.pulse_models import PulseCredential
 PENDING_CHALLENGES = {} 
 
 @router.post("/auth/webauthn/register/start")
-def register_webauthn_start(user_id: int, session: Session = Depends(get_session)):
-    user = session.get(User, user_id)
-    if not user:
-         # Fallback for dev mode if User table not populated or using fake ID
-         email = "user@example.com"
-    else:
-         email = user.email
+def register_webauthn_start(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    """Start WebAuthn registration for current user."""
+    options = get_registration_options(str(user.id), user.email)
 
-    options = get_registration_options(str(user_id), email)
-    
     # Store challenge temporarily
-    PENDING_CHALLENGES[str(user_id)] = options.challenge
-    
-    # Convert to JSON-compatible dict (webauthn helper does this but we ensure dict)
+    PENDING_CHALLENGES[str(user.id)] = options.challenge
+
+    # Convert to JSON-compatible dict
     return options.to_dict()
 
 @router.post("/auth/webauthn/register/finish")
-def register_webauthn_finish(user_id: int, payload: dict, session: Session = Depends(get_session)):
-    challenge = PENDING_CHALLENGES.pop(str(user_id), None)
+def register_webauthn_finish(payload: dict, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    """Finish WebAuthn registration for current user."""
+    challenge = PENDING_CHALLENGES.pop(str(user.id), None)
     if not challenge:
         raise HTTPException(status_code=400, detail="Challenge expired or not found")
-        
+
     try:
-        # 1. Verify
-        # We need to reconstruct the original options dict partially for validation
+        # Verify the registration
         verification = verify_registration(
             options={"challenge": challenge},
             response=payload
         )
-        
-        # 2. Save Credential
+
+        # Save credential
         cred_id = verification.credential_id
-        # Convert bytes to base64 or used provided ID from library
-        
-        # Check if exists
-        existing = session.get(PulseCredential, str(cred_id)) # Casting ID to string if needed
+
+        # Check if credential already exists
+        existing = session.get(PulseCredential, str(cred_id))
         if existing:
-            # Overwrite or error? Let's overwrite for dev friendliness
             session.delete(existing)
             session.commit()
-            
+
         new_cred = PulseCredential(
-            id=str(cred_id), # Ensure string
-            user_id=user_id,
-            public_key=str(verification.credential_public_key), # Store as string representation
+            id=str(cred_id),
+            user_id=user.id,
+            public_key=str(verification.credential_public_key),
             sign_count=verification.sign_count
         )
         session.add(new_cred)
         session.commit()
-        
+
         return {"status": "verified", "credential_id": str(cred_id)}
-        
+
     except Exception as e:
         print(f"WebAuthn Error: {e}")
         raise HTTPException(status_code=400, detail=str(e))

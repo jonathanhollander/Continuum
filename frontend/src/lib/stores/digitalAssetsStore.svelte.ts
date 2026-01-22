@@ -51,7 +51,20 @@ function migrateDigitalAssets(): DigitalAccount[] {
     }));
 }
 
-export const digitalAssetsSync = registerSync<DigitalAccount>('digital_assets', 'digital_assets');
+const digitalAssetMapper = (item: any) => {
+    if (!item) return item;
+    return {
+        ...item,
+        // Remote (snake) -> Local (camel)
+        isClosed: item.is_closed ?? item.isClosed,
+        closureDate: item.closure_date ?? item.closureDate,
+        // Local (camel) -> Remote (snake)
+        is_closed: item.isClosed ?? item.is_closed,
+        closure_date: item.closureDate ?? item.closure_date
+    };
+};
+
+export const digitalAssetsSync = registerSync<DigitalAccount>('digital_assets', 'digital_assets', digitalAssetMapper);
 
 // Lazy Migration
 if (typeof window !== 'undefined') {

@@ -1,8 +1,10 @@
 <script lang="ts">
     import { Phone } from "lucide-svelte";
 
-    export let contact: any; // Using any to avoid complex type duplication for now, or import shared type
-    export let updateStatus: (id: string, status: string) => void;
+    let { contact, updateStatus } = $props<{
+        contact: any;
+        updateStatus: (id: number | string, status: string) => void;
+    }>();
 
     const statuses = [
         "Pending",
@@ -45,7 +47,7 @@
     <div class="flex items-center gap-2 w-full md:w-auto overflow-x-auto">
         {#each statuses as status}
             <button
-                on:click={() => updateStatus(contact.id, status)}
+                onclick={() => updateStatus(contact.id, status)}
                 class="px-3 py-1.5 rounded-lg text-xs font-bold border transition-all whitespace-nowrap
                 {contact.notificationStatus === status
                     ? 'bg-slate-800 text-white border-slate-800'

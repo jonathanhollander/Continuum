@@ -5,7 +5,7 @@
 	import { page } from "$app/stores";
 	import { onMount, setContext } from "svelte";
 	import { goto } from "$app/navigation";
-	import { estateAudit } from "$lib/stores/auditStore";
+	import { estateAudit } from "$lib/stores/auditStore.svelte";
 	import ConciergeSettings from "$lib/components/concierge/ConciergeSettings.svelte";
 	import ConciergePanel from "$lib/components/layout/ConciergePanel.svelte";
 	import { conciergeEngine } from "$lib/stores/conciergeEngine";
@@ -145,9 +145,8 @@
 	});
 
 	onMount(() => {
-		// Run audit on load and periodically
+		// Run audit on load
 		estateAudit.runAudit();
-		const interval = setInterval(() => estateAudit.runAudit(), 5000);
 
 		const handleGlobalKeydown = (e: KeyboardEvent) => {
 			if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -159,7 +158,6 @@
 		window.addEventListener("keydown", handleGlobalKeydown);
 
 		return () => {
-			clearInterval(interval);
 			window.removeEventListener("keydown", handleGlobalKeydown);
 		};
 	});

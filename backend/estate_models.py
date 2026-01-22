@@ -23,6 +23,9 @@ class Asset(SQLModel, table=True):
     username: Optional[str] = None
     instructions: Optional[str] = None
     priority: Optional[str] = None
+    image: Optional[str] = None
+    is_closed: bool = Field(default=False)
+    closure_date: Optional[str] = None
 
 class FinancialAccount(SQLModel, table=True):
     __tablename__ = "financial_accounts"
@@ -225,3 +228,49 @@ class ContactRelationship(SQLModel, table=True):
     source_id: str # Can be 'owner' or a Contact UUID/ID
     target_id: str
     type: str # parent_of, spouse_of, sibling_of, professional_to
+
+# --- TIMELINE ---
+class LifeEvent(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="users.id")
+    year: int
+    label: str
+    description: Optional[str] = None
+    date: Optional[str] = None
+    type: str  # milestone, education, work, relationship, future, accomplishment
+    category: Optional[str] = None
+    reflection: Optional[str] = None
+    is_highlight: bool = Field(default=False)
+    impact: Optional[str] = None
+    assigned_contact_id: Optional[str] = None
+
+# --- TIME CAPSULE ---
+class TimeCapsuleMessage(SQLModel, table=True):
+    id: Optional[str] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="users.id")
+    title: str
+    recipient: str
+    video_url: Optional[str] = None
+    audio_url: Optional[str] = None
+    media_id: Optional[str] = None
+    content_preview: str
+    trigger_type: str  # date, milestone
+    trigger_value: str
+    is_released: bool = Field(default=False)
+    created_at: str
+
+# --- FUNERAL ---
+class FuneralData(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="users.id", unique=True)
+    wishes: str = Field(default="{}") # JSON of FuneralWishes
+    budget: str = Field(default="[]") # JSON of List[FuneralBudgetItem]
+
+# --- ADVANCED ASSETS ---
+class AdvancedAssetData(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="users.id", unique=True)
+    transactions: str = Field(default="[]") # JSON of List[AssetTransaction]
+    maintenance: str = Field(default="[]") # JSON of List[MaintenanceLog]
+    claims: str = Field(default="[]") # JSON of List[InsuranceClaim]
+

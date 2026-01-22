@@ -13,9 +13,13 @@ export class SyncManager<T extends { id: number | string }> {
     lastSync = $state<Date | null>(null);
     error = $state<string | null>(null);
 
+    private key: string;
+    private endpoint: string;
+    private mapper?: (local: any) => T;
     private apiBase: string;
+    private subscriptions = new Set<(value: T[]) => void>();
 
-    constructor(key: string, endpoint: string, mapper?: (local: any) => any, apiBase: string = "/api/data") {
+    constructor(key: string, endpoint: string, mapper?: (local: any) => T, apiBase: string = "/api/data") {
         this.key = key;
         this.endpoint = endpoint;
         this.mapper = mapper;
@@ -125,11 +129,13 @@ export class SyncManager<T extends { id: number | string }> {
 
             if (!res.ok) throw new Error("Failed to save");
 
-            const newItem = await res.json();
+            const raw = await res.json();
+            const newItem = this.mapper ? this.mapper(raw) : raw;
 
             if (!skipLocal) {
                 this.items = [...this.items, newItem];
                 setStored(this.key, this.items);
+                this.notify();
             }
             return newItem;
         } catch (e) {
@@ -138,34 +144,57 @@ export class SyncManager<T extends { id: number | string }> {
         }
     }
 
-    async update(data: T) {
-        // Optimistic
-        const original = this.items;
-        this.items = this.items.map(i => i.id === data.id ? { ...i, ...data } : i);
+    async update(idOrData: T | number | string, partialData?: Partial<T>) {
+        let id: number | string;
+        let updates: Partial<T>;
+
+        if (typeof idOrData === 'object' && idOrData !== null) {
+            id = idOrData.id;
+            updates = idOrData;
+        } else {
+            id = idOrData;
+            updates = partialData || {};
+        }
+
+        // Optimistic Update
+        const original = [...this.items];
+        const index = this.items.findIndex(i => String(i.id) === String(id));
+        if (index === -1) return;
+
+        const currentItem = this.items[index];
+        const updatedItem = { ...currentItem, ...updates };
+        this.items[index] = updatedItem;
+        this.items = [...this.items]; // trigger reactivity
         setStored(this.key, this.items);
+        this.notify();
 
         try {
             const token = get(auth).token;
-            const res = await fetch(`${BASE_URL}${this.apiBase}/${this.endpoint}/${data.id}`, {
+            const payload = this.mapper ? this.mapper(updatedItem) : updatedItem;
+
+            const res = await fetch(`${BASE_URL}${this.apiBase}/${this.endpoint}/${id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`
                 },
-                body: JSON.stringify(data)
+                body: JSON.stringify(payload)
             });
 
             if (!res.ok) throw new Error("Failed to update remote");
-            const updated = await res.json();
+            const raw = await res.json();
+            const remoteItem = this.mapper ? this.mapper(raw) : raw;
 
-            // Sync again with server data to ensure consistency (e.g. server-side timestamps)
-            this.items = this.items.map(i => i.id === data.id ? updated : i);
+            // Sync again with server data
+            this.items[index] = remoteItem;
+            this.items = [...this.items];
             setStored(this.key, this.items);
-            return updated;
+            return remoteItem;
         } catch (e) {
             console.error("Update failed, rolling back", e);
             this.items = original;
             setStored(this.key, this.items);
+            this.notify();
             throw e;
         }
     }
@@ -217,12 +246,13 @@ export class SyncManager<T extends { id: number | string }> {
                     onlyLocal,
                     onlyRemote,
                     remoteItems // Return full remote list for inspection
-                };
-            } catch (e) {
-                console.error("Audit error", e);
-                throw e;
-            }
+                }
+            };
+        } catch (e) {
+            console.error("Audit error", e);
+            throw e;
         }
+    }
 }
 
 export class SingletonSyncManager<T extends object> {
@@ -283,7 +313,7 @@ export class SingletonSyncManager<T extends object> {
         }
     }
 
-    async update(newData: T, payload?: any) {
+    async update(newData: T) {
         const original = this.data;
         this.data = { ...(this.data || {} as T), ...newData };
         setStored(this.key, this.data);
@@ -291,24 +321,28 @@ export class SingletonSyncManager<T extends object> {
 
         try {
             const token = get(auth).token;
-            // For singletons, we often POST to the base endpoint (e.g. /api/estate)
+            const payload = this.mapper ? this.mapper(this.data) : this.data;
+
             const res = await fetch(`${BASE_URL}${this.apiBase}/${this.endpoint}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`
                 },
-                body: JSON.stringify(payload || this.data)
+                body: JSON.stringify(payload)
             });
 
             if (!res.ok) throw new Error("Update failed");
-            const saved = await res.json();
-            this.updateLocal(this.mapper ? this.mapper(saved) : saved);
-            return this.data;
+            const raw = await res.json();
+            const saved = this.mapper ? this.mapper(raw) : raw;
+
+            this.updateLocal(saved);
+            return saved;
         } catch (e) {
             console.error(`[Sync:${this.key}] Update failed, rolling back`, e);
             this.data = original;
             setStored(this.key, original);
+            this.notify();
             throw e;
         }
     }

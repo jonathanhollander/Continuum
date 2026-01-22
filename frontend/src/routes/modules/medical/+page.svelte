@@ -16,31 +16,31 @@
     import {
         medicalStore,
         type MedicalDirective,
-    } from "$lib/stores/medicalStore";
+    } from "$lib/stores/medicalStore.svelte";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
-    import { estateProfile } from "$lib/stores/estateStore";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { activityLog } from "$lib/stores/activityLog";
     import LegalDisclaimer from "$lib/components/common/LegalDisclaimer.svelte";
 
-    let showAddForm = false;
-    let editMode = false;
-    let newDirective: Partial<MedicalDirective> = {
+    let showAddForm = $state(false);
+    let editMode = $state(false);
+    let newDirective: Partial<MedicalDirective> = $state({
         type: "healthcare_proxy",
         title: "",
-        location_of_original: "",
-        primary_contact: "",
-        contact_phone: "",
+        locationOfOriginal: "",
+        primaryContact: "",
+        contactPhone: "",
         summary: "",
-    };
+    });
 
-    let showProfileEdit = false;
-    let tempProfile = {
-        organ_donor: $medicalStore.profile.organ_donor,
-        blood_type: $medicalStore.profile.blood_type,
-        allergies: $medicalStore.profile.allergies,
-    };
+    let showProfileEdit = $state(false);
+    let tempProfile = $state({
+        organDonor: medicalStore.profile.organDonor,
+        bloodType: medicalStore.profile.bloodType,
+        allergies: medicalStore.profile.allergies,
+    });
 
     function saveProfile() {
         medicalStore.updateProfile(tempProfile);
@@ -51,7 +51,7 @@
             entityType: "Medical Profile",
             entityId: "profile",
             entityName: "Health Data",
-            userContext: $estateProfile.ownerName || "User",
+            userContext: estateProfile.current.ownerName || "User",
         });
     }
 
@@ -64,9 +64,9 @@
                 module: "Health & Medical",
                 action: "UPDATE",
                 entityType: "Medical Directive",
-                entityId: newDirective.id,
-                entityName: newDirective.title,
-                userContext: $estateProfile.ownerName || "User",
+                entityId: String(newDirective.id),
+                entityName: newDirective.title || "",
+                userContext: estateProfile.current.ownerName || "User",
             });
         } else {
             medicalStore.addDirective(
@@ -77,8 +77,8 @@
                 action: "CREATE",
                 entityType: "Medical Directive",
                 entityId: crypto.randomUUID(),
-                entityName: newDirective.title,
-                userContext: $estateProfile.ownerName || "User",
+                entityName: newDirective.title || "",
+                userContext: estateProfile.current.ownerName || "User",
             });
         }
 
@@ -95,14 +95,14 @@
         newDirective = {
             type: "healthcare_proxy",
             title: "",
-            location_of_original: "",
-            primary_contact: "",
-            contact_phone: "",
+            locationOfOriginal: "",
+            primaryContact: "",
+            contactPhone: "",
             summary: "",
         };
     }
 
-    function removeDirective(id: number) {
+    function removeDirective(id: string | number) {
         if (
             !confirm(
                 "Remove this directive? This should only be done if the document is revoked.",
@@ -147,7 +147,7 @@
             </div>
         </div>
         <button
-            on:click={() => (showAddForm = true)}
+            onclick={() => (showAddForm = true)}
             class="flex items-center justify-center gap-2 px-6 py-3 bg-red-600 text-white rounded-2xl font-bold hover:bg-red-700 transition-colors shadow-lg shadow-red-200"
         >
             <Plus size={20} />
@@ -182,14 +182,14 @@
                                         Blood Type
                                     </p>
                                     <p class="text-xl font-bold text-gray-900">
-                                        {$medicalStore.profile.blood_type ||
+                                        {medicalStore.profile.bloodType ||
                                             "Not Set"}
                                     </p>
                                 </div>
                                 <div
                                     class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center font-bold"
                                 >
-                                    {$medicalStore.profile.blood_type?.includes(
+                                    {medicalStore.profile.bloodType?.includes(
                                         "+",
                                     )
                                         ? "+"
@@ -206,7 +206,7 @@
                                     Critical Allergies
                                 </p>
                                 <p class="text-sm font-medium text-orange-900">
-                                    {$medicalStore.profile.allergies ||
+                                    {medicalStore.profile.allergies ||
                                         "None reported"}
                                 </p>
                             </div>
@@ -214,7 +214,7 @@
                             <div
                                 class="flex items-center gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-100"
                             >
-                                {#if $medicalStore.profile.organ_donor}
+                                {#if medicalStore.profile.organDonor}
                                     <CircleCheck
                                         class="text-blue-600"
                                         size={20}
@@ -234,8 +234,8 @@
                             </div>
 
                             <button
-                                on:click={() => {
-                                    tempProfile = { ...$medicalStore.profile };
+                                onclick={() => {
+                                    tempProfile = { ...medicalStore.profile };
                                     showProfileEdit = true;
                                 }}
                                 class="w-full py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors font-bold text-sm"
@@ -251,7 +251,7 @@
                                     >Blood Type</label
                                 >
                                 <select
-                                    bind:value={tempProfile.blood_type}
+                                    bind:value={tempProfile.bloodType}
                                     class="w-full px-4 py-2 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-red-500"
                                 >
                                     <option value="">Unknown</option>
@@ -280,7 +280,7 @@
                             <div class="flex items-center gap-2">
                                 <input
                                     type="checkbox"
-                                    bind:checked={tempProfile.organ_donor}
+                                    bind:checked={tempProfile.organDonor}
                                     id="donor-check"
                                 />
                                 <label
@@ -291,12 +291,12 @@
                             </div>
                             <div class="flex gap-2">
                                 <button
-                                    on:click={saveProfile}
+                                    onclick={saveProfile}
                                     class="flex-1 py-2 bg-red-600 text-white rounded-xl font-bold text-sm"
                                     >Save</button
                                 >
                                 <button
-                                    on:click={() => (showProfileEdit = false)}
+                                    onclick={() => (showProfileEdit = false)}
                                     class="flex-1 py-2 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm"
                                     >Cancel</button
                                 >
@@ -323,7 +323,7 @@
                 </div>
             </div>
 
-            {#each $medicalStore.directives as dir}
+            {#each medicalStore.directives as dir}
                 <div
                     class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-shadow relative group"
                 >
@@ -353,13 +353,13 @@
 
                         <div class="flex gap-1">
                             <button
-                                on:click={() => editDirective(dir)}
+                                onclick={() => editDirective(dir)}
                                 class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                             >
                                 <Pencil size={18} />
                             </button>
                             <button
-                                on:click={() => removeDirective(dir.id)}
+                                onclick={() => removeDirective(dir.id)}
                                 class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                             >
                                 <Trash2 size={18} />
@@ -376,13 +376,13 @@
                                 >Primary Contact / Proxy</span
                             >
                             <p class="text-sm font-bold text-gray-900">
-                                {dir.primary_contact}
+                                {dir.primaryContact}
                             </p>
                             <p
                                 class="text-xs text-gray-500 flex items-center gap-1 mt-1"
                             >
                                 <Phone size={12} />
-                                {dir.contact_phone}
+                                {dir.contactPhone}
                             </p>
                         </div>
                         <div
@@ -393,14 +393,14 @@
                                 >Location of Original</span
                             >
                             <p class="text-sm font-bold text-gray-900">
-                                {dir.location_of_original}
+                                {dir.locationOfOriginal}
                             </p>
                         </div>
                     </div>
                 </div>
             {/each}
 
-            {#if $medicalStore.directives.length === 0}
+            {#if medicalStore.directives.length === 0}
                 <!-- GHOST ROWS -->
                 <div class="mb-6 space-y-4">
                     {#each getSmartSamples($language).medical || [] as sample}
@@ -408,22 +408,25 @@
                             name={sample.title}
                             subtitle={sample.summary}
                             type={sample.type === "dnr" ? "DNR" : "Proxy"}
-                            onClick={() => {
+                            onclick={() => {
                                 newDirective = {
                                     ...newDirective,
                                     title: sample.title,
+                                    type: sample.type as any,
+                                    locationOfOriginal:
+                                        sample.locationOfOriginal,
                                     summary: sample.summary,
-                                    type:
-                                        sample.type === "dnr"
-                                            ? "dnr"
-                                            : "healthcare_proxy",
                                 };
                                 showAddForm = true;
                             }}
                         >
-                            <svelte:fragment slot="icon">
-                                <FileText size={20} class="text-slate-400" />
-                            </svelte:fragment>
+                            {#snippet icon()}
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400"
+                                >
+                                    <FileText size={20} />
+                                </div>
+                            {/snippet}
                         </GhostRow>
                     {/each}
                 </div>
@@ -456,7 +459,7 @@
                     </p>
                 </div>
                 <button
-                    on:click={resetForm}
+                    onclick={resetForm}
                     class="p-2 hover:bg-gray-100 rounded-full text-gray-400"
                 >
                     <Plus size={24} class="rotate-45" />
@@ -464,7 +467,10 @@
             </div>
 
             <form
-                on:submit|preventDefault={saveDirective}
+                onsubmit={(e) => {
+                    e.preventDefault();
+                    saveDirective();
+                }}
                 class="p-8 space-y-6"
             >
                 <div class="grid grid-cols-2 gap-4">
@@ -516,28 +522,29 @@
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
-                    <div>
+                    <div class="space-y-3">
                         <label
                             class="block text-xs font-bold uppercase text-gray-500 mb-1"
                             >Primary Proxy/Contact</label
                         >
                         <input
                             type="text"
-                            bind:value={newDirective.primary_contact}
-                            placeholder="Name"
-                            class="w-full px-4 py-2 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-red-500"
+                            bind:value={newDirective.primaryContact}
+                            placeholder="e.g. Dr. Sarah Chen"
+                            class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
                         />
                     </div>
-                    <div>
+                    <div class="space-y-3">
                         <label
-                            class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                            for="contactPhone"
+                            class="text-xs font-black text-slate-400 uppercase tracking-widest ml-1"
                             >Contact Phone</label
                         >
                         <input
                             type="text"
-                            bind:value={newDirective.contact_phone}
-                            placeholder="(xxx) xxx-xxxx"
-                            class="w-full px-4 py-2 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-red-500"
+                            bind:value={newDirective.contactPhone}
+                            placeholder="e.g. +1 (555) 000-0000"
+                            class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
                         />
                     </div>
                 </div>
@@ -549,16 +556,16 @@
                     >
                     <input
                         type="text"
-                        bind:value={newDirective.location_of_original}
-                        placeholder="e.g. Top drawer in office safe"
-                        class="w-full px-4 py-2 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-red-500"
+                        bind:value={newDirective.locationOfOriginal}
+                        placeholder="e.g. Safe deposit box at First National Bank"
+                        class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
                     />
                 </div>
 
                 <div class="flex gap-4 pt-4">
                     <button
                         type="button"
-                        on:click={resetForm}
+                        onclick={resetForm}
                         class="flex-1 py-4 px-6 bg-gray-100 text-gray-600 rounded-2xl font-bold hover:bg-gray-200 transition-colors"
                     >
                         Cancel

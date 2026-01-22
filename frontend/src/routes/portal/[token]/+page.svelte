@@ -5,18 +5,16 @@
   import { API_BASE_URL } from "$lib/config";
 
   let token = $page.params.token;
-  let loading = true;
-  let error = null;
-  let data = null;
+  let loading = $state(true);
+  let error: string | null = $state(null);
+  let data: any = $state(null);
 
-  let actionLoading = false;
-  let actionMessage = "";
+  let actionLoading = $state(false);
+  let actionMessage = $state("");
 
   onMount(async () => {
     try {
-      const res = await fetch(
-        `${API_BASE_URL}/api/pulse/portal/${token}`,
-      );
+      const res = await fetch(`${API_BASE_URL}/api/pulse/portal/${token}`);
       if (res.ok) {
         data = await res.json();
       } else {
@@ -52,10 +50,9 @@
     if (!token) return;
     actionLoading = true;
     try {
-      const res = await fetch(
-        `${API_BASE_URL}/api/pulse/confirm/${token}`,
-        { method: "POST" },
-      );
+      const res = await fetch(`${API_BASE_URL}/api/pulse/confirm/${token}`, {
+        method: "POST",
+      });
       if (res.ok) {
         actionMessage = "Confirmed! The pulse timer has been reset.";
         // Optimistically update UI

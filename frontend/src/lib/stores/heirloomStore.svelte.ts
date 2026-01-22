@@ -43,7 +43,18 @@ function migrateLegacyHeirlooms(): Heirloom[] {
 // 2. If sync.items is empty, check legacy.
 // 3. If legacy exists, sync.create() them or sync.setItems()? SyncManager needs a bulk set or we loop create.
 
-export const heirloomSync = registerSync<Heirloom>('heirlooms', 'heirlooms');
+const heirloomMapper = (item: any) => {
+    if (!item) return item;
+    return {
+        ...item,
+        // Remote (valuation) -> Local (value)
+        value: item.valuation !== undefined ? String(item.valuation) : item.value,
+        // Local (value) -> Remote (valuation)
+        valuation: item.value !== undefined ? parseFloat(item.value) : item.valuation
+    };
+};
+
+export const heirloomSync = registerSync<Heirloom>('heirlooms', 'heirlooms', heirloomMapper);
 
 // Check migration after sync init (next tick or immediately if synchronous load)
 if (typeof window !== 'undefined') {

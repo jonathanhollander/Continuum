@@ -2,15 +2,25 @@
     import { Sparkles } from "lucide-svelte";
     import { fade } from "svelte/transition";
 
-    export let value: string = "";
-    export let placeholder: string = "";
-    export let label: string = "";
-    export let isAIPopulated: boolean = false;
-    export let type: string = "text";
+    let {
+        value = $bindable(""),
+        placeholder = "",
+        label = "",
+        isAIPopulated = false,
+        type = "text",
+    } = $props<{
+        value?: string;
+        placeholder?: string;
+        label?: string;
+        isAIPopulated?: boolean;
+        type?: string;
+    }>();
 
-    $: glowClass = isAIPopulated
-        ? "border-amber-500/50 shadow-[0_0_15px_-3px_rgba(245,158,11,0.2)] bg-amber-50/5"
-        : "border-slate-200 bg-slate-50";
+    let glowClass = $derived(
+        isAIPopulated
+            ? "border-amber-500/50 shadow-[0_0_15px_-3px_rgba(245,158,11,0.2)] bg-amber-50/5"
+            : "border-slate-200 bg-slate-50",
+    );
 </script>
 
 <div class="space-y-2">
@@ -38,7 +48,6 @@
             bind:value
             {placeholder}
             class="w-full {glowClass} border-2 focus:border-indigo-600 focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all"
-            on:input
         />
     </div>
 </div>

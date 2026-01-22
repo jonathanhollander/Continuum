@@ -12,4 +12,6 @@ python-dotenv
 apscheduler>=3.10.0
 jinja2
 pyjwt
-passlib[recommended]
+passlib[bcrypt]
+bcrypt>=4.0.0
+postmarker>=1.0  # Postmark email API client

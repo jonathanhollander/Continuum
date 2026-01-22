@@ -15,7 +15,7 @@
     class="min-h-screen bg-slate-950 text-slate-100 relative overflow-hidden font-sans"
 >
     <!-- Warm Technology Atmosphere -->
-    <LivingMesh status={getMeshStatus($pulse.status)} />
+    <LivingMesh status={getMeshStatus(pulse.status)} />
 
     <!-- Content Layer -->
     <div class="relative z-10 transition-colors duration-1000">

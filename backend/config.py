@@ -54,7 +54,17 @@ class Settings(BaseSettings):
     RP_NAME: str = "Continuum Estate"
     ORIGIN: str = "http://localhost:5173"
 
-    # Email Configuration (Postmark)
+    # Email Configuration
+    # Provider Selection (automatic based on available credentials):
+    # 1. Postmark (recommended) - if POSTMARK_API_KEY is set
+    # 2. SMTP - if SMTP_ENABLED=true and SMTP_HOST is set
+    # 3. Local File Storage - fallback for development
+
+    # Postmark (recommended for production)
+    POSTMARK_API_KEY: Optional[str] = None
+    POSTMARK_FROM_EMAIL: str = "noreply@continuum.im"
+
+    # SMTP Configuration (fallback or alternative provider)
     SMTP_ENABLED: bool = False
     SMTP_HOST: Optional[str] = None
     SMTP_PORT: int = 587
@@ -62,10 +72,11 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: Optional[str] = None
     SMTP_FROM_EMAIL: str = "noreply@continuum.im"
     SMTP_FROM_NAME: str = "Continuum Pulse"
+    SMTP_USE_TLS: bool = True
 
-    # Postmark (preferred for production)
-    POSTMARK_API_KEY: Optional[str] = None
-    POSTMARK_FROM_EMAIL: str = "noreply@continuum.im"
+    # Email Settings
+    EMAIL_MAX_RETRIES: int = 3
+    EMAIL_RETRY_DELAY_SECONDS: int = 60
 
     # File Storage
     OUTBOX_DIR: str = "backend/outbox"
