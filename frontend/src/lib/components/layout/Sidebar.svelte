@@ -19,6 +19,7 @@
     import { logout } from "$lib/stores/keyringStore";
     import ProfileSwitcher from "$lib/components/ui/ProfileSwitcher.svelte";
     import { contextStore } from "$lib/stores/contextStore.svelte";
+    import GettingStartedTracker from "$lib/components/GettingStartedTracker.svelte";
 
     // Props
     interface Props {
@@ -274,6 +275,9 @@
                 </div>
             </div>
         {/if}
+
+        <!-- Getting Started Progress (shows until core actions complete) -->
+        <GettingStartedTracker variant="sidebar" />
     </nav>
 
     <!-- Sidebar Footer: Profile & Settings -->
