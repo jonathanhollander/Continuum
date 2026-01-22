@@ -163,7 +163,8 @@ def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), se
             user = User(
                 email="jh@continuum.estate",
                 external_id="user-jh-bypass",
-                hashed_password="BYPASS_AUTH"
+                hashed_password="BYPASS_AUTH",
+                public_key=""
             )
             session.add(user)
             session.commit()
