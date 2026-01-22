@@ -1,8 +1,54 @@
 [
     {
+        "id": "self-1",
+        "title": "A Breathing Space",
+        "description": "A 5-minute guided pause for when the weight feels too heavy.",
+        "type": "video",
+        "duration": "05:00",
+        "category": "Self-Care",
+        "iconName": "LucideHeart",
+        "color": "emerald"
+    },
+    {
+        "id": "self-2",
+        "title": "Permission to Rest",
+        "description": "Why sleep, meals, and gentle movement matter during grief.",
+        "type": "article",
+        "category": "Self-Care",
+        "iconName": "LucideHeart",
+        "color": "emerald"
+    },
+    {
+        "id": "self-3",
+        "title": "Grief Has No Timeline",
+        "description": "Understanding that everyone moves through loss differently.",
+        "type": "article",
+        "category": "Self-Care",
+        "iconName": "LucideHeart",
+        "color": "emerald"
+    },
+    {
         "id": "exec-1",
         "title": "The Executor's Practical Guide to Grief",
         "description": "How to manage administrative duties while honoring your emotional journey.",
+        "type": "article",
+        "category": "Executors",
+        "iconName": "LucideShieldAlert",
+        "color": "amber"
+    },
+    {
+        "id": "exec-2",
+        "title": "Navigating the Paperwork: A Gentle Guide",
+        "description": "Step-by-step help with the administrative tasks, at your own pace.",
+        "type": "article",
+        "category": "Executors",
+        "iconName": "LucideShieldAlert",
+        "color": "amber"
+    },
+    {
+        "id": "exec-3",
+        "title": "When to Ask for Help",
+        "description": "You don't have to carry this alone. Knowing when to delegate.",
         "type": "article",
         "category": "Executors",
         "iconName": "LucideShieldAlert",
@@ -19,6 +65,35 @@
         "color": "rose"
     },
     {
+        "id": "term-2",
+        "title": "The Art of the Legacy Letter",
+        "description": "Writing down your heart for those you leave behind.",
+        "type": "video",
+        "duration": "08:15",
+        "category": "Terminal Care",
+        "iconName": "LucideHeart",
+        "color": "rose"
+    },
+    {
+        "id": "term-3",
+        "title": "Being Present at the End",
+        "description": "What to expect and how to simply be there.",
+        "type": "article",
+        "category": "Terminal Care",
+        "iconName": "LucideHeart",
+        "color": "rose"
+    },
+    {
+        "id": "term-4",
+        "title": "Words for the Unsayable",
+        "description": "Finding language for final conversations.",
+        "type": "video",
+        "duration": "10:30",
+        "category": "Terminal Care",
+        "iconName": "LucideHeart",
+        "color": "rose"
+    },
+    {
         "id": "fam-1",
         "title": "Supporting Children Through Loss",
         "description": "Age-appropriate language and activities for grieving families.",
@@ -28,22 +103,41 @@
         "color": "indigo"
     },
     {
-        "id": "exec-2",
-        "title": "Death Bureaucracy: A Map",
-        "description": "A step-by-step guide to the papers and permissions required after a death.",
-        "type": "article",
-        "category": "Executors",
-        "iconName": "LucideShieldAlert",
-        "color": "amber"
+        "id": "fam-2",
+        "title": "Honoring Their Memory",
+        "description": "Simple rituals and ways to keep their spirit present.",
+        "type": "video",
+        "duration": "07:45",
+        "category": "Family Support",
+        "iconName": "LucideBookOpen",
+        "color": "indigo"
     },
     {
-        "id": "term-2",
-        "title": "The Art of the Legacy Letter",
-        "description": "Writing down your heart for those you leave behind.",
+        "id": "fam-3",
+        "title": "When Grief Comes in Waves",
+        "description": "Understanding triggers and allowing yourself to feel.",
+        "type": "article",
+        "category": "Family Support",
+        "iconName": "LucideBookOpen",
+        "color": "indigo"
+    },
+    {
+        "id": "fam-4",
+        "title": "Gathering as a Family",
+        "description": "Creating space for shared grief and connection.",
+        "type": "article",
+        "category": "Family Support",
+        "iconName": "LucideBookOpen",
+        "color": "indigo"
+    },
+    {
+        "id": "fam-5",
+        "title": "The First Year",
+        "description": "Navigating holidays, anniversaries, and milestones after loss.",
         "type": "video",
-        "duration": "08:15",
-        "category": "Terminal Care",
-        "iconName": "LucideHeart",
-        "color": "rose"
+        "duration": "15:20",
+        "category": "Family Support",
+        "iconName": "LucideBookOpen",
+        "color": "indigo"
     }
 ]

@@ -55,6 +55,124 @@
             "number": "1300 845 745"
         }
     ],
+    "DE": [
+        {
+            "label": "Telefonseelsorge",
+            "number": "0800 111 0 111"
+        },
+        {
+            "label": "Telefonseelsorge (Alt)",
+            "number": "0800 111 0 222"
+        },
+        {
+            "label": "Kinder- und Jugendtelefon",
+            "number": "116 111"
+        }
+    ],
+    "FR": [
+        {
+            "label": "SOS Amitie",
+            "number": "09 72 39 40 50"
+        },
+        {
+            "label": "Fil Sante Jeunes",
+            "number": "0 800 235 236"
+        },
+        {
+            "label": "SOS Suicide Phoenix",
+            "number": "01 40 44 46 45"
+        }
+    ],
+    "ES": [
+        {
+            "label": "Telefono de la Esperanza",
+            "number": "717 003 717"
+        },
+        {
+            "label": "Samaritans Spain",
+            "number": "900 525 100"
+        }
+    ],
+    "IE": [
+        {
+            "label": "Samaritans Ireland",
+            "number": "116 123"
+        },
+        {
+            "label": "Pieta House",
+            "number": "1800 247 247"
+        },
+        {
+            "label": "Aware",
+            "number": "1800 80 48 48"
+        }
+    ],
+    "NZ": [
+        {
+            "label": "Lifeline NZ",
+            "number": "0800 543 354"
+        },
+        {
+            "label": "Need to Talk?",
+            "number": "1737"
+        },
+        {
+            "label": "Youthline",
+            "number": "0800 376 633"
+        }
+    ],
+    "IN": [
+        {
+            "label": "iCall",
+            "number": "9152987821"
+        },
+        {
+            "label": "AASRA",
+            "number": "9820466726"
+        },
+        {
+            "label": "Vandrevala Foundation",
+            "number": "1860-2662-345"
+        }
+    ],
+    "JP": [
+        {
+            "label": "TELL Lifeline",
+            "number": "03-5774-0992"
+        },
+        {
+            "label": "Befrienders Osaka",
+            "number": "06-6260-4343"
+        },
+        {
+            "label": "Yorisoi Hotline",
+            "number": "0120-279-338"
+        }
+    ],
+    "NL": [
+        {
+            "label": "113 Suicide Prevention",
+            "number": "0900 0113"
+        },
+        {
+            "label": "Luisterlijn",
+            "number": "0900 0767"
+        }
+    ],
+    "ZA": [
+        {
+            "label": "SADAG",
+            "number": "0800 567 567"
+        },
+        {
+            "label": "Lifeline South Africa",
+            "number": "0861 322 322"
+        },
+        {
+            "label": "Suicide Crisis Line",
+            "number": "0800 567 567"
+        }
+    ],
     "DEFAULT": [
         {
             "label": "International Crisis Directory",

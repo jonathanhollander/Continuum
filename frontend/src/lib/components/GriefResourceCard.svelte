@@ -58,12 +58,12 @@
     <div class="flex items-center justify-between text-xs font-medium">
         <div class="flex items-center gap-2 text-slate-500">
             <Icon class="w-4 h-4" />
-            <span>{type === "article" ? "Reading" : "Watch"}</span>
+            <span>{type === "article" ? "A gentle read" : "A quiet moment"}</span>
         </div>
         <div
             class="text-{color}-400 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
         >
-            {type === "article" ? "Read More" : "Play Now"}
+            {type === "article" ? "When you're ready" : "Watch when ready"}
             <LucideExternalLink class="w-3 h-3" />
         </div>
     </div>

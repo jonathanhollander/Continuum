@@ -86,7 +86,7 @@ Example: { "message": "The silence they leave behind can be so loud... it's okay
         }
     } catch (error) {
         console.error('Grief AI Error:', error);
-        return { content: "I'm here, but I'm having a little trouble connecting right now. Please take a gentle breath while I try to reconnect." };
+        return { content: "I'm still here with you. My words aren't flowing as smoothly right now, but you're not alone. Take a gentle breath, and know that the resources in the sidebar are always available." };
     }
 }
 

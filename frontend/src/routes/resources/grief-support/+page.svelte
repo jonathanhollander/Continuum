@@ -51,10 +51,20 @@
         { code: "UK", name: "United Kingdom" },
         { code: "CA", name: "Canada" },
         { code: "AU", name: "Australia" },
+        { code: "DE", name: "Germany" },
+        { code: "FR", name: "France" },
+        { code: "ES", name: "Spain" },
+        { code: "IE", name: "Ireland" },
+        { code: "NZ", name: "New Zealand" },
+        { code: "IN", name: "India" },
+        { code: "JP", name: "Japan" },
+        { code: "NL", name: "Netherlands" },
+        { code: "ZA", name: "South Africa" },
     ];
 
     const filterCategories = [
         "All",
+        "Self-Care",
         "Executors",
         "Terminal Care",
         "Family Support",
@@ -66,13 +76,22 @@
         LucideBookOpen,
     };
 
+    // Language-to-country mapping for intelligent hotline defaults
+    const languageToCountry: Record<string, string> = {
+        en: "US",
+        es: "ES",
+        fr: "FR",
+        de: "DE",
+        ru: "US", // No Russian hotlines yet, default to US
+        he: "US", // No Israeli hotlines yet, default to US
+    };
+
     onMount(() => {
         mounted = true;
 
-        // Initial country detection based on language store
+        // Set initial country based on UI language (user can override)
         const currentLang = $languageStore;
-        if (currentLang === "en") selectedCountry = "US";
-        else if (currentLang === "es") selectedCountry = "US"; // Default to US for Spanish for now
+        selectedCountry = languageToCountry[currentLang] || "US";
 
         refreshHotlines();
     });
@@ -219,7 +238,7 @@
                                         }}
                                         class="text-xs text-slate-500 hover:text-slate-300"
                                     >
-                                        Close Results
+                                        Done for now
                                     </button>
                                 {/if}
                             </div>
@@ -248,7 +267,7 @@
                                         isSearching}
                                     class="absolute right-3 top-1/2 -translate-y-1/2 px-4 py-2 rounded-xl bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 transition-all disabled:opacity-30 text-sm font-medium"
                                 >
-                                    {isSearching ? "Searching..." : "Search"}
+                                    {isSearching ? "Searching..." : "Find support"}
                                 </button>
                             </div>
 
@@ -284,8 +303,7 @@
                                 <div
                                     class="w-full p-8 border border-dashed border-white/10 rounded-2xl text-center text-slate-500 italic"
                                 >
-                                    No practitioners found in this area. Try a
-                                    broader search.
+                                    We haven't found support in that area yet. You might try a nearby city, or reach out to us for help finding resources.
                                 </div>
                             {/if}
                         </div>

@@ -71,6 +71,11 @@
 </script>
 
 <div class="space-y-6">
+    <!-- Gentle intro -->
+    <p class="text-sm text-slate-400 italic leading-relaxed">
+        When you're ready, these small steps may help. There's no rush—move at your own pace.
+    </p>
+
     <div class="flex items-center gap-4 mb-8">
         <button
             onclick={() => (activePriority = "immediate")}
@@ -79,7 +84,7 @@
                 ? 'bg-rose-500/20 text-rose-200 border border-rose-500/30'
                 : 'bg-white/5 text-slate-500 hover:text-slate-300'}"
         >
-            Immediate Actions
+            Right now
         </button>
         <button
             onclick={() => (activePriority = "soon")}
