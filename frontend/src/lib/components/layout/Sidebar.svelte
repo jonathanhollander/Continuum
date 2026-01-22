@@ -2,7 +2,7 @@
     import { page } from "$app/stores";
     import { t, userRole } from "$lib/stores/concierge";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
-    import { navGroups } from "$lib/config/navigation";
+    import { navGroups, pulseSubNav } from "$lib/config/navigation";
     import {
         ChevronDown,
         ChevronRight,
@@ -11,6 +11,7 @@
         Users,
         LogOut,
         Star,
+        Zap,
     } from "lucide-svelte";
     import { createEventDispatcher } from "svelte";
     import { slide } from "svelte/transition";
@@ -31,6 +32,9 @@
     // Accordion State: Key of the currently open group
     let openGroupKey = $state<string | null>(null);
 
+    // Check if we're in Pulse section
+    let isInPulseSection = $derived($page.url.pathname.startsWith('/modules/pulse'));
+
     // Filter Nav Items
     let filteredNavGroups = $derived(
         navGroups
@@ -43,33 +47,48 @@
             .filter((group) => group.items.length > 0),
     );
 
+    // Filter Pulse sub-nav
+    let filteredPulseNav = $derived(
+        pulseSubNav.filter((item) => item.allowedRoles.includes($userRole))
+    );
+
     // Effect: Auto-open the group containing the current page
     $effect(() => {
         const path = $page.url.pathname;
 
-        // Find the group that should be open
+        // Find the group that should be open (skip primary groups which are always open)
         const activeGroup = filteredNavGroups.find((group) =>
-            group.items.some((item) => item.href === path),
+            !group.isPrimary && group.items.some((item) => item.href === path || path.startsWith(item.href)),
         );
 
         if (activeGroup) {
             openGroupKey = activeGroup.groupKey;
         } else if (!openGroupKey) {
-            // Default to first non-collapsed group if none open
+            // Default to first non-collapsed, non-primary group if none open
             const defaultGroup = filteredNavGroups.find(
-                (g) => !g.isCollapsedByDefault,
+                (g) => !g.isCollapsedByDefault && !g.isPrimary,
             );
             if (defaultGroup) openGroupKey = defaultGroup.groupKey;
         }
     });
 
     function toggleGroup(key: string) {
+        // Primary groups can't be collapsed
+        const group = filteredNavGroups.find(g => g.groupKey === key);
+        if (group?.isPrimary) return;
+
         if (openGroupKey === key) {
             openGroupKey = null;
         } else {
             // "Accordion Mode": Close others, open this one
             openGroupKey = key;
         }
+    }
+
+    function isGroupOpen(group: typeof filteredNavGroups[0]): boolean {
+        // Primary groups are always open
+        if (group.isPrimary) return true;
+        return openGroupKey === group.groupKey;
     }
 
     function handleClose() {
@@ -120,60 +139,81 @@
     <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-2 custom-scrollbar">
         {#each filteredNavGroups as group}
             <div class="mb-2">
-                <!-- Group Header (Accordion Toggle) -->
-                <button
-                    class="w-full flex flex-col items-start px-4 py-3 rounded-xl transition-all hover:bg-white/5 group border border-transparent
-                    {openGroupKey === group.groupKey
-                        ? 'bg-white/5 border-white/5'
-                        : ''}"
-                    onclick={() => toggleGroup(group.groupKey)}
-                    aria-expanded={openGroupKey === group.groupKey}
-                >
-                    <div class="w-full flex items-center justify-between">
-                        <span
-                            class="text-[10px] font-bold text-primary-foreground/60 uppercase tracking-widest"
-                        >
-                            {$t[group.groupKey] || group.groupLabel}
-                        </span>
-                        {#if openGroupKey === group.groupKey}
-                            <ChevronDown
-                                size={14}
-                                class="text-primary-foreground/40"
-                            />
-                        {:else}
-                            <ChevronRight
-                                size={14}
-                                class="text-primary-foreground/40"
-                            />
+                <!-- Group Header -->
+                {#if group.isPrimary}
+                    <!-- Primary group: Always expanded, different styling -->
+                    <div class="px-4 py-2 mb-1">
+                        <div class="flex items-center gap-2">
+                            <Zap size={12} class="text-amber-400" />
+                            <span class="text-[10px] font-bold text-amber-400/90 uppercase tracking-widest">
+                                {$t[group.groupKey] || group.groupLabel}
+                            </span>
+                        </div>
+                        {#if group.groupDescription}
+                            <p class="text-[10px] text-primary-foreground/50 mt-0.5 pl-5">
+                                {group.groupDescription}
+                            </p>
                         {/if}
                     </div>
-                    {#if group.groupDescription && openGroupKey !== group.groupKey}
-                        <p
-                            class="text-[10px] text-primary-foreground/40 mt-1 line-clamp-1 italic"
-                        >
-                            {group.groupDescription}
-                        </p>
-                    {/if}
-                </button>
+                {:else}
+                    <!-- Regular group: Collapsible accordion -->
+                    <button
+                        class="w-full flex flex-col items-start px-4 py-3 rounded-xl transition-all hover:bg-white/5 group border border-transparent
+                        {isGroupOpen(group)
+                            ? 'bg-white/5 border-white/5'
+                            : ''}"
+                        onclick={() => toggleGroup(group.groupKey)}
+                        aria-expanded={isGroupOpen(group)}
+                    >
+                        <div class="w-full flex items-center justify-between">
+                            <span
+                                class="text-[10px] font-bold text-primary-foreground/60 uppercase tracking-widest"
+                            >
+                                {$t[group.groupKey] || group.groupLabel}
+                            </span>
+                            {#if isGroupOpen(group)}
+                                <ChevronDown
+                                    size={14}
+                                    class="text-primary-foreground/40"
+                                />
+                            {:else}
+                                <ChevronRight
+                                    size={14}
+                                    class="text-primary-foreground/40"
+                                />
+                            {/if}
+                        </div>
+                        {#if group.groupDescription && !isGroupOpen(group)}
+                            <p
+                                class="text-[10px] text-primary-foreground/40 mt-1 line-clamp-1 italic"
+                            >
+                                {group.groupDescription}
+                            </p>
+                        {/if}
+                    </button>
+                {/if}
 
                 <!-- Group Items -->
-                {#if openGroupKey === group.groupKey}
+                {#if isGroupOpen(group)}
                     <div
                         class="mt-1 space-y-1"
                         transition:slide={{ duration: 300 }}
                     >
                         {#each group.items as item}
                             {@const isEssential = contextStore.isExecutor && item.isExecutorEssential}
+                            {@const isActive = $page.url.pathname === item.href.split('#')[0] ||
+                                (item.href === '/modules/pulse' && isInPulseSection && item.key === 'pulse')}
                             <a
                                 href={item.href}
-                                class="flex items-center gap-3 px-3 py-2 mx-1 rounded-xl transition-all duration-200 group relative overflow-hidden
-                            {$page.url.pathname === item.href.split('#')[0]
+                                class="flex items-center gap-3 px-3 py-2.5 mx-1 rounded-xl transition-all duration-200 group relative overflow-hidden
+                                {isActive
                                     ? 'bg-white/20 text-white shadow-lg shadow-black/5 font-semibold'
                                     : 'text-primary-foreground/80 hover:text-white hover:bg-white/10'}
-                            {isEssential ? 'ring-1 ring-amber-400/30' : ''}"
+                                {isEssential ? 'ring-1 ring-amber-400/30' : ''}
+                                {group.isPrimary ? 'py-3' : ''}"
                                 onclick={handleClose}
                             >
-                                {#if $page.url.pathname === item.href.split("#")[0]}
+                                {#if isActive}
                                     <div
                                         class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full bg-white"
                                     ></div>
@@ -181,9 +221,7 @@
 
                                 <svelte:component
                                     this={item.icon}
-                                    class="w-4 h-4 transition-transform duration-300 group-hover:scale-110 {$page
-                                        .url.pathname ===
-                                    item.href.split('#')[0]
+                                    class="w-4 h-4 transition-transform duration-300 group-hover:scale-110 {isActive
                                         ? 'text-white'
                                         : 'text-primary-foreground/50'}"
                                 />
@@ -199,6 +237,43 @@
                 {/if}
             </div>
         {/each}
+
+        <!-- Pulse Sub-Navigation (shown when in Pulse section) -->
+        {#if isInPulseSection && filteredPulseNav.length > 1}
+            <div class="mt-4 pt-4 border-t border-white/10">
+                <div class="px-4 py-2 mb-1">
+                    <span class="text-[10px] font-bold text-primary-foreground/60 uppercase tracking-widest">
+                        Pulse Navigation
+                    </span>
+                </div>
+                <div class="space-y-1">
+                    {#each filteredPulseNav as item}
+                        {@const isActive = $page.url.pathname === item.href}
+                        <a
+                            href={item.href}
+                            class="flex items-center gap-3 px-3 py-2 mx-1 rounded-xl transition-all duration-200 group relative overflow-hidden
+                            {isActive
+                                ? 'bg-white/20 text-white shadow-lg shadow-black/5 font-semibold'
+                                : 'text-primary-foreground/80 hover:text-white hover:bg-white/10'}"
+                            onclick={handleClose}
+                        >
+                            {#if isActive}
+                                <div
+                                    class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full bg-white"
+                                ></div>
+                            {/if}
+                            <svelte:component
+                                this={item.icon}
+                                class="w-4 h-4 transition-transform duration-300 group-hover:scale-110 {isActive
+                                    ? 'text-white'
+                                    : 'text-primary-foreground/50'}"
+                            />
+                            <span class="text-sm flex-1">{item.label}</span>
+                        </a>
+                    {/each}
+                </div>
+            </div>
+        {/if}
     </nav>
 
     <!-- Sidebar Footer: Profile & Settings -->

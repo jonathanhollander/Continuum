@@ -78,6 +78,7 @@
 	import GodModeToggle from "$lib/components/wizard/GodModeToggle.svelte";
 	import Sidebar from "$lib/components/layout/Sidebar.svelte";
 	import FocusFooter from "$lib/components/layout/FocusFooter.svelte";
+	import MobileBottomNav from "$lib/components/layout/MobileBottomNav.svelte";
 	import { navGroups } from "$lib/config/navigation";
 	import { compassStore } from "$lib/stores/compassStore";
 	import NotificationContainer from "$lib/components/NotificationContainer.svelte";
@@ -207,14 +208,20 @@
 			conciergeEngine.open();
 		};
 
+		const handleMobileSidebarToggle = () => {
+			isSidebarOpen = !isSidebarOpen;
+		};
+
 		window.addEventListener("keydown", handleGlobalKeydown);
 		window.addEventListener("continuum:simplify-view", handleSimplifyView);
 		window.addEventListener("continuum:request-help", handleRequestHelp);
+		window.addEventListener("toggle-mobile-sidebar", handleMobileSidebarToggle);
 
 		return () => {
 			window.removeEventListener("keydown", handleGlobalKeydown);
 			window.removeEventListener("continuum:simplify-view", handleSimplifyView);
 			window.removeEventListener("continuum:request-help", handleRequestHelp);
+			window.removeEventListener("toggle-mobile-sidebar", handleMobileSidebarToggle);
 		};
 	});
 
@@ -462,7 +469,7 @@
 					</header>
 				{/if}
 
-				<main class="flex-1 overflow-x-hidden pb-20">
+				<main class="flex-1 overflow-x-hidden pb-20 lg:pb-6">
 					<div
 						class="animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-full"
 					>
@@ -475,6 +482,11 @@
 				{/if}
 			</div>
 		</div>
+
+		<!-- Mobile Bottom Navigation -->
+		{#if !isFocusMode}
+			<MobileBottomNav />
+		{/if}
 	</div>
 {/if}
 
