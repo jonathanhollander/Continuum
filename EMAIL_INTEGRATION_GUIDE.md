@@ -120,15 +120,19 @@ Create a test script or use the Python shell:
 
 ```python
 from backend.services.email_service import email_service
-from backend.database import get_session
-
 # Get a database session
 session = next(get_session())
+
+# Get user ID from email (recommended approach)
+from sqlmodel import select
+from backend.database import User
+user = session.exec(select(User).where(User.email == "test@example.com")).first()
+user_id = user.id if user else 1 # Fallback for demo
 
 # Test welcome email
 result = email_service.send_welcome_email(
     to_email="test@example.com",
-    user_id=1,
+    user_id=user_id,
     dashboard_url="https://your-app.com/dashboard",
     db_session=session
 )
@@ -221,11 +225,75 @@ def send_custom_notification(self, to_email: str, ...):
 - [ ] Configure sender email to use verified domain
 - [ ] Test all email types (magic link, pulse alerts, welcome)
 - [ ] Monitor email logs table for delivery issues
-- [ ] Set up email bounce/complaint webhooks (Postmark)
+- [x] Set up email bounce/complaint webhooks (Postmark) - ✅ Implemented
 - [ ] Add email rate limiting if needed
 - [ ] Configure SPF/DKIM records for your domain
 - [ ] Review email templates for branding consistency
 - [ ] Test spam score using mail-tester.com
+
+## Bounce and Complaint Handling
+
+The system includes a webhook endpoint to receive bounce and spam complaint notifications from Postmark.
+
+### Webhook Endpoint
+
+- **URL:** `POST /api/emails/webhook/postmark`
+- **Purpose:** Updates email log status when emails bounce or receive spam complaints
+
+### Supported Event Types
+
+| Event Type | New Status | Description |
+|------------|------------|-------------|
+| Bounce | `bounced` | Email delivery permanently or temporarily failed |
+| SpamComplaint | `spam_complaint` | Recipient marked email as spam |
+| SubscriptionChange | `unsubscribed` | Recipient unsubscribed |
+
+### Setting Up Postmark Webhooks
+
+1. **Log into Postmark Dashboard**
+   - Go to https://account.postmarkapp.com
+
+2. **Navigate to Webhooks**
+   - Select your server → Settings → Webhooks
+
+3. **Add a New Webhook**
+   - **URL:** `https://your-domain.com/api/emails/webhook/postmark`
+   - **Events to send:**
+     - ✅ Bounce (all types)
+     - ✅ Spam Complaint
+   - **HTTP Method:** POST
+   - **Content-Type:** application/json
+
+4. **Test the Webhook**
+   - Click "Test" in Postmark to send a sample payload
+   - Check your logs for "Postmark webhook received" messages
+
+### Viewing Bounced Emails
+
+Query bounced emails via the API:
+
+```bash
+# Get all bounced emails (admin only)
+curl -H "Authorization: Bearer YOUR_TOKEN" \
+  https://your-domain.com/api/emails/bounces
+```
+
+Or in the database:
+
+```sql
+SELECT * FROM email_logs
+WHERE status IN ('bounced', 'spam_complaint', 'unsubscribed')
+ORDER BY created_at DESC;
+```
+
+### Bounce Types
+
+Postmark distinguishes several bounce types:
+
+- **HardBounce:** Permanent failure (invalid address, domain doesn't exist)
+- **SoftBounce:** Temporary failure (mailbox full, server temporarily unavailable)
+- **SpamNotification:** ISP spam block
+- **Unsubscribe:** Link/header unsubscribe
 
 ## Troubleshooting
 

@@ -18,7 +18,7 @@ class EmailLog(SQLModel, table=True):
         recipient_name: Name of recipient
         subject: Email subject line
         template_name: Template used (e.g., "magic_link", "pulse_tier1")
-        status: Delivery status (pending, sent, failed, bounced)
+        status: Delivery status (pending, sent, failed, bounced, spam_complaint, unsubscribed)
         provider: Email provider used (postmark, smtp, local)
         provider_message_id: External message ID from email provider
         error_message: Error details if delivery failed
@@ -33,7 +33,7 @@ class EmailLog(SQLModel, table=True):
     recipient_name: str
     subject: str
     template_name: str = Field(index=True)
-    status: str = Field(default="pending", index=True)  # pending, sent, failed, bounced
+    status: str = Field(default="pending", index=True)  # pending, sent, failed, bounced, spam_complaint, unsubscribed
     provider: str = Field(default="postmark")  # postmark, smtp, local
     provider_message_id: Optional[str] = Field(default=None)
     error_message: Optional[str] = Field(default=None)
