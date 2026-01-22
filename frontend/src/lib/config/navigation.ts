@@ -32,7 +32,10 @@ import {
     Zap,
     Compass,
     ArrowRight,
-    Search
+    Search,
+    Key,
+    Stethoscope,
+    Building2
 } from "lucide-svelte";
 
 export type UserRole = "Owner" | "Executor" | "Family";
@@ -45,7 +48,7 @@ export type NavItem = {
     allowedRoles: UserRole[];
     isExecutorEssential?: boolean;
     isQuickStart?: boolean;
-    isCoreAction?: boolean; // Part of the 3 essential actions
+    isCoreAction?: boolean;
 };
 
 export type NavGroup = {
@@ -58,52 +61,18 @@ export type NavGroup = {
 };
 
 // ===========================================
-// MINIMAL NAVIGATION - Focus on ONE problem
+// ESTATE PLANNING NAVIGATION
 // ===========================================
-// Core problem: "Make sure your family knows what to do"
-// Core actions: 1) Add contacts, 2) Add documents, 3) Set up Pulse
-// Everything else: Discover in catalog
-
-export const coreActions: NavItem[] = [
-    {
-        label: "My Contacts",
-        key: "contacts",
-        href: "/modules/contacts",
-        icon: Users,
-        allowedRoles: ["Owner", "Executor", "Family"],
-        isExecutorEssential: true,
-        isCoreAction: true,
-    },
-    {
-        label: "Documents",
-        key: "documents",
-        href: "/modules/legal-documents",
-        icon: Files,
-        allowedRoles: ["Owner", "Executor"],
-        isExecutorEssential: true,
-        isCoreAction: true,
-    },
-    {
-        label: "Wellness Check-in",
-        key: "pulse",
-        href: "/modules/pulse",
-        icon: Heart,
-        allowedRoles: ["Owner", "Executor", "Family"],
-        isCoreAction: true,
-    },
-];
-
-// ===========================================
-// SIMPLIFIED SIDEBAR - Only essentials visible
-// ===========================================
-// Before: 36 items in 4 groups
-// After: 4 essentials + "Explore More" link
+// Core problem: Complete estate planning
+// Core essentials: What survivors NEED on day one
+// Secondary: Important but not urgent
+// Catalog: Nice-to-have legacy/memory features
 
 export const navGroups: NavGroup[] = [
     {
-        groupLabel: "Essentials",
+        groupLabel: "Estate Essentials",
         groupKey: "groupEssentials",
-        groupDescription: "The foundation of your plan",
+        groupDescription: "Core estate planning",
         isPrimary: true,
         items: [
             {
@@ -114,13 +83,111 @@ export const navGroups: NavGroup[] = [
                 allowedRoles: ["Owner", "Executor", "Family"],
                 isQuickStart: true,
             },
-            ...coreActions,
+            {
+                label: "Assets & Financial",
+                key: "financial",
+                href: "/modules/financial-accounts",
+                icon: Wallet,
+                allowedRoles: ["Owner", "Executor"],
+                isExecutorEssential: true,
+                isCoreAction: true,
+            },
+            {
+                label: "Insurance",
+                key: "insurance",
+                href: "/modules/insurance",
+                icon: Shield,
+                allowedRoles: ["Owner", "Executor"],
+                isExecutorEssential: true,
+                isCoreAction: true,
+            },
+            {
+                label: "Contacts",
+                key: "contacts",
+                href: "/modules/contacts",
+                icon: Users,
+                allowedRoles: ["Owner", "Executor", "Family"],
+                isExecutorEssential: true,
+                isCoreAction: true,
+            },
+            {
+                label: "Documents",
+                key: "documents",
+                href: "/modules/legal-documents",
+                icon: Files,
+                allowedRoles: ["Owner", "Executor"],
+                isExecutorEssential: true,
+                isCoreAction: true,
+            },
+            {
+                label: "Medical",
+                key: "medical",
+                href: "/modules/medical",
+                icon: Stethoscope,
+                allowedRoles: ["Owner", "Executor", "Family"],
+                isExecutorEssential: true,
+                isCoreAction: true,
+            },
+            {
+                label: "Home Access",
+                key: "home-manual",
+                href: "/modules/home-manual",
+                icon: Key,
+                allowedRoles: ["Owner", "Executor", "Family"],
+                isExecutorEssential: true,
+                isCoreAction: true,
+            },
+            {
+                label: "Pulse",
+                key: "pulse",
+                href: "/modules/pulse",
+                icon: Heart,
+                allowedRoles: ["Owner", "Executor", "Family"],
+                isCoreAction: true,
+            },
         ],
     },
     {
-        groupLabel: "Explore More",
-        groupKey: "groupExplore",
-        groupDescription: "All features",
+        groupLabel: "Secondary",
+        groupKey: "groupSecondary",
+        groupDescription: "Additional records",
+        isCollapsedByDefault: true,
+        items: [
+            {
+                label: "Subscriptions",
+                key: "subscriptions",
+                href: "/modules/subscriptions",
+                icon: Receipt,
+                allowedRoles: ["Owner", "Executor"],
+            },
+            {
+                label: "Pet Care",
+                key: "pets",
+                href: "/modules/pets",
+                icon: Dog,
+                allowedRoles: ["Owner", "Executor", "Family"],
+            },
+            {
+                label: "Real Estate",
+                key: "property",
+                href: "/modules/property",
+                icon: Building2,
+                allowedRoles: ["Owner", "Executor"],
+                isExecutorEssential: true,
+            },
+            {
+                label: "Digital Guardian",
+                key: "guardian",
+                href: "/modules/digital-guardian",
+                icon: Shield,
+                allowedRoles: ["Owner", "Executor"],
+            },
+        ],
+    },
+    {
+        groupLabel: "Legacy & More",
+        groupKey: "groupLegacy",
+        groupDescription: "Memories, letters, tools",
         isCollapsedByDefault: true,
         items: [
             {
@@ -131,15 +198,7 @@ export const navGroups: NavGroup[] = [
                 allowedRoles: ["Owner", "Executor", "Family"],
             },
             {
-                label: "Financial",
-                key: "financial",
-                href: "/modules/financial-accounts",
-                icon: Wallet,
-                allowedRoles: ["Owner", "Executor"],
-                isExecutorEssential: true,
-            },
-            {
-                label: "Letters",
+                label: "Legacy Letters",
                 key: "letters",
                 href: "/modules/letters",
                 icon: Heart,
@@ -153,32 +212,10 @@ export const navGroups: NavGroup[] = [
                 allowedRoles: ["Owner", "Executor", "Family"],
             },
             {
-                label: "Medical",
-                key: "medical",
-                href: "/modules/medical",
-                icon: Heart,
-                allowedRoles: ["Owner", "Executor", "Family"],
-            },
-        ],
-    },
-    {
-        groupLabel: "Tools",
-        groupKey: "groupTools",
-        groupDescription: "Advanced",
-        isCollapsedByDefault: true,
-        items: [
-            {
                 label: "Red Binder",
                 key: "binder",
                 href: "/binder",
                 icon: Activity,
-                allowedRoles: ["Owner", "Executor"],
-            },
-            {
-                label: "Executor Kit",
-                key: "executor",
-                href: "/modules/executor-toolkit",
-                icon: Briefcase,
                 allowedRoles: ["Owner", "Executor"],
             },
             {
@@ -253,9 +290,9 @@ export const pulseSubNav: NavItem[] = [
 ];
 
 // ===========================================
-// CATALOG CATEGORIES - All features organized
+// CATALOG CATEGORIES - Legacy & Tools
 // ===========================================
-// These appear in the catalog discovery page, not sidebar
+// These appear in the catalog discovery page
 
 export type CatalogCategory = {
     id: string;
@@ -266,18 +303,6 @@ export type CatalogCategory = {
 };
 
 export const catalogCategories: CatalogCategory[] = [
-    {
-        id: "estate",
-        label: "Assets & Wealth",
-        description: "Track your financial picture",
-        icon: Wallet,
-        items: [
-            { label: "Financial Accounts", key: "assets", href: "/modules/financial-accounts", icon: Wallet, allowedRoles: ["Owner", "Executor"], isExecutorEssential: true },
-            { label: "Real Estate", key: "property", href: "/modules/property", icon: Home, allowedRoles: ["Owner", "Executor"], isExecutorEssential: true },
-            { label: "Insurance", key: "insurance", href: "/modules/insurance", icon: Shield, allowedRoles: ["Owner", "Executor"] },
-            { label: "Subscriptions", key: "subscriptions", href: "/modules/subscriptions", icon: Receipt, allowedRoles: ["Owner", "Executor"] },
-        ]
-    },
     {
         id: "legacy",
         label: "Life & Legacy",
@@ -291,18 +316,6 @@ export const catalogCategories: CatalogCategory[] = [
             { label: "Time Capsule", key: "capsule", href: "/modules/time-capsule", icon: Box, allowedRoles: ["Owner", "Executor", "Family"] },
             { label: "Life Timeline", key: "timeline", href: "/modules/timeline", icon: Calendar, allowedRoles: ["Owner", "Executor", "Family"] },
             { label: "Funeral Wishes", key: "funeral", href: "/modules/funeral", icon: Scroll, allowedRoles: ["Owner", "Executor", "Family"] },
-        ]
-    },
-    {
-        id: "logistics",
-        label: "Practical Matters",
-        description: "Day-to-day essentials",
-        icon: Hammer,
-        items: [
-            { label: "Home Manual", key: "home-manual", href: "/modules/home-manual", icon: Hammer, allowedRoles: ["Owner", "Executor", "Family"] },
-            { label: "Health & Medical", key: "medical", href: "/modules/medical", icon: Heart, allowedRoles: ["Owner", "Executor", "Family"] },
-            { label: "Pet Care", key: "pets", href: "/modules/pets", icon: Dog, allowedRoles: ["Owner", "Executor", "Family"] },
-            { label: "Digital Guardian", key: "guardian", href: "/modules/digital-guardian", icon: Shield, allowedRoles: ["Owner", "Executor"] },
         ]
     },
     {
@@ -321,3 +334,6 @@ export const catalogCategories: CatalogCategory[] = [
         ]
     },
 ];
+
+// Core actions for onboarding tracking
+export const coreActions: NavItem[] = navGroups[0].items.filter(item => item.isCoreAction);
