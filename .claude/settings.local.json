@@ -29,7 +29,14 @@
       "Bash(python -c \"from backend.routers.media import router; print\\(f''Media router registered with {len\\(router.routes\\)} routes''\\)\")",
       "Bash(chmod:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git restore:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr create:*)",
+      "Bash(cd /Users/jonathanhollander/AI\\\\ Code/Notion\\\\ Template/Continuum_SaaS && gh pr merge:*)",
+      "Bash(git checkout:*)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
