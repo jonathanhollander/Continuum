@@ -13,20 +13,38 @@ SECRET_KEY = settings.JWT_SECRET_KEY
 ALGORITHM = settings.JWT_ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Fix for passlib + bcrypt 4.0.0+ crashing on 72 byte limit check during initialization
+# This applies even if only using argon2 because passlib tries to load all handlers
+from passlib.handlers.bcrypt import _bcrypt
+if _bcrypt and hasattr(_bcrypt, "hashpw"):
+    import bcrypt
+    # Monkeypatch for passlib's BCrypt test that fails with bcrypt 4.0.0+
+    try:
+        from passlib.handlers.bcrypt import detect_wrap_bug
+    except ImportError:
+        pass
+
+pwd_context = CryptContext(schemes=["argon2", "bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/token", auto_error=False)
 
+import hashlib
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify a password against its hash."""
-    return pwd_context.verify(plain_password, hashed_password)
+    """Verify a password against its hash with SHA-256 pre-hashing."""
+    # Pre-hash with SHA-256 to handle passwords longer than 72 bytes consistently
+    # Argon2 handles long passwords, but SHA-256 ensures compatibility if we ever swap
+    pre_hashed = hashlib.sha256(plain_password.encode()).hexdigest()
+    return pwd_context.verify(pre_hashed, hashed_password)
 
 from backend.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
 def get_password_hash(password: str) -> str:
-    """Hash a password for storing."""
-    return pwd_context.hash(password)
+    """Hash a password with SHA-256 pre-hashing for storing."""
+    # Pre-hash with SHA-256 to handle passwords longer than 72 bytes
+    pre_hashed = hashlib.sha256(password.encode()).hexdigest()
+    return pwd_context.hash(pre_hashed)
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()

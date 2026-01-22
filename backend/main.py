@@ -18,7 +18,7 @@ from backend.pulse_scheduler import start_scheduler, stop_scheduler
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import select
 from datetime import timedelta
-from backend.routers import pulse, contacts, estate_data, insurance, medical, pets, memories, auth as auth_router, media, email, heirlooms
+from backend.routers import pulse, contacts, estate_data, insurance, medical, pets, memories, auth as auth_router, media, email, heirlooms, support
 
 from backend.errors import ContinuumException, handle_exception
 from slowapi import _rate_limit_exceeded_handler
@@ -114,6 +114,7 @@ app.include_router(pets.router)
 app.include_router(memories.router)
 app.include_router(media.router)
 app.include_router(heirlooms.router)
+app.include_router(support.router)
 
 # Initialize database on startup
 @app.on_event("startup")
@@ -220,9 +221,70 @@ class RegistrationResponse(BaseModel):
 
 # --- Endpoints ---
 
-@app.get("/api/health")
-def health_check():
-    return {"status": "healthy", "service": "continuum-saas"}
+@app.get("/api/health", summary="Perform a deep health check", tags=["monitoring"])
+async def health_check(session: Session = Depends(get_session)):
+    """
+    Perform a robust health check that verifies:
+    1. Database connectivity
+    2. Storage write permissions
+    3. Frontend availability (loopback)
+    """
+    import httpx
+    health = {
+        "status": "healthy",
+        "database": False,
+        "storage": False,
+        "frontend_reachable": False,
+        "scheduler": False,
+        "environment": settings.ENVIRONMENT,
+        "version": settings.APP_VERSION
+    }
+
+    # 1. Verify Database
+    try:
+        from sqlmodel import text
+        session.exec(text("SELECT 1"))
+        health["database"] = True
+    except Exception as e:
+        logger.error(f"Health check failure: Database connection failed: {e}")
+        health["status"] = "unhealthy"
+
+    # 2. Verify Storage
+    try:
+        os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+        test_file = os.path.join(settings.UPLOAD_DIR, ".health_check")
+        with open(test_file, "w") as f:
+            f.write("ok")
+        os.remove(test_file)
+        health["storage"] = True
+    except Exception as e:
+        logger.error(f"Health check failure: Storage is not writable: {e}")
+        health["status"] = "unhealthy"
+
+    # 3. Verify Frontend Reachability
+    try:
+        async with httpx.AsyncClient() as client:
+            # Check for 200 OK or 301/302 from the frontend
+            response = await client.head(settings.FRONTEND_URL, timeout=2.0, follow_redirects=True)
+            if response.status_code < 400:
+                health["frontend_reachable"] = True
+            else:
+                logger.warning(f"Health check: Frontend returned status {response.status_code}")
+    except Exception as e:
+        logger.warning(f"Health check: Frontend loopback check failed: {e}")
+
+    # 4. Verify Scheduler
+    try:
+        from backend.pulse_scheduler import scheduler
+        health["scheduler"] = scheduler.running
+    except Exception as e:
+        logger.error(f"Health check failure: Scheduler status unknown: {e}")
+        health["status"] = "unhealthy"
+
+    if health["status"] != "healthy":
+        return JSONResponse(status_code=503, content=health)
+    
+    return health
 
 @app.post("/api/auth/register/challenge")
 def register_challenge(request: ChallengeRequest):

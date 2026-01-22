@@ -84,17 +84,17 @@
         "home_vendors",
         "vendors",
         vendorMapper,
-    );
+    ).setAffirmationContext('general');
     const accessSync = registerSync<AccessCode>(
         "home_access",
         "home_access",
         accessMapper,
-    );
+    ).setAffirmationContext('general');
     const utilitySync = registerSync<Utility>(
         "home_utilities",
         "utilities",
         utilityMapper,
-    );
+    ).setAffirmationContext('general');
 
     let activeTab = "vendors";
 
@@ -116,7 +116,7 @@
     }
 
     async function deleteVendor(id: number | string) {
-        if (!confirm("Are you sure you'd like to remove this item?")) return;
+        if (!confirm("Remove this item? You can add it back anytime.")) return;
         await vendorSync.delete(id);
     }
 
@@ -128,7 +128,7 @@
     }
 
     async function deleteCode(id: number | string) {
-        if (!confirm("Are you sure you'd like to remove this item?")) return;
+        if (!confirm("Remove this item? You can add it back anytime.")) return;
         await accessSync.delete(id);
     }
 
@@ -143,7 +143,7 @@
     }
 
     async function deleteUtility(id: number | string) {
-        if (!confirm("Are you sure you'd like to remove this item?")) return;
+        if (!confirm("Remove this item? You can add it back anytime.")) return;
         await utilitySync.delete(id);
     }
 </script>

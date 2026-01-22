@@ -128,7 +128,7 @@
     function clearLog() {
         if (
             !confirm(
-                "Are you sure you want to clear the entire activity log? This action cannot be undone.",
+                "Clear the entire activity log? This action is permanent and cannot be undone.",
             )
         )
             return;
@@ -216,7 +216,7 @@
                 <option value="all">All Actions</option>
                 <option value="CREATE">Create</option>
                 <option value="UPDATE">Update</option>
-                <option value="DELETE">Delete</option>
+                <option value="DELETE">Remove</option>
                 <option value="EXPORT">Export</option>
                 <option value="SETTINGS_CHANGE">Settings Change</option>
             </select>

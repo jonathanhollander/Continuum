@@ -109,6 +109,7 @@ class Settings(BaseSettings):
     # External APIs
     GITHUB_TOKEN: Optional[str] = None
     VITE_OPENROUTER_API_KEY: Optional[str] = None
+    TAVILY_API_KEY: Optional[str] = None
 
     # Railway Specific
     RAILWAY_ENVIRONMENT: Optional[str] = None

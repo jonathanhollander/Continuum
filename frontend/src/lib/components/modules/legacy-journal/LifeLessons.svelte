@@ -15,7 +15,7 @@
         tags: string[];
     }
 
-    const lessonSync = registerSync<Lesson>("life_lessons", "life_lessons");
+    const lessonSync = registerSync<Lesson>("life_lessons", "life_lessons").setAffirmationContext('general');
 
     let tags = ["All", "Career", "Love", "Money", "Parenting", "Resilience"];
     let activeTag = $state("All");
@@ -61,7 +61,7 @@
 
     function removeLesson(id: string) {
         // Updated type
-        if (!confirm("Are you sure you'd like to remove this lesson?")) return;
+        if (!confirm("Remove this lesson? You can add it back later.")) return;
         lessonSync.delete(id);
     }
 

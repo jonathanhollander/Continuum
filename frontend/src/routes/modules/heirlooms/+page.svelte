@@ -16,6 +16,7 @@
     import VisionUploader from "$lib/components/modules/heirlooms/VisionUploader.svelte";
     import type { AnalyzedHeirloom } from "$lib/services/visionService";
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
+    import EmptyState from "$lib/components/EmptyState.svelte";
     import Affirmation from "$lib/components/Affirmation.svelte";
     import { onMount } from "svelte";
     import {
@@ -243,7 +244,7 @@
     }
 
     function removeHeirloom(id: string) {
-        if (!confirm("Are you sure you'd like to remove this heirloom? The story will be preserved in your activity log.")) return;
+        if (!confirm("Remove this heirloom? Your story will be preserved in the activity log.")) return;
         heirloomStore.deleteItem(id);
     }
 
@@ -367,9 +368,17 @@
 
     <!-- Grid -->
     {#if items.length === 0}
-        <div
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-        >
+        <EmptyState
+            title="Your treasures deserve their stories"
+            whyMatters="<strong>Objects without stories become 'stuff' that gets donated or thrown away.</strong> That watch your grandfather wore every day? Your wedding dress? The painting your mother loved? Without their stories documented, they lose their meaning.<br/><br/>When you catalog heirlooms here, you're not just making a list—you're preserving the emotional value that makes these items irreplaceable. You're ensuring their stories survive even when you can't tell them anymore."
+            encouragement="Start with one meaningful object. Take a photo, write why it matters. The rest will follow naturally."
+            icon={Gift}
+            iconClass="text-amber-500"
+            ctaLabel="Preserve your first treasure"
+            onAction={() => (showAddForm = true)}
+        />
+        <!-- Hidden Ghost Rows for reference -->
+        <div class="hidden grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {#each getSmartSamples($language).heirlooms || [] as sample}
                 <GhostRow
                     name={sample.name}
@@ -390,21 +399,7 @@
                     </svelte:fragment>
                 </GhostRow>
             {/each}
-
-            <button
-                class="border-2 border-dashed border-stone-200 rounded-xl flex flex-col items-center justify-center text-stone-400 hover:border-[#4A7C74] hover:text-[#4A7C74] hover:bg-[#4A7C74]/5 transition-all h-[88px] group"
-                onclick={() => (showAddForm = true)}
-            >
-                <div class="flex items-center gap-2">
-                    <Plus size={20} />
-                    <span class="font-bold">Catalog New</span>
-                </div>
-            </button>
         </div>
-        <div class="flex justify-center mt-6">
-            <button
-                onclick={() => (showAddForm = true)}
-                class="text-sm font-bold text-[#4A7C74] hover:bg-[#4A7C74]/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
             >
                 <Gift size={14} /> Start Heirloom Registry
             </button>

@@ -36,8 +36,8 @@
     },
     {
         "id": "subscriptions",
-        "title": "Subscriptions",
-        "description": "Gently untangling the threads of a life, ensuring nothing stays hidden.",
+        "title": "Accounts to Close or Transfer",
+        "description": "Every subscription you document is money your family won't lose to forgotten charges. This simple list can save them hundreds—or even thousands—in the months after you're gone.",
         "icon": "💳",
         "role": "executor"
     },
@@ -50,15 +50,15 @@
     },
     {
         "id": "contacts",
-        "title": "Your Safety Net",
-        "description": "A map of your safety net—bringing people together when it matters most.",
+        "title": "Your Circle of Trust",
+        "description": "The people who matter most—who should be notified first, who can help when things go wrong, and who need to know your wishes. Building this list is an act of care for those you love.",
         "icon": "🤝",
         "role": "owner"
     },
     {
         "id": "funeral",
-        "title": "Funeral Planning",
-        "description": "Your final act of care: a beautiful, stress-free path for those saying goodbye.",
+        "title": "Honoring Your Life",
+        "description": "These choices reflect who you are and how you want to be remembered. Take your time with each one—this is your final gift to the people who love you.",
         "icon": "🕊️",
         "role": "owner"
     }

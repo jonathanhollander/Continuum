@@ -54,7 +54,7 @@ const heirloomMapper = (item: any) => {
     };
 };
 
-export const heirloomSync = registerSync<Heirloom>('heirlooms', 'heirlooms', heirloomMapper);
+export const heirloomSync = registerSync<Heirloom>('heirlooms', 'heirlooms', heirloomMapper).setAffirmationContext('heirlooms');
 
 // Check migration after sync init (next tick or immediately if synchronous load)
 if (typeof window !== 'undefined') {

@@ -13,6 +13,10 @@ class User(SQLModel, table=True):
     public_key: Optional[str] = Field(default=None)  # WebAuthn Public Key (optional)
     sign_count: int = Field(default=0)
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    # User role for context-aware messaging (owner, executor, family_member)
+    user_role: Optional[str] = Field(default="owner")  # owner | executor | family_member
+    # Optional: User's emotional context (healthy, terminal, grieving)
+    emotional_context: Optional[str] = Field(default=None)  # healthy | terminal | grieving
 
 class Estate(SQLModel, table=True):
     __tablename__ = "estates"
@@ -81,6 +85,16 @@ def migrate_db():
             if "hashed_password" not in user_columns:
                 logger.info("Migrating: Adding hashed_password to users table")
                 session.execute(text("ALTER TABLE users ADD COLUMN hashed_password TEXT"))
+                session.commit()
+            # Add user_role for context-aware messaging
+            if "user_role" not in user_columns:
+                logger.info("Migrating: Adding user_role to users table")
+                session.execute(text("ALTER TABLE users ADD COLUMN user_role TEXT DEFAULT 'owner'"))
+                session.commit()
+            # Add emotional_context for grief-aware features
+            if "emotional_context" not in user_columns:
+                logger.info("Migrating: Adding emotional_context to users table")
+                session.execute(text("ALTER TABLE users ADD COLUMN emotional_context TEXT"))
                 session.commit()
             # Make public_key nullable
             if "public_key" in user_columns:

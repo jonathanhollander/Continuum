@@ -74,9 +74,9 @@ const familyMapper = (local: any): FamilyMemory => ({
 
 // --- Sync Managers ---
 
-const visualManager = registerSync<VisualMemory>('visual_memories', 'memories/visual', visualMapper, '/api');
-const archiveManager = registerSync<ExternalArchive>('external_archives', 'memories/archives', archiveMapper, '/api');
-const familyManager = registerSync<FamilyMemory>('family_memories', 'memories/family', familyMapper, '/api');
+const visualManager = registerSync<VisualMemory>('visual_memories', 'memories/visual', visualMapper, '/api').setAffirmationContext('heirlooms');
+const archiveManager = registerSync<ExternalArchive>('external_archives', 'memories/archives', archiveMapper, '/api').setAffirmationContext('heirlooms');
+const familyManager = registerSync<FamilyMemory>('family_memories', 'memories/family', familyMapper, '/api').setAffirmationContext('heirlooms');
 
 // --- Stores & Actions ---
 

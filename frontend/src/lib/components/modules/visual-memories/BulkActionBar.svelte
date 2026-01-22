@@ -73,7 +73,7 @@
                 on:click={() => dispatch("delete")}
             >
                 <Trash2 size={16} />
-                <span>Delete</span>
+                <span>Remove</span>
             </button>
         </div>
 

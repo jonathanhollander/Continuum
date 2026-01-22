@@ -18,7 +18,9 @@
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
+    import EmptyState from "$lib/components/EmptyState.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
+    import GriefSupportBanner from "$lib/components/GriefSupportBanner.svelte";
     import { onMount } from "svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { activityLog } from "$lib/stores/activityLog";
@@ -146,7 +148,7 @@
     }
 
     function removeExpense(id: string) {
-        if (!confirm("Are you sure you'd like to remove this expense?")) return;
+        if (!confirm("Remove this expense? You can add it back later.")) return;
         funeralStore.update((data) => ({
             ...data,
             budget: data.budget.filter((i) => i.id !== id),
@@ -229,6 +231,10 @@
                 title="Important Note"
                 message="Funeral laws and requirements vary significantly by state and country. While these wishes guide your family, some jurisdictions require specific legal forms for binding disposition instructions."
             />
+        </div>
+
+        <div class="max-w-3xl mx-auto mt-8 text-left">
+            <GriefSupportBanner compact={true} />
         </div>
     </div>
 
@@ -322,47 +328,16 @@
             <!-- BUDGET TAB -->
             <div in:fade={{ duration: 300 }}>
                 {#if budgetItems.length === 0}
-                    <!-- GHOST ROWS -->
-                    <div class="grid gap-4">
-                        <GhostRow
-                            type="Budget Item"
-                            onClick={prefillEstimates}
-                        />
-                        <GhostRow
-                            type="Budget Item"
-                            onClick={prefillEstimates}
-                        />
-                        <GhostRow
-                            type="Budget Item"
-                            onClick={prefillEstimates}
-                        />
-                    </div>
-                    <!-- <EmptyStateGuide type="funeral" onAdd={prefillEstimates} /> -->
-                    <div class="text-center mt-6">
-                        <p class="text-stone-500 text-sm mb-4">
-                            Start with industry estimates or build your own.
-                        </p>
-                        <div class="flex justify-center gap-4">
-                            <button
-                                onclick={prefillEstimates}
-                                class="text-[#4A7C74] font-bold text-sm bg-[#4A7C74]/10 px-4 py-2 rounded-lg hover:bg-[#4A7C74]/20 transition-colors"
-                            >
-                                Auto-Fill Common Costs
-                            </button>
-                            <button
-                                onclick={() => {
-                                    newExpense = {
-                                        name: "New Expense",
-                                        cost: 0,
-                                    };
-                                    showAddExpense = true;
-                                }}
-                                class="text-stone-500 font-bold text-sm hover:text-stone-700 hover:underline px-4 py-2"
-                            >
-                                Manually Add Item
-                            </button>
-                        </div>
-                    </div>
+                    <EmptyState
+                        title="How you'd like to be remembered"
+                        whyMatters="<strong>Without these instructions, your family will make these deeply personal choices while grieving—and wonder forever if they got it right.</strong> The music at your service, the flowers, the tone, the dress code—these details shape how people remember you.<br/><br/>Documenting your wishes isn't morbid. It's a gift. It lets your family focus on honoring you instead of guessing what you would have wanted."
+                        encouragement="You don't have to decide everything now. Start with just one thing—maybe your favorite song or flower."
+                        icon={Music}
+                        iconClass="text-purple-500"
+                        ctaLabel="Share your wishes"
+                        onAction={prefillEstimates}
+                        skipMessage="Come back to this when you're ready. There's no rush."
+                    />
                 {:else}
                     <!-- Total Cost / Comparison -->
                     <div

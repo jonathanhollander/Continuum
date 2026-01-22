@@ -34,7 +34,7 @@ const calendarMapper = (item: any) => {
     }
 };
 
-export const calendarSync = registerSync<AnniversaryEvent>('calendar_events', 'calendar_events', calendarMapper);
+export const calendarSync = registerSync<AnniversaryEvent>('calendar_events', 'calendar_events', calendarMapper).setAffirmationContext('general');
 
 export const calendarStore = {
     get items() { return calendarSync.items; },

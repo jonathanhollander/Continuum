@@ -56,7 +56,7 @@ const timeCapsuleMapper = (item: any) => {
     };
 };
 
-export const timeCapsuleSync = registerSync<TimeCapsuleMessage>('time_capsule', 'time_capsule', timeCapsuleMapper);
+export const timeCapsuleSync = registerSync<TimeCapsuleMessage>('time_capsule', 'time_capsule', timeCapsuleMapper).setAffirmationContext('timeCapsule');
 
 export const timeCapsuleStore = {
     get items() { return timeCapsuleSync.items; },

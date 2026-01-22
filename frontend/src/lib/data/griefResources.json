@@ -1,0 +1,49 @@
+[
+    {
+        "id": "exec-1",
+        "title": "The Executor's Practical Guide to Grief",
+        "description": "How to manage administrative duties while honoring your emotional journey.",
+        "type": "article",
+        "category": "Executors",
+        "iconName": "LucideShieldAlert",
+        "color": "amber"
+    },
+    {
+        "id": "term-1",
+        "title": "Legacy Conversations",
+        "description": "Gentle ways to talk about the things that matter most with your family.",
+        "type": "video",
+        "duration": "12:40",
+        "category": "Terminal Care",
+        "iconName": "LucideHeart",
+        "color": "rose"
+    },
+    {
+        "id": "fam-1",
+        "title": "Supporting Children Through Loss",
+        "description": "Age-appropriate language and activities for grieving families.",
+        "type": "article",
+        "category": "Family Support",
+        "iconName": "LucideBookOpen",
+        "color": "indigo"
+    },
+    {
+        "id": "exec-2",
+        "title": "Death Bureaucracy: A Map",
+        "description": "A step-by-step guide to the papers and permissions required after a death.",
+        "type": "article",
+        "category": "Executors",
+        "iconName": "LucideShieldAlert",
+        "color": "amber"
+    },
+    {
+        "id": "term-2",
+        "title": "The Art of the Legacy Letter",
+        "description": "Writing down your heart for those you leave behind.",
+        "type": "video",
+        "duration": "08:15",
+        "category": "Terminal Care",
+        "iconName": "LucideHeart",
+        "color": "rose"
+    }
+]

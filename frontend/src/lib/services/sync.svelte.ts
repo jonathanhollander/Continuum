@@ -2,6 +2,7 @@ import { getStored, setStored } from "$lib/stores/persistence";
 
 import { auth } from "../stores/auth";
 import { get } from "svelte/store";
+import { notifications } from "$lib/stores/notificationStore";
 
 const BASE_URL = import.meta.env.VITE_API_URL || "";
 
@@ -18,6 +19,7 @@ export class SyncManager<T extends { id: number | string }> {
     private mapper?: (local: any) => T;
     private apiBase: string;
     private subscriptions = new Set<(value: T[]) => void>();
+    private affirmationContext?: 'general' | 'documents' | 'wishes' | 'contacts' | 'medical' | 'pets' | 'insurance' | 'funeral' | 'subscriptions' | 'heirlooms' | 'timeline' | 'letters' | 'timeCapsule' | 'pulse';
 
     constructor(key: string, endpoint: string, mapper?: (local: any) => T, apiBase: string = "/api/data") {
         this.key = key;
@@ -27,6 +29,15 @@ export class SyncManager<T extends { id: number | string }> {
 
         // 1. Instant Load
         this.items = getStored<T[]>(key, []);
+    }
+
+    /**
+     * Set the affirmation context for this sync manager.
+     * When set, successful create/update operations will show affirmations.
+     */
+    setAffirmationContext(context: 'general' | 'documents' | 'wishes' | 'contacts' | 'medical' | 'pets' | 'insurance' | 'funeral' | 'subscriptions' | 'heirlooms' | 'timeline' | 'letters' | 'timeCapsule' | 'pulse') {
+        this.affirmationContext = context;
+        return this;
     }
 
     subscribe(run: (value: T[]) => void) {
@@ -136,6 +147,11 @@ export class SyncManager<T extends { id: number | string }> {
                 this.items = [...this.items, newItem];
                 setStored(this.key, this.items);
                 this.notify();
+
+                // Show affirmation if context is set
+                if (this.affirmationContext) {
+                    notifications.showAffirmation(this.affirmationContext);
+                }
             }
             return newItem;
         } catch (e) {
@@ -189,6 +205,12 @@ export class SyncManager<T extends { id: number | string }> {
             this.items[index] = remoteItem;
             this.items = [...this.items];
             setStored(this.key, this.items);
+
+            // Show affirmation if context is set
+            if (this.affirmationContext) {
+                notifications.showAffirmation(this.affirmationContext);
+            }
+
             return remoteItem;
         } catch (e) {
             console.error("Update failed, rolling back", e);
@@ -261,6 +283,7 @@ export class SingletonSyncManager<T extends object> {
     lastSync = $state<Date | null>(null);
     error = $state<string | null>(null);
     private subscriptions = new Set<(value: T | null) => void>();
+    private affirmationContext?: 'general' | 'documents' | 'wishes' | 'contacts' | 'medical' | 'pets' | 'insurance' | 'funeral' | 'subscriptions' | 'heirlooms' | 'timeline' | 'letters' | 'timeCapsule' | 'pulse';
 
     private key: string;
     private endpoint: string;
@@ -276,6 +299,15 @@ export class SingletonSyncManager<T extends object> {
         // Load Initial & Map legacy local data if needed
         const raw = getStored<T>(key, {} as T);
         this.data = mapper ? mapper(raw) : raw;
+    }
+
+    /**
+     * Set the affirmation context for this sync manager.
+     * When set, successful update operations will show affirmations.
+     */
+    setAffirmationContext(context: 'general' | 'documents' | 'wishes' | 'contacts' | 'medical' | 'pets' | 'insurance' | 'funeral' | 'subscriptions' | 'heirlooms' | 'timeline' | 'letters' | 'timeCapsule' | 'pulse') {
+        this.affirmationContext = context;
+        return this;
     }
 
     async sync() {
@@ -337,6 +369,12 @@ export class SingletonSyncManager<T extends object> {
             const saved = this.mapper ? this.mapper(raw) : raw;
 
             this.updateLocal(saved);
+
+            // Show affirmation if context is set
+            if (this.affirmationContext) {
+                notifications.showAffirmation(this.affirmationContext);
+            }
+
             return saved;
         } catch (e) {
             console.error(`[Sync:${this.key}] Update failed, rolling back`, e);

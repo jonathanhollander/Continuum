@@ -70,7 +70,7 @@ With all my love,
     const willSync = registerSync<EthicalWillData>(
         "ethical_will",
         "ethical_will",
-    );
+    ).setAffirmationContext('wishes');
 
     // Derived State
     let willData = $derived(willSync.items.find((i) => i.id === "main"));

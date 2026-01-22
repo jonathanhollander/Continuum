@@ -27,7 +27,7 @@ export interface PropertyItem {
 }
 
 // Initialize Sync Manager
-export const propertySync = registerSync<PropertyItem>('properties', 'properties');
+export const propertySync = registerSync<PropertyItem>('properties', 'properties').setAffirmationContext('general');
 
 // Helper to calculate total valuation
 function getTotalValuation() {

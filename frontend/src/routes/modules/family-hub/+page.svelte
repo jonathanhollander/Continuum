@@ -178,7 +178,7 @@
     }
 
     function deleteMemory(id: number) {
-        if (!confirm("Are you sure you'd like to remove this memory?")) return;
+        if (!confirm("Remove this memory? It will be preserved in your activity log.")) return;
         removeFamilyMemory(id);
     }
 

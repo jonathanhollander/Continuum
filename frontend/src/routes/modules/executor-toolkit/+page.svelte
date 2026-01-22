@@ -12,6 +12,7 @@
         TriangleAlert,
         Leaf,
     } from "lucide-svelte";
+    import GriefSupportBanner from "$lib/components/GriefSupportBanner.svelte";
     import ExecutorTaskDetail from "$lib/components/executor/ExecutorTaskDetail.svelte";
     import { executorTasks } from "$lib/data/executorTasks";
     import { currentScenario } from "$lib/stores/scenario";
@@ -101,6 +102,10 @@
                 </div>
             </div>
         {/if}
+
+        <div class="mt-8 text-left">
+            <GriefSupportBanner compact={true} />
+        </div>
     </div>
 
     <!-- Navigation Tabs (Only show if no task selected) -->

@@ -81,6 +81,9 @@
 	import { navGroups } from "$lib/config/navigation";
 	import { compassStore } from "$lib/stores/compassStore";
 	import NotificationContainer from "$lib/components/NotificationContainer.svelte";
+	import RoleSwitcher from "$lib/components/RoleSwitcher.svelte";
+	import { contextStore } from "$lib/stores/contextStore.svelte";
+	import TakeBreakButton from "$lib/components/TakeBreakButton.svelte";
 
 	let { children } = $props();
 
@@ -99,11 +102,21 @@
 
 	// Sync Compass Content to Architect
 	// When route changes, compassStore updates. We use that for The Architect's data.
+	let previousPath = $state<string>('');
 	$effect(() => {
 		if ($page.url.pathname) {
 			compassStore.updateContext($page.url.pathname);
-			overwhelmDetector.recordNavigation();
+			overwhelmDetector.recordNavigation($page.url.pathname);
 			logger.debug("Navigation tracked", { path: $page.url.pathname });
+
+			// Detect back button navigation
+			if (previousPath && $page.url.pathname !== previousPath) {
+				// Simple heuristic: if we're going to a "simpler" path, it might be back navigation
+				if ($page.url.pathname.split('/').length < previousPath.split('/').length) {
+					overwhelmDetector.recordBackButton();
+				}
+			}
+			previousPath = $page.url.pathname;
 		}
 	});
 
@@ -149,6 +162,9 @@
 		// Initialize auth store (load token from localStorage, fetch user)
 		auth.init();
 
+		// Initialize context-aware messaging from user profile
+		contextStore.refresh();
+
 		// Run audit on load
 		estateAudit.runAudit();
 
@@ -172,10 +188,33 @@
 			}
 		};
 
+		// Handle overwhelm detection events
+		const handleSimplifyView = () => {
+			logger.info("Simplified view requested by user");
+			// TODO: Implement simplified view mode
+			// For now, just show a notification
+			import('$lib/stores/notificationStore').then(({ notifications }) => {
+				notifications.showInfo(
+					"We've simplified the view to show only essential information. You can always expand sections as needed.",
+					"Simplified view activated"
+				);
+			});
+		};
+
+		const handleRequestHelp = () => {
+			logger.info("Help requested from overwhelm detection");
+			// Open AI Concierge
+			conciergeEngine.open();
+		};
+
 		window.addEventListener("keydown", handleGlobalKeydown);
+		window.addEventListener("continuum:simplify-view", handleSimplifyView);
+		window.addEventListener("continuum:request-help", handleRequestHelp);
 
 		return () => {
 			window.removeEventListener("keydown", handleGlobalKeydown);
+			window.removeEventListener("continuum:simplify-view", handleSimplifyView);
+			window.removeEventListener("continuum:request-help", handleRequestHelp);
 		};
 	});
 
@@ -354,23 +393,11 @@
 
 						<!-- Header Actions -->
 						<div class="flex items-center gap-6">
-							<!-- Role Switcher -->
-							<div
-								class="hidden md:flex items-center bg-gray-100 rounded-lg p-1"
-							>
-								{#each ["Owner", "Executor", "Family"] as role}
-									<button
-										onclick={() =>
-											userRole.set(role as UserRole)}
-										class="px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all
-                                    {$userRole === role
-											? 'bg-slate-900 text-white shadow-sm'
-											: 'text-slate-400 hover:text-slate-600'}"
-									>
-										{$t["role" + role] || role}
-									</button>
-								{/each}
-							</div>
+							<!-- Take a Break Button -->
+							<TakeBreakButton variant="icon-only" />
+
+							<!-- Context-Aware Role Switcher -->
+							<RoleSwitcher />
 
 							<!-- Language Selector (Top Menu) -->
 							<div

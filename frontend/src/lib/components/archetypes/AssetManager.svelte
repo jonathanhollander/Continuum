@@ -41,7 +41,7 @@
         module.id === "assets-main"
             ? "financial_assets"
             : `assets_${module.id}`;
-    const assetSync = registerSync<Asset>(syncKey, syncKey);
+    const assetSync = registerSync<Asset>(syncKey, syncKey).setAffirmationContext('general');
 
     type AssetType =
         | "Property"
@@ -215,7 +215,7 @@
     }
 
     function removeAsset(id: string) {
-        if (!confirm("Are you sure you want to delete this asset?")) return;
+        if (!confirm("Remove this asset? You can add it back later if needed.")) return;
         const asset = assets.find((a) => a.id === id);
 
         // SyncManager delete

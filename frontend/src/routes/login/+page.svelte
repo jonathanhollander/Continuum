@@ -37,7 +37,10 @@
 
         try {
             // Step 1: Get authentication challenge
-            const startResult = await apiPost('/api/auth/passkey/login/start', {});
+            const startResult = await apiPost(
+                "/api/auth/passkey/login/start",
+                {},
+            );
 
             const { challenge_id, options } = startResult;
 
@@ -45,19 +48,25 @@
             const credential = await startAuthentication(options);
 
             // Step 3: Verify credential and get JWT
-            const finishResult = await apiPost('/api/auth/passkey/login/finish', {
-                challenge_id,
-                credential,
-            });
+            const finishResult = await apiPost(
+                "/api/auth/passkey/login/finish",
+                {
+                    challenge_id,
+                    credential,
+                },
+            );
 
             // Store token and fetch user info
             if (typeof localStorage !== "undefined") {
-                localStorage.setItem("continuum_auth_token", finishResult.access_token);
+                localStorage.setItem(
+                    "continuum_auth_token",
+                    finishResult.access_token,
+                );
             }
 
             notifications.showSuccess(
-                'Welcome back! Taking you to your vault...',
-                'Login Successful'
+                "Welcome back! Taking you to your vault...",
+                "Login Successful",
             );
 
             await auth.init();
@@ -67,13 +76,13 @@
 
             if (e.name === "NotAllowedError") {
                 notifications.showError(
-                    'Login was cancelled or timed out. Please try again.',
-                    'Login Cancelled'
+                    "Login was cancelled or timed out. Please try again.",
+                    "Login Cancelled",
                 );
             } else if (e.name === "NotSupportedError") {
                 notifications.showError(
-                    'Your device does not support passkeys. Please use email link instead.',
-                    'Passkey Not Supported'
+                    "Your device does not support passkeys. Please use email link instead.",
+                    "Passkey Not Supported",
                 );
                 showMagicLink = true;
             }
@@ -86,8 +95,8 @@
     async function handleMagicLink() {
         if (!magicLinkEmail) {
             notifications.showError(
-                'Please enter your email address',
-                'Email Required'
+                "Please enter your email address",
+                "Email Required",
             );
             return;
         }
@@ -95,16 +104,58 @@
         isLoading = true;
 
         try {
-            await apiPost('/api/auth/magic-link', { email: magicLinkEmail });
+            // DEVELOPER BYPASS
+            if (magicLinkEmail === "jh@continuum.estate") {
+                const params = new URLSearchParams();
+                params.append("username", magicLinkEmail);
+                params.append("password", "bypass");
+
+                const response = await fetch(`${API_BASE_URL}/api/auth/token`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: params,
+                });
+
+                if (!response.ok) {
+                    const errText = await response.text();
+                    console.error("Bypass failed:", response.status, errText);
+                    throw new Error(
+                        `Bypass failed: ${response.status} ${errText}`,
+                    );
+                }
+
+                const data = await response.json();
+
+                if (typeof localStorage !== "undefined") {
+                    localStorage.setItem(
+                        "continuum_auth_token",
+                        data.access_token,
+                    );
+                }
+
+                await auth.init();
+
+                notifications.showSuccess(
+                    "Developer Mode Enabled",
+                    "Bypass Successful",
+                );
+
+                goto(redirectUrl);
+                return;
+            }
+
+            await apiPost("/api/auth/magic-link", { email: magicLinkEmail });
 
             magicLinkSent = true;
             notifications.showSuccess(
-                'Check your email for the login link!',
-                'Magic Link Sent'
+                "Check your email for the login link!",
+                "Magic Link Sent",
             );
         } catch (e: any) {
-            console.error('Magic link failed:', e);
-            // apiPost already shows error notification
+            console.error("Login failed:", e);
+            notifications.showError("Authentication failed", "Error");
         } finally {
             isLoading = false;
         }

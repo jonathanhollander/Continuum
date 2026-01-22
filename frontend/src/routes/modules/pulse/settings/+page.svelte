@@ -192,7 +192,7 @@
     }
 
     async function deleteContact(contactId: number) {
-        if (!confirm("Are you sure you'd like to remove this contact from your Pulse network?")) return;
+        if (!confirm("Remove this contact from your Pulse network? You can add them back later.")) return;
         try {
             await apiDelete(`/api/pulse/contacts/${contactId}`);
             contacts = contacts.filter((c) => c.id !== contactId);

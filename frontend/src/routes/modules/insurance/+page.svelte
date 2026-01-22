@@ -34,6 +34,7 @@
         Sparkles,
     } from "lucide-svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
+    import EmptyState from "$lib/components/EmptyState.svelte";
 
     // Concierge Imports
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
@@ -243,7 +244,7 @@
     }
 
     function deletePolicy(id: string | number, name: string) {
-        if (confirm(`Are you sure you want to remove the policy "${name}"?`)) {
+        if (confirm(`Remove the policy "${name}"? You can add it back later if needed.`)) {
             insuranceStore.deletePolicy(id);
 
             activityLog.logEvent({
@@ -679,52 +680,18 @@
                 </div>
             </div>
         {:else}
-            <!-- GHOST ROW IMPLEMENTATION -->
+            <!-- Empty State for Insurance -->
             {#if filteredPolicies.length === 0 && searchQuery === ""}
-                <div class="col-span-full space-y-4">
-                    <div
-                        class="border border-amber-200 bg-amber-50/50 rounded-xl p-4 mb-4 flex items-center gap-3 text-amber-800"
-                    >
-                        <Sparkles size={20} />
-                        <p class="text-sm font-medium">
-                            Concierge Mode: Showing examples based on your
-                            region.
-                        </p>
-                    </div>
-
-                    {#each getSmartSamples($language).insurance || [] as sample}
-                        <GhostRow
-                            name={sample.policyName}
-                            subtitle={`${sample.insurer} • ${sample.insuranceType}`}
-                            value={sample.premiumAmount}
-                            type="Policy"
-                            onclick={() => {
-                                newPolicy = {
-                                    ...newPolicy,
-                                    policyName: sample.policyName,
-                                    insuranceType: sample.insuranceType as any,
-                                    insurer: sample.insurer,
-                                    premiumAmount: sample.premiumAmount,
-                                    policyDocuments: "",
-                                };
-                                showAddModal = true;
-                            }}
-                        >
-                            {#snippet icon()}
-                                <Shield size={20} class="text-slate-400" />
-                            {/snippet}
-                        </GhostRow>
-                    {/each}
-
-                    <div class="flex justify-center mt-6">
-                        <button
-                            onclick={() => (showAddModal = true)}
-                            class="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg shadow-indigo-600/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
-                        >
-                            <Plus size={18} />
-                            Start Protecting Your Family
-                        </button>
-                    </div>
+                <div class="col-span-full">
+                    <EmptyState
+                        title="Protect your family's financial future"
+                        whyMatters="<strong>Life insurance ensures your family has financial security when you're no longer here to provide it.</strong> Without documentation, they may never find these benefits—policies sit unclaimed, beneficiaries go unpaid, and the protection you worked for goes to waste.<br/><br/>Cataloging your policies here means your family will know exactly what coverage exists, who to contact, and how to file claims. It turns a confusing maze of paperwork into a clear roadmap during their darkest time."
+                        encouragement="Start with just your life insurance. Add health, auto, and home policies as you have time."
+                        icon={Shield}
+                        iconClass="text-indigo-500"
+                        ctaLabel="Document first policy"
+                        onAction={() => (showAddModal = true)}
+                    />
                 </div>
             {/if}
         {/each}

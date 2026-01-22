@@ -7,6 +7,7 @@
     import RefreshControl from "$lib/components/ui/RefreshControl.svelte"; // NEW IMPORT
     import { REFLECTION_POOLS } from "$lib/data/reflectionPools"; // NEW IMPORT
     import { onMount } from "svelte";
+    import { notifications } from "$lib/stores/notificationStore";
 
     let activeTab = "reflections"; // 'reflections' | 'will' | 'lessons'
 
@@ -25,7 +26,7 @@
 
     function saveReflection() {
         setStored(REFLECTION_KEY, reflectionText);
-        alert("Reflection saved.");
+        notifications.showAffirmation('general');
     }
 
     // Dynamic Prompt Logic

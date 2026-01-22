@@ -44,8 +44,8 @@ const directiveMapper = (item: any) => {
     };
 };
 
-export const profileSync = registerSingletonSync<MedicalProfile>('medical_profile', 'profile', profileMapper, '/api/medical');
-export const directiveSync = registerSync<MedicalDirective>('medical_directives', 'directives', directiveMapper, '/api/medical');
+export const profileSync = registerSingletonSync<MedicalProfile>('medical_profile', 'profile', profileMapper, '/api/medical').setAffirmationContext('medical');
+export const directiveSync = registerSync<MedicalDirective>('medical_directives', 'directives', directiveMapper, '/api/medical').setAffirmationContext('medical');
 
 export const medicalStore = {
     get profile() {

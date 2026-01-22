@@ -1,4 +1,19 @@
 from backend.utils.logger import get_logger
+from backend.config import settings
+import base64
+from webauthn import (
+    generate_registration_options,
+    verify_registration_response,
+    generate_authentication_options,
+    verify_authentication_response,
+)
+from webauthn.helpers.structs import (
+    AttestationConveyancePreference,
+    AuthenticatorSelectionCriteria,
+    AuthenticatorAttachment,
+    UserVerificationRequirement,
+    ResidentKeyRequirement,
+)
 
 logger = get_logger(__name__)
 

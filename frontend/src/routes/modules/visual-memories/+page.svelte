@@ -101,7 +101,7 @@
     }
 
     function handleDeleteArchive(id: number) {
-        if (confirm("Are you sure you'd like to remove this archive location?")) {
+        if (confirm("Remove this archive location? You can add it back anytime.")) {
             removeArchive(id);
         }
     }
@@ -149,7 +149,7 @@
     }
 
     function handleBulkDeleteSubmit() {
-        if (confirm(`Permanently delete ${selectedCount} memories?`)) {
+        if (confirm(`Remove ${selectedCount} memories? This action cannot be undone.`)) {
             // Bulk delete not explicitly implemented in SyncManager but we can map
             selectedIds.forEach((id) => removeVisualMemory(Number(id)));
             selectedIds = [];

@@ -38,6 +38,7 @@ export type NavItem = {
     href: string;
     icon: any;
     allowedRoles: UserRole[];
+    isExecutorEssential?: boolean; // Highlighted for executor mode
 };
 
 export type NavGroup = {
@@ -88,6 +89,7 @@ export const navGroups: NavGroup[] = [
                 href: "/modules/financial-accounts",
                 icon: Wallet,
                 allowedRoles: ["Owner", "Executor"],
+                isExecutorEssential: true,
             },
             {
                 label: "Real Estate",
@@ -95,6 +97,7 @@ export const navGroups: NavGroup[] = [
                 href: "/modules/property",
                 icon: Home,
                 allowedRoles: ["Owner", "Executor"],
+                isExecutorEssential: true,
             },
             {
                 label: "Insurance Portfolio",
@@ -165,6 +168,7 @@ export const navGroups: NavGroup[] = [
                 href: "/modules/contacts",
                 icon: Users,
                 allowedRoles: ["Owner", "Executor", "Family"],
+                isExecutorEssential: true,
             },
             {
                 label: "Funeral Planner",
@@ -193,6 +197,7 @@ export const navGroups: NavGroup[] = [
                 href: "/modules/legal-documents",
                 icon: Files,
                 allowedRoles: ["Owner", "Executor"],
+                isExecutorEssential: true,
             },
             {
                 label: "Home Manual",

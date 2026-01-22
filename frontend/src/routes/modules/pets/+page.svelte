@@ -15,6 +15,7 @@
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import Affirmation from "$lib/components/Affirmation.svelte";
+    import EmptyState from "$lib/components/EmptyState.svelte";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import { petStore, type PetEntry } from "$lib/stores/petStore.svelte";
@@ -90,7 +91,7 @@
     }
 
     function removePet(id: number) {
-        if (!confirm("Are you sure you'd like to remove this pet from your records?")) return;
+        if (!confirm("Remove this pet? You can add them back anytime if needed.")) return;
         petStore.removePet(id);
     }
 </script>
@@ -105,11 +106,10 @@
                 <Dog size={32} />
             </div>
             <h1 class="font-serif font-bold text-4xl text-[#304743] mb-2">
-                Pet Care Plan
+                Care for Your Companions
             </h1>
-            <p class="text-lg text-muted-foreground">
-                Because they are family too. Ensure they are loved and cared
-                for, no matter what.
+            <p class="text-lg text-muted-foreground leading-relaxed max-w-2xl">
+                Your pets depend on you completely. This plan ensures they'll be loved and cared for by someone you trust, no matter what happens. It's one of the kindest things you can do for them—and for the person who steps in to help.
             </p>
         </div>
         <button
@@ -244,34 +244,18 @@
             </div>
         {/each}
 
-        <!-- Empty State / Add Placeholder -->
+        <!-- Empty State -->
         {#if petStore.items.length === 0}
-            <div class="col-span-full space-y-4">
-                {#each getSmartSamples($language).pets || [] as sample}
-                    <GhostRow
-                        name={sample.name}
-                        subtitle={`${sample.breed} • ${sample.guardian}`}
-                        type="Pet"
-                        onClick={() => {
-                            newPet = {
-                                ...newPet,
-                                name: sample.name,
-                                breed: sample.breed,
-                                type: sample.type as "dog" | "cat" | "other",
-                                guardian: sample.guardian,
-                            };
-                            showAddForm = true;
-                        }}
-                    >
-                        <svelte:fragment slot="icon">
-                            {#if sample.type === "cat"}
-                                <Cat size={20} class="text-slate-400" />
-                            {:else}
-                                <Dog size={20} class="text-slate-400" />
-                            {/if}
-                        </svelte:fragment>
-                    </GhostRow>
-                {/each}
+            <div class="col-span-full">
+                <EmptyState
+                    title="Your companions deserve a plan too"
+                    whyMatters="Your pets depend on you completely for their care, comfort, and survival. <strong>Without a documented plan, they could end up in a shelter</strong> or with someone who doesn't know their needs, fears, or routines. <br/><br/>Creating this plan ensures they'll be loved and cared for by someone you trust—someone who knows their favorite toy, their medical needs, and the way they like to be held. It's one of the most loving things you can do for them."
+                    encouragement="When you're ready, take a moment to think about who would give them the life they deserve."
+                    icon={Dog}
+                    iconClass="text-orange-500"
+                    ctaLabel="Protect your companion"
+                    onAction={() => (showAddForm = true)}
+                />
             </div>
         {/if}
     </div>

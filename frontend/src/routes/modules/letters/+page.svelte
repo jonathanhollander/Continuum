@@ -44,6 +44,7 @@
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
     import { REFLECTION_POOLS } from "$lib/data/reflectionPools";
     import RefreshControl from "$lib/components/ui/RefreshControl.svelte";
+    import { notifications } from "$lib/stores/notificationStore";
 
     type SavedLetter = {
         id: string;
@@ -56,13 +57,14 @@
         isLocked?: boolean;
     };
 
+    import GriefSupportBanner from "$lib/components/GriefSupportBanner.svelte";
     import { registerSync } from "$lib/services/sync.svelte";
 
     // Sync Manager for Letters
     const letterSync = registerSync<SavedLetter>(
         "saved_letters",
         "future_letters",
-    );
+    ).setAffirmationContext("letters");
     let savedLetters = $derived(letterSync.items);
 
     let searchQuery = $state("");
@@ -75,9 +77,11 @@
 
     async function saveToVault() {
         if (!generatedLetter) {
-            alert(
-                "Error: The letter content appears to be empty. Please go back and try again.",
-            );
+            notifications.showError({
+                message:
+                    "The letter content appears to be empty. Please go back and try again.",
+                code: "EMPTY_CONTENT",
+            });
             return;
         }
 
@@ -106,7 +110,7 @@
             userContext: $estateProfile.ownerName || "User",
         });
 
-        alert("Letter saved to your secure vault.");
+        // Affirmation is shown automatically by letterSync.create()
         mode = "menu";
         resetSelection();
     }
@@ -120,7 +124,12 @@
     }
 
     function deleteLetter(id: string, name: string) {
-        if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
+        if (
+            !confirm(
+                `Remove the letter to "${name}"? You can always create it again if needed.`,
+            )
+        )
+            return;
         letterSync.delete(id);
 
         activityLog.logEvent({
@@ -415,6 +424,10 @@
                 </div>
             </div>
         </header>
+
+        <div class="mb-12">
+            <GriefSupportBanner compact={true} />
+        </div>
 
         <!-- Essential Actions Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">

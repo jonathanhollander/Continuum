@@ -10,12 +10,14 @@
         Download,
         Users,
         LogOut,
+        Star,
     } from "lucide-svelte";
     import { createEventDispatcher } from "svelte";
     import { slide } from "svelte/transition";
     import logo from "$lib/assets/logo.png";
     import { logout } from "$lib/stores/keyringStore";
     import ProfileSwitcher from "$lib/components/ui/ProfileSwitcher.svelte";
+    import { contextStore } from "$lib/stores/contextStore.svelte";
 
     // Props
     interface Props {
@@ -161,12 +163,14 @@
                         transition:slide={{ duration: 300 }}
                     >
                         {#each group.items as item}
+                            {@const isEssential = contextStore.isExecutor && item.isExecutorEssential}
                             <a
                                 href={item.href}
                                 class="flex items-center gap-3 px-3 py-2 mx-1 rounded-xl transition-all duration-200 group relative overflow-hidden
                             {$page.url.pathname === item.href.split('#')[0]
                                     ? 'bg-white/20 text-white shadow-lg shadow-black/5 font-semibold'
-                                    : 'text-primary-foreground/80 hover:text-white hover:bg-white/10'}"
+                                    : 'text-primary-foreground/80 hover:text-white hover:bg-white/10'}
+                            {isEssential ? 'ring-1 ring-amber-400/30' : ''}"
                                 onclick={handleClose}
                             >
                                 {#if $page.url.pathname === item.href.split("#")[0]}
@@ -183,9 +187,12 @@
                                         ? 'text-white'
                                         : 'text-primary-foreground/50'}"
                                 />
-                                <span class="text-sm"
+                                <span class="text-sm flex-1"
                                     >{$t[item.key] || item.label}</span
                                 >
+                                {#if isEssential}
+                                    <Star size={12} class="text-amber-400/60" />
+                                {/if}
                             </a>
                         {/each}
                     </div>

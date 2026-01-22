@@ -3,6 +3,8 @@
     import ThePulse from "$lib/components/dashboard/ThePulse.svelte";
     import HolographicGrid from "$lib/components/dashboard/HolographicGrid.svelte";
     import FocusCard from "$lib/components/dashboard/FocusCard.svelte";
+    import ExecutorHub from "$lib/components/executor/ExecutorHub.svelte";
+    import ExecutorWelcome from "$lib/components/executor/ExecutorWelcome.svelte";
     import { estateAudit } from "$lib/stores/auditStore.svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { familyStore } from "$lib/stores/familyStore.svelte";
@@ -19,6 +21,11 @@
     } from "lucide-svelte";
     import { t } from "$lib/stores/localization";
     import { browser } from "$app/environment";
+    import { contextStore } from "$lib/stores/contextStore.svelte";
+    import { getGreeting, getProgressMessage } from "$lib/utils/contextualMessages";
+
+    // Executor mode welcome state
+    let showExecutorWelcome = $state(false);
 
     // "The Pulse" State
     let pulseStatus = $state<"secure" | "active" | "critical" | "standby">(
@@ -37,10 +44,10 @@
 
     // Greeting Typewriter
     let greeting = $state("");
-    // Reactive greeting target based on state
+    // Reactive greeting target based on state and user role
     let fullGreeting = $derived(
         estateAudit.totalScore > 0
-            ? $t("system.analyzing")
+            ? getGreeting()
             : $t("system.initializing"),
     );
 
@@ -67,6 +74,14 @@
 
         if (estateAudit.totalScore > 0) {
             pulseStatus = "active";
+        }
+
+        // Check if executor and first time
+        if (browser && contextStore.isExecutor) {
+            const hasSeenWelcome = localStorage.getItem('continuum_executor_welcome_seen');
+            if (!hasSeenWelcome) {
+                showExecutorWelcome = true;
+            }
         }
 
         // Simulate "System Boot"
@@ -134,9 +149,14 @@
 
             // If they skipped, the focus card should STILL point to initialization
             focusItem = {
-                title: "System Initialization Required",
-                description:
-                    "Your digital estate is currently unconfigured. The wizard will guide you through core setup in 30 seconds.",
+                title: contextStore.isExecutor || contextStore.isFamily
+                    ? "Estate Information Needed"
+                    : "System Initialization Required",
+                description: contextStore.isExecutor
+                    ? "The estate profile is currently empty. Begin gathering information when you're ready."
+                    : contextStore.isFamily
+                    ? "Estate information hasn't been added yet. Check back later or contact the executor."
+                    : "Your digital estate is currently unconfigured. The wizard will guide you through core setup in 30 seconds.",
                 link: "/start?force=true",
                 type: "critical",
             };
@@ -196,9 +216,16 @@
         } else {
             // All Good
             focusItem = {
-                title: "Legacy Secured",
-                description:
-                    "All core systems are nominal. Consider adding a personal touch to your timeline.",
+                title: contextStore.isExecutor
+                    ? "Estate Documentation Complete"
+                    : contextStore.isFamily
+                    ? "Information Available"
+                    : "Legacy Secured",
+                description: contextStore.isExecutor
+                    ? "The estate profile is comprehensive. All essential information has been documented."
+                    : contextStore.isFamily
+                    ? "Estate information is well-organized and accessible."
+                    : "All core systems are nominal. Consider adding a personal touch to your timeline.",
                 link: "/modules/letters",
                 type: "insight",
             };
@@ -210,23 +237,33 @@
 <div class="min-h-screen text-slate-200 font-sans selection:bg-indigo-500/30">
     <HolographicGrid />
 
+    <!-- Executor Welcome Modal -->
+    {#if showExecutorWelcome}
+        <ExecutorWelcome onComplete={() => showExecutorWelcome = false} />
+    {/if}
+
     <main
         class="relative container mx-auto px-6 py-12 flex flex-col lg:flex-row items-center justify-center min-h-[80vh] gap-12 lg:gap-24"
     >
-        <!-- Left: The Visual Core -->
-        <div class="flex-1 flex flex-col items-center relative">
-            <ThePulse status={pulseStatus} {score} />
+        {#if contextStore.isExecutor}
+            <!-- Executor Mode: Simplified Hub -->
+            <ExecutorHub />
+        {:else}
+            <!-- Standard Dashboard: The Pulse + Focus Card -->
+            <!-- Left: The Visual Core -->
+            <div class="flex-1 flex flex-col items-center relative">
+                <ThePulse status={pulseStatus} {score} />
 
-            <!-- System Status Text -->
-            <div
-                class="mt-8 font-mono text-sm text-indigo-300/60 uppercase tracking-[0.2em]"
-            >
-                {greeting}<span class="animate-pulse">_</span>
+                <!-- System Status Text -->
+                <div
+                    class="mt-8 font-mono text-sm text-indigo-300/60 uppercase tracking-[0.2em]"
+                >
+                    {greeting}<span class="animate-pulse">_</span>
+                </div>
             </div>
-        </div>
 
-        <!-- Right: The Singular Focus -->
-        {#if !loading && focusItem}
+            <!-- Right: The Singular Focus -->
+            {#if !loading && focusItem}
             <div
                 class="flex-1 w-full max-w-xl"
                 in:fly={{ x: 50, duration: 1000 }}
@@ -316,6 +353,7 @@
                     </div>
                 </div>
             </div>
+            {/if}
         {/if}
     </main>
 </div>

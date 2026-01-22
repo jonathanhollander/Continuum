@@ -65,7 +65,7 @@
     }
 
     function deleteAssetQR(id: string, name: string) {
-        if (!confirm(`Remove QR label for "${name}"?`)) return;
+        if (!confirm(`Remove the QR label for "${name}"? You can create a new one anytime.`)) return;
         qrStore.removeAssetQR(id);
 
         activityLog.logEvent({

@@ -241,7 +241,7 @@
     function deleteItem(id: string, name: string) {
         if (
             confirm(
-                `Are you sure you want to remove "${name}" from your property list?`,
+                `Remove "${name}" from your property list? You can add it back anytime.`,
             )
         ) {
             propertyStore.deleteItem(id);
@@ -335,13 +335,10 @@
                 <h1
                     class="text-4xl font-extrabold text-slate-900 tracking-tight mb-2"
                 >
-                    Property <span class="text-blue-600 font-light italic"
-                        >&</span
-                    > Assets
+                    Your Home, Your Legacy
                 </h1>
                 <p class="text-slate-500 max-w-2xl text-lg leading-relaxed">
-                    Account for physical holdings, from real estate and vehicles
-                    to valuable personal collections.
+                    These are the physical things you've built, bought, and cared for—your home, your vehicles, the possessions that matter. Documenting them now means your family won't have to search for deeds, titles, or proof of ownership during an already difficult time.
                 </p>
             </div>
         </div>

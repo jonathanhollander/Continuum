@@ -4,9 +4,12 @@
 import { writable } from 'svelte/store';
 import type { ErrorNotification } from '$lib/services/errorHandler';
 import { createErrorNotification, type ErrorDetails } from '$lib/services/errorHandler';
+import { getRandomAffirmation, type Affirmation } from '$lib/data/affirmations';
 
 export interface Notification extends ErrorNotification {
 	type: 'error' | 'success' | 'info';
+	/** Optional secondary message for affirmations */
+	secondaryMessage?: string;
 }
 
 function createNotificationStore() {
@@ -54,6 +57,35 @@ function createNotificationStore() {
 			setTimeout(() => {
 				this.dismiss(notification.id);
 			}, 5000);
+
+			return notification.id;
+		},
+
+		/**
+		 * Show an affirmation-based success notification.
+		 * Uses the affirmations library for meaningful, context-aware messages.
+		 */
+		showAffirmation(
+			module: 'general' | 'documents' | 'wishes' | 'contacts' | 'medical' | 'pets' | 'insurance' | 'funeral' | 'subscriptions' | 'heirlooms' | 'timeline' | 'letters' | 'timeCapsule' | 'pulse' = 'general'
+		) {
+			const affirmation = getRandomAffirmation(module);
+
+			const notification: Notification = {
+				id: `affirmation-${Date.now()}-${Math.random()}`,
+				title: affirmation.primary,
+				message: affirmation.secondary,
+				secondaryMessage: affirmation.secondary,
+				type: 'success',
+				canRetry: false,
+				timestamp: new Date()
+			};
+
+			update((notifications) => [...notifications, notification]);
+
+			// Auto-dismiss after 7 seconds (longer for affirmations to be read)
+			setTimeout(() => {
+				this.dismiss(notification.id);
+			}, 7000);
 
 			return notification.id;
 		},

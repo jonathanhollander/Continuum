@@ -10,6 +10,7 @@
     } from "lucide-svelte";
     import SubscriptionRow from "$lib/components/modules/subscriptions/SubscriptionRow.svelte";
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
+    import EmptyState from "$lib/components/EmptyState.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import { onMount, tick } from "svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
@@ -37,7 +38,7 @@
     const subscriptionSync = registerSync<Subscription>(
         "subscriptions",
         "subscriptions",
-    );
+    ).setAffirmationContext('subscriptions');
     let subscriptions = $derived(subscriptionSync.items);
 
     // Migration Logic (One-time check)
@@ -184,7 +185,7 @@
     }
 
     function removeSubscription(id: string) {
-        if (!confirm("Are you sure you'd like to remove this subscription from your records?")) return;
+        if (!confirm("Remove this subscription? You can add it back anytime.")) return;
         const sub = subscriptions.find((s) => s.id === id);
 
         subscriptionSync.delete(id);
@@ -259,10 +260,10 @@
                 <div class="p-2.5 bg-indigo-100 rounded-xl text-indigo-700">
                     <Receipt class="w-8 h-8" />
                 </div>
-                No More Zombie Bills
+                Accounts to Close or Transfer
             </h1>
             <p class="text-slate-500 mt-2 text-lg leading-relaxed max-w-2xl">
-                Every subscription you document is money your family won't lose to forgotten charges. This simple list can save them hundreds or even thousands in the months after you're gone.
+                Every subscription you document is money your family won't lose to forgotten charges. This simple list can save them hundreds—or even thousands—in the months after you're gone. It's a small task now that prevents a big headache later.
             </p>
         </div>
 
@@ -277,37 +278,15 @@
 
     <!-- Content -->
     {#if subscriptions.length === 0}
-        <!-- GHOST ROW IMPLEMENTATION -->
-        <!-- GHOST ROW IMPLEMENTATION -->
-        <div class="space-y-4">
-            {#each getSmartSamples($language).subscriptions || [] as sample}
-                <GhostRow
-                    name={sample.name}
-                    subtitle={`${sample.cost}/mo • ${sample.cycle}`}
-                    type="Subscription"
-                    onClick={() => {
-                        newSub = {
-                            ...newSub,
-                            name: sample.name,
-                            cost: sample.cost,
-                            cycle: sample.cycle as "Monthly" | "Yearly",
-                            difficulty: "Medium",
-                        };
-                        showAddForm = true;
-                    }}
-                />
-            {/each}
-
-            <div class="flex justify-center mt-6">
-                <button
-                    onclick={() => (showAddForm = true)}
-                    class="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-slate-900/10 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
-                >
-                    <Plus size={18} />
-                    Add First Service
-                </button>
-            </div>
-        </div>
+        <EmptyState
+            title="Identify your 'zombie bills'"
+            whyMatters="<strong>After you're gone, these charges will keep hitting your bank account until someone notices and cancels them.</strong> But without a record, your family won't know what to look for or how to cancel them.<br/><br/>Documenting your subscriptions isn't just about saving money—it's about preventing your spouse or executor from spending weeks hunting down mystery charges while grieving. Each service you document is one less headache for them."
+            encouragement="Start with the obvious ones—Netflix, Spotify, your gym. You can add others as you remember them."
+            icon={Receipt}
+            iconClass="text-slate-600"
+            ctaLabel="Document first subscription"
+            onAction={() => (showAddForm = true)}
+        />
     {:else}
         <!-- Stats Grid -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">

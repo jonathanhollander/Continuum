@@ -6,6 +6,8 @@ export interface User {
     id: number;
     email: string;
     external_id: string;
+    user_role?: 'planning' | 'executor' | 'family' | 'advisor';
+    emotional_context?: 'healthy' | 'terminal' | 'grieving';
 }
 
 interface AuthState {

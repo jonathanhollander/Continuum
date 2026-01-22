@@ -18,7 +18,11 @@
 				<div class="notification-icon">✅</div>
 				<div class="notification-content">
 					<div class="notification-title">{notification.title}</div>
-					<div class="notification-message">{notification.message}</div>
+					{#if notification.secondaryMessage && notification.secondaryMessage !== notification.message}
+						<div class="notification-secondary">{notification.secondaryMessage}</div>
+					{:else}
+						<div class="notification-message">{notification.message}</div>
+					{/if}
 				</div>
 				<button
 					class="close-button"
@@ -109,6 +113,14 @@
 		color: #4a5568;
 		font-size: 14px;
 		line-height: 1.5;
+	}
+
+	.notification-secondary {
+		color: #48bb78;
+		font-size: 13px;
+		line-height: 1.4;
+		font-weight: 500;
+		margin-top: 2px;
 	}
 
 	.close-button {

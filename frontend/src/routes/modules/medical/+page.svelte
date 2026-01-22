@@ -21,9 +21,11 @@
     import { getSmartSamples } from "$lib/data/smartSamples";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import Affirmation from "$lib/components/Affirmation.svelte";
+    import EmptyState from "$lib/components/EmptyState.svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { activityLog } from "$lib/stores/activityLog";
     import LegalDisclaimer from "$lib/components/common/LegalDisclaimer.svelte";
+    import GriefSupportBanner from "$lib/components/GriefSupportBanner.svelte";
 
     let showAddForm = $state(false);
     let editMode = $state(false);
@@ -109,7 +111,7 @@
     function removeDirective(id: string | number) {
         if (
             !confirm(
-                "Are you sure you'd like to remove this directive? This should only be done if the document has been revoked.",
+                "Remove this directive? This should only be done if the document has been revoked.",
             )
         )
             return;
@@ -161,6 +163,10 @@
             Record Your Wishes
         </button>
     </header>
+
+    <div class="max-w-3xl">
+        <GriefSupportBanner compact={true} />
+    </div>
 
     <!-- Affirmation Message -->
     <Affirmation module="medical" bind:show={showAffirmation} />
@@ -413,8 +419,17 @@
             {/each}
 
             {#if medicalStore.directives.length === 0}
-                <!-- GHOST ROWS -->
-                <div class="mb-6 space-y-4">
+                <EmptyState
+                    title="Your healthcare wishes matter"
+                    whyMatters="<strong>Without advance directives, doctors and family members must guess what you would want during a medical crisis.</strong> This creates agonizing decisions for loved ones who are already suffering.<br/><br/>Documenting your healthcare wishes—whether it's a healthcare proxy, living will, or DNR—gives them clarity, legal authority, and peace of mind. They'll know they're honoring your choices, not making impossible decisions on your behalf."
+                    encouragement="When you're ready, start with just one directive. You can always add more later."
+                    icon={Shield}
+                    iconClass="text-blue-500"
+                    ctaLabel="Document my wishes"
+                    onAction={() => (showAddForm = true)}
+                />
+                <!-- GHOST ROWS (Hidden, keeping for reference) -->
+                <div class="mb-6 space-y-4 hidden">
                     {#each getSmartSamples($language).medical || [] as sample}
                         <GhostRow
                             name={sample.title}

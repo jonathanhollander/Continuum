@@ -69,7 +69,7 @@
     }
 
     async function deleteItem(id: number) {
-        if (!confirm("Permanently delete these instructions from the vault?"))
+        if (!confirm("Remove these instructions from the vault? This action is permanent."))
             return;
         await apiDelete(`/api/pulse/vault/${id}`);
         items = items.filter((i) => i.id !== id);

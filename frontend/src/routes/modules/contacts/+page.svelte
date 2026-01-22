@@ -26,6 +26,7 @@
     const registry = Array.isArray(registryData) ? registryData : [];
     const module = registry.find((m) => m.id === "contacts");
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
+    import EmptyState from "$lib/components/EmptyState.svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
     import { conciergeEngine } from "$lib/stores/conciergeEngine";
     import {
@@ -33,6 +34,9 @@
         type FamilyMember,
         type FamilyRole,
     } from "$lib/stores/familyStore.svelte";
+    import { contextStore } from "$lib/stores/contextStore.svelte";
+    import { contacts as contactsText, getEmptyStateMessage, getActionLabel } from "$lib/utils/contextualMessages";
+    import ContextualMessage from "$lib/components/ContextualMessage.svelte";
 
     let activeTab = $state("call-list");
 
@@ -145,7 +149,7 @@
     }
 
     async function deleteContact(id: number | string) {
-        if (!confirm("Are you sure you'd like to remove this contact from your records?")) return;
+        if (!confirm("Remove this contact? You can always add them back later if needed.")) return;
         familyStore.removeMember(id);
     }
 
@@ -157,7 +161,11 @@
 {#if module}
     <LivingBlueprintHeader
         title={module.title}
-        subtitle={module.description}
+        subtitle={contextStore.isExecutor
+            ? "Important contacts and relationships to notify or consult"
+            : contextStore.isFamily
+            ? "Family and friends connected to the estate"
+            : module.description}
         tier={module.role === "owner" ? "preparation" : "executor"}
     />
 {/if}
@@ -168,7 +176,14 @@
             onclick={() => (showAddModal = true)}
             class="px-5 py-2.5 bg-slate-900 text-white font-bold rounded-xl shadow-lg hover:bg-slate-800 transition-all flex items-center gap-2"
         >
-            <Plus size={18} /> Add Contact
+            <Plus size={18} />
+            <ContextualMessage
+                variants={{
+                    planning: 'Add Contact',
+                    executor: 'Add Contact',
+                    family: 'Add Contact'
+                }}
+            />
         </button>
     </div>
 
@@ -248,40 +263,25 @@
     <!-- Content -->
     <div class="min-h-[500px]">
         {#if contacts.length === 0}
-            <div class="max-w-3xl mx-auto space-y-4">
-                {#each getSmartSamples($language).contacts || [] as sample}
-                    <GhostRow
-                        name={sample.name}
-                        subtitle={`${sample.role} • ${sample.relation}`}
-                        type="Contact"
-                        onClick={() => {
-                            newContact = {
-                                ...newContact,
-                                name: sample.name,
-                                role: sample.role as FamilyRole,
-                                relation: sample.relation,
-                                phone: sample.phone,
-                                email: sample.email,
-                                tier: "2_SameDay",
-                            };
-                            showAddModal = true;
-                        }}
-                    >
-                        <svelte:fragment slot="icon">
-                            <User size={20} class="text-slate-400" />
-                        </svelte:fragment>
-                    </GhostRow>
-                {/each}
-
-                <div class="flex justify-center mt-4">
-                    <button
-                        onclick={() => (showAddModal = true)}
-                        class="text-sm font-bold text-[#4A7C74] hover:bg-[#4A7C74]/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
-                    >
-                        <Plus size={14} /> Create First Contact
-                    </button>
-                </div>
-            </div>
+            <EmptyState
+                title={contextStore.isExecutor ? "Contact Directory Empty" : contextStore.isFamily ? "No Contacts Yet" : "Your circle of trust"}
+                whyMatters={contextStore.isExecutor
+                    ? "<strong>Contact information is essential for estate administration.</strong> If no contacts were recorded, you may need to gather this information from other sources such as phone records, address books, or family members.<br/><br/>Building this directory will help ensure all necessary parties are properly notified and consulted."
+                    : contextStore.isFamily
+                    ? "<strong>Contact information will be helpful for coordinating with family and friends.</strong> This directory will be populated as information becomes available.<br/><br/>If you have contact details to contribute, you can add them here."
+                    : "<strong>These are the people who should be notified, who can help, who need to know.</strong> Without this list, your family won't know who your lawyer is, who has your keys, or who should be at your bedside.<br/><br/>Creating this directory is a gift to whoever handles your affairs—they won't have to search through old emails or guess who matters to you. Each person you add here removes one more burden from their shoulders."
+                }
+                encouragement={contextStore.isExecutor
+                    ? "Begin gathering contact information at your own pace."
+                    : contextStore.isFamily
+                    ? "Add contacts as information becomes available."
+                    : "Start with just one person—maybe your executor, spouse, or closest friend. You can build this over time."
+                }
+                icon={Users}
+                iconClass="text-indigo-500"
+                ctaLabel={getActionLabel('add')}
+                onAction={() => (showAddModal = true)}
+            />
         {:else if activeTab === "call-list"}
             <div in:fade class="space-y-8 max-w-4xl mx-auto">
                 <div

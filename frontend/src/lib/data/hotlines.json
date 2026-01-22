@@ -1,0 +1,68 @@
+{
+    "US": [
+        {
+            "label": "988 Suicide & Crisis Lifeline",
+            "number": "988"
+        },
+        {
+            "label": "Crisis Text Line",
+            "number": "Text HOME to 741741"
+        },
+        {
+            "label": "SAMHSA National Helpline",
+            "number": "1-800-662-HELP"
+        }
+    ],
+    "UK": [
+        {
+            "label": "NHS Urgent Mental Health",
+            "number": "111"
+        },
+        {
+            "label": "Samaritans",
+            "number": "116 123"
+        },
+        {
+            "label": "Cruse Bereavement Support",
+            "number": "0808 808 1677"
+        }
+    ],
+    "CA": [
+        {
+            "label": "Talk Suicide Canada",
+            "number": "1-833-456-4566"
+        },
+        {
+            "label": "Wellness Together Canada",
+            "number": "1-866-585-0445"
+        },
+        {
+            "label": "Hope for Wellness",
+            "number": "1-855-242-3310"
+        }
+    ],
+    "AU": [
+        {
+            "label": "Lifeline Australia",
+            "number": "13 11 14"
+        },
+        {
+            "label": "Beyond Blue",
+            "number": "1300 22 4636"
+        },
+        {
+            "label": "GriefLine",
+            "number": "1300 845 745"
+        }
+    ],
+    "DEFAULT": [
+        {
+            "label": "International Crisis Directory",
+            "number": "befrienders.org"
+        },
+        {
+            "label": "Global Suicide Hotlines",
+            "number": "iasp.info/resources"
+        }
+    ]
+}

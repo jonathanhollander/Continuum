@@ -64,7 +64,7 @@ const digitalAssetMapper = (item: any) => {
     };
 };
 
-export const digitalAssetsSync = registerSync<DigitalAccount>('digital_assets', 'digital_assets', digitalAssetMapper);
+export const digitalAssetsSync = registerSync<DigitalAccount>('digital_assets', 'digital_assets', digitalAssetMapper).setAffirmationContext('general');
 
 // Lazy Migration
 if (typeof window !== 'undefined') {

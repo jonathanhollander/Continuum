@@ -25,6 +25,7 @@
     import { fade, slide, scale } from "svelte/transition";
     import { quintOut } from "svelte/easing";
     import VideoRecorder from "$lib/components/media/VideoRecorder.svelte";
+    import EmptyState from "$lib/components/EmptyState.svelte";
     import { mediaStorage } from "$lib/services/indexedDB";
 
     let showAddModal = false;
@@ -251,22 +252,16 @@
         {/each}
 
         {#if $timeCapsuleStore.length === 0}
-            <div
-                class="md:col-span-2 lg:col-span-3 py-20 bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200 text-center space-y-6"
-            >
-                <div
-                    class="p-6 bg-white rounded-3xl w-24 h-24 mx-auto shadow-sm flex items-center justify-center text-slate-200"
-                >
-                    <MessageSquare size={48} />
-                </div>
-                <div class="space-y-2">
-                    <h3 class="text-2xl font-black text-slate-900">
-                        Your Vault is Empty
-                    </h3>
-                    <p class="text-slate-500 max-w-sm mx-auto font-medium">
-                        Capture a memory, a message, or a piece of advice today
-                        to be seen years from now.
-                    </p>
+            <div class="md:col-span-2 lg:col-span-3">
+                <EmptyState
+                    title="Words waiting to be written"
+                    whyMatters="<strong>The messages you write here will comfort your loved ones when you're no longer here to say them yourself.</strong> Imagine your daughter graduating, getting married, or having her first child—and finding your voice waiting for her at each milestone.<br/><br/>These aren't just letters. They're your presence at moments you can't physically attend. They're proof that you thought about their future, that you cared enough to speak across time."
+                    encouragement="You don't need to write them all today. Start with just one person, one moment. The rest will come when you're ready."
+                    icon={MessageSquare}
+                    iconClass="text-purple-500"
+                    ctaLabel="Write your first message"
+                    onAction={() => (showAddModal = true)}
+                />
                 </div>
                 <button
                     on:click={() => (showAddModal = true)}

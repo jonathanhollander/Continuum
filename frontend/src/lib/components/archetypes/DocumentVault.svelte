@@ -63,7 +63,7 @@
         if (module?.id) {
             // Register sync for this specific vault
             // Maps docs_{id} -> vault_documents endpoint
-            docSync = registerSync<Doc>(`docs_${module.id}`, "vault_documents");
+            docSync = registerSync<Doc>(`docs_${module.id}`, "vault_documents").setAffirmationContext('documents');
         }
     });
 
@@ -158,7 +158,7 @@
     }
 
     function removeDoc(id: string) {
-        if (!confirm("Are you sure you'd like to remove this document? This cannot be undone.")) return;
+        if (!confirm("Would you like to remove this document? This action is permanent.")) return;
         if (!docSync) return;
 
         const doc = docs.find((d) => d.id === id);

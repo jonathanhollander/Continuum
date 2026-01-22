@@ -3,7 +3,7 @@ from backend.limiter import limiter
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session, select
 from pydantic import BaseModel, EmailStr
-from typing import List
+from typing import List, Optional
 from datetime import timedelta
 from backend.database import User, get_session
 from backend.auth import (
@@ -65,6 +65,8 @@ class UserResponse(BaseModel):
     id: int
     email: str
     external_id: str
+    user_role: Optional[str] = "planning"
+    emotional_context: Optional[str] = None
 
 @router.post("/signup", response_model=TokenResponse, summary="Register new user", description="Creates a new user account with email and password, sends a welcome email, and returns a JWT access token.")
 @limiter.limit("5/minute")
@@ -168,15 +170,6 @@ def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), se
             session.refresh(user)
     elif not user or not user.hashed_password or not verify_password(form_data.password, user.hashed_password):
         log_auth_failure(session, request, form_data.username, "password", "Invalid credentials")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    # Verify password
-    if not verify_password(form_data.password, user.hashed_password):
-        log_auth_failure(session, request, user.email, "password", "Invalid password")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",

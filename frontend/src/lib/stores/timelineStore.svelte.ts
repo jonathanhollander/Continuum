@@ -27,7 +27,7 @@ const timelineMapper = (item: any) => {
     };
 };
 
-export const timelineSync = registerSync<LifeEvent>('timeline_events', 'timeline_events', timelineMapper);
+export const timelineSync = registerSync<LifeEvent>('timeline_events', 'timeline_events', timelineMapper).setAffirmationContext('timeline');
 
 export const timelineStore = {
     get items() { return timelineSync.items; },

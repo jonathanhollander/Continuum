@@ -183,7 +183,7 @@
     }
 
     function removeEvent(id: string) {
-        if (!confirm("Are you sure you'd like to remove this event from your calendar?")) return;
+        if (!confirm("Remove this event? You can create it again if needed.")) return;
         calendarSync.delete(id);
     }
 

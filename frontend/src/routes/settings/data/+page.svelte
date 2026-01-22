@@ -95,7 +95,7 @@
 
     async function purgeTestData() {
         if (!testDataFactory) return;
-        if (!confirm("Clean up all generated test data?")) return;
+        if (!confirm("Remove all test data? This will clean up sample content from your account.")) return;
 
         purgingTest = true;
         await testDataFactory.purge();
