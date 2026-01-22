@@ -14,26 +14,28 @@
     } from "lucide-svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
+    import Affirmation from "$lib/components/Affirmation.svelte";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
-    import { petStore, type PetEntry } from "$lib/stores/petStore";
+    import { petStore, type PetEntry } from "$lib/stores/petStore.svelte";
     import { onMount } from "svelte";
-    import { estateProfile } from "$lib/stores/estateStore";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { activityLog } from "$lib/stores/activityLog";
 
-    let showAddForm = false;
-    let newPet: Partial<PetEntry> = {
+    let showAddForm = $state(false);
+    let showAffirmation = $state(false);
+    let newPet: Partial<PetEntry> = $state({
         type: "dog",
         name: "",
         breed: "",
         guardian:
-            $estateProfile.spouseName || $estateProfile.executorName || "",
+            $estateProfile.spouse_name || $estateProfile.executor_name || "",
         vetName: "",
         vetPhone: "",
         foodInstructions: "",
         medicalNeeds: "",
         notes: "",
-    };
+    });
 
     function savePet() {
         if (!newPet.name) return;
@@ -44,25 +46,24 @@
                 module: "Pet Care",
                 action: "UPDATE",
                 entityType: "Pet",
-                entityId: newPet.id,
+                entityId: newPet.id as string,
                 entityName: newPet.name,
                 userContext: $estateProfile.ownerName || "User",
             });
         } else {
             petStore.addPet(newPet as Omit<PetEntry, "id">);
-            // We don't have the ID immediately for the log if it's generated in store,
-            // but for simplicity we log the create action.
             activityLog.logEvent({
                 module: "Pet Care",
                 action: "CREATE",
                 entityType: "Pet",
-                entityId: crypto.randomUUID(), // Temp ID for log since store handles true ID
+                entityId: crypto.randomUUID(),
                 entityName: newPet.name || "Unknown",
                 userContext: $estateProfile.ownerName || "User",
             });
         }
 
         resetForm();
+        showAffirmation = true;
     }
 
     function editPet(pet: PetEntry) {
@@ -77,7 +78,9 @@
             name: "",
             breed: "",
             guardian:
-                $estateProfile.spouseName || $estateProfile.executorName || "",
+                $estateProfile.spouse_name ||
+                $estateProfile.executor_name ||
+                "",
             vetName: "",
             vetPhone: "",
             foodInstructions: "",
@@ -86,8 +89,8 @@
         };
     }
 
-    function removePet(id: string) {
-        if (!confirm("Remove this pet?")) return;
+    function removePet(id: number) {
+        if (!confirm("Are you sure you'd like to remove this pet from your records?")) return;
         petStore.removePet(id);
     }
 </script>
@@ -111,15 +114,18 @@
         </div>
         <button
             class="bg-[#304743] text-white px-6 py-2 rounded-xl font-bold hover:bg-[#2a3f3b] transition-colors flex items-center gap-2"
-            on:click={() => (showAddForm = !showAddForm)}
+            onclick={() => (showAddForm = !showAddForm)}
         >
             <Plus size={20} /> Add Pet
         </button>
     </div>
 
+    <!-- Affirmation Message -->
+    <Affirmation module="pets" bind:show={showAffirmation} />
+
     <!-- Pet Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {#each $petStore as PetEntry[] as pet}
+        {#each petStore.items as pet}
             <div
                 class="bg-white rounded-3xl border border-border shadow-sm overflow-hidden group hover:shadow-md transition-all"
             >
@@ -131,14 +137,20 @@
                         class="absolute top-4 left-4 flex gap-2 z-20 opacity-0 group-hover:opacity-100 transition-all"
                     >
                         <button
-                            on:click|stopPropagation={() => editPet(pet)}
+                            onclick={(e) => {
+                                e.stopPropagation();
+                                editPet(pet);
+                            }}
                             class="p-2 bg-white/50 hover:bg-white text-blue-400 hover:text-blue-600 rounded-full"
                             title="Edit Pet"
                         >
                             <Pencil size={16} />
                         </button>
                         <button
-                            on:click|stopPropagation={() => removePet(pet.id)}
+                            onclick={(e) => {
+                                e.stopPropagation();
+                                removePet(pet.id as number);
+                            }}
                             class="p-2 bg-white/50 hover:bg-white text-red-400 hover:text-red-600 rounded-full"
                             title="Remove Pet"
                         >
@@ -209,7 +221,7 @@
                         </div>
                     </div>
 
-                    {#if pet.medicalNeeds}
+                    {#if pet.medical_needs}
                         <div
                             class="flex items-start gap-2 pt-2 border-t border-gray-100"
                         >
@@ -233,7 +245,7 @@
         {/each}
 
         <!-- Empty State / Add Placeholder -->
-        {#if $petStore.length === 0}
+        {#if petStore.items.length === 0}
             <div class="col-span-full space-y-4">
                 {#each getSmartSamples($language).pets || [] as sample}
                     <GhostRow
@@ -281,7 +293,7 @@
                         Add a Pet
                     </h3>
                     <button
-                        on:click={resetForm}
+                        onclick={resetForm}
                         class="text-gray-400 hover:text-gray-600"
                     >
                         <span class="sr-only">Close</span>
@@ -423,12 +435,12 @@
 
                 <div class="p-6 bg-gray-50 flex justify-end gap-3">
                     <button
-                        on:click={() => (showAddForm = false)}
+                        onclick={() => (showAddForm = false)}
                         class="px-6 py-2 rounded-xl font-bold text-gray-500 hover:bg-gray-200 transition-colors"
-                        >Cancel</button
+                        >Not right now</button
                     >
                     <button
-                        on:click={savePet}
+                        onclick={savePet}
                         disabled={!newPet.name}
                         class="px-6 py-2 rounded-xl font-bold bg-[#304743] text-white hover:bg-[#20302d] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >

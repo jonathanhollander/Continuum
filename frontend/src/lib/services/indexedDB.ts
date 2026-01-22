@@ -1,3 +1,9 @@
+/**
+ * DEPRECATED: This IndexedDB-based media storage is being replaced with backend storage.
+ * Use mediaService.ts for new implementations.
+ * This file is kept for backward compatibility and migration purposes only.
+ */
+
 const DB_NAME = 'continuum_media_db';
 const STORE_NAME = 'media_blobs';
 const VERSION = 1;

@@ -1,11 +1,11 @@
 
-import type { FamilyMember } from '$lib/stores/familyStore';
-import type { InsurancePolicy } from '$lib/stores/insuranceStore';
+import type { FamilyMember } from '$lib/stores/familyStore.svelte';
+import type { InsurancePolicy } from '$lib/stores/insuranceStore.svelte';
 import type { PropertyItem } from '$lib/stores/propertyStore.svelte';
-import { digitalAssetsStore } from "../stores/digitalAssetsStore.svelte";
+import { digitalAssetsStore, type DigitalAccount } from "$lib/stores/digitalAssetsStore.svelte";
 import type { Heirloom } from '$lib/stores/heirloomStore.svelte';
-import type { MedicalDirective } from '$lib/stores/medicalStore';
-import type { PetEntry } from '$lib/stores/petStore';
+import type { MedicalDirective } from '$lib/stores/medicalStore.svelte';
+import type { PetEntry } from '$lib/stores/petStore.svelte';
 
 // Common Financial Asset Type (matches AssetManager)
 export interface FinancialAsset {
@@ -416,7 +416,10 @@ export const getSmartSamples = (locale: string = 'en'): SmartSampleCollection =>
                 email: 'dr.smith@example.com',
                 tier: '1_Immediate',
                 notificationStatus: 'Pending',
-                notes: dict.contacts.notes
+                notes: dict.contacts.notes,
+                isExecutor: false,
+                isBeneficiary: false,
+                isEmergencyContact: false
             },
             {
                 id: commonId('cont-2'),
@@ -427,7 +430,10 @@ export const getSmartSamples = (locale: string = 'en'): SmartSampleCollection =>
                 email: 'lawyer@example.com',
                 tier: '2_SameDay',
                 notificationStatus: 'Pending',
-                notes: dict.contacts.notes
+                notes: dict.contacts.notes,
+                isExecutor: false,
+                isBeneficiary: false,
+                isEmergencyContact: false
             }
         ],
         memories: [

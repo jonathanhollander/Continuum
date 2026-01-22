@@ -1,15 +1,20 @@
 <script lang="ts">
     import { Upload, X, Image as ImageIcon, CircleCheck } from "lucide-svelte";
-    import { createEventDispatcher } from "svelte";
 
-    export let imageUrl: string = "";
-    export let label: string = "Upload Image";
+    let {
+        imageUrl = $bindable(""),
+        label = "Upload Image",
+        onchange,
+    } = $props<{
+        imageUrl?: string;
+        label?: string;
+        onchange?: (url: string) => void;
+    }>();
 
-    const dispatch = createEventDispatcher();
-    let dragging = false;
-    let processing = false;
-    let error: string | null = null;
-    let fileInput: HTMLInputElement;
+    let dragging = $state(false);
+    let processing = $state(false);
+    let error: string | null = $state(null);
+    let fileInput: HTMLInputElement | undefined = $state();
 
     function handleDragOver(e: DragEvent) {
         e.preventDefault();
@@ -41,7 +46,7 @@
             return;
         }
 
-        // 2MB Initial Check
+        // 5MB Initial Check
         if (file.size > 5 * 1024 * 1024) {
             error = "File is too large (Max 5MB).";
             return;
@@ -82,7 +87,7 @@
                 // Compress to JPEG 0.7 quality
                 const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.7);
                 imageUrl = compressedDataUrl;
-                dispatch("change", compressedDataUrl);
+                if (onchange) onchange(compressedDataUrl);
                 processing = false;
             };
         };
@@ -90,7 +95,7 @@
 
     function clearImage() {
         imageUrl = "";
-        dispatch("change", "");
+        if (onchange) onchange("");
         if (fileInput) fileInput.value = "";
     }
 </script>
@@ -114,7 +119,7 @@
                 class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2"
             >
                 <button
-                    on:click={clearImage}
+                    onclick={clearImage}
                     class="bg-white text-rose-600 px-4 py-2 rounded-lg font-bold text-sm shadow-lg hover:bg-rose-50 flex items-center gap-2"
                 >
                     <X size={16} /> Remove
@@ -134,15 +139,18 @@
                 ? 'border-[#4A7C74] bg-[#4A7C74]/5'
                 : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}
             {error ? 'border-red-300 bg-red-50' : ''}"
-            on:dragover={handleDragOver}
-            on:dragleave={handleDragLeave}
-            on:drop={handleDrop}
-            on:click={() => fileInput.click()}
+            ondragover={handleDragOver}
+            ondragleave={handleDragLeave}
+            ondrop={handleDrop}
+            onclick={() => fileInput?.click()}
+            onkeydown={(e) => e.key === "Enter" && fileInput?.click()}
+            role="button"
+            tabindex="0"
         >
             <input
                 type="file"
                 bind:this={fileInput}
-                on:change={handleFileSelect}
+                onchange={handleFileSelect}
                 accept="image/*"
                 class="hidden"
             />

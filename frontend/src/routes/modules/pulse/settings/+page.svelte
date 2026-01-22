@@ -1,6 +1,10 @@
 <script lang="ts">
-    import { pulse } from "$lib/stores/pulse";
+    import { pulse } from "$lib/stores/pulse.svelte";
     import { onMount } from "svelte";
+    import {
+        startRegistration,
+        startAuthentication,
+    } from "@simplewebauthn/browser";
     import {
         Shield,
         Activity,
@@ -17,8 +21,7 @@
         Check,
         X,
     } from "lucide-svelte";
-
-    const USER_ID = 1;
+    import { apiGet, apiPost, apiPut, apiDelete } from "$lib/api/client";
 
     let saving = $state(false);
     let connectingBio = $state(false);
@@ -44,19 +47,16 @@
 
     async function loadData() {
         try {
-            const baseUrl = import.meta.env.VITE_API_BASE || "";
-            const [settingsRes, tiersRes, contactsRes] = await Promise.all([
-                fetch(`${baseUrl}/api/pulse/settings?user_id=${USER_ID}`),
-                fetch(`${baseUrl}/api/pulse/tiers?user_id=${USER_ID}`),
-                fetch(`${baseUrl}/api/pulse/contacts?user_id=${USER_ID}`),
+            const [settingsData, tiersData, contactsData] = await Promise.all([
+                apiGet("/api/pulse/settings"),
+                apiGet("/api/pulse/tiers"),
+                apiGet("/api/pulse/contacts"),
             ]);
 
-            if (settingsRes.ok) {
-                settings = await settingsRes.json();
-                pulse.update((s) => ({ ...s, enabled: settings.enabled }));
-            }
-            if (tiersRes.ok) tiers = await tiersRes.json();
-            if (contactsRes.ok) contacts = await contactsRes.json();
+            settings = settingsData;
+            pulse.update((s) => ({ ...s, enabled: settings.enabled }));
+            tiers = tiersData;
+            contacts = contactsData;
 
             if (tiers.length === 0) {
                 // ... defaults ...
@@ -95,19 +95,9 @@
     async function saveSettings() {
         saving = true;
         try {
-            const baseUrl = import.meta.env.VITE_API_BASE || "";
-            const res = await fetch(
-                `${baseUrl}/api/pulse/settings?user_id=${USER_ID}`,
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(settings),
-                },
-            );
-            if (res.ok) {
-                pulse.update((s) => ({ ...s, enabled: settings.enabled }));
-                pulse.init(USER_ID);
-            }
+            await apiPost("/api/pulse/settings", settings);
+            pulse.update((s) => ({ ...s, enabled: settings.enabled }));
+            pulse.init();
         } finally {
             saving = false;
         }
@@ -115,15 +105,7 @@
 
     async function updateTier(tier: any) {
         try {
-            const baseUrl = import.meta.env.VITE_API_BASE || "";
-            await fetch(
-                `${baseUrl}/api/pulse/tiers/${tier.id}?user_id=${USER_ID}`,
-                {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(tier),
-                },
-            );
+            await apiPut(`/api/pulse/tiers/${tier.id}`, tier);
             editingTierId = null;
         } catch (e) {
             console.error(e);
@@ -132,22 +114,12 @@
 
     async function updateContact(contact: any) {
         try {
-            const baseUrl = import.meta.env.VITE_API_BASE || "";
-            const res = await fetch(
-                `${baseUrl}/api/pulse/contacts/${contact.id}?user_id=${USER_ID}`,
-                {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(contact),
-                },
-            );
+            await apiPut(`/api/pulse/contacts/${contact.id}`, contact);
             // Refresh contacts to ensure list updates if tier changed
-            if (res.ok) {
-                // Verify if we need to manually trigger reactivity or if $state handles it
-                // With Svelte 5 deep reactivity on array objects, this might be fine,
-                // but 'getContactsForTier' needs to see the change.
-                contacts = [...contacts]; // Force refresh
-            }
+            // Verify if we need to manually trigger reactivity or if $state handles it
+            // With Svelte 5 deep reactivity on array objects, this might be fine,
+            // but 'getContactsForTier' needs to see the change.
+            contacts = [...contacts]; // Force refresh
         } catch (e) {
             console.error(e);
         }
@@ -175,34 +147,20 @@
         // Start Real Enrollment Flow
         try {
             connectingBio = true;
-            const baseUrl = import.meta.env.VITE_API_BASE || "";
 
             // 1. Get Options
-            const optsRes = await fetch(
-                `${baseUrl}/api/pulse/auth/webauthn/register/start?user_id=${USER_ID}`,
-                { method: "POST" },
+            const options = await apiPost(
+                "/api/pulse/auth/webauthn/register/start",
             );
-            const options = await optsRes.json();
 
             // 2. Browser Interaction
             const attResp = await startRegistration(options);
 
             // 3. Verify
-            const verifyRes = await fetch(
-                `${baseUrl}/api/pulse/auth/webauthn/register/finish?user_id=${USER_ID}`,
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(attResp),
-                },
-            );
+            await apiPost("/api/pulse/auth/webauthn/register/finish", attResp);
 
-            if (verifyRes.ok) {
-                settings.biometric_extension_enabled = true;
-                await saveSettings();
-            } else {
-                alert("Biometric verification failed.");
-            }
+            settings.biometric_extension_enabled = true;
+            await saveSettings();
         } catch (e) {
             console.error("WebAuthn Failed", e);
             alert("Could not register biometric device. See console.");
@@ -222,34 +180,21 @@
         if (!email) return;
 
         try {
-            const baseUrl = import.meta.env.VITE_API_BASE || "";
-            const res = await fetch(
-                `${baseUrl}/api/pulse/contacts?user_id=${USER_ID}`,
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        name,
-                        email,
-                        tier_id: tierId,
-                        user_id: USER_ID,
-                    }),
-                },
-            );
-            if (res.ok) contacts = [...contacts, await res.json()];
+            const newContact = await apiPost("/api/pulse/contacts", {
+                name,
+                email,
+                tier_id: tierId,
+            });
+            contacts = [...contacts, newContact];
         } catch (e) {
             console.error(e);
         }
     }
 
     async function deleteContact(contactId: number) {
-        if (!confirm("Remove this contact?")) return;
+        if (!confirm("Are you sure you'd like to remove this contact from your Pulse network?")) return;
         try {
-            const baseUrl = import.meta.env.VITE_API_BASE || "";
-            await fetch(
-                `${baseUrl}/api/pulse/contacts/${contactId}?user_id=${USER_ID}`,
-                { method: "DELETE" },
-            );
+            await apiDelete(`/api/pulse/contacts/${contactId}`);
             contacts = contacts.filter((c) => c.id !== contactId);
         } catch (e) {
             console.error(e);

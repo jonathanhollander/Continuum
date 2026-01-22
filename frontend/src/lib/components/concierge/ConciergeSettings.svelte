@@ -6,7 +6,7 @@
         t,
     } from "$lib/stores/concierge";
     import { accessibilityStore } from "$lib/stores/accessibilityStore";
-    import { estateProfile } from "$lib/stores/estateStore";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
     import {
         Download,
         FileText,

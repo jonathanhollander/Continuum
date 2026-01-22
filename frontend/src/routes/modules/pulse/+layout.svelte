@@ -1,7 +1,7 @@
 <script lang="ts">
     import "../../../app.css";
     import LivingMesh from "$lib/components/pulse/LivingMesh.svelte";
-    import { pulse } from "$lib/stores/pulse";
+    import { pulse } from "$lib/stores/pulse.svelte";
 
     // Map store status to LivingMesh props
     function getMeshStatus(status: string) {
@@ -15,7 +15,7 @@
     class="min-h-screen bg-slate-950 text-slate-100 relative overflow-hidden font-sans"
 >
     <!-- Warm Technology Atmosphere -->
-    <LivingMesh status={getMeshStatus($pulse.status)} />
+    <LivingMesh status={getMeshStatus(pulse.status)} />
 
     <!-- Content Layer -->
     <div class="relative z-10 transition-colors duration-1000">

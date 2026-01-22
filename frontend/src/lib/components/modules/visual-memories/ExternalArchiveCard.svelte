@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { ExternalArchive } from "$lib/stores/visualMemoryStore";
+    import type { ExternalArchive } from "$lib/stores/visualMemoryStore.svelte";
     import {
         ExternalLink,
         HardDrive,
@@ -67,9 +67,9 @@
     </div>
 
     <div class="space-y-3">
-        {#if archive.accessUrl}
+        {#if archive.access_url || archive.accessUrl}
             <a
-                href={archive.accessUrl}
+                href={archive.access_url || archive.accessUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 class="flex items-center gap-2 text-sm text-[#4A7C74] font-medium hover:underline"
@@ -84,7 +84,7 @@
             >
                 <Key size={12} /> Access Instructions
             </div>
-            {archive.locationDetails}
+            {archive.location_details || archive.locationDetails}
         </div>
     </div>
 </div>

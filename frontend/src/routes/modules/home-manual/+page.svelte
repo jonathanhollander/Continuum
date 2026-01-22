@@ -22,8 +22,6 @@
     import { registerSync } from "$lib/services/sync.svelte";
     import { getStored } from "$lib/stores/persistence";
 
-    const USER_ID = 1;
-
     // MAPPERS
     // Maps local/legacy objects to backend schema
     const vendorMapper = (item: any) => {
@@ -118,7 +116,7 @@
     }
 
     async function deleteVendor(id: number | string) {
-        if (!confirm("Delete?")) return;
+        if (!confirm("Are you sure you'd like to remove this item?")) return;
         await vendorSync.delete(id);
     }
 
@@ -130,7 +128,7 @@
     }
 
     async function deleteCode(id: number | string) {
-        if (!confirm("Delete?")) return;
+        if (!confirm("Are you sure you'd like to remove this item?")) return;
         await accessSync.delete(id);
     }
 
@@ -145,7 +143,7 @@
     }
 
     async function deleteUtility(id: number | string) {
-        if (!confirm("Delete?")) return;
+        if (!confirm("Are you sure you'd like to remove this item?")) return;
         await utilitySync.delete(id);
     }
 </script>

@@ -51,7 +51,20 @@ function migrateDigitalAssets(): DigitalAccount[] {
     }));
 }
 
-export const digitalAssetsSync = registerSync<DigitalAccount>('digital_assets', 'digital_assets');
+const digitalAssetMapper = (item: any) => {
+    if (!item) return item;
+    return {
+        ...item,
+        // Remote (snake) -> Local (camel)
+        isClosed: item.is_closed ?? item.isClosed,
+        closureDate: item.closure_date ?? item.closureDate,
+        // Local (camel) -> Remote (snake)
+        is_closed: item.isClosed ?? item.is_closed,
+        closure_date: item.closureDate ?? item.closure_date
+    };
+};
+
+export const digitalAssetsSync = registerSync<DigitalAccount>('digital_assets', 'digital_assets', digitalAssetMapper);
 
 // Lazy Migration
 if (typeof window !== 'undefined') {
@@ -59,13 +72,8 @@ if (typeof window !== 'undefined') {
         const legacy = migrateDigitalAssets();
         if (legacy.length > 0) {
             console.log("Migrating digital assets...", legacy);
-            // We ideally want to batch create. 
-            // For now, relies on user manually saving or we push them? 
-            // SyncManager doesn't auto-ingest return values.
-            // We'll leave it empty in SyncManager for now, letting the UI handle "if empty, check legacy?"
-            // OR simpler: we don't migrate automatically here because we can't `create` easily without async.
-            // Actually, we can just let the consuming page handle the merge if needed, OR:
-            // The `migrateDigitalAssets` function is available.
+            digitalAssetsSync.items = legacy;
+            // SyncManager will auto-migrate these to cloud on next syncAll()
         }
     }
 }

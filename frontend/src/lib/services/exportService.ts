@@ -3,9 +3,9 @@ import autoTable from 'jspdf-autotable';
 import { writable, get } from 'svelte/store';
 import { propertyStore } from '$lib/stores/propertyStore.svelte';
 import { heirloomStore } from '$lib/stores/heirloomStore.svelte';
-import { timelineStore } from '$lib/stores/timelineStore';
-import { medicalStore } from '$lib/stores/medicalStore';
-import { insuranceStore } from '$lib/stores/insuranceStore';
+import { timelineStore } from '$lib/stores/timelineStore.svelte';
+import { medicalStore } from '$lib/stores/medicalStore.svelte';
+import { insuranceStore } from '$lib/stores/insuranceStore.svelte';
 
 export type ExportScope = 'full' | 'insurance' | 'medical';
 
@@ -112,7 +112,7 @@ export async function createPDFBlob(
                 // Basic spacing check
                 if (currentY > 250) { doc.addPage(); currentY = 20; }
 
-                const policies = get(insuranceStore) || [];
+                const policies = insuranceStore.policies || [];
                 currentY = addSectionTitle("Insurance Policies", currentY);
 
                 if (policies.length === 0) {
@@ -173,7 +173,7 @@ export async function createPDFBlob(
                 onProgress("Processing Timeline...");
                 if (currentY > 250) { doc.addPage(); currentY = 20; }
 
-                const events = get(timelineStore) || [];
+                const events = timelineStore.items || [];
                 currentY = addSectionTitle("Life Timeline", currentY);
 
                 if (events.length === 0) {
@@ -205,8 +205,8 @@ export async function createPDFBlob(
                 onProgress("Processing Medical...");
                 if (currentY > 250) { doc.addPage(); currentY = 20; }
 
-                const medical = get(medicalStore);
-                const directives = medical?.directives || [];
+                const medical = medicalStore;
+                const directives = medical.directives || [];
 
                 currentY = addSectionTitle("Medical directives", currentY); // Using "directives" as "Summary" might be broader
 

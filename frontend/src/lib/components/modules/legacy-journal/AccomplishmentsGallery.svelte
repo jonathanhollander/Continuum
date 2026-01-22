@@ -1,13 +1,16 @@
 <script lang="ts">
     import { fade, scale } from "svelte/transition";
     import { Trophy, Plus, Search, X, Pencil } from "lucide-svelte";
-    import { timelineStore, type LifeEvent } from "$lib/stores/timelineStore";
+    import {
+        timelineStore,
+        type LifeEvent,
+    } from "$lib/stores/timelineStore.svelte";
     import { onMount } from "svelte";
-    import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
+    import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import { goto } from "$app/navigation";
 
-    let searchTerm = "";
-    let activeCategory = "All";
+    let searchTerm = $state("");
+    let activeCategory = $state("All");
     const categories = [
         "All",
         "Career",
@@ -18,18 +21,22 @@
         "Other",
     ];
 
-    $: accomplishments = $timelineStore.filter(
-        (e) => e.type === "accomplishment",
+    let accomplishments = $derived(
+        timelineStore.items.filter((e) => e.type === "accomplishment"),
     );
 
-    $: filteredAccomplishments = accomplishments.filter((acc) => {
-        const matchesSearch =
-            acc.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            acc.description?.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesCategory =
-            activeCategory === "All" || acc.category === activeCategory;
-        return matchesSearch && matchesCategory;
-    });
+    let filteredAccomplishments = $derived(
+        accomplishments.filter((acc) => {
+            const matchesSearch =
+                acc.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                acc.description
+                    ?.toLowerCase()
+                    .includes(searchTerm.toLowerCase());
+            const matchesCategory =
+                activeCategory === "All" || acc.category === activeCategory;
+            return matchesSearch && matchesCategory;
+        }),
+    );
 
     // We don't implement the Add/Edit form here to keep it simple and centralized in Timeline for now,
     // but we can provide a link to the Timeline module or implement a simplified version later if needed.
@@ -43,7 +50,7 @@
         <div class="flex flex-wrap gap-2">
             {#each categories as cat}
                 <button
-                    on:click={() => (activeCategory = cat)}
+                    onclick={() => (activeCategory = cat)}
                     class="px-4 py-1.5 rounded-full text-sm font-bold transition-all border
                     {activeCategory === cat
                         ? 'bg-amber-600 border-amber-600 text-white shadow-sm'

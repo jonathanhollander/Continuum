@@ -1,7 +1,9 @@
 import { getStored, setStored } from "$lib/stores/persistence";
 
-const BASE_URL = import.meta.env.VITE_API_BASE || "";
-const USER_ID = 1; // TODO: Connect to real auth store
+import { auth } from "../stores/auth";
+import { get } from "svelte/store";
+
+const BASE_URL = import.meta.env.VITE_API_URL || "";
 
 export type SyncStatus = "idle" | "syncing" | "error" | "synced";
 
@@ -13,14 +15,15 @@ export class SyncManager<T extends { id: number | string }> {
 
     private key: string;
     private endpoint: string;
-    private mapper?: (local: any) => any;
-
+    private mapper?: (local: any) => T;
+    private apiBase: string;
     private subscriptions = new Set<(value: T[]) => void>();
 
-    constructor(key: string, endpoint: string, mapper?: (local: any) => any) {
+    constructor(key: string, endpoint: string, mapper?: (local: any) => T, apiBase: string = "/api/data") {
         this.key = key;
         this.endpoint = endpoint;
         this.mapper = mapper;
+        this.apiBase = apiBase;
 
         // 1. Instant Load
         this.items = getStored<T[]>(key, []);
@@ -45,10 +48,19 @@ export class SyncManager<T extends { id: number | string }> {
         this.error = null;
         try {
             // Fetch Remote
-            const res = await fetch(`${BASE_URL}/api/data/${this.endpoint}?user_id=${USER_ID}`);
+            const token = get(auth).token;
+            if (!token) {
+                console.warn(`[Sync:${this.key}] No auth token, skipping sync`);
+                return;
+            }
+
+            const res = await fetch(`${BASE_URL}${this.apiBase}/${this.endpoint}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
             if (!res.ok) throw new Error("Failed to fetch remote data");
 
-            const remoteItems: T[] = await res.json();
+            const rawItems: T[] = await res.json();
+            const remoteItems = this.mapper ? rawItems.map(this.mapper) : rawItems;
 
             // Logic: Up-Sync vs Down-Sync
             // If Remote is empty but Local has data -> Migration (Up-Sync)
@@ -56,13 +68,15 @@ export class SyncManager<T extends { id: number | string }> {
                 console.log(`[Sync:${this.key}] Migrating ${this.items.length} items to cloud...`);
                 await this.migrateUp(this.items);
                 // Re-fetch to get canon IDs
-                const res2 = await fetch(`${BASE_URL}/api/data/${this.endpoint}?user_id=${USER_ID}`);
+                const res2 = await fetch(`${BASE_URL}${this.apiBase}/${this.endpoint}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
                 if (res2.ok) {
-                    this.updateLocal(await res2.json());
+                    const raw2 = await res2.json();
+                    this.updateLocal(this.mapper ? raw2.map(this.mapper) : raw2);
                 }
             } else {
                 // Standard Mirror (Down-Sync) - Server is Truth
-                // TODO: Smart Merge? For now, Server Overwrites Local to ensure consistency.
                 this.updateLocal(remoteItems);
             }
 
@@ -103,23 +117,84 @@ export class SyncManager<T extends { id: number | string }> {
                 // ok
             }
 
-            const res = await fetch(`${BASE_URL}/api/data/${this.endpoint}?user_id=${USER_ID}`, {
+            const token = get(auth).token;
+            const res = await fetch(`${BASE_URL}${this.apiBase}/${this.endpoint}`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
                 body: JSON.stringify(payload)
             });
 
             if (!res.ok) throw new Error("Failed to save");
 
-            const newItem = await res.json();
+            const raw = await res.json();
+            const newItem = this.mapper ? this.mapper(raw) : raw;
 
             if (!skipLocal) {
                 this.items = [...this.items, newItem];
                 setStored(this.key, this.items);
+                this.notify();
             }
             return newItem;
         } catch (e) {
             console.error("Create failed", e);
+            throw e;
+        }
+    }
+
+    async update(idOrData: T | number | string, partialData?: Partial<T>) {
+        let id: number | string;
+        let updates: Partial<T>;
+
+        if (typeof idOrData === 'object' && idOrData !== null) {
+            id = idOrData.id;
+            updates = idOrData;
+        } else {
+            id = idOrData;
+            updates = partialData || {};
+        }
+
+        // Optimistic Update
+        const original = [...this.items];
+        const index = this.items.findIndex(i => String(i.id) === String(id));
+        if (index === -1) return;
+
+        const currentItem = this.items[index];
+        const updatedItem = { ...currentItem, ...updates };
+        this.items[index] = updatedItem;
+        this.items = [...this.items]; // trigger reactivity
+        setStored(this.key, this.items);
+        this.notify();
+
+        try {
+            const token = get(auth).token;
+            const payload = this.mapper ? this.mapper(updatedItem) : updatedItem;
+
+            const res = await fetch(`${BASE_URL}${this.apiBase}/${this.endpoint}/${id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) throw new Error("Failed to update remote");
+            const raw = await res.json();
+            const remoteItem = this.mapper ? this.mapper(raw) : raw;
+
+            // Sync again with server data
+            this.items[index] = remoteItem;
+            this.items = [...this.items];
+            setStored(this.key, this.items);
+            return remoteItem;
+        } catch (e) {
+            console.error("Update failed, rolling back", e);
+            this.items = original;
+            setStored(this.key, this.items);
+            this.notify();
             throw e;
         }
     }
@@ -131,8 +206,10 @@ export class SyncManager<T extends { id: number | string }> {
         setStored(this.key, this.items);
 
         try {
-            const res = await fetch(`${BASE_URL}/api/data/${this.endpoint}/${id}?user_id=${USER_ID}`, {
-                method: "DELETE"
+            const token = get(auth).token;
+            const res = await fetch(`${BASE_URL}${this.apiBase}/${this.endpoint}/${id}`, {
+                method: "DELETE",
+                headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!res.ok) throw new Error("Delete failed remote");
         } catch (e) {
@@ -146,7 +223,10 @@ export class SyncManager<T extends { id: number | string }> {
 
     async audit() {
         try {
-            const res = await fetch(`${BASE_URL}/api/data/${this.endpoint}?user_id=${USER_ID}`);
+            const token = get(auth).token;
+            const res = await fetch(`${BASE_URL}${this.apiBase}/${this.endpoint}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
             if (!res.ok) throw new Error("Audit fetch failed");
             const remoteItems: T[] = await res.json();
 
@@ -175,6 +255,115 @@ export class SyncManager<T extends { id: number | string }> {
     }
 }
 
+export class SingletonSyncManager<T extends object> {
+    data = $state<T | null>(null);
+    status = $state<SyncStatus>("idle");
+    lastSync = $state<Date | null>(null);
+    error = $state<string | null>(null);
+    private subscriptions = new Set<(value: T | null) => void>();
+
+    private key: string;
+    private endpoint: string;
+    private mapper?: (local: any) => T;
+    private apiBase: string;
+
+    constructor(key: string, endpoint: string, mapper?: (local: any) => T, apiBase: string = "/api") {
+        this.key = key;
+        this.endpoint = endpoint;
+        this.mapper = mapper;
+        this.apiBase = apiBase;
+
+        // Load Initial & Map legacy local data if needed
+        const raw = getStored<T>(key, {} as T);
+        this.data = mapper ? mapper(raw) : raw;
+    }
+
+    async sync() {
+        this.status = "syncing";
+        this.error = null;
+        try {
+            const token = get(auth).token;
+            if (!token) return;
+
+            const res = await fetch(`${BASE_URL}${this.apiBase}/${this.endpoint}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error("Failed to fetch remote data");
+
+            const raw = await res.json();
+            const remoteData = this.mapper ? this.mapper(raw) : raw;
+
+            // Simple migration: if remote is empty but local has data
+            const isRemoteEmpty = !remoteData || Object.keys(remoteData).length === 0;
+            const isLocalPopulated = this.data && Object.keys(this.data).length > 0;
+
+            if (isRemoteEmpty && isLocalPopulated) {
+                console.log(`[Sync:${this.key}] Migrating local singleton to cloud...`);
+                await this.update(this.data!);
+            } else {
+                this.updateLocal(remoteData);
+            }
+
+            this.status = "synced";
+            this.lastSync = new Date();
+        } catch (e: any) {
+            console.error(`[Sync:${this.key}] Error:`, e);
+            this.status = "error";
+            this.error = e.message;
+        }
+    }
+
+    async update(newData: T) {
+        const original = this.data;
+        this.data = { ...(this.data || {} as T), ...newData };
+        setStored(this.key, this.data);
+        this.notify();
+
+        try {
+            const token = get(auth).token;
+            const payload = this.mapper ? this.mapper(this.data) : this.data;
+
+            const res = await fetch(`${BASE_URL}${this.apiBase}/${this.endpoint}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) throw new Error("Update failed");
+            const raw = await res.json();
+            const saved = this.mapper ? this.mapper(raw) : raw;
+
+            this.updateLocal(saved);
+            return saved;
+        } catch (e) {
+            console.error(`[Sync:${this.key}] Update failed, rolling back`, e);
+            this.data = original;
+            setStored(this.key, original);
+            this.notify();
+            throw e;
+        }
+    }
+
+    private updateLocal(data: T) {
+        this.data = data;
+        setStored(this.key, data);
+        this.notify();
+    }
+
+    subscribe(run: (value: T | null) => void) {
+        run(this.data);
+        this.subscriptions.add(run);
+        return () => this.subscriptions.delete(run);
+    }
+
+    private notify() {
+        this.subscriptions.forEach(run => run(this.data));
+    }
+}
+
 import { browser } from '$app/environment';
 
 // Helper Class to validly use Runes
@@ -197,14 +386,24 @@ export function getRegistry() {
     return _plainRegistry;
 }
 
-export function registerSync<T>(key: string, endpoint: string, mapper?: any) {
-
+export function registerSync<T>(key: string, endpoint: string, mapper?: any, apiBase?: string) {
     const reg = getRegistry();
     if (!reg[key]) {
-        console.log(`[Sync] Registering NEW manager for ${key}`);
-        reg[key] = new SyncManager<T>(key, endpoint, mapper);
-    } else {
-        console.log(`[Sync] Returning existing manager for ${key}`);
+        reg[key] = new SyncManager<T>(key, endpoint, mapper, apiBase);
     }
     return reg[key] as SyncManager<T>;
+}
+
+export function registerSingletonSync<T extends object>(key: string, endpoint: string, mapper?: any, apiBase?: string) {
+    const reg = getRegistry();
+    if (!reg[key]) {
+        reg[key] = new SingletonSyncManager<T>(key, endpoint, mapper, apiBase) as any;
+    }
+    return reg[key] as unknown as SingletonSyncManager<T>;
+}
+
+export async function syncAll() {
+    const reg = getRegistry();
+    const promises = Object.values(reg).map(manager => manager.sync());
+    return Promise.allSettled(promises);
 }

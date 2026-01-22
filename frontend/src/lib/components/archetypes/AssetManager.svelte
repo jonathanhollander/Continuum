@@ -25,7 +25,7 @@
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import { language } from "$lib/stores/localization";
     import { encouragementMode, userRole } from "$lib/stores/concierge";
-    import { estateProfile } from "$lib/stores/estateStore";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { activityLog } from "$lib/stores/activityLog";
     import { fly, scale, slide, fade } from "svelte/transition";
     // import { getStored, setStored } from "$lib/stores/persistence"; // REMOVED
@@ -413,7 +413,7 @@
                 <MapPin size={16} /> Treasure Hunt
             </a>
             <button
-                on:click={exportToCSV}
+                onclick={exportToCSV}
                 class="px-4 py-2 rounded-lg bg-gray-100 text-gray-600 text-sm font-bold hover:bg-gray-200 transition-colors flex items-center gap-2"
             >
                 <TrendingUp size={16} /> Export CSV
@@ -577,13 +577,13 @@
 
                 <div class="flex justify-end gap-3 mt-6 relative z-10">
                     <button
-                        on:click={resetForm}
+                        onclick={resetForm}
                         class="px-4 py-2 rounded-lg hover:bg-muted transition-colors text-sm font-semibold"
                     >
                         Cancel
                     </button>
                     <button
-                        on:click={saveAsset}
+                        onclick={saveAsset}
                         class="px-6 py-2 rounded-lg bg-[#4A7C74] hover:bg-[#3b635d] text-white font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2"
                     >
                         {#if newAsset.id}
@@ -601,6 +601,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         <!-- ... (Each asset block remains same) ... -->
         {#each assets as asset (asset.id)}
+            {@const Icon = getIcon(asset.type)}
             <div
                 transition:scale={{ duration: 300 }}
                 class="group bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all border border-transparent hover:border-[#4A7C74]/20 relative overflow-hidden"
@@ -609,14 +610,14 @@
                     class="absolute top-2 right-2 flex gap-1 z-20 opacity-0 group-hover:opacity-100 transition-opacity"
                 >
                     <button
-                        on:click={() => editAsset(asset)}
+                        onclick={() => editAsset(asset)}
                         class="p-2 bg-white/80 rounded-full text-blue-400 hover:text-blue-600 hover:bg-blue-50"
                         title="Edit Asset"
                     >
                         <Pencil size={16} />
                     </button>
                     <button
-                        on:click={() => removeAsset(asset.id)}
+                        onclick={() => removeAsset(asset.id)}
                         class="p-2 bg-white/80 rounded-full text-red-400 hover:text-red-600 hover:bg-red-50"
                         title="Delete Asset"
                     >
@@ -635,10 +636,7 @@
                     <div
                         class="p-3 rounded-xl bg-secondary/30 text-[#4A7C74] group-hover:scale-110 transition-transform duration-300"
                     >
-                        <svelte:component
-                            this={getIcon(asset.type)}
-                            size={24}
-                        />
+                        <Icon size={24} />
                     </div>
                     <div class="text-right">
                         {#if $userRole !== "Family"}
@@ -708,7 +706,7 @@
                     subtitle={sample.type}
                     value={sampleValue}
                     type="Asset"
-                    onClick={() => {
+                    onclick={() => {
                         newAsset = {
                             ...newAsset,
                             name: sample.name,
@@ -718,27 +716,24 @@
                         showAddForm = true;
                     }}
                 >
-                    <svelte:fragment slot="icon">
-                        <svelte:component
-                            this={getIcon(sample.type as AssetType)}
-                            size={20}
-                            class="text-slate-400"
-                        />
-                    </svelte:fragment>
+                    {#snippet icon()}
+                        {@const Icon = getIcon(sample.type as AssetType)}
+                        <Icon size={20} class="text-slate-400" />
+                    {/snippet}
                 </GhostRow>
             {/each}
 
             <div class="col-span-full flex justify-center mt-4">
                 {#if $userRole !== "Family"}
                     <button
-                        on:click={addStarterPack}
+                        onclick={addStarterPack}
                         class="text-sm font-bold text-[#4A7C74] hover:bg-[#4A7C74]/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
                     >
                         <Sparkles size={14} /> Or use the Starter Pack
                     </button>
                     <!-- Fallback manual trigger -->
                     <button
-                        on:click={() => (showAddForm = true)}
+                        onclick={() => (showAddForm = true)}
                         class="text-sm font-bold text-stone-400 hover:text-[#4A7C74] px-4 py-2"
                     >
                         Add Item Manually

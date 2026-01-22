@@ -1,11 +1,11 @@
 import { browser } from '$app/environment';
 import { getSmartSamples } from '$lib/data/smartSamples';
 import { propertyStore } from '$lib/stores/propertyStore.svelte';
-import { familyMembers, addMember, addRelationship } from '$lib/stores/familyStore';
-import { insuranceStore } from '$lib/stores/insuranceStore';
+import { familyStore } from '$lib/stores/familyStore.svelte';
+import { insuranceStore } from '$lib/stores/insuranceStore.svelte';
 import { heirloomStore } from '$lib/stores/heirloomStore.svelte';
 import { digitalAssetsStore } from '$lib/stores/digitalAssetsStore.svelte';
-import { medicalStore } from '$lib/stores/medicalStore';
+import { medicalStore } from '$lib/stores/medicalStore.svelte';
 import { activityLog } from '$lib/stores/activityLog';
 
 // Persistent Key
@@ -72,7 +72,7 @@ function createOnboardingStore() {
 
             // 2. Family
             samples.family.forEach(member => {
-                addMember(member);
+                familyStore.addMember(member);
             });
             // Add a mock relationship for demo visual goodness if needed, 
             // but smartSamples currently only returns members interactively.

@@ -5,7 +5,7 @@
         COMMON_MILESTONES,
         type TimeCapsuleMessage,
         type ReleaseTrigger,
-    } from "$lib/stores/timeCapsuleStore";
+    } from "$lib/stores/timeCapsuleStore.svelte";
     import {
         Lock,
         Unlock,

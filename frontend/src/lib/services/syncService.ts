@@ -1,7 +1,5 @@
-import { get } from 'svelte/store';
-import { activeAccountId } from '../stores/keyringStore';
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+import { API_URL } from '../config';
+import { logger } from '../utils/logger';
 
 interface SyncPayload {
     transparent_data: string;
@@ -23,14 +21,18 @@ export async function syncWithBackend(data: any) {
 
     syncTimeout = setTimeout(async () => {
         try {
-            console.log('🔄 Syncing with backend...', data);
+            logger.info('🔄 Syncing with backend...', data);
 
             // In a real app, the backend user_id would be resolved from the email or session
             // For this implementation, we use a mock mapping or let the backend handle it
-            const response = await fetch(`${API_BASE}/estate?user_id=1`, { // Mock user_id 1
+            const { token } = get(auth);
+            if (!token) return;
+
+            const response = await fetch(`${API_URL}/estate`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
                     transparent_data: JSON.stringify(data),
@@ -39,12 +41,12 @@ export async function syncWithBackend(data: any) {
             });
 
             if (!response.ok) {
-                console.error('❌ Sync failed:', response.statusText);
+                logger.error('❌ Sync failed', { status: response.status, text: response.statusText });
             } else {
-                console.log('✅ Sync successful');
+                logger.debug('✅ Sync successful');
             }
         } catch (error) {
-            console.error('❌ Sync error:', error);
+            logger.error('❌ Sync error', error);
         }
     }, 2000); // 2 second debounce to prevent spamming the DB
 }
@@ -56,14 +58,21 @@ export async function loadFromBackend(): Promise<any | null> {
     const email = get(activeAccountId);
     if (!email || email === 'anonymous') return null;
 
+    const { token } = get(auth);
+    if (!token) return null;
+
     try {
-        const response = await fetch(`${API_BASE}/estate?user_id=1`);
+        const response = await fetch(`${API_URL}/estate`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
         if (response.ok) {
             const estate = await response.json();
             return JSON.parse(estate.transparent_data || '{}');
         }
     } catch (error) {
-        console.error('❌ Failed to load from backend:', error);
+        logger.error('❌ Failed to load from backend', error);
     }
     return null;
 }

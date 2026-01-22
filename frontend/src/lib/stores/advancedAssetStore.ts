@@ -1,4 +1,5 @@
-import { createProfileStore } from './persistence';
+import { registerSingletonSync } from '$lib/services/sync.svelte';
+import { getLegacy } from './persistence';
 
 // --- Transactions ---
 export interface AssetTransaction {
@@ -34,69 +35,72 @@ export interface InsuranceClaim {
     note: string;
 }
 
-interface AdvancedAssetState {
+export interface AdvancedAssetState {
     transactions: AssetTransaction[];
     maintenance: MaintenanceLog[];
     claims: InsuranceClaim[];
 }
 
-const DEFAULT_STATE: AdvancedAssetState = {
+export const DEFAULT_ADVANCED_STATE: AdvancedAssetState = {
     transactions: [],
     maintenance: [],
     claims: []
 };
 
+const advancedAssetMapper = (data: any) => ({
+    ...data,
+    transactions: JSON.stringify(data.transactions),
+    maintenance: JSON.stringify(data.maintenance),
+    claims: JSON.stringify(data.claims)
+});
+
+// Initialize Sync Manager
+export const advancedAssetSync = registerSingletonSync<AdvancedAssetState>('advanced_assets', 'advanced_assets', advancedAssetMapper, '/api/data');
+
 // Migration / Initialization
-const getInitialData = (): AdvancedAssetState => {
-    if (typeof localStorage === 'undefined') return DEFAULT_STATE;
-
-    const unified = localStorage.getItem('continuum_owner_advanced_assets');
-    if (unified) return DEFAULT_STATE;
-
-    const legacy = localStorage.getItem('continuum_advanced_assets');
+if (!advancedAssetSync.data || Object.keys(advancedAssetSync.data).length === 0) {
+    const legacy = getLegacy('continuum_advanced_assets');
     if (legacy) {
         try {
-            return { ...DEFAULT_STATE, ...JSON.parse(legacy) };
+            advancedAssetSync.update({ ...DEFAULT_ADVANCED_STATE, ...JSON.parse(legacy) }, true);
         } catch (e) {
             console.error("Migration failed for advanced assets", e);
         }
+    } else {
+        advancedAssetSync.update(DEFAULT_ADVANCED_STATE, true);
     }
-    return DEFAULT_STATE;
-};
-
-function createReactiveAdvancedAssetStore() {
-    const store = createProfileStore<AdvancedAssetState>('advanced_assets', getInitialData());
-    const { subscribe, update } = store;
-
-    return {
-        subscribe,
-        // Transaction methods
-        addTransaction: (tx: Omit<AssetTransaction, 'id'>) => {
-            update(s => ({ ...s, transactions: [{ ...tx, id: crypto.randomUUID() }, ...s.transactions] }));
-        },
-        removeTransaction: (id: string) => {
-            update(s => ({ ...s, transactions: s.transactions.filter(t => t.id !== id) }));
-        },
-
-        // Maintenance methods
-        addMaintenance: (log: Omit<MaintenanceLog, 'id'>) => {
-            update(s => ({ ...s, maintenance: [{ ...log, id: crypto.randomUUID() }, ...s.maintenance] }));
-        },
-        removeMaintenance: (id: string) => {
-            update(s => ({ ...s, maintenance: s.maintenance.filter(m => m.id !== id) }));
-        },
-
-        // Claims methods
-        addClaim: (claim: Omit<InsuranceClaim, 'id'>) => {
-            update(s => ({ ...s, claims: [{ ...claim, id: crypto.randomUUID() }, ...s.claims] }));
-        },
-        updateClaimStatus: (id: string, status: InsuranceClaim['status'], paid?: number) => {
-            update(s => ({ ...s, claims: s.claims.map(c => c.id === id ? { ...c, status, amountPaid: paid ?? c.amountPaid } : c) }));
-        },
-        removeClaim: (id: string) => {
-            update(s => ({ ...s, claims: s.claims.filter(c => c.id !== id) }));
-        }
-    };
 }
 
-export const advancedAssetStore = createReactiveAdvancedAssetStore();
+// Wrapper for compatibility
+export const advancedAssetStore = {
+    get data() { return advancedAssetSync.data as AdvancedAssetState; },
+    get transactions() { return (advancedAssetSync.data as AdvancedAssetState)?.transactions || []; },
+    get maintenance() { return (advancedAssetSync.data as AdvancedAssetState)?.maintenance || []; },
+    get claims() { return (advancedAssetSync.data as AdvancedAssetState)?.claims || []; },
+
+    addTransaction: (tx: Omit<AssetTransaction, 'id'>) => {
+        const current = advancedAssetSync.data as AdvancedAssetState;
+        advancedAssetSync.update({
+            ...current,
+            transactions: [{ ...tx, id: crypto.randomUUID() }, ...current.transactions]
+        });
+    },
+
+    addMaintenance: (log: Omit<MaintenanceLog, 'id'>) => {
+        const current = advancedAssetSync.data as AdvancedAssetState;
+        advancedAssetSync.update({
+            ...current,
+            maintenance: [{ ...log, id: crypto.randomUUID() }, ...current.maintenance]
+        });
+    },
+
+    addClaim: (claim: Omit<InsuranceClaim, 'id'>) => {
+        const current = advancedAssetSync.data as AdvancedAssetState;
+        advancedAssetSync.update({
+            ...current,
+            claims: [{ ...claim, id: crypto.randomUUID() }, ...current.claims]
+        });
+    },
+
+    subscribe: advancedAssetSync.subscribe.bind(advancedAssetSync)
+};

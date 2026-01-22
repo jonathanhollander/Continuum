@@ -4,7 +4,7 @@
         type AssetTransaction,
         type MaintenanceLog,
         type InsuranceClaim,
-    } from "$lib/stores/advancedAssetStore";
+    } from "$lib/stores/advancedAssetStore.svelte";
     import {
         digitalAssetsStore,
         type DigitalAccount,

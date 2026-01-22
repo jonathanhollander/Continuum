@@ -1,0 +1,61 @@
+{% extends "emails/base.html" %}
+
+{% block content %}
+<div class="greeting">Dear {{ recipient_name }},</div>
+
+<h2>EMERGENCY: Full Vault Access Granted</h2>
+
+<div class="alert-box" style="border-left-color: #7c2d12; background: #fef2f2;">
+    <strong>Tier 4 EMERGENCY:</strong> Complete digital estate access activated
+</div>
+
+<p style="font-size: 16px; color: #991b1b; font-weight: 600;">
+    This is the highest level of escalation for <strong>{{ user_name }}</strong>. Extended attempts to confirm their wellbeing have been unsuccessful.
+</p>
+
+<p><strong>FULL ACCESS NOW GRANTED TO:</strong></p>
+<ul style="color: #475569; margin: 16px 0; font-weight: 600;">
+    <li>Complete digital vault contents</li>
+    <li>All account credentials and access information</li>
+    <li>Financial documents and account details</li>
+    <li>Legal documents including will and estate instructions</li>
+    <li>Personal messages and final wishes</li>
+    <li>All property and asset information</li>
+</ul>
+
+<div class="cta-container">
+    <a href="{{ portal_url }}" class="cta-button" style="background: #7c2d12;">Access Complete Vault</a>
+</div>
+
+<div class="divider"></div>
+
+<p><strong>IMMEDIATE ACTIONS REQUIRED:</strong></p>
+<ol style="color: #475569; margin: 16px 0;">
+    <li><strong>Verify {{ user_name }}'s safety and status</strong> - contact authorities if you have not already</li>
+    <li><strong>Review medical and legal directives</strong> to understand their wishes</li>
+    <li><strong>Coordinate with other designated guardians</strong> and legal representatives</li>
+    <li><strong>Secure critical accounts</strong> as outlined in their estate instructions</li>
+    <li><strong>Follow documented procedures</strong> for asset management and notification</li>
+</ol>
+
+<div class="alert-box" style="background: #fffbeb; border-left-color: #f59e0b;">
+    <p style="margin: 0 0 12px 0;"><strong>Legal and Ethical Responsibility:</strong></p>
+    <p style="margin: 0; font-size: 14px;">
+        As a Tier 4 guardian, you now have access to {{ user_name }}'s most sensitive information. This access carries significant legal and ethical responsibilities. All information must be used solely in accordance with their documented wishes and applicable laws.
+    </p>
+</div>
+
+<p style="font-size: 14px; color: #1e293b; margin-top: 24px; font-weight: 600;">
+    {{ user_name }} chose you as their highest-level guardian because of the deep trust they place in you. This information represents their digital legacy and final wishes.
+</p>
+
+<div class="divider"></div>
+
+<p style="font-size: 13px; color: #64748b;">
+    <strong>If this is a false alarm:</strong> If you have confirmed {{ user_name }}'s safety, please immediately reset the system through the Guardian Portal and notify them to update their check-in schedule or contact preferences.
+</p>
+
+<p style="font-size: 13px; color: #94a3b8; margin-top: 16px;">
+    <strong>Support:</strong> If you need assistance navigating this process or have questions about your responsibilities, please review the Guardian Guide in the portal or contact our support team.
+</p>
+{% endblock %}

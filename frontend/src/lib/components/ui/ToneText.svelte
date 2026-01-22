@@ -2,13 +2,14 @@
     import { toneStore } from "$lib/stores/toneStore";
     import { fade } from "svelte/transition";
 
-    export let planning: string;
-    export let grief: string | undefined = undefined;
-    export let executor: string | undefined = undefined;
+    let { planning, grief, executor } = $props<{
+        planning: string;
+        grief?: string;
+        executor?: string;
+    }>();
 
-    $: activeText = getActiveText($toneStore.mode);
-
-    function getActiveText(mode: string) {
+    let activeText = $derived.by(() => {
+        const mode = toneStore.mode;
         switch (mode) {
             case "grief":
                 return grief || planning;
@@ -17,7 +18,7 @@
             default:
                 return planning;
         }
-    }
+    });
 </script>
 
 <span in:fade={{ duration: 300 }} class="tone-text-wrapper inline-block">

@@ -11,22 +11,15 @@
     } from "lucide-svelte";
     import { fade, slide } from "svelte/transition";
     import { onMount } from "svelte";
-
-    const USER_ID = 1;
+    import { apiGet } from "$lib/api/client";
     let activeTier = $state(0);
     // Tiers will be fetched from backend
     let tiers = $state<any[]>([]);
 
     onMount(async () => {
         try {
-            const baseUrl = import.meta.env.VITE_API_BASE || "";
-            const res = await fetch(
-                `${baseUrl}/api/pulse/tiers?user_id=${USER_ID}`,
-            );
-            if (res.ok) {
-                const rawTiers = await res.json();
-                tiers = mapTiersToUI(rawTiers);
-            }
+            const rawTiers = await apiGet('/api/pulse/tiers');
+            tiers = mapTiersToUI(rawTiers);
         } catch (e) {
             console.error(e);
         }

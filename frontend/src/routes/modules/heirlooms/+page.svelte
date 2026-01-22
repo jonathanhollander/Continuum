@@ -16,6 +16,7 @@
     import VisionUploader from "$lib/components/modules/heirlooms/VisionUploader.svelte";
     import type { AnalyzedHeirloom } from "$lib/services/visionService";
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
+    import Affirmation from "$lib/components/Affirmation.svelte";
     import { onMount } from "svelte";
     import {
         heirloomSync,
@@ -23,7 +24,7 @@
     } from "$lib/stores/heirloomStore.svelte";
     import { qrStore } from "$lib/stores/qrStore";
     import { activityLog } from "$lib/stores/activityLog";
-    import { estateProfile } from "$lib/stores/estateStore";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
     import EvidenceGalleryUploader from "$lib/components/ui/EvidenceGalleryUploader.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import { getSmartSamples } from "$lib/data/smartSamples";
@@ -31,6 +32,7 @@
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
 
     let showAddModal = false;
+    let showAffirmation = $state(false);
     let selectedImage: string | null = null;
     let showWizard = false;
 
@@ -221,30 +223,28 @@
     function addHeirloom() {
         if (!newHeirloom.name) return;
 
-        heirloomStore.update((items) => [
-            {
-                id: crypto.randomUUID(),
-                name: newHeirloom.name || "Unknown Treasure",
-                recipient: newHeirloom.recipient || "Undecided",
-                story: newHeirloom.story || "",
-                image:
-                    newHeirloom.image ||
-                    getsuggestedImage(
-                        newHeirloom.name || "",
-                        newHeirloom.story || "",
-                    ),
-            } as Heirloom,
-            ...items,
-        ]);
+        heirloomStore.addItem({
+            name: newHeirloom.name || "Unknown Treasure",
+            recipient: newHeirloom.recipient || "Undecided",
+            story: newHeirloom.story || "",
+            image:
+                newHeirloom.image ||
+                getsuggestedImage(
+                    newHeirloom.name || "",
+                    newHeirloom.story || "",
+                ),
+        });
+
         showAddForm = false;
+        showAffirmation = true;
         newHeirloom = {
             image: "",
         };
     }
 
     function removeHeirloom(id: string) {
-        if (!confirm("Remove this heirloom from the registry?")) return;
-        heirloomStore.update((items) => items.filter((h) => h.id !== id));
+        if (!confirm("Are you sure you'd like to remove this heirloom? The story will be preserved in your activity log.")) return;
+        heirloomStore.deleteItem(id);
     }
 
     // QR Logic
@@ -291,7 +291,7 @@
         <div class="w-full max-w-2xl relative" in:fly={{ y: 20 }}>
             <button
                 class="absolute -top-12 right-0 text-white/50 hover:text-white"
-                onclick={() => (showWizard = false)}>Close</button
+                onclick={() => (showWizard = false)}>Go back</button
             >
             <ConciergeFlow
                 steps={wizardSteps}
@@ -310,13 +310,20 @@
             <Gift size={48} />
         </div>
         <h1 class="font-serif font-bold text-4xl text-[#304743] mb-4">
-            Heirloom Stories
+            More Than Just Things
         </h1>
-        <p class="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Objects carry stories. Document the history and meaning behind your
-            most treasured possessions so they remain more than just "things."
+        <p
+            class="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed"
+        >
+            Objects carry stories that deserve to be told. When you document the
+            history and meaning behind your treasured possessions, you're
+            ensuring these stories survive—transforming objects into heirlooms
+            that connect generations.
         </p>
     </div>
+
+    <!-- Affirmation Message -->
+    <Affirmation module="heirlooms" bind:show={showAffirmation} />
 
     <!-- AI Prompt Injection -->
     <div class="max-w-3xl mx-auto mb-12">
@@ -490,7 +497,7 @@
                             onclick={() => (showQrModal = false)}
                             class="px-5 py-2 rounded-xl font-bold text-stone-500 hover:bg-stone-100"
                         >
-                            Close
+                            Go back
                         </button>
                         <button
                             onclick={printLabel}
@@ -520,7 +527,7 @@
                     </h3>
                     <button
                         onclick={() => (showAddForm = false)}
-                        class="text-gray-400 hover:text-gray-600">Close</button
+                        class="text-gray-400 hover:text-gray-600">Go back</button
                     >
                 </div>
 
@@ -593,7 +600,7 @@
                     <button
                         onclick={() => (showAddForm = false)}
                         class="px-6 py-2 rounded-xl font-bold text-gray-500 hover:bg-gray-200"
-                        >Cancel</button
+                        >Not right now</button
                     >
                     <button
                         onclick={addHeirloom}

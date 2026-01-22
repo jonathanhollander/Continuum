@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { InternalMemory } from "$lib/stores/visualMemoryStore";
+    import type { VisualMemory } from "$lib/stores/visualMemoryStore.svelte";
     import {
         Grid,
         LayoutTemplate,
@@ -11,7 +11,7 @@
     import { createEventDispatcher } from "svelte";
     import { fade, fly } from "svelte/transition";
 
-    export let memories: InternalMemory[] = [];
+    export let memories: VisualMemory[] = [];
     export let viewMode: "grid" | "carousel" = "grid";
     export let selectedIds: string[] = [];
     export let isSelectionMode = false;
@@ -36,9 +36,9 @@
         dispatch("selectionChange", selectedIds);
     }
 
-    function handleCardClick(memory: InternalMemory) {
+    function handleCardClick(memory: VisualMemory) {
         if (isSelectionMode) {
-            toggleSelection(memory.id, new Event("click"));
+            toggleSelection(String(memory.id), new Event("click"));
         } else {
             viewMode = "carousel";
             activeIndex = memories.indexOf(memory);
@@ -162,11 +162,13 @@
                         >
                             <button
                                 class="p-2 bg-white/80 backdrop-blur rounded-full hover:bg-white text-slate-500 hover:text-red-500 transition-colors"
-                                on:click={(e) => toggleFavorite(memory.id, e)}
+                                on:click={(e) =>
+                                    toggleFavorite(String(memory.id), e)}
                             >
                                 <Heart
                                     size={14}
-                                    class={memory.isFavorite
+                                    class={memory.is_favorite ||
+                                    (memory as any).isFavorite
                                         ? "fill-red-500 text-red-500"
                                         : ""}
                                 />
@@ -242,7 +244,8 @@
                     >
                         <Heart
                             size={20}
-                            class={memories[activeIndex].isFavorite
+                            class={memories[activeIndex].is_favorite ||
+                            (memories[activeIndex] as any).isFavorite
                                 ? "fill-red-500 text-red-500"
                                 : ""}
                         />

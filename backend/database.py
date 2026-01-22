@@ -2,13 +2,15 @@ import os
 from datetime import datetime
 from typing import Optional, List
 from sqlmodel import Field, SQLModel, create_engine, Session, select
+from backend.config import settings
 
 class User(SQLModel, table=True):
     __tablename__ = "users"
     id: Optional[int] = Field(default=None, primary_key=True)
-    external_id: str = Field(unique=True, index=True) 
+    external_id: str = Field(unique=True, index=True)
     email: str = Field(unique=True, index=True)
-    public_key: str # WebAuthn Public Key
+    hashed_password: Optional[str] = Field(default=None)  # Password hash for email/password login
+    public_key: Optional[str] = Field(default=None)  # WebAuthn Public Key (optional)
     sign_count: int = Field(default=0)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -27,45 +29,67 @@ class Estate(SQLModel, table=True):
 
 from sqlalchemy import inspect, text
 from backend.estate_models import (
-    Asset, FinancialAccount, Vendor, HomeAccess, Utility, 
-    Document, Letter, JournalEntry, Subscription, CalendarEvent
+    Asset, FinancialAccount, Vendor, HomeAccess, Utility,
+    Document, Letter, JournalEntry, Subscription, CalendarEvent,
+    InsurancePolicy, MedicalProfile, MedicalDirective, Pet, ContactRelationship
 )
+from backend.models.media import MediaFile
+from backend.models.email_log import EmailLog
 
 # Database Engine
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./continuum_saas.db")
+DATABASE_URL = settings.DATABASE_URL
+connect_args = settings.get_database_connect_args()
 
-# Force SSL for Postgres (Railway)
-connect_args = {}
-if "postgresql" in DATABASE_URL:
-    connect_args["sslmode"] = "require"
-
-engine = create_engine(DATABASE_URL, connect_args=connect_args)
-
-engine = create_engine(DATABASE_URL, connect_args=connect_args)
+engine = create_engine(
+    DATABASE_URL,
+    connect_args=connect_args,
+    echo=settings.DB_ECHO,
+    pool_size=settings.DB_POOL_SIZE if "postgresql" in DATABASE_URL else 5,
+    max_overflow=settings.DB_MAX_OVERFLOW if "postgresql" in DATABASE_URL else 10,
+)
 
 import time
 from sqlalchemy.exc import OperationalError
+
+from backend.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 def create_db_and_tables():
     retries = 5
     for i in range(retries):
         try:
-            print(f"🔄 Attempting Database Connection ({i+1}/{retries})...")
+            logger.info(f"Attempting Database Connection ({i+1}/{retries})...")
             SQLModel.metadata.create_all(engine)
             migrate_db()
-            print("✅ Database Connected & Initialized!")
+            logger.info("Database Connected & Initialized!")
             break
         except OperationalError as e:
             if i == retries - 1:
-                print(f"❌ Database Connection Failed after {retries} attempts: {e}")
+                logger.error(f"Database Connection Failed after {retries} attempts: {e}")
                 raise e
-            print(f"⚠️ Connection Refused. Database might be sleeping. Retrying in 3s...")
+            logger.warning(f"Connection Refused. Database might be sleeping. Retrying in 3s...")
             time.sleep(3)
 
 def migrate_db():
     """Simple migration helper to add missing columns for SQLite/Postgres"""
     inspector = inspect(engine)
     with Session(engine) as session:
+        # Add password field to users table
+        try:
+            user_columns = [c["name"] for c in inspector.get_columns("users")]
+            if "hashed_password" not in user_columns:
+                logger.info("Migrating: Adding hashed_password to users table")
+                session.execute(text("ALTER TABLE users ADD COLUMN hashed_password TEXT"))
+                session.commit()
+            # Make public_key nullable
+            if "public_key" in user_columns:
+                # Note: Making columns nullable is complex in SQLite, so we skip this for SQLite
+                # PostgreSQL: session.execute(text("ALTER TABLE users ALTER COLUMN public_key DROP NOT NULL"))
+                pass
+        except Exception as e:
+            logger.warning(f"Migration info for users table: {e}")
+
         # Generic Migration for all models
         table_cols = {
             "assets": {
@@ -96,10 +120,10 @@ def migrate_db():
                 existing = [c["name"] for c in inspector.get_columns(table)]
                 for col_name, col_type in cols.items():
                     if col_name not in existing:
-                        print(f"🔧 Migrating: Adding {col_name} to {table}")
+                        logger.info(f"Migrating: Adding {col_name} to {table}")
                         session.execute(text(f"ALTER TABLE {table} ADD COLUMN {col_name} {col_type}"))
             except Exception as e:
-                print(f"⚠️ Migration skipping {table}: {e}")
+                logger.warning(f"Migration skipping {table}: {e}")
 
         # Check pulse_settings columns
         columns = [c["name"] for c in inspector.get_columns("pulse_settings")]
@@ -123,43 +147,54 @@ def migrate_db():
         
         for col_name, col_type in new_cols.items():
             if col_name not in columns:
-                print(f"🔧 Migrating: Adding column {col_name} to pulse_settings")
+                logger.info(f"Migrating: Adding column {col_name} to pulse_settings")
                 try:
                     session.execute(text(f"ALTER TABLE pulse_settings ADD COLUMN {col_name} {col_type}"))
                 except Exception as e:
-                    print(f"⚠️ Migration Error adding {col_name}: {e}")
+                    logger.warning(f"Migration Error adding {col_name}: {e}")
 
         # Check pulse_contacts columns
         try:
              # Verify table exists first
             inspector.get_columns("pulse_contacts")
             contact_columns = [c["name"] for c in inspector.get_columns("pulse_contacts")]
-            
+
             contact_new_cols = {
                 "individual_delay_hours": "INTEGER",
                 "notify_on_safety_timer": "BOOLEAN DEFAULT 1",
                 "role": "TEXT DEFAULT 'Family'",
                 "relation": "TEXT",
                 "notes": "TEXT",
-                "avatar": "TEXT"
+                "avatar": "TEXT",
+                "is_executor": "BOOLEAN DEFAULT 0",
+                "is_beneficiary": "BOOLEAN DEFAULT 0",
+                "is_emergency_contact": "BOOLEAN DEFAULT 0"
             }
-            
+
             for col_name, col_type in contact_new_cols.items():
                 if col_name not in contact_columns:
-                    print(f"🔧 Migrating: Adding column {col_name} to pulse_contacts")
+                    logger.info(f"Migrating: Adding column {col_name} to pulse_contacts")
                     try:
                         session.execute(text(f"ALTER TABLE pulse_contacts ADD COLUMN {col_name} {col_type}"))
                     except Exception as e:
-                        print(f"⚠️ Migration Error adding {col_name}: {e}")
-            
-            # Note: Making tier_id nullable is harder in SQLite (requires recreate). 
+                        logger.warning(f"Migration Error adding {col_name}: {e}")
+
+            # Note: Making tier_id nullable is harder in SQLite (requires recreate).
             # ideally we would do: session.execute(text("ALTER TABLE pulse_contacts ALTER COLUMN tier_id DROP NOT NULL"))
-            # For now in Dev, if we insert without tier_id it might fail if schema enforces it. 
+            # For now in Dev, if we insert without tier_id it might fail if schema enforces it.
             # We will assume SQLite logic allows null if not stricter defined or we might need a workaround for dev.
             # (SQLModel by default doesn't enforce NOT NULL on DB level for Optional fields unless specified, so we might be safe for new rows)
         except Exception:
             pass # Table might not exist yet
-        
+
+        # Create email_logs table if it doesn't exist (new in email integration update)
+        try:
+            inspector.get_columns("email_logs")
+            logger.info("email_logs table exists")
+        except Exception:
+            logger.info("Creating email_logs table...")
+            # Table will be created by SQLModel.metadata.create_all() above
+
         session.commit()
 
 def get_session():

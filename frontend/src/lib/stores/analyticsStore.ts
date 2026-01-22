@@ -1,17 +1,18 @@
 import { derived } from 'svelte/store';
-import { estateProfile } from './estateStore';
-import { petStore } from './petStore';
-import { medicalStore } from './medicalStore';
-import { advancedAssetStore } from './advancedAssetStore';
+import { estateProfile } from './estateStore.svelte';
+import { petStore } from './petStore.svelte';
+import { medicalStore } from './medicalStore.svelte';
+import { advancedAssetStore } from './advancedAssetStore.svelte';
 import { digitalAssetsStore } from "./digitalAssetsStore.svelte";
-import { estateAudit } from './auditStore';
+import { estateAudit } from './auditStore.svelte';
 import { heirloomStore } from './heirloomStore.svelte';
-import { funeralStore } from './funeralStore';
-import { pulse } from './pulse';
+import { funeralStore } from './funeralStore.svelte';
+import { pulse } from './pulse.svelte';
 
 export const estateAnalytics = derived(
     [estateProfile, petStore, medicalStore, advancedAssetStore, digitalAssetsStore, estateAudit, heirloomStore, funeralStore, pulse],
     ([$profile, $pets, $medical, $advanced, $digital, $audit, $heirlooms, $funeral, $pulse]) => {
+
 
         // --- 1. Legal Readiness ---
         const hasExecutor = !!$profile?.executorName;

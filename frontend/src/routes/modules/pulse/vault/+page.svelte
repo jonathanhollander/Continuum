@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
+    import { apiGet, apiPost, apiPut, apiDelete } from "$lib/api/client";
     import {
         ShieldAlert,
         Lock,
@@ -15,8 +16,6 @@
         EyeOff,
     } from "lucide-svelte";
     import { fade, slide } from "svelte/transition";
-
-    const USER_ID = 1;
 
     let items = $state<any[]>([]);
     let loading = $state(true);
@@ -35,11 +34,7 @@
 
     async function loadVault() {
         try {
-            const baseUrl = import.meta.env.VITE_API_BASE || "";
-            const res = await fetch(
-                `${baseUrl}/api/pulse/vault?user_id=${USER_ID}`,
-            );
-            if (res.ok) items = await res.json();
+            items = await apiGet('/api/pulse/vault');
         } finally {
             loading = false;
         }
@@ -49,44 +44,25 @@
         if (!newItem.name || !newItem.content) return;
         saving = true;
         try {
-            const baseUrl = import.meta.env.VITE_API_BASE || "";
-
-            let res;
+            let saved;
             if (newItem.id) {
                 // Update implementation
-                res = await fetch(
-                    `${baseUrl}/api/pulse/vault/${newItem.id}?user_id=${USER_ID}`,
-                    {
-                        method: "PUT",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(newItem),
-                    },
-                );
+                saved = await apiPut(`/api/pulse/vault/${newItem.id}`, newItem);
             } else {
                 // Create implementation
-                res = await fetch(
-                    `${baseUrl}/api/pulse/vault?user_id=${USER_ID}`,
-                    {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(newItem),
-                    },
-                );
+                saved = await apiPost('/api/pulse/vault', newItem);
             }
 
-            if (res.ok) {
-                const saved = await res.json();
-                if (newItem.id) {
-                    items = items.map((i) => (i.id === saved.id ? saved : i));
-                } else {
-                    items = [...items, saved];
-                }
-                newItem = {
-                    name: "",
-                    content: "",
-                    unlock_condition: "tier_3_escalation",
-                };
+            if (newItem.id) {
+                items = items.map((i) => (i.id === saved.id ? saved : i));
+            } else {
+                items = [...items, saved];
             }
+            newItem = {
+                name: "",
+                content: "",
+                unlock_condition: "tier_3_escalation",
+            };
         } finally {
             saving = false;
         }
@@ -95,11 +71,7 @@
     async function deleteItem(id: number) {
         if (!confirm("Permanently delete these instructions from the vault?"))
             return;
-        const baseUrl =
-            import.meta.env.VITE_API_BASE || "http://localhost:8000";
-        await fetch(`${baseUrl}/api/pulse/vault/${id}?user_id=${USER_ID}`, {
-            method: "DELETE",
-        });
+        await apiDelete(`/api/pulse/vault/${id}`);
         items = items.filter((i) => i.id !== id);
     }
 </script>

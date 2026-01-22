@@ -12,7 +12,7 @@
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import { onMount, tick } from "svelte";
-    import { estateProfile } from "$lib/stores/estateStore";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { activityLog } from "$lib/stores/activityLog";
     import { fade, scale } from "svelte/transition";
     import { FileText, Download, Printer } from "lucide-svelte";
@@ -184,7 +184,7 @@
     }
 
     function removeSubscription(id: string) {
-        if (!confirm("Remove this subscription?")) return;
+        if (!confirm("Are you sure you'd like to remove this subscription from your records?")) return;
         const sub = subscriptions.find((s) => s.id === id);
 
         subscriptionSync.delete(id);
@@ -259,11 +259,10 @@
                 <div class="p-2.5 bg-indigo-100 rounded-xl text-indigo-700">
                     <Receipt class="w-8 h-8" />
                 </div>
-                Subscriptions & Services
+                No More Zombie Bills
             </h1>
-            <p class="text-slate-500 mt-2 text-lg">
-                Identify recurring charges to prevent "Zombie Bills" from
-                draining the estate.
+            <p class="text-slate-500 mt-2 text-lg leading-relaxed max-w-2xl">
+                Every subscription you document is money your family won't lose to forgotten charges. This simple list can save them hundreds or even thousands in the months after you're gone.
             </p>
         </div>
 
@@ -433,7 +432,7 @@
                     </h3>
                     <button
                         onclick={resetForm}
-                        class="text-gray-400 hover:text-gray-600">Close</button
+                        class="text-gray-400 hover:text-gray-600">Go back</button
                     >
                 </div>
 
@@ -535,7 +534,7 @@
                     <button
                         onclick={() => (showAddForm = false)}
                         class="px-6 py-2 rounded-xl font-bold text-gray-500 hover:bg-gray-200"
-                        >Cancel</button
+                        >Not right now</button
                     >
                     <button
                         onclick={saveSubscription}

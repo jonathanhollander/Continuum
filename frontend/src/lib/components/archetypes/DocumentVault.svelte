@@ -25,7 +25,7 @@
     import FileUploader from "$lib/components/ui/FileUploader.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
-    import { estateProfile } from "$lib/stores/estateStore";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { activityLog } from "$lib/stores/activityLog";
     // import { getStored, setStored } from "$lib/stores/persistence";
 
@@ -158,7 +158,7 @@
     }
 
     function removeDoc(id: string) {
-        if (!confirm("Remove this document?")) return;
+        if (!confirm("Are you sure you'd like to remove this document? This cannot be undone.")) return;
         if (!docSync) return;
 
         const doc = docs.find((d) => d.id === id);
@@ -528,7 +528,7 @@
                         <button
                             onclick={resetForm}
                             class="px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
-                            >Cancel</button
+                            >Not right now</button
                         >
                         <button
                             onclick={saveDoc}
@@ -650,9 +650,9 @@
             </div>
         {/each}
         {#if docs.length === 0}
-            <GhostRow type="Document" onClick={startWizard} />
-            <GhostRow type="Document" onClick={startWizard} />
-            <GhostRow type="Document" onClick={startWizard} />
+            <GhostRow type="Document" onclick={startWizard} />
+            <GhostRow type="Document" onclick={startWizard} />
+            <GhostRow type="Document" onclick={startWizard} />
             <div class="flex justify-center mt-4">
                 <button
                     onclick={startWizard}

@@ -4,7 +4,7 @@
         type PropertyItem,
     } from "$lib/stores/propertyStore.svelte";
     import { activityLog } from "$lib/stores/activityLog";
-    import { estateProfile } from "$lib/stores/estateStore";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { fade, slide, scale } from "svelte/transition";
     import { quintOut } from "svelte/easing";
     import { qrStore } from "$lib/stores/qrStore";

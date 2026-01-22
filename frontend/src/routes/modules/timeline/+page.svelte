@@ -19,50 +19,42 @@
     } from "lucide-svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
 
-    import { timelineStore, type LifeEvent } from "$lib/stores/timelineStore";
-    import { familyMembers } from "$lib/stores/familyStore";
+    import {
+        timelineStore,
+        type LifeEvent,
+    } from "$lib/stores/timelineStore.svelte";
+    import { familyStore } from "$lib/stores/familyStore.svelte";
 
     // --- State & Types ---
     // LifeEvent imported from store
 
-    let getContactById = $derived((id: string | undefined) =>
-        $familyMembers.find((m) => m.id === id),
+    let getContactById = $derived((id: string | number | undefined) =>
+        familyStore.members.find((m) => m.id === id),
     );
 
-    let showMemento = false;
-    let birthYear = 1990;
+    let showMemento = $state(false);
+    let birthYear = $state(1990);
     let currentYear = new Date().getFullYear();
-    let lifeExpectancy = 85;
+    let lifeExpectancy = $state(85);
 
     // Use store directly
-    let lifeEvents = $derived($timelineStore);
+    let lifeEvents = $derived(timelineStore.items);
 
-    let showAddModal = false;
-    let newEvent: Partial<LifeEvent> & { id?: number } = {
+    let showAddModal = $state(false);
+    let newEvent: Partial<LifeEvent> = $state({
         year: currentYear,
         label: "",
         type: "milestone",
-    };
+    });
 
     function saveEvent() {
         if (!newEvent.label || !newEvent.year) return;
 
-        timelineStore.update((events) => {
-            let updated;
-            if (newEvent.id) {
-                // Edit Mode
-                updated = events.map((e) =>
-                    e.id === newEvent.id ? ({ ...newEvent } as LifeEvent) : e,
-                );
-            } else {
-                // Create Mode
-                updated = [
-                    ...events,
-                    { ...newEvent, id: Date.now() } as LifeEvent,
-                ];
-            }
-            return updated.sort((a, b) => a.year - b.year);
-        });
+        if (newEvent.id) {
+            timelineStore.updateEvent(newEvent.id, newEvent);
+        } else {
+            timelineStore.addEvent(newEvent);
+        }
 
         resetForm();
     }
@@ -80,12 +72,15 @@
             label: "",
             type: "milestone",
             assignedContactId: undefined,
+            description: "",
+            reflection: "",
+            category: "Personal",
         };
     }
 
-    function removeEvent(id: number) {
-        if (!confirm("Remove this event?")) return;
-        timelineStore.update((events) => events.filter((e) => e.id !== id));
+    function removeEvent(id: string | number) {
+        if (!confirm("Are you sure you'd like to remove this event from your timeline?")) return;
+        timelineStore.removeEvent(id);
     }
 
     // Memento Mori Calculation
@@ -94,7 +89,7 @@
     // Dynamic Grid Sizing: Furthest event OR Current Year + 3
     let maxEventYear = $derived(
         lifeEvents.length > 0
-            ? Math.max(...lifeEvents.map((e) => new Date(e.date).getFullYear()))
+            ? Math.max(...lifeEvents.map((e) => e.year))
             : currentYear,
     );
     let endYear = $derived(Math.max(maxEventYear, currentYear + 3));
@@ -270,7 +265,7 @@
                             class="w-full p-2 rounded-lg border focus:ring-2 ring-[#4A7C74] outline-none bg-white text-sm"
                         >
                             <option value={undefined}>No one assigned</option>
-                            {#each $familyMembers as member}
+                            {#each familyStore.members as member}
                                 <option value={member.id}
                                     >{member.name} ({member.role})</option
                                 >

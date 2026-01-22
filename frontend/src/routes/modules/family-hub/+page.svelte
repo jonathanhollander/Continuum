@@ -22,14 +22,28 @@
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
     import { onMount } from "svelte";
-    import { estateProfile } from "$lib/stores/estateStore";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { activityLog } from "$lib/stores/activityLog";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
+    import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
+    import * as registryRaw from "$lib/data/registry.json";
+
+    // Registry Data Handling
+    const registryData = (registryRaw as any).default || registryRaw;
+    const registry = Array.isArray(registryData) ? registryData : [];
+    const module = registry.find((m) => m.id === "family-hub");
+
+    import {
+        familyMemories,
+        addFamilyMemory,
+        updateFamilyMemory,
+        removeFamilyMemory,
+    } from "$lib/stores/visualMemoryStore";
 
     // --- State & Types ---
     type MemoryType = "photo" | "recipe" | "quote";
-    let viewMode = $state<"dashboard" | "concierge">("dashboard"); // Default to dashboard for now, or check memories later
+    let viewMode = $state<"dashboard" | "concierge">("dashboard");
 
     interface Memory {
         id: number;
@@ -40,9 +54,10 @@
         desc?: string;
         text?: string;
         author?: string;
+        is_favorite?: boolean;
     }
 
-    let memories = $state<Memory[]>([]);
+    let memories = $derived(familyMemories.items);
     let showAddModal = $state(false);
 
     // Form Mock-Model
@@ -50,29 +65,13 @@
         type: "photo",
         title: "",
         desc: "",
-        image: "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800&q=80", // Default placeholder
+        image: "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800&q=80",
         author: $estateProfile.ownerName || "Me",
         date: new Date().getFullYear().toString(),
     });
 
-    import { getStored, setStored } from "$lib/stores/persistence";
-
-    // ... imports
-
-    const STORAGE_KEY = "family_memories";
-
     onMount(() => {
-        // Default Seed Data (DISABLED FOR GHOST ROW TEST - UNCOMMENT TO RESTORE)
-        /*
-        const defaults: Memory[] = [
-           ...
-        ];
-        */
-
-        memories = getStored<Memory[]>(STORAGE_KEY, []); // Start empty to test Ghost Rows
-        // if (memories.length === 0) {
-        //     viewMode = "concierge";
-        // }
+        familyMemories.sync();
     });
 
     function handleConciergeAnswer(e: CustomEvent) {
@@ -84,25 +83,16 @@
 
         // Auto-create a memory from the concierge answer
         if (answers.fav_memory) {
-            const newId = Date.now();
-            memories = [
-                {
-                    id: newId,
-                    type: "quote",
-                    title: "My Favorite Memory",
-                    text: answers.fav_memory,
-                    author: "Me",
-                },
-                ...memories,
-            ];
-            save();
+            addFamilyMemory({
+                type: "quote",
+                title: "My Favorite Memory",
+                text: answers.fav_memory,
+                author: "Me",
+                is_favorite: false,
+            });
         }
 
         viewMode = "dashboard";
-    }
-
-    function save() {
-        setStored(STORAGE_KEY, memories);
     }
 
     function saveMemory() {
@@ -110,7 +100,9 @@
 
         if (newMemory.id) {
             // Edit Mode
-            const oldMemory = memories.find((m) => m.id === newMemory.id);
+            const oldMemory = memories.find(
+                (m: Memory) => m.id === newMemory.id,
+            );
             const changes = [];
 
             if (oldMemory) {
@@ -134,9 +126,7 @@
                     });
             }
 
-            memories = memories.map((m) =>
-                m.id === newMemory.id ? ({ ...newMemory } as Memory) : m,
-            );
+            updateFamilyMemory(newMemory.id, newMemory as any);
 
             // Log UPDATE
             activityLog.logEvent({
@@ -150,21 +140,22 @@
             });
         } else {
             // Create Mode
-            const newId = Date.now();
-            memories = [{ ...newMemory, id: newId } as Memory, ...memories];
+            addFamilyMemory({
+                ...newMemory,
+                is_favorite: false,
+            } as any);
 
             // Log CREATE
             activityLog.logEvent({
                 module: "Family Hub",
                 action: "CREATE",
                 entityType: "Memory",
-                entityId: String(newId),
+                entityId: "new",
                 entityName: newMemory.title || "Unnamed Memory",
                 userContext: $estateProfile.ownerName || "User",
             });
         }
 
-        save();
         resetForm();
     }
 
@@ -187,9 +178,8 @@
     }
 
     function deleteMemory(id: number) {
-        if (!confirm("Remove this memory?")) return;
-        memories = memories.filter((m) => m.id !== id);
-        save();
+        if (!confirm("Are you sure you'd like to remove this memory?")) return;
+        removeFamilyMemory(id);
     }
 
     const collections = [
@@ -416,36 +406,13 @@
         </div>
     {/if}
 
-    <!-- Hero Section -->
-    <section
-        class="relative h-[400px] overflow-hidden flex items-center justify-center text-center px-4"
-    >
-        <div
-            class="absolute inset-0 bg-gradient-to-b from-rose-50/80 to-[#FDFBF7] z-10"
-        ></div>
-        <img
-            src="https://images.unsplash.com/photo-1511895426328-dc8714191300?w=1600&q=80"
-            alt="Family gathering"
-            class="absolute inset-0 w-full h-full object-cover opacity-20"
+    {#if module}
+        <LivingBlueprintHeader
+            title={module.title}
+            subtitle={module.description}
+            tier={module.role === "owner" ? "preparation" : "executor"}
         />
-
-        <div class="relative z-20 max-w-2xl mx-auto space-y-6" in:fade>
-            <div
-                class="inline-flex items-center justify-center p-3 bg-white/80 backdrop-blur-sm rounded-full shadow-sm mb-4"
-            >
-                <Heart class="w-6 h-6 text-rose-500 fill-rose-500" />
-            </div>
-            <h1
-                class="font-serif text-5xl md:text-6xl text-slate-800 tracking-tight"
-            >
-                The Family Hub
-            </h1>
-            <p class="text-xl text-slate-600 font-light leading-relaxed">
-                A gathering place for our shared history, cherished memories,
-                and the legacy that connects us all.
-            </p>
-        </div>
-    </section>
+    {/if}
 
     <!-- Family Network Visualizer -->
     <section class="max-w-7xl mx-auto px-6 -mt-16 relative z-30 mb-20">
@@ -606,7 +573,7 @@
                                     name={sample.name}
                                     subtitle={sample.description}
                                     type="Memory"
-                                    onClick={() => {
+                                    onclick={() => {
                                         newMemory = {
                                             ...newMemory,
                                             title: sample.name,
@@ -621,7 +588,7 @@
                                         showAddModal = true;
                                     }}
                                 >
-                                    <svelte:fragment slot="icon">
+                                    {#snippet icon()}
                                         <svelte:component
                                             this={sample.type === "Recipe"
                                                 ? Scroll
@@ -631,7 +598,7 @@
                                             size={20}
                                             class="text-slate-400"
                                         />
-                                    </svelte:fragment>
+                                    {/snippet}
                                 </GhostRow>
                             {/each}
                         {:else}

@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { estateAudit } from "$lib/stores/auditStore";
+    import { estateAudit } from "$lib/stores/auditStore.svelte";
     import { CircleCheck, Circle, ArrowRight } from "lucide-svelte";
 
     onMount(() => {

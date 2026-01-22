@@ -2,9 +2,9 @@
     import {
         insuranceStore,
         type InsurancePolicy,
-    } from "$lib/stores/insuranceStore";
+    } from "$lib/stores/insuranceStore.svelte";
     import { activityLog } from "$lib/stores/activityLog";
-    import { estateProfile } from "$lib/stores/estateStore";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { fade, slide, scale, fly } from "svelte/transition";
     import { quintOut } from "svelte/easing";
     import {
@@ -88,8 +88,7 @@
         },
     ];
 
-    function handleWizardComplete(event: CustomEvent) {
-        const answers = event.detail;
+    function handleWizardComplete(answers: Record<string, any>) {
         if (answers.intro === false) {
             showWizard = false;
             return;
@@ -109,15 +108,15 @@
         showWizard = false;
     }
 
-    function addWizardPolicy(name: string, type: any, insurer = "TBD") {
-        const created = insuranceStore.addPolicy({
+    async function addWizardPolicy(name: string, type: any, insurer = "TBD") {
+        const created = await insuranceStore.addPolicy({
             policyName: name,
             insuranceType: type,
             insurer: insurer,
             policyNumber: "PENDING",
             premiumAmount: 0,
             premiumFrequency: "Monthly",
-            beneficiaries: $estateProfile.primaryBeneficiary || "",
+            beneficiaries: estateProfile.current.primaryBeneficiary || "",
             agentName: "",
             agentContact: "",
             claimsProcedure: "",
@@ -130,13 +129,13 @@
             module: "Insurance",
             action: "CREATE",
             entityType: "Policy",
-            entityId: created.id,
-            entityName: created.policyName,
+            entityId: String(created!.id!),
+            entityName: created!.policyName,
             userContext: "Concierge",
         });
     }
 
-    const policies = $derived($insuranceStore);
+    const policies = $derived(insuranceStore.policies);
     const filteredPolicies = $derived(
         policies.filter((p) => {
             const matchesSearch =
@@ -180,7 +179,7 @@
         isEditing = false;
     }
 
-    function handleAddPolicy() {
+    async function handleAddPolicy() {
         if (!newPolicy.policyName || !newPolicy.insurer) return;
 
         if (isEditing && newPolicy.id) {
@@ -214,13 +213,13 @@
                 module: "Insurance",
                 action: "UPDATE",
                 entityType: "Policy",
-                entityId: newPolicy.id,
-                entityName: newPolicy.policyName,
+                entityId: String(newPolicy.id),
+                entityName: newPolicy.policyName!,
                 changes,
-                userContext: $estateProfile.ownerName || "User",
+                userContext: estateProfile.current.ownerName || "User",
             });
         } else {
-            const created = insuranceStore.addPolicy(
+            const created = await insuranceStore.addPolicy(
                 newPolicy as Omit<InsurancePolicy, "id">,
             );
 
@@ -228,9 +227,9 @@
                 module: "Insurance",
                 action: "CREATE",
                 entityType: "Policy",
-                entityId: created.id,
-                entityName: created.policyName,
-                userContext: $estateProfile.ownerName || "User",
+                entityId: String(created!.id!),
+                entityName: created!.policyName,
+                userContext: estateProfile.current.ownerName || "User",
             });
         }
 
@@ -243,7 +242,7 @@
         showAddModal = true;
     }
 
-    function deletePolicy(id: string, name: string) {
+    function deletePolicy(id: string | number, name: string) {
         if (confirm(`Are you sure you want to remove the policy "${name}"?`)) {
             insuranceStore.deletePolicy(id);
 
@@ -251,9 +250,9 @@
                 module: "Insurance",
                 action: "DELETE",
                 entityType: "Policy",
-                entityId: id,
+                entityId: String(id),
                 entityName: name,
-                userContext: $estateProfile.ownerName || "User",
+                userContext: estateProfile.current.ownerName || "User",
             });
         }
     }
@@ -295,11 +294,11 @@
             <div class="w-full max-w-2xl relative" in:fly={{ y: 20 }}>
                 <button
                     class="absolute -top-12 right-0 text-white/50 hover:text-white"
-                    on:click={() => (showWizard = false)}>Close</button
+                    onclick={() => (showWizard = false)}>Close</button
                 >
                 <ConciergeFlow
                     steps={wizardSteps}
-                    on:complete={handleWizardComplete}
+                    oncomplete={handleWizardComplete}
                 />
             </div>
         </div>
@@ -322,21 +321,22 @@
                 <h1
                     class="text-4xl font-extrabold text-slate-900 tracking-tight mb-2"
                 >
-                    Insurance <span class="text-indigo-600 font-light italic"
-                        >&</span
-                    > Policies
+                    Protecting <span class="text-indigo-600 font-light italic"
+                        >Your</span
+                    > Loved Ones
                 </h1>
                 <p class="text-slate-500 max-w-2xl text-lg leading-relaxed">
-                    Centralize your coverage details, beneficiary designations,
-                    and claims procedures to ensure your family's financial
-                    security.
+                    Life insurance and protection policies are acts of love.
+                    They ensure your family has financial security when you're
+                    no longer here to provide it, bridging the gap when they
+                    need it most.
                 </p>
             </div>
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
             <button
-                on:click={() => (showWizard = true)}
+                onclick={() => (showWizard = true)}
                 class="flex items-center gap-2 px-5 py-3 border border-indigo-100 text-indigo-700 font-bold rounded-2xl hover:bg-indigo-50 transition-colors"
             >
                 <Sparkles size={18} />
@@ -348,7 +348,7 @@
             >
                 {#each types as type}
                     <button
-                        on:click={() => (filterType = type)}
+                        onclick={() => (filterType = type)}
                         class="px-4 py-2 rounded-xl text-xs font-bold tracking-wider transition-all {filterType ===
                         type
                             ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
@@ -360,11 +360,11 @@
             </div>
 
             <button
-                on:click={() => (showAddModal = true)}
+                onclick={() => (showAddModal = true)}
                 class="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-2xl transition-all shadow-xl shadow-slate-900/10 font-bold"
             >
                 <Plus size={20} />
-                Add Policy
+                Add Protection
             </button>
         </div>
     </header>
@@ -501,6 +501,7 @@
     <!-- Policy Cards Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-8">
         {#each filteredPolicies as policy (policy.id)}
+            {@const Icon = typeIcons[policy.insuranceType] || Shield}
             <div
                 class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 overflow-hidden group flex flex-col"
                 transition:scale={{
@@ -520,12 +521,7 @@
                                     policy.insuranceType
                                 ]}"
                             >
-                                <svelte:component
-                                    this={typeIcons[policy.insuranceType] ||
-                                        Shield}
-                                    size={28}
-                                    strokeWidth={2.5}
-                                />
+                                <Icon size={28} strokeWidth={2.5} />
                             </div>
                             <div>
                                 <h3
@@ -544,14 +540,17 @@
                             class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0"
                         >
                             <button
-                                on:click={() => editPolicy(policy)}
+                                onclick={() => editPolicy(policy)}
                                 class="p-3 bg-slate-50 hover:bg-indigo-50 text-slate-400 hover:text-indigo-600 rounded-2xl transition-all"
                             >
                                 <Pencil size={18} />
                             </button>
                             <button
-                                on:click={() =>
-                                    deletePolicy(policy.id, policy.policyName)}
+                                onclick={() =>
+                                    deletePolicy(
+                                        String(policy.id),
+                                        policy.policyName,
+                                    )}
                                 class="p-3 bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-2xl transition-all"
                             >
                                 <Trash2 size={18} />
@@ -699,7 +698,7 @@
                             subtitle={`${sample.insurer} • ${sample.insuranceType}`}
                             value={sample.premiumAmount}
                             type="Policy"
-                            onClick={() => {
+                            onclick={() => {
                                 newPolicy = {
                                     ...newPolicy,
                                     policyName: sample.policyName,
@@ -711,19 +710,19 @@
                                 showAddModal = true;
                             }}
                         >
-                            <svelte:fragment slot="icon">
+                            {#snippet icon()}
                                 <Shield size={20} class="text-slate-400" />
-                            </svelte:fragment>
+                            {/snippet}
                         </GhostRow>
                     {/each}
 
                     <div class="flex justify-center mt-6">
                         <button
-                            on:click={() => (showAddModal = true)}
+                            onclick={() => (showAddModal = true)}
                             class="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg shadow-indigo-600/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
                         >
                             <Plus size={18} />
-                            Initialize Portfolio
+                            Start Protecting Your Family
                         </button>
                     </div>
                 </div>
@@ -740,7 +739,7 @@
     >
         <div
             class="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
-            on:click={resetForm}
+            onclick={resetForm}
         ></div>
 
         <div
@@ -753,18 +752,18 @@
                     <nav
                         class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600 mb-3"
                     >
-                        <Activity size={12} />
-                        <span>Data Management</span>
+                        <Heart size={12} />
+                        <span>Acts of Love</span>
                     </nav>
                     <h2
                         class="text-4xl font-black text-slate-900 tracking-tighter"
                     >
-                        {isEditing ? "Modify" : "Register"}
-                        <span class="text-indigo-600">Policy</span>
+                        {isEditing ? "Update" : "Document"}
+                        <span class="text-indigo-600">Protection</span>
                     </h2>
                 </div>
                 <button
-                    on:click={resetForm}
+                    onclick={resetForm}
                     class="w-14 h-14 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:rotate-90 transition-all duration-500"
                 >
                     <X size={24} strokeWidth={3} />
@@ -879,7 +878,7 @@
                                 {#each ["Active", "Pending", "Inactive"] as status}
                                     <button
                                         type="button"
-                                        on:click={() =>
+                                        onclick={() =>
                                             (newPolicy.status = status as any)}
                                         class="flex-1 py-3 text-[10px] font-black uppercase tracking-tighter rounded-xl transition-all {newPolicy.status ===
                                         status
@@ -954,13 +953,13 @@
                 class="p-10 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-6"
             >
                 <button
-                    on:click={resetForm}
+                    onclick={resetForm}
                     class="text-sm font-black text-slate-400 hover:text-slate-900 uppercase tracking-[0.2em] transition-colors"
                 >
                     Discard Changes
                 </button>
                 <button
-                    on:click={handleAddPolicy}
+                    onclick={handleAddPolicy}
                     disabled={!newPolicy.policyName || !newPolicy.insurer}
                     class="bg-indigo-600 text-white px-12 py-5 rounded-3xl font-black shadow-2xl shadow-indigo-600/30 hover:scale-[1.03] active:scale-[0.98] transition-all disabled:opacity-30 disabled:hover:scale-100"
                 >

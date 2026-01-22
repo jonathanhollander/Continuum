@@ -8,9 +8,7 @@
     } from "lucide-svelte";
     import { slide } from "svelte/transition";
 
-    export let sub;
-    export let onCancel;
-    export let onGenerateLetter;
+    let { sub, onCancel, onGenerateLetter } = $props();
 
     let expanded = false;
 
@@ -28,7 +26,7 @@
     <!-- Main Row -->
     <div
         class="p-4 flex items-center justify-between cursor-pointer"
-        on:click={() => (expanded = !expanded)}
+        onclick={() => (expanded = !expanded)}
     >
         <div class="flex items-center gap-4">
             <!-- Icon placeholder or logo -->
@@ -120,7 +118,7 @@
 
                     <div class="pt-4 border-t border-slate-100 flex gap-3">
                         <button
-                            on:click={onGenerateLetter}
+                            onclick={onGenerateLetter}
                             class="flex-1 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-bold shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2"
                         >
                             <CreditCard size={14} />

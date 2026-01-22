@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { pulse } from "$lib/stores/pulse";
+    import { pulse } from "$lib/stores/pulse.svelte";
+    import { apiGet, apiPost } from "$lib/api/client";
     import { onMount } from "svelte";
     import {
         Activity,
@@ -15,7 +16,6 @@
     import LivingMesh from "$lib/components/pulse/LivingMesh.svelte";
     import PetalDrift from "$lib/components/pulse/PetalDrift.svelte";
 
-    const USER_ID = 1;
     let petals: PetalDrift;
 
     let localStatus = $state({
@@ -28,21 +28,16 @@
     });
 
     onMount(async () => {
-        pulse.init(USER_ID);
+        pulse.init();
         fetchSafetyStatus();
         const interval = setInterval(fetchSafetyStatus, 10000);
         return () => clearInterval(interval);
     });
 
     async function fetchSafetyStatus() {
-        const baseUrl = import.meta.env.VITE_API_BASE || "";
         try {
-            const res = await fetch(
-                `${baseUrl}/api/pulse/safety/status?user_id=${USER_ID}`,
-            );
-            if (res.ok) {
-                localStatus.safetyTimer = await res.json();
-            }
+            const data = await apiGet("/api/pulse/safety/status");
+            localStatus.safetyTimer = data;
         } catch (e) {
             console.error(e);
         }
@@ -51,11 +46,7 @@
     async function checkIn() {
         localStatus.checkingIn = true;
         try {
-            const success = await pulse.checkin(
-                USER_ID,
-                5,
-                "Manual Dashboard Tap",
-            );
+            const success = await pulse.checkin("Manual Dashboard Tap");
             if (success) {
                 localStatus.lastSuccess = true;
                 petals?.trigger();
@@ -69,31 +60,25 @@
     }
 
     async function startSafety() {
-        const baseUrl = import.meta.env.VITE_API_BASE || "";
         try {
-            const res = await fetch(
-                `${baseUrl}/api/pulse/safety/start?user_id=${USER_ID}&minutes=${localStatus.safetyInput}&purpose=${localStatus.purpose}`,
-                {
-                    method: "POST",
-                },
+            const params = new URLSearchParams({
+                minutes: localStatus.safetyInput.toString(),
+                purpose: localStatus.purpose,
+            });
+            const data = await apiPost(
+                `/api/pulse/safety/start?${params.toString()}`,
             );
-            if (res.ok) {
-                localStatus.safetyTimer = await res.json();
-                localStatus.showSafetyConfig = false;
-            }
+            localStatus.safetyTimer = data;
+            localStatus.showSafetyConfig = false;
         } catch (e) {
             console.error(e);
         }
     }
 
     async function cancelSafety() {
-        const baseUrl = import.meta.env.VITE_API_BASE || "";
         try {
-            const res = await fetch(
-                `${baseUrl}/api/pulse/safety/cancel?user_id=${USER_ID}`,
-                { method: "POST" },
-            );
-            if (res.ok) localStatus.safetyTimer = null;
+            await apiPost("/api/pulse/safety/cancel");
+            localStatus.safetyTimer = null;
         } catch (e) {
             console.error(e);
         }
@@ -165,10 +150,10 @@
 
         <div class="space-y-2">
             <h1 class="text-2xl font-serif text-white flex items-center gap-3">
-                {$pulse.status === "active"
+                {pulse.status === "active"
                     ? "Heartbeat Active"
                     : "Seeking Connection"}
-                {#if $pulse.status === "active"}
+                {#if pulse.status === "active"}
                     <span
                         class="inline-block w-2 h-2 bg-emerald-500 rounded-full animate-ping"
                     ></span>
@@ -177,7 +162,7 @@
             <p
                 class="text-slate-400 text-sm max-w-sm mx-auto leading-relaxed italic"
             >
-                Your inner circle is standing by. Next scheduled nudge in {$pulse.next_nudge ||
+                Your inner circle is standing by. Next scheduled nudge in {pulse.next_nudge ||
                     "--:--"}.
             </p>
         </div>

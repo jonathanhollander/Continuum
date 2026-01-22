@@ -18,7 +18,7 @@
         ShieldCheck,
     } from "lucide-svelte";
     import { slide, scale, fade } from "svelte/transition";
-    import { estateProfile } from "$lib/stores/estateStore";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { getStored, setStored } from "$lib/stores/persistence";
 
     export let module: any;
@@ -341,7 +341,7 @@
                 <button
                     on:click={() => (showAddForm = false)}
                     class="px-5 py-2.5 text-sm font-medium hover:bg-black/5 rounded-lg transition-colors"
-                    >Cancel</button
+                    >Not right now</button
                 >
                 <button
                     on:click={addContact}

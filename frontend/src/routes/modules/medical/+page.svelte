@@ -16,42 +16,45 @@
     import {
         medicalStore,
         type MedicalDirective,
-    } from "$lib/stores/medicalStore";
+    } from "$lib/stores/medicalStore.svelte";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
-    import { estateProfile } from "$lib/stores/estateStore";
+    import Affirmation from "$lib/components/Affirmation.svelte";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { activityLog } from "$lib/stores/activityLog";
     import LegalDisclaimer from "$lib/components/common/LegalDisclaimer.svelte";
 
-    let showAddForm = false;
-    let editMode = false;
-    let newDirective: Partial<MedicalDirective> = {
+    let showAddForm = $state(false);
+    let editMode = $state(false);
+    let showAffirmation = $state(false);
+    let newDirective: Partial<MedicalDirective> = $state({
         type: "healthcare_proxy",
         title: "",
         locationOfOriginal: "",
         primaryContact: "",
         contactPhone: "",
         summary: "",
-    };
+    });
 
-    let showProfileEdit = false;
-    let tempProfile = {
-        organDonor: $medicalStore.organDonor,
-        bloodType: $medicalStore.bloodType,
-        allergies: $medicalStore.allergies,
-    };
+    let showProfileEdit = $state(false);
+    let tempProfile = $state({
+        organDonor: medicalStore.profile.organDonor,
+        bloodType: medicalStore.profile.bloodType,
+        allergies: medicalStore.profile.allergies,
+    });
 
     function saveProfile() {
         medicalStore.updateProfile(tempProfile);
         showProfileEdit = false;
+        showAffirmation = true;
         activityLog.logEvent({
             module: "Health & Medical",
             action: "UPDATE",
             entityType: "Medical Profile",
             entityId: "profile",
             entityName: "Health Data",
-            userContext: $estateProfile.ownerName || "User",
+            userContext: estateProfile.current.ownerName || "User",
         });
     }
 
@@ -64,9 +67,9 @@
                 module: "Health & Medical",
                 action: "UPDATE",
                 entityType: "Medical Directive",
-                entityId: newDirective.id,
-                entityName: newDirective.title,
-                userContext: $estateProfile.ownerName || "User",
+                entityId: String(newDirective.id),
+                entityName: newDirective.title || "",
+                userContext: estateProfile.current.ownerName || "User",
             });
         } else {
             medicalStore.addDirective(
@@ -77,11 +80,12 @@
                 action: "CREATE",
                 entityType: "Medical Directive",
                 entityId: crypto.randomUUID(),
-                entityName: newDirective.title,
-                userContext: $estateProfile.ownerName || "User",
+                entityName: newDirective.title || "",
+                userContext: estateProfile.current.ownerName || "User",
             });
         }
 
+        showAffirmation = true;
         resetForm();
     }
 
@@ -102,10 +106,10 @@
         };
     }
 
-    function removeDirective(id: string) {
+    function removeDirective(id: string | number) {
         if (
             !confirm(
-                "Remove this directive? This should only be done if the document is revoked.",
+                "Are you sure you'd like to remove this directive? This should only be done if the document has been revoked.",
             )
         )
             return;
@@ -133,10 +137,13 @@
                 <div class="p-3 bg-red-100 text-red-600 rounded-2xl">
                     <Heart size={32} />
                 </div>
-                Medical & Health Safety Net
+                Your Voice at the End of Life
             </h1>
-            <p class="text-gray-500 mt-2">
-                Critical directives and emergency instructions.
+            <p class="text-gray-500 mt-2 text-lg max-w-2xl leading-relaxed">
+                These are some of the most important decisions you'll make. They
+                ensure your values are honored when you can't speak for
+                yourself, protecting your dignity and your family's peace of
+                mind.
             </p>
             <div class="mt-4">
                 <LegalDisclaimer
@@ -147,13 +154,16 @@
             </div>
         </div>
         <button
-            on:click={() => (showAddForm = true)}
+            onclick={() => (showAddForm = true)}
             class="flex items-center justify-center gap-2 px-6 py-3 bg-red-600 text-white rounded-2xl font-bold hover:bg-red-700 transition-colors shadow-lg shadow-red-200"
         >
             <Plus size={20} />
-            Add Directive
+            Record Your Wishes
         </button>
     </header>
+
+    <!-- Affirmation Message -->
+    <Affirmation module="medical" bind:show={showAffirmation} />
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Life Saving Profile -->
@@ -182,13 +192,16 @@
                                         Blood Type
                                     </p>
                                     <p class="text-xl font-bold text-gray-900">
-                                        {$medicalStore.bloodType || "Not Set"}
+                                        {medicalStore.profile.bloodType ||
+                                            "Not Set"}
                                     </p>
                                 </div>
                                 <div
                                     class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center font-bold"
                                 >
-                                    {$medicalStore.bloodType?.includes("+")
+                                    {medicalStore.profile.bloodType?.includes(
+                                        "+",
+                                    )
                                         ? "+"
                                         : "-"}
                                 </div>
@@ -203,14 +216,15 @@
                                     Critical Allergies
                                 </p>
                                 <p class="text-sm font-medium text-orange-900">
-                                    {$medicalStore.allergies || "None reported"}
+                                    {medicalStore.profile.allergies ||
+                                        "None reported"}
                                 </p>
                             </div>
 
                             <div
                                 class="flex items-center gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-100"
                             >
-                                {#if $medicalStore.organDonor}
+                                {#if medicalStore.profile.organDonor}
                                     <CircleCheck
                                         class="text-blue-600"
                                         size={20}
@@ -230,8 +244,8 @@
                             </div>
 
                             <button
-                                on:click={() => {
-                                    tempProfile = { ...$medicalStore };
+                                onclick={() => {
+                                    tempProfile = { ...medicalStore.profile };
                                     showProfileEdit = true;
                                 }}
                                 class="w-full py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors font-bold text-sm"
@@ -287,14 +301,14 @@
                             </div>
                             <div class="flex gap-2">
                                 <button
-                                    on:click={saveProfile}
+                                    onclick={saveProfile}
                                     class="flex-1 py-2 bg-red-600 text-white rounded-xl font-bold text-sm"
                                     >Save</button
                                 >
                                 <button
-                                    on:click={() => (showProfileEdit = false)}
+                                    onclick={() => (showProfileEdit = false)}
                                     class="flex-1 py-2 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm"
-                                    >Cancel</button
+                                    >Not right now</button
                                 >
                             </div>
                         </div>
@@ -310,16 +324,18 @@
             >
                 <Shield class="text-blue-600 mt-1 shrink-0" size={24} />
                 <div>
-                    <h3 class="font-bold text-blue-900">Legal Directives</h3>
-                    <p class="text-sm text-blue-800 mt-1">
-                        Ensure your healthcare proxies and living wills are
-                        registered. These documents speak for you when you
-                        cannot.
+                    <h3 class="font-bold text-blue-900 text-lg">
+                        Your End-of-Life Voice
+                    </h3>
+                    <p class="text-sm text-blue-800 mt-1 leading-relaxed">
+                        Providing clear guidance for your medical care is a gift
+                        to your family. It removes the burden of uncertainty and
+                        ensures your wishes are honored with dignity.
                     </p>
                 </div>
             </div>
 
-            {#each $medicalStore.directives as dir}
+            {#each medicalStore.directives as dir}
                 <div
                     class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-shadow relative group"
                 >
@@ -349,13 +365,13 @@
 
                         <div class="flex gap-1">
                             <button
-                                on:click={() => editDirective(dir)}
+                                onclick={() => editDirective(dir)}
                                 class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                             >
                                 <Pencil size={18} />
                             </button>
                             <button
-                                on:click={() => removeDirective(dir.id)}
+                                onclick={() => removeDirective(dir.id)}
                                 class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                             >
                                 <Trash2 size={18} />
@@ -396,7 +412,7 @@
                 </div>
             {/each}
 
-            {#if $medicalStore.directives.length === 0}
+            {#if medicalStore.directives.length === 0}
                 <!-- GHOST ROWS -->
                 <div class="mb-6 space-y-4">
                     {#each getSmartSamples($language).medical || [] as sample}
@@ -404,22 +420,25 @@
                             name={sample.title}
                             subtitle={sample.summary}
                             type={sample.type === "dnr" ? "DNR" : "Proxy"}
-                            onClick={() => {
+                            onclick={() => {
                                 newDirective = {
                                     ...newDirective,
                                     title: sample.title,
+                                    type: sample.type as any,
+                                    locationOfOriginal:
+                                        sample.locationOfOriginal,
                                     summary: sample.summary,
-                                    type:
-                                        sample.type === "dnr"
-                                            ? "dnr"
-                                            : "healthcare_proxy",
                                 };
                                 showAddForm = true;
                             }}
                         >
-                            <svelte:fragment slot="icon">
-                                <FileText size={20} class="text-slate-400" />
-                            </svelte:fragment>
+                            {#snippet icon()}
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400"
+                                >
+                                    <FileText size={20} />
+                                </div>
+                            {/snippet}
                         </GhostRow>
                     {/each}
                 </div>
@@ -444,15 +463,17 @@
                 <div>
                     <h2 class="text-2xl font-bold text-gray-900">
                         {newDirective.id
-                            ? "Edit Directive"
-                            : "Add New Directive"}
+                            ? "Update Your Voice"
+                            : "Document Your Wishes"}
                     </h2>
-                    <p class="text-gray-500">
-                        Document your medical preferences.
+                    <p class="text-gray-500 leading-relaxed">
+                        These choices reflect your values and ensure you're
+                        cared for exactly as you wish. It's okay to take your
+                        time.
                     </p>
                 </div>
                 <button
-                    on:click={resetForm}
+                    onclick={resetForm}
                     class="p-2 hover:bg-gray-100 rounded-full text-gray-400"
                 >
                     <Plus size={24} class="rotate-45" />
@@ -460,7 +481,10 @@
             </div>
 
             <form
-                on:submit|preventDefault={saveDirective}
+                onsubmit={(e) => {
+                    e.preventDefault();
+                    saveDirective();
+                }}
                 class="p-8 space-y-6"
             >
                 <div class="grid grid-cols-2 gap-4">
@@ -512,7 +536,7 @@
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
-                    <div>
+                    <div class="space-y-3">
                         <label
                             class="block text-xs font-bold uppercase text-gray-500 mb-1"
                             >Primary Proxy/Contact</label
@@ -520,20 +544,21 @@
                         <input
                             type="text"
                             bind:value={newDirective.primaryContact}
-                            placeholder="Name"
-                            class="w-full px-4 py-2 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-red-500"
+                            placeholder="e.g. Dr. Sarah Chen"
+                            class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
                         />
                     </div>
-                    <div>
+                    <div class="space-y-3">
                         <label
-                            class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                            for="contactPhone"
+                            class="text-xs font-black text-slate-400 uppercase tracking-widest ml-1"
                             >Contact Phone</label
                         >
                         <input
                             type="text"
                             bind:value={newDirective.contactPhone}
-                            placeholder="(xxx) xxx-xxxx"
-                            class="w-full px-4 py-2 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-red-500"
+                            placeholder="e.g. +1 (555) 000-0000"
+                            class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
                         />
                     </div>
                 </div>
@@ -546,18 +571,18 @@
                     <input
                         type="text"
                         bind:value={newDirective.locationOfOriginal}
-                        placeholder="e.g. Top drawer in office safe"
-                        class="w-full px-4 py-2 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-red-500"
+                        placeholder="e.g. Safe deposit box at First National Bank"
+                        class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
                     />
                 </div>
 
                 <div class="flex gap-4 pt-4">
                     <button
                         type="button"
-                        on:click={resetForm}
+                        onclick={resetForm}
                         class="flex-1 py-4 px-6 bg-gray-100 text-gray-600 rounded-2xl font-bold hover:bg-gray-200 transition-colors"
                     >
-                        Cancel
+                        Not right now
                     </button>
                     <button
                         type="submit"

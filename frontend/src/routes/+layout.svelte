@@ -5,12 +5,18 @@
 	import { page } from "$app/stores";
 	import { onMount, setContext } from "svelte";
 	import { goto } from "$app/navigation";
-	import { estateAudit } from "$lib/stores/auditStore";
+	import { estateAudit } from "$lib/stores/auditStore.svelte";
 	import ConciergeSettings from "$lib/components/concierge/ConciergeSettings.svelte";
 	import ConciergePanel from "$lib/components/layout/ConciergePanel.svelte";
 	import { conciergeEngine } from "$lib/stores/conciergeEngine";
 	import { language, userRole, type UserRole } from "$lib/stores/concierge";
 	import { dictionary } from "$lib/stores/dictionary";
+	import { logger } from "$lib/utils/logger";
+	import {
+		overwhelmDetector,
+		overwhelmState,
+	} from "$lib/services/overwhelmDetection";
+	import BreakOffer from "$lib/components/BreakOffer.svelte";
 
 	import GlobalSimBanner from "$lib/components/simulator/GlobalSimBanner.svelte";
 
@@ -27,6 +33,7 @@
 		BookOpen,
 		Receipt,
 		Hammer,
+		Loader2,
 		Gift,
 		Calendar,
 		Users,
@@ -73,6 +80,7 @@
 	import FocusFooter from "$lib/components/layout/FocusFooter.svelte";
 	import { navGroups } from "$lib/config/navigation";
 	import { compassStore } from "$lib/stores/compassStore";
+	import NotificationContainer from "$lib/components/NotificationContainer.svelte";
 
 	let { children } = $props();
 
@@ -94,12 +102,56 @@
 	$effect(() => {
 		if ($page.url.pathname) {
 			compassStore.updateContext($page.url.pathname);
+			overwhelmDetector.recordNavigation();
+			logger.debug("Navigation tracked", { path: $page.url.pathname });
 		}
 	});
 
 	import { registerAccount } from "$lib/stores/keyringStore";
+	import { auth } from "$lib/stores/auth";
+	import { syncAll } from "$lib/services/sync.svelte";
+
+	// Derived: Is this the Wizard or Marketing Landing?
+	let isWizardRoute = $derived(
+		$page.url.pathname.startsWith("/wizard") ||
+			$page.url.pathname.startsWith("/start"),
+	);
+	let isMarketingRoute = $derived(
+		$page.url.pathname.startsWith("/marketing") ||
+			$page.url.pathname === "/",
+	);
+
+	// Derived: Is this an Auth or Public Pulse route?
+	let isAuthRoute = $derived(
+		$page.url.pathname === "/login" ||
+			$page.url.pathname === "/signup" ||
+			$page.url.pathname.startsWith("/auth/") ||
+			$page.url.pathname.startsWith("/pulse/respond") ||
+			$page.url.pathname.startsWith("/pulse/verify"),
+	);
+
+	// Sync Data when Auth is ready
+	let lastSyncedToken = $state<string | null>(null);
+	$effect(() => {
+		if ($auth.token && !$auth.loading && $auth.token !== lastSyncedToken) {
+			console.log("[Layout] Auth detected, starting global sync...");
+			lastSyncedToken = $auth.token;
+			syncAll();
+		}
+	});
+
+	// Update concierge context on route change
+	$effect(() => {
+		conciergeEngine.setContext($page.url.pathname);
+	});
 
 	onMount(() => {
+		// Initialize auth store (load token from localStorage, fetch user)
+		auth.init();
+
+		// Run audit on load
+		estateAudit.runAudit();
+
 		// Handoff Pickup Logic
 		const email = $page.url.searchParams.get("email");
 		const lang = $page.url.searchParams.get("lang");
@@ -112,27 +164,6 @@
 			const cleanUrl = $page.url.pathname + $page.url.hash;
 			goto(cleanUrl, { replaceState: true });
 		}
-	});
-
-	// Derived: Is this the Wizard or Marketing Landing?
-	let isWizardRoute = $derived(
-		$page.url.pathname.startsWith("/wizard") ||
-			$page.url.pathname.startsWith("/start"),
-	);
-	let isMarketingRoute = $derived(
-		$page.url.pathname.startsWith("/marketing") ||
-			$page.url.pathname === "/",
-	);
-
-	// Update concierge context on route change
-	$effect(() => {
-		conciergeEngine.setContext($page.url.pathname);
-	});
-
-	onMount(() => {
-		// Run audit on load and periodically
-		estateAudit.runAudit();
-		const interval = setInterval(() => estateAudit.runAudit(), 5000);
 
 		const handleGlobalKeydown = (e: KeyboardEvent) => {
 			if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -144,7 +175,6 @@
 		window.addEventListener("keydown", handleGlobalKeydown);
 
 		return () => {
-			clearInterval(interval);
 			window.removeEventListener("keydown", handleGlobalKeydown);
 		};
 	});
@@ -158,14 +188,34 @@
 	}
 
 	$effect(() => {
-		// Navigation Guard
-		if (!isWizardRoute && !isMarketingRoute) {
-			const allItems = navGroups.flatMap((g) => g.items);
-			const currentItem = allItems.find(
-				(item) => item.href === $page.url.pathname,
-			);
-			if (currentItem && !currentItem.allowedRoles.includes($userRole)) {
-				goto("/");
+		// Navigation Guard & Auth Protection
+		if (!$auth.loading) {
+			const isPublicRoute =
+				isWizardRoute || isMarketingRoute || isAuthRoute;
+
+			if (!isPublicRoute && !$auth.user && !$auth.token) {
+				console.log(
+					"[Layout] Unauthorized access to protected route, redirecting to login...",
+				);
+				goto("/login");
+				return;
+			}
+
+			// If logged in, protect based on roles
+			if ($auth.user && !isWizardRoute && !isMarketingRoute) {
+				const allItems = navGroups.flatMap((g) => g.items);
+				const currentItem = allItems.find(
+					(item) => item.href === $page.url.pathname,
+				);
+				if (
+					currentItem &&
+					!currentItem.allowedRoles.includes($userRole)
+				) {
+					console.warn(
+						`[Layout] Role ${$userRole} not authorized for ${$page.url.pathname}`,
+					);
+					goto("/dashboard");
+				}
 			}
 		}
 	});
@@ -176,7 +226,27 @@
 	<title>Continuum</title>
 </svelte:head>
 
-{#if isWizardRoute || isMarketingRoute}
+<!-- Global Notification Container (appears on ALL pages, including auth) -->
+<NotificationContainer />
+
+{#if $auth.loading}
+	<!-- Global Loading State -->
+	<div
+		class="min-h-screen bg-[#0F1115] flex flex-col items-center justify-center p-6 font-sans"
+	>
+		<div class="relative">
+			<div
+				class="absolute inset-0 bg-teal-500/20 blur-3xl rounded-full animate-pulse"
+			></div>
+			<Loader2
+				class="w-12 h-12 text-teal-400 animate-spin relative z-10"
+			/>
+		</div>
+		<p class="mt-6 text-slate-400 font-medium tracking-wide animate-pulse">
+			Verifying your security credentials...
+		</p>
+	</div>
+{:else if isWizardRoute || isMarketingRoute || isAuthRoute}
 	<!-- Wizard/Marketing Mode: Full exclusion of standard layout -->
 	{@render children()}
 {:else}
@@ -398,6 +468,10 @@
 	isOpen={$conciergeEngine.isOpen}
 	onClose={() => conciergeEngine.close()}
 />
+
+{#if $overwhelmState.isOverwhelmed}
+	<BreakOffer signals={$overwhelmState.signals} />
+{/if}
 
 {#if $magicTrigger}
 	<SuccessParticles />

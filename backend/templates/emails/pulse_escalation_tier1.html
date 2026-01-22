@@ -1,0 +1,33 @@
+{% extends "emails/base.html" %}
+
+{% block content %}
+<div class="greeting">Dear {{ recipient_name }},</div>
+
+<h2>Welfare Check Notification</h2>
+
+<div class="alert-box info">
+    <strong>Tier 1 Alert:</strong> Standard wellness check-in
+</div>
+
+<p>We have not received a scheduled check-in from <strong>{{ user_name }}</strong> within their standard timeframe.</p>
+
+<p>As a Tier 1 contact in their Digital Guardian network, this is a gentle notification. If you have been in contact with them recently through other means, you can reset the timer by confirming their wellbeing through the Guardian Portal.</p>
+
+<div class="cta-container">
+    <a href="{{ portal_url }}" class="cta-button">Open Guardian Portal</a>
+</div>
+
+<div class="divider"></div>
+
+<p><strong>What This Means:</strong></p>
+<ul style="color: #475569; margin: 16px 0;">
+    <li>This is the first level of notification - no immediate action required</li>
+    <li>The person may simply be traveling, busy, or disconnected</li>
+    <li>Simply confirming recent contact will reset the wellness timer</li>
+    <li>If you have concerns, you may escalate through the portal</li>
+</ul>
+
+<p style="font-size: 14px; color: #64748b; margin-top: 24px;">
+    Thank you for being part of {{ user_name }}'s trusted circle. Your role in their digital estate planning provides them peace of mind.
+</p>
+{% endblock %}
