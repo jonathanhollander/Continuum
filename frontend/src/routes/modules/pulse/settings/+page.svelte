@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { pulse } from "$lib/stores/pulse";
+    import { pulse } from "$lib/stores/pulse.svelte";
     import { onMount } from "svelte";
     import {
         startRegistration,
@@ -48,9 +48,9 @@
     async function loadData() {
         try {
             const [settingsData, tiersData, contactsData] = await Promise.all([
-                apiGet('/api/pulse/settings'),
-                apiGet('/api/pulse/tiers'),
-                apiGet('/api/pulse/contacts'),
+                apiGet("/api/pulse/settings"),
+                apiGet("/api/pulse/tiers"),
+                apiGet("/api/pulse/contacts"),
             ]);
 
             settings = settingsData;
@@ -95,7 +95,7 @@
     async function saveSettings() {
         saving = true;
         try {
-            await apiPost('/api/pulse/settings', settings);
+            await apiPost("/api/pulse/settings", settings);
             pulse.update((s) => ({ ...s, enabled: settings.enabled }));
             pulse.init();
         } finally {
@@ -149,13 +149,15 @@
             connectingBio = true;
 
             // 1. Get Options
-            const options = await apiPost('/api/pulse/auth/webauthn/register/start');
+            const options = await apiPost(
+                "/api/pulse/auth/webauthn/register/start",
+            );
 
             // 2. Browser Interaction
             const attResp = await startRegistration(options);
 
             // 3. Verify
-            await apiPost('/api/pulse/auth/webauthn/register/finish', attResp);
+            await apiPost("/api/pulse/auth/webauthn/register/finish", attResp);
 
             settings.biometric_extension_enabled = true;
             await saveSettings();
@@ -178,7 +180,7 @@
         if (!email) return;
 
         try {
-            const newContact = await apiPost('/api/pulse/contacts', {
+            const newContact = await apiPost("/api/pulse/contacts", {
                 name,
                 email,
                 tier_id: tierId,
@@ -190,7 +192,7 @@
     }
 
     async function deleteContact(contactId: number) {
-        if (!confirm("Remove this contact?")) return;
+        if (!confirm("Are you sure you'd like to remove this contact from your Pulse network?")) return;
         try {
             await apiDelete(`/api/pulse/contacts/${contactId}`);
             contacts = contacts.filter((c) => c.id !== contactId);

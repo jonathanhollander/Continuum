@@ -20,17 +20,19 @@
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import { onMount } from "svelte";
-    import { estateProfile } from "$lib/stores/estateStore";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { activityLog } from "$lib/stores/activityLog";
     import { UserCircle, MapPin as MapPinIcon, Cross } from "lucide-svelte";
+    import { funeralStore } from "$lib/stores/funeralStore.svelte";
     import FuneralWizard from "$lib/components/modules/funeral/FuneralWizard.svelte";
-
-    import {
-        funeralStore,
-        type FuneralBudgetItem,
-        type FuneralWishes,
-    } from "$lib/stores/funeralStore";
     import LegalDisclaimer from "$lib/components/common/LegalDisclaimer.svelte";
+    import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
+    import * as registryRaw from "$lib/data/registry.json";
+
+    // Registry Data Handling
+    const registryData = (registryRaw as any).default || registryRaw;
+    const registry = Array.isArray(registryData) ? registryData : [];
+    const module = registry.find((m) => m.id === "funeral");
 
     let activeTab = $state("wishes"); // 'wishes' | 'budget'
     let showAddExpense = $state(false);
@@ -144,7 +146,7 @@
     }
 
     function removeExpense(id: string) {
-        if (!confirm("Remove expense?")) return;
+        if (!confirm("Are you sure you'd like to remove this expense?")) return;
         funeralStore.update((data) => ({
             ...data,
             budget: data.budget.filter((i) => i.id !== id),
@@ -207,28 +209,21 @@
     }
 </script>
 
-<div class="max-w-6xl mx-auto p-8 animate-in fade-in duration-500">
-    <!-- Header -->
-    <div class="mb-12 text-center">
-        <div
-            class="inline-flex items-center justify-center p-4 bg-teal-100 text-teal-800 rounded-full mb-6"
-        >
-            <Scroll size={48} />
-        </div>
+{#if module}
+    <LivingBlueprintHeader
+        title={module.title}
+        subtitle={module.description}
+        tier={module.role === "owner" ? "preparation" : "executor"}
+    />
+{/if}
 
-        <div class="max-w-xl mx-auto mb-6">
+<div class="max-w-6xl mx-auto p-8 animate-in fade-in duration-500">
+    <div class="mb-12 text-center">
+        <div class="max-w-xl mx-auto mb-8">
             <AIPromptBar context="obituary" />
         </div>
 
-        <h1 class="font-serif font-bold text-4xl text-[#304743] mb-4">
-            Funeral Planner
-        </h1>
-        <p class="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Relieve the burden of decision-making. Plan the details, manage the
-            budget, and ensure your wishes are honored.
-        </p>
-
-        <div class="mt-8 max-w-3xl mx-auto text-left">
+        <div class="max-w-3xl mx-auto text-left">
             <LegalDisclaimer
                 variant="banner"
                 title="Important Note"
@@ -247,7 +242,7 @@
                     : 'text-gray-500 hover:text-gray-900'}"
                 onclick={() => (activeTab = "wishes")}
             >
-                My Wishes & Vibe
+                Vision & Spirit
             </button>
             <button
                 class="px-6 py-2.5 rounded-lg font-bold text-sm transition-all {activeTab ===
@@ -256,7 +251,7 @@
                     : 'text-gray-500 hover:text-gray-900'}"
                 onclick={() => (activeTab = "budget")}
             >
-                Budget Calculator
+                Financial Care
             </button>
         </div>
     </div>
@@ -274,7 +269,7 @@
                 </div>
                 <div>
                     <h2 class="text-xl font-bold text-slate-800">
-                        Memorial for {$estateProfile.ownerName ||
+                        Celebrating the Life of {$estateProfile.ownerName ||
                             "Valued Member"}
                     </h2>
                     <p class="text-sm text-slate-500 italic">
@@ -435,7 +430,7 @@
                             <h3
                                 class="font-bold text-stone-700 flex items-center gap-2"
                             >
-                                <DollarSign size={18} /> Budget Breakdown
+                                <DollarSign size={18} /> Financial Stewardship
                             </h3>
                             <div class="flex gap-2">
                                 <button

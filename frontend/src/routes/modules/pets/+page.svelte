@@ -14,14 +14,16 @@
     } from "lucide-svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
+    import Affirmation from "$lib/components/Affirmation.svelte";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
-    import { petStore, type PetEntry } from "$lib/stores/petStore";
+    import { petStore, type PetEntry } from "$lib/stores/petStore.svelte";
     import { onMount } from "svelte";
-    import { estateProfile } from "$lib/stores/estateStore";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { activityLog } from "$lib/stores/activityLog";
 
     let showAddForm = $state(false);
+    let showAffirmation = $state(false);
     let newPet: Partial<PetEntry> = $state({
         type: "dog",
         name: "",
@@ -61,6 +63,7 @@
         }
 
         resetForm();
+        showAffirmation = true;
     }
 
     function editPet(pet: PetEntry) {
@@ -87,7 +90,7 @@
     }
 
     function removePet(id: number) {
-        if (!confirm("Remove this pet?")) return;
+        if (!confirm("Are you sure you'd like to remove this pet from your records?")) return;
         petStore.removePet(id);
     }
 </script>
@@ -116,6 +119,9 @@
             <Plus size={20} /> Add Pet
         </button>
     </div>
+
+    <!-- Affirmation Message -->
+    <Affirmation module="pets" bind:show={showAffirmation} />
 
     <!-- Pet Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -431,7 +437,7 @@
                     <button
                         onclick={() => (showAddForm = false)}
                         class="px-6 py-2 rounded-xl font-bold text-gray-500 hover:bg-gray-200 transition-colors"
-                        >Cancel</button
+                        >Not right now</button
                     >
                     <button
                         onclick={savePet}

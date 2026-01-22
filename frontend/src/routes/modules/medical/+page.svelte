@@ -20,12 +20,14 @@
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
+    import Affirmation from "$lib/components/Affirmation.svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { activityLog } from "$lib/stores/activityLog";
     import LegalDisclaimer from "$lib/components/common/LegalDisclaimer.svelte";
 
     let showAddForm = $state(false);
     let editMode = $state(false);
+    let showAffirmation = $state(false);
     let newDirective: Partial<MedicalDirective> = $state({
         type: "healthcare_proxy",
         title: "",
@@ -45,6 +47,7 @@
     function saveProfile() {
         medicalStore.updateProfile(tempProfile);
         showProfileEdit = false;
+        showAffirmation = true;
         activityLog.logEvent({
             module: "Health & Medical",
             action: "UPDATE",
@@ -82,6 +85,7 @@
             });
         }
 
+        showAffirmation = true;
         resetForm();
     }
 
@@ -105,7 +109,7 @@
     function removeDirective(id: string | number) {
         if (
             !confirm(
-                "Remove this directive? This should only be done if the document is revoked.",
+                "Are you sure you'd like to remove this directive? This should only be done if the document has been revoked.",
             )
         )
             return;
@@ -133,10 +137,13 @@
                 <div class="p-3 bg-red-100 text-red-600 rounded-2xl">
                     <Heart size={32} />
                 </div>
-                Medical & Health Safety Net
+                Your Voice at the End of Life
             </h1>
-            <p class="text-gray-500 mt-2">
-                Critical directives and emergency instructions.
+            <p class="text-gray-500 mt-2 text-lg max-w-2xl leading-relaxed">
+                These are some of the most important decisions you'll make. They
+                ensure your values are honored when you can't speak for
+                yourself, protecting your dignity and your family's peace of
+                mind.
             </p>
             <div class="mt-4">
                 <LegalDisclaimer
@@ -151,9 +158,12 @@
             class="flex items-center justify-center gap-2 px-6 py-3 bg-red-600 text-white rounded-2xl font-bold hover:bg-red-700 transition-colors shadow-lg shadow-red-200"
         >
             <Plus size={20} />
-            Add Directive
+            Record Your Wishes
         </button>
     </header>
+
+    <!-- Affirmation Message -->
+    <Affirmation module="medical" bind:show={showAffirmation} />
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Life Saving Profile -->
@@ -298,7 +308,7 @@
                                 <button
                                     onclick={() => (showProfileEdit = false)}
                                     class="flex-1 py-2 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm"
-                                    >Cancel</button
+                                    >Not right now</button
                                 >
                             </div>
                         </div>
@@ -314,11 +324,13 @@
             >
                 <Shield class="text-blue-600 mt-1 shrink-0" size={24} />
                 <div>
-                    <h3 class="font-bold text-blue-900">Legal Directives</h3>
-                    <p class="text-sm text-blue-800 mt-1">
-                        Ensure your healthcare proxies and living wills are
-                        registered. These documents speak for you when you
-                        cannot.
+                    <h3 class="font-bold text-blue-900 text-lg">
+                        Your End-of-Life Voice
+                    </h3>
+                    <p class="text-sm text-blue-800 mt-1 leading-relaxed">
+                        Providing clear guidance for your medical care is a gift
+                        to your family. It removes the burden of uncertainty and
+                        ensures your wishes are honored with dignity.
                     </p>
                 </div>
             </div>
@@ -451,11 +463,13 @@
                 <div>
                     <h2 class="text-2xl font-bold text-gray-900">
                         {newDirective.id
-                            ? "Edit Directive"
-                            : "Add New Directive"}
+                            ? "Update Your Voice"
+                            : "Document Your Wishes"}
                     </h2>
-                    <p class="text-gray-500">
-                        Document your medical preferences.
+                    <p class="text-gray-500 leading-relaxed">
+                        These choices reflect your values and ensure you're
+                        cared for exactly as you wish. It's okay to take your
+                        time.
                     </p>
                 </div>
                 <button
@@ -568,7 +582,7 @@
                         onclick={resetForm}
                         class="flex-1 py-4 px-6 bg-gray-100 text-gray-600 rounded-2xl font-bold hover:bg-gray-200 transition-colors"
                     >
-                        Cancel
+                        Not right now
                     </button>
                     <button
                         type="submit"

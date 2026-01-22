@@ -183,7 +183,7 @@
     }
 
     function removeEvent(id: string) {
-        if (!confirm("Remove this event?")) return;
+        if (!confirm("Are you sure you'd like to remove this event from your calendar?")) return;
         calendarSync.delete(id);
     }
 
@@ -554,7 +554,7 @@
                     <button
                         on:click={resetForm}
                         class="px-6 py-2 rounded-xl font-bold text-gray-500 hover:bg-gray-200 transition-colors"
-                        >Cancel</button
+                        >Not right now</button
                     >
                     <button
                         on:click={handleSave}

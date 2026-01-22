@@ -15,54 +15,39 @@
     import { onMount } from "svelte";
     import ContactRow from "$lib/components/modules/contacts/ContactRow.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
+    import Affirmation from "$lib/components/Affirmation.svelte";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
+    import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
+    import * as registryRaw from "$lib/data/registry.json";
+
+    // Registry Data Handling
+    const registryData = (registryRaw as any).default || registryRaw;
+    const registry = Array.isArray(registryData) ? registryData : [];
+    const module = registry.find((m) => m.id === "contacts");
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
     import { conciergeEngine } from "$lib/stores/conciergeEngine";
-    import { apiGet, apiPost, apiDelete } from "$lib/api/client";
-
-    type ContactRole =
-        | "Family"
-        | "Friend"
-        | "Medical"
-        | "Legal"
-        | "Financial"
-        | "Other";
-
-    // Updated type to match Backend
-    type Contact = {
-        id: number; // Backend uses Int ID
-        name: string;
-        role: ContactRole;
-        relation: string;
-        phone: string;
-        email: string;
-        notes: string;
-        // Pulse Specific
-        // Pulse Specific
-        tier_id?: number | null;
-        tier?: string; // For frontend simulation
-        notificationStatus?: string;
-    };
+    import {
+        familyStore,
+        type FamilyMember,
+        type FamilyRole,
+    } from "$lib/stores/familyStore.svelte";
 
     let activeTab = $state("call-list");
-    let contacts = $state<Contact[]>([]);
+
+    // Use familyStore as source of truth
+    let contacts = $derived(familyStore.members);
+
     let showAddModal = $state(false);
+    let showAffirmation = $state(false);
 
     // Form State
-    let newContact = $state<Partial<Contact>>({
+    let newContact = $state<Partial<FamilyMember>>({
         role: "Family",
         notes: "",
+        relation: "",
     });
-
-    // Derived: Pulse Tiers (In the backend, this is determined by tier_id)
-    // For now we simulate the tier grouping based on if checking logic needs fetch
-    // Actually, listing logic in Pulse uses Tiers. Here contacts are just contacts.
-    // But to keep the "Call List" view, we need to know Tiers.
-    // We will assume fetched contacts have tier data.
-    // Backend `PulseContact` has `tier_id`. We need to map that to UI tiers if we want to show groups.
-    // For simplicity in this page, we show ALL contacts in Directory, and maybe grouped by Tier if exists.
 
     // Helper to get tier name from ID (mock logic for now or we fetch tiers map)
     // Tweak: We will filter based on tier_id existence for "Call List"
@@ -70,16 +55,24 @@
     // We assume the API returns contacts with a 'tier' string field like "1_Immediate" if not "tier_id"
     // Adjusting based on `GhostRow` usage which sets `tier: "2_SameDay"`
     let tier1 = $derived(
-        contacts.filter((c: any) => c.tier?.startsWith("1") || c.tier_id === 1),
+        contacts.filter(
+            (c: FamilyMember) => c.tier?.startsWith("1") || c.tierId === 1,
+        ),
     );
     let tier2 = $derived(
-        contacts.filter((c: any) => c.tier?.startsWith("2") || c.tier_id === 2),
+        contacts.filter(
+            (c: FamilyMember) => c.tier?.startsWith("2") || c.tierId === 2,
+        ),
     );
     let tier3 = $derived(
-        contacts.filter((c: any) => c.tier?.startsWith("3") || c.tier_id === 3),
+        contacts.filter(
+            (c: FamilyMember) => c.tier?.startsWith("3") || c.tierId === 3,
+        ),
     );
 
-    let callList = $derived(contacts.filter((c: any) => c.tier || c.tier_id));
+    let callList = $derived(
+        contacts.filter((c: FamilyMember) => c.tier || c.tierId),
+    );
 
     // AI Intake Integration
     $effect(() => {
@@ -110,7 +103,7 @@
                 ...newContact,
                 name: name || newContact.name,
                 relation: relation || newContact.relation,
-                role: (relation || newContact.role) as ContactRole,
+                role: (relation || newContact.role) as FamilyRole,
                 phone: phone || newContact.phone,
                 email: email || newContact.email,
                 notes: notes || newContact.notes,
@@ -119,116 +112,58 @@
     });
 
     onMount(async () => {
-        await loadContacts();
+        // Initial sync
+        await familyStore.sync();
     });
-
-    async function loadContacts() {
-        // Try API first
-        try {
-            contacts = await apiGet('/api/contacts');
-            // Backup to local
-            localStorage.setItem(
-                "continuum_contacts_fallback",
-                JSON.stringify(contacts),
-            );
-            return;
-        } catch (e) {
-            console.warn("API unavailable, falling back to local storage:", e);
-        }
-
-        // Fallback
-        const local = localStorage.getItem("continuum_contacts_fallback");
-        if (local) {
-            contacts = JSON.parse(local);
-        }
-    }
 
     async function addContact() {
         if (!newContact.name) return;
 
-        const payload = {
+        // Default values for new contact
+        const contactToAdd: Omit<FamilyMember, "id"> = {
             name: newContact.name,
             role: newContact.role || "Friend",
-            relation: newContact.relation,
+            relation: newContact.relation || "",
             phone: newContact.phone,
             email: newContact.email,
             notes: newContact.notes,
-            tier_id: null, // Don't enforce tier until selected
-            tier: "1_Immediate", // Simulation
+            isExecutor: false,
+            isBeneficiary: false,
+            isEmergencyContact: false,
+            tierId: null, // Don't enforce tier until selected
+            tier: "1_Immediate", // Simulation default
             notificationStatus: "Pending",
+            avatar: newContact.avatar,
         };
 
-        // Try API
-        let success = false;
-        try {
-            await apiPost('/api/contacts', payload);
-            success = true;
-            await loadContacts();
-        } catch (e) {
-            console.warn("API add failed, saving locally:", e);
-        }
-
-        if (!success) {
-            // Local Save with temp ID
-            const localPayload = { ...payload, id: Date.now() };
-            contacts = [...contacts, localPayload as Contact];
-            localStorage.setItem(
-                "continuum_contacts_fallback",
-                JSON.stringify(contacts),
-            );
-        }
+        // familyStore handles generation of ID and Sync
+        await familyStore.addMember(contactToAdd);
 
         showAddModal = false;
-        newContact = { role: "Family", notes: "" };
+        newContact = { role: "Family", notes: "", relation: "" };
+        showAffirmation = true;
     }
 
-    async function deleteContact(id: number) {
-        if (!confirm("Remove this contact?")) return;
-
-        // Optimistic UI for local
-        const oldContacts = [...contacts];
-        contacts = contacts.filter((c) => c.id !== id);
-        localStorage.setItem(
-            "continuum_contacts_fallback",
-            JSON.stringify(contacts),
-        );
-
-        try {
-            await apiDelete(`/api/contacts/${id}`);
-            await loadContacts(); // Re-sync if API works
-        } catch (e) {
-            console.warn("API delete failed, kept local change:", e);
-        }
+    async function deleteContact(id: number | string) {
+        if (!confirm("Are you sure you'd like to remove this contact from your records?")) return;
+        familyStore.removeMember(id);
     }
 
-    // Stub for updating status (no backend support for status in this simplified model yet, assuming persisted?)
-    // This part of UI logic will be revisited if user wants the "Call List Status" to be persisted.
-    function updateStatus(id: number, status: string) {
-        // Optimistic UI update
-        const c = contacts.find((x) => x.id === id);
-        if (c) c.notificationStatus = status;
+    function updateStatus(id: number | string, status: string) {
+        familyStore.updateMember(id, { notificationStatus: status });
     }
 </script>
 
-<div class="max-w-6xl mx-auto p-6 md:p-8 animate-in fade-in duration-500">
-    <!-- Header -->
-    <div
-        class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8"
-    >
-        <div class="flex items-center gap-4">
-            <div class="p-3 bg-rose-100 text-rose-600 rounded-xl shadow-sm">
-                <Phone size={32} />
-            </div>
-            <div>
-                <h1 class="font-serif font-bold text-3xl text-slate-900">
-                    Connections & Notifications
-                </h1>
-                <p class="text-slate-500">
-                    Manage your network and define the "Call List" strategy.
-                </p>
-            </div>
-        </div>
+{#if module}
+    <LivingBlueprintHeader
+        title={module.title}
+        subtitle={module.description}
+        tier={module.role === "owner" ? "preparation" : "executor"}
+    />
+{/if}
 
+<div class="max-w-6xl mx-auto p-6 md:p-8 animate-in fade-in duration-500">
+    <div class="flex justify-end mb-8">
         <button
             onclick={() => (showAddModal = true)}
             class="px-5 py-2.5 bg-slate-900 text-white font-bold rounded-xl shadow-lg hover:bg-slate-800 transition-all flex items-center gap-2"
@@ -236,6 +171,9 @@
             <Plus size={18} /> Add Contact
         </button>
     </div>
+
+    <!-- Affirmation Message -->
+    <Affirmation module="contacts" bind:show={showAffirmation} />
 
     <!-- Stats -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
@@ -320,7 +258,7 @@
                             newContact = {
                                 ...newContact,
                                 name: sample.name,
-                                role: sample.role as ContactRole,
+                                role: sample.role as FamilyRole,
                                 relation: sample.relation,
                                 phone: sample.phone,
                                 email: sample.email,
@@ -564,7 +502,9 @@
                             <option>Friend</option>
                             <option>Medical</option>
                             <option>Legal</option>
+                            <option>Financial</option>
                             <option>Other</option>
+                            <option>Pet</option>
                         </select>
                     </div>
 

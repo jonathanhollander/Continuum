@@ -158,7 +158,7 @@
     }
 
     async function deleteContact(contactId: number) {
-        if (!confirm("Remove this contact?")) return;
+        if (!confirm("Are you sure you'd like to remove this contact from your Pulse network?")) return;
         try {
             await fetch(
                 `${baseUrl}/api/pulse/contacts/${contactId}?user_id=${userId}`,

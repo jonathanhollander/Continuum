@@ -23,6 +23,13 @@
         syncAllMemories,
         type ExternalArchive,
     } from "$lib/stores/visualMemoryStore";
+    import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
+    import * as registryRaw from "$lib/data/registry.json";
+
+    // Registry Data Handling
+    const registryData = (registryRaw as any).default || registryRaw;
+    const registry = Array.isArray(registryData) ? registryData : [];
+    const module = registry.find((m) => m.id === "visual-memories");
     import { onMount, type ComponentProps } from "svelte";
     import ExternalArchiveCard from "$lib/components/modules/visual-memories/ExternalArchiveCard.svelte";
     import MemoryGallery from "$lib/components/modules/visual-memories/MemoryGallery.svelte";
@@ -94,7 +101,7 @@
     }
 
     function handleDeleteArchive(id: number) {
-        if (confirm("Remove this archive location?")) {
+        if (confirm("Are you sure you'd like to remove this archive location?")) {
             removeArchive(id);
         }
     }
@@ -114,7 +121,6 @@
 
             const reader = new FileReader();
             reader.onload = (loadEvent) => {
-                const result = loadEvent.target?.result as string;
                 const result = loadEvent.target?.result as string;
                 addVisualMemory({
                     url: result,
@@ -254,29 +260,15 @@
     </div>
 {/if}
 
-<div class="max-w-7xl mx-auto p-8 animate-in fade-in duration-500">
-    <!-- Header -->
-    <div class="text-center mb-12">
-        <div
-            class="inline-flex items-center justify-center p-4 bg-purple-100 text-purple-800 rounded-full mb-6 relative"
-        >
-            <Image size={48} />
-            <!-- Decorative -->
-            <div
-                class="absolute -right-2 -top-2 bg-white p-1.5 rounded-full shadow-sm border border-slate-100 text-amber-500"
-            >
-                <Grid size={16} />
-            </div>
-        </div>
-        <h1 class="text-4xl font-serif font-bold text-[#304743] mb-4">
-            Visual Memories
-        </h1>
-        <p class="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            Preserve your most cherished photos and videos, and create a map to
-            the rest of your digital legacy.
-        </p>
-    </div>
+{#if module}
+    <LivingBlueprintHeader
+        title={module.title}
+        subtitle={module.description}
+        tier={module.role === "owner" ? "preparation" : "executor"}
+    />
+{/if}
 
+<div class="max-w-7xl mx-auto p-8 animate-in fade-in duration-500">
     <!-- Tabs / Navigation -->
     <div
         class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 border-b border-slate-100 pb-4"

@@ -61,7 +61,7 @@
 
     function removeLesson(id: string) {
         // Updated type
-        if (!confirm("Delete this lesson?")) return;
+        if (!confirm("Are you sure you'd like to remove this lesson?")) return;
         lessonSync.delete(id);
     }
 

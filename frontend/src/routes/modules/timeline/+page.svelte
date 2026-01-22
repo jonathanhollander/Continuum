@@ -79,7 +79,7 @@
     }
 
     function removeEvent(id: string | number) {
-        if (!confirm("Remove this event?")) return;
+        if (!confirm("Are you sure you'd like to remove this event from your timeline?")) return;
         timelineStore.removeEvent(id);
     }
 

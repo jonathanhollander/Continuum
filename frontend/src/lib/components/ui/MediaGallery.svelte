@@ -83,7 +83,7 @@
 
     function handleDelete(id: string, e: Event) {
         e.stopPropagation();
-        if (confirm("Delete this item?")) {
+        if (confirm("Are you sure you'd like to remove this item?")) {
             dispatch("delete", id);
         }
     }
