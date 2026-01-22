@@ -1,6 +1,15 @@
 import { registerSync } from '$lib/services/sync.svelte';
 
-export type FamilyRole = 'owner' | 'spouse' | 'child' | 'grandchild' | 'parent' | 'sibling' | 'pet' | 'professional' | 'executor';
+export type FamilyRole =
+    | 'Family'
+    | 'Friend'
+    | 'Medical'
+    | 'Legal'
+    | 'Financial'
+    | 'Other'
+    | 'Pet'
+    // Legacy support (mapped during sync)
+    | 'owner' | 'spouse' | 'child' | 'grandchild' | 'parent' | 'sibling' | 'professional' | 'executor';
 
 export interface FamilyMember {
     id: string | number;
@@ -15,6 +24,9 @@ export interface FamilyMember {
     isEmergencyContact: boolean;
     notes?: string;
     tierId?: number | null;
+    // UI Helpers
+    tier?: string; // For simulation/display
+    notificationStatus?: string;
 }
 
 export interface Relationship {
@@ -26,13 +38,39 @@ export interface Relationship {
 
 const contactMapper = (item: any) => {
     if (!item) return item;
+
+    // legacy role mapping
+    let role = item.role;
+    let relation = item.relation;
+
+    // Map legacy backend/store roles to "Concept" (Role) + "Detail" (Relation)
+    const legacyMap: Record<string, string> = {
+        'spouse': 'Family',
+        'child': 'Family',
+        'grandchild': 'Family',
+        'parent': 'Family',
+        'sibling': 'Family',
+        'professional': 'Other', // Could be Medical/Legal, default to Other
+        'pet': 'Pet'
+    };
+
+    // If role is one of the legacy specific ones, map it
+    if (legacyMap[role]) {
+        if (!relation) relation = role.charAt(0).toUpperCase() + role.slice(1); // "spouse" -> "Spouse"
+        role = legacyMap[role];
+    }
+
     return {
         ...item,
+        role: role || 'Other',
+        relation: relation || '',
+
         // Remote -> Local
         isExecutor: item.is_executor ?? item.isExecutor ?? false,
         isBeneficiary: item.is_beneficiary ?? item.isBeneficiary ?? false,
         isEmergencyContact: item.is_emergency_contact ?? item.isEmergencyContact ?? false,
         tierId: item.tier_id ?? item.tierId ?? null,
+
         // Local -> Remote
         ['is_executor']: item.isExecutor ?? item.is_executor,
         ['is_beneficiary']: item.isBeneficiary ?? item.is_beneficiary,

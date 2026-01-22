@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { estateAudit } from "$lib/stores/auditStore";
+    import { estateAudit } from "$lib/stores/auditStore.svelte";
     import { TriangleAlert, Clock, Activity, ShieldAlert } from "lucide-svelte";
 
     onMount(() => {

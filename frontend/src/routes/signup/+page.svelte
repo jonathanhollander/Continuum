@@ -3,13 +3,14 @@
     import { goto } from '$app/navigation';
     import { auth } from '$lib/stores/auth';
     import { API_BASE_URL } from '$lib/config';
+    import { apiPost } from '$lib/api/client';
+    import { notifications } from '$lib/stores/notificationStore';
     import { startRegistration } from '@simplewebauthn/browser';
     import { Shield, Fingerprint, AlertCircle, CheckCircle2 } from 'lucide-svelte';
     import { fade, fly } from 'svelte/transition';
 
     let email = '';
     let isLoading = false;
-    let error = '';
     let step: 'email' | 'passkey' | 'complete' = 'email';
     let userId: number | null = null;
 
@@ -22,38 +23,42 @@
 
     async function handleEmailSubmit() {
         if (!email) {
-            error = 'Please enter your email address';
+            notifications.showError(
+                'Please enter your email address',
+                'Email Required'
+            );
             return;
         }
 
         isLoading = true;
-        error = '';
 
         try {
             // Step 1: Create account and start passkey registration
-            const res = await fetch(`${API_BASE_URL}/api/auth/passkey/register/start`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email })
-            });
+            const result = await apiPost('/api/auth/passkey/register/start', { email });
 
-            if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.detail || 'Failed to create account');
+            userId = result.user_id;
+
+            // Check for warnings (e.g., email send failures)
+            if (result.warnings && result.warnings.length > 0) {
+                result.warnings.forEach((warning: any) => {
+                    if (warning.severity === 'warning') {
+                        notifications.showWarning(warning.message, 'Account Created');
+                    } else {
+                        notifications.showInfo(warning.message, 'Account Created');
+                    }
+                });
             }
-
-            const { user_id, options } = await res.json();
-            userId = user_id;
 
             // Move to passkey step
             step = 'passkey';
 
             // Automatically start passkey registration
-            await handlePasskeyRegistration(options);
+            await handlePasskeyRegistration(result.options);
 
         } catch (e: any) {
             console.error('Account creation failed:', e);
-            error = e.message || 'Failed to create account';
+            // apiPost already shows error notification via global system
+            // No need to set inline error
         } finally {
             isLoading = false;
         }
@@ -61,33 +66,33 @@
 
     async function handlePasskeyRegistration(options: any) {
         isLoading = true;
-        error = '';
 
         try {
             // Step 2: Show browser passkey creation prompt
             const credential = await startRegistration(options);
 
             // Step 3: Finish registration and get JWT
-            const finishRes = await fetch(`${API_BASE_URL}/api/auth/passkey/register/finish`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    user_id: userId,
-                    credential
-                })
+            const result = await apiPost('/api/auth/passkey/register/finish', {
+                user_id: userId,
+                credential
             });
 
-            if (!finishRes.ok) {
-                const errorData = await finishRes.json();
-                throw new Error(errorData.detail || 'Registration failed');
+            // Check for warnings
+            if (result.warnings && result.warnings.length > 0) {
+                result.warnings.forEach((warning: any) => {
+                    notifications.showWarning(warning.message, 'Registration Complete');
+                });
             }
-
-            const { access_token } = await finishRes.json();
 
             // Store token
             if (typeof localStorage !== 'undefined') {
-                localStorage.setItem('continuum_auth_token', access_token);
+                localStorage.setItem('continuum_auth_token', result.access_token);
             }
+
+            notifications.showSuccess(
+                'Your account is ready! Taking you to your vault...',
+                'Welcome to Continuum!'
+            );
 
             // Show success and redirect
             step = 'complete';
@@ -100,12 +105,17 @@
             console.error('Passkey registration failed:', e);
 
             if (e.name === 'NotAllowedError') {
-                error = 'Passkey creation was cancelled. Please try again.';
+                notifications.showError(
+                    'Passkey creation was cancelled. Please try again.',
+                    'Registration Cancelled'
+                );
             } else if (e.name === 'NotSupportedError') {
-                error = 'Your device does not support passkeys. Please try a different device or contact support.';
-            } else {
-                error = e.message || 'Failed to create passkey. Please try again.';
+                notifications.showError(
+                    'Your device does not support passkeys. Please try a different device or contact support.',
+                    'Passkey Not Supported'
+                );
             }
+            // apiPost already shows error notification for other errors
 
             step = 'email';
         } finally {
@@ -139,15 +149,6 @@
 
         <!-- Main Signup Card -->
         <div class="bg-slate-900/50 border border-slate-800 rounded-3xl p-10 backdrop-blur-sm space-y-6">
-            {#if error}
-                <div class="bg-red-500/10 border border-red-500/30 rounded-2xl p-5 flex items-start gap-4" in:fly={{ y: -20, duration: 300 }}>
-                    <AlertCircle class="w-6 h-6 text-red-400 flex-shrink-0 mt-0.5" />
-                    <div>
-                        <p class="text-red-300 font-medium text-lg">{error}</p>
-                    </div>
-                </div>
-            {/if}
-
             {#if step === 'email'}
                 <!-- Step 1: Email Entry -->
                 <div class="space-y-6" in:fly={{ x: -20, duration: 300 }}>

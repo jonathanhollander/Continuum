@@ -321,14 +321,15 @@
                 <h1
                     class="text-4xl font-extrabold text-slate-900 tracking-tight mb-2"
                 >
-                    Insurance <span class="text-indigo-600 font-light italic"
-                        >&</span
-                    > Policies
+                    Protecting <span class="text-indigo-600 font-light italic"
+                        >Your</span
+                    > Loved Ones
                 </h1>
                 <p class="text-slate-500 max-w-2xl text-lg leading-relaxed">
-                    Centralize your coverage details, beneficiary designations,
-                    and claims procedures to ensure your family's financial
-                    security.
+                    Life insurance and protection policies are acts of love.
+                    They ensure your family has financial security when you're
+                    no longer here to provide it, bridging the gap when they
+                    need it most.
                 </p>
             </div>
         </div>
@@ -363,7 +364,7 @@
                 class="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-2xl transition-all shadow-xl shadow-slate-900/10 font-bold"
             >
                 <Plus size={20} />
-                Add Policy
+                Add Protection
             </button>
         </div>
     </header>
@@ -721,7 +722,7 @@
                             class="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg shadow-indigo-600/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
                         >
                             <Plus size={18} />
-                            Initialize Portfolio
+                            Start Protecting Your Family
                         </button>
                     </div>
                 </div>
@@ -751,14 +752,14 @@
                     <nav
                         class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600 mb-3"
                     >
-                        <Activity size={12} />
-                        <span>Data Management</span>
+                        <Heart size={12} />
+                        <span>Acts of Love</span>
                     </nav>
                     <h2
                         class="text-4xl font-black text-slate-900 tracking-tighter"
                     >
-                        {isEditing ? "Modify" : "Register"}
-                        <span class="text-indigo-600">Policy</span>
+                        {isEditing ? "Update" : "Document"}
+                        <span class="text-indigo-600">Protection</span>
                     </h2>
                 </div>
                 <button

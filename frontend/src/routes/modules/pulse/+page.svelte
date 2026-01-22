@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { pulse } from "$lib/stores/pulse";
+    import { pulse } from "$lib/stores/pulse.svelte";
     import { apiGet, apiPost } from "$lib/api/client";
     import { onMount } from "svelte";
     import {
@@ -36,7 +36,7 @@
 
     async function fetchSafetyStatus() {
         try {
-            const data = await apiGet('/api/pulse/safety/status');
+            const data = await apiGet("/api/pulse/safety/status");
             localStatus.safetyTimer = data;
         } catch (e) {
             console.error(e);
@@ -63,9 +63,11 @@
         try {
             const params = new URLSearchParams({
                 minutes: localStatus.safetyInput.toString(),
-                purpose: localStatus.purpose
+                purpose: localStatus.purpose,
             });
-            const data = await apiPost(`/api/pulse/safety/start?${params.toString()}`);
+            const data = await apiPost(
+                `/api/pulse/safety/start?${params.toString()}`,
+            );
             localStatus.safetyTimer = data;
             localStatus.showSafetyConfig = false;
         } catch (e) {
@@ -75,7 +77,7 @@
 
     async function cancelSafety() {
         try {
-            await apiPost('/api/pulse/safety/cancel');
+            await apiPost("/api/pulse/safety/cancel");
             localStatus.safetyTimer = null;
         } catch (e) {
             console.error(e);

@@ -23,6 +23,9 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from backend.config import settings
 from sqlmodel import Session
 from backend.models.email_log import EmailLog
+from backend.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class EmailService:
@@ -33,7 +36,7 @@ class EmailService:
 
     def __init__(self):
         # Initialize Jinja2 template environment
-        template_dir = Path(__file__).parent.parent / "templates" / "emails"
+        template_dir = Path(__file__).parent.parent / "templates"
         self.jinja_env = Environment(
             loader=FileSystemLoader(str(template_dir)),
             autoescape=select_autoescape(['html', 'xml'])
@@ -53,7 +56,10 @@ class EmailService:
                 from postmarker.core import PostmarkClient
                 self.postmark_client = PostmarkClient(server_token=settings.POSTMARK_API_KEY)
             except ImportError:
-                print("⚠️  Postmark library not installed. Run: pip install postmarker")
+                logger.warning(
+                    "Postmark library not installed, falling back to alternate provider",
+                    extra={"context": {"fallback_provider": "smtp" if settings.SMTP_ENABLED else "local"}}
+                )
                 self.provider = "smtp" if settings.SMTP_ENABLED else "local"
 
     def _determine_provider(self) -> str:
@@ -100,10 +106,20 @@ class EmailService:
 
         # Render HTML template
         try:
-            template = self.jinja_env.get_template(f"{template_name}.html")
+            template = self.jinja_env.get_template(f"emails/{template_name}.html")
             html_body = template.render(**context)
         except Exception as e:
-            print(f"❌ Template rendering error: {e}")
+            logger.error(
+                "Email template rendering failed",
+                extra={"context": {
+                    "template_name": template_name,
+                    "recipient": to_email,
+                    "subject": subject,
+                    "error": str(e),
+                    "error_type": type(e).__name__
+                }},
+                exc_info=True
+            )
             return {"status": "failed", "error": f"Template error: {e}"}
 
         # Create email log entry
@@ -143,7 +159,18 @@ class EmailService:
             return result
 
         except Exception as e:
-            print(f"❌ Email send error: {e}")
+            logger.error(
+                "Email send failed",
+                extra={"context": {
+                    "provider": self.provider,
+                    "recipient": to_email,
+                    "subject": subject,
+                    "user_id": user_id,
+                    "error": str(e),
+                    "error_type": type(e).__name__
+                }},
+                exc_info=True
+            )
 
             # Update log entry with error
             if db_session and log_entry:
@@ -165,20 +192,36 @@ class EmailService:
                 MessageStream="outbound"
             )
 
-            print(f"✅ [POSTMARK] Email sent to {to_email}: {subject}")
+            logger.info(
+                "Email sent via Postmark",
+                extra={"context": {
+                    "provider": "postmark",
+                    "recipient": to_email,
+                    "subject": subject,
+                    "message_id": response.get("MessageID")
+                }}
+            )
             return {
                 "status": "sent",
                 "provider": "postmark",
                 "message_id": response.get("MessageID")
             }
         except Exception as e:
-            print(f"❌ [POSTMARK] Error: {e}")
+            fallback_provider = "smtp" if settings.SMTP_ENABLED else "local"
+            logger.warning(
+                f"Postmark send failed, falling back to {fallback_provider}",
+                extra={"context": {
+                    "original_provider": "postmark",
+                    "fallback_provider": fallback_provider,
+                    "recipient": to_email,
+                    "error": str(e),
+                    "error_type": type(e).__name__
+                }}
+            )
             # Fallback to SMTP or local
             if settings.SMTP_ENABLED:
-                print("⚠️  Falling back to SMTP...")
                 return self._send_via_smtp(to_email, "", subject, html_body)
             else:
-                print("⚠️  Falling back to local storage...")
                 return self._save_to_local(to_email, subject, html_body)
 
     def _send_via_smtp(self, to_email: str, recipient_name: str, subject: str, html_body: str) -> Dict[str, Any]:
@@ -201,16 +244,32 @@ class EmailService:
                     server.login(settings.SMTP_USERNAME, settings.SMTP_PASSWORD)
                 server.send_message(msg)
 
-            print(f"✅ [SMTP] Email sent to {to_email}: {subject}")
+            logger.info(
+                "Email sent via SMTP",
+                extra={"context": {
+                    "provider": "smtp",
+                    "recipient": to_email,
+                    "subject": subject,
+                    "message_id": msg.get('Message-ID', 'smtp-' + datetime.utcnow().isoformat())
+                }}
+            )
             return {
                 "status": "sent",
                 "provider": "smtp",
                 "message_id": msg.get('Message-ID', 'smtp-' + datetime.utcnow().isoformat())
             }
         except Exception as e:
-            print(f"❌ [SMTP] Error: {e}")
+            logger.warning(
+                "SMTP send failed, falling back to local storage",
+                extra={"context": {
+                    "original_provider": "smtp",
+                    "fallback_provider": "local",
+                    "recipient": to_email,
+                    "error": str(e),
+                    "error_type": type(e).__name__
+                }}
+            )
             # Fallback to local
-            print("⚠️  Falling back to local storage...")
             return self._save_to_local(to_email, subject, html_body)
 
     def _save_to_local(self, to_email: str, subject: str, html_body: str) -> Dict[str, Any]:
@@ -223,7 +282,16 @@ class EmailService:
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(html_body)
 
-        print(f"📧 [LOCAL] Email saved to {filepath}")
+        logger.info(
+            "Email saved to local file",
+            extra={"context": {
+                "provider": "local",
+                "recipient": to_email,
+                "subject": subject,
+                "file_path": filepath,
+                "message_id": f"local-{timestamp}"
+            }}
+        )
         return {
             "status": "saved_local",
             "provider": "local",

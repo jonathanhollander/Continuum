@@ -1,4 +1,5 @@
 import { writable } from 'svelte/store';
+import { logger } from '../utils/logger';
 
 // Types
 export type EncouragementMode = 'Full' | 'Soft' | 'Hidden';
@@ -29,7 +30,7 @@ export function logInteraction(action: string, details: string = '') {
         ...log,
         { timestamp: Date.now(), action, details }
     ]);
-    console.log(`[Concierge Log] ${action}: ${details}`);
+    logger.info(`[Concierge Log] ${action}`, { details });
 }
 
 // Helper to check if prompts should be shown

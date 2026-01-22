@@ -2,7 +2,9 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from sqlmodel import Session, create_engine
 from backend.database import engine
 from backend.pulse_logic import check_and_escalate_all
+from backend.utils.logger import get_logger
 
+logger = get_logger(__name__)
 scheduler = BackgroundScheduler()
 
 def pulse_job():
@@ -18,8 +20,8 @@ def start_scheduler():
         # check_and_escalate_all runs every hour
         scheduler.add_job(pulse_job, 'interval', hours=1, id='pulse_check')
         scheduler.start()
-        print("⏰ Pulse Scheduler Started")
+        logger.info("Pulse Scheduler started (checking every hour)")
 
 def stop_scheduler():
     scheduler.shutdown()
-    print("⏰ Pulse Scheduler Stopped")
+    logger.info("Pulse Scheduler stopped")

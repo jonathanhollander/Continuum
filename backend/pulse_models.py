@@ -34,6 +34,18 @@ class PulseSettings(SQLModel, table=True):
     biometric_extension_enabled: bool = Field(default=False)
     biometric_extension_hours: int = Field(default=24) # Default 24h extension
 
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "enabled": True,
+                "frequency_days": 2,
+                "grace_period_hours": 24,
+                "custom_message": "Thinking of you. Please check in when you can.",
+                "pet_protocol_enabled": True
+            }
+        }
+    }
+
 class PulseVault(SQLModel, table=True):
     __tablename__ = "pulse_vault"
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -87,6 +99,18 @@ class PulseContact(SQLModel, table=True):
     is_executor: bool = Field(default=False)
     is_beneficiary: bool = Field(default=False)
     is_emergency_contact: bool = Field(default=False)
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "name": "Sarah Connor",
+                "role": "Family",
+                "relation": "Sister",
+                "email": "sarah@example.com",
+                "is_executor": True
+            }
+        }
+    }
 
     # Pulse Specific (Optional - only if they are a Guardian)
     tier_id: Optional[int] = Field(default=None, foreign_key="pulse_escalation_tiers.id")

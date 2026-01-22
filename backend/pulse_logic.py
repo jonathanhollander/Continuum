@@ -2,26 +2,37 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 from sqlmodel import Session, select, col
 from backend.pulse_models import (
-    PulseSettings, PulseCheckin, PulseEscalationTier, 
+    PulseSettings, PulseCheckin, PulseEscalationTier,
     PulseContact, PulseEscalationLog, PulseMessage
 )
+from backend.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 def check_and_escalate_all(session: Session):
     """
     Main entry point for the scheduler.
     Iterates through all users with Pulse enabled and checks/escalates status.
     """
-    print(f"[{datetime.utcnow()}] 💓 Running Pulse Health Check...")
-    
+    logger.info("Running Pulse health check for all enabled users")
+
     # Get all enabled settings
     statement = select(PulseSettings).where(PulseSettings.enabled == True)
     all_settings = session.exec(statement).all()
-    
+
     for settings in all_settings:
         try:
             process_user_pulse(session, settings)
         except Exception as e:
-            print(f"ERROR processing user {settings.user_id}: {e}")
+            logger.error(
+                f"Error processing Pulse check for user {settings.user_id}",
+                extra={"context": {
+                    "user_id": settings.user_id,
+                    "error": str(e),
+                    "error_type": type(e).__name__
+                }},
+                exc_info=True
+            )
 
 def process_user_pulse(session: Session, settings: PulseSettings):
     user_id = settings.user_id
@@ -48,7 +59,7 @@ def process_user_pulse(session: Session, settings: PulseSettings):
     # If in Grace Period (Overdue but not Escalating)
     if soft_deadline < now < hard_deadline:
         # TODO: Send "Soft Nudge" to USER if not sent recently
-        # print(f"User {user_id} is in Grace Period (Overdue)")
+        logger.debug(f"User {user_id} is in Grace Period (Overdue)")
         return
         
     # 3. Escalation Logic (Past Hard Deadline)
@@ -104,7 +115,15 @@ def process_user_pulse(session: Session, settings: PulseSettings):
             trigger_escalation(session, user_id, next_tier_number, str(last_log.triggered_at))
 
 def trigger_escalation(session: Session, user_id: int, tier_number: int, reference_time: str):
-    print(f"🚨 [ESCALATION] Triggering Tier {tier_number} for User {user_id} (Ref: {reference_time})")
+    logger.warning(
+        f"Pulse escalation triggered: Tier {tier_number}",
+        extra={"context": {
+            "user_id": user_id,
+            "tier_number": tier_number,
+            "reference_time": reference_time,
+            "event": "pulse_escalation"
+        }}
+    )
     
     # 1. Log the event
     log_entry = PulseEscalationLog(
@@ -140,7 +159,15 @@ def send_notification(session: Session, contact: PulseContact, tier_number: int)
     Send escalation notification to guardian contact.
     Uses new template-based email service with proper delivery tracking.
     """
-    print(f"   --> 📧 Generating Tier {tier_number} Alert for {contact.name}...")
+    logger.info(
+        f"Sending Tier {tier_number} escalation alert to guardian",
+        extra={"context": {
+            "contact_name": contact.name,
+            "contact_email": contact.email,
+            "tier_number": tier_number,
+            "user_id": contact.user_id
+        }}
+    )
 
     # Get user information for personalization
     user = session.get(User, contact.user_id)

@@ -1,25 +1,30 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlmodel import Session, select
+from backend.limiter import limiter
 from datetime import datetime, timedelta
 from backend.database import get_session, User
 from backend.auth import get_current_user
 import secrets
+import base64
 from backend.pulse_models import (
-    PulseSettings, PulseCheckin, PulseVault, 
+    PulseSettings, PulseCheckin, PulseVault,
     PulseEscalationTier, PulseContact,
     PulseMessage, PulseEscalationLog, PulseSafetyTimer
 )
+from backend.utils.logger import get_logger
 
+logger = get_logger(__name__)
 router = APIRouter(prefix="/api/pulse", tags=["pulse"])
 
-@router.post("/checkin")
-def checkin(method: str = "manual", note: str = None, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+@router.post("/checkin", summary="Record a life-check-in", description="Allows the user to manually check in, confirming they are safe. This resets the escalation timer.")
+@limiter.limit("5/minute")
+def checkin(request: Request, method: str = "manual", note: str = None, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     checkin = PulseCheckin(user_id=user.id, method=method, note=note)
     session.add(checkin)
     session.commit()
     return {"status": "success", "timestamp": checkin.timestamp}
 
-@router.get("/status")
+@router.get("/status", summary="Get current Pulse status", description="Returns if Pulse is active, grace period status, and the next expected nudge time.")
 def get_status(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     settings = session.get(PulseSettings, user.id)
     if not settings:
@@ -40,7 +45,7 @@ def get_status(user: User = Depends(get_current_user), session: Session = Depend
         "next_nudge": next_time.strftime("%Y-%m-%d %H:%M")
     }
 
-@router.get("/settings")
+@router.get("/settings", summary="Retrieve Pulse settings", description="Gets the user's Pulse configuration, including frequency and current check-in token.")
 def get_settings(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     settings = session.get(PulseSettings, user.id)
     if not settings:
@@ -53,8 +58,9 @@ def get_settings(user: User = Depends(get_current_user), session: Session = Depe
         session.commit()
     return settings
 
-@router.post("/settings")
-def update_settings(new_settings: PulseSettings, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+@router.post("/settings", summary="Update Pulse settings", description="Updates the user's Pulse configuration. Resets the check-in token if not provided.")
+@limiter.limit("10/minute")
+def update_settings(request: Request, new_settings: PulseSettings, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     settings = session.get(PulseSettings, user.id)
     if not settings:
         settings = PulseSettings(user_id=user.id)
@@ -78,7 +84,7 @@ def get_contacts(user: User = Depends(get_current_user), session: Session = Depe
     statement = select(PulseContact).where(PulseContact.user_id == user.id)
     return session.exec(statement).all()
 
-@router.post("/contacts")
+@router.post("/contacts", summary="Create a Guardian contact", description="Adds a new contact who will be notified during Pulse escalation. Generates a unique portal token for them.")
 def create_contact(contact: PulseContact, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     contact.user_id = user.id
     contact.portal_token = secrets.token_urlsafe(32) # Grant portal access immediately
@@ -184,7 +190,8 @@ def send_message(contact_id: int, message: str, user: User = Depends(get_current
 # --- Vault & Instructions ---
 
 @router.get("/vault")
-def get_vault(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+@limiter.limit("10/minute")
+def get_vault(request: Request, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     return session.exec(select(PulseVault).where(PulseVault.user_id == user.id)).all()
 
 @router.post("/vault")
@@ -226,9 +233,16 @@ def send_nudge(contact_id: int, session: Session = Depends(get_session)):
     contact = session.get(PulseContact, contact_id)
     if not contact:
         raise HTTPException(status_code=404, detail="Contact not found")
-        
-    print(f"--- NUDGE SENT from {contact.name} to User {contact.user_id} ---")
-    
+
+    logger.info(
+        "Pulse nudge sent to user",
+        extra={"context": {
+            "from_contact": contact.name,
+            "to_user_id": contact.user_id,
+            "contact_id": contact_id
+        }}
+    )
+
     # Optional: ensure we log a message
     msg = PulseMessage(
         user_id=contact.user_id, 
@@ -344,7 +358,9 @@ def register_webauthn_start(user: User = Depends(get_current_user), session: Ses
     PENDING_CHALLENGES[str(user.id)] = options.challenge
 
     # Convert to JSON-compatible dict
-    return options.to_dict()
+    from webauthn import options_to_json
+    import json
+    return json.loads(options_to_json(options))
 
 @router.post("/auth/webauthn/register/finish")
 def register_webauthn_finish(payload: dict, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
@@ -360,26 +376,38 @@ def register_webauthn_finish(payload: dict, user: User = Depends(get_current_use
             response=payload
         )
 
-        # Save credential
+        # Store credential
         cred_id = verification.credential_id
+        pub_key = verification.credential_public_key
+        
+        # Convert bytes to base64url strings for safe storage
+        cred_id_b64 = base64.urlsafe_b64encode(cred_id).decode('utf-8').rstrip('=')
+        pub_key_b64 = base64.urlsafe_b64encode(pub_key).decode('utf-8').rstrip('=')
 
         # Check if credential already exists
-        existing = session.get(PulseCredential, str(cred_id))
+        existing = session.get(PulseCredential, cred_id_b64)
         if existing:
             session.delete(existing)
             session.commit()
 
         new_cred = PulseCredential(
-            id=str(cred_id),
+            id=cred_id_b64,
             user_id=user.id,
-            public_key=str(verification.credential_public_key),
+            public_key=pub_key_b64,
             sign_count=verification.sign_count
         )
         session.add(new_cred)
         session.commit()
 
-        return {"status": "verified", "credential_id": str(cred_id)}
+        return {"status": "verified", "credential_id": cred_id_b64}
 
     except Exception as e:
-        print(f"WebAuthn Error: {e}")
+        logger.error(
+            "WebAuthn verification failed for Pulse credential",
+            extra={"context": {
+                "error": str(e),
+                "error_type": type(e).__name__
+            }},
+            exc_info=True
+        )
         raise HTTPException(status_code=400, detail=str(e))

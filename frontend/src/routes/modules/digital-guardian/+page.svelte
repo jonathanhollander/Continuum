@@ -18,7 +18,7 @@
         X,
     } from "lucide-svelte";
     import { onMount } from "svelte";
-    import { estateProfile } from "$lib/stores/estateStore";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
     // import { getStored, setStored } from "$lib/stores/persistence"; // REMOVED
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";

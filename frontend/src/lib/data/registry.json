@@ -2,50 +2,64 @@
     {
         "id": "preparation-hub",
         "title": "Preparation Hub",
-        "description": "A steady starting place for your estate planning journey.",
+        "description": "A peaceful beginning to your legacy, designed to comfort and guide you.",
         "icon": "🚀",
         "role": "owner"
     },
     {
         "id": "family-hub",
         "title": "Family Hub",
-        "description": "Organize family ties, emergency contacts, and shared memories.",
+        "description": "Your shared history, preserved for the people who matter most.",
         "icon": "👨‍👩‍👧‍👦",
         "role": "owner"
     },
     {
         "id": "timeline",
         "title": "Life Timeline",
-        "description": "Your story isn't just a list of assets. It's a series of moments.",
+        "description": "The beautiful arc of your journey, captured in the moments that count.",
         "icon": "📅",
         "role": "owner"
     },
     {
         "id": "executor-hub",
         "title": "Executor Hub",
-        "description": "Practical steps for carry out wishes. Keep documents together.",
+        "description": "A supportive guide to help you honor their wishes with grace and clarity.",
         "icon": "⚖️",
         "role": "executor"
     },
     {
         "id": "visual-memories",
         "title": "Visual Memories",
-        "description": "A gallery of your most precious photos and videos.",
+        "description": "Preserving the smiles, the places, and the moments that defined your journey.",
         "icon": "📸",
         "role": "owner"
     },
     {
         "id": "subscriptions",
         "title": "Subscriptions",
-        "description": "List recurring charges so nothing continues unnoticed.",
+        "description": "Gently untangling the threads of a life, ensuring nothing stays hidden.",
         "icon": "💳",
         "role": "executor"
     },
     {
         "id": "legal-documents",
         "title": "Legal Documents",
-        "description": "Secure storage for wills, trusts, and other legal papers.",
+        "description": "Safe storage for your promises, protecting what you've built for them.",
         "icon": "📜",
+        "role": "owner"
+    },
+    {
+        "id": "contacts",
+        "title": "Your Safety Net",
+        "description": "A map of your safety net—bringing people together when it matters most.",
+        "icon": "🤝",
+        "role": "owner"
+    },
+    {
+        "id": "funeral",
+        "title": "Funeral Planning",
+        "description": "Your final act of care: a beautiful, stress-free path for those saying goodbye.",
+        "icon": "🕊️",
         "role": "owner"
     }
 ]

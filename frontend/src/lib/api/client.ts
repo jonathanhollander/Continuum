@@ -7,8 +7,9 @@
 
 import { get } from 'svelte/store';
 import { auth } from '$lib/stores/auth';
-import { API_BASE_URL } from '$lib/config';
+import { API_BASE_URL, DEFAULT_TIMEOUT } from '$lib/config';
 import { browser } from '$app/environment';
+import { parseApiError } from '$lib/services/errorHandler';
 
 /**
  * Get authentication headers for API requests
@@ -47,7 +48,11 @@ export async function apiGet<T = any>(endpoint: string): Promise<T> {
     }
 
     if (!response.ok) {
-        throw new Error(`API Error: ${response.statusText}`);
+        const errorDetails = await parseApiError(response);
+        const error = new Error(errorDetails.message);
+        (error as any).code = errorDetails.code;
+        (error as any).details = errorDetails.details;
+        throw error;
     }
 
     return response.json();
@@ -72,7 +77,11 @@ export async function apiPost<T = any>(endpoint: string, data?: any): Promise<T>
     }
 
     if (!response.ok) {
-        throw new Error(`API Error: ${response.statusText}`);
+        const errorDetails = await parseApiError(response);
+        const error = new Error(errorDetails.message);
+        (error as any).code = errorDetails.code;
+        (error as any).details = errorDetails.details;
+        throw error;
     }
 
     return response.json();
@@ -97,7 +106,11 @@ export async function apiPut<T = any>(endpoint: string, data?: any): Promise<T> 
     }
 
     if (!response.ok) {
-        throw new Error(`API Error: ${response.statusText}`);
+        const errorDetails = await parseApiError(response);
+        const error = new Error(errorDetails.message);
+        (error as any).code = errorDetails.code;
+        (error as any).details = errorDetails.details;
+        throw error;
     }
 
     return response.json();
@@ -121,7 +134,11 @@ export async function apiDelete<T = any>(endpoint: string): Promise<T> {
     }
 
     if (!response.ok) {
-        throw new Error(`API Error: ${response.statusText}`);
+        const errorDetails = await parseApiError(response);
+        const error = new Error(errorDetails.message);
+        (error as any).code = errorDetails.code;
+        (error as any).details = errorDetails.details;
+        throw error;
     }
 
     return response.json();
@@ -136,18 +153,26 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}): Pro
         ...(options.headers || {})
     };
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        ...options,
-        headers
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT);
 
-    if (response.status === 401) {
-        auth.logout();
-        if (browser) {
-            window.location.href = '/login';
+    try {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            ...options,
+            headers,
+            signal: controller.signal
+        });
+
+        if (response.status === 401) {
+            auth.logout();
+            if (browser) {
+                window.location.href = '/login';
+            }
+            throw new Error('Authentication required');
         }
-        throw new Error('Authentication required');
-    }
 
-    return response;
+        return response;
+    } finally {
+        clearTimeout(timeoutId);
+    }
 }

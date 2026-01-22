@@ -1,6 +1,10 @@
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
-    import { familyStore, type FamilyMember, type Relationship } from "$lib/stores/familyStore.svelte";
+    import {
+        familyStore,
+        type FamilyMember,
+        type Relationship,
+    } from "$lib/stores/familyStore.svelte";
     import {
         User,
         Heart,
@@ -138,17 +142,44 @@
     }
 
     // --- Value Helpers ---
-    function getNodeColor(role: string): string {
-        switch (role) {
-            case "owner":
-                return "#4A7C74"; // Brand Teal
-            case "spouse":
+    function getNodeColor(role: string, relation: string): string {
+        const r = role.toLowerCase();
+        const rel = relation?.toLowerCase() || "";
+
+        if (r === "owner") return "#4A7C74"; // Brand Teal
+
+        // Family Colors based on Relation
+        if (r === "family") {
+            if (
+                rel.includes("spouse") ||
+                rel.includes("partner") ||
+                rel.includes("wife") ||
+                rel.includes("husband")
+            ) {
                 return "#E11D48"; // Rose
-            case "child":
+            }
+            if (
+                rel.includes("child") ||
+                rel.includes("son") ||
+                rel.includes("daughter")
+            ) {
                 return "#F59E0B"; // Amber
-            default:
-                return "#64748B"; // Slate
+            }
+            return "#64748B"; // Slate (General Family)
         }
+
+        return "#94A3B8"; // Default Gray
+    }
+
+    function isSpouse(node: FamilyMember): boolean {
+        const rel = node.relation?.toLowerCase() || "";
+        return (
+            node.role === "Family" &&
+            (rel.includes("spouse") ||
+                rel.includes("partner") ||
+                rel.includes("wife") ||
+                rel.includes("husband"))
+        );
     }
 
     // --- Hybrid Interaction ---
@@ -162,6 +193,7 @@
     bind:clientWidth={width}
     bind:clientHeight={height}
 >
+    <!-- Graph Lines -->
     <svg class="w-full h-full pointer-events-none">
         {#each links as link}
             <line
@@ -175,6 +207,7 @@
         {/each}
     </svg>
 
+    <!-- Nodes -->
     {#each nodes as node (node.id)}
         <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div
@@ -183,7 +216,6 @@
             on:mousedown={(e) => {
                 draggingNode = node;
                 selectedNode = node;
-                // prevent text selection
                 e.preventDefault();
             }}
             on:mouseenter={() => (hoveredNode = node)}
@@ -196,10 +228,10 @@
                 ></div>
             {/if}
 
-            <!-- Node -->
+            <!-- Node Circle -->
             <div
                 class="w-16 h-16 rounded-full bg-white border-4 shadow-sm overflow-hidden relative transition-transform hover:scale-110"
-                style="border-color: {getNodeColor(node.role)}"
+                style="border-color: {getNodeColor(node.role, node.relation)}"
             >
                 {#if node.avatar}
                     <img
@@ -216,7 +248,7 @@
                 {/if}
 
                 <!-- Role Icon Badge -->
-                {#if node.is_executor || (node as any).isExecutor || node.role === "spouse"}
+                {#if node.is_executor || (node as any).isExecutor || isSpouse(node)}
                     <div
                         class="absolute bottom-0 right-0 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm"
                     >
@@ -224,20 +256,7 @@
                                 size={12}
                                 class="text-[#4A7C74]"
                             />{/if}
-                        {#if node.role === "spouse"}<Heart
-                                size={12}
-                                class="text-rose-500"
-                            />{/if}
-                    </div>
-                {#if node.is_executor || (node as any).isExecutor || node.role === "spouse"}
-                    <div
-                        class="absolute bottom-0 right-0 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm"
-                    >
-                        {#if node.is_executor || (node as any).isExecutor}<Shield
-                                size={12}
-                                class="text-[#4A7C74]"
-                            />{/if}
-                        {#if node.role === "spouse"}<Heart
+                        {#if isSpouse(node)}<Heart
                                 size={12}
                                 class="text-rose-500"
                             />{/if}
@@ -259,7 +278,6 @@
         <button
             class="flex items-center gap-2 px-4 py-2 bg-white shadow-lg rounded-full font-bold text-slate-600 hover:text-[#4A7C74] transition-colors"
             on:click={() => {
-                // reset sim positions gently
                 nodes.forEach((n) => {
                     n.vx += (Math.random() - 0.5) * 5;
                     n.vy += (Math.random() - 0.5) * 5;
@@ -274,8 +292,8 @@
                 (selectedNode = {
                     id: undefined as any,
                     name: "New Member",
-                    role: "child",
-                    relation: "",
+                    role: "Family",
+                    relation: "Child",
                     is_executor: false,
                     is_beneficiary: false,
                     is_emergency_contact: false,
@@ -317,20 +335,34 @@
 
                 <div>
                     <label class="text-xs font-bold uppercase text-slate-400"
-                        >Relationship</label
+                        >Type</label
                     >
                     <select
                         bind:value={selectedNode.role}
                         class="w-full p-2 border rounded-lg focus:border-[#4A7C74] outline-none"
                     >
-                        <option value="spouse">Spouse / Partner</option>
-                        <option value="child">Child</option>
-                        <option value="grandchild">Grandchild</option>
-                        <option value="sibling">Sibling</option>
-                        <option value="parent">Parent</option>
-                        <option value="professional">Professional</option>
-                        <option value="executor">Executor (Non-Family)</option>
+                        <option value="Family">Family Member</option>
+                        <option value="Friend">Friend</option>
+                        <option value="Medical">Medical Professional</option>
+                        <option value="Legal">Legal Professional</option>
+                        <option value="Financial">Financial Professional</option
+                        >
+                        <option value="Pet">Pet</option>
+                        <option value="Other">Other</option>
                     </select>
+                </div>
+
+                <div>
+                    <label class="text-xs font-bold uppercase text-slate-400"
+                        >Relationship / Title</label
+                    >
+                    <input
+                        bind:value={selectedNode.relation}
+                        placeholder={selectedNode.role === "Family"
+                            ? "e.g. Spouse, Son, Mother"
+                            : "e.g. Cardiologist, Best Friend"}
+                        class="w-full p-2 border rounded-lg focus:border-[#4A7C74] outline-none"
+                    />
                 </div>
 
                 <div>
@@ -377,7 +409,10 @@
                         class="w-full py-3 bg-[#4A7C74] text-white rounded-xl font-bold hover:shadow-lg transition-transform active:scale-95"
                         on:click={() => {
                             if (selectedNode?.id) {
-                                familyStore.updateMember(selectedNode.id, selectedNode);
+                                familyStore.updateMember(
+                                    selectedNode.id,
+                                    selectedNode,
+                                );
                             } else if (selectedNode) {
                                 familyStore.addMember(selectedNode);
                             }

@@ -19,64 +19,85 @@ from backend.database import get_session, create_db_and_tables
 from backend.config import settings
 
 
+from backend.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 def test_email_service():
     """Test email service configuration and templates."""
-    print("=" * 60)
-    print("CONTINUUM EMAIL INTEGRATION TEST")
-    print("=" * 60)
+    logger.info("=" * 60)
+    logger.info("CONTINUUM EMAIL INTEGRATION TEST")
+    logger.info("=" * 60)
 
     # Check provider
-    print(f"\n✓ Active Provider: {email_service.provider}")
+    logger.info(f"Active Provider: {email_service.provider}")
 
     # Check configuration
     if email_service.provider == "postmark":
-        print(f"✓ Postmark configured")
-        print(f"  From: {settings.POSTMARK_FROM_EMAIL}")
+        logger.info(f"Postmark configured")
+        logger.info(f"  From: {settings.POSTMARK_FROM_EMAIL}")
         if settings.POSTMARK_API_KEY:
-            print(f"  API Key: {settings.POSTMARK_API_KEY[:8]}...{settings.POSTMARK_API_KEY[-4:]}")
+            logger.info(f"  API Key: {settings.POSTMARK_API_KEY[:8]}...{settings.POSTMARK_API_KEY[-4:]}")
     elif email_service.provider == "smtp":
-        print(f"✓ SMTP configured")
-        print(f"  Host: {settings.SMTP_HOST}:{settings.SMTP_PORT}")
-        print(f"  From: {settings.SMTP_FROM_EMAIL}")
-        print(f"  TLS: {settings.SMTP_USE_TLS}")
+        logger.info(f"SMTP configured")
+        logger.info(f"  Host: {settings.SMTP_HOST}:{settings.SMTP_PORT}")
+        logger.info(f"  From: {settings.SMTP_FROM_EMAIL}")
+        logger.info(f"  TLS: {settings.SMTP_USE_TLS}")
     else:
-        print(f"⚠️  Using local file storage (development mode)")
-        print(f"  Outbox: {settings.OUTBOX_DIR}")
+        logger.info(f"Using local file storage (development mode)")
+        logger.info(f"  Outbox: {settings.OUTBOX_DIR}")
 
     # Get test email
     test_email = sys.argv[1] if len(sys.argv) > 1 else "test@continuum.im"
-    print(f"\n📧 Test recipient: {test_email}")
+    logger.info(f"Test recipient: {test_email}")
 
     # Initialize database
-    print("\n🔄 Initializing database...")
+    logger.info("Initializing database...")
     create_db_and_tables()
 
     # Get database session
     session = next(get_session())
 
-    print("\n" + "=" * 60)
-    print("TESTING EMAIL TEMPLATES")
-    print("=" * 60)
+    # Get test user ID dynamically
+    from sqlmodel import select
+    from backend.database import User
+    
+    test_user_email = "test@continuum.estate"
+    statement = select(User).where(User.email == test_user_email)
+    test_user = session.exec(statement).first()
+    
+    if test_user:
+        target_user_id = test_user.id
+        target_user_name = "Test User"
+        logger.info(f"Found test user: {test_user_email} (ID: {target_user_id})")
+    else:
+        target_user_id = 1
+        target_user_name = "John Doe"
+        logger.warning(f"Test user {test_user_email} not found! Falling back to user_id=1")
+
+    logger.info("=" * 60)
+    logger.info("TESTING EMAIL TEMPLATES")
+    logger.info("=" * 60)
 
     # Test 1: Welcome Email
-    print("\n[1/6] Testing Welcome Email...")
+    logger.info("Testing Welcome Email...")
     try:
         result = email_service.send_welcome_email(
             to_email=test_email,
-            user_id=1,
+            user_id=target_user_id,
             dashboard_url=f"{settings.get_frontend_url()}/dashboard",
             db_session=session
         )
-        print(f"  ✅ Status: {result.get('status')}")
+        logger.info(f"  Status: {result.get('status')}")
         if result.get('message_id'):
-            print(f"  Message ID: {result.get('message_id')}")
+            logger.info(f"  Message ID: {result.get('message_id')}")
         if result.get('file_path'):
-            print(f"  Saved to: {result.get('file_path')}")
+            logger.info(f"  Saved to: {result.get('file_path')}")
     except Exception as e:
-        print(f"  ❌ Error: {e}")
+        logger.error(f"  Error: {e}")
 
     # Test 2: Magic Link
-    print("\n[2/6] Testing Magic Link Email...")
+    logger.info("Testing Magic Link Email...")
     try:
         magic_url = f"{settings.get_frontend_url()}/auth/verify?token=test-token-123"
         result = email_service.send_magic_link(
@@ -84,22 +105,22 @@ def test_email_service():
             magic_link_url=magic_url,
             db_session=session
         )
-        print(f"  ✅ Status: {result.get('status')}")
+        logger.info(f"  Status: {result.get('status')}")
         if result.get('message_id'):
-            print(f"  Message ID: {result.get('message_id')}")
+            logger.info(f"  Message ID: {result.get('message_id')}")
     except Exception as e:
-        print(f"  ❌ Error: {e}")
+        logger.error(f"  Error: {e}")
 
     # Test 3-6: Pulse Alerts (All Tiers)
     for tier in range(1, 5):
-        print(f"\n[{tier+2}/6] Testing Pulse Alert Tier {tier}...")
+        logger.info(f"Testing Pulse Alert Tier {tier}...")
         try:
             result = email_service.send_pulse_alert(
                 to_email=test_email,
                 recipient_name="Test Guardian",
                 tier_number=tier,
-                user_id=1,
-                user_name="John Doe",
+                user_id=target_user_id,
+                user_name=target_user_name,
                 portal_url=f"{settings.get_frontend_url()}/portal/test-token",
                 additional_context={
                     "last_checkin_date": "January 15, 2026 at 10:30 AM UTC",
@@ -108,16 +129,16 @@ def test_email_service():
                 },
                 db_session=session
             )
-            print(f"  ✅ Status: {result.get('status')}")
+            logger.info(f"  Status: {result.get('status')}")
             if result.get('message_id'):
-                print(f"  Message ID: {result.get('message_id')}")
+                logger.info(f"  Message ID: {result.get('message_id')}")
         except Exception as e:
-            print(f"  ❌ Error: {e}")
+            logger.error(f"  Error: {e}")
 
     # Summary
-    print("\n" + "=" * 60)
-    print("EMAIL LOG SUMMARY")
-    print("=" * 60)
+    logger.info("=" * 60)
+    logger.info("EMAIL LOG SUMMARY")
+    logger.info("=" * 60)
 
     from sqlmodel import select
     from backend.models.email_log import EmailLog
@@ -125,43 +146,43 @@ def test_email_service():
     logs = session.exec(select(EmailLog).order_by(EmailLog.created_at.desc()).limit(10)).all()
 
     if logs:
-        print(f"\nRecent {len(logs)} emails:")
+        logger.info(f"Recent {len(logs)} emails:")
         for log in logs:
-            status_icon = "✅" if log.status == "sent" else "📧" if log.status == "saved_local" else "❌"
-            print(f"  {status_icon} {log.template_name:30s} → {log.recipient_email:30s} [{log.status}]")
+            status_prev = "sent" if log.status == "sent" else "local" if log.status == "saved_local" else "failed"
+            logger.info(f"  {log.template_name:30s} → {log.recipient_email:30s} [{status_prev}]")
 
         # Status counts
         from collections import Counter
         status_counts = Counter(log.status for log in logs)
-        print(f"\nStatus breakdown:")
+        logger.info(f"Status breakdown:")
         for status, count in status_counts.items():
-            print(f"  {status}: {count}")
+            logger.info(f"  {status}: {count}")
     else:
-        print("\n⚠️  No email logs found")
+        logger.info("No email logs found")
 
     # Local files
     if email_service.provider == "local":
-        print("\n" + "=" * 60)
-        print("LOCAL EMAIL FILES")
-        print("=" * 60)
+        logger.info("=" * 60)
+        logger.info("LOCAL EMAIL FILES")
+        logger.info("=" * 60)
         import os
         outbox_files = sorted(os.listdir(settings.OUTBOX_DIR))[-6:]  # Last 6 files
-        print(f"\nRecent files in {settings.OUTBOX_DIR}:")
+        logger.info(f"Recent files in {settings.OUTBOX_DIR}:")
         for filename in outbox_files:
-            print(f"  📄 {filename}")
+            logger.info(f"  📄 {filename}")
 
-    print("\n" + "=" * 60)
-    print("TEST COMPLETE")
-    print("=" * 60)
-    print("\nNext steps:")
+    logger.info("=" * 60)
+    logger.info("TEST COMPLETE")
+    logger.info("=" * 60)
+    logger.info("Next steps:")
     if email_service.provider == "local":
-        print("  1. Configure POSTMARK_API_KEY or SMTP settings in .env")
-        print("  2. Run this test again to verify actual email delivery")
-        print("  3. Check email templates in backend/templates/emails/")
+        logger.info("  1. Configure POSTMARK_API_KEY or SMTP settings in .env")
+        logger.info("  2. Run this test again to verify actual email delivery")
+        logger.info("  3. Check email templates in backend/templates/emails/")
     else:
-        print("  1. Check your email inbox for test messages")
-        print("  2. Review email_logs table for delivery status")
-        print("  3. Update templates if needed in backend/templates/emails/")
+        logger.info("  1. Check your email inbox for test messages")
+        logger.info("  2. Review email_logs table for delivery status")
+        logger.info("  3. Update templates if needed in backend/templates/emails/")
 
     session.close()
 

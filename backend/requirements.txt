@@ -15,3 +15,6 @@ pyjwt
 passlib[bcrypt]
 bcrypt>=4.0.0
 postmarker>=1.0  # Postmark email API client
+alembic>=1.13.0  # Database migration tool
+slowapi>=0.1.9  # Rate limiting
+secure>=0.3.0  # Security headers

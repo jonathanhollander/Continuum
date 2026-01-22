@@ -1,4 +1,8 @@
 from backend.database import migrate_db
-print("Forcing DB Migration...")
+from backend.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
+logger.info("Forcing DB Migration...")
 migrate_db()
-print("Done.")
+logger.info("Done.")

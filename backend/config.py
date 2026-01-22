@@ -3,9 +3,14 @@ Centralized Configuration Management for Continuum SaaS
 Uses Pydantic Settings for type-safe environment variable handling
 """
 import os
+import logging
 from typing import List, Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import field_validator, ValidationError
+
+# Use standard library logging to avoid circular imports
+# (This module is imported by backend.utils.logger)
+logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
@@ -31,6 +36,8 @@ class Settings(BaseSettings):
     # Frontend URLs
     FRONTEND_URL: str = "http://localhost:5173"
     FRONTEND_URL_PRODUCTION: Optional[str] = None
+    API_URL: str = "http://localhost:8000"
+    API_TIMEOUT_SECONDS: int = 30
 
     # CORS Configuration
     CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
@@ -95,6 +102,10 @@ class Settings(BaseSettings):
     CLERK_SECRET_KEY: Optional[str] = None
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: Optional[str] = None
 
+    # Rate Limiting Defaults
+    DEFAULT_RATE_LIMIT_SENSITIVE: str = "5/minute"
+    DEFAULT_RATE_LIMIT_STANDARD: str = "30/minute"
+
     # External APIs
     GITHUB_TOKEN: Optional[str] = None
     VITE_OPENROUTER_API_KEY: Optional[str] = None
@@ -120,10 +131,45 @@ class Settings(BaseSettings):
         return v
 
     def get_cors_origins_list(self) -> List[str]:
-        """Parse CORS_ORIGINS string into a list"""
-        if self.CORS_ORIGINS == "*":
-            return ["*"]
-        return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
+        """
+        Parse and validate CORS origins.
+        In production, only allow specific whitelisted domains.
+        """
+        origins = [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
+
+        # In production, validate and restrict to allowed domains
+        if self.is_production():
+            allowed_domains = [
+                "continuum.im",
+                "app.continuum.im",
+                "continuum-saas.up.railway.app",  # Railway deployment
+            ]
+
+            # If Railway domain is set, add it to allowed list
+            if self.RAILWAY_PUBLIC_DOMAIN:
+                allowed_domains.append(self.RAILWAY_PUBLIC_DOMAIN)
+
+            # Filter origins to only include allowed domains
+            validated_origins = []
+            for origin in origins:
+                if origin == "*":
+                    logger.warning("Wildcard '*' not allowed in production CORS, skipping")
+                    continue
+
+                # Check if origin contains any allowed domain
+                if any(domain in origin for domain in allowed_domains):
+                    validated_origins.append(origin)
+                else:
+                    logger.warning(f"CORS origin '{origin}' not in production whitelist, skipping")
+
+            if not validated_origins:
+                logger.warning("No valid CORS origins for production, defaulting to localhost")
+                return ["http://localhost:5173"]  # Failsafe
+
+            return validated_origins
+
+        # Development mode - allow all specified origins
+        return origins
 
     def get_frontend_url(self) -> str:
         """
@@ -198,16 +244,16 @@ try:
     if settings.is_production():
         validation_errors = settings.validate_production_config()
         if validation_errors:
-            print("⚠️  PRODUCTION CONFIGURATION WARNINGS:")
+            logger.warning("Production configuration warnings detected:")
             for error in validation_errors:
-                print(f"   - {error}")
+                logger.warning(f"  - {error}")
         else:
-            print("✅ Production configuration validated successfully")
+            logger.info("Production configuration validated successfully")
     else:
-        print(f"🔧 Running in {settings.ENVIRONMENT} mode")
+        logger.info(f"Running in {settings.ENVIRONMENT} mode")
 
 except ValidationError as e:
-    print(f"❌ Configuration Error: {e}")
+    logger.error(f"Configuration validation error: {e}", exc_info=True)
     raise
 
 

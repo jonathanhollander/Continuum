@@ -416,7 +416,10 @@ export const getSmartSamples = (locale: string = 'en'): SmartSampleCollection =>
                 email: 'dr.smith@example.com',
                 tier: '1_Immediate',
                 notificationStatus: 'Pending',
-                notes: dict.contacts.notes
+                notes: dict.contacts.notes,
+                isExecutor: false,
+                isBeneficiary: false,
+                isEmergencyContact: false
             },
             {
                 id: commonId('cont-2'),
@@ -427,7 +430,10 @@ export const getSmartSamples = (locale: string = 'en'): SmartSampleCollection =>
                 email: 'lawyer@example.com',
                 tier: '2_SameDay',
                 notificationStatus: 'Pending',
-                notes: dict.contacts.notes
+                notes: dict.contacts.notes,
+                isExecutor: false,
+                isBeneficiary: false,
+                isEmergencyContact: false
             }
         ],
         memories: [

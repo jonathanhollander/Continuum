@@ -3,7 +3,7 @@
         calendarStore,
         upcomingEvents,
         type AnniversaryEvent,
-    } from "$lib/stores/calendarStore";
+    } from "$lib/stores/calendarStore.svelte";
     import {
         Calendar,
         Heart,

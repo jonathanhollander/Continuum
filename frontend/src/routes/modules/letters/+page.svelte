@@ -39,7 +39,7 @@
     } from "$lib/data/letterTemplates";
     import { onMount } from "svelte";
     import { activityLog } from "$lib/stores/activityLog";
-    import { estateProfile } from "$lib/stores/estateStore";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
     import LetterAssistant from "$lib/components/modules/letters/LetterAssistant.svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
     import { REFLECTION_POOLS } from "$lib/data/reflectionPools";

@@ -20,6 +20,10 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against its hash."""
     return pwd_context.verify(plain_password, hashed_password)
 
+from backend.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 def get_password_hash(password: str) -> str:
     """Hash a password for storing."""
     return pwd_context.hash(password)

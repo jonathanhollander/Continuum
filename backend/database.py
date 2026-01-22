@@ -51,20 +51,24 @@ engine = create_engine(
 import time
 from sqlalchemy.exc import OperationalError
 
+from backend.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 def create_db_and_tables():
     retries = 5
     for i in range(retries):
         try:
-            print(f"🔄 Attempting Database Connection ({i+1}/{retries})...")
+            logger.info(f"Attempting Database Connection ({i+1}/{retries})...")
             SQLModel.metadata.create_all(engine)
             migrate_db()
-            print("✅ Database Connected & Initialized!")
+            logger.info("Database Connected & Initialized!")
             break
         except OperationalError as e:
             if i == retries - 1:
-                print(f"❌ Database Connection Failed after {retries} attempts: {e}")
+                logger.error(f"Database Connection Failed after {retries} attempts: {e}")
                 raise e
-            print(f"⚠️ Connection Refused. Database might be sleeping. Retrying in 3s...")
+            logger.warning(f"Connection Refused. Database might be sleeping. Retrying in 3s...")
             time.sleep(3)
 
 def migrate_db():
@@ -75,7 +79,7 @@ def migrate_db():
         try:
             user_columns = [c["name"] for c in inspector.get_columns("users")]
             if "hashed_password" not in user_columns:
-                print("🔧 Migrating: Adding hashed_password to users table")
+                logger.info("Migrating: Adding hashed_password to users table")
                 session.execute(text("ALTER TABLE users ADD COLUMN hashed_password TEXT"))
                 session.commit()
             # Make public_key nullable
@@ -84,7 +88,7 @@ def migrate_db():
                 # PostgreSQL: session.execute(text("ALTER TABLE users ALTER COLUMN public_key DROP NOT NULL"))
                 pass
         except Exception as e:
-            print(f"⚠️ Migration info for users table: {e}")
+            logger.warning(f"Migration info for users table: {e}")
 
         # Generic Migration for all models
         table_cols = {
@@ -116,10 +120,10 @@ def migrate_db():
                 existing = [c["name"] for c in inspector.get_columns(table)]
                 for col_name, col_type in cols.items():
                     if col_name not in existing:
-                        print(f"🔧 Migrating: Adding {col_name} to {table}")
+                        logger.info(f"Migrating: Adding {col_name} to {table}")
                         session.execute(text(f"ALTER TABLE {table} ADD COLUMN {col_name} {col_type}"))
             except Exception as e:
-                print(f"⚠️ Migration skipping {table}: {e}")
+                logger.warning(f"Migration skipping {table}: {e}")
 
         # Check pulse_settings columns
         columns = [c["name"] for c in inspector.get_columns("pulse_settings")]
@@ -143,11 +147,11 @@ def migrate_db():
         
         for col_name, col_type in new_cols.items():
             if col_name not in columns:
-                print(f"🔧 Migrating: Adding column {col_name} to pulse_settings")
+                logger.info(f"Migrating: Adding column {col_name} to pulse_settings")
                 try:
                     session.execute(text(f"ALTER TABLE pulse_settings ADD COLUMN {col_name} {col_type}"))
                 except Exception as e:
-                    print(f"⚠️ Migration Error adding {col_name}: {e}")
+                    logger.warning(f"Migration Error adding {col_name}: {e}")
 
         # Check pulse_contacts columns
         try:
@@ -169,11 +173,11 @@ def migrate_db():
 
             for col_name, col_type in contact_new_cols.items():
                 if col_name not in contact_columns:
-                    print(f"🔧 Migrating: Adding column {col_name} to pulse_contacts")
+                    logger.info(f"Migrating: Adding column {col_name} to pulse_contacts")
                     try:
                         session.execute(text(f"ALTER TABLE pulse_contacts ADD COLUMN {col_name} {col_type}"))
                     except Exception as e:
-                        print(f"⚠️ Migration Error adding {col_name}: {e}")
+                        logger.warning(f"Migration Error adding {col_name}: {e}")
 
             # Note: Making tier_id nullable is harder in SQLite (requires recreate).
             # ideally we would do: session.execute(text("ALTER TABLE pulse_contacts ALTER COLUMN tier_id DROP NOT NULL"))
@@ -186,9 +190,9 @@ def migrate_db():
         # Create email_logs table if it doesn't exist (new in email integration update)
         try:
             inspector.get_columns("email_logs")
-            print("✅ email_logs table exists")
+            logger.info("email_logs table exists")
         except Exception:
-            print("🔧 Creating email_logs table...")
+            logger.info("Creating email_logs table...")
             # Table will be created by SQLModel.metadata.create_all() above
 
         session.commit()

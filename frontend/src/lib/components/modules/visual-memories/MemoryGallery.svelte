@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { VisualMemory } from "$lib/stores/visualMemoryStore";
+    import type { VisualMemory } from "$lib/stores/visualMemoryStore.svelte";
     import {
         Grid,
         LayoutTemplate,

@@ -2,7 +2,7 @@ import { registerSync } from '$lib/services/sync.svelte';
 import { getLegacy } from './persistence';
 
 export type Heirloom = {
-    id: string;
+    id: string | number;
     name: string;
     recipient: string;
     story: string;
@@ -58,26 +58,24 @@ export const heirloomSync = registerSync<Heirloom>('heirlooms', 'heirlooms', hei
 
 // Check migration after sync init (next tick or immediately if synchronous load)
 if (typeof window !== 'undefined') {
-    // SyncManager loads from localStorage 'heirlooms' (or whatever key logic).
-    // The previous key was 'continuum_owner_heirlooms'. 
-    // Wait, SyncManager uses `continuum_${userId}_${key}` or similar?
-    // Let's check SyncManager implementation. It uses `getStored(key, [])`.
-    // PropertyStore used 'property_items'. Sync registered 'properties'.
-    // HeirloomStore used 'heirlooms'.
-
-    // If the new SyncManager uses a different key, we must migrate.
-    // Assuming SyncManager standards.
-
     // Lazy migration:
     if (heirloomSync.items.length === 0) {
         const legacyData = migrateLegacyHeirlooms();
         if (legacyData.length > 0) {
             console.log("Migrating legacy heirlooms...", legacyData);
-            heirloomSync.items = legacyData.map(item => ({
-                ...item,
-                id: String(item.id) // Ensure string IDs for local phase
-            }));
-            // Note: SyncManager will auto-migrate these to cloud on next syncAll()
+            // We migrate by creating them on the backend one by one, or letting SyncManager handle it if we push to items.
+            // SyncManager.items setter usually triggers a sync if implemented that way, but often it's better to use create().
+            // Let's loop and create.
+            legacyData.forEach(item => {
+                heirloomSync.create({
+                    ...item,
+                    // Ensure IDs are valid for backend if needed, or let backend assign? 
+                    // If backend assigns, we drop ID. If UUID, we keep. 
+                    // SQLModel ID is int? No, look at model: id: Optional[int]. 
+                    // So we should DROP the ID and let backend assign a new int ID.
+                    id: undefined
+                });
+            });
         }
     }
 }
@@ -86,33 +84,21 @@ if (typeof window !== 'undefined') {
 export const heirloomStore = {
     get items() { return heirloomSync.items; },
 
-    // Mimic svelte/store update for easy refactor
-    update: (fn: (items: Heirloom[]) => Heirloom[]) => {
-        // This is a bit risky as it bypasses individual SyncManager actions (create/delete).
-        // BUT, if the UI code does full list manipulation (like filtering/sorting then setting back?), 
-        // SyncManager really wants specific CRUD for efficient syncing.
-        // However, looking at usage: `update(items => [...items, new])` -> create.
-        // `update(items => items.filter)` -> delete.
-        // If we really want to support `update`, we should try to map it, or just expose a raw set?
-        // Ideally we update the UI to use create/delete.
-        // For now, let's keep this but allow direct mutation if safe, or warn.
-        // ACTUALLY: The UI code uses `.update`.
-        console.warn("heirloomStore.update is deprecated. Use heirloomSync methods.");
-    },
-
     addItem: (item: Partial<Heirloom>) => {
         return heirloomSync.create({
             ...item,
-            id: item.id || crypto.randomUUID(),
-            name: item.name || '',
-            recipient: item.recipient || '',
+            // id: item.id  <-- Drop ID, let backend assign auto-increment int
+            name: item.name || 'Unknown Treasure',
+            recipient: item.recipient || 'Undecided',
             story: item.story || '',
             image: item.image || ''
         });
     },
 
-    deleteItem: (id: string) => heirloomSync.delete(id),
+    updateItem: (id: string | number, updates: Partial<Heirloom>) => heirloomSync.update(id, updates),
+    deleteItem: (id: string | number) => heirloomSync.delete(id),
 
     // Store Compatibility
     subscribe: heirloomSync.subscribe.bind(heirloomSync)
 };
+

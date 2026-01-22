@@ -16,6 +16,18 @@ class Asset(SQLModel, table=True):
     notes: Optional[str] = None
     beneficiary_id: Optional[int] = None
     
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "name": "Main Residence",
+                "type": "real_estate",
+                "valuation": 450000.0,
+                "status": "active",
+                "notes": "Title deed is in the blue safe."
+            }
+        }
+    }
+    
     # Heirloom & Digital Asset compatibility
     recipient: Optional[str] = None
     story: Optional[str] = None
@@ -26,6 +38,20 @@ class Asset(SQLModel, table=True):
     image: Optional[str] = None
     is_closed: bool = Field(default=False)
     closure_date: Optional[str] = None
+
+# --- HEIRLOOMS ---
+class Heirloom(SQLModel, table=True):
+    __tablename__ = "heirlooms"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="users.id")
+    name: str
+    recipient: Optional[str] = None
+    story: Optional[str] = None
+    image: Optional[str] = None
+    value: Optional[str] = None # Keeping as string to match legacy frontend 'valuation' mix-up, or maybe float? Plan said value (optional).
+    location: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
 
 class FinancialAccount(SQLModel, table=True):
     __tablename__ = "financial_accounts"
@@ -81,6 +107,17 @@ class Document(SQLModel, table=True):
     status: Optional[str] = "verified" # Added for compatibility
     location: Optional[str] = None # Added for compatibility
     notes: Optional[str] = None
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "title": "Last Will and Testament",
+                "category": "legal",
+                "location_physical": "Safe deposit box at First National Bank",
+                "is_digitized": True
+            }
+        }
+    }
 
 # --- LEGACY & WISDOM ---
 class Letter(SQLModel, table=True):

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { ExternalArchive } from "$lib/stores/visualMemoryStore";
+    import type { ExternalArchive } from "$lib/stores/visualMemoryStore.svelte";
     import {
         ExternalLink,
         HardDrive,

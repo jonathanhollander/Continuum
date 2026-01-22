@@ -4,6 +4,8 @@
     import { page } from "$app/stores";
     import { auth } from "$lib/stores/auth";
     import { API_BASE_URL } from "$lib/config";
+    import { apiPost } from "$lib/api/client";
+    import { notifications } from "$lib/stores/notificationStore";
     import { startAuthentication } from "@simplewebauthn/browser";
     import {
         Shield,
@@ -15,7 +17,6 @@
     import { fade, fly } from "svelte/transition";
 
     let isLoading = false;
-    let error = "";
     let showHelp = false;
     let showMagicLink = false;
     let magicLinkEmail = "";
@@ -33,51 +34,31 @@
 
     async function handlePasskeyLogin() {
         isLoading = true;
-        error = "";
 
         try {
             // Step 1: Get authentication challenge
-            const startRes = await fetch(
-                `${API_BASE_URL}/api/auth/passkey/login/start`,
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                },
-            );
+            const startResult = await apiPost('/api/auth/passkey/login/start', {});
 
-            if (!startRes.ok) {
-                throw new Error("Failed to start authentication");
-            }
-
-            const { challenge_id, options } = await startRes.json();
+            const { challenge_id, options } = startResult;
 
             // Step 2: Show browser passkey prompt
             const credential = await startAuthentication(options);
 
             // Step 3: Verify credential and get JWT
-            const finishRes = await fetch(
-                `${API_BASE_URL}/api/auth/passkey/login/finish`,
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        challenge_id,
-                        credential,
-                    }),
-                },
-            );
-
-            if (!finishRes.ok) {
-                const errorData = await finishRes.json();
-                throw new Error(errorData.detail || "Authentication failed");
-            }
-
-            const { access_token } = await finishRes.json();
+            const finishResult = await apiPost('/api/auth/passkey/login/finish', {
+                challenge_id,
+                credential,
+            });
 
             // Store token and fetch user info
             if (typeof localStorage !== "undefined") {
-                localStorage.setItem("continuum_auth_token", access_token);
+                localStorage.setItem("continuum_auth_token", finishResult.access_token);
             }
+
+            notifications.showSuccess(
+                'Welcome back! Taking you to your vault...',
+                'Login Successful'
+            );
 
             await auth.init();
             goto(redirectUrl);
@@ -85,16 +66,18 @@
             console.error("Passkey login failed:", e);
 
             if (e.name === "NotAllowedError") {
-                error = "Login was cancelled or timed out. Please try again.";
+                notifications.showError(
+                    'Login was cancelled or timed out. Please try again.',
+                    'Login Cancelled'
+                );
             } else if (e.name === "NotSupportedError") {
-                error =
-                    "Your device does not support passkeys. Please use magic link instead.";
+                notifications.showError(
+                    'Your device does not support passkeys. Please use email link instead.',
+                    'Passkey Not Supported'
+                );
                 showMagicLink = true;
-            } else {
-                error =
-                    e.message ||
-                    "Login failed. Please try again or use magic link.";
             }
+            // apiPost already shows error notification for other errors
         } finally {
             isLoading = false;
         }
@@ -102,27 +85,26 @@
 
     async function handleMagicLink() {
         if (!magicLinkEmail) {
-            error = "Please enter your email address";
+            notifications.showError(
+                'Please enter your email address',
+                'Email Required'
+            );
             return;
         }
 
         isLoading = true;
-        error = "";
 
         try {
-            const res = await fetch(`${API_BASE_URL}/api/auth/magic-link`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email: magicLinkEmail }),
-            });
+            await apiPost('/api/auth/magic-link', { email: magicLinkEmail });
 
-            if (res.ok) {
-                magicLinkSent = true;
-            } else {
-                throw new Error("Failed to send magic link");
-            }
+            magicLinkSent = true;
+            notifications.showSuccess(
+                'Check your email for the login link!',
+                'Magic Link Sent'
+            );
         } catch (e: any) {
-            error = e.message || "Failed to send magic link";
+            console.error('Magic link failed:', e);
+            // apiPost already shows error notification
         } finally {
             isLoading = false;
         }
@@ -158,20 +140,6 @@
         <div
             class="bg-slate-900/50 border border-slate-800 rounded-3xl p-10 backdrop-blur-sm space-y-6"
         >
-            {#if error}
-                <div
-                    class="bg-red-500/10 border border-red-500/30 rounded-2xl p-5 flex items-start gap-4"
-                    in:fly={{ y: -20, duration: 300 }}
-                >
-                    <AlertCircle
-                        class="w-6 h-6 text-red-400 flex-shrink-0 mt-0.5"
-                    />
-                    <div>
-                        <p class="text-red-300 font-medium text-lg">{error}</p>
-                    </div>
-                </div>
-            {/if}
-
             {#if !showMagicLink}
                 <!-- Passkey Login (Primary) -->
                 <div class="space-y-6">

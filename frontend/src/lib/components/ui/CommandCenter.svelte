@@ -34,10 +34,10 @@
     import { page } from "$app/stores";
     import { goto } from "$app/navigation";
 
-    import { insuranceStore } from "$lib/stores/insuranceStore";
-    import { advancedAssetStore } from "$lib/stores/advancedAssetStore"; // Assuming basic asset store for now
-    import { petStore } from "$lib/stores/petStore";
-    import { medicalStore } from "$lib/stores/medicalStore";
+    import { insuranceStore } from "$lib/stores/insuranceStore.svelte";
+    import { advancedAssetStore } from "$lib/stores/advancedAssetStore.svelte"; // Assuming basic asset store for now
+    import { petStore } from "$lib/stores/petStore.svelte";
+    import { medicalStore } from "$lib/stores/medicalStore.svelte";
     import { writable, derived } from "svelte/store";
 
     const dispatch = createEventDispatcher();
@@ -312,9 +312,7 @@
                     > Select</span
                 >
             </div>
-            <div class="flex items-center gap-1">
-                Continuum Command Center
-            </div>
+            <div class="flex items-center gap-1">Continuum Command Center</div>
         </div>
     </div>
 </div>
