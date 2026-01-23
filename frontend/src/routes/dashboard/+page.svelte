@@ -130,7 +130,7 @@
 
         if (score === 0) {
             // New User / System Initialization Mode
-            // Only redirect if they haven't explicitly skipped setup
+            // Redirect to new onboarding flow if not completed
             const skipped =
                 typeof localStorage !== "undefined" &&
                 localStorage.getItem("continuum_setup_skipped") === "true";
@@ -143,21 +143,22 @@
                 !$preferenceStore.onboardingComplete
             ) {
                 hasAutoRedirected = true;
-                window.location.href = "/start";
+                // Use new comprehensive onboarding flow
+                window.location.href = "/onboarding";
                 return;
             }
 
-            // If they skipped, the focus card should STILL point to initialization
+            // If they skipped, the focus card should STILL point to onboarding
             focusItem = {
                 title: contextStore.isExecutor || contextStore.isFamily
                     ? "Estate Information Needed"
-                    : "System Initialization Required",
+                    : "Let's Get Started",
                 description: contextStore.isExecutor
                     ? "The estate profile is currently empty. Begin gathering information when you're ready."
                     : contextStore.isFamily
                     ? "Estate information hasn't been added yet. Check back later or contact the executor."
-                    : "Your digital estate is currently unconfigured. The wizard will guide you through core setup in 30 seconds.",
-                link: "/start?force=true",
+                    : "Your digital estate is ready to be set up. We'll guide you through each step at your pace.",
+                link: "/onboarding",
                 type: "critical",
             };
             return;

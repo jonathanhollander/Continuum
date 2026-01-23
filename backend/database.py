@@ -13,12 +13,18 @@ class User(SQLModel, table=True):
     public_key: Optional[str] = Field(default=None)  # WebAuthn Public Key (optional)
     sign_count: int = Field(default=0)
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    # User role for context-aware messaging (owner, executor, family_member)
-    user_role: Optional[str] = Field(default="owner")  # owner | executor | family_member
-    # Optional: User's emotional context (healthy, terminal, grieving)
-    emotional_context: Optional[str] = Field(default=None)  # healthy | terminal | grieving
+    # User role for context-aware messaging (planning, executor, family, advisor)
+    user_role: Optional[str] = Field(default="planning")  # planning | executor | family | advisor
+    # Optional: User's emotional context (healthy, preparing, grieving)
+    emotional_context: Optional[str] = Field(default=None)  # healthy | preparing | grieving
     # Overwhelm support preference
     overwhelm_muted: bool = Field(default=False)
+    # Onboarding fields
+    deceased_name: Optional[str] = Field(default=None)  # Name of person being honored (executor/family mode)
+    onboarding_step: Optional[str] = Field(default=None)  # Current onboarding step
+    onboarding_completed: bool = Field(default=False)  # Whether onboarding is complete
+    language: Optional[str] = Field(default="en")  # Preferred language
+    font_size: Optional[str] = Field(default="normal")  # Preferred font size (normal, large, xlarge)
 
 
 class RefreshToken(SQLModel, table=True):
@@ -119,6 +125,23 @@ def migrate_db():
                 logger.info("Migrating: Adding overwhelm_muted to users table")
                 session.execute(text("ALTER TABLE users ADD COLUMN overwhelm_muted BOOLEAN DEFAULT FALSE"))
                 session.commit()
+            # Add onboarding fields
+            onboarding_cols = {
+                "deceased_name": "TEXT",
+                "onboarding_step": "TEXT",
+                "onboarding_completed": "BOOLEAN DEFAULT FALSE",
+                "language": "TEXT DEFAULT 'en'",
+                "font_size": "TEXT DEFAULT 'normal'"
+            }
+            for col_name, col_type in onboarding_cols.items():
+                if col_name not in user_columns:
+                    logger.info(f"Migrating: Adding {col_name} to users table")
+                    try:
+                        session.execute(text(f"ALTER TABLE users ADD COLUMN {col_name} {col_type}"))
+                        session.commit()
+                    except Exception as col_e:
+                        logger.warning(f"Migration Error adding {col_name}: {col_e}")
+                        session.rollback()
             # Make public_key nullable
             if "public_key" in user_columns:
                 # Execute for PostgreSQL only

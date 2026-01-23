@@ -108,15 +108,15 @@
             }
 
             notifications.showSuccess(
-                "Your account is ready! Taking you to your vault...",
+                "Your account is ready! Let's get you set up...",
                 "Welcome to Continuum!",
             );
 
-            // Show success and redirect
+            // Show success and redirect to onboarding
             step = "complete";
             setTimeout(() => {
                 auth.init();
-                goto("/dashboard");
+                goto("/onboarding");
             }, 2000);
         } catch (e: any) {
             console.error("Passkey registration failed:", e);
