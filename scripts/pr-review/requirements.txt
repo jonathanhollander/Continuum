@@ -1,0 +1,18 @@
+# PR Review Scripts Dependencies
+# Install with: pip install -r scripts/pr-review/requirements.txt
+
+# No external dependencies required - uses standard library only
+# The following are optional for enhanced functionality:
+
+# For better JSON handling (optional)
+# orjson>=3.9.0
+
+# For mypy type checking (optional, but recommended)
+# mypy>=1.8.0
+
+# For pytest coverage checking (optional)
+# pytest>=7.0.0
+# pytest-cov>=4.0.0
+
+# Note: All core functionality uses Python standard library
+# Git operations use subprocess calls to the git CLI
