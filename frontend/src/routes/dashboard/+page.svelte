@@ -1,60 +1,55 @@
 <script lang="ts">
-    import { onMount, onDestroy } from "svelte";
+    import { onMount } from "svelte";
     import ThePulse from "$lib/components/dashboard/ThePulse.svelte";
     import HolographicGrid from "$lib/components/dashboard/HolographicGrid.svelte";
-    import FocusCard from "$lib/components/dashboard/FocusCard.svelte";
     import ExecutorHub from "$lib/components/executor/ExecutorHub.svelte";
     import ExecutorWelcome from "$lib/components/executor/ExecutorWelcome.svelte";
+    import { auth } from "$lib/stores/auth";
     import { estateAudit } from "$lib/stores/auditStore.svelte.ts";
     import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
     import { familyStore } from "$lib/stores/familyStore.svelte.ts";
     import { digitalAssetsStore } from "$lib/stores/digitalAssetsStore.svelte.ts";
     import { insuranceStore } from "$lib/stores/insuranceStore.svelte.ts";
+    import { medicalStore } from "$lib/stores/medicalStore.svelte.ts";
+    import { propertyStore } from "$lib/stores/propertyStore.svelte.ts";
     import { preferenceStore } from "$lib/stores/preferenceStore.ts";
     import { fade, fly } from "svelte/transition";
     import {
-        Shield,
-        Users,
-        Sparkles,
-        BrainCircuit,
-        UserCog,
-        Wallet,
-        Heart,
-        Stethoscope,
-        Files,
+        Search,
+        Grid,
+        List as ListIcon,
         Check,
+        BrainCircuit,
     } from "lucide-svelte";
-    import { t } from "$lib/stores/localization.ts";
     import { browser } from "$app/environment";
     import { contextStore } from "$lib/stores/contextStore.svelte.ts";
     import {
         getGreeting,
-        getProgressMessage,
     } from "$lib/utils/contextualMessages";
+    import * as registryRaw from "$lib/data/registry.json";
+
+    // Import registry data
+    const registryData = (registryRaw as any).default || registryRaw;
+    const registry: Array<{id: string; title: string; description: string; icon: string; role: string}> = Array.isArray(registryData)
+        ? registryData
+        : Object.values(registryData).filter((x) => typeof x === "object");
 
     // Executor mode welcome state
     let showExecutorWelcome = $state(false);
 
     // "The Pulse" State
-    let pulseStatus = $state<"secure" | "active" | "critical" | "standby">(
-        "standby",
-    );
+    let pulseStatus = $state<"secure" | "active" | "critical" | "standby">("standby");
     let score = $state(0);
     let loading = $state(true);
 
-    // "The Focus" Logic
-    let focusItem = $state<{
-        title: string;
-        description: string;
-        link: string;
-        type: "critical" | "insight";
-    } | null>(null);
+    // Search and view state
+    let searchQuery = $state("");
+    let viewMode = $state<"grid" | "list">("grid");
 
     // Greeting Typewriter
     let greeting = $state("");
-    // Reactive greeting target based on state and user role
     let fullGreeting = $derived(
-        estateAudit.totalScore > 0 ? getGreeting() : $t("system.initializing"),
+        estateAudit.totalScore > 0 ? getGreeting() : "System Initializing..."
     );
 
     // Dynamic Metrics
@@ -62,51 +57,73 @@
     let networkSize = $derived(familyStore.members.length);
     let coverageCount = $derived(
         digitalAssetsStore.items.filter(
-            (a) => !a.isClosed && a.platform !== "Example",
+            (a) => !a.isClosed && a.platform !== "Example"
         ).length +
             insuranceStore.policies.length +
-            (estateAudit.moduleScores["financial"] ? 1 : 0),
+            (estateAudit.moduleScores["financial"] ? 1 : 0)
     );
 
-    // Areas documented (Option B) - shows what has been started without judgment
+    // Module status mapping - connects registry modules to audit data and stores
+    const moduleStatusMap: Record<string, { auditKey: string; getCount: () => number; label: string }> = {
+        'contacts': { auditKey: 'family', getCount: () => familyStore.members.length, label: 'contacts' },
+        'legal-documents': { auditKey: 'financial', getCount: () => propertyStore.items.length, label: 'assets' },
+        'visual-memories': { auditKey: 'digital', getCount: () => 0, label: 'photos' },
+        'subscriptions': { auditKey: 'digital', getCount: () => digitalAssetsStore.items.length, label: 'accounts' },
+        'funeral': { auditKey: 'medical', getCount: () => medicalStore.directives.length, label: 'directives' },
+        'family-hub': { auditKey: 'family', getCount: () => familyStore.members.length, label: 'members' },
+        'timeline': { auditKey: 'family', getCount: () => 0, label: '' },
+        'executor-hub': { auditKey: 'family', getCount: () => 0, label: '' },
+        'preparation-hub': { auditKey: 'financial', getCount: () => 0, label: '' },
+    };
+
+    // Derived status for each module
+    let moduleStatus = $derived.by(() => {
+        const status: Record<string, { started: boolean; count: number; label: string }> = {};
+        const scores = estateAudit.moduleScores;
+
+        for (const module of registry) {
+            const config = moduleStatusMap[module.id];
+            if (config) {
+                const auditScore = scores[config.auditKey] || 0;
+                const count = config.getCount();
+                status[module.id] = {
+                    started: auditScore > 0 || count > 0,
+                    count: count,
+                    label: config.label
+                };
+            } else {
+                // Default for modules not in map
+                status[module.id] = {
+                    started: false,
+                    count: 0,
+                    label: ''
+                };
+            }
+        }
+        return status;
+    });
+
+    // Filtered modules based on search
+    let filteredModules = $derived.by(() => {
+        if (searchQuery.trim() === "") {
+            return registry;
+        }
+        return registry.filter(
+            (m) =>
+                m.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (m.description &&
+                    m.description.toLowerCase().includes(searchQuery.toLowerCase()))
+        );
+    });
+
+    // Areas documented summary
     let areasDocumented = $derived.by(() => {
         const modules = estateAudit.moduleScores;
-        const areas = [
-            {
-                key: "financial",
-                label: "Financial",
-                icon: Wallet,
-                started: modules["financial"] > 0,
-            },
-            {
-                key: "insurance",
-                label: "Insurance",
-                icon: Shield,
-                started: modules["insurance"] > 0,
-            },
-            {
-                key: "family",
-                label: "Contacts",
-                icon: Users,
-                started: modules["family"] > 0,
-            },
-            {
-                key: "medical",
-                label: "Medical",
-                icon: Stethoscope,
-                started: modules["medical"] > 0,
-            },
-            {
-                key: "digital",
-                label: "Digital",
-                icon: Files,
-                started: modules["digital"] > 0,
-            },
-        ];
+        const areas = ['financial', 'insurance', 'family', 'medical', 'digital'];
+        const started = areas.filter(a => modules[a] > 0);
         return {
-            started: areas.filter((a) => a.started),
-            notStarted: areas.filter((a) => !a.started),
-            total: areas.length,
+            started: started.length,
+            total: areas.length
         };
     });
 
@@ -117,6 +134,8 @@
         maximumFractionDigits: 0,
     });
 
+    let hasAutoRedirected = false;
+
     onMount(() => {
         estateAudit.runAudit();
 
@@ -126,9 +145,7 @@
 
         // Check if executor and first time
         if (browser && contextStore.isExecutor) {
-            const hasSeenWelcome = localStorage.getItem(
-                "continuum_executor_welcome_seen",
-            );
+            const hasSeenWelcome = localStorage.getItem("continuum_executor_welcome_seen");
             if (!hasSeenWelcome) {
                 showExecutorWelcome = true;
             }
@@ -137,16 +154,14 @@
         // Simulate "System Boot"
         let i = 0;
         const interval = setInterval(() => {
-            // Check against current fullGreeting length (it might change if lang swaps, but that's edge case)
             if (i < fullGreeting.length) {
                 greeting += fullGreeting[i];
                 i++;
             } else {
                 clearInterval(interval);
                 loading = false;
-                determineFocus();
             }
-        }, 30); // Typewriter speed
+        }, 30);
 
         return () => clearInterval(interval);
     });
@@ -155,7 +170,6 @@
         if (estateAudit.percentage !== undefined) {
             score = estateAudit.percentage;
 
-            // Logic for Pulse Status
             if (score === 0) {
                 pulseStatus = "standby";
             } else if (score > 80) {
@@ -165,124 +179,25 @@
             } else {
                 pulseStatus = "active";
             }
-
-            // Always recalculate focus when audit updates
-            determineFocus();
         }
     });
 
-    let hasAutoRedirected = false;
-
-    function determineFocus() {
-        // "The Algorithm" - Simple Simulation for now
-        const issues = estateAudit.issues || [];
-        const profile = estateProfile.current;
-
-        if (score === 0) {
-            // New User / System Initialization Mode
-            // Redirect to new onboarding flow if not completed
-            const skipped =
-                typeof localStorage !== "undefined" &&
-                localStorage.getItem("continuum_setup_skipped") === "true";
-
+    // Check for onboarding redirect
+    $effect(() => {
+        if (score === 0 && browser && !loading) {
+            const skipped = localStorage.getItem("continuum_setup_skipped") === "true";
             if (
-                browser &&
                 !skipped &&
                 !hasAutoRedirected &&
                 !$preferenceStore.expertMode &&
-                !$preferenceStore.onboardingComplete
+                !$preferenceStore.onboardingComplete &&
+                !$auth.loading
             ) {
                 hasAutoRedirected = true;
-                // Use new comprehensive onboarding flow
                 window.location.href = "/onboarding";
-                return;
             }
-
-            // If they skipped, the focus card should STILL point to onboarding
-            focusItem = {
-                title:
-                    contextStore.isExecutor || contextStore.isFamily
-                        ? "Getting Started"
-                        : "Begin When You're Ready",
-                description: contextStore.isExecutor
-                    ? "The estate profile is waiting for information. Take your time gathering what you need."
-                    : contextStore.isFamily
-                      ? "Estate information hasn't been added yet. Check back when you're ready."
-                      : "This is important work that takes courage. We'll guide you through it at your own pace.",
-                link: "/onboarding",
-                type: "critical",
-            };
-            return;
         }
-
-        if (issues.length > 0) {
-            // Pick highest priority issue
-            const issue = issues[0]; // Issues are usually sorted by impact in the store (or should be)
-            let title = issue;
-            let link = "/modules/timeline";
-
-            // Map issues to routes (Concierge Logic) - using compassionate language
-            if (
-                issue.includes("Will") ||
-                issue.includes("Executor") ||
-                issue.includes("Legal")
-            ) {
-                title = "Important Documents";
-                link = "/modules/legal-documents";
-            } else if (
-                issue.includes("Beneficiary") ||
-                issue.includes("financial") ||
-                issue.includes("account")
-            ) {
-                title = "Financial Information";
-                link = "/modules/financial-accounts";
-            } else if (issue.includes("Proxy") || issue.includes("Health")) {
-                title = "Your Care Preferences";
-                link = "/modules/medical-directives";
-            } else if (
-                issue.includes("Digital") ||
-                issue.includes("Password") ||
-                issue.includes("Phone")
-            ) {
-                title = "Digital Account Access";
-                link = "/modules/digital-guardian";
-            } else if (
-                issue.includes("Insurance") ||
-                issue.includes("policy")
-            ) {
-                title = "Protection for Your Family";
-                link = "/modules/insurance";
-            } else if (issue.includes("Family") || issue.includes("contact")) {
-                title = "People Who Matter";
-                link = "/modules/contacts";
-            }
-
-            focusItem = {
-                title: title.replace(/\[.*?\]\s/, ""), // Clean raw strings
-                description:
-                    "When you're ready, this would be a meaningful next step for your family.",
-                link: link,
-                type: "critical",
-            };
-        } else {
-            // All Good - use affirming, not celebratory language
-            focusItem = {
-                title: contextStore.isExecutor
-                    ? "You've Done Meaningful Work"
-                    : contextStore.isFamily
-                      ? "Information Is Here"
-                      : "You've Built Something Meaningful",
-                description: contextStore.isExecutor
-                    ? "The essential information has been gathered. Take a moment to rest."
-                    : contextStore.isFamily
-                      ? "Estate information is organized and available when needed."
-                      : "Your family will have clarity when they need it most. Add a personal message when you're ready.",
-                link: "/modules/letters",
-                type: "insight",
-            };
-            pulseStatus = "secure";
-        }
-    }
+    });
 </script>
 
 <div class="min-h-screen text-slate-200 font-sans selection:bg-indigo-500/30">
@@ -293,170 +208,220 @@
         <ExecutorWelcome onComplete={() => (showExecutorWelcome = false)} />
     {/if}
 
-    <main
-        class="relative container mx-auto px-6 py-12 flex flex-col lg:flex-row items-center justify-center min-h-[80vh] gap-12 lg:gap-24"
-    >
+    <main class="relative container mx-auto px-6 py-8">
         {#if contextStore.isExecutor}
             <!-- Executor Mode: Simplified Hub -->
             <ExecutorHub />
         {:else}
-            <!-- Standard Dashboard: The Pulse + Focus Card -->
-            <!-- Left: The Visual Core -->
-            <div class="flex-1 flex flex-col items-center relative">
-                <ThePulse status={pulseStatus} {score} />
+            <!-- Compact Hero: ThePulse + Quick Stats -->
+            <div class="flex flex-col lg:flex-row items-center gap-8 mb-12" in:fade={{ duration: 600 }}>
+                <!-- ThePulse (Scaled Down) -->
+                <div class="flex-shrink-0 scale-75 origin-center -my-12">
+                    <ThePulse status={pulseStatus} {score} />
+                </div>
 
-                <!-- System Status Text -->
-                <div
-                    class="mt-8 font-mono text-sm text-indigo-300/60 uppercase tracking-[0.2em]"
-                >
-                    {greeting}<span class="animate-pulse">_</span>
+                <!-- Status + Quick Stats -->
+                <div class="flex-1 text-center lg:text-left">
+                    <!-- System Status -->
+                    <div class="font-mono text-sm text-indigo-300/60 uppercase tracking-[0.2em] mb-3">
+                        {greeting}<span class="animate-pulse">_</span>
+                    </div>
+
+                    <!-- Quick Summary -->
+                    {#if !loading}
+                        <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4 text-sm" in:fly={{ y: 20, duration: 600, delay: 300 }}>
+                            <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
+                                <BrainCircuit size={14} class="text-indigo-400" />
+                                <span class="text-slate-400">
+                                    {areasDocumented.started} of {areasDocumented.total} areas documented
+                                </span>
+                            </div>
+                            {#if networkSize > 0}
+                                <div class="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-slate-400">
+                                    {networkSize} people
+                                </div>
+                            {/if}
+                            {#if coverageCount > 0}
+                                <div class="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-slate-400">
+                                    {coverageCount} items
+                                </div>
+                            {/if}
+                            {#if totalValue > 0}
+                                <div class="px-3 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300">
+                                    {currency.format(totalValue)} protected
+                                </div>
+                            {/if}
+                        </div>
+                    {/if}
                 </div>
             </div>
 
-            <!-- Right: The Singular Focus -->
-            {#if !loading && focusItem}
-                <div
-                    class="flex-1 w-full max-w-xl"
-                    in:fly={{ x: 50, duration: 1000 }}
-                >
-                    <div class="mb-6 flex items-center gap-3 opacity-60">
-                        <BrainCircuit size={18} class="text-indigo-400" />
-                        <span
-                            class="text-xs font-bold uppercase tracking-widest"
-                            >{$preferenceStore.expertMode
-                                ? "Expert Dashboard"
-                                : "AI Concierge Priority"}</span
-                        >
+            <!-- Search Bar + View Toggle -->
+            {#if !loading}
+                <div class="flex flex-col md:flex-row gap-4 justify-between items-center mb-8" in:fly={{ y: 20, duration: 600, delay: 400 }}>
+                    <!-- Search Bar with Scan Line Effect -->
+                    <div class="relative w-full md:w-96 group">
+                        <Search class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 size-4 transition-colors group-focus-within:text-indigo-400" />
+                        <input
+                            type="text"
+                            bind:value={searchQuery}
+                            placeholder="Search modules..."
+                            class="w-full bg-slate-950/50 border border-white/10 rounded-xl pl-11 pr-4 py-3 text-white placeholder-slate-500 focus:border-indigo-500/50 focus:outline-none transition-all backdrop-blur-sm"
+                        />
+                        <div class="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-0 group-focus-within:opacity-100 transition-opacity"></div>
                     </div>
 
-                    {#if $preferenceStore.expertMode}
-                        <div
-                            class="mb-6 p-4 bg-white/5 border border-white/10 rounded-2xl flex items-center gap-4 text-xs text-slate-400"
-                            in:fade
+                    <!-- View Toggle -->
+                    <div class="flex items-center gap-2 border border-white/10 rounded-xl p-1 bg-slate-950/50 backdrop-blur-sm">
+                        <button
+                            onclick={() => viewMode = "grid"}
+                            class="p-2.5 rounded-lg transition-all {viewMode === 'grid' ? 'bg-indigo-500/20 text-indigo-300 shadow-[0_0_12px_rgba(99,102,241,0.3)]' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'}"
                         >
-                            <UserCog size={16} class="text-slate-500" />
-                            <p>
-                                Expert Mode Active: Proactive AI guidance is
-                                disabled. You have full manual control.
-                            </p>
-                        </div>
-                    {/if}
-
-                    <FocusCard
-                        title={focusItem.title}
-                        description={focusItem.description}
-                        actionLink={focusItem.link}
-                        type={focusItem.type}
-                        actionLabel={score === 0
-                            ? "Begin when ready"
-                            : "Take this step"}
-                    />
-
-                    <!-- Areas Documented (Option B + C combination) -->
-                    <div
-                        class="mt-8 p-5 rounded-2xl bg-white/5 border border-white/5 backdrop-blur-sm"
-                    >
-                        <div class="flex items-center justify-between mb-4">
-                            <span
-                                class="text-[10px] uppercase font-bold text-slate-400 tracking-widest"
-                            >
-                                What You've Documented
-                            </span>
-                            <span class="text-xs text-slate-500">
-                                {areasDocumented.started.length} of {areasDocumented.total}
-                                areas
-                            </span>
-                        </div>
-
-                        <!-- Visual area indicators -->
-                        <div class="flex flex-wrap gap-2">
-                            {#each areasDocumented.started as area}
-                                <div
-                                    class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/30"
-                                >
-                                    <svelte:component
-                                        this={area.icon}
-                                        size={14}
-                                        class="text-emerald-400"
-                                    />
-                                    <span class="text-xs text-emerald-300"
-                                        >{area.label}</span
-                                    >
-                                </div>
-                            {/each}
-                            {#each areasDocumented.notStarted as area}
-                                <div
-                                    class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 opacity-50"
-                                >
-                                    <svelte:component
-                                        this={area.icon}
-                                        size={14}
-                                        class="text-slate-500"
-                                    />
-                                    <span class="text-xs text-slate-500"
-                                        >{area.label}</span
-                                    >
-                                </div>
-                            {/each}
-                        </div>
-
-                        <!-- Summary stats -->
-                        {#if areasDocumented.started.length > 0}
-                            <div
-                                class="mt-4 pt-4 border-t border-white/10 grid grid-cols-3 gap-4 text-center"
-                            >
-                                <div>
-                                    <div class="text-lg font-bold text-white">
-                                        {networkSize}
-                                    </div>
-                                    <div
-                                        class="text-[10px] text-slate-500 uppercase"
-                                    >
-                                        People
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="text-lg font-bold text-white">
-                                        {coverageCount}
-                                    </div>
-                                    <div
-                                        class="text-[10px] text-slate-500 uppercase"
-                                    >
-                                        Items
-                                    </div>
-                                </div>
-                                {#if totalValue > 0}
-                                    <div>
-                                        <div
-                                            class="text-lg font-bold text-white"
-                                        >
-                                            {currency.format(totalValue)}
-                                        </div>
-                                        <div
-                                            class="text-[10px] text-slate-500 uppercase"
-                                        >
-                                            Protected
-                                        </div>
-                                    </div>
-                                {:else}
-                                    <div>
-                                        <div
-                                            class="text-lg font-bold text-white"
-                                        >
-                                            {areasDocumented.started.length}
-                                        </div>
-                                        <div
-                                            class="text-[10px] text-slate-500 uppercase"
-                                        >
-                                            Areas
-                                        </div>
-                                    </div>
-                                {/if}
-                            </div>
-                        {/if}
+                            <Grid size={16} />
+                        </button>
+                        <button
+                            onclick={() => viewMode = "list"}
+                            class="p-2.5 rounded-lg transition-all {viewMode === 'list' ? 'bg-indigo-500/20 text-indigo-300 shadow-[0_0_12px_rgba(99,102,241,0.3)]' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'}"
+                        >
+                            <ListIcon size={16} />
+                        </button>
                     </div>
+                </div>
+
+                <!-- Module Catalog Grid -->
+                {#if viewMode === "grid"}
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {#each filteredModules as module, i (module.id)}
+                            <a
+                                href={`/modules/${module.id}`}
+                                class="block group"
+                                in:fly={{ y: 30, duration: 600, delay: 100 + i * 80 }}
+                            >
+                                <!-- Glassmorphism Card with Hover Glow -->
+                                <div class="relative rounded-2xl p-[1px] bg-gradient-to-br from-white/20 via-white/5 to-transparent overflow-hidden transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_0_40px_-10px_rgba(99,102,241,0.4)]">
+                                    <div class="bg-slate-950/40 backdrop-blur-md h-full rounded-2xl p-5">
+                                        <!-- Header: Icon + Status Badge -->
+                                        <div class="flex items-start justify-between mb-3">
+                                            <div class="size-12 rounded-xl bg-indigo-500/10 flex items-center justify-center text-2xl relative overflow-hidden">
+                                                {module.icon}
+                                                {#if moduleStatus[module.id]?.started}
+                                                    <div class="absolute inset-0 rounded-xl bg-emerald-500/10 animate-pulse"></div>
+                                                {/if}
+                                            </div>
+                                            {#if moduleStatus[module.id]?.started}
+                                                <span class="flex items-center gap-1 text-xs text-emerald-400 bg-emerald-500/20 px-2 py-1 rounded-full shadow-[0_0_12px_rgba(16,185,129,0.3)]">
+                                                    <Check size={12} /> Started
+                                                </span>
+                                            {:else}
+                                                <span class="text-xs text-slate-500 bg-white/5 px-2 py-1 rounded-full">
+                                                    Not Yet
+                                                </span>
+                                            {/if}
+                                        </div>
+
+                                        <!-- Title + Description -->
+                                        <h3 class="font-medium text-white mb-1 group-hover:text-indigo-300 transition-colors">
+                                            {module.title}
+                                        </h3>
+                                        <p class="text-sm text-slate-400 line-clamp-2">
+                                            {module.description}
+                                        </p>
+
+                                        <!-- Progress Stats (if any) -->
+                                        {#if moduleStatus[module.id]?.count > 0}
+                                            <div class="mt-3 pt-3 border-t border-white/10 text-xs text-slate-500">
+                                                {moduleStatus[module.id].count} {moduleStatus[module.id].label}
+                                            </div>
+                                        {/if}
+
+                                        <!-- Role Badge -->
+                                        <div class="mt-3 flex justify-between items-center">
+                                            <span class="text-[10px] font-bold uppercase text-slate-500 tracking-wider">
+                                                {module.role}
+                                            </span>
+                                            <span class="text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity text-xs">
+                                                Open →
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Shine sweep on hover -->
+                                    <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
+                                </div>
+                            </a>
+                        {/each}
+                    </div>
+                {/if}
+
+                <!-- List View -->
+                {#if viewMode === "list"}
+                    <div class="space-y-2">
+                        {#each filteredModules as module, i (module.id)}
+                            <a
+                                href={`/modules/${module.id}`}
+                                class="flex items-center gap-4 p-4 rounded-xl bg-slate-950/40 backdrop-blur-md border border-white/10 hover:border-indigo-500/50 transition-all group"
+                                in:fly={{ x: -20, duration: 400, delay: 50 + i * 40 }}
+                            >
+                                <div class="size-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-xl flex-shrink-0 relative">
+                                    {module.icon}
+                                    {#if moduleStatus[module.id]?.started}
+                                        <div class="absolute -top-1 -right-1 size-3 bg-emerald-500 rounded-full border-2 border-slate-950"></div>
+                                    {/if}
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="font-medium truncate group-hover:text-indigo-300 transition-colors">
+                                        {module.title}
+                                    </h3>
+                                    <p class="text-xs text-slate-500 truncate">
+                                        {module.description}
+                                    </p>
+                                </div>
+                                <div class="flex items-center gap-3 flex-shrink-0">
+                                    {#if moduleStatus[module.id]?.count > 0}
+                                        <span class="text-xs text-slate-400">
+                                            {moduleStatus[module.id].count} {moduleStatus[module.id].label}
+                                        </span>
+                                    {/if}
+                                    {#if moduleStatus[module.id]?.started}
+                                        <span class="flex items-center gap-1 text-xs text-emerald-400">
+                                            <Check size={12} />
+                                        </span>
+                                    {/if}
+                                    <span class="text-[10px] font-bold uppercase text-slate-600 tracking-wider">
+                                        {module.role}
+                                    </span>
+                                </div>
+                            </a>
+                        {/each}
+                    </div>
+                {/if}
+
+                <!-- Empty State -->
+                {#if filteredModules.length === 0}
+                    <div class="text-center py-20 text-slate-500" in:fade>
+                        <p>No modules found matching "{searchQuery}"</p>
+                    </div>
+                {/if}
+            {:else}
+                <!-- Loading State with Shimmer -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+                    {#each Array(6) as _, i}
+                        <div class="h-48 rounded-2xl bg-slate-800/30 animate-pulse relative overflow-hidden">
+                            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent shimmer-animation"></div>
+                        </div>
+                    {/each}
                 </div>
             {/if}
         {/if}
     </main>
 </div>
+
+<style>
+    @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+    .shimmer-animation {
+        animation: shimmer 2s infinite;
+    }
+</style>
