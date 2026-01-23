@@ -18,6 +18,11 @@
         Sparkles,
         BrainCircuit,
         UserCog,
+        Wallet,
+        Heart,
+        Stethoscope,
+        Files,
+        Check,
     } from "lucide-svelte";
     import { t } from "$lib/stores/localization";
     import { browser } from "$app/environment";
@@ -61,6 +66,23 @@
             insuranceStore.policies.length +
             (estateAudit.moduleScores["financial"] ? 1 : 0),
     );
+
+    // Areas documented (Option B) - shows what has been started without judgment
+    let areasDocumented = $derived.by(() => {
+        const modules = estateAudit.moduleScores;
+        const areas = [
+            { key: 'financial', label: 'Financial', icon: Wallet, started: modules['financial'] > 0 },
+            { key: 'insurance', label: 'Insurance', icon: Shield, started: modules['insurance'] > 0 },
+            { key: 'family', label: 'Contacts', icon: Users, started: modules['family'] > 0 },
+            { key: 'medical', label: 'Medical', icon: Stethoscope, started: modules['medical'] > 0 },
+            { key: 'digital', label: 'Digital', icon: Files, started: modules['digital'] > 0 },
+        ];
+        return {
+            started: areas.filter(a => a.started),
+            notStarted: areas.filter(a => !a.started),
+            total: areas.length
+        };
+    });
 
     // Formatter
     const currency = new Intl.NumberFormat("en-US", {
@@ -299,55 +321,57 @@
                         : "Take this step"}
                 />
 
-                <!-- What you've documented -->
-                <div
-                    class="mt-8 grid grid-cols-2 gap-4 opacity-50 hover:opacity-100 transition-opacity"
-                >
-                    <div
-                        class="p-4 rounded-2xl bg-white/5 border border-white/5 backdrop-blur-sm flex items-center gap-3"
-                    >
-                        <Shield size={20} class="text-emerald-400" />
-                        <div>
-                            <div
-                                class="text-[10px] uppercase font-bold text-slate-400"
-                            >
-                                Protected Value
-                            </div>
-                            <div class="font-bold text-white tracking-tight">
-                                {currency.format(totalValue)}
-                            </div>
-                        </div>
+                <!-- Areas Documented (Option B + C combination) -->
+                <div class="mt-8 p-5 rounded-2xl bg-white/5 border border-white/5 backdrop-blur-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-widest">
+                            What You've Documented
+                        </span>
+                        <span class="text-xs text-slate-500">
+                            {areasDocumented.started.length} of {areasDocumented.total} areas
+                        </span>
                     </div>
-                    <div
-                        class="p-4 rounded-2xl bg-white/5 border border-white/5 backdrop-blur-sm flex items-center gap-3"
-                    >
-                        <Users size={20} class="text-indigo-400" />
-                        <div>
-                            <div
-                                class="text-[10px] uppercase font-bold text-slate-400"
-                            >
-                                People Connected
+
+                    <!-- Visual area indicators -->
+                    <div class="flex flex-wrap gap-2">
+                        {#each areasDocumented.started as area}
+                            <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/30">
+                                <svelte:component this={area.icon} size={14} class="text-emerald-400" />
+                                <span class="text-xs text-emerald-300">{area.label}</span>
                             </div>
-                            <div class="font-bold text-white">
-                                {networkSize} {networkSize === 1 ? "Person" : "People"}
+                        {/each}
+                        {#each areasDocumented.notStarted as area}
+                            <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 opacity-50">
+                                <svelte:component this={area.icon} size={14} class="text-slate-500" />
+                                <span class="text-xs text-slate-500">{area.label}</span>
                             </div>
-                        </div>
+                        {/each}
                     </div>
-                    <div
-                        class="p-4 rounded-2xl bg-white/5 border border-white/5 backdrop-blur-sm flex items-center gap-3"
-                    >
-                        <Sparkles size={20} class="text-amber-400" />
-                        <div>
-                            <div
-                                class="text-[10px] uppercase font-bold text-slate-400"
-                            >
-                                Items Documented
+
+                    <!-- Summary stats -->
+                    {#if areasDocumented.started.length > 0}
+                        <div class="mt-4 pt-4 border-t border-white/10 grid grid-cols-3 gap-4 text-center">
+                            <div>
+                                <div class="text-lg font-bold text-white">{networkSize}</div>
+                                <div class="text-[10px] text-slate-500 uppercase">People</div>
                             </div>
-                            <div class="font-bold text-white">
-                                {coverageCount} Recorded
+                            <div>
+                                <div class="text-lg font-bold text-white">{coverageCount}</div>
+                                <div class="text-[10px] text-slate-500 uppercase">Items</div>
                             </div>
+                            {#if totalValue > 0}
+                                <div>
+                                    <div class="text-lg font-bold text-white">{currency.format(totalValue)}</div>
+                                    <div class="text-[10px] text-slate-500 uppercase">Protected</div>
+                                </div>
+                            {:else}
+                                <div>
+                                    <div class="text-lg font-bold text-white">{areasDocumented.started.length}</div>
+                                    <div class="text-[10px] text-slate-500 uppercase">Areas</div>
+                                </div>
+                            {/if}
                         </div>
-                    </div>
+                    {/if}
                 </div>
             </div>
             {/if}
