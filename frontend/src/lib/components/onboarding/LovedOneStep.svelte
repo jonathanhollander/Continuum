@@ -97,7 +97,7 @@
                 onclick={skip}
                 class="px-4 py-2 text-slate-400 hover:text-white transition-colors"
             >
-                Skip for now
+                Maybe later
             </button>
 
             <button

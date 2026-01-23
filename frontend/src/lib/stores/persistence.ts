@@ -37,11 +37,14 @@ export const setStored = <T>(key: string, value: T, profileId?: string) => {
     localStorage.setItem(fullKey, valToStore);
 
     // 2. Remote Persistence (Railway PostgreSQL via FastAPI)
-    // Always attempt sync if we have a valid account or if it's the 'owner' profile
+    // NOTE: We are phasing out syncWithBackend in favor of granular SyncManager stores.
+    // Only uncomment if you have a legacy store that hasn't been migrated yet.
+    /*
     if (accId !== 'anonymous') {
         console.log(`[Dual Persistence] Syncing ${key} to Railway...`);
         syncWithBackend({ [key]: value });
     }
+    */
 };
 
 // Helper: Get legacy non-namespaced data for migration

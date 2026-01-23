@@ -117,7 +117,7 @@
                             <span class="text-xs bg-indigo-500/30 text-indigo-300 px-2 py-0.5 rounded-full">Recommended</span>
                         </h3>
                         <p class="text-sm text-slate-400">
-                            Have a conversation to quickly capture your important information.
+                            Have a conversation to gently capture your important information.
                         </p>
                     </div>
                 </div>

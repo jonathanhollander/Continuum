@@ -12,6 +12,10 @@ from backend.estate_models import (
     MedicalProfile, LifeEvent, TimeCapsuleMessage, FuneralData,
     AdvancedAssetData
 )
+from backend.models.activity_models import ActivityLogEntry
+from backend.models.qr_models import QRAccessPack, QRAssetLabel
+from backend.models.acceptance_models import AcceptanceTask
+from backend.models.automation_models import AutomationRule
 from backend.utils.logger import get_logger
 from backend.utils.audit import log_audit, log_deletion
 
@@ -120,7 +124,12 @@ MODEL_MAP = {
     "timeline_events": LifeEvent,
     "time_capsule": TimeCapsuleMessage,
     "funeral_data": FuneralData,
-    "advanced_assets": AdvancedAssetData
+    "advanced_assets": AdvancedAssetData,
+    "activity_log": ActivityLogEntry,
+    "qr_packs": QRAccessPack,
+    "qr_labels": QRAssetLabel,
+    "acceptance_tasks": AcceptanceTask,
+    "automation_rules": AutomationRule
 }
 
 @router.get("/{data_type}", summary="Get estate items", response_model=List[Any])

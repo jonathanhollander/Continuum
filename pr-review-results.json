@@ -1,0 +1,488 @@
+{
+  "metadata": {
+    "pr_number": 43,
+    "base_ref": "main",
+    "head_ref": "origin/claude/redesign-onboarding-flow-sM66z",
+    "timestamp": "2026-01-23T15:03:11.670192",
+    "project": "Continuum SaaS"
+  },
+  "breaking_changes": {
+    "count": 40,
+    "items": [
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /passkey/login/start -> /passkey/login/finish",
+        "severity": "high",
+        "old_value": "POST /passkey/login/start",
+        "new_value": "POST /passkey/login/finish",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /passkey/login/start -> /passkey/register/start",
+        "severity": "high",
+        "old_value": "POST /passkey/login/start",
+        "new_value": "POST /passkey/register/start",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /passkey/login/finish -> /passkey/login/start",
+        "severity": "high",
+        "old_value": "POST /passkey/login/finish",
+        "new_value": "POST /passkey/login/start",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /passkey/login/finish -> /passkey/register/finish",
+        "severity": "high",
+        "old_value": "POST /passkey/login/finish",
+        "new_value": "POST /passkey/register/finish",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /refresh -> /logout-all",
+        "severity": "high",
+        "old_value": "POST /refresh",
+        "new_value": "POST /logout-all",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /refresh -> /logout",
+        "severity": "high",
+        "old_value": "POST /refresh",
+        "new_value": "POST /logout",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /refresh -> /signup",
+        "severity": "high",
+        "old_value": "POST /refresh",
+        "new_value": "POST /signup",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /refresh -> /magic-link",
+        "severity": "high",
+        "old_value": "POST /refresh",
+        "new_value": "POST /magic-link",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /refresh -> /token",
+        "severity": "high",
+        "old_value": "POST /refresh",
+        "new_value": "POST /token",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /logout-all -> /refresh",
+        "severity": "high",
+        "old_value": "POST /logout-all",
+        "new_value": "POST /refresh",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /logout-all -> /logout",
+        "severity": "high",
+        "old_value": "POST /logout-all",
+        "new_value": "POST /logout",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /logout-all -> /signup",
+        "severity": "high",
+        "old_value": "POST /logout-all",
+        "new_value": "POST /signup",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /logout-all -> /magic-link",
+        "severity": "high",
+        "old_value": "POST /logout-all",
+        "new_value": "POST /magic-link",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /logout-all -> /token",
+        "severity": "high",
+        "old_value": "POST /logout-all",
+        "new_value": "POST /token",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /passkey/register/finish -> /passkey/login/finish",
+        "severity": "high",
+        "old_value": "POST /passkey/register/finish",
+        "new_value": "POST /passkey/login/finish",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /passkey/register/finish -> /passkey/register/start",
+        "severity": "high",
+        "old_value": "POST /passkey/register/finish",
+        "new_value": "POST /passkey/register/start",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /preferences -> /onboarding",
+        "severity": "high",
+        "old_value": "PATCH /preferences",
+        "new_value": "PATCH /onboarding",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /logout -> /refresh",
+        "severity": "high",
+        "old_value": "POST /logout",
+        "new_value": "POST /refresh",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /logout -> /logout-all",
+        "severity": "high",
+        "old_value": "POST /logout",
+        "new_value": "POST /logout-all",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /logout -> /signup",
+        "severity": "high",
+        "old_value": "POST /logout",
+        "new_value": "POST /signup",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /logout -> /magic-link",
+        "severity": "high",
+        "old_value": "POST /logout",
+        "new_value": "POST /magic-link",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /logout -> /token",
+        "severity": "high",
+        "old_value": "POST /logout",
+        "new_value": "POST /token",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /passkey/register/start -> /passkey/login/start",
+        "severity": "high",
+        "old_value": "POST /passkey/register/start",
+        "new_value": "POST /passkey/login/start",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /passkey/register/start -> /passkey/register/finish",
+        "severity": "high",
+        "old_value": "POST /passkey/register/start",
+        "new_value": "POST /passkey/register/finish",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /me -> /onboarding",
+        "severity": "high",
+        "old_value": "GET /me",
+        "new_value": "GET /onboarding",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /signup -> /refresh",
+        "severity": "high",
+        "old_value": "POST /signup",
+        "new_value": "POST /refresh",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /signup -> /logout-all",
+        "severity": "high",
+        "old_value": "POST /signup",
+        "new_value": "POST /logout-all",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /signup -> /logout",
+        "severity": "high",
+        "old_value": "POST /signup",
+        "new_value": "POST /logout",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /signup -> /magic-link",
+        "severity": "high",
+        "old_value": "POST /signup",
+        "new_value": "POST /magic-link",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /signup -> /token",
+        "severity": "high",
+        "old_value": "POST /signup",
+        "new_value": "POST /token",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /magic-link -> /refresh",
+        "severity": "high",
+        "old_value": "POST /magic-link",
+        "new_value": "POST /refresh",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /magic-link -> /logout-all",
+        "severity": "high",
+        "old_value": "POST /magic-link",
+        "new_value": "POST /logout-all",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /magic-link -> /logout",
+        "severity": "high",
+        "old_value": "POST /magic-link",
+        "new_value": "POST /logout",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /magic-link -> /signup",
+        "severity": "high",
+        "old_value": "POST /magic-link",
+        "new_value": "POST /signup",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /magic-link -> /token",
+        "severity": "high",
+        "old_value": "POST /magic-link",
+        "new_value": "POST /token",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /token -> /refresh",
+        "severity": "high",
+        "old_value": "POST /token",
+        "new_value": "POST /refresh",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /token -> /logout-all",
+        "severity": "high",
+        "old_value": "POST /token",
+        "new_value": "POST /logout-all",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /token -> /logout",
+        "severity": "high",
+        "old_value": "POST /token",
+        "new_value": "POST /logout",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /token -> /signup",
+        "severity": "high",
+        "old_value": "POST /token",
+        "new_value": "POST /signup",
+        "migration_required": true
+      },
+      {
+        "file": "backend/routers/auth.py",
+        "line": 0,
+        "change_type": "api_renamed",
+        "description": "API endpoint renamed: /token -> /magic-link",
+        "severity": "high",
+        "old_value": "POST /token",
+        "new_value": "POST /magic-link",
+        "migration_required": true
+      }
+    ],
+    "critical": 0,
+    "high": 40,
+    "should_block": true
+  },
+  "security": {
+    "count": 1,
+    "items": [
+      {
+        "file": "backend/database.py",
+        "line": 142,
+        "issue_type": "sql_injection",
+        "description": "SQLAlchemy text() with f-string (SQL injection risk)",
+        "severity": "critical",
+        "snippet": "session.execute(text(f\"ALTER TABLE users ADD COLUMN {col_name} {col_type}\"))",
+        "recommendation": "Use parameterized queries with placeholders",
+        "cwe_id": "CWE-89"
+      }
+    ],
+    "critical": 1,
+    "high": 0,
+    "should_block": true
+  },
+  "emotional_tone": {
+    "count": 2,
+    "items": [
+      {
+        "file": ".claude/agents/security-scanner.md",
+        "line": 63,
+        "text": "- Raw SQL: `execute.*\\+.*user_input`",
+        "violation_type": "forbidden_phrase",
+        "violation_phrase": "execute",
+        "severity": "high",
+        "suggestion": "carry out",
+        "principle": "Supportive, never clinical",
+        "context": "High severity: harsh language"
+      },
+      {
+        "file": "backend/database.py",
+        "line": 142,
+        "text": "session.execute(text(f\"ALTER TABLE users ADD COLUMN {col_name} {col_type}\"))",
+        "violation_type": "forbidden_phrase",
+        "violation_phrase": "execute",
+        "severity": "high",
+        "suggestion": "carry out",
+        "principle": "Supportive, never clinical",
+        "context": "High severity: harsh language"
+      }
+    ],
+    "high": 2,
+    "medium": 0,
+    "low": 0,
+    "should_warn": true
+  },
+  "test_coverage": {
+    "percentage": 0,
+    "low_coverage_files": []
+  },
+  "migrations": {
+    "valid": true,
+    "issues": [],
+    "critical": 0,
+    "should_block": false
+  },
+  "type_safety": {
+    "count": 0,
+    "items": []
+  },
+  "summary": {
+    "passed": false,
+    "checks_passed": 2,
+    "checks_failed": 2,
+    "checks_run": 4,
+    "critical_issues": 41,
+    "warnings": 2
+  }
+}

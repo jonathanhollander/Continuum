@@ -21,9 +21,9 @@
 
     let {
         state = $bindable("idle"),
-        idleText = "Save changes",
+        idleText = "Save my thoughts",
         savingText = "Saving...",
-        savedText = "Saved!",
+        savedText = "Saved with care",
         errorText = "Try again",
         onclick,
         disabled = false,
