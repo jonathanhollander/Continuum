@@ -4,6 +4,20 @@ import { auth } from "../stores/auth";
 import { get } from "svelte/store";
 import { notifications } from "$lib/stores/notificationStore";
 
+const toCamel = (str: string) => str.replace(/([-_][a-z])/g, group => group.toUpperCase().replace('-', '').replace('_', ''));
+const toSnake = (str: string) => str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+
+const convertKeys = (obj: any, converter: (s: string) => string): any => {
+    if (obj === null || typeof obj !== 'object' || obj instanceof Date || obj instanceof Blob) return obj;
+    if (Array.isArray(obj)) return obj.map(i => convertKeys(i, converter));
+
+    const newObj: any = {};
+    Object.keys(obj).forEach(key => {
+        newObj[converter(key)] = convertKeys(obj[key], converter);
+    });
+    return newObj;
+};
+
 const BASE_URL = import.meta.env.VITE_API_URL || "";
 
 export type SyncStatus = "idle" | "syncing" | "error" | "synced";
@@ -70,8 +84,11 @@ export class SyncManager<T extends { id: number | string }> {
             });
             if (!res.ok) throw new Error("Failed to fetch remote data");
 
-            const rawItems: T[] = await res.json();
-            const remoteItems = this.mapper ? rawItems.map(this.mapper) : rawItems;
+            const rawItems: any[] = await res.json();
+            const remoteItems = rawItems.map(item => {
+                const camelItem = convertKeys(item, toCamel);
+                return this.mapper ? this.mapper(camelItem) : camelItem;
+            });
 
             // Logic: Up-Sync vs Down-Sync
             // If Remote is empty but Local has data -> Migration (Up-Sync)
@@ -141,7 +158,8 @@ export class SyncManager<T extends { id: number | string }> {
             if (!res.ok) throw new Error("Failed to save");
 
             const raw = await res.json();
-            const newItem = this.mapper ? this.mapper(raw) : raw;
+            const newItemRaw = convertKeys(raw, toCamel);
+            const newItem = this.mapper ? this.mapper(newItemRaw) : newItemRaw;
 
             if (!skipLocal) {
                 this.items = [...this.items, newItem];
@@ -199,7 +217,8 @@ export class SyncManager<T extends { id: number | string }> {
 
             if (!res.ok) throw new Error("Failed to update remote");
             const raw = await res.json();
-            const remoteItem = this.mapper ? this.mapper(raw) : raw;
+            const remoteItemRaw = convertKeys(raw, toCamel);
+            const remoteItem = this.mapper ? this.mapper(remoteItemRaw) : remoteItemRaw;
 
             // Sync again with server data
             this.items[index] = remoteItem;
@@ -323,7 +342,8 @@ export class SingletonSyncManager<T extends object> {
             if (!res.ok) throw new Error("Failed to fetch remote data");
 
             const raw = await res.json();
-            const remoteData = this.mapper ? this.mapper(raw) : raw;
+            const remoteDataRaw = convertKeys(raw, toCamel);
+            const remoteData = this.mapper ? this.mapper(remoteDataRaw) : remoteDataRaw;
 
             // Simple migration: if remote is empty but local has data
             const isRemoteEmpty = !remoteData || Object.keys(remoteData).length === 0;
@@ -366,7 +386,8 @@ export class SingletonSyncManager<T extends object> {
 
             if (!res.ok) throw new Error("Update failed");
             const raw = await res.json();
-            const saved = this.mapper ? this.mapper(raw) : raw;
+            const savedRaw = convertKeys(raw, toCamel);
+            const saved = this.mapper ? this.mapper(savedRaw) : savedRaw;
 
             this.updateLocal(saved);
 

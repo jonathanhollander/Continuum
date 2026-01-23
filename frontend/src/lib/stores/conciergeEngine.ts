@@ -44,7 +44,6 @@ interface ConciergeState {
     currentRoute: string;
     currentContextName: string;
     hasInteracted: boolean;
-    hasPendingContextSwitch: boolean;
     isPoppedOut: boolean;
     floatingPosition: { x: number; y: number } | null;
     floatingSize: { width: number; height: number } | null;
@@ -62,7 +61,6 @@ function createConciergeEngine() {
         currentRoute: '',
         currentContextName: 'Continuum Dashboard',
         hasInteracted: false,
-        hasPendingContextSwitch: false,
         isPoppedOut: false,
         popOutMode: null,
         floatingPosition: { x: 50, y: 50 }, // Default top-right-ish
@@ -184,28 +182,7 @@ function createConciergeEngine() {
                 return newState;
             });
 
-            // Check for pending context switch (Delayed Pivot)
-            const state = get({ subscribe });
-            if (state.hasPendingContextSwitch) {
-                const contextName = state.currentContextName;
-                const leadQuestion = PIVOT_GREETINGS[contextName] || `Shall we start securing the details for ${contextName}?`;
-                const pivotMsg = `We've moved into ${contextName}. ${leadQuestion}`;
-
-                const assistantMsg: Message = {
-                    id: Math.random().toString(36).substring(7),
-                    role: 'assistant',
-                    content: pivotMsg,
-                    timestamp: Date.now()
-                };
-
-                update(s => ({
-                    ...s,
-                    messages: [...s.messages, assistantMsg],
-                    hasPendingContextSwitch: false
-                }));
-            } else {
-                updateInitialGreeting();
-            }
+            updateInitialGreeting();
         },
         close: () => {
             update(s => {
@@ -292,9 +269,6 @@ function createConciergeEngine() {
                         timestamp: Date.now()
                     };
                     update(s => ({ ...s, messages: [...s.messages, assistantMsg] }));
-                } else {
-                    // Panel is closed, mark for pending pivot on next open
-                    update(s => ({ ...s, hasPendingContextSwitch: true }));
                 }
             } else if (state.isOpen && state.messages.length === 0) {
                 updateInitialGreeting();
