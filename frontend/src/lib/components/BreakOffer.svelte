@@ -14,18 +14,45 @@
     } from "lucide-svelte";
     import { quintOut } from "svelte/easing";
 
+    import { notifications } from "$lib/stores/notificationStore";
+
     interface Props {
         signals?: string[];
     }
     let { signals = [] }: Props = $props();
 
     let showBreakScreen = $state(false);
+    let showModal = $state(false);
+    let dontShowAgain = $state(false);
     let breakDuration = $state(0); // in seconds
     let breakTimer: number | undefined;
 
+    // Decide whether to show the modal or just a notification
+    $effect(() => {
+        if (signals.length > 0) {
+            const isMajor =
+                signals.includes("user_requested_break") ||
+                signals.includes("AI_SUGGESTION") ||
+                signals.includes("high_error_rate");
+
+            if (isMajor) {
+                showModal = true;
+            } else {
+                // For minor signals like rapid navigation, just show a gentle reminder
+                notifications.showInfo(getMessage(), "Mindful Planning Tip");
+                // Reset immediately so the notification doesn't repeat per signal update
+                overwhelmDetector.reset();
+            }
+        }
+    });
+
     function dismiss() {
-        logger.info("User dismissed break offer", { signals });
-        overwhelmDetector.reset();
+        if (dontShowAgain) {
+            overwhelmDetector.mutePermanently();
+        } else {
+            logger.info("User dismissed break offer", { signals });
+            overwhelmDetector.reset();
+        }
     }
 
     function takeBreak() {
@@ -104,7 +131,7 @@
     }
 </script>
 
-{#if !showBreakScreen}
+{#if showModal && !showBreakScreen}
     <!-- Initial Overwhelm Intervention Prompt -->
     <div
         class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
@@ -174,11 +201,30 @@
 
                 <!-- Dismiss -->
                 <button
-                    onclick={dismiss}
+                    onclick={() => {
+                        showModal = false;
+                        dismiss();
+                    }}
                     class="w-full py-3 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors"
                 >
                     I'm okay to continue
                 </button>
+
+                <!-- Do Not Show Again Checkbox -->
+                <div class="flex items-center justify-center gap-2 mt-2">
+                    <input
+                        type="checkbox"
+                        id="dont-show-again"
+                        bind:checked={dontShowAgain}
+                        class="w-4 h-4 text-teal-600 border-zinc-300 rounded focus:ring-teal-500"
+                    />
+                    <label
+                        for="dont-show-again"
+                        class="text-xs text-zinc-500 dark:text-zinc-400 cursor-pointer select-none"
+                    >
+                        Don't show this support again
+                    </label>
+                </div>
             </div>
         </div>
     </div>

@@ -26,6 +26,13 @@ from slowapi.errors import RateLimitExceeded
 from backend.limiter import limiter
 from secure import Secure, ContentSecurityPolicy, StrictTransportSecurity, ReferrerPolicy
 from backend.utils.logger import get_logger, setup_logging
+from backend.csrf import CSRFMiddleware, get_csrf_token_endpoint
+
+def setup_app_documentation(app: FastAPI):
+    """Configure OpenAPI tags and documentation for the app."""
+    # This logic is currently inline in app instantiation, 
+    # but we add this docstring for architectural reference.
+    pass
 
 logger = get_logger(__name__)
 
@@ -165,10 +172,16 @@ app.add_middleware(
     allow_credentials=settings.CORS_ALLOW_CREDENTIALS,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"] if settings.is_production()
                   else (settings.CORS_ALLOW_METHODS.split(",") if settings.CORS_ALLOW_METHODS != "*" else ["*"]),
-    allow_headers=["Content-Type", "Authorization", "Accept", "Origin", "User-Agent"] if settings.is_production()
+    allow_headers=["Content-Type", "Authorization", "Accept", "Origin", "User-Agent", "X-CSRF-Token"] if settings.is_production()
                   else (settings.CORS_ALLOW_HEADERS.split(",") if settings.CORS_ALLOW_HEADERS != "*" else ["*"]),
+    expose_headers=["X-Request-ID", "X-CSRF-Token"],  # Allow frontend to read these headers
     max_age=3600,  # Cache preflight responses for 1 hour
 )
+
+# CSRF Protection Middleware (Double-Submit Cookie Pattern)
+# In production, rejects requests without valid CSRF token
+# In development, logs warning but allows (for easier testing)
+app.add_middleware(CSRFMiddleware)
 
 # HTTPS Enforcement for Production
 if settings.is_production():
@@ -219,7 +232,56 @@ class RegistrationResponse(BaseModel):
     email: str
     response: dict
 
+
+# --- Pydantic Validation Models (P1-High Security) ---
+from typing import Any, Dict
+from pydantic import field_validator
+
+MAX_ESTATE_DATA_SIZE = 100000  # 100KB max for estate data
+
+
+class EstateDataPayload(BaseModel):
+    """Validated model for estate data storage."""
+    transparent_data: Optional[str] = "{}"
+    encrypted_vault: Optional[bytes] = b""
+
+    @field_validator("transparent_data")
+    @classmethod
+    def validate_transparent_data(cls, v):
+        if v and len(v) > MAX_ESTATE_DATA_SIZE:
+            raise ValueError(f"transparent_data exceeds maximum size ({MAX_ESTATE_DATA_SIZE} bytes)")
+        # Validate it's valid JSON
+        try:
+            json.loads(v or "{}")
+        except json.JSONDecodeError:
+            raise ValueError("transparent_data must be valid JSON")
+        return v
+
+
+class EstateProfilePayload(BaseModel):
+    """Validated model for estate profile data."""
+    data: Dict[str, Any]
+
+    @field_validator("data")
+    @classmethod
+    def validate_data(cls, v):
+        # Check size
+        json_str = json.dumps(v)
+        if len(json_str) > MAX_ESTATE_DATA_SIZE:
+            raise ValueError(f"Profile data exceeds maximum size ({MAX_ESTATE_DATA_SIZE} bytes)")
+        return v
+
 # --- Endpoints ---
+
+@app.get("/api/csrf-token", summary="Get a CSRF token", tags=["auth"])
+async def csrf_token(request: Request):
+    """
+    Get a CSRF token for frontend use.
+    The token is also set as a cookie automatically by the CSRF middleware.
+    Frontend should include this token in X-CSRF-Token header for state-changing requests.
+    """
+    return get_csrf_token_endpoint(request)
+
 
 @app.get("/api/health", summary="Perform a deep health check", tags=["monitoring"])
 async def health_check(session: Session = Depends(get_session)):
@@ -319,14 +381,15 @@ def get_estate(user: User = Depends(get_current_user), session: Session = Depend
     return estate
 
 @app.post("/api/estate")
-def save_estate(estate_data: dict, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+def save_estate(estate_data: EstateDataPayload, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    """Save estate data with Pydantic validation (P1-High Security)."""
     estate = session.exec(select(Estate).where(Estate.user_id == user.id)).first()
     if not estate:
         estate = Estate(user_id=user.id)
         session.add(estate)
-    
-    estate.transparent_data = estate_data.get("transparent_data", "{}")
-    estate.encrypted_vault = estate_data.get("encrypted_vault", b"")
+
+    estate.transparent_data = estate_data.transparent_data
+    estate.encrypted_vault = estate_data.encrypted_vault
     session.commit()
     return {"status": "saved"}
 
@@ -341,11 +404,12 @@ def get_estate_profile(user: User = Depends(get_current_user), session: Session 
         if "estate_profile" in td:
             return td["estate_profile"]
         return td
-    except:
+    except Exception as e:
+        logger.debug(f"Failed to parse estate profile: {e}")
         return {}
 
 @app.post("/api/estate/profile")
-def save_estate_profile(profile: dict, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+def save_estate_profile(profile: EstateProfilePayload, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     estate = session.exec(select(Estate).where(Estate.user_id == user.id)).first()
     if not estate:
         estate = Estate(user_id=user.id)
@@ -353,10 +417,11 @@ def save_estate_profile(profile: dict, user: User = Depends(get_current_user), s
     
     try:
         td = json.loads(estate.transparent_data or "{}")
-    except:
+    except Exception as e:
+        logger.debug(f"Transparent data parse failure in save_profile: {e}")
         td = {}
-    
-    td["estate_profile"] = profile
+
+    td["estate_profile"] = profile.data  # Use validated data from Pydantic model
     estate.transparent_data = json.dumps(td)
     session.commit()
     return td["estate_profile"]
@@ -384,13 +449,30 @@ async def serve_spa(full_path: str):
     if full_path.startswith("api"):
         raise HTTPException(status_code=404, detail="API endpoint not found")
 
+    # P1-High: Path traversal protection
+    # Define the base directory for static files
+    base_dir = os.path.realpath("frontend/dist")
+
     # Check if the file exists in dist (e.g. /favicon.ico, /robots.txt)
     # Ensure full_path does not start with / to work with os.path.join correctly
     clean_path = full_path.lstrip("/")
+
+    # Block any path containing traversal sequences before joining
+    if ".." in clean_path or clean_path.startswith("/"):
+        logger.warning(f"Blocked potential path traversal attempt: '{full_path}'")
+        return FileResponse("frontend/dist/index.html")
+
+    # Construct the file path
     file_path = os.path.join("frontend", "dist", clean_path)
 
-    if os.path.isfile(file_path):
-        return FileResponse(file_path)
+    # Resolve to absolute path and verify it's within allowed directory
+    resolved_path = os.path.realpath(file_path)
+    if not resolved_path.startswith(base_dir):
+        logger.warning(f"Blocked path traversal attempt: '{full_path}' resolved to '{resolved_path}'")
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    if os.path.isfile(resolved_path):
+        return FileResponse(resolved_path)
 
     # Otherwise, serve the index.html for the frontend to handle routing
     logger.debug(f"Falling back to index.html for path: '{full_path}'")

@@ -54,7 +54,8 @@ class Settings(BaseSettings):
     # JWT Authentication
     JWT_SECRET_KEY: str = "continuum-dev-secret-key-change-in-production"
     JWT_ALGORITHM: str = "HS256"
-    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080  # 7 days
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 15  # 15 minutes (short-lived)
+    JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7  # 7 days (long-lived)
 
     # WebAuthn/Passkey Configuration
     RP_ID: str = "localhost"

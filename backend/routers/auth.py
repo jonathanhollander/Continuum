@@ -11,7 +11,12 @@ from backend.auth import (
     get_password_hash,
     verify_password,
     get_current_user,
-    ACCESS_TOKEN_EXPIRE_MINUTES
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    create_refresh_token,
+    verify_refresh_token,
+    revoke_refresh_token,
+    revoke_all_user_tokens,
+    rotate_refresh_token
 )
 from backend.security import (
     get_registration_options,
@@ -22,6 +27,7 @@ from backend.security import (
 from backend.pulse_models import PulseCredential
 from backend.utils.audit import log_auth_success, log_auth_failure
 from backend.utils.logger import get_logger
+from backend.challenge_store import challenge_store
 import secrets
 import base64
 import json
@@ -30,9 +36,6 @@ from webauthn import options_to_json
 logger = get_logger(__name__)
 
 router = APIRouter(prefix="/api/auth", tags=["authentication"])
-
-# Simple in-memory challenge store (Use Redis in production)
-PENDING_CHALLENGES = {}
 
 # Request/Response Models
 class SignupRequest(BaseModel):
@@ -58,8 +61,14 @@ class WarningMessage(BaseModel):
 
 class TokenResponse(BaseModel):
     access_token: str
+    refresh_token: Optional[str] = None
     token_type: str
+    expires_in: int = ACCESS_TOKEN_EXPIRE_MINUTES * 60  # seconds
     warnings: List[WarningMessage] = []
+
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
 
 class UserResponse(BaseModel):
     id: int
@@ -67,6 +76,56 @@ class UserResponse(BaseModel):
     external_id: str
     user_role: Optional[str] = "planning"
     emotional_context: Optional[str] = None
+    overwhelm_muted: bool = False
+
+
+# --- WebAuthn Pydantic Validation Models (P1-High Security) ---
+from typing import Any, Dict
+from pydantic import field_validator
+
+
+class PasskeyRegisterFinishPayload(BaseModel):
+    """Validated model for completing passkey registration."""
+    user_id: int
+    credential: Dict[str, Any]
+
+    @field_validator("credential")
+    @classmethod
+    def validate_credential(cls, v):
+        """Validate WebAuthn credential response structure."""
+        required_fields = ["id", "rawId", "response", "type"]
+        missing = [f for f in required_fields if f not in v]
+        if missing:
+            raise ValueError(f"Missing required credential fields: {missing}")
+        if v.get("type") != "public-key":
+            raise ValueError("Invalid credential type - must be 'public-key'")
+        return v
+
+
+class PasskeyLoginFinishPayload(BaseModel):
+    """Validated model for completing passkey login."""
+    challenge_id: str
+    credential: Dict[str, Any]
+
+    @field_validator("challenge_id")
+    @classmethod
+    def validate_challenge_id(cls, v):
+        if not v or len(v) < 10:
+            raise ValueError("Invalid challenge_id")
+        return v
+
+    @field_validator("credential")
+    @classmethod
+    def validate_credential(cls, v):
+        """Validate WebAuthn assertion response structure."""
+        required_fields = ["id", "rawId", "response", "type"]
+        missing = [f for f in required_fields if f not in v]
+        if missing:
+            raise ValueError(f"Missing required credential fields: {missing}")
+        if v.get("type") != "public-key":
+            raise ValueError("Invalid credential type - must be 'public-key'")
+        return v
+
 
 @router.post("/signup", response_model=TokenResponse, summary="Register new user", description="Creates a new user account with email and password, sends a welcome email, and returns a JWT access token.")
 @limiter.limit("5/minute")
@@ -135,15 +194,18 @@ def signup(request: Request, signup_data: SignupRequest, session: Session = Depe
             severity="warning"
         ))
 
-    # Generate JWT token
+    # Generate JWT tokens
     access_token = create_access_token(
         data={"sub": str(new_user.id)},
         expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
+    refresh_token = create_refresh_token(new_user.id, session)
 
     return {
         "access_token": access_token,
+        "refresh_token": refresh_token,
         "token_type": "bearer",
+        "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         "warnings": warnings
     }
 
@@ -180,13 +242,19 @@ def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), se
     # Log successful login
     log_auth_success(session, request, user.id, user.email, "password")
 
-    # Generate JWT token
+    # Generate JWT tokens
     access_token = create_access_token(
         data={"sub": str(user.id)},
         expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
+    refresh_token = create_refresh_token(user.id, session)
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer",
+        "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60
+    }
 
 @router.get("/me", response_model=UserResponse, summary="Get current user", description="Returns information about the currently authenticated user based on the JWT token.")
 def get_current_user_info(current_user: User = Depends(get_current_user)):
@@ -224,11 +292,11 @@ def passkey_register_start(request: Request, signup_data: PasskeySignupRequest, 
     # Generate WebAuthn registration options
     options = get_registration_options(str(new_user.id), new_user.email)
 
-    # Store challenge temporarily
-    PENDING_CHALLENGES[str(new_user.id)] = {
+    # Store challenge temporarily (uses Redis in production, in-memory in development)
+    challenge_store.set(str(new_user.id), {
         "challenge": options.challenge,
         "type": "registration"
-    }
+    }, expire_seconds=300)
 
     return {
         "user_id": new_user.id,
@@ -237,19 +305,18 @@ def passkey_register_start(request: Request, signup_data: PasskeySignupRequest, 
 
 @router.post("/passkey/register/finish", response_model=TokenResponse)
 @limiter.limit("10/minute")
-def passkey_register_finish(request: Request, payload: dict, session: Session = Depends(get_session)):
+def passkey_register_finish(request: Request, payload: PasskeyRegisterFinishPayload, session: Session = Depends(get_session)):
     """
     Complete passkey registration (Step 2 of 2).
     Verifies WebAuthn credential and returns JWT token.
+    Uses Pydantic validation for payload security (P1-High).
     """
-    user_id = payload.get("user_id")
-    credential_response = payload.get("credential")
+    # Validated by Pydantic model
+    user_id = payload.user_id
+    credential_response = payload.credential
 
-    if not user_id or not credential_response:
-        raise HTTPException(status_code=400, detail="Missing user_id or credential")
-
-    challenge_data = PENDING_CHALLENGES.pop(str(user_id), None)
-    if not challenge_data or challenge_data["type"] != "registration":
+    challenge_data = challenge_store.pop(str(user_id))
+    if not challenge_data or challenge_data.get("type") != "registration":
         raise HTTPException(status_code=400, detail="Challenge expired or not found")
 
     try:
@@ -282,13 +349,19 @@ def passkey_register_finish(request: Request, payload: dict, session: Session = 
         session.add(new_cred)
         session.commit()
 
-        # Generate JWT token
+        # Generate JWT tokens
         access_token = create_access_token(
             data={"sub": str(user_id)},
             expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         )
+        refresh_token = create_refresh_token(user_id, session)
 
-        return {"access_token": access_token, "token_type": "bearer"}
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer",
+            "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60
+        }
 
     except Exception as e:
         logger.error(
@@ -311,12 +384,12 @@ def passkey_login_start(request: Request):
     """
     options = get_authentication_options()
 
-    # Generate a temporary challenge ID
+    # Generate a temporary challenge ID and store (uses Redis in production)
     challenge_id = secrets.token_urlsafe(32)
-    PENDING_CHALLENGES[challenge_id] = {
+    challenge_store.set(challenge_id, {
         "challenge": options.challenge,
         "type": "authentication"
-    }
+    }, expire_seconds=300)
 
     return {
         "challenge_id": challenge_id,
@@ -325,19 +398,18 @@ def passkey_login_start(request: Request):
 
 @router.post("/passkey/login/finish", response_model=TokenResponse)
 @limiter.limit("10/minute")
-def passkey_login_finish(request: Request, payload: dict, session: Session = Depends(get_session)):
+def passkey_login_finish(request: Request, payload: PasskeyLoginFinishPayload, session: Session = Depends(get_session)):
     """
     Complete passkey login (Step 2 of 2).
     Verifies WebAuthn assertion and returns JWT token.
+    Uses Pydantic validation for payload security (P1-High).
     """
-    challenge_id = payload.get("challenge_id")
-    credential_response = payload.get("credential")
+    # Validated by Pydantic model
+    challenge_id = payload.challenge_id
+    credential_response = payload.credential
 
-    if not challenge_id or not credential_response:
-        raise HTTPException(status_code=400, detail="Missing challenge_id or credential")
-
-    challenge_data = PENDING_CHALLENGES.pop(challenge_id, None)
-    if not challenge_data or challenge_data["type"] != "authentication":
+    challenge_data = challenge_store.pop(challenge_id)
+    if not challenge_data or challenge_data.get("type") != "authentication":
         raise HTTPException(status_code=400, detail="Challenge expired or not found")
 
     try:
@@ -364,13 +436,19 @@ def passkey_login_finish(request: Request, payload: dict, session: Session = Dep
         session.add(credential)
         session.commit()
 
-        # Generate JWT token
+        # Generate JWT tokens
         access_token = create_access_token(
             data={"sub": str(credential.user_id)},
             expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         )
+        refresh_token = create_refresh_token(credential.user_id, session)
 
-        return {"access_token": access_token, "token_type": "bearer"}
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer",
+            "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60
+        }
 
     except Exception as e:
         logger.error(
@@ -475,14 +553,104 @@ def verify_magic_link(request: Request, token: str, session: Session = Depends(g
         # Log successful magic link authentication
         log_auth_success(session, request, user.id, user.email, "magic_link")
 
-        # Generate new long-lived JWT token
+        # Generate JWT tokens
         access_token = create_access_token(
             data={"sub": str(user.id)},
             expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         )
+        refresh_token = create_refresh_token(user.id, session)
 
-        return {"access_token": access_token, "token_type": "bearer"}
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer",
+            "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60
+        }
 
     except jwt.PyJWTError:
         log_auth_failure(session, request, "", "magic_link_verify", "Invalid or expired token")
         raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+
+# --- Refresh Token Endpoints ---
+
+@router.post("/refresh", response_model=TokenResponse, summary="Refresh access token", description="Exchange a valid refresh token for a new access token and refresh token.")
+@limiter.limit("30/minute")
+def refresh_access_token(request: Request, token_request: RefreshTokenRequest, session: Session = Depends(get_session)):
+    """
+    Refresh access token using a refresh token.
+    Implements token rotation (old refresh token is revoked, new one is issued).
+    """
+    result = rotate_refresh_token(token_request.refresh_token, session)
+
+    if not result:
+        log_auth_failure(session, request, "", "refresh", "Invalid or expired refresh token")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired refresh token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    new_refresh_token, user = result
+
+    # Generate new access token
+    access_token = create_access_token(
+        data={"sub": str(user.id)},
+        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+
+    logger.info(f"Token refreshed for user {user.id}")
+
+    return {
+        "access_token": access_token,
+        "refresh_token": new_refresh_token,
+        "token_type": "bearer",
+        "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60
+    }
+
+
+@router.post("/logout", summary="Logout (revoke refresh token)", description="Revoke the current refresh token to logout from this device.")
+@limiter.limit("10/minute")
+def logout(request: Request, token_request: RefreshTokenRequest, session: Session = Depends(get_session)):
+    """
+    Logout by revoking the provided refresh token.
+    This only affects the current device/session.
+    """
+    if revoke_refresh_token(token_request.refresh_token, session):
+        return {"status": "success", "message": "Logged out successfully"}
+    else:
+        # Don't reveal if token was already revoked or invalid
+        return {"status": "success", "message": "Logged out successfully"}
+
+
+@router.post("/logout-all", summary="Logout from all devices", description="Revoke all refresh tokens for the current user, logging out from all devices.")
+@limiter.limit("5/minute")
+def logout_all(request: Request, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    """
+    Logout from all devices by revoking all refresh tokens.
+    Requires valid access token authentication.
+    """
+    count = revoke_all_user_tokens(user.id, session)
+    return {"status": "success", "message": f"Logged out from all devices ({count} sessions revoked)"}
+
+
+@router.patch("/preferences", response_model=UserResponse)
+def update_preferences(
+    prefs: Dict[str, Any],
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    """Update user preferences."""
+    if "overwhelm_muted" in prefs:
+        current_user.overwhelm_muted = prefs["overwhelm_muted"]
+    
+    if "user_role" in prefs:
+        current_user.user_role = prefs["user_role"]
+        
+    if "emotional_context" in prefs:
+        current_user.emotional_context = prefs["emotional_context"]
+
+    session.add(current_user)
+    session.commit()
+    session.refresh(current_user)
+    return current_user

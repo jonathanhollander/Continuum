@@ -4,13 +4,13 @@ from datetime import datetime
 
 # --- ASSETS & FINANCE ---
 class Asset(SQLModel, table=True):
+    """Generic model for physical, digital, or financial assets."""
     __tablename__ = "assets"
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id")
-    name: str
-    type: str = "other" # real_estate, vehicle, financial, digital, physical
-    valuation: Optional[float] = None # Added for compatibility
-    status: Optional[str] = "active" # Added for compatibility
+    user_id: int = Field(foreign_key="users.id", index=True)
+    name: str = Field(index=True)
+    type: str = Field(default="other", index=True) # real_estate, vehicle, financial, digital, physical
+    status: Optional[str] = Field(default="active", index=True) # Added for compatibility
     ownershipDetails: Optional[str] = None # Added for compatibility
     documents: Optional[str] = None # Added for compatibility
     notes: Optional[str] = None
@@ -41,11 +41,12 @@ class Asset(SQLModel, table=True):
 
 # --- HEIRLOOMS ---
 class Heirloom(SQLModel, table=True):
+    """Model for physical heirlooms with sentimental or financial value."""
     __tablename__ = "heirlooms"
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id")
-    name: str
-    recipient: Optional[str] = None
+    user_id: int = Field(foreign_key="users.id", index=True)
+    name: str = Field(index=True)
+    recipient: Optional[str] = Field(default=None, index=True)
     story: Optional[str] = None
     image: Optional[str] = None
     value: Optional[str] = None # Keeping as string to match legacy frontend 'valuation' mix-up, or maybe float? Plan said value (optional).
@@ -54,9 +55,10 @@ class Heirloom(SQLModel, table=True):
 
 
 class FinancialAccount(SQLModel, table=True):
+    """Model for bank accounts, investments, or credit lines."""
     __tablename__ = "financial_accounts"
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id")
+    user_id: int = Field(foreign_key="users.id", index=True)
     institution: str
     account_type: str # checking, savings, investment, credit
     account_number_encrypted: Optional[str] = None # We might want to encrypt this
@@ -65,9 +67,10 @@ class FinancialAccount(SQLModel, table=True):
 
 # --- HOME MANUAL ---
 class Vendor(SQLModel, table=True):
+    """Model for service providers and trusted vendors (e.g., plumber, lawyer)."""
     __tablename__ = "vendors"
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id")
+    user_id: int = Field(foreign_key="users.id", index=True)
     name: str
     category: str # plumber, electrician, etc
     phone: Optional[str] = None
@@ -76,17 +79,19 @@ class Vendor(SQLModel, table=True):
     notes: Optional[str] = None
 
 class HomeAccess(SQLModel, table=True):
+    """Model for location-based access codes (e.g., wifi, front door, safe)."""
     __tablename__ = "home_access"
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id")
+    user_id: int = Field(foreign_key="users.id", index=True)
     location: str # Front Door, Wifi, Safe
     code_encrypted: str # "1234" (should ideally be encrypted)
     instructions: Optional[str] = None
 
 class Utility(SQLModel, table=True):
+    """Model for utility service providers (e.g., water, gas, electricity)."""
     __tablename__ = "utilities"
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id")
+    user_id: int = Field(foreign_key="users.id", index=True)
     provider: str
     service_type: str # water, electric, gas
     location: Optional[str] = None # Added for frontend compatibility
@@ -95,9 +100,10 @@ class Utility(SQLModel, table=True):
 
 # --- LEGAL & DOCUMENTS ---
 class Document(SQLModel, table=True):
+    """Model for important digitized or physical documents (e.g., wills, deeds)."""
     __tablename__ = "documents"
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id")
+    user_id: int = Field(foreign_key="users.id", index=True)
     title: str
     name: Optional[str] = None # Added for compatibility
     category: str # will, trust, deed, insurance
@@ -121,9 +127,10 @@ class Document(SQLModel, table=True):
 
 # --- LEGACY & WISDOM ---
 class Letter(SQLModel, table=True):
+    """Model for legacy letters intended for specific recipients after a trigger event."""
     __tablename__ = "letters"
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id")
+    user_id: int = Field(foreign_key="users.id", index=True)
     recipient_name: Optional[str] = None # Or link to Contact
     title: str
     content: str # content or encrypted content
@@ -131,9 +138,10 @@ class Letter(SQLModel, table=True):
     status: str = "draft" # draft, final
 
 class JournalEntry(SQLModel, table=True):
+    """Model for personal reflections, life lessons, or journal entries."""
     __tablename__ = "journal_entries"
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id")
+    user_id: int = Field(foreign_key="users.id", index=True)
     type: str = "reflection" # reflection, life_lesson, ethical_will
     title: Optional[str] = None
     content: str
@@ -142,9 +150,10 @@ class JournalEntry(SQLModel, table=True):
 
 # --- LOGISTICS ---
 class Subscription(SQLModel, table=True):
+    """Model for recurring digital or physical subscriptions."""
     __tablename__ = "subscriptions"
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id")
+    user_id: int = Field(foreign_key="users.id", index=True)
     name: str
     cost: Optional[float] = None
     frequency: str = "monthly"
@@ -155,9 +164,10 @@ class Subscription(SQLModel, table=True):
     auto_renew: bool = True
 
 class CalendarEvent(SQLModel, table=True):
+    """Model for important dates, birthdays, or recurring maintenance rituals."""
     __tablename__ = "calendar_events"
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id")
+    user_id: int = Field(foreign_key="users.id", index=True)
     title: str
     date: str # "YYYY-MM-DD" or "MM-DD"
     type: str = "event" # birthday, tax, maintenance, ritual
@@ -168,9 +178,10 @@ class CalendarEvent(SQLModel, table=True):
 
 # --- INSURANCE ---
 class InsurancePolicy(SQLModel, table=True):
+    """Model for insurance coverage (e.g., life, health, auto)."""
     __tablename__ = "insurance_policies"
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id")
+    user_id: int = Field(foreign_key="users.id", index=True)
     policy_name: str
     insurance_type: str  # Life, Health, Auto, Home, Disability, Other
     insurer: str
@@ -188,6 +199,7 @@ class InsurancePolicy(SQLModel, table=True):
 
 # --- MEDICAL ---
 class MedicalProfile(SQLModel, table=True):
+    """Model for core medical information, allergies, and blood type."""
     __tablename__ = "medical_profiles"
     user_id: int = Field(primary_key=True, foreign_key="users.id")
     organ_donor: bool = Field(default=False)
@@ -195,9 +207,10 @@ class MedicalProfile(SQLModel, table=True):
     allergies: Optional[str] = None
 
 class MedicalDirective(SQLModel, table=True):
+    """Model for legal medical instructions (e.g., living will, proxy)."""
     __tablename__ = "medical_directives"
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id")
+    user_id: int = Field(foreign_key="users.id", index=True)
     type: str # healthcare_proxy, living_will, dnr, palliative_care, other
     title: str
     location_of_original: Optional[str] = None
@@ -207,9 +220,10 @@ class MedicalDirective(SQLModel, table=True):
 
 # --- PETS ---
 class Pet(SQLModel, table=True):
+    """Model for ensuring the care and continuity of beloved animal companions."""
     __tablename__ = "pets"
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id")
+    user_id: int = Field(foreign_key="users.id", index=True)
     name: str
     type: str # dog, cat, bird, other
     breed: Optional[str] = None
@@ -223,9 +237,10 @@ class Pet(SQLModel, table=True):
 
 # --- FAMILY & MEMORIES ---
 class FamilyMemory(SQLModel, table=True):
+    """Model for preserving family stories, recipes, and quotes."""
     __tablename__ = "family_memories"
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id")
+    user_id: int = Field(foreign_key="users.id", index=True)
     type: str # photo, recipe, quote
     title: str
     date: Optional[str] = None
@@ -236,9 +251,10 @@ class FamilyMemory(SQLModel, table=True):
     is_favorite: bool = Field(default=False)
 
 class VisualMemory(SQLModel, table=True):
+    """Model for media-based memories like photos and videos."""
     __tablename__ = "visual_memories"
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id")
+    user_id: int = Field(foreign_key="users.id", index=True)
     url: str 
     name: str
     date: Optional[str] = None
@@ -249,9 +265,10 @@ class VisualMemory(SQLModel, table=True):
     size: Optional[int] = None
 
 class ExternalArchive(SQLModel, table=True):
+    """Model for links to external cloud storage or physical archives."""
     __tablename__ = "external_archives"
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id")
+    user_id: int = Field(foreign_key="users.id", index=True)
     platform: str
     access_url: Optional[str] = None
     location_details: str
@@ -259,6 +276,7 @@ class ExternalArchive(SQLModel, table=True):
 
 # --- FAMILY NETWORK ---
 class ContactRelationship(SQLModel, table=True):
+    """Model for defining relationships between people in the circle of trust."""
     __tablename__ = "contact_relationships"
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="users.id")
@@ -268,8 +286,9 @@ class ContactRelationship(SQLModel, table=True):
 
 # --- TIMELINE ---
 class LifeEvent(SQLModel, table=True):
+    """Model for items in the user's life timeline."""
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id")
+    user_id: int = Field(foreign_key="users.id", index=True)
     year: int
     label: str
     description: Optional[str] = None
@@ -283,8 +302,9 @@ class LifeEvent(SQLModel, table=True):
 
 # --- TIME CAPSULE ---
 class TimeCapsuleMessage(SQLModel, table=True):
+    """Model for scheduled future messages or milestone-triggered recordings."""
     id: Optional[str] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id")
+    user_id: int = Field(foreign_key="users.id", index=True)
     title: str
     recipient: str
     video_url: Optional[str] = None
@@ -298,6 +318,7 @@ class TimeCapsuleMessage(SQLModel, table=True):
 
 # --- FUNERAL ---
 class FuneralData(SQLModel, table=True):
+    """Model for funeral wishes and budget planning."""
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="users.id", unique=True)
     wishes: str = Field(default="{}") # JSON of FuneralWishes
@@ -305,6 +326,7 @@ class FuneralData(SQLModel, table=True):
 
 # --- ADVANCED ASSETS ---
 class AdvancedAssetData(SQLModel, table=True):
+    """Model for complex asset details like maintenance logs and claims."""
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="users.id", unique=True)
     transactions: str = Field(default="[]") # JSON of List[AssetTransaction]

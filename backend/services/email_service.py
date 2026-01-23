@@ -22,10 +22,30 @@ from typing import Optional, Dict, Any
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from backend.config import settings
 from sqlmodel import Session
+from pydantic import BaseModel, EmailStr, Field
 from backend.models.email_log import EmailLog
 from backend.utils.logger import get_logger
+from backend.database import get_session, User
 
 logger = get_logger(__name__)
+
+
+class EmailPayload(BaseModel):
+    """Schema for a standard email send request."""
+    to_email: EmailStr
+    recipient_name: str
+    subject: str
+    template_name: str
+    template_context: Dict[str, Any]
+    user_id: Optional[int] = None
+
+class EmailResult(BaseModel):
+    """Schema for email delivery result."""
+    status: str
+    message_id: Optional[str] = None
+    provider: str
+    error: Optional[str] = None
+    file_path: Optional[str] = None
 
 
 class EmailService:
@@ -73,29 +93,26 @@ class EmailService:
 
     def send_email(
         self,
-        to_email: str,
-        recipient_name: str,
-        subject: str,
-        template_name: str,
-        template_context: Dict[str, Any],
-        user_id: Optional[int] = None,
+        payload: EmailPayload,
         db_session: Optional[Session] = None
-    ) -> Dict[str, Any]:
+    ) -> EmailResult:
         """
         Send email using configured provider.
 
         Args:
-            to_email: Recipient email address
-            recipient_name: Recipient's name
-            subject: Email subject line
-            template_name: Name of template file (without .html)
-            template_context: Variables to pass to template
-            user_id: Associated user ID (for logging)
+            payload: Validated email payload
             db_session: Database session for logging
 
         Returns:
-            Dict with status, message_id, and provider info
+            EmailResult model with delivery status
         """
+        to_email = payload.to_email
+        recipient_name = payload.recipient_name
+        subject = payload.subject
+        template_name = payload.template_name
+        template_context = payload.template_context
+        user_id = payload.user_id
+
         # Add standard context variables
         context = {
             "recipient_name": recipient_name,
@@ -120,7 +137,7 @@ class EmailService:
                 }},
                 exc_info=True
             )
-            return {"status": "failed", "error": f"Template error: {e}"}
+            return EmailResult(status="failed", error=f"Template error: {e}", provider=self.provider)
 
         # Create email log entry
         log_entry = None
@@ -156,7 +173,7 @@ class EmailService:
                 db_session.add(log_entry)
                 db_session.commit()
 
-            return result
+            return EmailResult(**result)
 
         except Exception as e:
             logger.error(
@@ -179,7 +196,7 @@ class EmailService:
                 db_session.add(log_entry)
                 db_session.commit()
 
-            return {"status": "failed", "error": str(e)}
+            return EmailResult(status="failed", error=str(e), provider=self.provider)
 
     def _send_via_postmark(self, to_email: str, subject: str, html_body: str) -> Dict[str, Any]:
         """Send email using Postmark API."""
@@ -220,8 +237,10 @@ class EmailService:
             )
             # Fallback to SMTP or local
             if settings.SMTP_ENABLED:
+                logger.debug("Falling back to SMTP from Postmark")
                 return self._send_via_smtp(to_email, "", subject, html_body)
             else:
+                logger.debug("Falling back to local from Postmark")
                 return self._save_to_local(to_email, subject, html_body)
 
     def _send_via_smtp(self, to_email: str, recipient_name: str, subject: str, html_body: str) -> Dict[str, Any]:
@@ -306,16 +325,16 @@ class EmailService:
         to_email: str,
         magic_link_url: str,
         db_session: Optional[Session] = None
-    ) -> Dict[str, Any]:
+    ) -> EmailResult:
         """Send magic link authentication email."""
-        return self.send_email(
+        payload = EmailPayload(
             to_email=to_email,
             recipient_name=to_email.split('@')[0].title(),
             subject="Your Secure Continuum Login Link",
             template_name="magic_link",
-            template_context={"magic_link_url": magic_link_url},
-            db_session=db_session
+            template_context={"magic_link_url": magic_link_url}
         )
+        return self.send_email(payload=payload, db_session=db_session)
 
     def send_pulse_alert(
         self,
@@ -327,7 +346,7 @@ class EmailService:
         portal_url: str,
         additional_context: Optional[Dict[str, Any]] = None,
         db_session: Optional[Session] = None
-    ) -> Dict[str, Any]:
+    ) -> EmailResult:
         """Send pulse escalation alert email."""
         context = {
             "user_name": user_name,
@@ -342,15 +361,15 @@ class EmailService:
             4: "Continuum Pulse: EMERGENCY - Full Vault Access"
         }
 
-        return self.send_email(
+        payload = EmailPayload(
             to_email=to_email,
             recipient_name=recipient_name,
             subject=tier_subjects.get(tier_number, f"Continuum Pulse: Tier {tier_number} Alert"),
             template_name=f"pulse_escalation_tier{tier_number}",
             template_context=context,
-            user_id=user_id,
-            db_session=db_session
+            user_id=user_id
         )
+        return self.send_email(payload=payload, db_session=db_session)
 
     def send_welcome_email(
         self,
@@ -358,17 +377,17 @@ class EmailService:
         user_id: int,
         dashboard_url: str,
         db_session: Optional[Session] = None
-    ) -> Dict[str, Any]:
+    ) -> EmailResult:
         """Send welcome email to new users."""
-        return self.send_email(
+        payload = EmailPayload(
             to_email=to_email,
             recipient_name=to_email.split('@')[0].title(),
             subject="Welcome to Continuum - Your Digital Legacy is Protected",
             template_name="welcome",
             template_context={"dashboard_url": dashboard_url},
-            user_id=user_id,
-            db_session=db_session
+            user_id=user_id
         )
+        return self.send_email(payload=payload, db_session=db_session)
 
 
 # Singleton instance

@@ -5,6 +5,7 @@ from typing import List
 from backend.database import get_session, User
 from backend.auth import get_current_user
 from backend.estate_models import MedicalProfile, MedicalDirective
+from backend.utils.audit import log_audit, log_deletion
 
 router = APIRouter(prefix="/api/medical", tags=["medical"])
 
@@ -35,6 +36,17 @@ def update_medical_profile(request: Request, updated: MedicalProfile, user: User
     session.add(profile)
     session.commit()
     session.refresh(profile)
+
+    # P1-High: Audit logging for medical profile update
+    log_audit(
+        session=session,
+        request=request,
+        action="update_medical_profile",
+        user_id=user.id,
+        user_email=user.email,
+        resource_type="medical_profile",
+        resource_id=str(user.id)
+    )
     return profile
 
 # --- Medical Directives ---
@@ -50,6 +62,17 @@ def create_medical_directive(request: Request, directive: MedicalDirective, user
     session.add(directive)
     session.commit()
     session.refresh(directive)
+
+    # P1-High: Audit logging for medical directive creation
+    log_audit(
+        session=session,
+        request=request,
+        action="create_medical_directive",
+        user_id=user.id,
+        user_email=user.email,
+        resource_type="medical_directive",
+        resource_id=str(directive.id)
+    )
     return directive
 
 @router.put("/directives/{directive_id}", response_model=MedicalDirective)
@@ -70,11 +93,21 @@ def update_medical_directive(request: Request, directive_id: int, updated: Medic
     return directive
 
 @router.delete("/directives/{directive_id}")
-def delete_medical_directive(directive_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+def delete_medical_directive(request: Request, directive_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     directive = session.get(MedicalDirective, directive_id)
     if not directive or directive.user_id != user.id:
         raise HTTPException(status_code=404, detail="Directive not found")
-    
+
+    # P1-High: Audit logging for medical directive deletion
+    log_deletion(
+        session=session,
+        request=request,
+        user_id=user.id,
+        user_email=user.email,
+        resource_type="medical_directive",
+        resource_id=directive_id
+    )
+
     session.delete(directive)
     session.commit()
     return {"status": "deleted"}

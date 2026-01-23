@@ -85,6 +85,7 @@
 	import RoleSwitcher from "$lib/components/RoleSwitcher.svelte";
 	import { contextStore } from "$lib/stores/contextStore.svelte";
 	import TakeBreakButton from "$lib/components/TakeBreakButton.svelte";
+	import MediaMigrationNotice from "$lib/components/MediaMigrationNotice.svelte";
 
 	let { children } = $props();
 
@@ -103,7 +104,7 @@
 
 	// Sync Compass Content to Architect
 	// When route changes, compassStore updates. We use that for The Architect's data.
-	let previousPath = $state<string>('');
+	let previousPath = $state<string>("");
 	$effect(() => {
 		if ($page.url.pathname) {
 			compassStore.updateContext($page.url.pathname);
@@ -113,7 +114,10 @@
 			// Detect back button navigation
 			if (previousPath && $page.url.pathname !== previousPath) {
 				// Simple heuristic: if we're going to a "simpler" path, it might be back navigation
-				if ($page.url.pathname.split('/').length < previousPath.split('/').length) {
+				if (
+					$page.url.pathname.split("/").length <
+					previousPath.split("/").length
+				) {
 					overwhelmDetector.recordBackButton();
 				}
 			}
@@ -151,6 +155,11 @@
 			console.log("[Layout] Auth detected, starting global sync...");
 			lastSyncedToken = $auth.token;
 			syncAll();
+
+			// Initialize overwhelm detector from user preference
+			if ($auth.user) {
+				overwhelmDetector.initialize(!!$auth.user.overwhelm_muted);
+			}
 		}
 	});
 
@@ -194,12 +203,14 @@
 			logger.info("Simplified view requested by user");
 			// TODO: Implement simplified view mode
 			// For now, just show a notification
-			import('$lib/stores/notificationStore').then(({ notifications }) => {
-				notifications.showInfo(
-					"We've simplified the view to show only essential information. You can always expand sections as needed.",
-					"Simplified view activated"
-				);
-			});
+			import("$lib/stores/notificationStore").then(
+				({ notifications }) => {
+					notifications.showInfo(
+						"We've simplified the view to show only essential information. You can always expand sections as needed.",
+						"Simplified view activated",
+					);
+				},
+			);
 		};
 
 		const handleRequestHelp = () => {
@@ -219,8 +230,14 @@
 
 		return () => {
 			window.removeEventListener("keydown", handleGlobalKeydown);
-			window.removeEventListener("continuum:simplify-view", handleSimplifyView);
-			window.removeEventListener("continuum:request-help", handleRequestHelp);
+			window.removeEventListener(
+				"continuum:simplify-view",
+				handleSimplifyView,
+			);
+			window.removeEventListener(
+				"continuum:request-help",
+				handleRequestHelp,
+			);
 			window.removeEventListener("toggle-mobile-sidebar", handleMobileSidebarToggle);
 		};
 	});
@@ -274,6 +291,9 @@
 
 <!-- Global Notification Container (appears on ALL pages, including auth) -->
 <NotificationContainer />
+
+<!-- Media Migration Notice (prompts IndexedDB → Cloud migration when needed) -->
+<MediaMigrationNotice />
 
 {#if $auth.loading}
 	<!-- Global Loading State -->

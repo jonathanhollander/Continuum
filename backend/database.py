@@ -17,6 +17,22 @@ class User(SQLModel, table=True):
     user_role: Optional[str] = Field(default="owner")  # owner | executor | family_member
     # Optional: User's emotional context (healthy, terminal, grieving)
     emotional_context: Optional[str] = Field(default=None)  # healthy | terminal | grieving
+    # Overwhelm support preference
+    overwhelm_muted: bool = Field(default=False)
+
+
+class RefreshToken(SQLModel, table=True):
+    """Refresh token for JWT token rotation - stored in DB for revocation support."""
+    __tablename__ = "refresh_tokens"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="users.id", index=True)
+    token_hash: str = Field(unique=True, index=True)  # SHA-256 hash of token
+    expires_at: datetime
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    revoked: bool = Field(default=False)
+    # Optional: track device/session info
+    device_info: Optional[str] = Field(default=None)
+
 
 class Estate(SQLModel, table=True):
     __tablename__ = "estates"
@@ -50,6 +66,8 @@ engine = create_engine(
     echo=settings.DB_ECHO,
     pool_size=settings.DB_POOL_SIZE if "postgresql" in DATABASE_URL else 5,
     max_overflow=settings.DB_MAX_OVERFLOW if "postgresql" in DATABASE_URL else 10,
+    pool_pre_ping=True,
+    pool_recycle=3600,
 )
 
 import time
@@ -96,6 +114,11 @@ def migrate_db():
                 logger.info("Migrating: Adding emotional_context to users table")
                 session.execute(text("ALTER TABLE users ADD COLUMN emotional_context TEXT"))
                 session.commit()
+            # Add overwhelm_muted for support preferences
+            if "overwhelm_muted" not in user_columns:
+                logger.info("Migrating: Adding overwhelm_muted to users table")
+                session.execute(text("ALTER TABLE users ADD COLUMN overwhelm_muted BOOLEAN DEFAULT FALSE"))
+                session.commit()
             # Make public_key nullable
             if "public_key" in user_columns:
                 # Execute for PostgreSQL only
@@ -104,7 +127,8 @@ def migrate_db():
                     session.execute(text("ALTER TABLE users ALTER COLUMN public_key DROP NOT NULL"))
                     session.commit()
         except Exception as e:
-            logger.warning(f"Migration info for users table: {e}")
+            logger.warning(f"Core user table migration info/failed: {e}")
+            session.rollback()
 
         # Generic Migration for all models
         table_cols = {
@@ -155,7 +179,7 @@ def migrate_db():
                             session.rollback()
                             session.begin()
             except Exception as e:
-                logger.warning(f"Migration skipping {table}: {e}")
+                logger.error(f"Migration critical failure on table {table}: {e}")
                 session.rollback()
                 session.begin()
 

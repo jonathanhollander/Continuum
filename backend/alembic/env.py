@@ -14,7 +14,7 @@ sys.path.insert(0, str(project_root))
 
 # Import our configuration and models
 from backend.config import settings
-from backend.database import User, Estate
+from backend.database import User, Estate, RefreshToken
 from backend.estate_models import (
     Asset,
     FinancialAccount,

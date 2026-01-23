@@ -6,15 +6,44 @@ from backend.database import get_session, User
 from backend.auth import get_current_user
 import secrets
 import base64
+from typing import Any, Dict
+from pydantic import BaseModel, field_validator
 from backend.pulse_models import (
     PulseSettings, PulseCheckin, PulseVault,
     PulseEscalationTier, PulseContact,
     PulseMessage, PulseEscalationLog, PulseSafetyTimer
 )
 from backend.utils.logger import get_logger
+from backend.challenge_store import challenge_store
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/api/pulse", tags=["pulse"])
+
+
+# --- Pydantic Validation Models (P1-High Security) ---
+
+class WebAuthnCredentialPayload(BaseModel):
+    """Validated model for WebAuthn credential registration."""
+    id: str
+    rawId: str
+    response: Dict[str, Any]
+    type: str
+
+    @field_validator("type")
+    @classmethod
+    def validate_type(cls, v):
+        if v != "public-key":
+            raise ValueError("Invalid credential type - must be 'public-key'")
+        return v
+
+    @field_validator("response")
+    @classmethod
+    def validate_response(cls, v):
+        required_fields = ["clientDataJSON", "attestationObject"]
+        missing = [f for f in required_fields if f not in v]
+        if missing:
+            raise ValueError(f"Missing required response fields: {missing}")
+        return v
 
 @router.post("/checkin", summary="Record a life-check-in", description="Allows the user to manually check in, confirming they are safe. This resets the escalation timer.")
 @limiter.limit("5/minute")
@@ -117,9 +146,11 @@ def delete_contact(contact_id: int, user: User = Depends(get_current_user), sess
     return {"status": "deleted"}
 
 # --- Guardian Portal (Public Access) ---
+# Rate limiting on public endpoints to prevent abuse
 
 @router.get("/portal/{token}")
-def get_portal_view(token: str, session: Session = Depends(get_session)):
+@limiter.limit("30/minute")  # P1-High: Rate limit public portal
+def get_portal_view(request: Request, token: str, session: Session = Depends(get_session)):
     # 1. Verify Token
     statement = select(PulseContact).where(PulseContact.portal_token == token)
     contact = session.exec(statement).first()
@@ -157,7 +188,8 @@ def get_portal_view(token: str, session: Session = Depends(get_session)):
     }
 
 @router.post("/respond/{token}")
-def guardian_respond(token: str, action: str, session: Session = Depends(get_session)):
+@limiter.limit("10/minute")  # P1-High: Rate limit public portal actions
+def guardian_respond(request: Request, token: str, action: str, session: Session = Depends(get_session)):
     contact = session.exec(select(PulseContact).where(PulseContact.portal_token == token)).first()
     if not contact: raise HTTPException(status_code=404, detail="Invalid token")
         
@@ -256,7 +288,8 @@ def send_nudge(contact_id: int, session: Session = Depends(get_session)):
     return {"status": "nudge_sent"}
 
 @router.post("/confirm/{token}")
-def confirm_contact(token: str, session: Session = Depends(get_session)):
+@limiter.limit("10/minute")  # P1-High: Rate limit public confirmation
+def confirm_contact(request: Request, token: str, session: Session = Depends(get_session)):
     contact = session.exec(select(PulseContact).where(PulseContact.portal_token == token)).first()
     if not contact:
         raise HTTPException(status_code=404, detail="Invalid token")
@@ -302,7 +335,8 @@ def cancel_safety_timer(user: User = Depends(get_current_user), session: Session
 # --- Magic Link ---
 
 @router.get("/verify/{token}")
-def verify_checkin_token(token: str, session: Session = Depends(get_session)):
+@limiter.limit("10/minute")  # P1-High: Rate limit magic link verification
+def verify_checkin_token(request: Request, token: str, session: Session = Depends(get_session)):
     settings = session.exec(select(PulseSettings).where(PulseSettings.checkin_token == token)).first()
     if not settings: raise HTTPException(status_code=404, detail="Invalid token")
         
@@ -346,16 +380,13 @@ def update_tier(tier_id: int, updated: PulseEscalationTier, user: User = Depends
 from backend.security import get_registration_options, verify_registration
 from backend.pulse_models import PulseCredential
 
-# Simple in-memory challenge store (Use Redis in production)
-PENDING_CHALLENGES = {} 
-
 @router.post("/auth/webauthn/register/start")
 def register_webauthn_start(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     """Start WebAuthn registration for current user."""
     options = get_registration_options(str(user.id), user.email)
 
-    # Store challenge temporarily
-    PENDING_CHALLENGES[str(user.id)] = options.challenge
+    # Store challenge temporarily (uses Redis in production, in-memory in development)
+    challenge_store.set(f"pulse_webauthn:{user.id}", options.challenge, expire_seconds=300)
 
     # Convert to JSON-compatible dict
     from webauthn import options_to_json
@@ -363,17 +394,20 @@ def register_webauthn_start(user: User = Depends(get_current_user), session: Ses
     return json.loads(options_to_json(options))
 
 @router.post("/auth/webauthn/register/finish")
-def register_webauthn_finish(payload: dict, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
-    """Finish WebAuthn registration for current user."""
-    challenge = PENDING_CHALLENGES.pop(str(user.id), None)
+def register_webauthn_finish(payload: WebAuthnCredentialPayload, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    """
+    Finish WebAuthn registration for current user.
+    Uses Pydantic validation for payload security (P1-High).
+    """
+    challenge = challenge_store.pop(f"pulse_webauthn:{user.id}")
     if not challenge:
         raise HTTPException(status_code=400, detail="Challenge expired or not found")
 
     try:
-        # Verify the registration
+        # Verify the registration - convert Pydantic model to dict for library
         verification = verify_registration(
             options={"challenge": challenge},
-            response=payload
+            response=payload.model_dump()
         )
 
         # Store credential
