@@ -150,13 +150,13 @@
             // If they skipped, the focus card should STILL point to initialization
             focusItem = {
                 title: contextStore.isExecutor || contextStore.isFamily
-                    ? "Estate Information Needed"
-                    : "System Initialization Required",
+                    ? "Getting Started"
+                    : "Begin When You're Ready",
                 description: contextStore.isExecutor
-                    ? "The estate profile is currently empty. Begin gathering information when you're ready."
+                    ? "The estate profile is waiting for information. Take your time gathering what you need."
                     : contextStore.isFamily
-                    ? "Estate information hasn't been added yet. Check back later or contact the executor."
-                    : "Your digital estate is currently unconfigured. The wizard will guide you through core setup in 30 seconds.",
+                    ? "Estate information hasn't been added yet. Check back when you're ready."
+                    : "This is important work that takes courage. We'll guide you through it at your own pace.",
                 link: "/start?force=true",
                 type: "critical",
             };
@@ -169,63 +169,62 @@
             let title = issue;
             let link = "/modules/timeline";
 
-            // Map issues to routes (Concierge Logic)
-            // Map issues to routes (Concierge Logic)
+            // Map issues to routes (Concierge Logic) - using compassionate language
             if (
                 issue.includes("Will") ||
                 issue.includes("Executor") ||
                 issue.includes("Legal")
             ) {
-                title = "Legal Core Missing";
+                title = "Important Documents";
                 link = "/modules/legal-documents";
             } else if (
                 issue.includes("Beneficiary") ||
                 issue.includes("financial") ||
                 issue.includes("account")
             ) {
-                title = "Asset Security Gap";
+                title = "Financial Information";
                 link = "/modules/financial-accounts";
             } else if (issue.includes("Proxy") || issue.includes("Health")) {
-                title = "Healthcare Vulnerability";
+                title = "Your Care Preferences";
                 link = "/modules/medical-directives";
             } else if (
                 issue.includes("Digital") ||
                 issue.includes("Password") ||
                 issue.includes("Phone")
             ) {
-                title = "Digital Access Risk";
+                title = "Digital Account Access";
                 link = "/modules/digital-guardian";
             } else if (
                 issue.includes("Insurance") ||
                 issue.includes("policy")
             ) {
-                title = "Insurance Coverage Gap";
+                title = "Protection for Your Family";
                 link = "/modules/insurance";
             } else if (issue.includes("Family") || issue.includes("contact")) {
-                title = "Notification Network Empty";
+                title = "People Who Matter";
                 link = "/modules/contacts";
             }
 
             focusItem = {
                 title: title.replace(/\[.*?\]\s/, ""), // Clean raw strings
                 description:
-                    "This is the single highest-impact action you can take to secure your legacy right now.",
+                    "When you're ready, this would be a meaningful next step for your family.",
                 link: link,
                 type: "critical",
             };
         } else {
-            // All Good
+            // All Good - use affirming, not celebratory language
             focusItem = {
                 title: contextStore.isExecutor
-                    ? "Estate Documentation Complete"
+                    ? "You've Done Meaningful Work"
                     : contextStore.isFamily
-                    ? "Information Available"
-                    : "Legacy Secured",
+                    ? "Information Is Here"
+                    : "You've Built Something Meaningful",
                 description: contextStore.isExecutor
-                    ? "The estate profile is comprehensive. All essential information has been documented."
+                    ? "The essential information has been gathered. Take a moment to rest."
                     : contextStore.isFamily
-                    ? "Estate information is well-organized and accessible."
-                    : "All core systems are nominal. Consider adding a personal touch to your timeline.",
+                    ? "Estate information is organized and available when needed."
+                    : "Your family will have clarity when they need it most. Add a personal message when you're ready.",
                 link: "/modules/letters",
                 type: "insight",
             };
@@ -296,11 +295,11 @@
                     actionLink={focusItem.link}
                     type={focusItem.type}
                     actionLabel={score === 0
-                        ? "Initialize System"
-                        : "Resolve Now"}
+                        ? "Begin when ready"
+                        : "Take this step"}
                 />
 
-                <!-- Dynamic secondary stats -->
+                <!-- What you've documented -->
                 <div
                     class="mt-8 grid grid-cols-2 gap-4 opacity-50 hover:opacity-100 transition-opacity"
                 >
@@ -312,7 +311,7 @@
                             <div
                                 class="text-[10px] uppercase font-bold text-slate-400"
                             >
-                                Estate Value
+                                Protected Value
                             </div>
                             <div class="font-bold text-white tracking-tight">
                                 {currency.format(totalValue)}
@@ -327,12 +326,10 @@
                             <div
                                 class="text-[10px] uppercase font-bold text-slate-400"
                             >
-                                Registered
+                                People Connected
                             </div>
                             <div class="font-bold text-white">
-                                {networkSize} Member{networkSize !== 1
-                                    ? "s"
-                                    : ""}
+                                {networkSize} {networkSize === 1 ? "Person" : "People"}
                             </div>
                         </div>
                     </div>
@@ -344,10 +341,10 @@
                             <div
                                 class="text-[10px] uppercase font-bold text-slate-400"
                             >
-                                Registry Coverage
+                                Items Documented
                             </div>
                             <div class="font-bold text-white">
-                                {coverageCount} Cataloged
+                                {coverageCount} Recorded
                             </div>
                         </div>
                     </div>

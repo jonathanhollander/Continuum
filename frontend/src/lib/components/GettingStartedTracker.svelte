@@ -35,24 +35,24 @@
     let steps = $derived([
         {
             id: "contacts",
-            label: "Add a trusted person",
-            description: "Someone who can help your family",
+            label: "Someone you trust",
+            description: "The people who matter most to your family",
             href: "/modules/contacts",
             icon: Users,
             complete: hasContacts,
         },
         {
             id: "documents",
-            label: "Upload one document",
-            description: "A will, policy, or important paper",
+            label: "One important document",
+            description: "Whatever feels right to start with",
             href: "/modules/legal-documents",
             icon: Files,
             complete: hasDocuments,
         },
         {
             id: "pulse",
-            label: "Set up wellness check-in",
-            description: "So someone knows if you need help",
+            label: "A way to stay connected",
+            description: "Peace of mind for you and your loved ones",
             href: "/modules/pulse",
             icon: Heart,
             complete: hasPulse,
@@ -93,11 +93,13 @@
         >
             <div class="flex items-center justify-between mb-3">
                 <span class="text-xs font-bold text-amber-400 uppercase tracking-widest">
-                    Getting Started
+                    Building Your Foundation
                 </span>
-                <span class="text-xs text-amber-400/60">
-                    {completedCount}/{steps.length}
-                </span>
+                <div class="flex gap-1">
+                    {#each steps as step}
+                        <div class="w-2 h-2 rounded-full {step.complete ? 'bg-amber-400' : 'bg-amber-400/20'}"></div>
+                    {/each}
+                </div>
             </div>
 
             <!-- Progress bar -->
@@ -133,7 +135,7 @@
                 onclick={dismiss}
                 class="mt-2 w-full text-xs text-primary-foreground/40 hover:text-primary-foreground/60 transition-colors"
             >
-                Hide this
+                I'll explore on my own
             </button>
         </div>
 
@@ -151,9 +153,9 @@
                             <Sparkles class="w-5 h-5 text-amber-600" />
                         </div>
                         <div>
-                            <h3 class="font-bold text-slate-800">Getting Started</h3>
+                            <h3 class="font-bold text-slate-800">Building Your Foundation</h3>
                             <p class="text-sm text-slate-500">
-                                {completedCount} of {steps.length} steps complete
+                                Small steps that make a meaningful difference
                             </p>
                         </div>
                     </div>
@@ -161,7 +163,7 @@
                         onclick={dismiss}
                         class="text-xs text-slate-400 hover:text-slate-600 underline underline-offset-2"
                     >
-                        Dismiss
+                        Explore on my own
                     </button>
                 </div>
 
@@ -239,23 +241,23 @@
         </div>
     {/if}
 {:else if allComplete && !dismissed}
-    <!-- Celebration state -->
+    <!-- Completion state - affirming without celebrating -->
     <div
         class="mx-3 mb-4 p-4 bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-2xl text-center"
         transition:slide
     >
-        <div class="text-2xl mb-2">🎉</div>
+        <div class="text-2xl mb-2">✨</div>
         <p class="text-sm font-medium text-green-400">
-            Foundation complete!
+            You've laid a strong foundation
         </p>
         <p class="text-xs text-green-400/60 mt-1">
-            Your family is now protected.
+            This is meaningful work. Continue when you're ready.
         </p>
         <button
             onclick={dismiss}
             class="mt-3 text-xs text-green-400/40 hover:text-green-400/60"
         >
-            Dismiss
+            Continue exploring
         </button>
     </div>
 {/if}

@@ -70,9 +70,9 @@ export type NavGroup = {
 
 export const navGroups: NavGroup[] = [
     {
-        groupLabel: "Estate Essentials",
+        groupLabel: "What Matters Most",
         groupKey: "groupEssentials",
-        groupDescription: "Core estate planning",
+        groupDescription: "The foundation of your estate",
         isPrimary: true,
         items: [
             {
@@ -84,7 +84,7 @@ export const navGroups: NavGroup[] = [
                 isQuickStart: true,
             },
             {
-                label: "Assets & Financial",
+                label: "Financial Security",
                 key: "financial",
                 href: "/modules/financial-accounts",
                 icon: Wallet,
@@ -93,7 +93,7 @@ export const navGroups: NavGroup[] = [
                 isCoreAction: true,
             },
             {
-                label: "Insurance",
+                label: "Protection & Insurance",
                 key: "insurance",
                 href: "/modules/insurance",
                 icon: Shield,
@@ -102,7 +102,7 @@ export const navGroups: NavGroup[] = [
                 isCoreAction: true,
             },
             {
-                label: "Contacts",
+                label: "People Who Matter",
                 key: "contacts",
                 href: "/modules/contacts",
                 icon: Users,
@@ -111,7 +111,7 @@ export const navGroups: NavGroup[] = [
                 isCoreAction: true,
             },
             {
-                label: "Documents",
+                label: "Important Documents",
                 key: "documents",
                 href: "/modules/legal-documents",
                 icon: Files,
@@ -120,7 +120,7 @@ export const navGroups: NavGroup[] = [
                 isCoreAction: true,
             },
             {
-                label: "Medical",
+                label: "Health & Care",
                 key: "medical",
                 href: "/modules/medical",
                 icon: Stethoscope,
@@ -129,7 +129,7 @@ export const navGroups: NavGroup[] = [
                 isCoreAction: true,
             },
             {
-                label: "Home Access",
+                label: "Home & Keys",
                 key: "home-manual",
                 href: "/modules/home-manual",
                 icon: Key,
@@ -138,7 +138,7 @@ export const navGroups: NavGroup[] = [
                 isCoreAction: true,
             },
             {
-                label: "Pulse",
+                label: "Wellness Check-in",
                 key: "pulse",
                 href: "/modules/pulse",
                 icon: Heart,
@@ -148,9 +148,9 @@ export const navGroups: NavGroup[] = [
         ],
     },
     {
-        groupLabel: "Secondary",
+        groupLabel: "When You're Ready",
         groupKey: "groupSecondary",
-        groupDescription: "Additional records",
+        groupDescription: "Additional areas to explore",
         isCollapsedByDefault: true,
         items: [
             {
@@ -168,7 +168,7 @@ export const navGroups: NavGroup[] = [
                 allowedRoles: ["Owner", "Executor", "Family"],
             },
             {
-                label: "Real Estate",
+                label: "Property",
                 key: "property",
                 href: "/modules/property",
                 icon: Building2,
@@ -176,7 +176,7 @@ export const navGroups: NavGroup[] = [
                 isExecutorEssential: true,
             },
             {
-                label: "Digital Guardian",
+                label: "Digital Accounts",
                 key: "guardian",
                 href: "/modules/digital-guardian",
                 icon: Shield,
@@ -185,34 +185,34 @@ export const navGroups: NavGroup[] = [
         ],
     },
     {
-        groupLabel: "Legacy & More",
+        groupLabel: "Life & Legacy",
         groupKey: "groupLegacy",
-        groupDescription: "Memories, letters, tools",
+        groupDescription: "Memories, messages, and more",
         isCollapsedByDefault: true,
         items: [
             {
-                label: "Browse All Features",
+                label: "Explore All Features",
                 key: "catalog",
                 href: "/catalog",
                 icon: Compass,
                 allowedRoles: ["Owner", "Executor", "Family"],
             },
             {
-                label: "Legacy Letters",
+                label: "Letters to Loved Ones",
                 key: "letters",
                 href: "/modules/letters",
                 icon: Heart,
                 allowedRoles: ["Owner", "Executor", "Family"],
             },
             {
-                label: "Heirlooms",
+                label: "Treasured Heirlooms",
                 key: "heirlooms",
                 href: "/modules/heirlooms",
                 icon: Gift,
                 allowedRoles: ["Owner", "Executor", "Family"],
             },
             {
-                label: "Red Binder",
+                label: "The Red Binder",
                 key: "binder",
                 href: "/binder",
                 icon: Activity,
@@ -306,31 +306,31 @@ export const catalogCategories: CatalogCategory[] = [
     {
         id: "legacy",
         label: "Life & Legacy",
-        description: "Preserve what matters most",
+        description: "Words, memories, and treasures to preserve",
         icon: Heart,
         items: [
-            { label: "Legacy Letters", key: "letters", href: "/modules/letters", icon: Heart, allowedRoles: ["Owner", "Executor", "Family"] },
-            { label: "Heirlooms", key: "heirlooms", href: "/modules/heirlooms", icon: Gift, allowedRoles: ["Owner", "Executor", "Family"] },
+            { label: "Letters to Loved Ones", key: "letters", href: "/modules/letters", icon: Heart, allowedRoles: ["Owner", "Executor", "Family"] },
+            { label: "Treasured Heirlooms", key: "heirlooms", href: "/modules/heirlooms", icon: Gift, allowedRoles: ["Owner", "Executor", "Family"] },
             { label: "Life Journal", key: "journal", href: "/modules/legacy-journal", icon: BookOpen, allowedRoles: ["Owner", "Executor", "Family"] },
             { label: "Visual Memories", key: "visual-memories", href: "/modules/visual-memories", icon: Image, allowedRoles: ["Owner", "Executor", "Family"] },
             { label: "Time Capsule", key: "capsule", href: "/modules/time-capsule", icon: Box, allowedRoles: ["Owner", "Executor", "Family"] },
             { label: "Life Timeline", key: "timeline", href: "/modules/timeline", icon: Calendar, allowedRoles: ["Owner", "Executor", "Family"] },
-            { label: "Funeral Wishes", key: "funeral", href: "/modules/funeral", icon: Scroll, allowedRoles: ["Owner", "Executor", "Family"] },
+            { label: "Final Wishes", key: "funeral", href: "/modules/funeral", icon: Scroll, allowedRoles: ["Owner", "Executor", "Family"] },
         ]
     },
     {
         id: "tools",
-        label: "Power Tools",
-        description: "Advanced features",
+        label: "Helpful Tools",
+        description: "Features to support your planning",
         icon: Settings,
         items: [
             { label: "The Red Binder", key: "binder", href: "/binder", icon: Activity, allowedRoles: ["Owner", "Executor"] },
-            { label: "Executor Toolkit", key: "executor", href: "/modules/executor-toolkit", icon: Briefcase, allowedRoles: ["Owner", "Executor"] },
-            { label: "Fire Drill", key: "simulator", href: "/modules/simulator", icon: Siren, allowedRoles: ["Owner"] },
-            { label: "QR Access", key: "qrcodes", href: "/modules/qr-codes", icon: QrCode, allowedRoles: ["Owner", "Executor"] },
-            { label: "Analytics", key: "analytics", href: "/modules/analytics", icon: BarChart3, allowedRoles: ["Owner"] },
-            { label: "Activity Log", key: "activity", href: "/modules/activity-log", icon: History, allowedRoles: ["Owner"] },
-            { label: "Anniversary Manager", key: "anniversary", href: "/modules/anniversary-manager", icon: Sparkles, allowedRoles: ["Owner", "Executor", "Family"] },
+            { label: "Executor Guide", key: "executor", href: "/modules/executor-toolkit", icon: Briefcase, allowedRoles: ["Owner", "Executor"] },
+            { label: "Practice Run", key: "simulator", href: "/modules/simulator", icon: Siren, allowedRoles: ["Owner"] },
+            { label: "QR Access Codes", key: "qrcodes", href: "/modules/qr-codes", icon: QrCode, allowedRoles: ["Owner", "Executor"] },
+            { label: "Insights", key: "analytics", href: "/modules/analytics", icon: BarChart3, allowedRoles: ["Owner"] },
+            { label: "Activity History", key: "activity", href: "/modules/activity-log", icon: History, allowedRoles: ["Owner"] },
+            { label: "Important Dates", key: "anniversary", href: "/modules/anniversary-manager", icon: Sparkles, allowedRoles: ["Owner", "Executor", "Family"] },
         ]
     },
 ];
