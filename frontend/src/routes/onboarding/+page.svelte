@@ -99,14 +99,11 @@
             // Clear any old onboarding state from localStorage
             localStorage.removeItem('continuum_onboarding_flow');
 
+            // Both paths go to contacts - AI option also opens the concierge
             if (startWithAI) {
-                // Open concierge and go to dashboard
                 conciergeEngine.open();
-                goto('/dashboard');
-            } else {
-                // Go directly to contacts module
-                goto('/modules/contacts');
             }
+            goto('/modules/contacts');
         } catch (e) {
             console.error('Failed to complete onboarding:', e);
             isCompleting = false;
