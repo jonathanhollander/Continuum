@@ -16,23 +16,16 @@
     import { fade, fly } from "svelte/transition";
     import {
         Search,
-        Grid,
-        List as ListIcon,
         Check,
-        BrainCircuit,
+        ChevronDown,
+        ChevronRight,
+        Zap,
     } from "lucide-svelte";
     import { browser } from "$app/environment";
     import { contextStore } from "$lib/stores/contextStore.svelte.ts";
-    import {
-        getGreeting,
-    } from "$lib/utils/contextualMessages";
-    import * as registryRaw from "$lib/data/registry.json";
-
-    // Import registry data
-    const registryData = (registryRaw as any).default || registryRaw;
-    const registry: Array<{id: string; title: string; description: string; icon: string; role: string}> = Array.isArray(registryData)
-        ? registryData
-        : Object.values(registryData).filter((x) => typeof x === "object");
+    import { getGreeting } from "$lib/utils/contextualMessages";
+    import { navGroups, catalogCategories, type NavItem, type NavGroup } from "$lib/config/navigation";
+    import { t, userRole } from "$lib/stores/conciergeStore.svelte.ts";
 
     // Executor mode welcome state
     let showExecutorWelcome = $state(false);
@@ -42,14 +35,16 @@
     let score = $state(0);
     let loading = $state(true);
 
-    // Search and view state
+    // Search state
     let searchQuery = $state("");
-    let viewMode = $state<"grid" | "list">("grid");
+
+    // Collapsed sections state (secondary groups start collapsed)
+    let collapsedSections = $state<Set<string>>(new Set(['groupSecondary', 'groupLegacy']));
 
     // Greeting Typewriter
     let greeting = $state("");
     let fullGreeting = $derived(
-        estateAudit.totalScore > 0 ? getGreeting() : "System Initializing..."
+        estateAudit.totalScore > 0 ? getGreeting() : "Taking a moment..."
     );
 
     // Dynamic Metrics
@@ -63,57 +58,100 @@
             (estateAudit.moduleScores["financial"] ? 1 : 0)
     );
 
-    // Module status mapping - connects registry modules to audit data and stores
-    const moduleStatusMap: Record<string, { auditKey: string; getCount: () => number; label: string }> = {
-        'contacts': { auditKey: 'family', getCount: () => familyStore.members.length, label: 'contacts' },
-        'legal-documents': { auditKey: 'financial', getCount: () => propertyStore.items.length, label: 'assets' },
-        'visual-memories': { auditKey: 'digital', getCount: () => 0, label: 'photos' },
-        'subscriptions': { auditKey: 'digital', getCount: () => digitalAssetsStore.items.length, label: 'accounts' },
-        'funeral': { auditKey: 'medical', getCount: () => medicalStore.directives.length, label: 'directives' },
-        'family-hub': { auditKey: 'family', getCount: () => familyStore.members.length, label: 'members' },
-        'timeline': { auditKey: 'family', getCount: () => 0, label: '' },
-        'executor-hub': { auditKey: 'family', getCount: () => 0, label: '' },
-        'preparation-hub': { auditKey: 'financial', getCount: () => 0, label: '' },
-    };
+    // Filter nav groups by user role
+    let filteredNavGroups = $derived(
+        navGroups
+            .map((group) => ({
+                ...group,
+                items: group.items.filter((item) =>
+                    item.allowedRoles.includes($userRole) && item.key !== 'dashboard'
+                ),
+            }))
+            .filter((group) => group.items.length > 0)
+    );
 
-    // Derived status for each module
-    let moduleStatus = $derived.by(() => {
-        const status: Record<string, { started: boolean; count: number; label: string }> = {};
+    // Module status mapping - connects nav items to audit data and stores
+    function getModuleStatus(item: NavItem): { inProgress: boolean; count: number; label: string } {
         const scores = estateAudit.moduleScores;
 
-        for (const module of registry) {
-            const config = moduleStatusMap[module.id];
-            if (config) {
-                const auditScore = scores[config.auditKey] || 0;
-                const count = config.getCount();
-                status[module.id] = {
-                    started: auditScore > 0 || count > 0,
-                    count: count,
-                    label: config.label
+        switch (item.key) {
+            case 'contacts':
+                return {
+                    inProgress: scores['family'] > 0 || familyStore.members.length > 0,
+                    count: familyStore.members.length,
+                    label: 'people'
                 };
-            } else {
-                // Default for modules not in map
-                status[module.id] = {
-                    started: false,
+            case 'financial':
+                return {
+                    inProgress: scores['financial'] > 0 || propertyStore.items.length > 0,
+                    count: propertyStore.items.length,
+                    label: 'accounts'
+                };
+            case 'insurance':
+                return {
+                    inProgress: scores['insurance'] > 0 || insuranceStore.policies.length > 0,
+                    count: insuranceStore.policies.length,
+                    label: 'policies'
+                };
+            case 'documents':
+                return {
+                    inProgress: scores['financial'] > 0,
                     count: 0,
                     label: ''
                 };
+            case 'medical':
+                return {
+                    inProgress: scores['medical'] > 0 || medicalStore.directives.length > 0,
+                    count: medicalStore.directives.length,
+                    label: 'directives'
+                };
+            case 'subscriptions':
+            case 'guardian':
+                return {
+                    inProgress: scores['digital'] > 0 || digitalAssetsStore.items.length > 0,
+                    count: digitalAssetsStore.items.length,
+                    label: 'accounts'
+                };
+            case 'property':
+                return {
+                    inProgress: propertyStore.items.length > 0,
+                    count: propertyStore.items.length,
+                    label: 'properties'
+                };
+            default:
+                return { inProgress: false, count: 0, label: '' };
+        }
+    }
+
+    // Filter items by search
+    let searchResults = $derived.by(() => {
+        if (searchQuery.trim() === "") return null;
+
+        const query = searchQuery.toLowerCase();
+        const results: NavItem[] = [];
+
+        for (const group of filteredNavGroups) {
+            for (const item of group.items) {
+                const label = $t[item.key] || item.label;
+                if (label.toLowerCase().includes(query)) {
+                    results.push(item);
+                }
             }
         }
-        return status;
-    });
 
-    // Filtered modules based on search
-    let filteredModules = $derived.by(() => {
-        if (searchQuery.trim() === "") {
-            return registry;
+        // Also search catalog categories
+        for (const category of catalogCategories) {
+            for (const item of category.items) {
+                if (item.allowedRoles.includes($userRole)) {
+                    const label = item.label;
+                    if (label.toLowerCase().includes(query) && !results.find(r => r.key === item.key)) {
+                        results.push(item);
+                    }
+                }
+            }
         }
-        return registry.filter(
-            (m) =>
-                m.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (m.description &&
-                    m.description.toLowerCase().includes(searchQuery.toLowerCase()))
-        );
+
+        return results;
     });
 
     // Areas documented summary
@@ -136,6 +174,15 @@
 
     let hasAutoRedirected = false;
 
+    function toggleSection(groupKey: string) {
+        if (collapsedSections.has(groupKey)) {
+            collapsedSections.delete(groupKey);
+        } else {
+            collapsedSections.add(groupKey);
+        }
+        collapsedSections = new Set(collapsedSections); // Trigger reactivity
+    }
+
     onMount(() => {
         estateAudit.runAudit();
 
@@ -151,7 +198,7 @@
             }
         }
 
-        // Simulate "System Boot"
+        // Gentle typewriter effect
         let i = 0;
         const interval = setInterval(() => {
             if (i < fullGreeting.length) {
@@ -208,15 +255,15 @@
         <ExecutorWelcome onComplete={() => (showExecutorWelcome = false)} />
     {/if}
 
-    <main class="relative container mx-auto px-6 py-8">
+    <main class="relative container mx-auto px-6 py-8 max-w-6xl">
         {#if contextStore.isExecutor}
             <!-- Executor Mode: Simplified Hub -->
             <ExecutorHub />
         {:else}
             <!-- Compact Hero: ThePulse + Quick Stats -->
-            <div class="flex flex-col lg:flex-row items-center gap-8 mb-12" in:fade={{ duration: 600 }}>
+            <div class="flex flex-col lg:flex-row items-center gap-6 mb-10" in:fade={{ duration: 600 }}>
                 <!-- ThePulse (Scaled Down) -->
-                <div class="flex-shrink-0 scale-75 origin-center -my-12">
+                <div class="flex-shrink-0 scale-[0.6] origin-center -my-16 -mx-8">
                     <ThePulse status={pulseStatus} {score} />
                 </div>
 
@@ -229,12 +276,9 @@
 
                     <!-- Quick Summary -->
                     {#if !loading}
-                        <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4 text-sm" in:fly={{ y: 20, duration: 600, delay: 300 }}>
-                            <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
-                                <BrainCircuit size={14} class="text-indigo-400" />
-                                <span class="text-slate-400">
-                                    {areasDocumented.started} of {areasDocumented.total} areas documented
-                                </span>
+                        <div class="flex flex-wrap items-center justify-center lg:justify-start gap-3 text-sm" in:fly={{ y: 20, duration: 600, delay: 300 }}>
+                            <div class="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-slate-400">
+                                {areasDocumented.started} of {areasDocumented.total} areas documented
                             </div>
                             {#if networkSize > 0}
                                 <div class="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-slate-400">
@@ -256,158 +300,182 @@
                 </div>
             </div>
 
-            <!-- Search Bar + View Toggle -->
+            <!-- Search Bar -->
             {#if !loading}
-                <div class="flex flex-col md:flex-row gap-4 justify-between items-center mb-8" in:fly={{ y: 20, duration: 600, delay: 400 }}>
-                    <!-- Search Bar with Scan Line Effect -->
-                    <div class="relative w-full md:w-96 group">
+                <div class="mb-8" in:fly={{ y: 20, duration: 600, delay: 400 }}>
+                    <div class="relative w-full max-w-md mx-auto lg:mx-0 group">
                         <Search class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 size-4 transition-colors group-focus-within:text-indigo-400" />
                         <input
                             type="text"
                             bind:value={searchQuery}
-                            placeholder="Search modules..."
+                            placeholder="Find what you need..."
                             class="w-full bg-slate-950/50 border border-white/10 rounded-xl pl-11 pr-4 py-3 text-white placeholder-slate-500 focus:border-indigo-500/50 focus:outline-none transition-all backdrop-blur-sm"
                         />
                         <div class="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-0 group-focus-within:opacity-100 transition-opacity"></div>
                     </div>
-
-                    <!-- View Toggle -->
-                    <div class="flex items-center gap-2 border border-white/10 rounded-xl p-1 bg-slate-950/50 backdrop-blur-sm">
-                        <button
-                            onclick={() => viewMode = "grid"}
-                            class="p-2.5 rounded-lg transition-all {viewMode === 'grid' ? 'bg-indigo-500/20 text-indigo-300 shadow-[0_0_12px_rgba(99,102,241,0.3)]' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'}"
-                        >
-                            <Grid size={16} />
-                        </button>
-                        <button
-                            onclick={() => viewMode = "list"}
-                            class="p-2.5 rounded-lg transition-all {viewMode === 'list' ? 'bg-indigo-500/20 text-indigo-300 shadow-[0_0_12px_rgba(99,102,241,0.3)]' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'}"
-                        >
-                            <ListIcon size={16} />
-                        </button>
-                    </div>
                 </div>
 
-                <!-- Module Catalog Grid -->
-                {#if viewMode === "grid"}
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {#each filteredModules as module, i (module.id)}
-                            <a
-                                href={`/modules/${module.id}`}
-                                class="block group"
-                                in:fly={{ y: 30, duration: 600, delay: 100 + i * 80 }}
+                <!-- Search Results -->
+                {#if searchResults !== null}
+                    <div class="mb-8" in:fade={{ duration: 300 }}>
+                        <h2 class="text-sm text-slate-400 mb-4">
+                            {searchResults.length === 0
+                                ? `Nothing found for "${searchQuery}"`
+                                : `${searchResults.length} result${searchResults.length === 1 ? '' : 's'}`}
+                        </h2>
+                        {#if searchResults.length > 0}
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {#each searchResults as item, i (item.key)}
+                                    {@const status = getModuleStatus(item)}
+                                    <a
+                                        href={item.href}
+                                        class="block group"
+                                        in:fly={{ y: 20, duration: 400, delay: i * 50 }}
+                                    >
+                                        <div class="relative rounded-xl p-[1px] bg-gradient-to-br from-white/15 via-white/5 to-transparent overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_30px_-10px_rgba(99,102,241,0.3)]">
+                                            <div class="bg-slate-950/60 backdrop-blur-md rounded-xl p-4 h-full">
+                                                <div class="flex items-center gap-3">
+                                                    <div class="size-10 rounded-lg bg-indigo-500/10 flex items-center justify-center">
+                                                        <svelte:component this={item.icon} size={18} class="text-indigo-400" />
+                                                    </div>
+                                                    <div class="flex-1 min-w-0">
+                                                        <h3 class="font-medium text-white truncate group-hover:text-indigo-300 transition-colors">
+                                                            {$t[item.key] || item.label}
+                                                        </h3>
+                                                        {#if status.count > 0}
+                                                            <p class="text-xs text-slate-500">{status.count} {status.label}</p>
+                                                        {/if}
+                                                    </div>
+                                                    {#if status.inProgress}
+                                                        <div class="size-2 rounded-full bg-emerald-500"></div>
+                                                    {/if}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                {/each}
+                            </div>
+                        {/if}
+                    </div>
+                {:else}
+                    <!-- Navigation Groups -->
+                    <div class="space-y-6">
+                        {#each filteredNavGroups as group, groupIndex (group.groupKey)}
+                            {@const isCollapsed = !group.isPrimary && collapsedSections.has(group.groupKey)}
+
+                            <section
+                                class="rounded-2xl bg-slate-950/30 backdrop-blur-sm border border-white/5 overflow-hidden"
+                                in:fly={{ y: 30, duration: 600, delay: 500 + groupIndex * 100 }}
                             >
-                                <!-- Glassmorphism Card with Hover Glow -->
-                                <div class="relative rounded-2xl p-[1px] bg-gradient-to-br from-white/20 via-white/5 to-transparent overflow-hidden transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_0_40px_-10px_rgba(99,102,241,0.4)]">
-                                    <div class="bg-slate-950/40 backdrop-blur-md h-full rounded-2xl p-5">
-                                        <!-- Header: Icon + Status Badge -->
-                                        <div class="flex items-start justify-between mb-3">
-                                            <div class="size-12 rounded-xl bg-indigo-500/10 flex items-center justify-center text-2xl relative overflow-hidden">
-                                                {module.icon}
-                                                {#if moduleStatus[module.id]?.started}
-                                                    <div class="absolute inset-0 rounded-xl bg-emerald-500/10 animate-pulse"></div>
+                                <!-- Group Header -->
+                                {#if group.isPrimary}
+                                    <div class="px-5 py-4 border-b border-white/5">
+                                        <div class="flex items-center gap-2">
+                                            <Zap size={14} class="text-amber-400" />
+                                            <h2 class="text-sm font-semibold text-amber-400/90 uppercase tracking-wider">
+                                                {$t[group.groupKey] || group.groupLabel}
+                                            </h2>
+                                        </div>
+                                        {#if group.groupDescription}
+                                            <p class="text-xs text-slate-500 mt-1 pl-6">
+                                                {group.groupDescription}
+                                            </p>
+                                        {/if}
+                                    </div>
+                                {:else}
+                                    <button
+                                        class="w-full px-5 py-4 border-b border-white/5 text-left hover:bg-white/5 transition-colors"
+                                        onclick={() => toggleSection(group.groupKey)}
+                                    >
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <h2 class="text-sm font-medium text-slate-300">
+                                                    {$t[group.groupKey] || group.groupLabel}
+                                                </h2>
+                                                {#if group.groupDescription}
+                                                    <p class="text-xs text-slate-500 mt-0.5">
+                                                        {group.groupDescription}
+                                                    </p>
                                                 {/if}
                                             </div>
-                                            {#if moduleStatus[module.id]?.started}
-                                                <span class="flex items-center gap-1 text-xs text-emerald-400 bg-emerald-500/20 px-2 py-1 rounded-full shadow-[0_0_12px_rgba(16,185,129,0.3)]">
-                                                    <Check size={12} /> Started
-                                                </span>
+                                            {#if isCollapsed}
+                                                <ChevronRight size={16} class="text-slate-500" />
                                             {:else}
-                                                <span class="text-xs text-slate-500 bg-white/5 px-2 py-1 rounded-full">
-                                                    Not Yet
-                                                </span>
+                                                <ChevronDown size={16} class="text-slate-500" />
                                             {/if}
                                         </div>
+                                    </button>
+                                {/if}
 
-                                        <!-- Title + Description -->
-                                        <h3 class="font-medium text-white mb-1 group-hover:text-indigo-300 transition-colors">
-                                            {module.title}
-                                        </h3>
-                                        <p class="text-sm text-slate-400 line-clamp-2">
-                                            {module.description}
-                                        </p>
+                                <!-- Group Items -->
+                                {#if !isCollapsed}
+                                    <div class="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                                        {#each group.items as item, i (item.key)}
+                                            {@const status = getModuleStatus(item)}
+                                            <a
+                                                href={item.href}
+                                                class="block group"
+                                                in:fly={{ y: 15, duration: 400, delay: i * 40 }}
+                                            >
+                                                <div class="relative rounded-xl p-[1px] bg-gradient-to-br from-white/10 via-white/5 to-transparent overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_25px_-10px_rgba(99,102,241,0.25)] {status.inProgress ? 'from-emerald-500/20' : ''}">
+                                                    <div class="bg-slate-950/50 backdrop-blur-md rounded-xl p-4 h-full">
+                                                        <!-- Icon + Status -->
+                                                        <div class="flex items-start justify-between mb-3">
+                                                            <div class="size-10 rounded-lg bg-indigo-500/10 flex items-center justify-center relative {status.inProgress ? 'bg-emerald-500/10' : ''}">
+                                                                <svelte:component
+                                                                    this={item.icon}
+                                                                    size={18}
+                                                                    class="{status.inProgress ? 'text-emerald-400' : 'text-indigo-400'}"
+                                                                />
+                                                            </div>
+                                                            {#if status.inProgress}
+                                                                <span class="flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-full">
+                                                                    <Check size={10} /> In progress
+                                                                </span>
+                                                            {:else}
+                                                                <span class="text-[10px] text-slate-600 bg-white/5 px-2 py-0.5 rounded-full">
+                                                                    When you're ready
+                                                                </span>
+                                                            {/if}
+                                                        </div>
 
-                                        <!-- Progress Stats (if any) -->
-                                        {#if moduleStatus[module.id]?.count > 0}
-                                            <div class="mt-3 pt-3 border-t border-white/10 text-xs text-slate-500">
-                                                {moduleStatus[module.id].count} {moduleStatus[module.id].label}
-                                            </div>
-                                        {/if}
+                                                        <!-- Title -->
+                                                        <h3 class="font-medium text-sm text-white group-hover:text-indigo-300 transition-colors leading-tight">
+                                                            {$t[item.key] || item.label}
+                                                        </h3>
 
-                                        <!-- Role Badge -->
-                                        <div class="mt-3 flex justify-between items-center">
-                                            <span class="text-[10px] font-bold uppercase text-slate-500 tracking-wider">
-                                                {module.role}
-                                            </span>
-                                            <span class="text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity text-xs">
-                                                Open →
-                                            </span>
-                                        </div>
+                                                        <!-- Count (if any) -->
+                                                        {#if status.count > 0}
+                                                            <p class="text-xs text-slate-500 mt-1">
+                                                                {status.count} {status.label}
+                                                            </p>
+                                                        {/if}
+                                                    </div>
+
+                                                    <!-- Hover shine -->
+                                                    <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+                                                </div>
+                                            </a>
+                                        {/each}
                                     </div>
-
-                                    <!-- Shine sweep on hover -->
-                                    <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
-                                </div>
-                            </a>
+                                {/if}
+                            </section>
                         {/each}
-                    </div>
-                {/if}
-
-                <!-- List View -->
-                {#if viewMode === "list"}
-                    <div class="space-y-2">
-                        {#each filteredModules as module, i (module.id)}
-                            <a
-                                href={`/modules/${module.id}`}
-                                class="flex items-center gap-4 p-4 rounded-xl bg-slate-950/40 backdrop-blur-md border border-white/10 hover:border-indigo-500/50 transition-all group"
-                                in:fly={{ x: -20, duration: 400, delay: 50 + i * 40 }}
-                            >
-                                <div class="size-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-xl flex-shrink-0 relative">
-                                    {module.icon}
-                                    {#if moduleStatus[module.id]?.started}
-                                        <div class="absolute -top-1 -right-1 size-3 bg-emerald-500 rounded-full border-2 border-slate-950"></div>
-                                    {/if}
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <h3 class="font-medium truncate group-hover:text-indigo-300 transition-colors">
-                                        {module.title}
-                                    </h3>
-                                    <p class="text-xs text-slate-500 truncate">
-                                        {module.description}
-                                    </p>
-                                </div>
-                                <div class="flex items-center gap-3 flex-shrink-0">
-                                    {#if moduleStatus[module.id]?.count > 0}
-                                        <span class="text-xs text-slate-400">
-                                            {moduleStatus[module.id].count} {moduleStatus[module.id].label}
-                                        </span>
-                                    {/if}
-                                    {#if moduleStatus[module.id]?.started}
-                                        <span class="flex items-center gap-1 text-xs text-emerald-400">
-                                            <Check size={12} />
-                                        </span>
-                                    {/if}
-                                    <span class="text-[10px] font-bold uppercase text-slate-600 tracking-wider">
-                                        {module.role}
-                                    </span>
-                                </div>
-                            </a>
-                        {/each}
-                    </div>
-                {/if}
-
-                <!-- Empty State -->
-                {#if filteredModules.length === 0}
-                    <div class="text-center py-20 text-slate-500" in:fade>
-                        <p>No modules found matching "{searchQuery}"</p>
                     </div>
                 {/if}
             {:else}
                 <!-- Loading State with Shimmer -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-                    {#each Array(6) as _, i}
-                        <div class="h-48 rounded-2xl bg-slate-800/30 animate-pulse relative overflow-hidden">
-                            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent shimmer-animation"></div>
+                <div class="space-y-6 mt-8">
+                    {#each [1, 2] as section}
+                        <div class="rounded-2xl bg-slate-800/20 p-4">
+                            <div class="h-6 w-40 bg-slate-700/30 rounded mb-4 animate-pulse"></div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                                {#each Array(4) as _}
+                                    <div class="h-24 rounded-xl bg-slate-800/30 animate-pulse relative overflow-hidden">
+                                        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent shimmer-animation"></div>
+                                    </div>
+                                {/each}
+                            </div>
                         </div>
                     {/each}
                 </div>
