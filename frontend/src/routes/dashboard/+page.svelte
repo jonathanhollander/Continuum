@@ -18,6 +18,11 @@
         Sparkles,
         BrainCircuit,
         UserCog,
+        Wallet,
+        Heart,
+        Stethoscope,
+        Files,
+        Check,
     } from "lucide-svelte";
     import { t } from "$lib/stores/localization";
     import { browser } from "$app/environment";
@@ -61,6 +66,23 @@
             insuranceStore.policies.length +
             (estateAudit.moduleScores["financial"] ? 1 : 0),
     );
+
+    // Areas documented (Option B) - shows what has been started without judgment
+    let areasDocumented = $derived.by(() => {
+        const modules = estateAudit.moduleScores;
+        const areas = [
+            { key: 'financial', label: 'Financial', icon: Wallet, started: modules['financial'] > 0 },
+            { key: 'insurance', label: 'Insurance', icon: Shield, started: modules['insurance'] > 0 },
+            { key: 'family', label: 'Contacts', icon: Users, started: modules['family'] > 0 },
+            { key: 'medical', label: 'Medical', icon: Stethoscope, started: modules['medical'] > 0 },
+            { key: 'digital', label: 'Digital', icon: Files, started: modules['digital'] > 0 },
+        ];
+        return {
+            started: areas.filter(a => a.started),
+            notStarted: areas.filter(a => !a.started),
+            total: areas.length
+        };
+    });
 
     // Formatter
     const currency = new Intl.NumberFormat("en-US", {
@@ -150,13 +172,13 @@
             // If they skipped, the focus card should STILL point to initialization
             focusItem = {
                 title: contextStore.isExecutor || contextStore.isFamily
-                    ? "Estate Information Needed"
-                    : "System Initialization Required",
+                    ? "Getting Started"
+                    : "Begin When You're Ready",
                 description: contextStore.isExecutor
-                    ? "The estate profile is currently empty. Begin gathering information when you're ready."
+                    ? "The estate profile is waiting for information. Take your time gathering what you need."
                     : contextStore.isFamily
-                    ? "Estate information hasn't been added yet. Check back later or contact the executor."
-                    : "Your digital estate is currently unconfigured. The wizard will guide you through core setup in 30 seconds.",
+                    ? "Estate information hasn't been added yet. Check back when you're ready."
+                    : "This is important work that takes courage. We'll guide you through it at your own pace.",
                 link: "/start?force=true",
                 type: "critical",
             };
@@ -169,63 +191,62 @@
             let title = issue;
             let link = "/modules/timeline";
 
-            // Map issues to routes (Concierge Logic)
-            // Map issues to routes (Concierge Logic)
+            // Map issues to routes (Concierge Logic) - using compassionate language
             if (
                 issue.includes("Will") ||
                 issue.includes("Executor") ||
                 issue.includes("Legal")
             ) {
-                title = "Legal Core Missing";
+                title = "Important Documents";
                 link = "/modules/legal-documents";
             } else if (
                 issue.includes("Beneficiary") ||
                 issue.includes("financial") ||
                 issue.includes("account")
             ) {
-                title = "Asset Security Gap";
+                title = "Financial Information";
                 link = "/modules/financial-accounts";
             } else if (issue.includes("Proxy") || issue.includes("Health")) {
-                title = "Healthcare Vulnerability";
+                title = "Your Care Preferences";
                 link = "/modules/medical-directives";
             } else if (
                 issue.includes("Digital") ||
                 issue.includes("Password") ||
                 issue.includes("Phone")
             ) {
-                title = "Digital Access Risk";
+                title = "Digital Account Access";
                 link = "/modules/digital-guardian";
             } else if (
                 issue.includes("Insurance") ||
                 issue.includes("policy")
             ) {
-                title = "Insurance Coverage Gap";
+                title = "Protection for Your Family";
                 link = "/modules/insurance";
             } else if (issue.includes("Family") || issue.includes("contact")) {
-                title = "Notification Network Empty";
+                title = "People Who Matter";
                 link = "/modules/contacts";
             }
 
             focusItem = {
                 title: title.replace(/\[.*?\]\s/, ""), // Clean raw strings
                 description:
-                    "This is the single highest-impact action you can take to secure your legacy right now.",
+                    "When you're ready, this would be a meaningful next step for your family.",
                 link: link,
                 type: "critical",
             };
         } else {
-            // All Good
+            // All Good - use affirming, not celebratory language
             focusItem = {
                 title: contextStore.isExecutor
-                    ? "Estate Documentation Complete"
+                    ? "You've Done Meaningful Work"
                     : contextStore.isFamily
-                    ? "Information Available"
-                    : "Legacy Secured",
+                    ? "Information Is Here"
+                    : "You've Built Something Meaningful",
                 description: contextStore.isExecutor
-                    ? "The estate profile is comprehensive. All essential information has been documented."
+                    ? "The essential information has been gathered. Take a moment to rest."
                     : contextStore.isFamily
-                    ? "Estate information is well-organized and accessible."
-                    : "All core systems are nominal. Consider adding a personal touch to your timeline.",
+                    ? "Estate information is organized and available when needed."
+                    : "Your family will have clarity when they need it most. Add a personal message when you're ready.",
                 link: "/modules/letters",
                 type: "insight",
             };
@@ -296,61 +317,61 @@
                     actionLink={focusItem.link}
                     type={focusItem.type}
                     actionLabel={score === 0
-                        ? "Initialize System"
-                        : "Resolve Now"}
+                        ? "Begin when ready"
+                        : "Take this step"}
                 />
 
-                <!-- Dynamic secondary stats -->
-                <div
-                    class="mt-8 grid grid-cols-2 gap-4 opacity-50 hover:opacity-100 transition-opacity"
-                >
-                    <div
-                        class="p-4 rounded-2xl bg-white/5 border border-white/5 backdrop-blur-sm flex items-center gap-3"
-                    >
-                        <Shield size={20} class="text-emerald-400" />
-                        <div>
-                            <div
-                                class="text-[10px] uppercase font-bold text-slate-400"
-                            >
-                                Estate Value
-                            </div>
-                            <div class="font-bold text-white tracking-tight">
-                                {currency.format(totalValue)}
-                            </div>
-                        </div>
+                <!-- Areas Documented (Option B + C combination) -->
+                <div class="mt-8 p-5 rounded-2xl bg-white/5 border border-white/5 backdrop-blur-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-widest">
+                            What You've Documented
+                        </span>
+                        <span class="text-xs text-slate-500">
+                            {areasDocumented.started.length} of {areasDocumented.total} areas
+                        </span>
                     </div>
-                    <div
-                        class="p-4 rounded-2xl bg-white/5 border border-white/5 backdrop-blur-sm flex items-center gap-3"
-                    >
-                        <Users size={20} class="text-indigo-400" />
-                        <div>
-                            <div
-                                class="text-[10px] uppercase font-bold text-slate-400"
-                            >
-                                Registered
+
+                    <!-- Visual area indicators -->
+                    <div class="flex flex-wrap gap-2">
+                        {#each areasDocumented.started as area}
+                            <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/30">
+                                <svelte:component this={area.icon} size={14} class="text-emerald-400" />
+                                <span class="text-xs text-emerald-300">{area.label}</span>
                             </div>
-                            <div class="font-bold text-white">
-                                {networkSize} Member{networkSize !== 1
-                                    ? "s"
-                                    : ""}
+                        {/each}
+                        {#each areasDocumented.notStarted as area}
+                            <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 opacity-50">
+                                <svelte:component this={area.icon} size={14} class="text-slate-500" />
+                                <span class="text-xs text-slate-500">{area.label}</span>
                             </div>
-                        </div>
+                        {/each}
                     </div>
-                    <div
-                        class="p-4 rounded-2xl bg-white/5 border border-white/5 backdrop-blur-sm flex items-center gap-3"
-                    >
-                        <Sparkles size={20} class="text-amber-400" />
-                        <div>
-                            <div
-                                class="text-[10px] uppercase font-bold text-slate-400"
-                            >
-                                Registry Coverage
+
+                    <!-- Summary stats -->
+                    {#if areasDocumented.started.length > 0}
+                        <div class="mt-4 pt-4 border-t border-white/10 grid grid-cols-3 gap-4 text-center">
+                            <div>
+                                <div class="text-lg font-bold text-white">{networkSize}</div>
+                                <div class="text-[10px] text-slate-500 uppercase">People</div>
                             </div>
-                            <div class="font-bold text-white">
-                                {coverageCount} Cataloged
+                            <div>
+                                <div class="text-lg font-bold text-white">{coverageCount}</div>
+                                <div class="text-[10px] text-slate-500 uppercase">Items</div>
                             </div>
+                            {#if totalValue > 0}
+                                <div>
+                                    <div class="text-lg font-bold text-white">{currency.format(totalValue)}</div>
+                                    <div class="text-[10px] text-slate-500 uppercase">Protected</div>
+                                </div>
+                            {:else}
+                                <div>
+                                    <div class="text-lg font-bold text-white">{areasDocumented.started.length}</div>
+                                    <div class="text-[10px] text-slate-500 uppercase">Areas</div>
+                                </div>
+                            {/if}
                         </div>
-                    </div>
+                    {/if}
                 </div>
             </div>
             {/if}

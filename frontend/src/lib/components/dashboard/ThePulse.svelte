@@ -6,6 +6,19 @@
     export let status: "secure" | "active" | "critical" | "standby" = "active";
     export let score: number = 0;
 
+    // Qualitative state based on progress (Option C)
+    // Instead of showing "78%", show meaningful states
+    $: qualitativeState = getQualitativeState(score, status);
+
+    function getQualitativeState(score: number, status: string): string {
+        if (status === "standby" || score === 0) return "Ready";
+        if (score < 25) return "Beginning";
+        if (score < 50) return "Growing";
+        if (score < 75) return "Building";
+        if (score < 90) return "Strong";
+        return "Solid";
+    }
+
     // Pulse Configuration based on status
     $: config =
         status === "secure"
@@ -58,8 +71,8 @@
     <div
         class="relative w-32 h-32 rounded-full {config.color} {config.glow} flex items-center justify-center transition-all bg-gradient-to-br from-white/20 to-transparent backdrop-blur-sm border border-white/20 z-10"
     >
-        <div class="text-white font-bold text-3xl font-serif tracking-tighter">
-            {status === "standby" ? "Ready" : `${score}%`}
+        <div class="text-white font-bold text-lg font-serif tracking-tight text-center px-2">
+            {qualitativeState}
         </div>
     </div>
 
