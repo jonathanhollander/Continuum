@@ -20,6 +20,7 @@ class User(SQLModel, table=True):
     # Overwhelm support preference
     overwhelm_muted: bool = Field(default=False)
     # Onboarding fields
+    display_name: Optional[str] = Field(default=None)  # User's preferred name (owner's name)
     deceased_name: Optional[str] = Field(default=None)  # Name of person being honored (executor/family mode)
     onboarding_step: Optional[str] = Field(default=None)  # Current onboarding step
     onboarding_completed: bool = Field(default=False)  # Whether onboarding is complete
@@ -127,6 +128,7 @@ def migrate_db():
                 session.commit()
             # Add onboarding fields
             onboarding_cols = {
+                "display_name": "TEXT",
                 "deceased_name": "TEXT",
                 "onboarding_step": "TEXT",
                 "onboarding_completed": "BOOLEAN DEFAULT FALSE",

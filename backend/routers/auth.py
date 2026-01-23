@@ -74,6 +74,7 @@ class UserResponse(BaseModel):
     id: int
     email: str
     external_id: str
+    display_name: Optional[str] = None
     user_role: Optional[str] = "planning"
     emotional_context: Optional[str] = None
     overwhelm_muted: bool = False
@@ -665,6 +666,7 @@ def update_preferences(
 
 class OnboardingRequest(BaseModel):
     """Request model for updating onboarding data."""
+    display_name: Optional[str] = None
     user_role: Optional[str] = None
     emotional_context: Optional[str] = None
     deceased_name: Optional[str] = None
@@ -676,9 +678,9 @@ class OnboardingRequest(BaseModel):
     model_config = {
         "json_schema_extra": {
             "example": {
+                "display_name": "John",
                 "user_role": "planning",
-                "emotional_context": "healthy",
-                "onboarding_step": "ready",
+                "onboarding_step": "complete",
                 "onboarding_completed": True
             }
         }
@@ -689,6 +691,7 @@ class OnboardingResponse(BaseModel):
     """Response model for onboarding data."""
     id: int
     email: str
+    display_name: Optional[str] = None
     user_role: Optional[str] = None
     emotional_context: Optional[str] = None
     deceased_name: Optional[str] = None
@@ -707,6 +710,7 @@ def update_onboarding(
     """
     Update onboarding data for the current user.
     This endpoint is called during the onboarding flow to persist:
+    - Display name (owner's preferred name)
     - User role (planning, executor, family, advisor)
     - Emotional context (healthy, preparing, grieving)
     - Deceased person's name (for executor/family modes)
@@ -714,6 +718,10 @@ def update_onboarding(
     - Language and accessibility preferences
     """
     updated_fields = []
+
+    if onboarding_data.display_name is not None:
+        current_user.display_name = onboarding_data.display_name
+        updated_fields.append("display_name")
 
     if onboarding_data.user_role is not None:
         current_user.user_role = onboarding_data.user_role
@@ -760,6 +768,7 @@ def update_onboarding(
     return OnboardingResponse(
         id=current_user.id,
         email=current_user.email,
+        display_name=getattr(current_user, 'display_name', None),
         user_role=current_user.user_role,
         emotional_context=current_user.emotional_context,
         deceased_name=getattr(current_user, 'deceased_name', None),
@@ -778,6 +787,7 @@ def get_onboarding(
     return OnboardingResponse(
         id=current_user.id,
         email=current_user.email,
+        display_name=getattr(current_user, 'display_name', None),
         user_role=current_user.user_role,
         emotional_context=current_user.emotional_context,
         deceased_name=getattr(current_user, 'deceased_name', None),
