@@ -1,0 +1,77 @@
+{
+  "review_settings": {
+    "fail_on_breaking_changes": true,
+    "fail_on_security_issues": true,
+    "fail_on_low_coverage": false,
+    "minimum_test_coverage": 70,
+    "block_emotional_tone_violations": false,
+    "require_migration_validation": true
+  },
+  "emotional_tone": {
+    "enabled": true,
+    "fail_on_high_severity": false,
+    "fail_on_medium_severity": false,
+    "fail_on_low_severity": false,
+    "heightened_sensitivity_files": true,
+    "check_files": [
+      "*.svelte",
+      "*.ts",
+      "*.tsx",
+      "*.py",
+      "*.html"
+    ],
+    "exclude_files": [
+      "*.test.ts",
+      "*.spec.ts",
+      "**/tests/**",
+      "**/test_*.py",
+      "**/__tests__/**",
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/build/**",
+      "*.config.*",
+      "package*.json",
+      "tsconfig.json",
+      "**/migrations/**",
+      "alembic/**",
+      "scripts/pr-review/**"
+    ]
+  },
+  "security": {
+    "enabled": true,
+    "scan_for_secrets": true,
+    "check_dependencies": true,
+    "sql_injection_detection": true,
+    "xss_detection": true,
+    "fail_on_critical": true,
+    "fail_on_high": true
+  },
+  "breaking_changes": {
+    "enabled": true,
+    "check_api_endpoints": true,
+    "check_database_schema": true,
+    "check_component_props": true,
+    "check_typescript_interfaces": true,
+    "check_env_variables": true
+  },
+  "test_coverage": {
+    "enabled": true,
+    "minimum_coverage": 70,
+    "fail_on_low_coverage": false,
+    "check_new_files": true
+  },
+  "migrations": {
+    "enabled": true,
+    "require_downgrade": true,
+    "block_destructive": true,
+    "migration_path": "backend/alembic/versions"
+  },
+  "type_safety": {
+    "enabled": true,
+    "check_typescript": true,
+    "check_python": true,
+    "fail_on_errors": false,
+    "frontend_path": "frontend",
+    "backend_path": "backend"
+  }
+}
