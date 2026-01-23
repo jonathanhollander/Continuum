@@ -152,7 +152,7 @@
 
         if (score === 0) {
             // New User / System Initialization Mode
-            // Only redirect if they haven't explicitly skipped setup
+            // Redirect to new onboarding flow if not completed
             const skipped =
                 typeof localStorage !== "undefined" &&
                 localStorage.getItem("continuum_setup_skipped") === "true";
@@ -165,11 +165,12 @@
                 !$preferenceStore.onboardingComplete
             ) {
                 hasAutoRedirected = true;
-                window.location.href = "/start";
+                // Use new comprehensive onboarding flow
+                window.location.href = "/onboarding";
                 return;
             }
 
-            // If they skipped, the focus card should STILL point to initialization
+            // If they skipped, the focus card should STILL point to onboarding
             focusItem = {
                 title: contextStore.isExecutor || contextStore.isFamily
                     ? "Getting Started"
@@ -179,7 +180,7 @@
                     : contextStore.isFamily
                     ? "Estate information hasn't been added yet. Check back when you're ready."
                     : "This is important work that takes courage. We'll guide you through it at your own pace.",
-                link: "/start?force=true",
+                link: "/onboarding",
                 type: "critical",
             };
             return;

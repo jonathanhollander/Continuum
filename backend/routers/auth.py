@@ -74,9 +74,15 @@ class UserResponse(BaseModel):
     id: int
     email: str
     external_id: str
+    display_name: Optional[str] = None
     user_role: Optional[str] = "planning"
     emotional_context: Optional[str] = None
     overwhelm_muted: bool = False
+    deceased_name: Optional[str] = None
+    onboarding_step: Optional[str] = None
+    onboarding_completed: bool = False
+    language: Optional[str] = "en"
+    font_size: Optional[str] = "normal"
 
 
 # --- WebAuthn Pydantic Validation Models (P1-High Security) ---
@@ -643,10 +649,10 @@ def update_preferences(
     """Update user preferences."""
     if "overwhelm_muted" in prefs:
         current_user.overwhelm_muted = prefs["overwhelm_muted"]
-    
+
     if "user_role" in prefs:
         current_user.user_role = prefs["user_role"]
-        
+
     if "emotional_context" in prefs:
         current_user.emotional_context = prefs["emotional_context"]
 
@@ -654,3 +660,139 @@ def update_preferences(
     session.commit()
     session.refresh(current_user)
     return current_user
+
+
+# --- Onboarding Endpoint ---
+
+class OnboardingRequest(BaseModel):
+    """Request model for updating onboarding data."""
+    display_name: Optional[str] = None
+    user_role: Optional[str] = None
+    emotional_context: Optional[str] = None
+    deceased_name: Optional[str] = None
+    onboarding_step: Optional[str] = None
+    onboarding_completed: Optional[bool] = None
+    language: Optional[str] = None
+    font_size: Optional[str] = None
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "display_name": "John",
+                "user_role": "planning",
+                "onboarding_step": "complete",
+                "onboarding_completed": True
+            }
+        }
+    }
+
+
+class OnboardingResponse(BaseModel):
+    """Response model for onboarding data."""
+    id: int
+    email: str
+    display_name: Optional[str] = None
+    user_role: Optional[str] = None
+    emotional_context: Optional[str] = None
+    deceased_name: Optional[str] = None
+    onboarding_step: Optional[str] = None
+    onboarding_completed: bool = False
+    language: Optional[str] = None
+    font_size: Optional[str] = None
+
+
+@router.patch("/onboarding", response_model=OnboardingResponse, summary="Update onboarding data", description="Update user's onboarding progress and preferences collected during the onboarding flow.")
+def update_onboarding(
+    onboarding_data: OnboardingRequest,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    """
+    Update onboarding data for the current user.
+    This endpoint is called during the onboarding flow to persist:
+    - Display name (owner's preferred name)
+    - User role (planning, executor, family, advisor)
+    - Emotional context (healthy, preparing, grieving)
+    - Deceased person's name (for executor/family modes)
+    - Onboarding step progress
+    - Language and accessibility preferences
+    """
+    updated_fields = []
+
+    if onboarding_data.display_name is not None:
+        current_user.display_name = onboarding_data.display_name
+        updated_fields.append("display_name")
+
+    if onboarding_data.user_role is not None:
+        current_user.user_role = onboarding_data.user_role
+        updated_fields.append("user_role")
+
+    if onboarding_data.emotional_context is not None:
+        current_user.emotional_context = onboarding_data.emotional_context
+        updated_fields.append("emotional_context")
+
+    if onboarding_data.deceased_name is not None:
+        current_user.deceased_name = onboarding_data.deceased_name
+        updated_fields.append("deceased_name")
+
+    if onboarding_data.onboarding_step is not None:
+        current_user.onboarding_step = onboarding_data.onboarding_step
+        updated_fields.append("onboarding_step")
+
+    if onboarding_data.onboarding_completed is not None:
+        current_user.onboarding_completed = onboarding_data.onboarding_completed
+        updated_fields.append("onboarding_completed")
+
+    if onboarding_data.language is not None:
+        current_user.language = onboarding_data.language
+        updated_fields.append("language")
+
+    if onboarding_data.font_size is not None:
+        current_user.font_size = onboarding_data.font_size
+        updated_fields.append("font_size")
+
+    if updated_fields:
+        session.add(current_user)
+        session.commit()
+        session.refresh(current_user)
+        logger.info(
+            "Onboarding data updated",
+            extra={"context": {
+                "user_id": current_user.id,
+                "updated_fields": updated_fields,
+                "onboarding_step": current_user.onboarding_step,
+                "onboarding_completed": getattr(current_user, 'onboarding_completed', False)
+            }}
+        )
+
+    return OnboardingResponse(
+        id=current_user.id,
+        email=current_user.email,
+        display_name=getattr(current_user, 'display_name', None),
+        user_role=current_user.user_role,
+        emotional_context=current_user.emotional_context,
+        deceased_name=getattr(current_user, 'deceased_name', None),
+        onboarding_step=getattr(current_user, 'onboarding_step', None),
+        onboarding_completed=getattr(current_user, 'onboarding_completed', False),
+        language=getattr(current_user, 'language', None),
+        font_size=getattr(current_user, 'font_size', None)
+    )
+
+
+@router.get("/onboarding", response_model=OnboardingResponse, summary="Get onboarding status", description="Retrieve the current user's onboarding progress and data.")
+def get_onboarding(
+    current_user: User = Depends(get_current_user)
+):
+    """Get current onboarding status and data."""
+    return OnboardingResponse(
+        id=current_user.id,
+        email=current_user.email,
+        display_name=getattr(current_user, 'display_name', None),
+        user_role=current_user.user_role,
+        emotional_context=current_user.emotional_context,
+        deceased_name=getattr(current_user, 'deceased_name', None),
+        onboarding_step=getattr(current_user, 'onboarding_step', None),
+        onboarding_completed=getattr(current_user, 'onboarding_completed', False),
+        language=getattr(current_user, 'language', None),
+        font_size=getattr(current_user, 'font_size', None)
+    )
