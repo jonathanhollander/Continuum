@@ -12,7 +12,7 @@
     } from "lucide-svelte";
     import logo from "$lib/assets/logo.png";
     import { accessibilityStore } from "$lib/stores/accessibilityStore";
-    import { preferenceStore } from "$lib/stores/preferenceStore";
+    import { preferenceStore } from "$lib/stores/preferenceStore.ts";
     import { goto } from "$app/navigation";
 
     // Accessibility scale

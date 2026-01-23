@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { pulse } from "$lib/stores/pulse.svelte";
+    import { pulse } from "$lib/stores/pulse.svelte.ts";
     import { onMount } from "svelte";
     import {
         startRegistration,

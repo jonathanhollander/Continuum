@@ -1,4 +1,4 @@
-import { registerSingletonSync } from '$lib/services/sync.svelte';
+import { registerSingletonSync } from "$lib/services/sync.svelte.ts";
 import { derived } from 'svelte/store';
 import { dictionary } from './dictionary';
 import { logger } from '../utils/logger';

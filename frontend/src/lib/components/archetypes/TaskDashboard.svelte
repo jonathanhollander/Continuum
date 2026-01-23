@@ -22,7 +22,7 @@
     } from "lucide-svelte";
     import { slide, scale, fade, fly } from "svelte/transition";
     import { flip } from "svelte/animate";
-    import { getStored, setStored } from "$lib/stores/persistence";
+    import { getStored, setStored } from "$lib/stores/persistence.ts";
 
     export let module: any;
 

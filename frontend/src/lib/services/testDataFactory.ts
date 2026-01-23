@@ -1,5 +1,5 @@
 import { getStored, setStored } from "$lib/stores/persistence";
-import { type SyncManager, registerSync, getRegistry } from "$lib/services/sync.svelte";
+import { type SyncManager, registerSync, getRegistry } from "$lib/services/sync.svelte.ts";
 
 const TEST_REGISTRY_KEY = "continuum_test_registry";
 

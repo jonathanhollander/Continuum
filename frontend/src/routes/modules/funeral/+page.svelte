@@ -22,10 +22,10 @@
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import GriefSupportBanner from "$lib/components/GriefSupportBanner.svelte";
     import { onMount } from "svelte";
-    import { estateProfile } from "$lib/stores/estateStore.svelte";
-    import { activityLog } from "$lib/stores/activityLog";
+    import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
+    import { activityLog } from "$lib/stores/activityLog.svelte.ts";
     import { UserCircle, MapPin as MapPinIcon, Cross } from "lucide-svelte";
-    import { funeralStore } from "$lib/stores/funeralStore.svelte";
+    import { funeralStore } from "$lib/stores/funeralStore.svelte.ts";
     import FuneralWizard from "$lib/components/modules/funeral/FuneralWizard.svelte";
     import LegalDisclaimer from "$lib/components/common/LegalDisclaimer.svelte";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
@@ -485,9 +485,13 @@
                     >
                         <div class="flex-1 pr-4">
                             <h3 class="font-serif font-bold text-xl">
-                                {newExpense.id ? "Update This Detail" : "Plan Ahead"}
+                                {newExpense.id
+                                    ? "Update This Detail"
+                                    : "Plan Ahead"}
                             </h3>
-                            <p class="text-emerald-100/80 text-sm mt-1 leading-relaxed">
+                            <p
+                                class="text-emerald-100/80 text-sm mt-1 leading-relaxed"
+                            >
                                 {newExpense.id
                                     ? "Keep your estimates current—it helps your family plan with clarity."
                                     : "By thinking through these costs now, you're protecting your family from difficult financial decisions during an already hard time."}

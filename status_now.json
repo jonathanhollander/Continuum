@@ -30,7 +30,7 @@
                   "environmentId": "9fbb046e-a376-411a-949b-e7c3409615b7",
                   "latestDeployment": {
                     "canRedeploy": true,
-                    "id": "0215cb28-0871-4f57-a66a-e5b772773b74",
+                    "id": "4af07e24-1045-4c65-b7cf-3d132b931186",
                     "meta": {
                       "buildOnly": false,
                       "configFile": "railway.toml",
@@ -44,7 +44,8 @@
                       },
                       "logsV2": true,
                       "nixpacksProviders": [
-                        "node"
+                        "python",
+                        " node"
                       ],
                       "propertyFileMapping": {
                         "build.builder": "$.build.builder",
@@ -183,8 +184,8 @@
                         "/var/lib/postgresql/data"
                       ]
                     },
-                    "status": "SUCCESS",
-                    "deploymentStopped": false
+                    "status": "SLEEPING",
+                    "deploymentStopped": true
                   },
                   "source": {
                     "repo": null,
@@ -216,7 +217,7 @@
                   "serviceId": "2e64e516-6efb-4410-8ec5-2e7fdd86dbbb",
                   "mountPath": "/var/lib/postgresql/data",
                   "environmentId": "9fbb046e-a376-411a-949b-e7c3409615b7",
-                  "currentSizeMB": 1105.567744,
+                  "currentSizeMB": 1108.344832,
                   "sizeMB": 50000,
                   "volume": {
                     "name": "postgres-volume",

@@ -18,8 +18,8 @@
         ShieldCheck,
     } from "lucide-svelte";
     import { slide, scale, fade } from "svelte/transition";
-    import { estateProfile } from "$lib/stores/estateStore.svelte";
-    import { getStored, setStored } from "$lib/stores/persistence";
+    import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
+    import { getStored, setStored } from "$lib/stores/persistence.ts";
 
     export let module: any;
 

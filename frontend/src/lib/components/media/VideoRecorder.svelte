@@ -175,6 +175,7 @@
             {#if !isRecording}
                 <button
                     on:click={startRecording}
+                    aria-label="Start Recording"
                     class="w-16 h-16 rounded-full border-[6px] border-white/30 flex items-center justify-center hover:scale-105 transition-all group/rec"
                 >
                     <div
@@ -184,6 +185,7 @@
             {:else}
                 <button
                     on:click={stopRecording}
+                    aria-label="Stop Recording"
                     class="w-16 h-16 rounded-full border-[6px] border-white/30 flex items-center justify-center hover:scale-105 transition-all group/stop"
                 >
                     <div class="w-6 h-6 bg-white rounded-md"></div>
@@ -203,6 +205,7 @@
             <div class="flex gap-4">
                 <button
                     on:click={() => videoPreview.play()}
+                    aria-label="Play recording"
                     class="p-4 bg-white/20 backdrop-blur rounded-full text-white hover:bg-white/40 transition"
                 >
                     <Play size={32} fill="currentColor" />

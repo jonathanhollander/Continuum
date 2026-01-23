@@ -1,4 +1,4 @@
-import { registerSingletonSync } from '$lib/services/sync.svelte';
+import { registerSingletonSync } from "$lib/services/sync.svelte.ts";
 import { apiGet, apiPost } from '$lib/api/client';
 
 export interface PulseStatus {

@@ -1,7 +1,7 @@
 <script lang="ts">
     import { fade, fly } from "svelte/transition";
     import { LucideHeart, LucideArrowRight } from "lucide-svelte";
-    import { userRole } from "$lib/stores/concierge";
+    import { userRole } from "$lib/stores/conciergeStore.svelte.ts";
 
     interface Props {
         message?: string;

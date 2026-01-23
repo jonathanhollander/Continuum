@@ -4,9 +4,9 @@
         userRole,
         language,
         t,
-    } from "$lib/stores/concierge";
-    import { accessibilityStore } from "$lib/stores/accessibilityStore";
-    import { estateProfile } from "$lib/stores/estateStore.svelte";
+    } from "$lib/stores/conciergeStore.svelte.ts";
+    import { accessibilityStore } from "$lib/stores/accessibilityStore.ts";
+    import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
     import {
         Download,
         FileText,
@@ -30,8 +30,8 @@
     import { goto } from "$app/navigation";
     import type { ExportScope } from "$lib/services/exportService";
 
-    import { profiles, currentProfileId } from "$lib/stores/profileContext";
-    import { triggerMagic } from "$lib/stores/magicStore";
+    import { profiles, currentProfileId } from "$lib/stores/profileContext.ts";
+    import { triggerMagic } from "$lib/stores/magicStore.ts";
     import { get } from "svelte/store";
 
     const roles = [

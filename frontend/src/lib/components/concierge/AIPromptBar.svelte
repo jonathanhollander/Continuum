@@ -1,7 +1,7 @@
 <script lang="ts">
     import { slide } from "svelte/transition";
     import { Sparkles, ArrowRight, Loader2, Copy, Mic } from "lucide-svelte";
-    import { logInteraction } from "$lib/stores/concierge";
+    import { logInteraction } from "$lib/stores/conciergeStore.svelte.ts";
 
     export let context:
         | "obituary"

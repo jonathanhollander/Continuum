@@ -102,6 +102,7 @@
         </div>
         <div class="bg-slate-100 p-1 rounded-lg flex">
             <button
+                type="button"
                 class="p-2 rounded-md transition-all {viewMode === 'grid'
                     ? 'bg-white text-[#4A7C74] shadow-sm'
                     : 'text-slate-400 hover:text-slate-600'}"
@@ -149,12 +150,21 @@
             >
                 {#each items as item (item.id)}
                     <div
-                        class="group relative aspect-square bg-slate-100 rounded-xl overflow-hidden cursor-pointer hover:shadow-lg transition-all {selectedIds.includes(
+                        role="button"
+                        tabindex="0"
+                        class="group relative aspect-square bg-slate-100 rounded-xl overflow-hidden cursor-pointer hover:shadow-lg transition-all text-left appearance-none border-none p-0 w-full {selectedIds.includes(
                             item.id,
                         )
                             ? 'ring-4 ring-indigo-500 ring-offset-2'
                             : ''}"
                         on:click={() => handleCardClick(item)}
+                        on:keydown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                handleCardClick(item);
+                            }
+                        }}
+                        aria-label="View {item.name}"
                     >
                         {#if item.type === "video"}
                             <div

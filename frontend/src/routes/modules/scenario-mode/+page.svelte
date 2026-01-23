@@ -14,7 +14,7 @@
         Cloud,
     } from "lucide-svelte";
     import { estateAnalytics } from "$lib/stores/analyticsStore";
-    import { estateProfile } from "$lib/stores/estateStore.svelte";
+    import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
 
     const scenarios = [
         {

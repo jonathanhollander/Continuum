@@ -1,11 +1,11 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { writable, get } from 'svelte/store';
-import { propertyStore } from '$lib/stores/propertyStore.svelte';
-import { heirloomStore } from '$lib/stores/heirloomStore.svelte';
-import { timelineStore } from '$lib/stores/timelineStore.svelte';
-import { medicalStore } from '$lib/stores/medicalStore.svelte';
-import { insuranceStore } from '$lib/stores/insuranceStore.svelte';
+import { propertyStore } from "$lib/stores/propertyStore.svelte.ts";
+import { heirloomStore } from "$lib/stores/heirloomStore.svelte.ts";
+import { timelineStore } from "$lib/stores/timelineStore.svelte.ts";
+import { medicalStore } from "$lib/stores/medicalStore.svelte.ts";
+import { insuranceStore } from "$lib/stores/insuranceStore.svelte.ts";
 
 export type ExportScope = 'full' | 'insurance' | 'medical';
 

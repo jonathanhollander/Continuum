@@ -25,8 +25,8 @@
     import FileUploader from "$lib/components/ui/FileUploader.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
-    import { estateProfile } from "$lib/stores/estateStore.svelte";
-    import { activityLog } from "$lib/stores/activityLog";
+    import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
+    import { activityLog } from "$lib/stores/activityLog.svelte.ts";
     // import { getStored, setStored } from "$lib/stores/persistence";
 
     let { module } = $props();
@@ -52,7 +52,7 @@
         fileData?: string;
     }
 
-    import { registerSync, type SyncManager } from "$lib/services/sync.svelte";
+    import { registerSync, type SyncManager } from "$lib/services/sync.svelte.ts";
 
     // ...
 
@@ -63,7 +63,10 @@
         if (module?.id) {
             // Register sync for this specific vault
             // Maps docs_{id} -> vault_documents endpoint
-            docSync = registerSync<Doc>(`docs_${module.id}`, "vault_documents").setAffirmationContext('documents');
+            docSync = registerSync<Doc>(
+                `docs_${module.id}`,
+                "vault_documents",
+            ).setAffirmationContext("documents");
         }
     });
 
@@ -158,7 +161,12 @@
     }
 
     function removeDoc(id: string) {
-        if (!confirm("Would you like to remove this document? This action is permanent.")) return;
+        if (
+            !confirm(
+                "Would you like to remove this document? This action is permanent.",
+            )
+        )
+            return;
         if (!docSync) return;
 
         const doc = docs.find((d) => d.id === id);

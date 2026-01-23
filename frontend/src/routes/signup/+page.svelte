@@ -2,7 +2,7 @@
     import { onMount } from "svelte";
     import { goto } from "$app/navigation";
     import { auth } from "$lib/stores/auth";
-    import { API_BASE_URL } from "$lib/config";
+    import { API_BASE_URL } from "$lib/config.ts";
     import { apiPost } from "$lib/api/client";
     import { notifications } from "$lib/stores/notificationStore";
     import { startRegistration } from "@simplewebauthn/browser";
@@ -122,19 +122,23 @@
             console.error("Passkey registration failed:", e);
 
             if (e.name === "NotAllowedError") {
-                notifications.showError({
-                    message:
-                        "Passkey creation was cancelled. Please try again.",
-                    code: "VALIDATION_ERROR",
-                });
+                notifications.showError(
+                    {
+                        message:
+                            "Passkey creation was cancelled. Please try again.",
+                        code: "VALIDATION_ERROR",
+                    },
+                    handlePasskeySubmit,
+                );
             } else if (e.name === "NotSupportedError") {
                 notifications.showError({
                     message:
                         "Your device does not support passkeys. Please try a different device or contact support.",
                     code: "VALIDATION_ERROR",
                 });
+            } else {
+                notifications.showError(e, handlePasskeySubmit);
             }
-            // apiPost already shows error notification for other errors
 
             step = "email";
         } finally {

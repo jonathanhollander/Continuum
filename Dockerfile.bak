@@ -4,7 +4,8 @@ WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm install
 COPY frontend/ ./
-RUN npm run build
+# Run build with verbose logging to debug issues
+RUN npm run build || (echo "Frontend build failed" && exit 1)
 
 # Final stage
 FROM python:3.11-slim
@@ -19,7 +20,7 @@ ENV PYTHONUNBUFFERED=1
 
 # Install backend dependencies
 COPY backend/requirements.txt ./backend/requirements.txt
-RUN pip install --no-cache-dir -r backend/requirements.txt
+RUN pip install --no-cache-dir -v -r backend/requirements.txt
 
 # Copy backend code
 COPY backend/ ./backend/

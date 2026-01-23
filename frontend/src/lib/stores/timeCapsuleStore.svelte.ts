@@ -1,5 +1,5 @@
 import { derived } from 'svelte/store';
-import { registerSync } from '$lib/services/sync.svelte';
+import { registerSync } from "$lib/services/sync.svelte.ts";
 
 export type ReleaseTrigger = 'date' | 'milestone';
 

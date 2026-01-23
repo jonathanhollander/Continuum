@@ -24,12 +24,15 @@
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import { language } from "$lib/stores/localization";
-    import { encouragementMode, userRole } from "$lib/stores/concierge";
-    import { estateProfile } from "$lib/stores/estateStore.svelte";
-    import { activityLog } from "$lib/stores/activityLog";
+    import {
+        encouragementMode,
+        userRole,
+    } from "$lib/stores/conciergeStore.svelte.ts";
+    import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
+    import { activityLog } from "$lib/stores/activityLog.svelte.ts";
     import { fly, scale, slide, fade } from "svelte/transition";
     // import { getStored, setStored } from "$lib/stores/persistence"; // REMOVED
-    import { registerSync } from "$lib/services/sync.svelte"; // ADDDED
+    import { registerSync } from "$lib/services/sync.svelte.ts"; // ADDDED
     import { getSmartSamples } from "$lib/data/smartSamples";
     import { conciergeEngine } from "$lib/stores/conciergeEngine";
 
@@ -41,7 +44,10 @@
         module.id === "assets-main"
             ? "financial_assets"
             : `assets_${module.id}`;
-    const assetSync = registerSync<Asset>(syncKey, syncKey).setAffirmationContext('general');
+    const assetSync = registerSync<Asset>(
+        syncKey,
+        syncKey,
+    ).setAffirmationContext("general");
 
     type AssetType =
         | "Property"
@@ -215,7 +221,8 @@
     }
 
     function removeAsset(id: string) {
-        if (!confirm("Remove this asset? You can add it back later if needed.")) return;
+        if (!confirm("Remove this asset? You can add it back later if needed."))
+            return;
         const asset = assets.find((a) => a.id === id);
 
         // SyncManager delete

@@ -3,8 +3,8 @@
     import { fade, slide } from "svelte/transition";
     import { Save, Heart, Anchor, Shield, Sun, Edit3 } from "lucide-svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
-    import { registerSync } from "$lib/services/sync.svelte"; // Added
-    import { activityLog } from "$lib/stores/activityLog";
+    import { registerSync } from "$lib/services/sync.svelte.ts"; // Added
+    import { activityLog } from "$lib/stores/activityLog.svelte.ts";
 
     // --- State ---
     interface CoreValue {
@@ -70,7 +70,7 @@ With all my love,
     const willSync = registerSync<EthicalWillData>(
         "ethical_will",
         "ethical_will",
-    ).setAffirmationContext('wishes');
+    ).setAffirmationContext("wishes");
 
     // Derived State
     let willData = $derived(willSync.items.find((i) => i.id === "main"));

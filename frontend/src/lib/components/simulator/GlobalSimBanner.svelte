@@ -1,7 +1,10 @@
 <script lang="ts">
     import { fade, slide } from "svelte/transition";
     import { Siren, X, ArrowRight } from "lucide-svelte";
-    import { currentScenario, isSimulationActive } from "$lib/stores/scenario";
+    import {
+        currentScenario,
+        isSimulationActive,
+    } from "$lib/stores/scenarioStore.svelte";
 
     function endSimulation() {
         isSimulationActive.set(false);

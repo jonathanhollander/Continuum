@@ -1,6 +1,6 @@
 import { get } from 'svelte/store';
 import { activeAccountId } from '../stores/keyringStore';
-import { userRole } from '../stores/concierge';
+import { userRole } from '../stores/conciergeStore.svelte.ts';
 
 const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || '';
 const SITE_URL = 'https://continuum.estate';

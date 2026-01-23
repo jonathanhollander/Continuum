@@ -16,12 +16,12 @@
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import Affirmation from "$lib/components/Affirmation.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
-    import { t, language } from "$lib/stores/localization";
+    import { t, language } from "$lib/stores/localization.ts";
     import { getSmartSamples } from "$lib/data/smartSamples";
-    import { petStore, type PetEntry } from "$lib/stores/petStore.svelte";
+    import { petStore, type PetEntry } from "$lib/stores/petStore.svelte.ts";
     import { onMount } from "svelte";
-    import { estateProfile } from "$lib/stores/estateStore.svelte";
-    import { activityLog } from "$lib/stores/activityLog";
+    import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
+    import { activityLog } from "$lib/stores/activityLog.svelte.ts";
 
     let showAddForm = $state(false);
     let showAffirmation = $state(false);
@@ -91,7 +91,12 @@
     }
 
     function removePet(id: number) {
-        if (!confirm("Remove this pet? You can add them back anytime if needed.")) return;
+        if (
+            !confirm(
+                "Remove this pet? You can add them back anytime if needed.",
+            )
+        )
+            return;
         petStore.removePet(id);
     }
 </script>
@@ -109,7 +114,10 @@
                 Care for Your Companions
             </h1>
             <p class="text-lg text-muted-foreground leading-relaxed max-w-2xl">
-                Your pets depend on you completely. This plan ensures they'll be loved and cared for by someone you trust, no matter what happens. It's one of the kindest things you can do for them—and for the person who steps in to help.
+                Your pets depend on you completely. This plan ensures they'll be
+                loved and cared for by someone you trust, no matter what
+                happens. It's one of the kindest things you can do for them—and
+                for the person who steps in to help.
             </p>
         </div>
         <button
@@ -274,8 +282,12 @@
                     class="p-6 border-b border-gray-100 flex justify-between items-start"
                 >
                     <div class="flex-1 pr-4">
-                        <h3 class="font-serif font-bold text-2xl text-[#304743]">
-                            {newPet.id ? "Update Their Care Plan" : "Protect Your Companion"}
+                        <h3
+                            class="font-serif font-bold text-2xl text-[#304743]"
+                        >
+                            {newPet.id
+                                ? "Update Their Care Plan"
+                                : "Protect Your Companion"}
                         </h3>
                         <p class="text-gray-500 text-sm mt-2 leading-relaxed">
                             {newPet.id
@@ -360,7 +372,9 @@
                             placeholder="Who will love them next?"
                         />
                         <p class="text-xs text-gray-400 mt-1.5 leading-relaxed">
-                            Choose someone who already knows and loves them, if possible. This person will receive all the care details you provide here.
+                            Choose someone who already knows and loves them, if
+                            possible. This person will receive all the care
+                            details you provide here.
                         </p>
                     </div>
 

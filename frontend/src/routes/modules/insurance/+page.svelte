@@ -2,9 +2,9 @@
     import {
         insuranceStore,
         type InsurancePolicy,
-    } from "$lib/stores/insuranceStore.svelte";
-    import { activityLog } from "$lib/stores/activityLog";
-    import { estateProfile } from "$lib/stores/estateStore.svelte";
+    } from "$lib/stores/insuranceStore.svelte.ts";
+    import { activityLog } from "$lib/stores/activityLog.svelte.ts";
+    import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
     import { fade, slide, scale, fly } from "svelte/transition";
     import { quintOut } from "svelte/easing";
     import {
@@ -38,7 +38,7 @@
 
     // Concierge Imports
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
-    import { t, language } from "$lib/stores/localization";
+    import { t, language } from "$lib/stores/localization.ts";
     import { getSmartSamples } from "$lib/data/smartSamples";
 
     let showAddModal = $state(false);
@@ -244,7 +244,11 @@
     }
 
     function deletePolicy(id: string | number, name: string) {
-        if (confirm(`Remove the policy "${name}"? You can add it back later if needed.`)) {
+        if (
+            confirm(
+                `Remove the policy "${name}"? You can add it back later if needed.`,
+            )
+        ) {
             insuranceStore.deletePolicy(id);
 
             activityLog.logEvent({

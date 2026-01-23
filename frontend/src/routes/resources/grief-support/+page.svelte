@@ -17,8 +17,11 @@
     import GuideViewer from "$lib/components/GuideViewer.svelte";
     import griefResources from "$lib/data/griefResources.json";
     import { getGuideById, type Guide } from "$lib/data/familyGuides";
-    import { userRole, language as languageStore } from "$lib/stores/concierge";
-    import { t } from "$lib/stores/localization";
+    import {
+        userRole,
+        language as languageStore,
+    } from "$lib/stores/conciergeStore.svelte.ts";
+    import { t } from "$lib/stores/localization.ts";
     import {
         getHotlinesByCountry,
         type Hotline,
@@ -240,7 +243,8 @@
                         {#each filteredResources as resource, i (resource.id)}
                             {#if resource.type === "guide"}
                                 <button
-                                    onclick={() => handleResourceClick(resource)}
+                                    onclick={() =>
+                                        handleResourceClick(resource)}
                                     class="text-left w-full"
                                 >
                                     <GriefResourceCard
@@ -308,7 +312,9 @@
                                         isSearching}
                                     class="absolute right-3 top-1/2 -translate-y-1/2 px-4 py-2 rounded-xl bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 transition-all disabled:opacity-30 text-sm font-medium"
                                 >
-                                    {isSearching ? "Searching..." : "Find support"}
+                                    {isSearching
+                                        ? "Searching..."
+                                        : "Find support"}
                                 </button>
                             </div>
 
@@ -344,7 +350,9 @@
                                 <div
                                     class="w-full p-8 border border-dashed border-white/10 rounded-2xl text-center text-slate-500 italic"
                                 >
-                                    We haven't found support in that area yet. You might try a nearby city, or reach out to us for help finding resources.
+                                    We haven't found support in that area yet.
+                                    You might try a nearby city, or reach out to
+                                    us for help finding resources.
                                 </div>
                             {/if}
                         </div>

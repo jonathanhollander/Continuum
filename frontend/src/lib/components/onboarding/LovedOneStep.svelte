@@ -1,7 +1,7 @@
 <script lang="ts">
     import { fade, fly } from 'svelte/transition';
     import { Heart, ArrowLeft, ArrowRight } from 'lucide-svelte';
-    import { onboardingFlowStore } from '$lib/stores/onboardingFlowStore.svelte';
+    import { onboardingFlowStore } from "$lib/stores/onboardingFlowStore.svelte.ts";
 
     let name = $state(onboardingFlowStore.data.deceasedName || '');
 

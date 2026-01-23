@@ -18,21 +18,21 @@
         X,
     } from "lucide-svelte";
     import { onMount } from "svelte";
-    import { estateProfile } from "$lib/stores/estateStore.svelte";
+    import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
     // import { getStored, setStored } from "$lib/stores/persistence"; // REMOVED
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
-    import { t, language } from "$lib/stores/localization";
+    import { t, language } from "$lib/stores/localization.ts";
     import { getSmartSamples } from "$lib/data/smartSamples";
-    import { activityLog } from "$lib/stores/activityLog";
+    import { activityLog } from "$lib/stores/activityLog.svelte.ts";
 
     // Sync Integration
-    import { registerSync } from "$lib/services/sync.svelte";
+    import { registerSync } from "$lib/services/sync.svelte.ts";
     import {
         digitalAssetsSync,
         digitalAssetsStore,
         type DigitalAccount,
-    } from "$lib/stores/digitalAssetsStore.svelte";
+    } from "$lib/stores/digitalAssetsStore.svelte.ts";
 
     let activeGuide = $state<string | null>(null);
 

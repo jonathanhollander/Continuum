@@ -1,6 +1,6 @@
 import { writable } from 'svelte/store';
 import { browser } from '$app/environment';
-import { API_BASE_URL } from '$lib/config';
+import { API_BASE_URL } from '$lib/config.ts';
 
 export interface User {
     id: number;

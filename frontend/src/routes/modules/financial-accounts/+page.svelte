@@ -3,8 +3,8 @@
     import { Wallet, Search, ExternalLink, Sparkles } from "lucide-svelte";
     import LegalDisclaimer from "$lib/components/common/LegalDisclaimer.svelte";
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte"; // Moved inside
-    import { registerSync } from "$lib/services/sync.svelte";
-    import { t } from "$lib/stores/localization";
+    import { registerSync } from "$lib/services/sync.svelte.ts";
+    import { t } from "$lib/stores/localization.ts";
     import { fade, fly } from "svelte/transition";
 
     let showWizard = $state(false);

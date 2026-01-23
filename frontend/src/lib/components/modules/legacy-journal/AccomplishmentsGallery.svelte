@@ -4,7 +4,7 @@
     import {
         timelineStore,
         type LifeEvent,
-    } from "$lib/stores/timelineStore.svelte";
+    } from "$lib/stores/timelineStore.svelte.ts";
     import { onMount } from "svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import { goto } from "$app/navigation";

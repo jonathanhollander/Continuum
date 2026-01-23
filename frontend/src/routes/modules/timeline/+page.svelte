@@ -22,8 +22,8 @@
     import {
         timelineStore,
         type LifeEvent,
-    } from "$lib/stores/timelineStore.svelte";
-    import { familyStore } from "$lib/stores/familyStore.svelte";
+    } from "$lib/stores/timelineStore.svelte.ts";
+    import { familyStore } from "$lib/stores/familyStore.svelte.ts";
 
     // --- State & Types ---
     // LifeEvent imported from store

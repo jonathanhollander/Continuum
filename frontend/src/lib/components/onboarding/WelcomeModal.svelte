@@ -1,7 +1,7 @@
 <script lang="ts">
     import { fly, fade, scale } from "svelte/transition";
     import { quintOut } from "svelte/easing";
-    import { onboardingStore } from "$lib/stores/onboardingStore.svelte";
+    import { onboardingStore } from "$lib/stores/onboardingStore.svelte.ts";
     import {
         Sparkles,
         ArrowRight,

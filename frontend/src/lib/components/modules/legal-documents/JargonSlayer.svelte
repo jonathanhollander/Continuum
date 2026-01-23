@@ -132,7 +132,8 @@
                     class="flex-1 overflow-y-auto p-12 bg-[#FDFBF7] relative paper-texture"
                 >
                     <div
-                        class="prose prose-lg max-w-none font-serif text-slate-800 leading-loose whitespace-pre-wrap"
+                        role="presentation"
+                        class="w-full text-left prose prose-lg max-w-none font-serif text-slate-800 leading-loose whitespace-pre-wrap appearance-none block bg-transparent border-none p-0"
                         on:click={handleTextClick}
                     >
                         {@html highlightText(analysis.fullText, analysis.terms)}

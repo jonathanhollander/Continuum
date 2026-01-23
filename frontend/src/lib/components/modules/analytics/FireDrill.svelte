@@ -122,7 +122,7 @@
                     {#each questions as q, i}
                         <div
                             class={`h-1 flex-1 rounded-full transition-colors ${i <= step ? "bg-indigo-500" : "bg-slate-800"}`}
-                        />
+                        ></div>
                     {/each}
                 </div>
 

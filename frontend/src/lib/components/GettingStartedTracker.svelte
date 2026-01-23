@@ -1,7 +1,7 @@
 <script lang="ts">
     import { Check, Users, Files, Heart, ArrowRight, Sparkles } from "lucide-svelte";
     import { fade, slide } from "svelte/transition";
-    import { familyStore } from "$lib/stores/familyStore.svelte";
+    import { familyStore } from "$lib/stores/familyStore.svelte.ts";
     import { browser } from "$app/environment";
 
     // Props

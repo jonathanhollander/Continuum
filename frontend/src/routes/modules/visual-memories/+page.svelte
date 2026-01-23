@@ -23,7 +23,7 @@
         toggleFavorite as toggleVisualFavorite,
         syncAllMemories,
         type ExternalArchive,
-    } from "$lib/stores/visualMemoryStore";
+    } from "$lib/stores/visualMemoryStore.svelte.ts";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
     import * as registryRaw from "$lib/data/registry.json";
 
@@ -102,7 +102,11 @@
     }
 
     function handleDeleteArchive(id: number) {
-        if (confirm("Remove this archive location? You can add it back anytime.")) {
+        if (
+            confirm(
+                "Remove this archive location? You can add it back anytime.",
+            )
+        ) {
             removeArchive(id);
         }
     }
@@ -150,7 +154,11 @@
     }
 
     function handleBulkDeleteSubmit() {
-        if (confirm(`Remove ${selectedCount} memories? This action cannot be undone.`)) {
+        if (
+            confirm(
+                `Remove ${selectedCount} memories? This action cannot be undone.`,
+            )
+        ) {
             // Bulk delete not explicitly implemented in SyncManager but we can map
             selectedIds.forEach((id) => removeVisualMemory(Number(id)));
             selectedIds = [];

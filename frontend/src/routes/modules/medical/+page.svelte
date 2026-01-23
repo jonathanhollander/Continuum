@@ -16,14 +16,14 @@
     import {
         medicalStore,
         type MedicalDirective,
-    } from "$lib/stores/medicalStore.svelte";
-    import { t, language } from "$lib/stores/localization";
+    } from "$lib/stores/medicalStore.svelte.ts";
+    import { t, language } from "$lib/stores/localization.ts";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import Affirmation from "$lib/components/Affirmation.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
-    import { estateProfile } from "$lib/stores/estateStore.svelte";
-    import { activityLog } from "$lib/stores/activityLog";
+    import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
+    import { activityLog } from "$lib/stores/activityLog.svelte.ts";
     import LegalDisclaimer from "$lib/components/common/LegalDisclaimer.svelte";
     import GriefSupportBanner from "$lib/components/GriefSupportBanner.svelte";
 

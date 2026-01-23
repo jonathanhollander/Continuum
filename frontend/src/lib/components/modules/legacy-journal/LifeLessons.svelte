@@ -3,8 +3,8 @@
     import { Tag, Plus, Filter, Search, X } from "lucide-svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
-    import { registerSync } from "$lib/services/sync.svelte";
-    import { activityLog } from "$lib/stores/activityLog";
+    import { registerSync } from "$lib/services/sync.svelte.ts";
+    import { activityLog } from "$lib/stores/activityLog.svelte.ts";
 
     // --- Types ---
     interface Lesson {
@@ -15,7 +15,10 @@
         tags: string[];
     }
 
-    const lessonSync = registerSync<Lesson>("life_lessons", "life_lessons").setAffirmationContext('general');
+    const lessonSync = registerSync<Lesson>(
+        "life_lessons",
+        "life_lessons",
+    ).setAffirmationContext("general");
 
     let tags = ["All", "Career", "Love", "Money", "Parenting", "Resilience"];
     let activeTag = $state("All");

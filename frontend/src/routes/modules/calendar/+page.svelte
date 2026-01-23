@@ -60,7 +60,7 @@
 
     // --- Logic ---
 
-    import { registerSync } from "$lib/services/sync.svelte";
+    import { registerSync } from "$lib/services/sync.svelte.ts";
 
     // Register Sync
     const calendarSync = registerSync<CalendarEvent>(

@@ -5,12 +5,16 @@
 	import { page } from "$app/stores";
 	import { onMount, setContext } from "svelte";
 	import { goto } from "$app/navigation";
-	import { estateAudit } from "$lib/stores/auditStore.svelte";
+	import { estateAudit } from "$lib/stores/auditStore.svelte.ts";
 	import ConciergeSettings from "$lib/components/concierge/ConciergeSettings.svelte";
 	import ConciergePanel from "$lib/components/layout/ConciergePanel.svelte";
-	import { conciergeEngine } from "$lib/stores/conciergeEngine";
-	import { language, userRole, type UserRole } from "$lib/stores/concierge";
-	import { dictionary } from "$lib/stores/dictionary";
+	import { conciergeEngine } from "$lib/stores/conciergeEngine.ts";
+	import {
+		language,
+		userRole,
+		type UserRole,
+	} from "$lib/stores/conciergeStore.svelte.ts";
+	import { dictionary } from "$lib/stores/dictionary.ts";
 	import { logger } from "$lib/utils/logger";
 	import {
 		overwhelmDetector,
@@ -67,23 +71,23 @@
 	} from "lucide-svelte";
 	import { fade, fly } from "svelte/transition";
 	import Modal from "$lib/components/ui/Modal.svelte";
-	import { t } from "$lib/stores/concierge";
-	import { toneStore, type AppTone } from "$lib/stores/toneStore";
+	import { t } from "$lib/stores/conciergeStore.svelte.ts";
+	import { toneStore, type AppTone } from "$lib/stores/toneStore.svelte.ts";
 	import CommandCenter from "$lib/components/ui/CommandCenter.svelte";
-	import { magicTrigger } from "$lib/stores/magicStore";
+	import { magicTrigger } from "$lib/stores/magicStore.ts";
 	import SuccessParticles from "$lib/components/ui/SuccessParticles.svelte";
 
-	import { genesisStore } from "$lib/stores/genesisStore";
+	import { genesisStore } from "$lib/stores/genesisStore.ts";
 	import TheArchitect from "$lib/components/wizard/TheArchitect.svelte";
 	import GodModeToggle from "$lib/components/wizard/GodModeToggle.svelte";
 	import Sidebar from "$lib/components/layout/Sidebar.svelte";
 	import FocusFooter from "$lib/components/layout/FocusFooter.svelte";
 	import MobileBottomNav from "$lib/components/layout/MobileBottomNav.svelte";
 	import { navGroups } from "$lib/config/navigation";
-	import { compassStore } from "$lib/stores/compassStore";
+	import { compassStore } from "$lib/stores/compassStore.ts";
 	import NotificationContainer from "$lib/components/NotificationContainer.svelte";
 	import RoleSwitcher from "$lib/components/RoleSwitcher.svelte";
-	import { contextStore } from "$lib/stores/contextStore.svelte";
+	import { contextStore } from "$lib/stores/contextStore.svelte.ts";
 	import TakeBreakButton from "$lib/components/TakeBreakButton.svelte";
 	import MediaMigrationNotice from "$lib/components/MediaMigrationNotice.svelte";
 
@@ -125,9 +129,9 @@
 		}
 	});
 
-	import { registerAccount } from "$lib/stores/keyringStore";
-	import { auth } from "$lib/stores/auth";
-	import { syncAll } from "$lib/services/sync.svelte";
+	import { registerAccount } from "$lib/stores/keyringStore.ts";
+	import { auth } from "$lib/stores/auth.ts";
+	import { syncAll } from "$lib/services/sync.svelte.ts";
 
 	// Derived: Is this the Wizard or Marketing Landing?
 	let isWizardRoute = $derived(
@@ -203,7 +207,7 @@
 			logger.info("Simplified view requested by user");
 			// TODO: Implement simplified view mode
 			// For now, just show a notification
-			import("$lib/stores/notificationStore").then(
+			import("$lib/stores/notificationStore.ts").then(
 				({ notifications }) => {
 					notifications.showInfo(
 						"We've simplified the view to show only essential information. You can always expand sections as needed.",
@@ -226,7 +230,10 @@
 		window.addEventListener("keydown", handleGlobalKeydown);
 		window.addEventListener("continuum:simplify-view", handleSimplifyView);
 		window.addEventListener("continuum:request-help", handleRequestHelp);
-		window.addEventListener("toggle-mobile-sidebar", handleMobileSidebarToggle);
+		window.addEventListener(
+			"toggle-mobile-sidebar",
+			handleMobileSidebarToggle,
+		);
 
 		return () => {
 			window.removeEventListener("keydown", handleGlobalKeydown);
@@ -238,7 +245,10 @@
 				"continuum:request-help",
 				handleRequestHelp,
 			);
-			window.removeEventListener("toggle-mobile-sidebar", handleMobileSidebarToggle);
+			window.removeEventListener(
+				"toggle-mobile-sidebar",
+				handleMobileSidebarToggle,
+			);
 		};
 	});
 

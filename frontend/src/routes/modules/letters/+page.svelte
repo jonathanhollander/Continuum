@@ -38,8 +38,8 @@
         type LetterTemplate,
     } from "$lib/data/letterTemplates";
     import { onMount } from "svelte";
-    import { activityLog } from "$lib/stores/activityLog";
-    import { estateProfile } from "$lib/stores/estateStore.svelte";
+    import { activityLog } from "$lib/stores/activityLog.svelte.ts";
+    import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
     import LetterAssistant from "$lib/components/modules/letters/LetterAssistant.svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
     import { REFLECTION_POOLS } from "$lib/data/reflectionPools";
@@ -58,7 +58,7 @@
     };
 
     import GriefSupportBanner from "$lib/components/GriefSupportBanner.svelte";
-    import { registerSync } from "$lib/services/sync.svelte";
+    import { registerSync } from "$lib/services/sync.svelte.ts";
 
     // Sync Manager for Letters
     const letterSync = registerSync<SavedLetter>(

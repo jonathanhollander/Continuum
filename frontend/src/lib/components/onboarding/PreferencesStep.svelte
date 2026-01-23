@@ -1,7 +1,7 @@
 <script lang="ts">
     import { fade, fly } from 'svelte/transition';
     import { Languages, Type, ArrowLeft, ArrowRight } from 'lucide-svelte';
-    import { onboardingFlowStore } from '$lib/stores/onboardingFlowStore.svelte';
+    import { onboardingFlowStore } from "$lib/stores/onboardingFlowStore.svelte.ts";
 
     const languages = [
         { code: 'en', name: 'English' },

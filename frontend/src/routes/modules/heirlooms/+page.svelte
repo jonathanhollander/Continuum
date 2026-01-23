@@ -22,14 +22,14 @@
     import {
         heirloomSync,
         type Heirloom,
-    } from "$lib/stores/heirloomStore.svelte";
+    } from "$lib/stores/heirloomStore.svelte.ts";
     import { qrStore } from "$lib/stores/qrStore";
-    import { activityLog } from "$lib/stores/activityLog";
-    import { estateProfile } from "$lib/stores/estateStore.svelte";
+    import { activityLog } from "$lib/stores/activityLog.svelte.ts";
+    import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
     import EvidenceGalleryUploader from "$lib/components/ui/EvidenceGalleryUploader.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import { getSmartSamples } from "$lib/data/smartSamples";
-    import { language } from "$lib/stores/localization";
+    import { language } from "$lib/stores/localization.ts";
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
 
     let showAddModal = false;
@@ -521,11 +521,16 @@
                     class="p-6 border-b border-gray-100 flex justify-between items-start bg-gray-50"
                 >
                     <div class="flex-1 pr-4">
-                        <h3 class="font-serif font-bold text-2xl text-slate-800">
+                        <h3
+                            class="font-serif font-bold text-2xl text-slate-800"
+                        >
                             Preserve a Treasure
                         </h3>
                         <p class="text-slate-500 text-sm mt-2 leading-relaxed">
-                            This object holds a story that only you can tell. By documenting it here, you're ensuring that story survives—transforming an object into an heirloom that connects generations.
+                            This object holds a story that only you can tell. By
+                            documenting it here, you're ensuring that story
+                            survives—transforming an object into an heirloom
+                            that connects generations.
                         </p>
                     </div>
                     <button
@@ -561,7 +566,8 @@
                             placeholder="The person who will cherish it"
                         />
                         <p class="text-xs text-gray-400 mt-1.5">
-                            Think about who would treasure this item and honor its meaning.
+                            Think about who would treasure this item and honor
+                            its meaning.
                         </p>
                     </div>
 

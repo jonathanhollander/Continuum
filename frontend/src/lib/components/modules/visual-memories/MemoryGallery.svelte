@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { VisualMemory } from "$lib/stores/visualMemoryStore.svelte";
+    import type { VisualMemory } from "$lib/stores/visualMemoryStore.svelte.ts";
     import {
         Grid,
         LayoutTemplate,
@@ -99,12 +99,20 @@
         >
             {#each memories as memory (memory.id)}
                 <div
+                    role="button"
+                    tabindex="0"
                     class="group relative aspect-square bg-slate-100 rounded-xl overflow-hidden cursor-pointer hover:shadow-lg transition-all {selectedIds.includes(
                         memory.id,
                     )
                         ? 'ring-4 ring-indigo-500 ring-offset-2'
                         : ''}"
                     on:click={() => handleCardClick(memory)}
+                    on:keydown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            handleCardClick(memory);
+                        }
+                    }}
                 >
                     <img
                         src={memory.url}

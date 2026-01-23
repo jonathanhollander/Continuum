@@ -15,14 +15,37 @@ export interface Notification extends ErrorNotification {
 function createNotificationStore() {
 	const { subscribe, update } = writable<Notification[]>([]);
 
+	const dismiss = (id: string) => {
+		update((notifications) => notifications.filter((n) => n.id !== id));
+		retryCallbacks.delete(id);
+	};
+
+	const dismissAll = () => {
+		update(() => []);
+		retryCallbacks.clear();
+	};
+
 	return {
 		subscribe,
 
 		/**
 		 * Show an error notification.
 		 */
-		showError(error: ErrorDetails, retryFn?: () => void) {
-			const errorNotification = createErrorNotification(error);
+		showError(error: ErrorDetails | Error | string, retryFn?: () => void) {
+			let errorObj: ErrorDetails;
+
+			if (typeof error === 'string') {
+				errorObj = { message: error };
+			} else if (error instanceof Error) {
+				errorObj = {
+					message: error.message,
+					code: (error as any).code
+				};
+			} else {
+				errorObj = error;
+			}
+
+			const errorNotification = createErrorNotification(errorObj);
 			const notification: Notification = {
 				...errorNotification,
 				type: 'error'
@@ -32,7 +55,12 @@ function createNotificationStore() {
 
 			// Store retry function if provided
 			if (retryFn) {
-				retryCallbacks.set(notification.id, retryFn);
+				// Wrap retry function to dismiss notification automatically
+				const wrappedRetry = () => {
+					dismiss(notification.id);
+					retryFn();
+				};
+				retryCallbacks.set(notification.id, wrappedRetry);
 			}
 
 			return notification.id;
@@ -55,7 +83,7 @@ function createNotificationStore() {
 
 			// Auto-dismiss success after 5 seconds
 			setTimeout(() => {
-				this.dismiss(notification.id);
+				dismiss(notification.id);
 			}, 5000);
 
 			return notification.id;
@@ -84,7 +112,7 @@ function createNotificationStore() {
 
 			// Auto-dismiss after 7 seconds (longer for affirmations to be read)
 			setTimeout(() => {
-				this.dismiss(notification.id);
+				dismiss(notification.id);
 			}, 7000);
 
 			return notification.id;
@@ -107,7 +135,7 @@ function createNotificationStore() {
 
 			// Auto-dismiss info after 7 seconds
 			setTimeout(() => {
-				this.dismiss(notification.id);
+				dismiss(notification.id);
 			}, 7000);
 
 			return notification.id;
@@ -116,18 +144,12 @@ function createNotificationStore() {
 		/**
 		 * Dismiss a notification.
 		 */
-		dismiss(id: string) {
-			update((notifications) => notifications.filter((n) => n.id !== id));
-			retryCallbacks.delete(id);
-		},
+		dismiss,
 
 		/**
 		 * Dismiss all notifications.
 		 */
-		dismissAll() {
-			update(() => []);
-			retryCallbacks.clear();
-		},
+		dismissAll,
 
 		/**
 		 * Get retry callback for a notification.

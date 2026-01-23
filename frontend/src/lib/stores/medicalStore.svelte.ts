@@ -1,4 +1,4 @@
-import { registerSync, registerSingletonSync } from '$lib/services/sync.svelte';
+import { registerSync, registerSingletonSync } from "$lib/services/sync.svelte.ts";
 
 export interface MedicalDirective {
     id: number | string;

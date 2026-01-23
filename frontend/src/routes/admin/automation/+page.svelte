@@ -1,6 +1,6 @@
 <script lang="ts">
     import { Settings, Zap, ArrowLeft } from "lucide-svelte";
-    import { automationRules } from "$lib/stores/automation";
+    import { automationRules } from "$lib/stores/automationStore.svelte.ts";
     import AutomationCard from "$lib/components/admin/AutomationCard.svelte";
     import WebhookConfig from "$lib/components/admin/WebhookConfig.svelte";
 

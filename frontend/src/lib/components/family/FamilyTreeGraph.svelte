@@ -4,7 +4,7 @@
         familyStore,
         type FamilyMember,
         type Relationship,
-    } from "$lib/stores/familyStore.svelte";
+    } from "$lib/stores/familyStore.svelte.ts";
     import {
         User,
         Heart,

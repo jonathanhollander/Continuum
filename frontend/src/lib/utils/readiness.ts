@@ -1,4 +1,4 @@
-import { getStored } from "$lib/stores/persistence";
+import { getStored } from "$lib/stores/persistence.ts";
 
 export type ModuleStatus = {
     id: string;

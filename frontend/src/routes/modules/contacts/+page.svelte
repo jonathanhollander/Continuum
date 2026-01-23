@@ -16,7 +16,7 @@
     import ContactRow from "$lib/components/modules/contacts/ContactRow.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import Affirmation from "$lib/components/Affirmation.svelte";
-    import { t, language } from "$lib/stores/localization";
+    import { t, language } from "$lib/stores/localization.ts";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
     import * as registryRaw from "$lib/data/registry.json";
@@ -33,9 +33,13 @@
         familyStore,
         type FamilyMember,
         type FamilyRole,
-    } from "$lib/stores/familyStore.svelte";
-    import { contextStore } from "$lib/stores/contextStore.svelte";
-    import { contacts as contactsText, getEmptyStateMessage, getActionLabel } from "$lib/utils/contextualMessages";
+    } from "$lib/stores/familyStore.svelte.ts";
+    import { contextStore } from "$lib/stores/contextStore.svelte.ts";
+    import {
+        contacts as contactsText,
+        getEmptyStateMessage,
+        getActionLabel,
+    } from "$lib/utils/contextualMessages";
     import ContextualMessage from "$lib/components/ContextualMessage.svelte";
 
     let activeTab = $state("call-list");
@@ -149,7 +153,12 @@
     }
 
     async function deleteContact(id: number | string) {
-        if (!confirm("Remove this contact? You can always add them back later if needed.")) return;
+        if (
+            !confirm(
+                "Remove this contact? You can always add them back later if needed.",
+            )
+        )
+            return;
         familyStore.removeMember(id);
     }
 
@@ -164,8 +173,8 @@
         subtitle={contextStore.isExecutor
             ? "Important contacts and relationships to notify or consult"
             : contextStore.isFamily
-            ? "Family and friends connected to the estate"
-            : module.description}
+              ? "Family and friends connected to the estate"
+              : module.description}
         tier={module.role === "owner" ? "preparation" : "executor"}
     />
 {/if}
@@ -179,9 +188,9 @@
             <Plus size={18} />
             <ContextualMessage
                 variants={{
-                    planning: 'Add Contact',
-                    executor: 'Add Contact',
-                    family: 'Add Contact'
+                    planning: "Add Contact",
+                    executor: "Add Contact",
+                    family: "Add Contact",
                 }}
             />
         </button>
@@ -264,22 +273,24 @@
     <div class="min-h-[500px]">
         {#if contacts.length === 0}
             <EmptyState
-                title={contextStore.isExecutor ? "Contact Directory Empty" : contextStore.isFamily ? "No Contacts Yet" : "Your circle of trust"}
+                title={contextStore.isExecutor
+                    ? "Contact Directory Empty"
+                    : contextStore.isFamily
+                      ? "No Contacts Yet"
+                      : "Your circle of trust"}
                 whyMatters={contextStore.isExecutor
                     ? "<strong>Contact information is essential for estate administration.</strong> If no contacts were recorded, you may need to gather this information from other sources such as phone records, address books, or family members.<br/><br/>Building this directory will help ensure all necessary parties are properly notified and consulted."
                     : contextStore.isFamily
-                    ? "<strong>Contact information will be helpful for coordinating with family and friends.</strong> This directory will be populated as information becomes available.<br/><br/>If you have contact details to contribute, you can add them here."
-                    : "<strong>These are the people who should be notified, who can help, who need to know.</strong> Without this list, your family won't know who your lawyer is, who has your keys, or who should be at your bedside.<br/><br/>Creating this directory is a gift to whoever handles your affairs—they won't have to search through old emails or guess who matters to you. Each person you add here removes one more burden from their shoulders."
-                }
+                      ? "<strong>Contact information will be helpful for coordinating with family and friends.</strong> This directory will be populated as information becomes available.<br/><br/>If you have contact details to contribute, you can add them here."
+                      : "<strong>These are the people who should be notified, who can help, who need to know.</strong> Without this list, your family won't know who your lawyer is, who has your keys, or who should be at your bedside.<br/><br/>Creating this directory is a gift to whoever handles your affairs—they won't have to search through old emails or guess who matters to you. Each person you add here removes one more burden from their shoulders."}
                 encouragement={contextStore.isExecutor
                     ? "Begin gathering contact information at your own pace."
                     : contextStore.isFamily
-                    ? "Add contacts as information becomes available."
-                    : "Start with just one person—maybe your executor, spouse, or closest friend. You can build this over time."
-                }
+                      ? "Add contacts as information becomes available."
+                      : "Start with just one person—maybe your executor, spouse, or closest friend. You can build this over time."}
                 icon={Users}
                 iconClass="text-indigo-500"
-                ctaLabel={getActionLabel('add')}
+                ctaLabel={getActionLabel("add")}
                 onAction={() => (showAddModal = true)}
             />
         {:else if activeTab === "call-list"}
@@ -448,16 +459,22 @@
                     class="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-start"
                 >
                     <div class="flex-1 pr-4">
-                        <h3 class="font-serif font-bold text-2xl text-slate-800">
+                        <h3
+                            class="font-serif font-bold text-2xl text-slate-800"
+                        >
                             Add Someone Important
                         </h3>
                         <p class="text-slate-500 text-sm mt-2 leading-relaxed">
-                            This person matters to you. By adding them here, you're ensuring they'll be included when the time comes—whether that means being notified, consulted, or simply remembered.
+                            This person matters to you. By adding them here,
+                            you're ensuring they'll be included when the time
+                            comes—whether that means being notified, consulted,
+                            or simply remembered.
                         </p>
                     </div>
                     <button
                         onclick={() => (showAddModal = false)}
-                        class="text-gray-400 hover:text-gray-600 mt-1">Close</button
+                        class="text-gray-400 hover:text-gray-600 mt-1"
+                        >Close</button
                     >
                 </div>
                 <div class="p-6 space-y-4">
@@ -550,19 +567,23 @@
                             class="w-full px-4 py-3 rounded-xl border border-indigo-200 bg-white"
                         >
                             <option value="1_Immediate"
-                                >First Call — Someone who should hear it from family, not others</option
+                                >First Call — Someone who should hear it from
+                                family, not others</option
                             >
                             <option value="2_SameDay"
                                 >Same Day — Close enough to be told directly</option
                             >
                             <option value="3_Service"
-                                >Extended Circle — Can learn through announcement</option
+                                >Extended Circle — Can learn through
+                                announcement</option
                             >
                             <option value="4_DNR">No Notification Needed</option
                             >
                         </select>
                         <p class="text-xs text-indigo-500 mt-2">
-                            Think about how they'd want to hear the news. The people closest to you deserve to be told directly, not find out on social media.
+                            Think about how they'd want to hear the news. The
+                            people closest to you deserve to be told directly,
+                            not find out on social media.
                         </p>
                     </div>
 

@@ -1,7 +1,7 @@
 <script lang="ts">
     import { fade, fly } from 'svelte/transition';
     import { User, Users, Briefcase, Heart, ArrowLeft, ArrowRight } from 'lucide-svelte';
-    import { onboardingFlowStore, type UserRole } from '$lib/stores/onboardingFlowStore.svelte';
+    import { onboardingFlowStore, type UserRole } from "$lib/stores/onboardingFlowStore.svelte.ts";
 
     const roles: { id: UserRole; icon: typeof User; title: string; description: string; color: string }[] = [
         {

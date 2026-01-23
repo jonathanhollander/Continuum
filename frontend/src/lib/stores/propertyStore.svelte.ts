@@ -1,4 +1,4 @@
-import { registerSync } from '$lib/services/sync.svelte';
+import { registerSync } from "$lib/services/sync.svelte.ts";
 
 export interface EvidenceItem {
     id: string;

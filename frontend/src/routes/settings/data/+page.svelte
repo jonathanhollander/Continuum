@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { getRegistry, type SyncManager } from "$lib/services/sync.svelte";
+    import { getRegistry, type SyncManager } from "$lib/services/sync.svelte.ts";
     import { onMount } from "svelte";
     import { navGroups } from "$lib/config/navigation";
     import {

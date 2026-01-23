@@ -1,7 +1,7 @@
 <script lang="ts">
     import "../../../app.css";
     import LivingMesh from "$lib/components/pulse/LivingMesh.svelte";
-    import { pulse } from "$lib/stores/pulse.svelte";
+    import { pulse } from "$lib/stores/pulse.svelte.ts";
 
     // Map store status to LivingMesh props
     function getMeshStatus(status: string) {

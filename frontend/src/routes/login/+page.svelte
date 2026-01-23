@@ -3,7 +3,7 @@
     import { goto } from "$app/navigation";
     import { page } from "$app/stores";
     import { auth } from "$lib/stores/auth";
-    import { API_BASE_URL } from "$lib/config";
+    import { API_BASE_URL } from "$lib/config.ts";
     import { apiPost } from "$lib/api/client";
     import { notifications } from "$lib/stores/notificationStore";
     import { startAuthentication } from "@simplewebauthn/browser";
@@ -76,17 +76,23 @@
 
             if (e.name === "NotAllowedError") {
                 notifications.showError(
-                    "Login was cancelled or timed out. Please try again.",
-                    "Login Cancelled",
+                    {
+                        message:
+                            "Login was cancelled or timed out. Please try again.",
+                        code: "AUTH_CANCELLED",
+                    },
+                    handlePasskeyLogin,
                 );
             } else if (e.name === "NotSupportedError") {
-                notifications.showError(
-                    "Your device does not support passkeys. Please use email link instead.",
-                    "Passkey Not Supported",
-                );
+                notifications.showError({
+                    message:
+                        "Your device does not support passkeys. Please use email link instead.",
+                    code: "NOT_SUPPORTED",
+                });
                 showMagicLink = true;
+            } else {
+                notifications.showError(e, handlePasskeyLogin);
             }
-            // apiPost already shows error notification for other errors
         } finally {
             isLoading = false;
         }
@@ -94,10 +100,10 @@
 
     async function handleMagicLink() {
         if (!magicLinkEmail) {
-            notifications.showError(
-                "Please enter your email address",
-                "Email Required",
-            );
+            notifications.showError({
+                message: "Please enter your email address",
+                code: "VALIDATION_ERROR",
+            });
             return;
         }
 
@@ -155,7 +161,7 @@
             );
         } catch (e: any) {
             console.error("Login failed:", e);
-            notifications.showError("Authentication failed", "Error");
+            notifications.showError(e, handleMagicLink);
         } finally {
             isLoading = false;
         }

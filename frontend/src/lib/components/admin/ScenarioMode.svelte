@@ -4,7 +4,7 @@
         isSimulationActive,
         SCENARIO_DESCRIPTIONS,
         type Scenario,
-    } from "$lib/stores/scenario";
+    } from "$lib/stores/scenarioStore.svelte.ts";
     import { Siren } from "lucide-svelte";
 
     // Explicitly type the keys to match the Scenario type

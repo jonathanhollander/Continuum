@@ -1,8 +1,8 @@
-import { getStored, setStored } from "$lib/stores/persistence";
+import { getStored, setStored } from "$lib/stores/persistence.ts";
 
-import { auth } from "../stores/auth";
+import { auth } from "../stores/auth.ts";
 import { get } from "svelte/store";
-import { notifications } from "$lib/stores/notificationStore";
+import { notifications } from "$lib/stores/notificationStore.ts";
 
 const toCamel = (str: string) => str.replace(/([-_][a-z])/g, group => group.toUpperCase().replace('-', '').replace('_', ''));
 const toSnake = (str: string) => str.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();

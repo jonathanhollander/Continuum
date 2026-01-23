@@ -20,7 +20,7 @@
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
     import { onMount } from "svelte";
-    import { registerSync } from "$lib/services/sync.svelte";
+    import { registerSync } from "$lib/services/sync.svelte.ts";
     import { getStored } from "$lib/stores/persistence";
 
     // MAPPERS

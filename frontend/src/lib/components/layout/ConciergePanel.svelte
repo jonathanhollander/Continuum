@@ -14,10 +14,13 @@
         Minimize2,
         Maximize2,
     } from "lucide-svelte";
-    import { conciergeEngine, type Message } from "$lib/stores/conciergeEngine";
+    import {
+        conciergeEngine,
+        type Message,
+    } from "$lib/stores/conciergeEngine.ts";
     import { voiceService } from "$lib/services/voiceService";
-    import { accessibilityStore } from "$lib/stores/accessibilityStore";
-    import { preferenceStore } from "$lib/stores/preferenceStore";
+    import { accessibilityStore } from "$lib/stores/accessibilityStore.ts";
+    import { preferenceStore } from "$lib/stores/preferenceStore.ts";
     import { onMount } from "svelte";
     import { browser } from "$app/environment";
     import { CheckCircle2 } from "lucide-svelte";

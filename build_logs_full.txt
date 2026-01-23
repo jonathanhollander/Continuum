@@ -1,0 +1,8 @@
+Indexing...
+railway up
+service: 1a96d157-aa0a-4df8-9aa6-445ea288917f
+environment: 9fbb046e-a376-411a-949b-e7c3409615b7
+bytes: 10620206
+url: https://backboard.railway.com/project/25d74db2-ed30-4e38-a6cd-3e52ae9399bf/environment/9fbb046e-a376-411a-949b-e7c3409615b7/up?serviceId=1a96d157-aa0a-4df8-9aa6-445ea288917f
+Uploading...
+  Build Logs: https://railway.com/project/25d74db2-ed30-4e38-a6cd-3e52ae9399bf/service/1a96d157-aa0a-4df8-9aa6-445ea288917f?id=e07c5e29-9bd3-4efd-93c3-41687a8acf37&

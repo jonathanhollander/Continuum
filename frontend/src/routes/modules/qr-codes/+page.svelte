@@ -27,8 +27,8 @@
         type AccessPack,
         type AssetLabel,
     } from "$lib/stores/qrStore";
-    import { activityLog } from "$lib/stores/activityLog";
-    import { estateProfile } from "$lib/stores/estateStore.svelte";
+    import { activityLog } from "$lib/stores/activityLog.svelte.ts";
+    import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
     import { onMount } from "svelte";
 
     let selectedPack = $state<AccessPack | null>(null);
@@ -65,7 +65,12 @@
     }
 
     function deleteAssetQR(id: string, name: string) {
-        if (!confirm(`Remove the QR label for "${name}"? You can create a new one anytime.`)) return;
+        if (
+            !confirm(
+                `Remove the QR label for "${name}"? You can create a new one anytime.`,
+            )
+        )
+            return;
         qrStore.removeAssetQR(id);
 
         activityLog.logEvent({

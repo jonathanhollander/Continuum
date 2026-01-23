@@ -2,9 +2,9 @@
     import {
         propertyStore,
         type PropertyItem,
-    } from "$lib/stores/propertyStore.svelte";
-    import { activityLog } from "$lib/stores/activityLog";
-    import { estateProfile } from "$lib/stores/estateStore.svelte";
+    } from "$lib/stores/propertyStore.svelte.ts";
+    import { activityLog } from "$lib/stores/activityLog.svelte.ts";
+    import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
     import { fade, slide, scale } from "svelte/transition";
     import { quintOut } from "svelte/easing";
     import { qrStore } from "$lib/stores/qrStore";
@@ -39,7 +39,7 @@
 
     // Concierge Imports
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
-    import { t, language } from "$lib/stores/localization";
+    import { t, language } from "$lib/stores/localization.ts";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import { fly } from "svelte/transition"; // Ensure fly is imported
 
@@ -338,7 +338,11 @@
                     Your Home, Your Legacy
                 </h1>
                 <p class="text-slate-500 max-w-2xl text-lg leading-relaxed">
-                    These are the physical things you've built, bought, and cared for—your home, your vehicles, the possessions that matter. Documenting them now means your family won't have to search for deeds, titles, or proof of ownership during an already difficult time.
+                    These are the physical things you've built, bought, and
+                    cared for—your home, your vehicles, the possessions that
+                    matter. Documenting them now means your family won't have to
+                    search for deeds, titles, or proof of ownership during an
+                    already difficult time.
                 </p>
             </div>
         </div>

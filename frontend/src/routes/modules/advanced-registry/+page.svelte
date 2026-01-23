@@ -4,12 +4,12 @@
         type AssetTransaction,
         type MaintenanceLog,
         type InsuranceClaim,
-    } from "$lib/stores/advancedAssetStore.svelte";
+    } from "$lib/stores/advancedAssetStore.svelte.ts";
     import {
         digitalAssetsStore,
         type DigitalAccount,
         type ClosurePreference,
-    } from "$lib/stores/digitalAssetsStore.svelte";
+    } from "$lib/stores/digitalAssetsStore.svelte.ts";
     import {
         Layers,
         Repeat,

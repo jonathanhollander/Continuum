@@ -8,7 +8,7 @@
         timeRemaining,
         type AcceptanceTask,
         type EstateComplexity,
-    } from "$lib/stores/acceptanceStore";
+    } from "$lib/stores/acceptanceStore.svelte.ts";
     import {
         ShieldCheck,
         Clock,

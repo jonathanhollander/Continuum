@@ -1,4 +1,4 @@
-import { registerSingletonSync } from '$lib/services/sync.svelte';
+import { registerSingletonSync } from "$lib/services/sync.svelte.ts";
 
 export type EstateProfile = {
     ownerName: string;

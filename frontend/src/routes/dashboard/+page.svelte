@@ -5,12 +5,12 @@
     import FocusCard from "$lib/components/dashboard/FocusCard.svelte";
     import ExecutorHub from "$lib/components/executor/ExecutorHub.svelte";
     import ExecutorWelcome from "$lib/components/executor/ExecutorWelcome.svelte";
-    import { estateAudit } from "$lib/stores/auditStore.svelte";
-    import { estateProfile } from "$lib/stores/estateStore.svelte";
-    import { familyStore } from "$lib/stores/familyStore.svelte";
-    import { digitalAssetsStore } from "$lib/stores/digitalAssetsStore.svelte";
-    import { insuranceStore } from "$lib/stores/insuranceStore.svelte";
-    import { preferenceStore } from "$lib/stores/preferenceStore";
+    import { estateAudit } from "$lib/stores/auditStore.svelte.ts";
+    import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
+    import { familyStore } from "$lib/stores/familyStore.svelte.ts";
+    import { digitalAssetsStore } from "$lib/stores/digitalAssetsStore.svelte.ts";
+    import { insuranceStore } from "$lib/stores/insuranceStore.svelte.ts";
+    import { preferenceStore } from "$lib/stores/preferenceStore.ts";
     import { fade, fly } from "svelte/transition";
     import {
         Shield,
@@ -24,10 +24,13 @@
         Files,
         Check,
     } from "lucide-svelte";
-    import { t } from "$lib/stores/localization";
+    import { t } from "$lib/stores/localization.ts";
     import { browser } from "$app/environment";
-    import { contextStore } from "$lib/stores/contextStore.svelte";
-    import { getGreeting, getProgressMessage } from "$lib/utils/contextualMessages";
+    import { contextStore } from "$lib/stores/contextStore.svelte.ts";
+    import {
+        getGreeting,
+        getProgressMessage,
+    } from "$lib/utils/contextualMessages";
 
     // Executor mode welcome state
     let showExecutorWelcome = $state(false);
@@ -51,9 +54,7 @@
     let greeting = $state("");
     // Reactive greeting target based on state and user role
     let fullGreeting = $derived(
-        estateAudit.totalScore > 0
-            ? getGreeting()
-            : $t("system.initializing"),
+        estateAudit.totalScore > 0 ? getGreeting() : $t("system.initializing"),
     );
 
     // Dynamic Metrics
@@ -71,16 +72,41 @@
     let areasDocumented = $derived.by(() => {
         const modules = estateAudit.moduleScores;
         const areas = [
-            { key: 'financial', label: 'Financial', icon: Wallet, started: modules['financial'] > 0 },
-            { key: 'insurance', label: 'Insurance', icon: Shield, started: modules['insurance'] > 0 },
-            { key: 'family', label: 'Contacts', icon: Users, started: modules['family'] > 0 },
-            { key: 'medical', label: 'Medical', icon: Stethoscope, started: modules['medical'] > 0 },
-            { key: 'digital', label: 'Digital', icon: Files, started: modules['digital'] > 0 },
+            {
+                key: "financial",
+                label: "Financial",
+                icon: Wallet,
+                started: modules["financial"] > 0,
+            },
+            {
+                key: "insurance",
+                label: "Insurance",
+                icon: Shield,
+                started: modules["insurance"] > 0,
+            },
+            {
+                key: "family",
+                label: "Contacts",
+                icon: Users,
+                started: modules["family"] > 0,
+            },
+            {
+                key: "medical",
+                label: "Medical",
+                icon: Stethoscope,
+                started: modules["medical"] > 0,
+            },
+            {
+                key: "digital",
+                label: "Digital",
+                icon: Files,
+                started: modules["digital"] > 0,
+            },
         ];
         return {
-            started: areas.filter(a => a.started),
-            notStarted: areas.filter(a => !a.started),
-            total: areas.length
+            started: areas.filter((a) => a.started),
+            notStarted: areas.filter((a) => !a.started),
+            total: areas.length,
         };
     });
 
@@ -100,7 +126,9 @@
 
         // Check if executor and first time
         if (browser && contextStore.isExecutor) {
-            const hasSeenWelcome = localStorage.getItem('continuum_executor_welcome_seen');
+            const hasSeenWelcome = localStorage.getItem(
+                "continuum_executor_welcome_seen",
+            );
             if (!hasSeenWelcome) {
                 showExecutorWelcome = true;
             }
@@ -172,14 +200,15 @@
 
             // If they skipped, the focus card should STILL point to onboarding
             focusItem = {
-                title: contextStore.isExecutor || contextStore.isFamily
-                    ? "Getting Started"
-                    : "Begin When You're Ready",
+                title:
+                    contextStore.isExecutor || contextStore.isFamily
+                        ? "Getting Started"
+                        : "Begin When You're Ready",
                 description: contextStore.isExecutor
                     ? "The estate profile is waiting for information. Take your time gathering what you need."
                     : contextStore.isFamily
-                    ? "Estate information hasn't been added yet. Check back when you're ready."
-                    : "This is important work that takes courage. We'll guide you through it at your own pace.",
+                      ? "Estate information hasn't been added yet. Check back when you're ready."
+                      : "This is important work that takes courage. We'll guide you through it at your own pace.",
                 link: "/onboarding",
                 type: "critical",
             };
@@ -241,13 +270,13 @@
                 title: contextStore.isExecutor
                     ? "You've Done Meaningful Work"
                     : contextStore.isFamily
-                    ? "Information Is Here"
-                    : "You've Built Something Meaningful",
+                      ? "Information Is Here"
+                      : "You've Built Something Meaningful",
                 description: contextStore.isExecutor
                     ? "The essential information has been gathered. Take a moment to rest."
                     : contextStore.isFamily
-                    ? "Estate information is organized and available when needed."
-                    : "Your family will have clarity when they need it most. Add a personal message when you're ready.",
+                      ? "Estate information is organized and available when needed."
+                      : "Your family will have clarity when they need it most. Add a personal message when you're ready.",
                 link: "/modules/letters",
                 type: "insight",
             };
@@ -261,7 +290,7 @@
 
     <!-- Executor Welcome Modal -->
     {#if showExecutorWelcome}
-        <ExecutorWelcome onComplete={() => showExecutorWelcome = false} />
+        <ExecutorWelcome onComplete={() => (showExecutorWelcome = false)} />
     {/if}
 
     <main
@@ -286,95 +315,147 @@
 
             <!-- Right: The Singular Focus -->
             {#if !loading && focusItem}
-            <div
-                class="flex-1 w-full max-w-xl"
-                in:fly={{ x: 50, duration: 1000 }}
-            >
-                <div class="mb-6 flex items-center gap-3 opacity-60">
-                    <BrainCircuit size={18} class="text-indigo-400" />
-                    <span class="text-xs font-bold uppercase tracking-widest"
-                        >{$preferenceStore.expertMode
-                            ? "Expert Dashboard"
-                            : "AI Concierge Priority"}</span
-                    >
-                </div>
-
-                {#if $preferenceStore.expertMode}
-                    <div
-                        class="mb-6 p-4 bg-white/5 border border-white/10 rounded-2xl flex items-center gap-4 text-xs text-slate-400"
-                        in:fade
-                    >
-                        <UserCog size={16} class="text-slate-500" />
-                        <p>
-                            Expert Mode Active: Proactive AI guidance is
-                            disabled. You have full manual control.
-                        </p>
-                    </div>
-                {/if}
-
-                <FocusCard
-                    title={focusItem.title}
-                    description={focusItem.description}
-                    actionLink={focusItem.link}
-                    type={focusItem.type}
-                    actionLabel={score === 0
-                        ? "Begin when ready"
-                        : "Take this step"}
-                />
-
-                <!-- Areas Documented (Option B + C combination) -->
-                <div class="mt-8 p-5 rounded-2xl bg-white/5 border border-white/5 backdrop-blur-sm">
-                    <div class="flex items-center justify-between mb-4">
-                        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-widest">
-                            What You've Documented
-                        </span>
-                        <span class="text-xs text-slate-500">
-                            {areasDocumented.started.length} of {areasDocumented.total} areas
-                        </span>
+                <div
+                    class="flex-1 w-full max-w-xl"
+                    in:fly={{ x: 50, duration: 1000 }}
+                >
+                    <div class="mb-6 flex items-center gap-3 opacity-60">
+                        <BrainCircuit size={18} class="text-indigo-400" />
+                        <span
+                            class="text-xs font-bold uppercase tracking-widest"
+                            >{$preferenceStore.expertMode
+                                ? "Expert Dashboard"
+                                : "AI Concierge Priority"}</span
+                        >
                     </div>
 
-                    <!-- Visual area indicators -->
-                    <div class="flex flex-wrap gap-2">
-                        {#each areasDocumented.started as area}
-                            <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/30">
-                                <svelte:component this={area.icon} size={14} class="text-emerald-400" />
-                                <span class="text-xs text-emerald-300">{area.label}</span>
-                            </div>
-                        {/each}
-                        {#each areasDocumented.notStarted as area}
-                            <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 opacity-50">
-                                <svelte:component this={area.icon} size={14} class="text-slate-500" />
-                                <span class="text-xs text-slate-500">{area.label}</span>
-                            </div>
-                        {/each}
-                    </div>
-
-                    <!-- Summary stats -->
-                    {#if areasDocumented.started.length > 0}
-                        <div class="mt-4 pt-4 border-t border-white/10 grid grid-cols-3 gap-4 text-center">
-                            <div>
-                                <div class="text-lg font-bold text-white">{networkSize}</div>
-                                <div class="text-[10px] text-slate-500 uppercase">People</div>
-                            </div>
-                            <div>
-                                <div class="text-lg font-bold text-white">{coverageCount}</div>
-                                <div class="text-[10px] text-slate-500 uppercase">Items</div>
-                            </div>
-                            {#if totalValue > 0}
-                                <div>
-                                    <div class="text-lg font-bold text-white">{currency.format(totalValue)}</div>
-                                    <div class="text-[10px] text-slate-500 uppercase">Protected</div>
-                                </div>
-                            {:else}
-                                <div>
-                                    <div class="text-lg font-bold text-white">{areasDocumented.started.length}</div>
-                                    <div class="text-[10px] text-slate-500 uppercase">Areas</div>
-                                </div>
-                            {/if}
+                    {#if $preferenceStore.expertMode}
+                        <div
+                            class="mb-6 p-4 bg-white/5 border border-white/10 rounded-2xl flex items-center gap-4 text-xs text-slate-400"
+                            in:fade
+                        >
+                            <UserCog size={16} class="text-slate-500" />
+                            <p>
+                                Expert Mode Active: Proactive AI guidance is
+                                disabled. You have full manual control.
+                            </p>
                         </div>
                     {/if}
+
+                    <FocusCard
+                        title={focusItem.title}
+                        description={focusItem.description}
+                        actionLink={focusItem.link}
+                        type={focusItem.type}
+                        actionLabel={score === 0
+                            ? "Begin when ready"
+                            : "Take this step"}
+                    />
+
+                    <!-- Areas Documented (Option B + C combination) -->
+                    <div
+                        class="mt-8 p-5 rounded-2xl bg-white/5 border border-white/5 backdrop-blur-sm"
+                    >
+                        <div class="flex items-center justify-between mb-4">
+                            <span
+                                class="text-[10px] uppercase font-bold text-slate-400 tracking-widest"
+                            >
+                                What You've Documented
+                            </span>
+                            <span class="text-xs text-slate-500">
+                                {areasDocumented.started.length} of {areasDocumented.total}
+                                areas
+                            </span>
+                        </div>
+
+                        <!-- Visual area indicators -->
+                        <div class="flex flex-wrap gap-2">
+                            {#each areasDocumented.started as area}
+                                <div
+                                    class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/30"
+                                >
+                                    <svelte:component
+                                        this={area.icon}
+                                        size={14}
+                                        class="text-emerald-400"
+                                    />
+                                    <span class="text-xs text-emerald-300"
+                                        >{area.label}</span
+                                    >
+                                </div>
+                            {/each}
+                            {#each areasDocumented.notStarted as area}
+                                <div
+                                    class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 opacity-50"
+                                >
+                                    <svelte:component
+                                        this={area.icon}
+                                        size={14}
+                                        class="text-slate-500"
+                                    />
+                                    <span class="text-xs text-slate-500"
+                                        >{area.label}</span
+                                    >
+                                </div>
+                            {/each}
+                        </div>
+
+                        <!-- Summary stats -->
+                        {#if areasDocumented.started.length > 0}
+                            <div
+                                class="mt-4 pt-4 border-t border-white/10 grid grid-cols-3 gap-4 text-center"
+                            >
+                                <div>
+                                    <div class="text-lg font-bold text-white">
+                                        {networkSize}
+                                    </div>
+                                    <div
+                                        class="text-[10px] text-slate-500 uppercase"
+                                    >
+                                        People
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-lg font-bold text-white">
+                                        {coverageCount}
+                                    </div>
+                                    <div
+                                        class="text-[10px] text-slate-500 uppercase"
+                                    >
+                                        Items
+                                    </div>
+                                </div>
+                                {#if totalValue > 0}
+                                    <div>
+                                        <div
+                                            class="text-lg font-bold text-white"
+                                        >
+                                            {currency.format(totalValue)}
+                                        </div>
+                                        <div
+                                            class="text-[10px] text-slate-500 uppercase"
+                                        >
+                                            Protected
+                                        </div>
+                                    </div>
+                                {:else}
+                                    <div>
+                                        <div
+                                            class="text-lg font-bold text-white"
+                                        >
+                                            {areasDocumented.started.length}
+                                        </div>
+                                        <div
+                                            class="text-[10px] text-slate-500 uppercase"
+                                        >
+                                            Areas
+                                        </div>
+                                    </div>
+                                {/if}
+                            </div>
+                        {/if}
+                    </div>
                 </div>
-            </div>
             {/if}
         {/if}
     </main>

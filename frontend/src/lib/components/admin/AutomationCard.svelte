@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { AutomationRule } from "$lib/stores/automation";
+    import type { AutomationRule } from "$lib/stores/automationStore.svelte";
     import { Bell, SquareCheck, TriangleAlert, Activity } from "lucide-svelte";
 
     export let rule: AutomationRule;
@@ -46,6 +46,6 @@
             class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform {rule.enabled
                 ? 'translate-x-6'
                 : ''}"
-        />
+        ></span>
     </button>
 </div>

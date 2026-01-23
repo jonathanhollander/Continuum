@@ -10,7 +10,7 @@
 
 import { auth } from './auth';
 import { get } from 'svelte/store';
-import { API_BASE } from '$lib/config';
+import { API_BASE_URL } from '$lib/config.ts';
 
 export type UserRole = 'planning' | 'executor' | 'family' | 'advisor';
 export type EmotionalContext = 'healthy' | 'preparing' | 'grieving' | null;
@@ -123,7 +123,7 @@ async function persistToBackend(): Promise<boolean> {
     if (!token) return false;
 
     try {
-        const response = await fetch(`${API_BASE}/api/auth/onboarding`, {
+        const response = await fetch(`${API_BASE_URL}/api/auth/onboarding`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -289,7 +289,7 @@ export const onboardingFlowStore = {
     // Resume capability
     canResume() {
         return data.startedAt !== null &&
-               data.completedAt === null &&
-               data.currentStep !== 'welcome';
+            data.completedAt === null &&
+            data.currentStep !== 'welcome';
     }
 };

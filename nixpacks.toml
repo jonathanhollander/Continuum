@@ -1,0 +1,23 @@
+providers = ["python"]
+
+[phases.setup]
+nixPkgs = ["python311", "nodejs_20", "gcc", "postgresql", "pkg-config", "openssl", "libffi"]
+
+[variables]
+NIXPACKS_NODE_VERSION = "20"
+PYTHONPATH = "/app"
+
+[phases.install]
+onlyIncludeFiles = ["backend/requirements.txt", "frontend/package.json", "frontend/package-lock.json", "package.json", "pyproject.toml"]
+cmds = [
+    "python -m venv /opt/venv",
+    "/opt/venv/bin/pip install --upgrade pip",
+    "/opt/venv/bin/pip install -r backend/requirements.txt",
+    "cd frontend && npm install --no-engine-strict"
+]
+
+[phases.build]
+cmds = ["cd frontend && npm run build"]
+
+[start]
+cmd = "/opt/venv/bin/python -m uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8080}"

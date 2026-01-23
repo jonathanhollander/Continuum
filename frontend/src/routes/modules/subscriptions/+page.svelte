@@ -13,12 +13,12 @@
     import EmptyState from "$lib/components/EmptyState.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import { onMount, tick } from "svelte";
-    import { estateProfile } from "$lib/stores/estateStore.svelte";
-    import { activityLog } from "$lib/stores/activityLog";
+    import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
+    import { activityLog } from "$lib/stores/activityLog.svelte.ts";
     import { fade, scale } from "svelte/transition";
     import { FileText, Download, Printer } from "lucide-svelte";
-    import { registerSync } from "$lib/services/sync.svelte";
-    import { t, language } from "$lib/stores/localization";
+    import { registerSync } from "$lib/services/sync.svelte.ts";
+    import { t, language } from "$lib/stores/localization.ts";
     import { getSmartSamples } from "$lib/data/smartSamples";
 
     type Subscription = {
@@ -38,7 +38,7 @@
     const subscriptionSync = registerSync<Subscription>(
         "subscriptions",
         "subscriptions",
-    ).setAffirmationContext('subscriptions');
+    ).setAffirmationContext("subscriptions");
     let subscriptions = $derived(subscriptionSync.items);
 
     // Migration Logic (One-time check)
@@ -185,7 +185,8 @@
     }
 
     function removeSubscription(id: string) {
-        if (!confirm("Remove this subscription? You can add it back anytime.")) return;
+        if (!confirm("Remove this subscription? You can add it back anytime."))
+            return;
         const sub = subscriptions.find((s) => s.id === id);
 
         subscriptionSync.delete(id);
@@ -263,7 +264,10 @@
                 Accounts to Close or Transfer
             </h1>
             <p class="text-slate-500 mt-2 text-lg leading-relaxed max-w-2xl">
-                Every subscription you document is money your family won't lose to forgotten charges. This simple list can save them hundreds—or even thousands—in the months after you're gone. It's a small task now that prevents a big headache later.
+                Every subscription you document is money your family won't lose
+                to forgotten charges. This simple list can save them hundreds—or
+                even thousands—in the months after you're gone. It's a small
+                task now that prevents a big headache later.
             </p>
         </div>
 
@@ -407,8 +411,12 @@
                     class="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-start"
                 >
                     <div class="flex-1 pr-4">
-                        <h3 class="font-serif font-bold text-2xl text-slate-800">
-                            {newSub.id ? "Update Subscription" : "Track a Recurring Charge"}
+                        <h3
+                            class="font-serif font-bold text-2xl text-slate-800"
+                        >
+                            {newSub.id
+                                ? "Update Subscription"
+                                : "Track a Recurring Charge"}
                         </h3>
                         <p class="text-slate-500 text-sm mt-2 leading-relaxed">
                             {newSub.id
@@ -418,7 +426,8 @@
                     </div>
                     <button
                         onclick={resetForm}
-                        class="text-gray-400 hover:text-gray-600 mt-1">Go back</button
+                        class="text-gray-400 hover:text-gray-600 mt-1"
+                        >Go back</button
                     >
                 </div>
 

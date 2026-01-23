@@ -3,8 +3,8 @@
         currentProfileId,
         profiles,
         type Profile,
-    } from "$lib/stores/profileContext";
-    import { t } from "$lib/stores/concierge";
+    } from "$lib/stores/profileContext.ts";
+    import { t } from "$lib/stores/conciergeStore.svelte.ts";
     import { User, Plus, Check, ChevronDown, Users } from "lucide-svelte";
     import { fade, slide } from "svelte/transition";
     import { tick } from "svelte";

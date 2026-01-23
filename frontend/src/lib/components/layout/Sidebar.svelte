@@ -1,7 +1,7 @@
 <script lang="ts">
     import { page } from "$app/stores";
-    import { t, userRole } from "$lib/stores/concierge";
-    import { estateProfile } from "$lib/stores/estateStore.svelte";
+    import { t, userRole } from "$lib/stores/conciergeStore.svelte.ts";
+    import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
     import { navGroups, pulseSubNav } from "$lib/config/navigation";
     import {
         ChevronDown,
@@ -16,9 +16,9 @@
     import { createEventDispatcher } from "svelte";
     import { slide } from "svelte/transition";
     import logo from "$lib/assets/logo.png";
-    import { logout } from "$lib/stores/keyringStore";
+    import { logout } from "$lib/stores/keyringStore.ts";
     import ProfileSwitcher from "$lib/components/ui/ProfileSwitcher.svelte";
-    import { contextStore } from "$lib/stores/contextStore.svelte";
+    import { contextStore } from "$lib/stores/contextStore.svelte.ts";
     import GettingStartedTracker from "$lib/components/GettingStartedTracker.svelte";
 
     // Props
@@ -34,7 +34,9 @@
     let openGroupKey = $state<string | null>(null);
 
     // Check if we're in Pulse section
-    let isInPulseSection = $derived($page.url.pathname.startsWith('/modules/pulse'));
+    let isInPulseSection = $derived(
+        $page.url.pathname.startsWith("/modules/pulse"),
+    );
 
     // Filter Nav Items
     let filteredNavGroups = $derived(
@@ -50,7 +52,7 @@
 
     // Filter Pulse sub-nav
     let filteredPulseNav = $derived(
-        pulseSubNav.filter((item) => item.allowedRoles.includes($userRole))
+        pulseSubNav.filter((item) => item.allowedRoles.includes($userRole)),
     );
 
     // Effect: Auto-open the group containing the current page
@@ -58,8 +60,12 @@
         const path = $page.url.pathname;
 
         // Find the group that should be open (skip primary groups which are always open)
-        const activeGroup = filteredNavGroups.find((group) =>
-            !group.isPrimary && group.items.some((item) => item.href === path || path.startsWith(item.href)),
+        const activeGroup = filteredNavGroups.find(
+            (group) =>
+                !group.isPrimary &&
+                group.items.some(
+                    (item) => item.href === path || path.startsWith(item.href),
+                ),
         );
 
         if (activeGroup) {
@@ -75,7 +81,7 @@
 
     function toggleGroup(key: string) {
         // Primary groups can't be collapsed
-        const group = filteredNavGroups.find(g => g.groupKey === key);
+        const group = filteredNavGroups.find((g) => g.groupKey === key);
         if (group?.isPrimary) return;
 
         if (openGroupKey === key) {
@@ -86,7 +92,7 @@
         }
     }
 
-    function isGroupOpen(group: typeof filteredNavGroups[0]): boolean {
+    function isGroupOpen(group: (typeof filteredNavGroups)[0]): boolean {
         // Primary groups are always open
         if (group.isPrimary) return true;
         return openGroupKey === group.groupKey;
@@ -146,12 +152,16 @@
                     <div class="px-4 py-2 mb-1">
                         <div class="flex items-center gap-2">
                             <Zap size={12} class="text-amber-400" />
-                            <span class="text-[10px] font-bold text-amber-400/90 uppercase tracking-widest">
+                            <span
+                                class="text-[10px] font-bold text-amber-400/90 uppercase tracking-widest"
+                            >
                                 {$t[group.groupKey] || group.groupLabel}
                             </span>
                         </div>
                         {#if group.groupDescription}
-                            <p class="text-[10px] text-primary-foreground/50 mt-0.5 pl-5">
+                            <p
+                                class="text-[10px] text-primary-foreground/50 mt-0.5 pl-5"
+                            >
                                 {group.groupDescription}
                             </p>
                         {/if}
@@ -160,9 +170,7 @@
                     <!-- Regular group: Collapsible accordion -->
                     <button
                         class="w-full flex flex-col items-start px-4 py-3 rounded-xl transition-all hover:bg-white/5 group border border-transparent
-                        {isGroupOpen(group)
-                            ? 'bg-white/5 border-white/5'
-                            : ''}"
+                        {isGroupOpen(group) ? 'bg-white/5 border-white/5' : ''}"
                         onclick={() => toggleGroup(group.groupKey)}
                         aria-expanded={isGroupOpen(group)}
                     >
@@ -201,9 +209,15 @@
                         transition:slide={{ duration: 300 }}
                     >
                         {#each group.items as item}
-                            {@const isEssential = contextStore.isExecutor && item.isExecutorEssential}
-                            {@const isActive = $page.url.pathname === item.href.split('#')[0] ||
-                                (item.href === '/modules/pulse' && isInPulseSection && item.key === 'pulse')}
+                            {@const isEssential =
+                                contextStore.isExecutor &&
+                                item.isExecutorEssential}
+                            {@const isActive =
+                                $page.url.pathname ===
+                                    item.href.split("#")[0] ||
+                                (item.href === "/modules/pulse" &&
+                                    isInPulseSection &&
+                                    item.key === "pulse")}
                             <a
                                 href={item.href}
                                 class="flex items-center gap-3 px-3 py-2.5 mx-1 rounded-xl transition-all duration-200 group relative overflow-hidden
@@ -243,7 +257,9 @@
         {#if isInPulseSection && filteredPulseNav.length > 1}
             <div class="mt-4 pt-4 border-t border-white/10">
                 <div class="px-4 py-2 mb-1">
-                    <span class="text-[10px] font-bold text-primary-foreground/60 uppercase tracking-widest">
+                    <span
+                        class="text-[10px] font-bold text-primary-foreground/60 uppercase tracking-widest"
+                    >
                         Pulse Navigation
                     </span>
                 </div>

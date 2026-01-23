@@ -5,7 +5,7 @@
  * for different user contexts (planning, executor, family member, etc.)
  */
 
-import { contextStore } from '$lib/stores/contextStore.svelte';
+import { contextStore } from "$lib/stores/contextStore.svelte.ts";
 
 export type MessageVariants = {
     planning: string;

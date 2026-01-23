@@ -3,7 +3,7 @@
     import {
         activityLog,
         type ActivityLogEntry,
-    } from "$lib/stores/activityLog";
+    } from "$lib/stores/activityLog.svelte.ts";
     import {
         History,
         Download,

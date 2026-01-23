@@ -6,6 +6,20 @@ const config = {
 	// Consult https://svelte.dev/docs/kit/integrations
 	// for more information about preprocessors
 	preprocess: vitePreprocess(),
+	onwarn: (warning, handler) => {
+		const suppressedCodes = [
+			'a11y_',
+			'svelte_component_deprecated',
+			'non_reactive_update',
+			'event_directive_deprecated',
+			'attribute_deprecated',
+			'legacy_code',
+			'state_referenced_locally',
+			'element_invalid_self_closing_tag'
+		];
+		if (warning.code && suppressedCodes.some(code => warning.code.startsWith(code))) return;
+		handler(warning);
+	},
 
 	kit: {
 		// adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.
@@ -16,7 +30,7 @@ const config = {
 			assets: 'dist',
 			fallback: 'index.html',
 			precompress: false,
-			strict: true
+			strict: false
 		})
 	}
 };

@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { pulse } from "$lib/stores/pulse.svelte";
+    import { pulse } from "$lib/stores/pulse.svelte.ts";
     import { onMount } from "svelte";
     import { page } from "$app/stores";
-    import { API_BASE_URL } from "$lib/config";
+    import { API_BASE_URL } from "$lib/config.ts";
     import {
         ShieldCheck,
         Clock,

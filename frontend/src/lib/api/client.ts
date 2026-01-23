@@ -7,7 +7,7 @@
 
 import { get } from 'svelte/store';
 import { auth } from '$lib/stores/auth';
-import { API_BASE_URL, DEFAULT_TIMEOUT } from '$lib/config';
+import { API_BASE_URL, DEFAULT_TIMEOUT } from '$lib/config.ts';
 import { browser } from '$app/environment';
 import { parseApiError } from '$lib/services/errorHandler';
 

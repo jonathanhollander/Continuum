@@ -7,7 +7,7 @@
         ThumbsDown,
     } from "lucide-svelte";
     import { fade, fly } from "svelte/transition";
-    import { t } from "$lib/stores/localization";
+    import { t } from "$lib/stores/localization.ts";
     let {
         steps = [],
         oncomplete,

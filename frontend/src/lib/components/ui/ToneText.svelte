@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { toneStore } from "$lib/stores/toneStore";
+    import { toneStore } from "$lib/stores/toneStore.svelte.ts";
     import { fade } from "svelte/transition";
 
     let { planning, grief, executor } = $props<{

@@ -10,7 +10,7 @@
  */
 import { writable, type Writable, get } from 'svelte/store';
 import { logger } from '../utils/logger';
-import { API_BASE_URL } from '../config';
+import { API_BASE_URL } from '../config.ts';
 
 export interface OverwhelmState {
     isOverwhelmed: boolean;
