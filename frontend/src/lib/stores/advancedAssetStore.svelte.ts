@@ -1,4 +1,4 @@
-import { registerSingletonSync } from "$lib/services/sync.svelte.ts";
+import { registerSingletonSync } from "$lib/services/sync.svelte";
 
 export interface AssetTransaction {
     id: string;
@@ -8,6 +8,7 @@ export interface AssetTransaction {
     amount: number;
     description: string;
     performBy: string;
+    custom_attributes?: string; // JSON string of custom field values
 }
 
 export interface MaintenanceLog {
@@ -18,6 +19,7 @@ export interface MaintenanceLog {
     provider: string;
     cost: number;
     nextDueDate?: string;
+    custom_attributes?: string; // JSON string of custom field values
 }
 
 export interface InsuranceClaim {
@@ -29,6 +31,7 @@ export interface InsuranceClaim {
     amountClaimed: number;
     amountPaid?: number;
     note: string;
+    custom_attributes?: string; // JSON string of custom field values
 }
 
 export interface AdvancedAssetState {

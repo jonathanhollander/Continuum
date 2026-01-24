@@ -1,7 +1,8 @@
 <script lang="ts">
     import { slide } from "svelte/transition";
     import { Sparkles, ArrowRight, Loader2, Copy, Mic } from "lucide-svelte";
-    import { logInteraction } from "$lib/stores/conciergeStore.svelte.ts";
+    import { logInteraction } from "$lib/stores/conciergeStore.svelte";
+    import { aiConciergeService } from "$lib/services/aiConciergeService";
 
     export let context:
         | "obituary"
@@ -57,16 +58,22 @@
         shufflePrompts();
     }
 
-    function runPrompt(text: string) {
+    async function runPrompt(text: string) {
         prompt = text;
         isGenerating = true;
         logInteraction("AI Prompt", `Context: ${context} | Prompt: ${text}`);
 
-        // Simulate AI Delay
-        setTimeout(() => {
+        try {
+            // Call the real service
+            const response = await aiConciergeService.chat(text, [], context);
+            result = `[Draft based on: "${text}"]\n\n${response.content}`;
+        } catch (e) {
+            console.error(e);
+            result =
+                "I'm having trouble connecting to my creative brain right now. Please try again in a moment.";
+        } finally {
             isGenerating = false;
-            result = `[AI Generated Draft based on: "${text}"]\n\nHere is a draft for you to review. Remember to add your personal touch.\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam...`;
-        }, 1500);
+        }
     }
 
     function toggleDictation() {
@@ -107,10 +114,10 @@
 </script>
 
 <div
-    class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-100 p-6 my-8"
+    class="bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl border border-primary/20 p-6 my-8"
 >
-    <div class="flex items-center gap-2 mb-4 text-indigo-900 font-bold">
-        <Sparkles size={18} class="text-indigo-500" />
+    <div class="flex items-center gap-2 mb-4 text-primary font-bold">
+        <Sparkles size={18} class="text-primary" />
         <span>Concierge Drafting Assistant</span>
     </div>
 
@@ -125,7 +132,7 @@
             class="w-full p-4 pr-24 rounded-xl border transition-all shadow-sm
             {isListening
                 ? 'border-red-400 ring-2 ring-red-100 bg-red-50'
-                : 'border-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500'}"
+                : 'border-primary/20 focus:outline-none focus:ring-2 focus:ring-primary'}"
             on:keydown={(e) => e.key === "Enter" && runPrompt(prompt)}
             disabled={isListening}
         />
@@ -144,7 +151,7 @@
 
             <!-- Send Button -->
             <button
-                class="p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                class="p-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-colors disabled:opacity-50"
                 disabled={!prompt || isGenerating || isListening}
                 on:click={() => runPrompt(prompt)}
             >
@@ -162,7 +169,7 @@
         <div class="flex flex-wrap gap-2 mt-4" transition:slide>
             {#each [...(quickPrompts[context] || []), ...prompts] as qp}
                 <button
-                    class="px-3 py-1.5 bg-white text-xs font-medium text-indigo-700 rounded-full border border-indigo-100 hover:border-indigo-300 hover:bg-indigo-50 transition-colors"
+                    class="px-3 py-1.5 bg-white text-xs font-medium text-primary-700 rounded-full border border-primary-100 hover:border-primary-300 hover:bg-primary-50 transition-colors"
                     on:click={() => runPrompt(qp)}
                 >
                     {qp}
@@ -174,21 +181,21 @@
     <!-- Result Area -->
     {#if result}
         <div
-            class="mt-4 bg-white rounded-xl p-4 border border-indigo-100 shadow-sm relative group"
+            class="mt-4 bg-white rounded-xl p-4 border border-primary-100 shadow-sm relative group"
             transition:slide
         >
             <div class="font-mono text-sm text-gray-700 whitespace-pre-wrap">
                 {result}
             </div>
             <button
-                class="absolute top-2 right-2 p-2 bg-gray-100 text-gray-500 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-indigo-100 hover:text-indigo-600"
+                class="absolute top-2 right-2 p-2 bg-gray-100 text-gray-500 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary-100 hover:text-primary-600"
                 on:click={copyResult}
                 title="Copy to Clipboard"
             >
                 <Copy size={16} />
             </button>
             <button
-                class="block w-full text-center text-xs text-indigo-400 mt-4 hover:text-indigo-600 hover:underline"
+                class="block w-full text-center text-xs text-primary-400 mt-4 hover:text-primary-600 hover:underline"
                 on:click={() => (result = "")}
             >
                 Start Over

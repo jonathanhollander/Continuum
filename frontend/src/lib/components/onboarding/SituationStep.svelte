@@ -1,7 +1,7 @@
 <script lang="ts">
     import { fade, fly } from 'svelte/transition';
     import { Sun, CloudRain, Heart, ArrowLeft, ArrowRight } from 'lucide-svelte';
-    import { onboardingFlowStore, type EmotionalContext } from "$lib/stores/onboardingFlowStore.svelte.ts";
+    import { onboardingFlowStore, type EmotionalContext } from "$lib/stores/onboardingFlowStore.svelte";
 
     const situations: { id: EmotionalContext; icon: typeof Sun; title: string; description: string; color: string }[] = [
         {

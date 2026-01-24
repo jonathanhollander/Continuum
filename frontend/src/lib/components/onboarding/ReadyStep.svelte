@@ -7,11 +7,11 @@
         ArrowLeft,
         Check,
     } from "lucide-svelte";
-    import { onboardingFlowStore } from "$lib/stores/onboardingFlowStore.svelte.ts";
+    import { onboardingFlowStore } from "$lib/stores/onboardingFlowStore.svelte";
     import { goto } from "$app/navigation";
-    import { conciergeEngine } from "$lib/stores/conciergeEngine.ts";
-    import { preferenceStore } from "$lib/stores/preferenceStore.ts";
-    import { contextStore } from "$lib/stores/contextStore.svelte.ts";
+    import { conciergeEngine } from "$lib/stores/conciergeEngine";
+    import { preferenceStore } from "$lib/stores/preferenceStore";
+    import { contextStore } from "$lib/stores/contextStore.svelte";
 
     let isCompleting = $state(false);
 

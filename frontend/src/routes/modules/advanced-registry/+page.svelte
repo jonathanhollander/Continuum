@@ -4,12 +4,12 @@
         type AssetTransaction,
         type MaintenanceLog,
         type InsuranceClaim,
-    } from "$lib/stores/advancedAssetStore.svelte.ts";
+    } from "$lib/stores/advancedAssetStore.svelte";
     import {
         digitalAssetsStore,
         type DigitalAccount,
         type ClosurePreference,
-    } from "$lib/stores/digitalAssetsStore.svelte.ts";
+    } from "$lib/stores/digitalAssetsStore.svelte";
     import {
         Layers,
         Repeat,
@@ -33,6 +33,7 @@
     } from "lucide-svelte";
     import { fade, slide, scale } from "svelte/transition";
     import EmptyState from "$lib/components/EmptyState.svelte";
+    import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
 
     let activeTab = $state<
         "transactions" | "maintenance" | "claims" | "killswitch"
@@ -44,6 +45,7 @@
     let addType = $state<"transaction" | "maintenance" | "claim" | "account">(
         "transaction",
     );
+    let parsedCustomAttributes = $state<Record<string, any>>({});
 
     // Temp Form States
     let newTx = $state<Partial<AssetTransaction>>({
@@ -70,20 +72,29 @@
     });
 
     function handleAdd() {
+        const customAttrsString = JSON.stringify(parsedCustomAttributes);
+
         if (addType === "transaction")
-            advancedAssetStore.addTransaction(
-                newTx as Omit<AssetTransaction, "id">,
-            );
+            advancedAssetStore.addTransaction({
+                ...newTx,
+                custom_attributes: customAttrsString,
+            } as Omit<AssetTransaction, "id">);
         if (addType === "maintenance")
-            advancedAssetStore.addMaintenance(
-                newMaint as Omit<MaintenanceLog, "id">,
-            );
+            advancedAssetStore.addMaintenance({
+                ...newMaint,
+                custom_attributes: customAttrsString,
+            } as Omit<MaintenanceLog, "id">);
         if (addType === "claim")
-            advancedAssetStore.addClaim(newClaim as Omit<InsuranceClaim, "id">);
+            advancedAssetStore.addClaim({
+                ...newClaim,
+                custom_attributes: customAttrsString,
+            } as Omit<InsuranceClaim, "id">);
         if (addType === "account")
             digitalAssetsStore.addAccount(
                 newAccount as Omit<DigitalAccount, "id" | "isClosed">,
             );
+
+        parsedCustomAttributes = {};
         showAddModal = false;
     }
 
@@ -658,6 +669,12 @@
                                 />
                             </div>
                         </div>
+                        <div class="pt-4 mt-4 border-t border-slate-100">
+                            <CustomFieldsManager
+                                entityType="transaction"
+                                bind:data={parsedCustomAttributes}
+                            />
+                        </div>
                     </div>
                 {:else if addType === "maintenance"}
                     <div class="space-y-4">
@@ -702,6 +719,12 @@
                                 />
                             </div>
                         </div>
+                        <div class="pt-4 mt-4 border-t border-slate-100">
+                            <CustomFieldsManager
+                                entityType="maintenance"
+                                bind:data={parsedCustomAttributes}
+                            />
+                        </div>
                     </div>
                 {:else if addType === "claim"}
                     <div class="space-y-4">
@@ -730,6 +753,12 @@
                                 class="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold"
                                 rows="3"
                             ></textarea>
+                        </div>
+                        <div class="pt-4 mt-4 border-t border-slate-100">
+                            <CustomFieldsManager
+                                entityType="claim"
+                                bind:data={parsedCustomAttributes}
+                            />
                         </div>
                     </div>
                 {:else if addType === "account"}

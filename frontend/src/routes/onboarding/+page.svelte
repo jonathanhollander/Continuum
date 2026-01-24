@@ -10,10 +10,10 @@
         Check,
     } from "lucide-svelte";
     import logo from "$lib/assets/logo.png";
-    import { auth } from "$lib/stores/auth.ts";
-    import { preferenceStore } from "$lib/stores/preferenceStore.ts";
-    import { conciergeEngine } from "$lib/stores/conciergeEngine.ts";
-    import { API_BASE_URL } from "$lib/config.ts";
+    import { auth } from "$lib/stores/auth";
+    import { preferenceStore } from "$lib/stores/preferenceStore";
+    import { conciergeEngine } from "$lib/stores/conciergeEngine";
+    import { API_BASE_URL } from "$lib/config";
 
     // Flow states
     let ready = $state(false);
@@ -49,6 +49,7 @@
             if (response.ok) {
                 const data = await response.json();
                 if (data.onboarding_completed) {
+                    preferenceStore.setOnboardingComplete(true);
                     goto("/dashboard");
                     return;
                 }

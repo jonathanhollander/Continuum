@@ -1,7 +1,7 @@
 <script lang="ts">
     import { fade, fly } from 'svelte/transition';
     import { Heart, Shield, Clock, ArrowRight } from 'lucide-svelte';
-    import { onboardingFlowStore } from "$lib/stores/onboardingFlowStore.svelte.ts";
+    import { onboardingFlowStore } from "$lib/stores/onboardingFlowStore.svelte";
 
     let ready = $state(false);
 

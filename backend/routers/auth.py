@@ -108,6 +108,11 @@ class PasskeyRegisterFinishPayload(BaseModel):
         return v
 
 
+class PasskeyLoginStartPayload(BaseModel):
+    """Optional payload for starting passkey login with email hint."""
+    email: Optional[str] = None
+
+
 class PasskeyLoginFinishPayload(BaseModel):
     """Validated model for completing passkey login."""
     challenge_id: str
@@ -285,10 +290,12 @@ def passkey_register_start(request: Request, signup_data: PasskeySignupRequest, 
         )
 
     # Create new user (without password)
+    # Note: public_key is set to empty string as placeholder - will be stored in PulseCredential after registration
     new_user = User(
         email=signup_data.email,
         external_id=f"user-{signup_data.email}",
-        hashed_password=None  # Passkey-only user
+        hashed_password=None,  # Passkey-only user
+        public_key=""  # Placeholder - actual key stored in PulseCredential table
     )
 
     session.add(new_user)
@@ -340,6 +347,27 @@ def passkey_register_finish(request: Request, payload: PasskeyRegisterFinishPayl
         cred_id_b64 = base64.urlsafe_b64encode(cred_id).decode('utf-8').rstrip('=')
         pub_key_b64 = base64.urlsafe_b64encode(pub_key).decode('utf-8').rstrip('=')
 
+        # Extract AAGUID (identifies authenticator type: Google, Apple, etc.)
+        aaguid_str = None
+        if hasattr(verification, 'aaguid') and verification.aaguid:
+            # AAGUID is 16 bytes, format as UUID string
+            aaguid_bytes = verification.aaguid
+            if isinstance(aaguid_bytes, bytes) and len(aaguid_bytes) == 16:
+                aaguid_str = f"{aaguid_bytes[:4].hex()}-{aaguid_bytes[4:6].hex()}-{aaguid_bytes[6:8].hex()}-{aaguid_bytes[8:10].hex()}-{aaguid_bytes[10:].hex()}"
+            logger.info(f"Passkey AAGUID: {aaguid_str}")
+
+        # Extract transports from client response (e.g., ["internal", "hybrid"])
+        transports_json = None
+        if isinstance(credential_response, dict) and 'transports' in credential_response:
+            transports_json = json.dumps(credential_response['transports'])
+            logger.info(f"Passkey transports: {credential_response['transports']}")
+        elif isinstance(credential_response, dict) and 'response' in credential_response:
+            # Transports might be nested in response
+            resp = credential_response.get('response', {})
+            if 'transports' in resp:
+                transports_json = json.dumps(resp['transports'])
+                logger.info(f"Passkey transports (nested): {resp['transports']}")
+
         # Check if credential already exists
         existing = session.get(PulseCredential, cred_id_b64)
         if existing:
@@ -350,10 +378,14 @@ def passkey_register_finish(request: Request, payload: PasskeyRegisterFinishPayl
             id=cred_id_b64,
             user_id=user_id,
             public_key=pub_key_b64,
-            sign_count=verification.sign_count
+            sign_count=verification.sign_count,
+            aaguid=aaguid_str,
+            transports=transports_json
         )
         session.add(new_cred)
         session.commit()
+
+        logger.info(f"Passkey registered for user {user_id}: aaguid={aaguid_str}, transports={transports_json}")
 
         # Generate JWT tokens
         access_token = create_access_token(
@@ -383,12 +415,50 @@ def passkey_register_finish(request: Request, payload: PasskeyRegisterFinishPayl
 
 @router.post("/passkey/login/start", summary="Start Passkey login", description="Initiates the WebAuthn assertion process by returning an authentication challenge.")
 @limiter.limit("10/minute")
-def passkey_login_start(request: Request):
+def passkey_login_start(request: Request, payload: PasskeyLoginStartPayload = None, session: Session = Depends(get_session)):
     """
     Start passkey login flow (Step 1 of 2).
     Generates authentication challenge.
+
+    If email is provided, looks up the user's credentials and restricts
+    authentication to platform authenticators only (prevents QR code).
     """
-    options = get_authentication_options()
+    credentials = None
+
+    # Debug: Log what we received
+    logger.info(f"Passkey login start - payload: {payload}")
+    if payload:
+        logger.info(f"Passkey login start - email: {payload.email}")
+
+    # If email provided, look up user's credentials to restrict to platform auth
+    if payload and payload.email:
+        # Find user by email
+        user = session.exec(select(User).where(User.email == payload.email)).first()
+        if user:
+            # Get user's passkey credentials
+            user_creds = session.exec(
+                select(PulseCredential).where(PulseCredential.user_id == user.id)
+            ).all()
+
+            if user_creds:
+                credentials = []
+                for cred in user_creds:
+                    cred_data = {"id": cred.id}
+                    # Include stored transports if available
+                    if cred.transports:
+                        try:
+                            cred_data["transports"] = json.loads(cred.transports)
+                        except json.JSONDecodeError:
+                            pass
+                    credentials.append(cred_data)
+                logger.info(f"Found {len(credentials)} credentials for user {payload.email}: {credentials}")
+            else:
+                logger.info(f"No credentials found for user {payload.email}")
+        else:
+            logger.info(f"User not found for email: {payload.email}")
+
+    logger.info(f"Calling get_authentication_options with credentials: {credentials is not None}")
+    options = get_authentication_options(credentials=credentials)
 
     # Generate a temporary challenge ID and store (uses Redis in production)
     challenge_id = secrets.token_urlsafe(32)

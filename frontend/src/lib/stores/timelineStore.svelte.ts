@@ -1,4 +1,4 @@
-import { registerSync } from "$lib/services/sync.svelte.ts";
+import { registerSync } from "$lib/services/sync.svelte";
 
 export interface LifeEvent {
     id: number | string;
@@ -12,6 +12,7 @@ export interface LifeEvent {
     isHighlight?: boolean;
     impact?: "High" | "Medium" | "Low";
     assignedContactId?: string;
+    custom_attributes?: string; // JSON string of custom field values
 }
 
 const timelineMapper = (item: any) => {

@@ -1,5 +1,6 @@
 <script lang="ts">
     import { fade, slide, fly } from "svelte/transition";
+    import { onMount } from "svelte";
     import {
         Heart,
         Shield,
@@ -16,18 +17,21 @@
     import {
         medicalStore,
         type MedicalDirective,
-    } from "$lib/stores/medicalStore.svelte.ts";
-    import { t, language } from "$lib/stores/localization.ts";
+    } from "$lib/stores/medicalStore.svelte";
+    import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import Affirmation from "$lib/components/Affirmation.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
-    import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
-    import { activityLog } from "$lib/stores/activityLog.svelte.ts";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
+    import { activityLog } from "$lib/stores/activityLog.svelte";
     import LegalDisclaimer from "$lib/components/common/LegalDisclaimer.svelte";
     import GriefSupportBanner from "$lib/components/GriefSupportBanner.svelte";
+    import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
+    import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
 
     let showAddForm = $state(false);
+    let parsedCustomAttributes = $state<Record<string, any>>({});
     let editMode = $state(false);
     let showAffirmation = $state(false);
     let newDirective: Partial<MedicalDirective> = $state({
@@ -44,6 +48,18 @@
         organDonor: medicalStore.profile.organDonor,
         bloodType: medicalStore.profile.bloodType,
         allergies: medicalStore.profile.allergies,
+    });
+
+    // Reactive profile derived from store subscription for display
+    let currentProfile = $state(medicalStore.profile);
+
+    // Sync medical data on mount and update reactive profile
+    onMount(() => {
+        medicalStore.sync();
+        // Subscribe to store changes to update reactive profile
+        return medicalStore.subscribe(() => {
+            currentProfile = medicalStore.profile;
+        });
     });
 
     function saveProfile() {
@@ -63,8 +79,13 @@
     function saveDirective() {
         if (!newDirective.title) return;
 
+        const directiveData = {
+            ...newDirective,
+            custom_attributes: JSON.stringify(parsedCustomAttributes),
+        };
+
         if (newDirective.id) {
-            medicalStore.updateDirective(newDirective.id, newDirective);
+            medicalStore.updateDirective(newDirective.id, directiveData);
             activityLog.logEvent({
                 module: "Health & Medical",
                 action: "UPDATE",
@@ -75,7 +96,7 @@
             });
         } else {
             medicalStore.addDirective(
-                newDirective as Omit<MedicalDirective, "id">,
+                directiveData as Omit<MedicalDirective, "id">,
             );
             activityLog.logEvent({
                 module: "Health & Medical",
@@ -93,6 +114,11 @@
 
     function editDirective(dir: MedicalDirective) {
         newDirective = { ...dir };
+        try {
+            parsedCustomAttributes = JSON.parse(dir.custom_attributes || "{}");
+        } catch {
+            parsedCustomAttributes = {};
+        }
         showAddForm = true;
     }
 
@@ -106,6 +132,7 @@
             contactPhone: "",
             summary: "",
         };
+        parsedCustomAttributes = {};
     }
 
     function removeDirective(id: string | number) {
@@ -129,40 +156,21 @@
 
 <div class="max-w-5xl mx-auto space-y-8 p-4 md:p-8">
     <!-- Header -->
-    <header
-        class="flex flex-col md:flex-row md:items-center justify-between gap-4"
+    <LivingBlueprintHeader
+        title="Your Voice at the End of Life"
+        subtitle="Ensure your values are honored when you can't speak for yourself"
+        tier="preparation"
+        detailedDescription="Your voice in healthcare decisions matters, even when you can't speak for yourself. Document your directives and medical history to guide your advocates."
+        whyMatters="Medical uncertainty places a heavy burden on families. Clear directives relieve them of agonizing guessing games and ensure your care aligns with your values."
     >
-        <div>
-            <h1
-                class="text-3xl font-bold text-gray-900 flex items-center gap-3"
-            >
-                <div class="p-3 bg-red-100 text-red-600 rounded-2xl">
-                    <Heart size={32} />
-                </div>
-                Your Voice at the End of Life
-            </h1>
-            <p class="text-gray-500 mt-2 text-lg max-w-2xl leading-relaxed">
-                These are some of the most important decisions you'll make. They
-                ensure your values are honored when you can't speak for
-                yourself, protecting your dignity and your family's peace of
-                mind.
-            </p>
-            <div class="mt-4">
-                <LegalDisclaimer
-                    variant="inline"
-                    title="Medical Disclaimer"
-                    message="Advance Directives and DNR orders often require specific state-mandated forms, witness signatures, or notarization to be legally binding. Use this module to organize your intent, but verify compliance with local healthcare laws."
-                />
-            </div>
-        </div>
         <button
             onclick={() => (showAddForm = true)}
-            class="flex items-center justify-center gap-2 px-6 py-3 bg-red-600 text-white rounded-2xl font-bold hover:bg-red-700 transition-colors shadow-lg shadow-red-200"
+            class="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-2xl font-bold hover:scale-105 transition-all shadow-lg shadow-primary/20"
         >
             <Plus size={20} />
-            Record Your Wishes
+            Save my medical wishes
         </button>
-    </header>
+    </LivingBlueprintHeader>
 
     <div class="max-w-3xl">
         <GriefSupportBanner compact={true} />
@@ -175,11 +183,11 @@
         <!-- Life Saving Profile -->
         <div class="lg:col-span-1 space-y-8">
             <section
-                class="bg-white rounded-3xl border border-red-100 shadow-sm overflow-hidden overflow-hidden overflow-hidden"
+                class="bg-white rounded-3xl border border-primary/10 shadow-sm overflow-hidden"
             >
-                <div class="p-6 bg-red-50 border-b border-red-100">
+                <div class="p-6 bg-primary/5 border-b border-primary/10">
                     <h2
-                        class="text-lg font-bold text-red-900 flex items-center gap-2"
+                        class="text-lg font-bold text-primary flex items-center gap-2"
                     >
                         <Activity size={20} />
                         Emergency Profile
@@ -203,7 +211,7 @@
                                     </p>
                                 </div>
                                 <div
-                                    class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center font-bold"
+                                    class="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center font-bold"
                                 >
                                     {medicalStore.profile.bloodType?.includes(
                                         "+",
@@ -230,7 +238,7 @@
                             <div
                                 class="flex items-center gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-100"
                             >
-                                {#if medicalStore.profile.organDonor}
+                                {#if currentProfile.organDonor}
                                     <CircleCheck
                                         class="text-blue-600"
                                         size={20}
@@ -254,7 +262,7 @@
                                     tempProfile = { ...medicalStore.profile };
                                     showProfileEdit = true;
                                 }}
-                                class="w-full py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors font-bold text-sm"
+                                class="w-full py-3 text-primary hover:bg-primary/5 rounded-xl transition-colors font-bold text-sm"
                             >
                                 Update Profile
                             </button>
@@ -308,8 +316,8 @@
                             <div class="flex gap-2">
                                 <button
                                     onclick={saveProfile}
-                                    class="flex-1 py-2 bg-red-600 text-white rounded-xl font-bold text-sm"
-                                    >Save</button
+                                    class="flex-1 py-2 bg-primary text-primary-foreground rounded-xl font-bold text-sm"
+                                    >Save my updates</button
                                 >
                                 <button
                                     onclick={() => (showProfileEdit = false)}
@@ -326,14 +334,14 @@
         <!-- Directives List -->
         <div class="lg:col-span-2 space-y-6">
             <div
-                class="bg-blue-50 p-6 rounded-3xl border border-blue-100 flex items-start gap-4"
+                class="bg-primary/5 p-6 rounded-3xl border border-primary/10 flex items-start gap-4"
             >
-                <Shield class="text-blue-600 mt-1 shrink-0" size={24} />
+                <Shield class="text-primary mt-1 shrink-0" size={24} />
                 <div>
-                    <h3 class="font-bold text-blue-900 text-lg">
+                    <h3 class="font-bold text-primary text-lg">
                         Your End-of-Life Voice
                     </h3>
-                    <p class="text-sm text-blue-800 mt-1 leading-relaxed">
+                    <p class="text-sm text-primary/80 mt-1 leading-relaxed">
                         Providing clear guidance for your medical care is a gift
                         to your family. It removes the burden of uncertainty and
                         ensures your wishes are honored with dignity.
@@ -348,7 +356,7 @@
                     <div class="flex items-start justify-between">
                         <div class="flex gap-4">
                             <div
-                                class="p-3 bg-gray-50 text-gray-400 rounded-2xl group-hover:bg-red-50 group-hover:text-red-500 transition-colors"
+                                class="p-3 bg-gray-50 text-gray-400 rounded-2xl group-hover:bg-primary/5 group-hover:text-primary transition-colors"
                             >
                                 <FileText size={24} />
                             </div>
@@ -424,8 +432,8 @@
                     whyMatters="<strong>Without advance directives, doctors and family members must guess what you would want during a medical crisis.</strong> This creates agonizing decisions for loved ones who are already suffering.<br/><br/>Documenting your healthcare wishes—whether it's a healthcare proxy, living will, or DNR—gives them clarity, legal authority, and peace of mind. They'll know they're honoring your choices, not making impossible decisions on your behalf."
                     encouragement="When you're ready, start with just one directive. You can always add more later."
                     icon={Shield}
-                    iconClass="text-blue-500"
-                    ctaLabel="Document my wishes"
+                    iconClass="text-primary"
+                    ctaLabel="Share my wishes"
                     onAction={() => (showAddForm = true)}
                 />
                 <!-- GHOST ROWS (Hidden, keeping for reference) -->
@@ -478,8 +486,8 @@
                 <div>
                     <h2 class="text-2xl font-bold text-gray-900">
                         {newDirective.id
-                            ? "Update Your Voice"
-                            : "Document Your Wishes"}
+                            ? "Share Your Voice"
+                            : "Who should hear your voice?"}
                     </h2>
                     <p class="text-gray-500 leading-relaxed">
                         These choices reflect your values and ensure you're
@@ -545,7 +553,7 @@
                     <textarea
                         bind:value={newDirective.summary}
                         placeholder="Key points of this directive..."
-                        class="w-full px-4 py-2 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-red-500"
+                        class="w-full px-4 py-2 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-primary"
                         rows="3"
                     ></textarea>
                 </div>
@@ -591,6 +599,14 @@
                     />
                 </div>
 
+                <!-- Custom Fields -->
+                <div class="pt-4 mt-4 border-t border-gray-100">
+                    <CustomFieldsManager
+                        entityType="medical"
+                        bind:data={parsedCustomAttributes}
+                    />
+                </div>
+
                 <div class="flex gap-4 pt-4">
                     <button
                         type="button"
@@ -601,9 +617,11 @@
                     </button>
                     <button
                         type="submit"
-                        class="flex-1 py-4 px-6 bg-red-600 text-white rounded-2xl font-bold hover:bg-red-700 transition-colors shadow-lg shadow-red-200 border-b-4 border-red-800 active:border-b-0 active:mt-1"
+                        class="flex-1 py-4 px-6 bg-primary text-primary-foreground rounded-2xl font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all"
                     >
-                        {newDirective.id ? "Save Changes" : "Add Directive"}
+                        {newDirective.id
+                            ? "Save my updates"
+                            : "Include this directive"}
                     </button>
                 </div>
             </form>

@@ -27,8 +27,8 @@
         type AccessPack,
         type AssetLabel,
     } from "$lib/stores/qrStore";
-    import { activityLog } from "$lib/stores/activityLog.svelte.ts";
-    import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
+    import { activityLog } from "$lib/stores/activityLog.svelte";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { onMount } from "svelte";
 
     let selectedPack = $state<AccessPack | null>(null);

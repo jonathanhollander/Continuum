@@ -2,7 +2,7 @@
     import { onMount } from "svelte";
     import { goto } from "$app/navigation";
     import { page } from "$app/stores";
-    import { API_BASE_URL } from "$lib/config.ts";
+    import { API_BASE_URL } from "$lib/config";
     import { Shield, CheckCircle2, AlertCircle, Loader2 } from "lucide-svelte";
     import { fade, fly } from "svelte/transition";
 

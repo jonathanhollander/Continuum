@@ -27,6 +27,10 @@ class MediaFile(SQLModel, table=True):
     module: str  # Which module uses this: heirlooms, properties, visual_memories, time_capsules
     reference_id: Optional[str] = None  # ID of the item in that module (e.g., heirloom_id)
 
+    # Storage Architecture
+    storage_provider: str = Field(default="local")  # "local" or "s3"
+    doc_category: str = Field(default="uncategorized")  # medical, legal, financial, personal, vet_records, media (fallback)
+    
     # Optional metadata
     description: Optional[str] = None
     width: Optional[int] = None  # For images/videos

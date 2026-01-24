@@ -3,8 +3,8 @@
     import { fade, slide } from "svelte/transition";
     import { Save, Heart, Anchor, Shield, Sun, Edit3 } from "lucide-svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
-    import { registerSync } from "$lib/services/sync.svelte.ts"; // Added
-    import { activityLog } from "$lib/stores/activityLog.svelte.ts";
+    import { registerSync } from "$lib/services/sync.svelte"; // Added
+    import { activityLog } from "$lib/stores/activityLog.svelte";
 
     // --- State ---
     interface CoreValue {

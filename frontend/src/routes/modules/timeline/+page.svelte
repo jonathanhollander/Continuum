@@ -22,8 +22,11 @@
     import {
         timelineStore,
         type LifeEvent,
-    } from "$lib/stores/timelineStore.svelte.ts";
-    import { familyStore } from "$lib/stores/familyStore.svelte.ts";
+    } from "$lib/stores/timelineStore.svelte";
+    import { familyStore } from "$lib/stores/familyStore.svelte";
+    import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
+
+    let parsedCustomAttributes = $state<Record<string, any>>({});
 
     // --- State & Types ---
     // LifeEvent imported from store
@@ -42,18 +45,29 @@
 
     let showAddModal = $state(false);
     let newEvent: Partial<LifeEvent> = $state({
+        id: undefined,
         year: currentYear,
         label: "",
         type: "milestone",
+        assignedContactId: undefined,
+        description: "",
+        reflection: "",
+        category: "Personal",
+        date: undefined,
     });
 
     function saveEvent() {
         if (!newEvent.label || !newEvent.year) return;
 
+        const eventData = {
+            ...newEvent,
+            custom_attributes: JSON.stringify(parsedCustomAttributes),
+        };
+
         if (newEvent.id) {
-            timelineStore.updateEvent(newEvent.id, newEvent);
+            timelineStore.updateEvent(newEvent.id, eventData);
         } else {
-            timelineStore.addEvent(newEvent);
+            timelineStore.addEvent(eventData);
         }
 
         resetForm();
@@ -61,6 +75,11 @@
 
     function editEvent(event: LifeEvent) {
         newEvent = { ...event };
+        try {
+            parsedCustomAttributes = JSON.parse(event.custom_attributes || "{}");
+        } catch {
+            parsedCustomAttributes = {};
+        }
         showAddModal = true;
     }
 
@@ -76,6 +95,7 @@
             reflection: "",
             category: "Personal",
         };
+        parsedCustomAttributes = {};
     }
 
     function removeEvent(id: string | number) {
@@ -307,6 +327,15 @@
                             </div>
                         </div>
                     {/if}
+
+                    <!-- Custom Fields -->
+                    <div class="pt-4 mt-4 border-t border-gray-100">
+                        <CustomFieldsManager
+                            entityType="timeline"
+                            bind:data={parsedCustomAttributes}
+                        />
+                    </div>
+
                     <button
                         onclick={saveEvent}
                         class="w-full py-3 bg-[#4A7C74] text-white rounded-xl font-bold mt-2"

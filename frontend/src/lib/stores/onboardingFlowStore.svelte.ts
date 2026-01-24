@@ -10,7 +10,7 @@
 
 import { auth } from './auth';
 import { get } from 'svelte/store';
-import { API_BASE_URL } from '$lib/config.ts';
+import { API_BASE_URL } from '$lib/config';
 
 export type UserRole = 'planning' | 'executor' | 'family' | 'advisor';
 export type EmotionalContext = 'healthy' | 'preparing' | 'grieving' | null;

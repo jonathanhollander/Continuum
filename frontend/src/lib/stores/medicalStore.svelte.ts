@@ -1,4 +1,4 @@
-import { registerSync, registerSingletonSync } from "$lib/services/sync.svelte.ts";
+import { registerSync, registerSingletonSync } from "$lib/services/sync.svelte";
 
 export interface MedicalDirective {
     id: number | string;
@@ -8,6 +8,8 @@ export interface MedicalDirective {
     primaryContact: string;
     contactPhone: string;
     summary: string;
+    fileData?: string;
+    custom_attributes?: string; // JSON string of custom field values
 }
 
 export interface MedicalProfile {
@@ -37,10 +39,12 @@ const directiveMapper = (item: any) => {
         locationOfOriginal: item.location_of_original ?? item.locationOfOriginal ?? '',
         primaryContact: item.primary_contact ?? item.primaryContact ?? '',
         contactPhone: item.contact_phone ?? item.contactPhone ?? '',
+        fileData: item.file_data ?? item.fileData ?? '',
         // Local -> Remote
         location_of_original: item.locationOfOriginal ?? item.location_of_original,
         primary_contact: item.primaryContact ?? item.primary_contact,
-        contact_phone: item.contactPhone ?? item.contact_phone
+        contact_phone: item.contactPhone ?? item.contact_phone,
+        file_data: item.fileData ?? item.file_data
     };
 };
 

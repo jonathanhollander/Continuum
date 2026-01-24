@@ -15,7 +15,7 @@
     import GriefSupportBanner from "$lib/components/GriefSupportBanner.svelte";
     import ExecutorTaskDetail from "$lib/components/executor/ExecutorTaskDetail.svelte";
     import { executorTasks } from "$lib/data/executorTasks";
-    import { currentScenario } from "$lib/stores/scenarioStore.svelte.ts";
+    import { currentScenario } from "$lib/stores/scenarioStore.svelte";
 
     let activeTab = $state("checklist");
     let selectedTask = $state<any>(null);

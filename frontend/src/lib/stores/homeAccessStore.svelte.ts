@@ -1,4 +1,4 @@
-import { registerSync } from "$lib/services/sync.svelte.ts";
+import { registerSync } from "$lib/services/sync.svelte";
 
 export interface HomeAccess {
     id?: number;
@@ -20,6 +20,7 @@ const manager = registerSync<HomeAccess>('home_access', 'home_access', mapper, '
 export const homeAccessStore = {
     subscribe: manager.subscribe.bind(manager),
     get items() { return manager.items; },
+    get status() { return manager.status; },
     create: (item: Omit<HomeAccess, 'id'>) => manager.create(item as HomeAccess),
     update: (id: number, updates: Partial<HomeAccess>) => manager.update(id, updates as HomeAccess),
     delete: (id: number) => manager.delete(id),

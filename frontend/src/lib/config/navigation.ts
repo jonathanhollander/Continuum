@@ -35,7 +35,8 @@ import {
     Search,
     Key,
     Stethoscope,
-    Building2
+    Building2,
+    MapPin
 } from "lucide-svelte";
 
 export type UserRole = "Owner" | "Executor" | "Family";
@@ -49,6 +50,9 @@ export type NavItem = {
     isExecutorEssential?: boolean;
     isQuickStart?: boolean;
     isCoreAction?: boolean;
+    behaviour?: "background-tab";
+    isExternal?: boolean;
+    tooltip?: string;
 };
 
 export type NavGroup = {
@@ -82,6 +86,7 @@ export const navGroups: NavGroup[] = [
                 icon: LayoutDashboard,
                 allowedRoles: ["Owner", "Executor", "Family"],
                 isQuickStart: true,
+                tooltip: "Your central hub for estate progress and status"
             },
             {
                 label: "Financial Security",
@@ -91,6 +96,7 @@ export const navGroups: NavGroup[] = [
                 allowedRoles: ["Owner", "Executor"],
                 isExecutorEssential: true,
                 isCoreAction: true,
+                tooltip: "Securely document bank accounts and investments"
             },
             {
                 label: "Protection & Insurance",
@@ -100,6 +106,7 @@ export const navGroups: NavGroup[] = [
                 allowedRoles: ["Owner", "Executor"],
                 isExecutorEssential: true,
                 isCoreAction: true,
+                tooltip: "Policies that protect the people you love"
             },
             {
                 label: "People Who Matter",
@@ -109,6 +116,7 @@ export const navGroups: NavGroup[] = [
                 allowedRoles: ["Owner", "Executor", "Family"],
                 isExecutorEssential: true,
                 isCoreAction: true,
+                tooltip: "Key contacts, advisors, and family members"
             },
             {
                 label: "Important Documents",
@@ -118,6 +126,7 @@ export const navGroups: NavGroup[] = [
                 allowedRoles: ["Owner", "Executor"],
                 isExecutorEssential: true,
                 isCoreAction: true,
+                tooltip: "Wills, trusts, and critical legal files"
             },
             {
                 label: "Health & Care",
@@ -127,6 +136,7 @@ export const navGroups: NavGroup[] = [
                 allowedRoles: ["Owner", "Executor", "Family"],
                 isExecutorEssential: true,
                 isCoreAction: true,
+                tooltip: "Medical directives and healthcare wishes"
             },
             {
                 label: "Home & Keys",
@@ -136,6 +146,7 @@ export const navGroups: NavGroup[] = [
                 allowedRoles: ["Owner", "Executor", "Family"],
                 isExecutorEssential: true,
                 isCoreAction: true,
+                tooltip: "Access codes, spare keys, and home details"
             },
             {
                 label: "Wellness Check-in",
@@ -144,6 +155,7 @@ export const navGroups: NavGroup[] = [
                 icon: Heart,
                 allowedRoles: ["Owner", "Executor", "Family"],
                 isCoreAction: true,
+                tooltip: "Let loved ones know you're okay"
             },
         ],
     },
@@ -159,6 +171,7 @@ export const navGroups: NavGroup[] = [
                 href: "/modules/subscriptions",
                 icon: Receipt,
                 allowedRoles: ["Owner", "Executor"],
+                tooltip: "Recurring payments and memberships to cancel"
             },
             {
                 label: "Pet Care",
@@ -166,6 +179,7 @@ export const navGroups: NavGroup[] = [
                 href: "/modules/pets",
                 icon: Dog,
                 allowedRoles: ["Owner", "Executor", "Family"],
+                tooltip: "Care instructions for your furry friends"
             },
             {
                 label: "Property",
@@ -174,6 +188,7 @@ export const navGroups: NavGroup[] = [
                 icon: Building2,
                 allowedRoles: ["Owner", "Executor"],
                 isExecutorEssential: true,
+                tooltip: "Real estate deeds and property details"
             },
             {
                 label: "Digital Accounts",
@@ -181,6 +196,7 @@ export const navGroups: NavGroup[] = [
                 href: "/modules/digital-guardian",
                 icon: Shield,
                 allowedRoles: ["Owner", "Executor"],
+                tooltip: "Online accounts, passwords, and digital life"
             },
         ],
     },
@@ -196,6 +212,7 @@ export const navGroups: NavGroup[] = [
                 href: "/catalog",
                 icon: Compass,
                 allowedRoles: ["Owner", "Executor", "Family"],
+                tooltip: "Browse all available Continuum modules"
             },
             {
                 label: "Letters to Loved Ones",
@@ -203,6 +220,7 @@ export const navGroups: NavGroup[] = [
                 href: "/modules/letters",
                 icon: Heart,
                 allowedRoles: ["Owner", "Executor", "Family"],
+                tooltip: "Leave meaningful messages for the future"
             },
             {
                 label: "Treasured Heirlooms",
@@ -210,6 +228,7 @@ export const navGroups: NavGroup[] = [
                 href: "/modules/heirlooms",
                 icon: Gift,
                 allowedRoles: ["Owner", "Executor", "Family"],
+                tooltip: "Items with special meaning and their stories"
             },
             {
                 label: "The Red Binder",
@@ -217,6 +236,7 @@ export const navGroups: NavGroup[] = [
                 href: "/binder",
                 icon: Activity,
                 allowedRoles: ["Owner", "Executor"],
+                tooltip: "Generate a physical backup of your plan"
             },
             {
                 label: "Settings",
@@ -224,6 +244,63 @@ export const navGroups: NavGroup[] = [
                 href: "/settings",
                 icon: Settings,
                 allowedRoles: ["Owner", "Executor", "Family"],
+                tooltip: "Manage your account and preferences"
+            },
+        ],
+    },
+    {
+        groupLabel: "Extras",
+        groupKey: "groupExtras",
+        groupDescription: "Additional tools and features",
+        isCollapsedByDefault: true,
+        items: [
+            {
+                label: "Family Tree",
+                key: "family-hub",
+                href: "/modules/family-hub",
+                icon: Users,
+                allowedRoles: ["Owner", "Executor", "Family"],
+                tooltip: "Your family network and connections"
+            },
+            {
+                label: "Future Scenarios",
+                key: "scenario",
+                href: "/modules/scenario-mode",
+                icon: Compass,
+                allowedRoles: ["Owner"],
+                tooltip: "Visualize and plan for different futures"
+            },
+            {
+                label: "Event Calendar",
+                key: "calendar",
+                href: "/modules/calendar",
+                icon: Calendar,
+                allowedRoles: ["Owner", "Executor", "Family"],
+                tooltip: "Important dates and milestones"
+            },
+            {
+                label: "Complete Record",
+                key: "advanced-registry",
+                href: "/modules/advanced-registry",
+                icon: Database,
+                allowedRoles: ["Owner", "Executor"],
+                tooltip: "Comprehensive database of all items"
+            },
+            {
+                label: "Builder Tools",
+                key: "builders",
+                href: "/modules/builders-console",
+                icon: Hammer,
+                allowedRoles: ["Owner"],
+                tooltip: "Developer tools for customizing Continuum"
+            },
+            {
+                label: "Treasure Hunt",
+                key: "treasurehunt",
+                href: "/modules/treasure-hunt",
+                icon: MapPin,
+                allowedRoles: ["Owner", "Executor", "Family"],
+                tooltip: "Interactive guide to finding important items"
             },
         ],
     },
@@ -316,6 +393,7 @@ export const catalogCategories: CatalogCategory[] = [
             { label: "Time Capsule", key: "capsule", href: "/modules/time-capsule", icon: Box, allowedRoles: ["Owner", "Executor", "Family"] },
             { label: "Life Timeline", key: "timeline", href: "/modules/timeline", icon: Calendar, allowedRoles: ["Owner", "Executor", "Family"] },
             { label: "Final Wishes", key: "funeral", href: "/modules/funeral", icon: Scroll, allowedRoles: ["Owner", "Executor", "Family"] },
+            { label: "Family Tree", key: "family-hub", href: "/modules/family-hub", icon: Users, allowedRoles: ["Owner", "Executor", "Family"] },
         ]
     },
     {
@@ -331,6 +409,11 @@ export const catalogCategories: CatalogCategory[] = [
             { label: "Insights", key: "analytics", href: "/modules/analytics", icon: BarChart3, allowedRoles: ["Owner"] },
             { label: "Activity History", key: "activity", href: "/modules/activity-log", icon: History, allowedRoles: ["Owner"] },
             { label: "Important Dates", key: "anniversary", href: "/modules/anniversary-manager", icon: Sparkles, allowedRoles: ["Owner", "Executor", "Family"] },
+            { label: "Future Scenarios", key: "scenario", href: "/modules/scenario-mode", icon: Compass, allowedRoles: ["Owner"] },
+            { label: "Event Calendar", key: "calendar", href: "/modules/calendar", icon: Calendar, allowedRoles: ["Owner", "Executor", "Family"] },
+            { label: "Complete Record", key: "advanced-registry", href: "/modules/advanced-registry", icon: Database, allowedRoles: ["Owner", "Executor"] },
+            { label: "Treasure Hunt", key: "treasurehunt", href: "/modules/treasure-hunt", icon: MapPin, allowedRoles: ["Owner", "Executor", "Family"] },
+            { label: "Builder Tools", key: "builders", href: "/modules/builders-console", icon: Hammer, allowedRoles: ["Owner"] },
         ]
     },
 ];

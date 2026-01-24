@@ -17,7 +17,7 @@
         Droplets,
         Leaf,
     } from "lucide-svelte";
-    import { funeralStore } from "$lib/stores/funeralStore.svelte.ts";
+    import { funeralStore } from "$lib/stores/funeralStore.svelte";
     import {
         FUNERAL_TRADITIONS,
         type TraditionConfig,

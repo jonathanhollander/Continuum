@@ -1,7 +1,7 @@
 <script lang="ts">
     import { page } from "$app/stores";
     import { onMount } from "svelte";
-    import { API_BASE_URL } from "$lib/config.ts";
+    import { API_BASE_URL } from "$lib/config";
     import { CheckCircle2, Shield, Activity, Loader2 } from "lucide-svelte";
     import { fade } from "svelte/transition";
     import LivingMesh from "$lib/components/pulse/LivingMesh.svelte";

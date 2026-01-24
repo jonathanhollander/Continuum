@@ -1,5 +1,5 @@
 import { derived } from 'svelte/store';
-import { registerSync } from "$lib/services/sync.svelte.ts";
+import { registerSync } from "$lib/services/sync.svelte";
 
 export interface AnniversaryEvent {
     id: string | number;
@@ -10,6 +10,7 @@ export interface AnniversaryEvent {
     ritualInstructions?: string;
     recurring: boolean;
     tags?: string[];
+    custom_attributes?: string; // JSON string of custom field values
 }
 
 const calendarMapper = (item: any) => {

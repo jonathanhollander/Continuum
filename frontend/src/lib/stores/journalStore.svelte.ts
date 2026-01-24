@@ -1,4 +1,4 @@
-import { registerSync } from "$lib/services/sync.svelte.ts";
+import { registerSync } from "$lib/services/sync.svelte";
 
 export interface JournalEntry {
     id?: number;
@@ -22,6 +22,7 @@ const manager = registerSync<JournalEntry>('journal_entries', 'journal_entries',
 export const journalStore = {
     subscribe: manager.subscribe.bind(manager),
     get items() { return manager.items; },
+    get status() { return manager.status; },
     create: (item: Omit<JournalEntry, 'id'>) => manager.create(item as JournalEntry),
     update: (id: number, updates: Partial<JournalEntry>) => manager.update(id, updates as JournalEntry),
     delete: (id: number) => manager.delete(id),

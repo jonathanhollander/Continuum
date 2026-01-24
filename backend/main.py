@@ -18,7 +18,7 @@ from backend.pulse_scheduler import start_scheduler, stop_scheduler
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import select
 from datetime import timedelta
-from backend.routers import pulse, contacts, estate_data, insurance, medical, pets, memories, auth as auth_router, media, email, heirlooms, support
+from backend.routers import pulse, contacts, estate_data, insurance, medical, pets, memories, auth as auth_router, media, email, heirlooms, support, documents
 
 from backend.errors import ContinuumException, handle_exception
 from slowapi import _rate_limit_exceeded_handler
@@ -122,6 +122,7 @@ app.include_router(memories.router)
 app.include_router(media.router)
 app.include_router(heirlooms.router)
 app.include_router(support.router)
+app.include_router(documents.router)
 
 # Initialize database on startup
 @app.on_event("startup")
@@ -140,19 +141,25 @@ def on_startup():
 def seed_dev_user():
     """Seed a default dev user for development/testing."""
     from backend.auth import get_password_hash
-    with Session(engine) as session:
-        # Check if dev user exists
-        existing = session.exec(select(User).where(User.email == "dev@continuum.im")).first()
-        if not existing:
-            logger.info("Seeding default dev user (dev@continuum.im / password: dev123)")
-            user = User(
-                external_id="dev-user-1",
-                email="dev@continuum.im",
-                hashed_password=get_password_hash("dev123")
-            )
-            session.add(user)
-            session.commit()
-            logger.info("Dev user created: dev@continuum.im / dev123")
+    try:
+        logger.info("Checking for dev user...")
+        with Session(engine) as session:
+            # Check if dev user exists
+            existing = session.exec(select(User).where(User.email == "dev@continuum.im")).first()
+            if not existing:
+                logger.info("Seeding default dev user (dev@continuum.im / password: dev123)")
+                user = User(
+                    external_id="dev-user-1",
+                    email="dev@continuum.im",
+                    hashed_password=get_password_hash("dev123")
+                )
+                session.add(user)
+                session.commit()
+                logger.info("Dev user created: dev@continuum.im / dev123")
+            else:
+                logger.info(f"Dev user already exists: id={existing.id}")
+    except Exception as e:
+        logger.error(f"Failed to seed dev user: {e}")
 
 @app.on_event("shutdown")
 def on_shutdown():
@@ -165,7 +172,7 @@ async def set_secure_headers(request: Request, call_next):
     secure_headers.set_headers(response)
     return response
 
-# Configure CORS
+# Configure CORS (Reload Triggered)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.get_cors_origins_list(),

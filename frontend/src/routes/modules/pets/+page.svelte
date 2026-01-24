@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { fade, slide } from "svelte/transition";
+    import { fade, slide, scale } from "svelte/transition";
+    import { quintOut } from "svelte/easing";
     import {
         Cat,
         Dog,
@@ -13,18 +14,21 @@
         Pencil,
     } from "lucide-svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
+    import UniversalUploader from "$lib/components/ui/UniversalUploader.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import Affirmation from "$lib/components/Affirmation.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
-    import { t, language } from "$lib/stores/localization.ts";
+    import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
+    import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
-    import { petStore, type PetEntry } from "$lib/stores/petStore.svelte.ts";
+    import { petStore, type PetEntry } from "$lib/stores/petStore.svelte";
     import { onMount } from "svelte";
-    import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
-    import { activityLog } from "$lib/stores/activityLog.svelte.ts";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
+    import { activityLog } from "$lib/stores/activityLog.svelte";
 
     let showAddForm = $state(false);
     let showAffirmation = $state(false);
+    let parsedCustomAttributes = $state<Record<string, any>>({});
     let newPet: Partial<PetEntry> = $state({
         type: "dog",
         name: "",
@@ -35,14 +39,21 @@
         vetPhone: "",
         foodInstructions: "",
         medicalNeeds: "",
+        documents: "",
         notes: "",
     });
 
     function savePet() {
         if (!newPet.name) return;
 
+        // Serialize custom attributes
+        const petData = {
+            ...newPet,
+            custom_attributes: JSON.stringify(parsedCustomAttributes)
+        };
+
         if (newPet.id) {
-            petStore.updatePet(newPet.id, newPet);
+            petStore.updatePet(newPet.id, petData);
             activityLog.logEvent({
                 module: "Pet Care",
                 action: "UPDATE",
@@ -52,7 +63,7 @@
                 userContext: $estateProfile.ownerName || "User",
             });
         } else {
-            petStore.addPet(newPet as Omit<PetEntry, "id">);
+            petStore.addPet(petData as Omit<PetEntry, "id">);
             activityLog.logEvent({
                 module: "Pet Care",
                 action: "CREATE",
@@ -68,7 +79,25 @@
     }
 
     function editPet(pet: PetEntry) {
-        newPet = { ...pet };
+        newPet = {
+            id: pet.id,
+            type: pet.type || "dog",
+            name: pet.name || "",
+            breed: pet.breed || "",
+            guardian: pet.guardian || "",
+            vetName: pet.vetName || pet.vet_name || "",
+            vetPhone: pet.vetPhone || pet.vet_phone || "",
+            foodInstructions: pet.foodInstructions || pet.food_instructions || "",
+            medicalNeeds: pet.medicalNeeds || pet.medical_needs || "",
+            documents: pet.documents || "",
+            notes: pet.notes || "",
+        };
+        // Parse custom attributes for editing
+        try {
+            parsedCustomAttributes = JSON.parse(pet.custom_attributes || "{}");
+        } catch {
+            parsedCustomAttributes = {};
+        }
         showAddForm = true;
     }
 
@@ -86,14 +115,16 @@
             vetPhone: "",
             foodInstructions: "",
             medicalNeeds: "",
+            documents: "",
             notes: "",
         };
+        parsedCustomAttributes = {};
     }
 
     function removePet(id: number) {
         if (
             !confirm(
-                "Remove this pet? You can add them back anytime if needed.",
+                "Remove this family member from your list? This detail can always be added back later.",
             )
         )
             return;
@@ -106,11 +137,11 @@
     <div class="mb-12 flex justify-between items-end">
         <div>
             <div
-                class="inline-flex items-center justify-center p-3 bg-orange-100 text-orange-700 rounded-full mb-4"
+                class="inline-flex items-center justify-center p-3 bg-primary/10 text-primary rounded-full mb-4"
             >
                 <Dog size={32} />
             </div>
-            <h1 class="font-serif font-bold text-4xl text-[#304743] mb-2">
+            <h1 class="font-serif font-bold text-4xl text-slate-900 mb-2">
                 Care for Your Companions
             </h1>
             <p class="text-lg text-muted-foreground leading-relaxed max-w-2xl">
@@ -121,10 +152,10 @@
             </p>
         </div>
         <button
-            class="bg-[#304743] text-white px-6 py-2 rounded-xl font-bold hover:bg-[#2a3f3b] transition-colors flex items-center gap-2"
+            class="bg-primary text-primary-foreground px-6 py-2 rounded-xl font-bold hover:opacity-90 transition-colors flex items-center gap-2 shadow-lg shadow-primary/20"
             onclick={() => (showAddForm = !showAddForm)}
         >
-            <Plus size={20} /> Add Pet
+            <Plus size={20} /> Share a pet detail
         </button>
     </div>
 
@@ -149,7 +180,7 @@
                                 e.stopPropagation();
                                 editPet(pet);
                             }}
-                            class="p-2 bg-white/50 hover:bg-white text-blue-400 hover:text-blue-600 rounded-full"
+                            class="p-2 bg-white/50 hover:bg-white text-primary/60 hover:text-primary rounded-full"
                             title="Edit Pet"
                         >
                             <Pencil size={16} />
@@ -172,7 +203,7 @@
                             <Dog size={120} />
                         {/if}
                     </div>
-                    <h3 class="text-3xl font-serif font-bold text-[#304743]">
+                    <h3 class="text-3xl font-serif font-bold text-slate-900">
                         {pet.name}
                     </h3>
                     <p class="text-amber-800 font-medium">{pet.breed}</p>
@@ -260,7 +291,7 @@
                     whyMatters="Your pets depend on you completely for their care, comfort, and survival. <strong>Without a documented plan, they could end up in a shelter</strong> or with someone who doesn't know their needs, fears, or routines. <br/><br/>Creating this plan ensures they'll be loved and cared for by someone you trust—someone who knows their favorite toy, their medical needs, and the way they like to be held. It's one of the most loving things you can do for them."
                     encouragement="When you're ready, take a moment to think about who would give them the life they deserve."
                     icon={Dog}
-                    iconClass="text-orange-500"
+                    iconClass="text-primary"
                     ctaLabel="Protect your companion"
                     onAction={() => (showAddForm = true)}
                 />
@@ -275,11 +306,11 @@
             transition:fade
         >
             <div
-                class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden"
+                class="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col"
                 transition:slide
             >
                 <div
-                    class="p-6 border-b border-gray-100 flex justify-between items-start"
+                    class="p-6 border-b border-gray-100 flex justify-between items-start shrink-0"
                 >
                     <div class="flex-1 pr-4">
                         <h3
@@ -317,7 +348,7 @@
                     </button>
                 </div>
 
-                <div class="p-6 space-y-4">
+                <div class="p-6 space-y-4 overflow-y-auto flex-1">
                     <div>
                         <label
                             class="block text-xs font-bold uppercase text-gray-500 mb-1"
@@ -430,6 +461,16 @@
                         </div>
                     </div>
 
+                    <div class="pt-2 border-t border-gray-100">
+                        <UniversalUploader
+                            bind:value={newPet.documents}
+                            label="Care Records & Photos"
+                            mode="any"
+                            module="pets"
+                            hideBorder
+                        />
+                    </div>
+
                     <div class="pt-2">
                         <SmartTextarea
                             bind:value={newPet.notes}
@@ -439,9 +480,17 @@
                             minHeight="100px"
                         />
                     </div>
+
+                    <!-- Custom Fields -->
+                    <div class="pt-4 mt-4 border-t border-gray-100">
+                        <CustomFieldsManager
+                            entityType="pet"
+                            bind:data={parsedCustomAttributes}
+                        />
+                    </div>
                 </div>
 
-                <div class="p-6 bg-gray-50 flex justify-end gap-3">
+                <div class="p-6 bg-gray-50 flex justify-end gap-3 shrink-0">
                     <button
                         onclick={() => (showAddForm = false)}
                         class="px-6 py-2 rounded-xl font-bold text-gray-500 hover:bg-gray-200 transition-colors"
@@ -450,9 +499,9 @@
                     <button
                         onclick={savePet}
                         disabled={!newPet.name}
-                        class="px-6 py-2 rounded-xl font-bold bg-[#304743] text-white hover:bg-[#20302d] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        class="px-6 py-2 rounded-xl font-bold bg-primary text-primary-foreground shadow-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        {newPet.id ? "Update Pet" : "Save Pet"}
+                        {newPet.id ? "Save changes" : "Record detail"}
                     </button>
                 </div>
             </div>

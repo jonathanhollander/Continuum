@@ -1,6 +1,8 @@
 import { writable } from 'svelte/store';
 import { browser } from '$app/environment';
-import { API_BASE_URL } from '$lib/config.ts';
+import { API_BASE_URL } from '$lib/config';
+import { preferenceStore } from '$lib/stores/preferenceStore';
+import { registerAccount } from '$lib/stores/keyringStore';
 
 export interface User {
     id: number;
@@ -9,19 +11,23 @@ export interface User {
     user_role?: 'planning' | 'executor' | 'family' | 'advisor';
     emotional_context?: 'healthy' | 'terminal' | 'grieving';
     overwhelm_muted?: boolean;
+    onboarding_completed?: boolean;
 }
 
 interface AuthState {
     token: string | null;
     user: User | null;
+    isAuthenticated: boolean;
     loading: boolean;
     error: string | null;
 }
 
+const token = browser ? localStorage.getItem('continuum_auth_token') : null;
 const initialState: AuthState = {
-    token: browser ? localStorage.getItem('continuum_auth_token') : null,
+    token,
     user: null,
-    loading: false,
+    isAuthenticated: false,
+    loading: !!token,
     error: null
 };
 
@@ -46,16 +52,23 @@ function createAuthStore() {
 
                 if (res.ok) {
                     const user = await res.json();
-                    update(s => ({ ...s, token, user, loading: false }));
+
+                    // Register account to namespace preferences
+                    if (browser) registerAccount(user.email);
+
+                    if (user.onboarding_completed) {
+                        preferenceStore.setOnboardingComplete(true);
+                    }
+                    update(s => ({ ...s, token, user, isAuthenticated: true, loading: false }));
                 } else {
                     // Token expired or invalid
                     if (browser) localStorage.removeItem('continuum_auth_token');
-                    update(s => ({ ...s, token: null, user: null, loading: false }));
+                    update(s => ({ ...s, token: null, user: null, isAuthenticated: false, loading: false }));
                 }
             } catch (e) {
                 console.error("Auth init failed", e);
                 if (browser) localStorage.removeItem('continuum_auth_token');
-                update(s => ({ ...s, token: null, user: null, loading: false, error: 'Failed to initialize authentication' }));
+                update(s => ({ ...s, token: null, user: null, isAuthenticated: false, loading: false, error: 'Failed to initialize authentication' }));
             }
         },
 
@@ -83,7 +96,14 @@ function createAuthStore() {
                     });
                     const user = await userRes.json();
 
-                    set({ token, user, loading: false, error: null });
+                    // Register account to namespace preferences
+                    if (browser) registerAccount(user.email);
+
+                    if (user.onboarding_completed) {
+                        preferenceStore.setOnboardingComplete(true);
+                    }
+
+                    set({ token, user, isAuthenticated: true, loading: false, error: null });
                     return true;
                 } else {
                     const error = await res.json();
@@ -124,7 +144,14 @@ function createAuthStore() {
                     });
                     const user = await userRes.json();
 
-                    set({ token, user, loading: false, error: null });
+                    // Register account to namespace preferences
+                    if (browser) registerAccount(user.email);
+
+                    if (user.onboarding_completed) {
+                        preferenceStore.setOnboardingComplete(true);
+                    }
+
+                    set({ token, user, isAuthenticated: true, loading: false, error: null });
                     return true;
                 } else {
                     const error = await res.json();
@@ -143,7 +170,7 @@ function createAuthStore() {
          */
         logout: () => {
             if (browser) localStorage.removeItem('continuum_auth_token');
-            set({ token: null, user: null, loading: false, error: null });
+            set({ token: null, user: null, isAuthenticated: false, loading: false, error: null });
         },
 
         /**
@@ -176,3 +203,7 @@ function createAuthStore() {
 }
 
 export const auth = createAuthStore();
+
+import { derived } from 'svelte/store';
+export const user = derived(auth, $auth => $auth.user);
+export const isAuthenticated = derived(auth, $auth => $auth.isAuthenticated);

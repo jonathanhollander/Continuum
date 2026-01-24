@@ -26,11 +26,11 @@
         whyMatters,
         encouragement = "Take your time. This will be here when you're ready.",
         icon = Heart,
-        iconClass = "text-rose-400",
-        ctaLabel = "Start when ready",
+        iconClass = "text-primary",
+        ctaLabel = "Explore this step",
         onAction,
         showSkipOption = true,
-        skipMessage = "It's okay to skip this for now and come back later."
+        skipMessage = "It's okay to skip this for now and come back later.",
     }: Props = $props();
 </script>
 
@@ -50,9 +50,9 @@
     </h3>
 
     <!-- Why This Matters (Emotional Connection) -->
-    <div class="mb-6 bg-blue-50/50 rounded-xl p-5 border border-blue-100">
+    <div class="mb-6 bg-primary/5 rounded-xl p-5 border border-primary/10">
         <div class="flex items-start gap-3 text-left">
-            <Info size={20} class="text-blue-500 shrink-0 mt-0.5" />
+            <Info size={20} class="text-primary shrink-0 mt-0.5" />
             <div class="text-slate-700 leading-relaxed">
                 {@html whyMatters}
             </div>
@@ -68,7 +68,7 @@
     {#if onAction}
         <button
             onclick={onAction}
-            class="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white px-8 py-3.5 rounded-xl font-semibold hover:from-indigo-600 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 mb-4"
+            class="bg-primary text-primary-foreground px-8 py-3.5 rounded-xl font-semibold hover:opacity-90 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 mb-4"
         >
             {ctaLabel}
         </button>

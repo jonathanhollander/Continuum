@@ -34,10 +34,10 @@
     import { page } from "$app/stores";
     import { goto } from "$app/navigation";
 
-    import { insuranceStore } from "$lib/stores/insuranceStore.svelte.ts";
-    import { advancedAssetStore } from "$lib/stores/advancedAssetStore.svelte.ts"; // Assuming basic asset store for now
-    import { petStore } from "$lib/stores/petStore.svelte.ts";
-    import { medicalStore } from "$lib/stores/medicalStore.svelte.ts";
+    import { insuranceStore } from "$lib/stores/insuranceStore.svelte";
+    import { advancedAssetStore } from "$lib/stores/advancedAssetStore.svelte"; // Assuming basic asset store for now
+    import { petStore } from "$lib/stores/petStore.svelte";
+    import { medicalStore } from "$lib/stores/medicalStore.svelte";
     import { writable, derived } from "svelte/store";
 
     const dispatch = createEventDispatcher();

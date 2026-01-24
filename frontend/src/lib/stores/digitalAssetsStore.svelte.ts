@@ -1,4 +1,4 @@
-import { registerSync } from "$lib/services/sync.svelte.ts";
+import { registerSync } from "$lib/services/sync.svelte";
 import { getLegacy } from './persistence';
 
 export type ClosurePreference = 'memorialize' | 'delete' | 'transfer' | 'none';

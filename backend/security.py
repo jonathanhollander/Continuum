@@ -13,7 +13,10 @@ from webauthn.helpers.structs import (
     AuthenticatorAttachment,
     UserVerificationRequirement,
     ResidentKeyRequirement,
+    PublicKeyCredentialDescriptor,
+    AuthenticatorTransport,
 )
+from typing import List, Optional
 
 logger = get_logger(__name__)
 
@@ -47,11 +50,58 @@ def verify_registration(options: dict, response: dict):
         require_user_verification=True,
     )
 
-def get_authentication_options():
-    """Generates options for WebAuthn authentication (Passkey login)."""
+def get_authentication_options(credentials: Optional[List[dict]] = None):
+    """
+    Generates options for WebAuthn authentication (Passkey login).
+
+    Args:
+        credentials: Optional list of credential dicts with 'id' (base64url) and optional 'transports'.
+                    If provided, restricts authentication to these credentials only.
+                    Setting transports to ['internal'] prevents QR code cross-device flow.
+    """
+    allow_credentials = None
+
+    if credentials:
+        allow_credentials = []
+        for cred in credentials:
+            # Decode credential ID from base64url
+            cred_id = cred.get('id')
+            if isinstance(cred_id, str):
+                padding = '=' * (4 - (len(cred_id) % 4)) if len(cred_id) % 4 != 0 else ''
+                cred_id = base64.urlsafe_b64decode(cred_id + padding)
+
+            # Use stored transports if available, otherwise default to internal only
+            stored_transports = cred.get('transports', [])
+            if stored_transports:
+                # Map string transports to AuthenticatorTransport enum
+                transport_map = {
+                    'internal': AuthenticatorTransport.INTERNAL,
+                    'hybrid': AuthenticatorTransport.HYBRID,
+                    'usb': AuthenticatorTransport.USB,
+                    'ble': AuthenticatorTransport.BLE,
+                    'nfc': AuthenticatorTransport.NFC,
+                }
+                transports = [transport_map.get(t, AuthenticatorTransport.INTERNAL) for t in stored_transports if t in transport_map]
+                # Always include internal to prefer platform authenticator
+                if AuthenticatorTransport.INTERNAL not in transports:
+                    transports.insert(0, AuthenticatorTransport.INTERNAL)
+            else:
+                # Default: internal only to prevent QR code
+                transports = [AuthenticatorTransport.INTERNAL]
+
+            logger.debug(f"Credential {cred_id[:20]}... using transports: {transports}")
+
+            allow_credentials.append(
+                PublicKeyCredentialDescriptor(
+                    id=cred_id,
+                    transports=transports,
+                )
+            )
+
     return generate_authentication_options(
         rp_id=RP_ID,
         user_verification=UserVerificationRequirement.REQUIRED,
+        allow_credentials=allow_credentials,
     )
 
 def verify_authentication(options: dict, response: dict, public_key: str, sign_count: int):

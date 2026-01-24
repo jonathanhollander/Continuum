@@ -1,4 +1,4 @@
-import { registerSync } from "$lib/services/sync.svelte.ts";
+import { registerSync } from "$lib/services/sync.svelte";
 
 export interface Subscription {
     id?: number;
@@ -11,6 +11,7 @@ export interface Subscription {
     paymentMethod?: string;
     renewal_date?: string;
     auto_renew: boolean;
+    custom_attributes?: string; // JSON string of custom field values
 }
 
 const mapper = (data: any): Subscription => ({
@@ -27,6 +28,7 @@ const manager = registerSync<Subscription>('subscriptions', 'subscriptions', map
 export const subscriptionStore = {
     subscribe: manager.subscribe.bind(manager),
     get items() { return manager.items; },
+    get status() { return manager.status; },
     create: (item: Omit<Subscription, 'id'>) => manager.create(item as Subscription),
     update: (id: number, updates: Partial<Subscription>) => manager.update(id, updates as Subscription),
     delete: (id: number) => manager.delete(id),

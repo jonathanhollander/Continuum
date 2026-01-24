@@ -15,6 +15,7 @@
         ChevronRight,
     } from "lucide-svelte";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
+    import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
 
     // --- Types ---
     type CalendarEvent = {
@@ -29,14 +30,17 @@
             subject: string;
             body: string;
         };
+        custom_attributes?: string;
     };
 
+    let parsedCustomAttributes = $state<Record<string, any>>({});
+
     // --- State ---
-    let showAddForm = false;
-    let editingId: string | null = null;
+    let showAddForm = $state(false);
+    let editingId = $state<string | null>(null);
 
     // Default new event
-    let newEvent: CalendarEvent = {
+    let newEvent = $state<CalendarEvent>({
         id: "",
         title: "",
         date: "",
@@ -48,19 +52,19 @@
             subject: "",
             body: "",
         },
-    };
+    });
 
     // Form inputs (separate for easier binding)
-    let formDate = ""; // YYYY-MM-DD from input
-    let formRecipient = "";
-    let formSubject = "";
-    let formBody = "";
+    let formDate = $state(""); // YYYY-MM-DD from input
+    let formRecipient = $state("");
+    let formSubject = $state("");
+    let formBody = $state("");
 
     // --- Logic ---
 
     // --- Logic ---
 
-    import { registerSync } from "$lib/services/sync.svelte.ts";
+    import { registerSync } from "$lib/services/sync.svelte";
 
     // Register Sync
     const calendarSync = registerSync<CalendarEvent>(
@@ -139,6 +143,7 @@
                           body: formBody,
                       }
                     : undefined,
+            custom_attributes: JSON.stringify(parsedCustomAttributes),
         };
 
         if (editingId) {
@@ -179,6 +184,12 @@
             formBody = "";
         }
 
+        try {
+            parsedCustomAttributes = JSON.parse(evt.custom_attributes || "{}");
+        } catch {
+            parsedCustomAttributes = {};
+        }
+
         showAddForm = true;
     }
 
@@ -202,6 +213,7 @@
         formRecipient = "";
         formSubject = "";
         formBody = "";
+        parsedCustomAttributes = {};
     }
 
     // --- HelpersFor Display ---
@@ -275,7 +287,7 @@
         </div>
         <button
             class="bg-[#304743] text-white px-6 py-2 rounded-xl font-bold hover:bg-[#2a3f3b] transition-colors flex items-center gap-2"
-            on:click={() => (showAddForm = true)}
+            onclick={() => (showAddForm = true)}
         >
             <Plus size={20} /> Add Significant Date
         </button>
@@ -308,13 +320,13 @@
                             class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                             <button
-                                on:click={() => editEvent(evt)}
+                                onclick={() => editEvent(evt)}
                                 class="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-blue-500"
                             >
                                 <Pencil size={16} />
                             </button>
                             <button
-                                on:click={() => removeEvent(evt.id)}
+                                onclick={() => removeEvent(evt.id)}
                                 class="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-red-500"
                             >
                                 <Trash2 size={16} />
@@ -374,7 +386,7 @@
         <!-- AI Suggestion Card (Mock) -->
         <button
             class="w-full border-2 border-dashed border-gray-200 rounded-3xl p-6 flex flex-col items-center justify-center text-center text-gray-400 gap-4 min-h-[300px] hover:border-[#304743]/50 hover:bg-gray-50/50 transition-all cursor-pointer"
-            on:click={() => (showAddForm = true)}
+            onclick={() => (showAddForm = true)}
         >
             <div class="p-4 bg-gray-100 rounded-full">
                 <Plus size={32} />
@@ -416,7 +428,7 @@
                         {editingId ? "Edit Event" : "Add Significant Date"}
                     </h3>
                     <button
-                        on:click={resetForm}
+                        onclick={resetForm}
                         class="text-white/70 hover:text-white"
                     >
                         <X size={24} />
@@ -546,18 +558,26 @@
                             ></textarea>
                         </div>
                     </div>
+
+                    <!-- Custom Fields -->
+                    <div class="pt-4 mt-4 border-t border-gray-100">
+                        <CustomFieldsManager
+                            entityType="calendar"
+                            bind:data={parsedCustomAttributes}
+                        />
+                    </div>
                 </div>
 
                 <div
                     class="p-6 bg-gray-50 flex justify-end gap-3 sticky bottom-0 border-t border-gray-100"
                 >
                     <button
-                        on:click={resetForm}
+                        onclick={resetForm}
                         class="px-6 py-2 rounded-xl font-bold text-gray-500 hover:bg-gray-200 transition-colors"
                         >Not right now</button
                     >
                     <button
-                        on:click={handleSave}
+                        onclick={handleSave}
                         disabled={!newEvent.title || !formDate}
                         class="px-6 py-2 rounded-xl font-bold bg-[#304743] text-white hover:bg-[#20302d] transition-colors disabled:opacity-50"
                         >Save Event</button

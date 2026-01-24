@@ -166,7 +166,9 @@ Example: { "message": "Sarah recorded as daughter—what a beautiful gift to hav
 
         // Attempt to parse JSON if AI returned it
         try {
-            const parsed = JSON.parse(rawContent);
+            // Clean markdown fences if present
+            const cleanContent = rawContent.replace(/^```json\s*/, '').replace(/^```\s*/, '').replace(/\s*```$/, '');
+            const parsed = JSON.parse(cleanContent);
             return {
                 content: parsed.message || rawContent,
                 extractedData: parsed.extractedData,
@@ -174,6 +176,7 @@ Example: { "message": "Sarah recorded as daughter—what a beautiful gift to hav
                 resources: parsed.resources
             };
         } catch {
+            // Fallback for non-JSON responses
             return { content: rawContent };
         }
     } catch (error) {

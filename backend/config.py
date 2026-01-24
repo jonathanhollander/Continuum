@@ -90,6 +90,14 @@ class Settings(BaseSettings):
     OUTBOX_DIR: str = "backend/outbox"
     UPLOAD_DIR: str = "backend/uploads"
     MAX_UPLOAD_SIZE: int = 10485760  # 10MB in bytes
+    
+    # MinIO / S3 Configuration
+    S3_ENABLED: bool = False
+    AWS_ACCESS_KEY_ID: Optional[str] = None
+    AWS_SECRET_ACCESS_KEY: Optional[str] = None
+    AWS_BUCKET_NAME: str = "continuum"
+    AWS_ENDPOINT_URL: Optional[str] = None
+    AWS_REGION_NAME: str = "us-east-1"
 
     # Pulse Scheduler
     PULSE_SCHEDULER_ENABLED: bool = True
@@ -204,8 +212,8 @@ class Settings(BaseSettings):
 
             return validated_origins
 
-        # Development mode - allow all specified origins
-        return origins
+        # Development mode - allow all origins to prevent local issues
+        return ["*"]
 
     def get_frontend_url(self) -> str:
         """

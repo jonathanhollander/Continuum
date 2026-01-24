@@ -2,7 +2,7 @@
   import { page } from "$app/stores";
   import { onMount } from "svelte";
   import { fade } from "svelte/transition";
-  import { API_BASE_URL } from "$lib/config.ts";
+  import { API_BASE_URL } from "$lib/config";
 
   let token = $page.params.token;
   let loading = $state(true);

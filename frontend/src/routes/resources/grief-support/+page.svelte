@@ -20,8 +20,8 @@
     import {
         userRole,
         language as languageStore,
-    } from "$lib/stores/conciergeStore.svelte.ts";
-    import { t } from "$lib/stores/localization.ts";
+    } from "$lib/stores/conciergeStore.svelte";
+    import { t } from "$lib/stores/localization";
     import {
         getHotlinesByCountry,
         type Hotline,

@@ -1,17 +1,18 @@
 <script lang="ts">
     import AssetManager from "$lib/components/archetypes/AssetManager.svelte";
-    import { Wallet, Search, ExternalLink, Sparkles } from "lucide-svelte";
+    import { Wallet, Search, ExternalLink, Sparkles } from "lucide-svelte"; // icons from original
+    import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
     import LegalDisclaimer from "$lib/components/common/LegalDisclaimer.svelte";
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte"; // Moved inside
-    import { registerSync } from "$lib/services/sync.svelte.ts";
-    import { t } from "$lib/stores/localization.ts";
+    import { registerSync } from "$lib/services/sync.svelte";
+    import { t } from "$lib/stores/localization";
     import { fade, fly } from "svelte/transition";
 
     let showWizard = $state(false);
     let reloadKey = $state(0);
 
     // Initialize Sync Service for Financial Assets
-    const assetSync = registerSync("financial_assets", "financial_assets");
+    const assetSync = registerSync("financial_assets", "financial_accounts");
 
     const wizardSteps = [
         {
@@ -118,29 +119,21 @@
 {/if}
 
 <div class="max-w-6xl mx-auto p-8">
-    <div class="mb-8 flex justify-between items-end">
-        <div>
-            <h1
-                class="font-serif font-bold text-4xl text-[#304743] flex items-center gap-3"
-            >
-                <div class="p-3 bg-[#4A7C74]/10 rounded-xl text-[#4A7C74]">
-                    <Wallet size={32} />
-                </div>
-                Assets & Wealth
-            </h1>
-            <p class="text-muted-foreground mt-2 ml-16 max-w-xl">
-                The ledger of your life's work. Track checking accounts,
-                retirement funds, and real estate so nothing gets lost.
-            </p>
-        </div>
+    <LivingBlueprintHeader
+        title={$t("financial")}
+        subtitle="Manage bank accounts, investments, and liabilities"
+        tier="financial"
+        detailedDescription="Gathering your financial accounts in one place isn't just about numbers—it's about ensuring your family isn't left searching for resources they might desperately need. This clarity provides immediate stability during a time of uncertainty."
+        whyMatters="Unclaimed assets and lost accounts are a common burden for grieving families. By documenting these now, you ensure resources go to supporting your loved ones rather than being lost to bureaucracy."
+    >
         <button
             onclick={() => (showWizard = true)}
-            class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold shadow-lg hover:bg-indigo-500 transition-all flex items-center gap-2"
+            class="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
         >
             <Sparkles size={16} />
             {$t("wizard.start")}
         </button>
-    </div>
+    </LivingBlueprintHeader>
 
     <!-- Core Manager -->
     {#key reloadKey}

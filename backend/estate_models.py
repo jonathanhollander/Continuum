@@ -2,6 +2,19 @@ from typing import Optional
 from sqlmodel import Field, SQLModel
 from datetime import datetime
 
+# --- CUSTOM FIELDS SCHEMA ---
+class UserCustomFieldDefinition(SQLModel, table=True):
+    """Defines a custom field available for a specific entity type."""
+    __tablename__ = "user_custom_field_definitions"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="users.id", index=True)
+    entity_type: str = Field(index=True) # e.g. "asset", "music", "pet"
+    name: str 
+    field_type: str = "text" # text, date, number, boolean, select
+    options: Optional[str] = None # JSON string for select options
+    order: int = 0
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
 # --- ASSETS & FINANCE ---
 class Asset(SQLModel, table=True):
     """Generic model for physical, digital, or financial assets."""
@@ -14,6 +27,15 @@ class Asset(SQLModel, table=True):
     ownershipDetails: Optional[str] = None # Added for compatibility
     documents: Optional[str] = None # Added for compatibility
     notes: Optional[str] = None
+    
+    # Property Specific
+    custom_attributes: Optional[str] = Field(default="{}")
+    valuation: Optional[float] = None
+    location: Optional[str] = None
+    purchaseDate: Optional[datetime] = None
+    maintenanceSchedule: Optional[str] = None # JSON string
+    thumbnail: Optional[str] = None
+
     beneficiary_id: Optional[int] = None
     
     model_config = {
@@ -51,6 +73,7 @@ class Heirloom(SQLModel, table=True):
     image: Optional[str] = None
     value: Optional[str] = None # Keeping as string to match legacy frontend 'valuation' mix-up, or maybe float? Plan said value (optional).
     location: Optional[str] = None
+    custom_attributes: Optional[str] = Field(default="{}")
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
@@ -59,11 +82,29 @@ class FinancialAccount(SQLModel, table=True):
     __tablename__ = "financial_accounts"
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="users.id", index=True)
-    institution: str
-    account_type: str # checking, savings, investment, credit
+    institution: Optional[str] = None  # Made optional for frontend compatibility
+    account_type: Optional[str] = None  # Made optional, frontend sends 'type'
     account_number_encrypted: Optional[str] = None # We might want to encrypt this
     holder_name: Optional[str] = None
     balance_estimate: Optional[float] = None
+    custom_attributes: Optional[str] = Field(default="{}")
+    # Frontend compatibility fields (AssetManager sends these)
+    name: Optional[str] = None  # Frontend sends this instead of institution
+    type: Optional[str] = None  # Frontend sends this instead of account_type
+    value: Optional[float] = None  # Frontend sends this instead of balance_estimate
+    location: Optional[str] = None
+    accountNumber: Optional[str] = None
+    ownershipPercentage: Optional[float] = None
+    beneficiaries: Optional[str] = None
+    notes: Optional[str] = None
+    loginUrl: Optional[str] = None
+    beneficiaryEmail: Optional[str] = None
+    image: Optional[str] = None
+    is_closed: bool = Field(default=False)
+    closure_date: Optional[str] = None
+    valueHistory: Optional[str] = None  # JSON string of array
+    closureNotes: Optional[str] = None
+    customAttributes: Optional[str] = None  # Alias for custom_attributes (camelCase)
 
 # --- HOME MANUAL ---
 class Vendor(SQLModel, table=True):
@@ -136,6 +177,13 @@ class Letter(SQLModel, table=True):
     content: str # content or encrypted content
     release_condition: str = "death" # death, specific_date
     status: str = "draft" # draft, final
+    # Frontend-compatible fields for SyncManager
+    date: Optional[str] = None  # Date letter was created
+    type: Optional[str] = "transactional"  # "emotional" or "transactional"
+    triggerDate: Optional[str] = None  # Specific date for release
+    triggerMilestone: Optional[str] = None  # Milestone trigger (grad, wedding, etc.)
+    isLocked: Optional[bool] = False  # Whether letter is locked until trigger
+    custom_attributes: Optional[str] = Field(default="{}")
 
 class JournalEntry(SQLModel, table=True):
     """Model for personal reflections, life lessons, or journal entries."""
@@ -162,6 +210,12 @@ class Subscription(SQLModel, table=True):
     paymentMethod: Optional[str] = None # Added for compatibility
     renewal_date: Optional[datetime] = None
     auto_renew: bool = True
+    custom_attributes: Optional[str] = Field(default="{}")
+    # Frontend compatibility fields
+    cancellationInstructions: Optional[str] = None
+    nextBilling: Optional[str] = None
+    loginUrl: Optional[str] = None
+    notes: Optional[str] = None
 
 class CalendarEvent(SQLModel, table=True):
     """Model for important dates, birthdays, or recurring maintenance rituals."""
@@ -174,6 +228,7 @@ class CalendarEvent(SQLModel, table=True):
     description: Optional[str] = None
     ritual_instructions: Optional[str] = None
     recurring: bool = False
+    custom_attributes: Optional[str] = Field(default="{}")
     tags: Optional[str] = None
 
 # --- INSURANCE ---
@@ -192,6 +247,7 @@ class InsurancePolicy(SQLModel, table=True):
     agent_name: Optional[str] = None
     agent_contact: Optional[str] = None
     claims_procedure: Optional[str] = None
+    custom_attributes: Optional[str] = Field(default="{}")
     policy_documents: Optional[str] = None
     status: str = "Active" # Active, Inactive, Pending
     expiration_date: Optional[datetime] = None
@@ -205,6 +261,7 @@ class MedicalProfile(SQLModel, table=True):
     organ_donor: bool = Field(default=False)
     blood_type: Optional[str] = None
     allergies: Optional[str] = None
+    custom_attributes: Optional[str] = Field(default="{}")
 
 class MedicalDirective(SQLModel, table=True):
     """Model for legal medical instructions (e.g., living will, proxy)."""
@@ -233,6 +290,7 @@ class Pet(SQLModel, table=True):
     food_instructions: Optional[str] = None
     medical_needs: Optional[str] = None
     microchip_number: Optional[str] = None
+    custom_attributes: Optional[str] = Field(default="{}")
     notes: Optional[str] = None
 
 # --- FAMILY & MEMORIES ---
@@ -299,6 +357,7 @@ class LifeEvent(SQLModel, table=True):
     is_highlight: bool = Field(default=False)
     impact: Optional[str] = None
     assigned_contact_id: Optional[str] = None
+    custom_attributes: Optional[str] = Field(default="{}")
 
 # --- TIME CAPSULE ---
 class TimeCapsuleMessage(SQLModel, table=True):
@@ -315,6 +374,7 @@ class TimeCapsuleMessage(SQLModel, table=True):
     trigger_value: str
     is_released: bool = Field(default=False)
     created_at: str
+    custom_attributes: Optional[str] = Field(default="{}")
 
 # --- FUNERAL ---
 class FuneralData(SQLModel, table=True):
@@ -323,6 +383,7 @@ class FuneralData(SQLModel, table=True):
     user_id: int = Field(foreign_key="users.id", unique=True)
     wishes: str = Field(default="{}") # JSON of FuneralWishes
     budget: str = Field(default="[]") # JSON of List[FuneralBudgetItem]
+    custom_attributes: Optional[str] = Field(default="{}")
 
 # --- ADVANCED ASSETS ---
 class AdvancedAssetData(SQLModel, table=True):

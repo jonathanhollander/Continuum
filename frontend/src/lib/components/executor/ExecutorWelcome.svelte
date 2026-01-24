@@ -7,7 +7,7 @@
 
     import { Heart, Clock, Shield, CheckCircle } from 'lucide-svelte';
     import { fade, fly } from 'svelte/transition';
-    import { contextStore } from "$lib/stores/contextStore.svelte.ts";
+    import { contextStore } from "$lib/stores/contextStore.svelte";
 
     interface Props {
         onComplete?: () => void;

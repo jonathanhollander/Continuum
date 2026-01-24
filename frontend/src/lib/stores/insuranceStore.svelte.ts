@@ -1,4 +1,4 @@
-import { registerSync } from "$lib/services/sync.svelte.ts";
+import { registerSync } from "$lib/services/sync.svelte";
 
 export interface InsurancePolicy {
     id: number | string;
@@ -16,6 +16,7 @@ export interface InsurancePolicy {
     status: 'Active' | 'Inactive' | 'Pending';
     expirationDate?: string;
     notes: string;
+    custom_attributes?: string;
 }
 
 const insuranceMapper = (item: any) => {

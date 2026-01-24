@@ -38,8 +38,8 @@
         type LetterTemplate,
     } from "$lib/data/letterTemplates";
     import { onMount } from "svelte";
-    import { activityLog } from "$lib/stores/activityLog.svelte.ts";
-    import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
+    import { activityLog } from "$lib/stores/activityLog.svelte";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
     import LetterAssistant from "$lib/components/modules/letters/LetterAssistant.svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
     import { REFLECTION_POOLS } from "$lib/data/reflectionPools";
@@ -58,7 +58,7 @@
     };
 
     import GriefSupportBanner from "$lib/components/GriefSupportBanner.svelte";
-    import { registerSync } from "$lib/services/sync.svelte.ts";
+    import { registerSync } from "$lib/services/sync.svelte";
 
     // Sync Manager for Letters
     const letterSync = registerSync<SavedLetter>(
@@ -126,7 +126,7 @@
     function deleteLetter(id: string, name: string) {
         if (
             !confirm(
-                `Remove the letter to "${name}"? You can always create it again if needed.`,
+                `Remove the letter to "${name}"? You can always start over if you feel like it later.`,
             )
         )
             return;
@@ -367,7 +367,7 @@
         >
             <div class="space-y-4">
                 <nav
-                    class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#4A7C74]"
+                    class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary"
                 >
                     <PenTool size={14} />
                     <span>Concierge v4.0</span>
@@ -378,7 +378,7 @@
                     <h1
                         class="text-5xl font-black text-slate-900 tracking-tight mb-3 font-serif"
                     >
-                        Legacy <span class="text-[#4A7C74] font-light italic"
+                        Legacy <span class="text-primary font-light italic"
                             >Correspondence</span
                         >
                     </h1>
@@ -469,7 +469,7 @@
                     class="absolute top-0 right-0 w-32 h-32 bg-rose-50/50 rounded-bl-[5rem] -mr-8 -mt-8 group-hover:scale-110 transition-transform"
                 ></div>
                 <div
-                    class="w-20 h-20 bg-rose-100 text-rose-600 rounded-3xl flex items-center justify-center shrink-0 shadow-inner group-hover:-rotate-6 transition-transform"
+                    class="w-20 h-20 bg-primary/10 text-primary rounded-3xl flex items-center justify-center shrink-0 shadow-inner group-hover:-rotate-6 transition-transform"
                 >
                     <Heart size={36} />
                 </div>
@@ -485,7 +485,7 @@
                     </p>
                 </div>
                 <div
-                    class="ml-auto w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-rose-500 group-hover:text-white transition-all"
+                    class="ml-auto w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-primary group-hover:text-primary-foreground transition-all"
                 >
                     <ArrowRight size={20} />
                 </div>
@@ -544,12 +544,12 @@
                                     />
                                 </div>
                                 <span
-                                    class="text-[10px] font-black uppercase tracking-widest text-[#4A7C74]"
+                                    class="text-[10px] font-black uppercase tracking-widest text-primary"
                                     >{template.category}</span
                                 >
                             </div>
                             <h3
-                                class="text-xl font-bold text-slate-900 tracking-tight group-hover:text-[#4A7C74] transition-colors"
+                                class="text-xl font-bold text-slate-900 tracking-tight group-hover:text-primary transition-colors"
                             >
                                 {template.title}
                             </h3>
@@ -561,7 +561,7 @@
                                 class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter"
                                 >Draft Template</span
                             >
-                            <ArrowRight size={16} class="text-[#4A7C74]" />
+                            <ArrowRight size={16} class="text-primary" />
                         </div>
                     </button>
                 {/each}
@@ -580,7 +580,7 @@
                     <ArrowLeft size={16} /> Back to Library
                 </button>
                 <div
-                    class="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-full text-xs font-bold"
+                    class="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full text-xs font-bold"
                 >
                     <Sparkles size={14} />
                     <span>Auto-mapped from Estate Profile</span>
@@ -610,7 +610,7 @@
                             <input
                                 type="text"
                                 bind:value={templateVariables[variable]}
-                                class="w-full px-6 py-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-[#4A7C74] focus:bg-white outline-none font-bold transition-all"
+                                class="w-full px-6 py-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-primary focus:bg-white outline-none font-bold transition-all"
                                 placeholder="Enter {variable.toLowerCase()}..."
                             />
                         </div>
@@ -629,7 +629,7 @@
                     </button>
                     <button
                         onclick={applyVariables}
-                        class="px-12 py-5 bg-[#4A7C74] text-white rounded-[2rem] font-black hover:bg-[#3b635d] shadow-2xl shadow-[#4A7C74]/20 transition-all hover:scale-105"
+                        class="px-12 py-5 bg-primary text-primary-foreground shadow-primary/20 hover:opacity-90"
                     >
                         Generate Document
                     </button>
@@ -675,7 +675,7 @@
                     class="bg-indigo-50/50 border border-indigo-100 p-8 rounded-[2.5rem] flex gap-6 items-center"
                 >
                     <div
-                        class="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center shrink-0 shadow-inner"
+                        class="w-14 h-14 bg-primary/10 text-primary rounded-2xl flex items-center justify-center shrink-0 shadow-inner"
                     >
                         <FileText size={28} />
                     </div>
@@ -715,7 +715,7 @@
                             class="font-black text-slate-900 uppercase tracking-widest text-xs flex items-center gap-3"
                         >
                             <span
-                                class="w-4 h-4 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center"
+                                class="w-4 h-4 bg-primary/10 text-primary rounded-lg flex items-center justify-center"
                                 ><CircleCheck size={10} /></span
                             >
                             Required Documents
@@ -726,7 +726,7 @@
                                     class="flex items-start gap-3 bg-slate-50 p-4 rounded-xl border border-slate-100/50"
                                 >
                                     <div
-                                        class="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0"
+                                        class="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0"
                                     ></div>
                                     <span
                                         class="text-sm font-bold text-slate-600 leading-snug"
@@ -778,7 +778,7 @@
                     class="w-24 h-24 border-8 border-slate-100 rounded-full animate-ping opacity-20"
                 ></div>
                 <div class="absolute inset-0 flex items-center justify-center">
-                    <PenTool size={48} class="text-[#4A7C74] animate-bounce" />
+                    <PenTool size={48} class="text-primary animate-bounce" />
                 </div>
             </div>
             <div class="text-center space-y-2">
@@ -811,7 +811,7 @@
                             Refine Your Draft
                         </h2>
                         <p
-                            class="text-[10px] font-black text-[#4A7C74] uppercase tracking-[0.2em] mt-1 italic"
+                            class="text-[10px] font-black text-primary uppercase tracking-[0.2em] mt-1 italic"
                         >
                             Personal Reflection in Progress
                         </p>
@@ -825,7 +825,7 @@
                             : simulateVoiceToText}
                         class="flex items-center gap-3 px-6 py-3 rounded-2xl font-black text-sm transition-all
                         {isRecording
-                            ? 'bg-rose-500 text-white shadow-xl shadow-rose-500/20'
+                            ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/20'
                             : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}"
                     >
                         {#if isRecording}
@@ -844,7 +844,7 @@
                             </div>
                             Recording...
                         {:else}
-                            <Mic size={18} class="text-rose-500" />
+                            <Mic size={18} class="text-primary" />
                             Voice Reflection
                         {/if}
                     </button>
@@ -866,7 +866,7 @@
                         class="bg-indigo-50/50 border border-indigo-100 p-8 rounded-[2.5rem] space-y-6"
                     >
                         <div class="flex items-center gap-3">
-                            <History size={20} class="text-indigo-600" />
+                            <History size={20} class="text-primary" />
                             <h4
                                 class="font-bold text-slate-900 uppercase tracking-widest text-xs"
                             >
@@ -882,7 +882,7 @@
                                 <input
                                     type="date"
                                     bind:value={letterTriggerDate}
-                                    class="w-full px-5 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-400 text-sm font-medium"
+                                    class="w-full px-5 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/40 text-sm font-medium"
                                 />
                             </div>
                             <div class="space-y-2">
@@ -892,7 +892,7 @@
                                 >
                                 <select
                                     bind:value={letterTriggerMilestone}
-                                    class="w-full px-5 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-400 text-sm font-medium appearance-none"
+                                    class="w-full px-5 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/40 text-sm font-medium appearance-none"
                                 >
                                     <option value=""
                                         >No Milestone Trigger</option
@@ -909,7 +909,7 @@
                             </div>
                         </div>
                         <p
-                            class="text-[10px] text-indigo-500 font-medium italic"
+                            class="text-[10px] text-primary/60 font-medium italic"
                         >
                             If set, this letter will remain "Locked" in your
                             vault until the trigger condition is met.
@@ -948,7 +948,7 @@
                             class="bg-blue-50 p-6 rounded-3xl border border-blue-100 flex gap-4"
                         >
                             <div
-                                class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center shrink-0"
+                                class="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center shrink-0"
                             >
                                 <Printer size={20} />
                             </div>
@@ -990,7 +990,7 @@
                             class="bg-emerald-50 p-6 rounded-3xl border border-emerald-100 flex gap-4"
                         >
                             <div
-                                class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center shrink-0"
+                                class="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center shrink-0"
                             >
                                 <Download size={20} />
                             </div>
@@ -1029,7 +1029,7 @@
                 </div>
                 <button
                     onclick={resetSelection}
-                    class="text-xs font-black uppercase tracking-widest text-slate-400 hover:text-rose-500 transition-colors"
+                    class="text-xs font-black uppercase tracking-widest text-slate-400 hover:text-primary transition-colors"
                 >
                     Cancel Interview
                 </button>

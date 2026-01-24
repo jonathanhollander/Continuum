@@ -8,7 +8,7 @@
         timeRemaining,
         type AcceptanceTask,
         type EstateComplexity,
-    } from "$lib/stores/acceptanceStore.svelte.ts";
+    } from "$lib/stores/acceptanceStore.svelte";
     import {
         ShieldCheck,
         Clock,
@@ -107,7 +107,7 @@
                 <Settings2 size={18} />
                 Estate Complexity:
                 <span class="text-indigo-600 capitalize"
-                    >{$estateComplexity}</span
+                    >{$estateComplexity.level}</span
                 >
             </button>
         </div>
@@ -137,7 +137,7 @@
                                 acceptanceStore.setComplexity(
                                     level as EstateComplexity,
                                 )}
-                            class="p-4 rounded-xl border-2 transition-all text-left space-y-2 {$estateComplexity ===
+                            class="p-4 rounded-xl border-2 transition-all text-left space-y-2 {$estateComplexity.level ===
                             level
                                 ? 'bg-white/10 border-white'
                                 : 'bg-transparent border-white/20 hover:border-white/40'}"
@@ -145,7 +145,7 @@
                             <div class="flex items-center justify-between">
                                 <span class="font-bold capitalize">{level}</span
                                 >
-                                {#if $estateComplexity === level}
+                                {#if $estateComplexity.level === level}
                                     <CircleCheck
                                         size={16}
                                         class="text-emerald-400"

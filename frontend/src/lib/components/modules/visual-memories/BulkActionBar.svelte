@@ -1,18 +1,25 @@
 <script lang="ts">
     import { X, Trash2, Tag, SquareCheck } from "lucide-svelte";
-    import { createEventDispatcher } from "svelte";
     import { fly } from "svelte/transition";
 
-    export let selectedCount: number = 0;
+    let {
+        selectedCount = 0,
+        ondelete,
+        ontag,
+        onclear
+    } = $props<{
+        selectedCount?: number;
+        ondelete?: () => void;
+        ontag?: (tag: string) => void;
+        onclear?: () => void;
+    }>();
 
-    const dispatch = createEventDispatcher();
-
-    let showTagInput = false;
-    let newTag = "";
+    let showTagInput = $state(false);
+    let newTag = $state("");
 
     function handleAddTag() {
         if (!newTag) return;
-        dispatch("tag", newTag);
+        ontag?.(newTag);
         newTag = "";
         showTagInput = false;
     }
@@ -42,18 +49,18 @@
                         bind:value={newTag}
                         placeholder="Enter tag..."
                         class="bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500 w-32 placeholder:text-slate-500"
-                        on:keydown={(e) => e.key === "Enter" && handleAddTag()}
-                        autoFocus
+                        onkeydown={(e) => e.key === "Enter" && handleAddTag()}
+                        autofocus
                     />
                     <button
                         class="p-1.5 hover:bg-slate-700 rounded-md text-slate-300 hover:text-white transition-colors"
-                        on:click={handleAddTag}
+                        onclick={handleAddTag}
                     >
                         <SquareCheck size={16} />
                     </button>
                     <button
                         class="p-1.5 hover:bg-slate-700 rounded-md text-slate-300 hover:text-white transition-colors"
-                        on:click={() => (showTagInput = false)}
+                        onclick={() => (showTagInput = false)}
                     >
                         <X size={16} />
                     </button>
@@ -61,7 +68,7 @@
             {:else}
                 <button
                     class="flex items-center gap-2 px-3 py-2 hover:bg-slate-800 rounded-lg transition-colors text-sm font-medium"
-                    on:click={() => (showTagInput = true)}
+                    onclick={() => (showTagInput = true)}
                 >
                     <Tag size={16} />
                     <span>Tag</span>
@@ -70,7 +77,7 @@
 
             <button
                 class="flex items-center gap-2 px-3 py-2 hover:bg-red-500/20 hover:text-red-400 rounded-lg transition-colors text-sm font-medium"
-                on:click={() => dispatch("delete")}
+                onclick={() => ondelete?.()}
             >
                 <Trash2 size={16} />
                 <span>Remove</span>
@@ -79,7 +86,7 @@
 
         <button
             class="ml-2 hover:bg-slate-800 p-2 rounded-full transition-colors"
-            on:click={() => dispatch("clear")}
+            onclick={() => onclear?.()}
             title="Clear Selection"
         >
             <X size={16} />

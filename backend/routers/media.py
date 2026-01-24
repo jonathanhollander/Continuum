@@ -21,6 +21,7 @@ from fastapi import Request
 router = APIRouter(prefix="/api/media", tags=["media"])
 
 # Allowed file types
+# Allowed file types
 ALLOWED_IMAGE_TYPES = {
     "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp", "image/heic"
 }
@@ -30,12 +31,28 @@ ALLOWED_VIDEO_TYPES = {
 ALLOWED_AUDIO_TYPES = {
     "audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg", "audio/webm"
 }
-ALLOWED_MIME_TYPES = ALLOWED_IMAGE_TYPES | ALLOWED_VIDEO_TYPES | ALLOWED_AUDIO_TYPES
+ALLOWED_DOCUMENT_TYPES = {
+    "application/pdf", "text/plain", "text/csv"
+}
+# Security: explicitly excluding .doc/.docx to prevent macro viruses
+
+ALLOWED_MIME_TYPES = ALLOWED_IMAGE_TYPES | ALLOWED_VIDEO_TYPES | ALLOWED_AUDIO_TYPES | ALLOWED_DOCUMENT_TYPES
 
 
 def validate_file_type(mime_type: str) -> bool:
     """Validate that the file type is allowed"""
     return mime_type.lower() in ALLOWED_MIME_TYPES
+
+
+def get_doc_category(mime_type: str) -> str:
+    """Determine document category from mime type"""
+    if mime_type in ALLOWED_DOCUMENT_TYPES:
+        return "documents"
+    elif mime_type in ALLOWED_IMAGE_TYPES:
+        return "images"
+    elif mime_type in ALLOWED_VIDEO_TYPES or mime_type in ALLOWED_AUDIO_TYPES:
+        return "media"
+    return "uncategorized"
 
 
 def validate_file_size(file_size: int) -> bool:
@@ -59,19 +76,14 @@ async def upload_media(
     session: Session = Depends(get_session)
 ):
     """
-    Upload a media file (image, video, or audio).
-
-    - **file**: The file to upload
-    - **module**: Which module this file belongs to (heirlooms, properties, etc.)
-    - **reference_id**: Optional ID of the item in that module
-    - **description**: Optional description of the file
+    Upload a media file or document.
     """
     # Validate file type
     mime_type = file.content_type or mimetypes.guess_type(file.filename)[0] or "application/octet-stream"
     if not validate_file_type(mime_type):
         raise HTTPException(
             status_code=400,
-            detail=f"File type '{mime_type}' not allowed. Allowed types: images, videos, audio."
+            detail=f"File type '{mime_type}' not allowed. Allowed types: PDF, Text, Images, Video, Audio. Word docs not accepted."
         )
 
     # Read file and validate size
@@ -85,14 +97,19 @@ async def upload_media(
             detail=f"File too large. Maximum size: {max_size_mb:.1f}MB"
         )
 
-    # Save file to storage
+    # Determine category
+    doc_category = get_doc_category(mime_type)
+
+    # Save file to storage (Hybrid: S3 or Local)
     try:
         from io import BytesIO
-        storage_path = storage.save_file(
+        # storage.save_file now returns (path, provider)
+        storage_path, provider = storage.save_file(
             file_data=BytesIO(file_data),
             user_id=user.id,
             original_filename=file.filename,
-            module=module
+            module=module,
+            category=doc_category
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to save file: {str(e)}")
@@ -106,7 +123,9 @@ async def upload_media(
         file_size=file_size,
         module=module,
         reference_id=reference_id,
-        description=description
+        description=description,
+        storage_provider=provider,
+        doc_category=doc_category
     )
 
     session.add(media_record)
@@ -141,7 +160,7 @@ async def download_media(
 ):
     """
     Download a media file by ID.
-    Returns the actual file with proper content-type headers.
+    Redirects to S3 presigned URL or serves local file.
     """
     # Get media record
     media = session.get(MediaFile, media_id)
@@ -153,7 +172,15 @@ async def download_media(
     if media.user_id != user.id:
         raise HTTPException(status_code=403, detail="Access denied")
 
-    # Get file path
+    # Handle S3 Storage
+    if media.storage_provider == "s3":
+        presigned_url = storage.get_presigned_url(media.storage_path)
+        if not presigned_url:
+            raise HTTPException(status_code=500, detail="Could not generate download URL")
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url=presigned_url)
+
+    # Handle Local Storage
     file_path = storage.get_file_path(media.storage_path)
 
     if not file_path.exists():
@@ -270,15 +297,16 @@ def delete_media(
         resource_id=media_id
     )
 
-    # Soft delete
+    # Soft delete (Mark as deleted in DB)
     from datetime import datetime
     media.deleted_at = datetime.utcnow()
 
     session.add(media)
     session.commit()
 
-    # Optionally delete physical file (commented out for safety)
-    # storage.delete_file(media.storage_path)
+    # Note: We keep the file in storage for now to allow undo/recovery
+    # If hard delete is needed, we would call:
+    # storage.delete_file(media.storage_path, provider=media.storage_provider)
 
     return {"ok": True, "message": "Media file deleted"}
 

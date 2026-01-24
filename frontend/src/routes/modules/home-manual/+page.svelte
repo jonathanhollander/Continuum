@@ -15,12 +15,15 @@
         Thermometer,
         MapPin,
         Shield,
+        X,
+        Save,
     } from "lucide-svelte";
+    import { fly } from "svelte/transition";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
     import { onMount } from "svelte";
-    import { registerSync } from "$lib/services/sync.svelte.ts";
+    import { registerSync } from "$lib/services/sync.svelte";
     import { getStored } from "$lib/stores/persistence";
 
     // MAPPERS
@@ -85,19 +88,29 @@
         "home_vendors",
         "vendors",
         vendorMapper,
-    ).setAffirmationContext('general');
+    ).setAffirmationContext("general");
     const accessSync = registerSync<AccessCode>(
         "home_access",
         "home_access",
         accessMapper,
-    ).setAffirmationContext('general');
+    ).setAffirmationContext("general");
     const utilitySync = registerSync<Utility>(
         "home_utilities",
         "utilities",
         utilityMapper,
-    ).setAffirmationContext('general');
+    ).setAffirmationContext("general");
 
-    let activeTab = "vendors";
+    let activeTab = $state("vendors");
+
+    // Modal States
+    let showVendorModal = $state(false);
+    let showCodeModal = $state(false);
+    let showUtilityModal = $state(false);
+
+    // Form States
+    let vendorForm = $state({ category: "", name: "", phone: "" });
+    let codeForm = $state({ location: "", code: "" });
+    let utilityForm = $state({ service_type: "", provider: "" });
 
     onMount(async () => {
         await Promise.all([
@@ -108,12 +121,19 @@
     });
 
     // Handlers
-    async function addVendor() {
-        const category = prompt("Vendor Role (e.g. Plumber):");
-        if (!category) return;
-        const name = prompt("Name/Company:");
-        const phone = prompt("Phone:");
-        await vendorSync.create({ category, name: name || "Unknown", phone });
+    function openVendorModal() {
+        vendorForm = { category: "", name: "", phone: "" };
+        showVendorModal = true;
+    }
+
+    async function saveVendor() {
+        if (!vendorForm.category || !vendorForm.name) return;
+        await vendorSync.create({
+            category: vendorForm.category,
+            name: vendorForm.name,
+            phone: vendorForm.phone,
+        });
+        showVendorModal = false;
     }
 
     async function deleteVendor(id: number | string) {
@@ -121,11 +141,18 @@
         await vendorSync.delete(id);
     }
 
-    async function addCode() {
-        const location = prompt("Code Label (e.g. Gate):");
-        if (!location) return;
-        const code = prompt("Code:");
-        await accessSync.create({ location, code_encrypted: code || "****" });
+    function openCodeModal() {
+        codeForm = { location: "", code: "" };
+        showCodeModal = true;
+    }
+
+    async function saveCode() {
+        if (!codeForm.location) return;
+        await accessSync.create({
+            location: codeForm.location,
+            code_encrypted: codeForm.code || "****",
+        });
+        showCodeModal = false;
     }
 
     async function deleteCode(id: number | string) {
@@ -133,14 +160,18 @@
         await accessSync.delete(id);
     }
 
-    async function addUtility() {
-        const service_type = prompt("Utility Type (Water, Gas, Electric):");
-        if (!service_type) return;
-        const provider = prompt("Provider Name:");
+    function openUtilityModal() {
+        utilityForm = { service_type: "", provider: "" };
+        showUtilityModal = true;
+    }
+
+    async function saveUtility() {
+        if (!utilityForm.service_type) return;
         await utilitySync.create({
-            service_type,
-            provider: provider || "Unknown",
+            service_type: utilityForm.service_type,
+            provider: utilityForm.provider || "Unknown",
         });
+        showUtilityModal = false;
     }
 
     async function deleteUtility(id: number | string) {
@@ -149,17 +180,235 @@
     }
 </script>
 
+<!-- Vendor Modal -->
+{#if showVendorModal}
+    <div
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
+        transition:fade
+    >
+        <div
+            class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
+            in:fly={{ y: 20 }}
+        >
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="font-serif font-bold text-xl text-[#304743]">
+                    Add Trusted Vendor
+                </h3>
+                <button
+                    onclick={() => (showVendorModal = false)}
+                    class="text-slate-400 hover:text-slate-600"
+                >
+                    <X size={20} />
+                </button>
+            </div>
+
+            <div class="p-6 space-y-4">
+                <div class="space-y-2">
+                    <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">
+                        Vendor Role
+                    </label>
+                    <input
+                        type="text"
+                        bind:value={vendorForm.category}
+                        placeholder="e.g. Plumber, Electrician, HVAC"
+                        class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium"
+                    />
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">
+                        Name / Company
+                    </label>
+                    <input
+                        type="text"
+                        bind:value={vendorForm.name}
+                        placeholder="e.g. Joe's Plumbing"
+                        class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium"
+                    />
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">
+                        Phone Number
+                    </label>
+                    <input
+                        type="tel"
+                        bind:value={vendorForm.phone}
+                        placeholder="(555) 123-4567"
+                        class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium"
+                    />
+                </div>
+            </div>
+
+            <div class="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+                <button
+                    onclick={() => (showVendorModal = false)}
+                    class="px-4 py-2 font-bold text-slate-500 hover:text-slate-700 text-sm"
+                >
+                    Cancel
+                </button>
+                <button
+                    onclick={saveVendor}
+                    disabled={!vendorForm.category || !vendorForm.name}
+                    class="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-bold text-sm shadow-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+                >
+                    <Save size={16} /> Save Vendor
+                </button>
+            </div>
+        </div>
+    </div>
+{/if}
+
+<!-- Access Code Modal -->
+{#if showCodeModal}
+    <div
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
+        transition:fade
+    >
+        <div
+            class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
+            in:fly={{ y: 20 }}
+        >
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="font-serif font-bold text-xl text-[#304743]">
+                    Add Access Code
+                </h3>
+                <button
+                    onclick={() => (showCodeModal = false)}
+                    class="text-slate-400 hover:text-slate-600"
+                >
+                    <X size={20} />
+                </button>
+            </div>
+
+            <div class="p-6 space-y-4">
+                <div class="space-y-2">
+                    <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">
+                        Code Label
+                    </label>
+                    <input
+                        type="text"
+                        bind:value={codeForm.location}
+                        placeholder="e.g. Gate, Garage, Alarm"
+                        class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium"
+                    />
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">
+                        Code
+                    </label>
+                    <input
+                        type="text"
+                        bind:value={codeForm.code}
+                        placeholder="e.g. 1234"
+                        class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-mono text-lg tracking-widest"
+                    />
+                </div>
+            </div>
+
+            <div class="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+                <button
+                    onclick={() => (showCodeModal = false)}
+                    class="px-4 py-2 font-bold text-slate-500 hover:text-slate-700 text-sm"
+                >
+                    Cancel
+                </button>
+                <button
+                    onclick={saveCode}
+                    disabled={!codeForm.location}
+                    class="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-bold text-sm shadow-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+                >
+                    <Save size={16} /> Save Code
+                </button>
+            </div>
+        </div>
+    </div>
+{/if}
+
+<!-- Utility Modal -->
+{#if showUtilityModal}
+    <div
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
+        transition:fade
+    >
+        <div
+            class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
+            in:fly={{ y: 20 }}
+        >
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="font-serif font-bold text-xl text-[#304743]">
+                    Add Utility Shutoff
+                </h3>
+                <button
+                    onclick={() => (showUtilityModal = false)}
+                    class="text-slate-400 hover:text-slate-600"
+                >
+                    <X size={20} />
+                </button>
+            </div>
+
+            <div class="p-6 space-y-4">
+                <div class="space-y-2">
+                    <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">
+                        Utility Type
+                    </label>
+                    <select
+                        bind:value={utilityForm.service_type}
+                        class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium"
+                    >
+                        <option value="">Select type...</option>
+                        <option value="Water">Water</option>
+                        <option value="Gas">Gas</option>
+                        <option value="Electric">Electric</option>
+                        <option value="Internet">Internet</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">
+                        Provider Name
+                    </label>
+                    <input
+                        type="text"
+                        bind:value={utilityForm.provider}
+                        placeholder="e.g. City Water Dept, PG&E"
+                        class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium"
+                    />
+                </div>
+            </div>
+
+            <div class="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+                <button
+                    onclick={() => (showUtilityModal = false)}
+                    class="px-4 py-2 font-bold text-slate-500 hover:text-slate-700 text-sm"
+                >
+                    Cancel
+                </button>
+                <button
+                    onclick={saveUtility}
+                    disabled={!utilityForm.service_type}
+                    class="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-bold text-sm shadow-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+                >
+                    <Save size={16} /> Save Utility
+                </button>
+            </div>
+        </div>
+    </div>
+{/if}
+
 <div class="max-w-6xl mx-auto p-6 md:p-8 animate-in fade-in duration-500">
     <!-- Header -->
     <div class="mb-8">
         <div class="flex items-center gap-4 mb-2">
             <div
-                class="p-3 bg-slate-900 text-white rounded-xl shadow-lg shadow-slate-200"
+                class="p-3 bg-primary/10 text-primary rounded-xl shadow-lg shadow-primary/10"
             >
                 <Hammer size={32} />
             </div>
             <div>
-                <h1 class="font-serif font-bold text-3xl text-slate-900">
+                <h1 class="font-serif font-bold text-3xl text-foreground">
                     The Home Operating Manual
                 </h1>
                 <p class="text-slate-500">
@@ -173,28 +422,28 @@
     <!-- Navigation Tabs -->
     <div class="flex gap-2 mb-8 border-b border-slate-200 pb-1">
         <button
-            on:click={() => (activeTab = "vendors")}
+            onclick={() => (activeTab = "vendors")}
             class="px-5 py-2.5 font-bold text-sm rounded-t-xl transition-all border-b-2
             {activeTab === 'vendors'
-                ? 'border-orange-500 text-orange-600 bg-orange-50'
+                ? 'border-primary text-primary bg-primary/10'
                 : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'}"
         >
             Trusted Vendors
         </button>
         <button
-            on:click={() => (activeTab = "access")}
+            onclick={() => (activeTab = "access")}
             class="px-5 py-2.5 font-bold text-sm rounded-t-xl transition-all border-b-2
             {activeTab === 'access'
-                ? 'border-indigo-500 text-indigo-600 bg-indigo-50'
+                ? 'border-primary text-primary bg-primary/10'
                 : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'}"
         >
             Access Codes
         </button>
         <button
-            on:click={() => (activeTab = "utilities")}
+            onclick={() => (activeTab = "utilities")}
             class="px-5 py-2.5 font-bold text-sm rounded-t-xl transition-all border-b-2
             {activeTab === 'utilities'
-                ? 'border-sky-500 text-sky-600 bg-sky-50'
+                ? 'border-primary text-primary bg-primary/10'
                 : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'}"
         >
             Utilities & Shutoffs
@@ -211,9 +460,9 @@
                         whyMatters="<strong>When something breaks, your family won't know who to call.</strong> The plumber you trust, the electrician who knows your wiring, the HVAC tech who's serviced your system for years—these relationships took time to build.<br/><br/>Documenting your trusted vendors means your family won't have to start from scratch during a crisis. They'll have the direct numbers, the names to ask for, and the context of your history with each provider."
                         encouragement="Start with whoever you'd call in an emergency—plumber, electrician, or handyman."
                         icon={Phone}
-                        iconClass="text-orange-500"
-                        ctaLabel="Add first vendor"
-                        onAction={addVendor}
+                        iconClass="text-primary"
+                        ctaLabel="Share your first vendor"
+                        onAction={openVendorModal}
                     />
                 {:else}
                     <div class="space-y-6">
@@ -222,10 +471,10 @@
                                 Who To Call
                             </h2>
                             <button
-                                on:click={addVendor}
-                                class="px-4 py-2 bg-slate-900 text-white rounded-lg font-bold text-sm hover:bg-slate-800 flex items-center gap-2"
+                                onclick={openVendorModal}
+                                class="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-bold text-sm shadow-md shadow-primary/10 hover:scale-[1.02] flex items-center gap-2"
                             >
-                                <Plus size={16} /> Add Vendor
+                                <Plus size={16} /> Include a trusted vendor
                             </button>
                         </div>
 
@@ -240,11 +489,11 @@
                                         class="flex justify-between items-start mb-3"
                                     >
                                         <span
-                                            class="px-2 py-1 bg-orange-100 text-orange-700 text-[10px] font-bold uppercase rounded-md tracking-wider"
+                                            class="px-2 py-1 bg-primary/10 text-primary text-[10px] font-bold uppercase rounded-md tracking-wider"
                                             >{vendor.category}</span
                                         >
                                         <button
-                                            on:click={() =>
+                                            onclick={() =>
                                                 deleteVendor(vendor.id)}
                                             class="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                                         >
@@ -279,12 +528,12 @@
 
                             <!-- Empty State Add -->
                             <button
-                                on:click={addVendor}
+                                onclick={openVendorModal}
                                 class="border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-slate-400 hover:border-slate-300 hover:bg-slate-50 transition-all min-h-[200px]"
                             >
                                 <Plus size={24} class="mb-2" />
                                 <span class="font-bold text-sm"
-                                    >Add New Contact</span
+                                    >Include a helper</span
                                 >
                             </button>
                         </div>
@@ -299,9 +548,9 @@
                         whyMatters="<strong>Alarm codes, garage door combinations, WiFi passwords, safe combinations—these are the invisible barriers that could lock your family out of their own home.</strong><br/><br/>Documenting access codes ensures your family can enter the house, disable alarms without triggering a police response, and access secured areas. It's one less thing for them to figure out during an already overwhelming time."
                         encouragement="Start with your most critical code—the alarm system or front door."
                         icon={Key}
-                        iconClass="text-indigo-500"
-                        ctaLabel="Add first code"
-                        onAction={addCode}
+                        iconClass="text-primary"
+                        ctaLabel="Share your first code"
+                        onAction={openCodeModal}
                     />
                 {:else}
                     <div class="space-y-6">
@@ -310,10 +559,10 @@
                                 Codes & Keys
                             </h2>
                             <button
-                                on:click={addCode}
-                                class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold text-sm hover:bg-indigo-700 flex items-center gap-2"
+                                onclick={openCodeModal}
+                                class="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-bold text-sm shadow-md shadow-primary/10 hover:scale-[1.02] flex items-center gap-2"
                             >
-                                <Plus size={16} /> Add Code
+                                <Plus size={16} /> Share an access code
                             </button>
                         </div>
 
@@ -349,7 +598,7 @@
                                         </div>
                                     {/if}
                                     <button
-                                        on:click={() => deleteCode(item.id)}
+                                        onclick={() => deleteCode(item.id)}
                                         class="text-slate-300 hover:text-red-500 p-2"
                                     >
                                         &times;
@@ -368,9 +617,9 @@
                         whyMatters="<strong>A burst pipe at 2am. A gas leak. A tripped breaker during a storm.</strong> In emergencies, knowing exactly where to find the water shutoff, gas valve, or electrical panel can prevent thousands in damage—or even save lives.<br/><br/>Documenting these critical locations means your family won't be searching frantically in a crisis. They'll know exactly where to go and what to do."
                         encouragement="Start with your water main shutoff—it's the most common emergency need."
                         icon={Droplets}
-                        iconClass="text-sky-500"
-                        ctaLabel="Add first shutoff location"
-                        onAction={addUtility}
+                        iconClass="text-primary"
+                        ctaLabel="Share your first shutoff"
+                        onAction={openUtilityModal}
                     />
                 {:else}
                     <div class="space-y-6">
@@ -379,10 +628,10 @@
                                 Critical Shutoffs
                             </h2>
                             <button
-                                on:click={addUtility}
-                                class="px-4 py-2 bg-sky-600 text-white rounded-lg font-bold text-sm hover:bg-sky-700 flex items-center gap-2"
+                                onclick={openUtilityModal}
+                                class="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-bold text-sm shadow-md shadow-primary/10 hover:scale-[1.02] flex items-center gap-2"
                             >
-                                <Plus size={16} /> Add Utility
+                                <Plus size={16} /> Share utility details
                             </button>
                         </div>
 
@@ -392,13 +641,13 @@
                                     class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-6 items-start relative group"
                                 >
                                     <button
-                                        on:click={() => deleteUtility(item.id)}
+                                        onclick={() => deleteUtility(item.id)}
                                         class="absolute top-4 right-4 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                                     >
                                         &times;
                                     </button>
                                     <div
-                                        class="p-4 bg-sky-50 text-sky-600 rounded-2xl shrink-0"
+                                        class="p-4 bg-primary/5 text-primary rounded-2xl shrink-0"
                                     >
                                         {#if item.service_type === "Water"}
                                             <Droplets size={32} />

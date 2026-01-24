@@ -1,5 +1,4 @@
 import { writable, get } from 'svelte/store';
-import { auth } from './auth';
 
 // Keyring tracks all "Standalone Accounts" (emails) registered in this browser
 const STORAGE_KEY = 'continuum_keyring_emails';
@@ -65,7 +64,10 @@ export function switchAccount(email: string) {
  * Logout - clear active account and redirect to picker
  */
 export function logout() {
-    auth.logout();
+    // auth.logout(); // Handled by UI to avoid circular dependency
     activeAccountId.set(null);
-    window.location.href = '/login';
+    if (typeof window !== 'undefined') {
+        localStorage.removeItem('continuum_auth_token');
+        window.location.href = '/login';
+    }
 }

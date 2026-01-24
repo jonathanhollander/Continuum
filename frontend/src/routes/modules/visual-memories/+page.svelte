@@ -23,7 +23,7 @@
         toggleFavorite as toggleVisualFavorite,
         syncAllMemories,
         type ExternalArchive,
-    } from "$lib/stores/visualMemoryStore.svelte.ts";
+    } from "$lib/stores/visualMemoryStore.svelte";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
     import * as registryRaw from "$lib/data/registry.json";
 
@@ -362,9 +362,9 @@
                         memories={visualMemories.items}
                         bind:viewMode
                         bind:selectedIds
-                        bind:isSelectionMode
-                        on:toggleFavorite={(e) =>
-                            toggleVisualFavorite(e.detail)}
+                        {isSelectionMode}
+                        onToggleFavorite={(id) =>
+                            toggleVisualFavorite(id)}
                     />
                 {/if}
             </div>
@@ -412,10 +412,8 @@
                     {#each externalArchives.items as archive (archive.id)}
                         <ExternalArchiveCard
                             {archive}
-                            onedit={(e: CustomEvent) =>
-                                openArchiveModal(e.detail)}
-                            ondelete={(e: CustomEvent) =>
-                                handleDeleteArchive(e.detail)}
+                            onedit={(arch) => openArchiveModal(arch)}
+                            ondelete={(id) => handleDeleteArchive(id)}
                         />
                     {/each}
 

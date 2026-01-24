@@ -2,9 +2,9 @@
     import {
         propertyStore,
         type PropertyItem,
-    } from "$lib/stores/propertyStore.svelte.ts";
-    import { activityLog } from "$lib/stores/activityLog.svelte.ts";
-    import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
+    } from "$lib/stores/propertyStore.svelte";
+    import { activityLog } from "$lib/stores/activityLog.svelte";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { fade, slide, scale } from "svelte/transition";
     import { quintOut } from "svelte/easing";
     import { qrStore } from "$lib/stores/qrStore";
@@ -35,21 +35,24 @@
         QrCode,
     } from "lucide-svelte";
     import EvidenceGalleryUploader from "$lib/components/ui/EvidenceGalleryUploader.svelte";
+    import UniversalUploader from "$lib/components/ui/UniversalUploader.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
+    import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
 
     // Concierge Imports
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
-    import { t, language } from "$lib/stores/localization.ts";
+    import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import { fly } from "svelte/transition"; // Ensure fly is imported
 
-    let showAddModal = false;
-    let isEditing = false;
-    let searchQuery = "";
-    let filterType: string = "All";
-    let showWizard = false;
+    let showAddModal = $state(false);
+    let isEditing = $state(false);
+    let searchQuery = $state("");
+    let filterType = $state<string>("All");
+    let showWizard = $state(false);
+    let parsedCustomAttributes = $state<Record<string, any>>({});
 
-    let newItem: Partial<PropertyItem> = {
+    let newItem = $state<Partial<PropertyItem>>({
         name: "",
         type: "Real Estate",
         location: "",
@@ -60,7 +63,7 @@
         notes: "",
         evidence: [],
         thumbnail: "",
-    };
+    });
 
     const wizardSteps = [
         {
@@ -171,12 +174,18 @@
             evidence: [],
             thumbnail: "",
         };
+        parsedCustomAttributes = {};
         showAddModal = false;
         isEditing = false;
     }
 
     function handleAddItem() {
         if (!newItem.name || !newItem.location) return;
+
+        const itemData = {
+            ...newItem,
+            custom_attributes: JSON.stringify(parsedCustomAttributes),
+        };
 
         if (isEditing && newItem.id) {
             const oldItem = propertyStore.getItem(newItem.id);
@@ -203,7 +212,7 @@
                     });
             }
 
-            propertyStore.updateItem(newItem.id, newItem);
+            propertyStore.updateItem(newItem.id, itemData);
 
             activityLog.logEvent({
                 module: "Property",
@@ -216,7 +225,7 @@
             });
         } else {
             const created = propertyStore.addItem(
-                newItem as Omit<PropertyItem, "id">,
+                itemData as Omit<PropertyItem, "id">,
             );
 
             activityLog.logEvent({
@@ -234,6 +243,11 @@
 
     function editItem(item: PropertyItem) {
         newItem = { ...item };
+        try {
+            parsedCustomAttributes = JSON.parse(item.custom_attributes || "{}");
+        } catch {
+            parsedCustomAttributes = {};
+        }
         isEditing = true;
         showAddModal = true;
     }
@@ -266,10 +280,10 @@
     };
 
     const typeColors = {
-        "Real Estate": "text-blue-600 bg-blue-50 border-blue-100",
-        Vehicle: "text-indigo-600 bg-indigo-50 border-indigo-100",
+        "Real Estate": "text-primary bg-primary/10 border-primary/20",
+        Vehicle: "text-primary bg-primary/10 border-primary/20",
         "Personal Property": "text-slate-600 bg-slate-50 border-slate-100",
-        Valuable: "text-amber-600 bg-amber-50 border-amber-100",
+        Valuable: "text-primary bg-primary/10 border-primary/20",
         Other: "text-purple-600 bg-purple-50 border-purple-100",
     };
 
@@ -329,7 +343,7 @@
                 <Home size={14} />
                 <span>Concierge v4.0</span>
                 <ChevronRight size={12} />
-                <span class="text-blue-600">Property & Real Estate</span>
+                <span class="text-primary">Property & Real Estate</span>
             </nav>
             <div>
                 <h1
@@ -350,7 +364,7 @@
         <div class="flex flex-wrap items-center gap-3">
             <button
                 onclick={() => (showWizard = true)}
-                class="flex items-center gap-2 px-5 py-3 border border-blue-100 text-blue-700 font-bold rounded-2xl hover:bg-blue-50 transition-colors"
+                class="flex items-center gap-2 px-5 py-3 border border-primary/20 text-primary font-bold rounded-2xl hover:bg-primary/5 transition-colors"
             >
                 <Info size={18} />
                 {$t("wizard.start")}
@@ -363,8 +377,8 @@
                         onclick={() => (filterType = type)}
                         class="px-4 py-2 rounded-xl text-xs font-bold tracking-wider transition-all {filterType ===
                         type
-                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
-                            : 'text-slate-500 hover:text-blue-600 hover:bg-slate-50'}"
+                            ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                            : 'text-slate-500 hover:text-primary hover:bg-slate-50'}"
                     >
                         {type}
                     </button>
@@ -373,10 +387,10 @@
 
             <button
                 onclick={() => (showAddModal = true)}
-                class="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-2xl transition-all shadow-xl shadow-slate-900/10 font-bold"
+                class="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-2xl transition-all shadow-xl shadow-primary/10 font-bold"
             >
                 <Plus size={20} />
-                Add Asset
+                Share a property detail
             </button>
         </div>
     </header>
@@ -388,12 +402,12 @@
         >
             <div class="flex items-start justify-between mb-4">
                 <div
-                    class="p-3 bg-blue-50 rounded-2xl text-blue-600 group-hover:scale-110 transition-transform"
+                    class="p-3 bg-primary/10 rounded-2xl text-primary group-hover:scale-110 transition-transform"
                 >
                     <DollarSign size={24} />
                 </div>
                 <div
-                    class="text-[10px] bg-blue-100 text-blue-700 px-2 py-1 rounded-lg font-bold"
+                    class="text-[10px] bg-primary/20 text-primary px-2 py-1 rounded-lg font-bold"
                 >
                     TOTAL
                 </div>
@@ -413,12 +427,12 @@
         >
             <div class="flex items-start justify-between mb-4">
                 <div
-                    class="p-3 bg-indigo-50 rounded-2xl text-indigo-600 group-hover:scale-110 transition-transform"
+                    class="p-3 bg-primary/10 rounded-2xl text-primary group-hover:scale-110 transition-transform"
                 >
                     <Building size={24} />
                 </div>
                 <div
-                    class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-1 rounded-lg font-bold"
+                    class="text-[10px] bg-primary/20 text-primary px-2 py-1 rounded-lg font-bold"
                 >
                     COUNT
                 </div>
@@ -463,12 +477,12 @@
         >
             <div class="flex items-start justify-between mb-4">
                 <div
-                    class="p-3 bg-emerald-50 rounded-2xl text-emerald-600 group-hover:scale-110 transition-transform"
+                    class="p-3 bg-primary/10 rounded-2xl text-primary group-hover:scale-110 transition-transform"
                 >
                     <ShieldCheck size={24} />
                 </div>
                 <div
-                    class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-1 rounded-lg font-bold"
+                    class="text-[10px] bg-primary/20 text-primary px-2 py-1 rounded-lg font-bold"
                 >
                     SECURE
                 </div>
@@ -492,7 +506,7 @@
                 type="text"
                 bind:value={searchQuery}
                 placeholder="Search by asset name or location..."
-                class="w-full bg-white border border-slate-200 rounded-2xl py-3 pl-12 pr-4 text-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all"
+                class="w-full bg-white border border-slate-200 rounded-2xl py-3 pl-12 pr-4 text-sm focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all"
             />
         </div>
         <div class="flex items-center gap-2">
@@ -501,7 +515,7 @@
                 >Inventory: {filteredItems.length} Assets</span
             >
             <button
-                class="p-3 bg-white border border-slate-200 rounded-2xl text-slate-500 hover:text-blue-600 transition-colors shadow-sm"
+                class="p-3 bg-white border border-slate-200 rounded-2xl text-slate-500 hover:text-primary transition-colors shadow-sm"
             >
                 <Download size={18} />
             </button>
@@ -553,14 +567,14 @@
                             </div>
                             <div>
                                 <h3
-                                    class="text-xl font-black text-slate-900 leading-tight group-hover:text-blue-600 transition-colors"
+                                    class="text-xl font-black text-slate-900 leading-tight group-hover:text-primary transition-colors"
                                 >
                                     {item.name}
                                 </h3>
                                 <div
                                     class="flex items-center gap-1.5 text-slate-400 font-bold text-xs uppercase tracking-tighter"
                                 >
-                                    <MapPin size={12} class="text-blue-500" />
+                                    <MapPin size={12} class="text-primary/60" />
                                     {item.location}
                                 </div>
                             </div>
@@ -577,9 +591,9 @@
                             </button>
                             <button
                                 onclick={() => editItem(item)}
-                                class="p-3 bg-slate-50 hover:bg-blue-50 text-slate-400 hover:text-blue-600 rounded-2xl transition-all"
+                                class="p-3 bg-slate-50 hover:bg-primary/10 text-slate-400 hover:text-primary rounded-2xl transition-all"
                             >
-                                <Pencil size={18} />
+                                <Edit2 size={18} />
                             </button>
                             <button
                                 onclick={() => deleteItem(item.id, item.name)}
@@ -667,7 +681,7 @@
 
                 <div class="mt-auto p-2">
                     <div
-                        class="bg-blue-600 rounded-[2rem] p-6 text-white flex items-center justify-between group/footer hover:bg-slate-900 transition-colors duration-500 cursor-pointer"
+                        class="bg-primary rounded-[2rem] p-6 text-primary-foreground flex items-center justify-between group/footer hover:bg-slate-900 transition-colors duration-500 cursor-pointer"
                     >
                         <div>
                             <p
@@ -726,7 +740,7 @@
                     <div class="flex justify-center mt-6">
                         <button
                             onclick={() => (showAddModal = true)}
-                            class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg shadow-blue-600/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                            class="bg-primary text-primary-foreground px-8 py-3 rounded-2xl font-bold shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
                         >
                             <Plus size={18} />
                             Register First Asset
@@ -756,7 +770,7 @@
             <div class="p-10 pb-0 flex items-center justify-between">
                 <div>
                     <nav
-                        class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 mb-3"
+                        class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-3"
                     >
                         <Plus size={12} />
                         <span>Asset Inventory</span>
@@ -764,8 +778,8 @@
                     <h2
                         class="text-4xl font-black text-slate-900 tracking-tighter"
                     >
-                        {isEditing ? "Modify" : "Add"}
-                        <span class="text-blue-600">Asset</span>
+                        {isEditing ? "Update" : "Record"}
+                        <span class="text-primary">Asset Detail</span>
                     </h2>
                 </div>
                 <button
@@ -782,7 +796,7 @@
                     <h3
                         class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3"
                     >
-                        <span class="w-6 h-[2px] bg-blue-600 rounded-full"
+                        <span class="w-6 h-[2px] bg-primary rounded-full"
                         ></span>
                         Asset Description
                     </h3>
@@ -798,7 +812,7 @@
                                 type="text"
                                 bind:value={newItem.name}
                                 placeholder="e.g. Primary Residence"
-                                class="w-full bg-slate-50 border-2 border-transparent focus:border-blue-600 focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all"
+                                class="w-full bg-slate-50 border-2 border-transparent focus:border-primary focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all"
                             />
                         </div>
                         <div class="space-y-3">
@@ -808,7 +822,7 @@
                             >
                             <select
                                 bind:value={newItem.type}
-                                class="w-full bg-slate-50 border-2 border-transparent focus:border-blue-600 focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all appearance-none cursor-pointer"
+                                class="w-full bg-slate-50 border-2 border-transparent focus:border-primary focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all appearance-none cursor-pointer"
                             >
                                 {#each types.filter((t) => t !== "All") as type}
                                     <option value={type}>{type}</option>
@@ -824,7 +838,7 @@
                                 type="text"
                                 bind:value={newItem.location}
                                 placeholder="City, State / Full Address"
-                                class="w-full bg-slate-50 border-2 border-transparent focus:border-blue-600 focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all"
+                                class="w-full bg-slate-50 border-2 border-transparent focus:border-primary focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all"
                             />
                         </div>
                     </div>
@@ -835,9 +849,9 @@
                     class="bg-blue-50/50 rounded-[2.5rem] p-8 border border-blue-100/50"
                 >
                     <h3
-                        class="text-xs font-black text-blue-600 uppercase tracking-[0.2em] mb-6 flex items-center gap-3"
+                        class="text-xs font-black text-primary uppercase tracking-[0.2em] mb-6 flex items-center gap-3"
                     >
-                        <span class="w-6 h-[2px] bg-blue-600 rounded-full"
+                        <span class="w-6 h-[2px] bg-primary rounded-full"
                         ></span>
                         Ownership & Value
                     </h3>
@@ -850,12 +864,12 @@
                             <div class="relative">
                                 <DollarSign
                                     size={16}
-                                    class="absolute left-4 top-4.5 text-blue-600"
+                                    class="absolute left-4 top-4.5 text-primary"
                                 />
                                 <input
                                     type="number"
                                     bind:value={newItem.valuation}
-                                    class="w-full bg-white border-2 border-transparent focus:border-blue-600 rounded-2xl p-4 pl-10 text-sm font-black outline-none transition-all shadow-sm"
+                                    class="w-full bg-white border-2 border-transparent focus:border-primary rounded-2xl p-4 pl-10 text-sm font-black outline-none transition-all shadow-sm"
                                 />
                             </div>
                         </div>
@@ -874,7 +888,7 @@
                                             (newItem.status = status as any)}
                                         class="flex-1 py-3 text-[10px] font-black uppercase tracking-tighter rounded-xl transition-all {newItem.status ===
                                         status
-                                            ? 'bg-blue-600 text-white shadow-lg'
+                                            ? 'bg-primary text-white shadow-lg'
                                             : 'text-slate-400 hover:bg-slate-50'}"
                                     >
                                         {status}
@@ -890,7 +904,7 @@
                             <input
                                 type="date"
                                 bind:value={newItem.purchaseDate}
-                                class="w-full bg-white border-2 border-transparent focus:border-blue-600 rounded-2xl p-4 text-sm font-bold outline-none transition-all shadow-sm cursor-pointer"
+                                class="w-full bg-white border-2 border-transparent focus:border-primary rounded-2xl p-4 text-sm font-bold outline-none transition-all shadow-sm cursor-pointer"
                             />
                         </div>
                     </div>
@@ -915,7 +929,7 @@
                                 type="text"
                                 bind:value={newItem.ownershipDetails}
                                 placeholder="e.g. Individual Title, Joint with Spouse"
-                                class="w-full bg-slate-50 border-2 border-transparent focus:border-blue-600 focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all"
+                                class="w-full bg-slate-50 border-2 border-transparent focus:border-primary focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all"
                             />
                         </div>
                         <div class="space-y-3">
@@ -923,11 +937,11 @@
                                 class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-sans"
                                 >Critical Documents</label
                             >
-                            <input
-                                type="text"
+                            <UniversalUploader
                                 bind:value={newItem.documents}
-                                placeholder="Deed, Title, Safety Deposit Box #, etc."
-                                class="w-full bg-slate-50 border-2 border-transparent focus:border-blue-600 focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all"
+                                label="Ownership Document"
+                                mode="any"
+                                module="properties"
                             />
                         </div>
                         <div class="space-y-3 md:col-span-2">
@@ -939,7 +953,7 @@
                                 bind:value={newItem.notes}
                                 rows="3"
                                 placeholder="Additional details, disposal instructions, or historical Significance..."
-                                class="w-full bg-slate-50 border-2 border-transparent focus:border-blue-600 focus:bg-white rounded-2xl p-6 text-sm font-bold outline-none transition-all resize-none leading-relaxed"
+                                class="w-full bg-slate-50 border-2 border-transparent focus:border-primary focus:bg-white rounded-2xl p-6 text-sm font-bold outline-none transition-all resize-none leading-relaxed"
                             ></textarea>
                         </div>
                     </div>
@@ -948,9 +962,9 @@
                 <!-- Group 4: Visual Evidence -->
                 <section>
                     <h3
-                        class="text-xs font-black text-blue-600 uppercase tracking-[0.2em] mb-6 flex items-center gap-3"
+                        class="text-xs font-black text-primary uppercase tracking-[0.2em] mb-6 flex items-center gap-3"
                     >
-                        <span class="w-6 h-[2px] bg-blue-600 rounded-full"
+                        <span class="w-6 h-[2px] bg-primary rounded-full"
                         ></span>
                         Insurance Evidence
                     </h3>
@@ -958,6 +972,14 @@
                     <EvidenceGalleryUploader
                         bind:evidence={newItem.evidence}
                         onsetCover={(e: any) => (newItem.thumbnail = e.detail)}
+                    />
+                </section>
+
+                <!-- Custom Fields -->
+                <section class="pt-6 mt-6 border-t border-slate-100">
+                    <CustomFieldsManager
+                        entityType="property"
+                        bind:data={parsedCustomAttributes}
                     />
                 </section>
             </div>
@@ -975,9 +997,9 @@
                 <button
                     onclick={handleAddItem}
                     disabled={!newItem.name || !newItem.location}
-                    class="bg-blue-600 text-white px-12 py-5 rounded-3xl font-black shadow-2xl shadow-blue-600/30 hover:scale-[1.03] active:scale-[0.98] transition-all disabled:opacity-30"
+                    class="bg-primary text-primary-foreground px-12 py-5 rounded-3xl font-black shadow-2xl shadow-primary/30 hover:scale-[1.03] active:scale-[0.98] transition-all disabled:opacity-30"
                 >
-                    Commit to Inventory
+                    Save these details
                 </button>
             </div>
         </div>

@@ -5,16 +5,16 @@
 	import { page } from "$app/stores";
 	import { onMount, setContext } from "svelte";
 	import { goto } from "$app/navigation";
-	import { estateAudit } from "$lib/stores/auditStore.svelte.ts";
+	import { estateAudit } from "$lib/stores/auditStore.svelte";
 	import ConciergeSettings from "$lib/components/concierge/ConciergeSettings.svelte";
 	import ConciergePanel from "$lib/components/layout/ConciergePanel.svelte";
-	import { conciergeEngine } from "$lib/stores/conciergeEngine.ts";
+	import { conciergeEngine } from "$lib/stores/conciergeEngine";
 	import {
 		language,
 		userRole,
 		type UserRole,
-	} from "$lib/stores/conciergeStore.svelte.ts";
-	import { dictionary } from "$lib/stores/dictionary.ts";
+	} from "$lib/stores/conciergeStore.svelte";
+	import { dictionary } from "$lib/stores/dictionary";
 	import { logger } from "$lib/utils/logger";
 	import {
 		overwhelmDetector,
@@ -68,28 +68,30 @@
 		Layers,
 		BarChart3,
 		Globe,
+		Palette,
 	} from "lucide-svelte";
 	import { fade, fly } from "svelte/transition";
 	import Modal from "$lib/components/ui/Modal.svelte";
-	import { t } from "$lib/stores/conciergeStore.svelte.ts";
-	import { toneStore, type AppTone } from "$lib/stores/toneStore.svelte.ts";
+	import { t } from "$lib/stores/conciergeStore.svelte";
+	import { toneStore, type AppTone } from "$lib/stores/toneStore.svelte";
 	import CommandCenter from "$lib/components/ui/CommandCenter.svelte";
-	import { magicTrigger } from "$lib/stores/magicStore.ts";
+	import { magicTrigger } from "$lib/stores/magicStore";
 	import SuccessParticles from "$lib/components/ui/SuccessParticles.svelte";
 
-	import { genesisStore } from "$lib/stores/genesisStore.ts";
+	import { genesisStore } from "$lib/stores/genesisStore";
 	import TheArchitect from "$lib/components/wizard/TheArchitect.svelte";
 	import GodModeToggle from "$lib/components/wizard/GodModeToggle.svelte";
 	import Sidebar from "$lib/components/layout/Sidebar.svelte";
 	import FocusFooter from "$lib/components/layout/FocusFooter.svelte";
 	import MobileBottomNav from "$lib/components/layout/MobileBottomNav.svelte";
 	import { navGroups } from "$lib/config/navigation";
-	import { compassStore } from "$lib/stores/compassStore.ts";
+	import { compassStore } from "$lib/stores/compassStore";
 	import NotificationContainer from "$lib/components/NotificationContainer.svelte";
 	import RoleSwitcher from "$lib/components/RoleSwitcher.svelte";
-	import { contextStore } from "$lib/stores/contextStore.svelte.ts";
+	import { contextStore } from "$lib/stores/contextStore.svelte";
 	import TakeBreakButton from "$lib/components/TakeBreakButton.svelte";
 	import MediaMigrationNotice from "$lib/components/MediaMigrationNotice.svelte";
+	import { accessibilityStore } from "$lib/stores/accessibilityStore";
 
 	let { children } = $props();
 
@@ -129,9 +131,9 @@
 		}
 	});
 
-	import { registerAccount } from "$lib/stores/keyringStore.ts";
-	import { auth } from "$lib/stores/auth.ts";
-	import { syncAll } from "$lib/services/sync.svelte.ts";
+	import { registerAccount } from "$lib/stores/keyringStore";
+	import { auth } from "$lib/stores/auth";
+	import { syncAll } from "$lib/services/sync.svelte";
 
 	// Derived: Is this the Wizard or Marketing Landing?
 	let isWizardRoute = $derived(
@@ -151,6 +153,9 @@
 			$page.url.pathname.startsWith("/pulse/respond") ||
 			$page.url.pathname.startsWith("/pulse/verify"),
 	);
+
+	// Derived: Is this the Dashboard route? (needs dark background for glassmorphism)
+	let isDashboardRoute = $derived($page.url.pathname === "/dashboard");
 
 	// Sync Data when Auth is ready
 	let lastSyncedToken = $state<string | null>(null);
@@ -329,14 +334,18 @@
 	<!-- Standard Application Layout -->
 	<div
 		dir={$language === "he" ? "rtl" : "ltr"}
-		class="min-h-screen bg-background flex flex-col font-sans text-foreground"
+		class="min-h-screen flex flex-col font-sans {isDashboardRoute
+			? 'bg-[#0F1115] text-white'
+			: 'bg-background text-foreground'}"
 	>
 		<GlobalSimBanner />
 		<div class="flex flex-1">
 			<!-- Mobile Sidebar Overlay -->
 			{#if isSidebarOpen}
 				<button
-					class="fixed inset-0 bg-background/80 z-40 lg:hidden backdrop-blur-sm cursor-default w-full h-full border-0"
+					class="fixed inset-0 z-40 lg:hidden backdrop-blur-sm cursor-default w-full h-full border-0 {isDashboardRoute
+						? 'bg-black/80'
+						: 'bg-background/80'}"
 					transition:fade={{ duration: 200 }}
 					onclick={toggleSidebar}
 					aria-label="Close sidebar"
@@ -368,27 +377,37 @@
 
 			<!-- Main Content Wrapper -->
 			<div
-				class="flex-1 ml-0 lg:ml-0 flex flex-col min-w-0 bg-background relative"
+				class="flex-1 ml-0 lg:ml-0 flex flex-col min-w-0 relative {isDashboardRoute
+					? 'bg-transparent'
+					: 'bg-background'}"
 			>
 				<!-- Mobile Header -->
 				<header
-					class="lg:hidden sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3 flex items-center justify-between shadow-sm"
+					class="lg:hidden sticky top-0 z-30 border-b px-4 py-3 flex items-center justify-between {isDashboardRoute
+						? 'bg-[#0F1115] border-white/5'
+						: 'bg-background border-border'}"
 				>
 					<div class="flex items-center gap-3">
 						<button
-							class="p-2 -ml-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+							class="p-2 -ml-2 rounded-lg {isDashboardRoute
+								? 'text-slate-300 hover:bg-white/10'
+								: 'text-slate-600 hover:bg-slate-100'}"
 							onclick={toggleSidebar}
 						>
 							<Menu class="w-6 h-6" />
 						</button>
-						<span class="font-semibold text-slate-900"
-							>Continuum</span
+						<span
+							class="font-semibold {isDashboardRoute
+								? 'text-white'
+								: 'text-slate-900'}">Continuum</span
 						>
 					</div>
 
 					<a
 						href="/settings"
-						class="p-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+						class="p-2 rounded-lg {isDashboardRoute
+							? 'text-slate-300 hover:bg-white/10'
+							: 'text-slate-600 hover:bg-slate-100'}"
 					>
 						<Settings class="w-5 h-5" />
 					</a>
@@ -397,20 +416,32 @@
 				<!-- Glass Header (Desktop) -->
 				{#if !isFocusMode}
 					<header
-						class="hidden lg:flex sticky top-0 z-40 h-20 px-8 items-center justify-between
-                bg-white/60 backdrop-blur-xl border-b border-slate-200/60 transition-all"
+						class="hidden lg:flex sticky top-0 z-40 h-20 px-8 items-center justify-between border-b transition-all {isDashboardRoute
+							? 'bg-[#0F1115] border-white/5'
+							: 'bg-background border-border'}"
 					>
 						<!-- Breadcrumbs / Page Title -->
 						<div
-							class="flex items-center gap-2 text-sm text-muted-foreground"
+							class="flex items-center gap-2 text-sm {isDashboardRoute
+								? 'text-slate-400'
+								: 'text-muted-foreground'}"
 						>
 							<span
-								class="uppercase tracking-wider font-semibold text-xs text-slate-500"
+								class="uppercase tracking-wider font-semibold text-xs {isDashboardRoute
+									? 'text-slate-500'
+									: 'text-slate-500'}"
 								>{$t.groupOverview || "Estate Overview"}</span
 							>
-							<ChevronRight size={14} class="text-slate-400" />
+							<ChevronRight
+								size={14}
+								class={isDashboardRoute
+									? "text-slate-600"
+									: "text-slate-400"}
+							/>
 							<span
-								class="font-serif text-slate-800 font-medium text-lg"
+								class="font-serif font-medium text-lg {isDashboardRoute
+									? 'text-white'
+									: 'text-slate-800'}"
 							>
 								{$page.url.pathname === "/dashboard"
 									? $t.dashboard
@@ -436,13 +467,55 @@
 							<!-- Context-Aware Role Switcher -->
 							<RoleSwitcher />
 
+							<!-- Color Picker (Top Menu) -->
+							<div
+								class="flex items-center gap-1.5 px-2 py-1 rounded-lg border {isDashboardRoute
+									? 'bg-white/10 border-white/20'
+									: 'bg-slate-100 border-slate-200'}"
+							>
+								<div
+									class="w-3 h-3 rounded-full shrink-0 border border-white/30"
+									style="background-color: {
+										{
+											teal: '#4A7C74',
+											indigo: '#6366f1',
+											emerald: '#10b981',
+											rose: '#f43f5e',
+											amber: '#f59e0b',
+											carbon: '#0f172a'
+										}[$accessibilityStore.color]
+									}"
+								></div>
+								<select
+									value={$accessibilityStore.color}
+									onchange={(e) =>
+										accessibilityStore.setColor(
+											e.currentTarget.value as any,
+										)}
+									class="bg-transparent text-[10px] font-bold uppercase tracking-tight outline-none cursor-pointer transition-colors border-none p-0 pr-1 focus:ring-0 min-w-0 {isDashboardRoute
+										? 'text-slate-300 hover:text-white'
+										: 'text-slate-600 hover:text-slate-900'}"
+								>
+									<option value="teal">🟢 Teal</option>
+									<option value="indigo">🔵 Indigo</option>
+									<option value="emerald">💚 Emerald</option>
+									<option value="rose">🩷 Rose</option>
+									<option value="amber">🟠 Amber</option>
+									<option value="carbon">⚫ Carbon</option>
+								</select>
+							</div>
+
 							<!-- Language Selector (Top Menu) -->
 							<div
-								class="flex items-center gap-1.5 px-2 py-1 bg-slate-100 rounded-lg border border-slate-200 max-w-[100px]"
+								class="flex items-center gap-1.5 px-2 py-1 rounded-lg border max-w-[100px] {isDashboardRoute
+									? 'bg-white/10 border-white/20'
+									: 'bg-slate-100 border-slate-200'}"
 							>
 								<Globe
 									size={14}
-									class="text-slate-400 shrink-0"
+									class="{isDashboardRoute
+										? 'text-slate-400'
+										: 'text-slate-400'} shrink-0"
 								/>
 								<select
 									value={$language}
@@ -450,7 +523,9 @@
 										language.set(
 											e.currentTarget.value as any,
 										)}
-									class="bg-transparent text-[10px] font-bold text-slate-600 uppercase tracking-tight outline-none cursor-pointer hover:text-slate-900 transition-colors border-none p-0 pr-1 focus:ring-0 min-w-0"
+									class="bg-transparent text-[10px] font-bold uppercase tracking-tight outline-none cursor-pointer transition-colors border-none p-0 pr-1 focus:ring-0 min-w-0 {isDashboardRoute
+										? 'text-slate-300 hover:text-white'
+										: 'text-slate-600 hover:text-slate-900'}"
 								>
 									<option value="en">🇺🇸 EN</option>
 									<option value="es">🇪🇸 ES</option>
@@ -464,7 +539,7 @@
 							<!-- AI Concierge Trigger -->
 							<button
 								onclick={() => conciergeEngine.open()}
-								class="flex items-center gap-2 px-3 py-1.5 bg-indigo-500/10 text-indigo-600 hover:bg-indigo-500/20 rounded-lg transition-colors border border-indigo-500/20"
+								class="flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg transition-colors border border-primary/20"
 								title="Open AI Concierge"
 							>
 								<Sparkles size={18} />

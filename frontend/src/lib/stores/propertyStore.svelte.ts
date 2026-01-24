@@ -1,4 +1,4 @@
-import { registerSync } from "$lib/services/sync.svelte.ts";
+import { registerSync } from "$lib/services/sync.svelte";
 
 export interface EvidenceItem {
     id: string;
@@ -24,6 +24,7 @@ export interface PropertyItem {
     notes: string;
     evidence?: EvidenceItem[];
     thumbnail?: string; // Cover image URL
+    custom_attributes?: string; // JSON string of custom field values
 }
 
 // Initialize Sync Manager

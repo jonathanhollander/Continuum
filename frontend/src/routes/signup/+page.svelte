@@ -2,7 +2,7 @@
     import { onMount } from "svelte";
     import { goto } from "$app/navigation";
     import { auth } from "$lib/stores/auth";
-    import { API_BASE_URL } from "$lib/config.ts";
+    import { API_BASE_URL } from "$lib/config";
     import { apiPost } from "$lib/api/client";
     import { notifications } from "$lib/stores/notificationStore";
     import { startRegistration } from "@simplewebauthn/browser";
@@ -18,6 +18,17 @@
     let isLoading = false;
     let step: "email" | "passkey" | "complete" = "email";
     let userId: number | null = null;
+    let lastOptions: any = null;
+
+    // Retry function for passkey registration
+    function retryPasskeyRegistration() {
+        if (lastOptions && userId) {
+            handlePasskeyRegistration(lastOptions);
+        } else {
+            // Restart from email step
+            step = "email";
+        }
+    }
 
     // Redirect if already logged in
     onMount(() => {
@@ -62,6 +73,9 @@
                 });
             }
 
+            // Store options for retry
+            lastOptions = result.options;
+
             // Move to passkey step
             step = "passkey";
 
@@ -69,8 +83,15 @@
             await handlePasskeyRegistration(result.options);
         } catch (e: any) {
             console.error("Account creation failed:", e);
-            // apiPost already shows error notification via global system
-            // No need to set inline error
+            // Show error notification to user
+            if (e.message?.includes("already registered") || e.message?.includes("already exists")) {
+                notifications.showError({
+                    message: "This email is already registered. Please sign in instead.",
+                    code: "DUPLICATE_EMAIL",
+                });
+            } else {
+                notifications.showError(e);
+            }
         } finally {
             isLoading = false;
         }
@@ -81,7 +102,8 @@
 
         try {
             // Step 2: Show browser passkey creation prompt
-            const credential = await startRegistration(options);
+            // Note: v11+ API requires { optionsJSON: options } format
+            const credential = await startRegistration({ optionsJSON: options });
 
             // Step 3: Finish registration and get JWT
             const result = await apiPost("/api/auth/passkey/register/finish", {
@@ -128,7 +150,7 @@
                             "Passkey creation was cancelled. Please try again.",
                         code: "VALIDATION_ERROR",
                     },
-                    handlePasskeySubmit,
+                    retryPasskeyRegistration,
                 );
             } else if (e.name === "NotSupportedError") {
                 notifications.showError({
@@ -137,7 +159,7 @@
                     code: "VALIDATION_ERROR",
                 });
             } else {
-                notifications.showError(e, handlePasskeySubmit);
+                notifications.showError(e, retryPasskeyRegistration);
             }
 
             step = "email";

@@ -33,21 +33,37 @@ async function getAllMediaIds(): Promise<string[]> {
 
         request.onsuccess = () => {
             const db = request.result;
-            const transaction = db.transaction([STORE_NAME], 'readonly');
-            const store = transaction.objectStore(STORE_NAME);
-            const getAllKeysRequest = store.getAllKeys();
 
-            getAllKeysRequest.onsuccess = () => {
-                resolve(getAllKeysRequest.result as string[]);
-            };
+            // Check if the object store exists before trying to access it
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.close();
+                resolve([]); // No store = no media to migrate
+                return;
+            }
 
-            getAllKeysRequest.onerror = () => {
-                reject(getAllKeysRequest.error);
-            };
+            try {
+                const transaction = db.transaction([STORE_NAME], 'readonly');
+                const store = transaction.objectStore(STORE_NAME);
+                const getAllKeysRequest = store.getAllKeys();
+
+                getAllKeysRequest.onsuccess = () => {
+                    db.close();
+                    resolve(getAllKeysRequest.result as string[]);
+                };
+
+                getAllKeysRequest.onerror = () => {
+                    db.close();
+                    reject(getAllKeysRequest.error);
+                };
+            } catch (e) {
+                db.close();
+                resolve([]); // Store access failed = treat as empty
+            }
         };
 
         request.onerror = () => {
-            reject(request.error);
+            // Database doesn't exist or can't be opened - no media to migrate
+            resolve([]);
         };
     });
 }

@@ -1,7 +1,7 @@
 <script>
     import ConciergeSettings from "$lib/components/concierge/ConciergeSettings.svelte";
     import { Settings } from "lucide-svelte";
-    import { t } from "$lib/stores/conciergeStore.svelte.ts";
+    import { t } from "$lib/stores/conciergeStore.svelte";
 </script>
 
 <div

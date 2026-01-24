@@ -13,13 +13,14 @@
     import EmptyState from "$lib/components/EmptyState.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import { onMount, tick } from "svelte";
-    import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
-    import { activityLog } from "$lib/stores/activityLog.svelte.ts";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
+    import { activityLog } from "$lib/stores/activityLog.svelte";
     import { fade, scale } from "svelte/transition";
     import { FileText, Download, Printer } from "lucide-svelte";
-    import { registerSync } from "$lib/services/sync.svelte.ts";
-    import { t, language } from "$lib/stores/localization.ts";
+    import { registerSync } from "$lib/services/sync.svelte";
+    import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
+    import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
 
     type Subscription = {
         id: string;
@@ -32,7 +33,10 @@
         cancellationInstructions: string;
         loginUrl?: string;
         notes?: string;
+        custom_attributes?: string;
     };
+
+    let parsedCustomAttributes = $state<Record<string, any>>({});
 
     // Register Sync Manager
     const subscriptionSync = registerSync<Subscription>(
@@ -118,6 +122,7 @@
                 cancellationInstructions: newSub.cancellationInstructions,
                 loginUrl: newSub.loginUrl,
                 notes: newSub.notes,
+                custom_attributes: JSON.stringify(parsedCustomAttributes),
             });
 
             // Log UPDATE handled by component manually for now, or move to SyncManager hooks?
@@ -147,6 +152,7 @@
                 cancellationInstructions: newSub.cancellationInstructions || "",
                 loginUrl: newSub.loginUrl || "",
                 notes: newSub.notes || "",
+                custom_attributes: JSON.stringify(parsedCustomAttributes),
             });
 
             // Log CREATE
@@ -165,6 +171,11 @@
 
     function editSubscription(sub: Subscription) {
         newSub = { ...sub };
+        try {
+            parsedCustomAttributes = JSON.parse(sub.custom_attributes || "{}");
+        } catch {
+            parsedCustomAttributes = {};
+        }
         showAddForm = true;
     }
 
@@ -182,10 +193,15 @@
             loginUrl: "",
             notes: "",
         };
+        parsedCustomAttributes = {};
     }
 
     function removeSubscription(id: string) {
-        if (!confirm("Remove this subscription? You can add it back anytime."))
+        if (
+            !confirm(
+                "Remove this subscription? This detail can always be added back later.",
+            )
+        )
             return;
         const sub = subscriptions.find((s) => s.id === id);
 
@@ -258,7 +274,7 @@
             <h1
                 class="font-serif font-bold text-3xl text-slate-900 flex items-center gap-3"
             >
-                <div class="p-2.5 bg-indigo-100 rounded-xl text-indigo-700">
+                <div class="p-2.5 bg-primary/10 rounded-xl text-primary">
                     <Receipt class="w-8 h-8" />
                 </div>
                 Accounts to Close or Transfer
@@ -272,11 +288,11 @@
         </div>
 
         <button
-            class="px-4 py-2.5 bg-slate-900 text-white font-semibold rounded-xl flex items-center gap-2 hover:bg-slate-800 transition-all shadow-sm group"
+            class="px-4 py-2.5 bg-primary text-primary-foreground font-semibold rounded-xl flex items-center gap-2 hover:opacity-90 transition-all shadow-sm group"
             onclick={() => (showAddForm = true)}
         >
             <Plus class="w-4 h-4 group-hover:scale-110 transition-transform" />
-            Add Service
+            Record a service
         </button>
     </div>
 
@@ -370,7 +386,7 @@
                     >
                         <button
                             onclick={() => editSubscription(sub)}
-                            class="p-1.5 hover:bg-blue-50 text-slate-400 hover:text-blue-600 rounded-full transition-colors"
+                            class="p-1.5 hover:bg-primary/10 text-slate-400 hover:text-primary rounded-full transition-colors"
                             title="Edit"
                         >
                             <Pencil size={14} />
@@ -394,7 +410,7 @@
                 <Plus
                     class="w-4 h-4 mr-2 group-hover:scale-110 transition-transform"
                 />
-                Tracking {subscriptions.length} services... Add another?
+                Tracking {subscriptions.length} services... Share another?
             </button>
         </div>
     {/if}
@@ -485,7 +501,7 @@
                                 <button
                                     class="px-4 py-2 rounded-lg border text-sm font-bold transition-all {newSub.difficulty ===
                                     diff
-                                        ? 'bg-indigo-600 text-white border-indigo-600'
+                                        ? 'bg-primary text-primary-foreground border-primary'
                                         : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}"
                                     onclick={() =>
                                         (newSub.difficulty = diff as
@@ -521,6 +537,14 @@
                             bind:value={newSub.paymentMethod}
                             class="w-full px-4 py-3 rounded-xl border border-gray-200"
                             placeholder="e.g. Chase ending in 1234"
+                        />
+                    </div>
+
+                    <!-- Custom Fields -->
+                    <div class="pt-4 mt-4 border-t border-gray-100">
+                        <CustomFieldsManager
+                            entityType="subscription"
+                            bind:data={parsedCustomAttributes}
                         />
                     </div>
                 </div>
@@ -559,9 +583,7 @@
                     class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50"
                 >
                     <div class="flex items-center gap-3">
-                        <div
-                            class="p-2 bg-indigo-100 text-indigo-700 rounded-lg"
-                        >
+                        <div class="p-2 bg-primary/10 text-primary rounded-lg">
                             <FileText size={20} />
                         </div>
                         <h3 class="font-serif font-bold text-xl text-slate-800">
@@ -633,7 +655,7 @@
                         <Printer size={16} /> Print
                     </button>
                     <button
-                        class="px-6 py-2.5 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:shadow-indigo-200 hover:bg-indigo-700 flex items-center gap-2 transition-all"
+                        class="px-6 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl shadow-lg hover:shadow-primary/20 hover:opacity-90 flex items-center gap-2 transition-all"
                     >
                         <Download size={16} /> Download PDF
                     </button>

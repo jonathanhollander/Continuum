@@ -21,11 +21,12 @@
     import EmptyState from "$lib/components/EmptyState.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import GriefSupportBanner from "$lib/components/GriefSupportBanner.svelte";
+    import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
     import { onMount } from "svelte";
-    import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
-    import { activityLog } from "$lib/stores/activityLog.svelte.ts";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
+    import { activityLog } from "$lib/stores/activityLog.svelte";
     import { UserCircle, MapPin as MapPinIcon, Cross } from "lucide-svelte";
-    import { funeralStore } from "$lib/stores/funeralStore.svelte.ts";
+    import { funeralStore, type FuneralWishes, type FuneralBudgetItem } from "$lib/stores/funeralStore.svelte";
     import FuneralWizard from "$lib/components/modules/funeral/FuneralWizard.svelte";
     import LegalDisclaimer from "$lib/components/common/LegalDisclaimer.svelte";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
@@ -42,6 +43,7 @@
         name: "",
         cost: 0,
     });
+    let parsedCustomAttributes = $state<Record<string, any>>({});
 
     let wishes = $derived($funeralStore.wishes);
     let budgetItems = $derived($funeralStore.budget);
@@ -82,6 +84,8 @@
     function saveExpense() {
         if (!newExpense.name) return;
 
+        const customAttrsString = JSON.stringify(parsedCustomAttributes);
+
         if (newExpense.id) {
             // Edit Mode
             funeralStore.update((data) => ({
@@ -93,6 +97,7 @@
                               ...newExpense,
                               cost: Number(newExpense.cost),
                               estimated: Number(newExpense.cost),
+                              custom_attributes: customAttrsString,
                           } as FuneralBudgetItem)
                         : item,
                 ),
@@ -120,6 +125,7 @@
                         name: newExpense.name || "Expense",
                         cost: Number(newExpense.cost),
                         estimated: Number(newExpense.cost),
+                        custom_attributes: customAttrsString,
                     },
                 ],
             }));
@@ -139,11 +145,17 @@
 
     function editExpense(item: FuneralBudgetItem) {
         newExpense = { ...item };
+        try {
+            parsedCustomAttributes = JSON.parse(item.custom_attributes || "{}");
+        } catch {
+            parsedCustomAttributes = {};
+        }
         showAddExpense = true;
     }
 
     function resetExpenseForm() {
         newExpense = { id: undefined, name: "", cost: 0 };
+        parsedCustomAttributes = {};
         showAddExpense = false;
     }
 
@@ -297,7 +309,7 @@
                         {$estateProfile.executorName || "None Designated"}
                     </p>
                 </div>
-                <div class="p-3 bg-white rounded-xl shadow-sm text-indigo-500">
+                <div class="p-3 bg-white rounded-xl shadow-sm text-primary">
                     <Users size={24} />
                 </div>
             </div>
@@ -315,7 +327,7 @@
                         {$estateProfile.legalCityState || "Not Set"}
                     </p>
                 </div>
-                <div class="p-3 bg-white rounded-xl shadow-sm text-emerald-500">
+                <div class="p-3 bg-white rounded-xl shadow-sm text-primary">
                     <MapPinIcon size={24} />
                 </div>
             </div>
@@ -526,6 +538,12 @@
                                 bind:value={newExpense.cost}
                                 class="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-[#4A7C74] outline-none font-medium"
                                 placeholder="0.00"
+                            />
+                        </div>
+                        <div class="pt-4 mt-4 border-t border-stone-100">
+                            <CustomFieldsManager
+                                entityType="funeral"
+                                bind:data={parsedCustomAttributes}
                             />
                         </div>
                         <button

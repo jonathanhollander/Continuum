@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { ExternalArchive } from "$lib/stores/visualMemoryStore.svelte.ts";
+    import type { ExternalArchive } from "$lib/stores/visualMemoryStore.svelte";
     import {
         ExternalLink,
         HardDrive,
@@ -8,11 +8,16 @@
         Edit2,
         Trash2,
     } from "lucide-svelte";
-    import { createEventDispatcher } from "svelte";
 
-    export let archive: ExternalArchive;
-
-    const dispatch = createEventDispatcher();
+    let {
+        archive,
+        onedit,
+        ondelete
+    } = $props<{
+        archive: ExternalArchive;
+        onedit?: (archive: ExternalArchive) => void;
+        ondelete?: (id: number) => void;
+    }>();
 
     // Helper to pick an icon based on platform name
     function getIcon(platform: string) {
@@ -52,14 +57,14 @@
             <button
                 class="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-[#4A7C74] transition-colors"
                 title="Edit"
-                on:click={() => dispatch("edit", archive)}
+                onclick={() => onedit?.(archive)}
             >
                 <Edit2 size={16} />
             </button>
             <button
                 class="p-2 hover:bg-red-50 rounded-lg text-slate-400 hover:text-red-500 transition-colors"
                 title="Remove"
-                on:click={() => dispatch("delete", archive.id)}
+                onclick={() => ondelete?.(archive.id)}
             >
                 <Trash2 size={16} />
             </button>

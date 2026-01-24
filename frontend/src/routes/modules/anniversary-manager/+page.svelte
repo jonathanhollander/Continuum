@@ -3,7 +3,7 @@
         calendarStore,
         upcomingEvents,
         type AnniversaryEvent,
-    } from "$lib/stores/calendarStore.svelte.ts";
+    } from "$lib/stores/calendarStore.svelte";
     import {
         Calendar,
         Heart,
@@ -21,8 +21,8 @@
     import { fade, slide, scale } from "svelte/transition";
     import { quintOut } from "svelte/easing";
 
-    let showAddModal = false;
-    let newEvent: Partial<AnniversaryEvent> = {
+    let showAddModal = $state(false);
+    let newEvent = $state<Partial<AnniversaryEvent>>({
         title: "",
         date: "",
         type: "birthday",
@@ -30,7 +30,7 @@
         ritualInstructions: "",
         recurring: true,
         tags: [],
-    };
+    });
 
     const typeIcons = {
         birthday: Sparkles,
@@ -107,7 +107,7 @@
                 </p>
             </div>
             <button
-                on:click={() => (showAddModal = true)}
+                onclick={() => (showAddModal = true)}
                 class="mt-4 px-8 py-3.5 bg-white text-indigo-900 rounded-full font-bold shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
             >
                 <Plus size={20} />
@@ -173,7 +173,7 @@
                                         </span>
                                     </div>
                                     <button
-                                        on:click={() =>
+                                        onclick={() =>
                                             calendarStore.removeEvent(event.id)}
                                         class="opacity-0 group-hover:opacity-100 p-2 text-slate-300 hover:text-rose-500 transition-all"
                                     >
@@ -313,7 +313,7 @@
                         Add Remembrance
                     </h2>
                     <button
-                        on:click={() => (showAddModal = false)}
+                        onclick={() => (showAddModal = false)}
                         class="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400"
                     >
                         <Plus class="rotate-45" />
@@ -399,13 +399,13 @@
 
                 <div class="flex gap-4 pt-4">
                     <button
-                        on:click={() => (showAddModal = false)}
+                        onclick={() => (showAddModal = false)}
                         class="flex-1 px-6 py-3.5 border border-slate-200 rounded-2xl font-bold text-slate-600 hover:bg-slate-50 transition-all font-sans"
                     >
                         Cancel
                     </button>
                     <button
-                        on:click={handleAdd}
+                        onclick={handleAdd}
                         class="flex-2 px-10 py-3.5 bg-indigo-600 text-white rounded-2xl font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all font-sans"
                     >
                         Save Memory

@@ -1,4 +1,4 @@
-import { registerSync } from "$lib/services/sync.svelte.ts";
+import { registerSync } from "$lib/services/sync.svelte";
 import { getLegacy } from './persistence';
 
 export type Heirloom = {
@@ -8,6 +8,7 @@ export type Heirloom = {
     story: string;
     image: string;
     value?: string;
+    custom_attributes?: string; // JSON string of custom field values
 };
 
 // Legacy Migration Logic

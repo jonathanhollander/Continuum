@@ -22,9 +22,9 @@
     } from "lucide-svelte";
     import { slide, scale, fade, fly } from "svelte/transition";
     import { flip } from "svelte/animate";
-    import { getStored, setStored } from "$lib/stores/persistence.ts";
+    import { getStored, setStored } from "$lib/stores/persistence";
 
-    export let module: any;
+    let { module } = $props<{ module: any }>();
 
     type TaskStatus = "todo" | "doing" | "done";
 
@@ -37,10 +37,10 @@
         assignee?: "Executor" | "Attorney" | "Family";
     }
 
-    let tasks: Task[] = [];
-    let showAddForm = false;
-    let showWizard = false;
-    let newTask = "";
+    let tasks = $state<Task[]>([]);
+    let showAddForm = $state(false);
+    let showWizard = $state(false);
+    let newTask = $state("");
 
     const storageKey = `tasks_${module.id}`;
 
@@ -183,11 +183,11 @@
         }
     }
 
-    $: todos = tasks.filter((t) => t.status === "todo");
-    $: doing = tasks.filter((t) => t.status === "doing");
-    $: done = tasks.filter((t) => t.status === "done");
-    $: progress =
-        tasks.length > 0 ? Math.round((done.length / tasks.length) * 100) : 0;
+    let todos = $derived(tasks.filter((t) => t.status === "todo"));
+    let doing = $derived(tasks.filter((t) => t.status === "doing"));
+    let done = $derived(tasks.filter((t) => t.status === "done"));
+    let progress = $derived(
+        tasks.length > 0 ? Math.round((done.length / tasks.length) * 100) : 0);
 </script>
 
 <div class="space-y-8 animate-in fade-in duration-500">
@@ -212,14 +212,14 @@
 
         <div class="flex gap-3">
             <button
-                on:click={() => (showWizard = true)}
+                onclick={() => (showWizard = true)}
                 class="bg-secondary/10 hover:bg-secondary/20 text-[#4A7C74] px-4 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-all"
             >
                 <Compass size={18} /> where do I start?
             </button>
 
             <button
-                on:click={() => (showAddForm = !showAddForm)}
+                onclick={() => (showAddForm = !showAddForm)}
                 class="bg-[#4A7C74] hover:bg-[#3b635d] text-white px-5 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
             >
                 <Plus size={18} /> Add Step
@@ -238,7 +238,7 @@
             >
                 <div class="p-8 bg-[#FBF9EB]/50 relative">
                     <button
-                        on:click={() => (showWizard = false)}
+                        onclick={() => (showWizard = false)}
                         class="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
                         ><X size={20} /></button
                     >
@@ -255,7 +255,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
                         {#each blueprints as bp}
                             <button
-                                on:click={() => loadBlueprint(bp)}
+                                onclick={() => loadBlueprint(bp)}
                                 class="text-left p-6 bg-white border border-border hover:border-[#4A7C74] rounded-xl transition-all hover:shadow-lg group relative overflow-hidden"
                             >
                                 <div
@@ -319,10 +319,10 @@
                 bind:value={newTask}
                 placeholder="What is the next small step?"
                 class="flex-1 bg-transparent border-none outline-none text-lg placeholder:text-muted-foreground/50 font-serif"
-                on:keydown={(e) => e.key === "Enter" && addTask()}
+                onkeydown={(e) => e.key === "Enter" && addTask()}
             />
             <button
-                on:click={() => addTask()}
+                onclick={() => addTask()}
                 class="font-bold text-[#4A7C74] hover:text-[#3b635d]"
                 >Add</button
             >
@@ -355,7 +355,7 @@
                         animate:flip
                     >
                         <button
-                            on:click={() => removeTask(task.id)}
+                            onclick={() => removeTask(task.id)}
                             class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
                             ><Trash2 size={14} /></button
                         >
@@ -389,7 +389,7 @@
                                 {task.dueDate}
                             </div>
                             <button
-                                on:click={() => moveTask(task, "doing")}
+                                onclick={() => moveTask(task, "doing")}
                                 class="text-xs font-bold text-[#4A7C74] hover:underline flex items-center gap-1"
                             >
                                 Start Step <ArrowRight size={12} />
@@ -439,7 +439,7 @@
                                 >{task.priority}</span
                             >
                             <button
-                                on:click={() => moveTask(task, "done")}
+                                onclick={() => moveTask(task, "done")}
                                 class="text-xs font-bold text-emerald-600 hover:underline flex items-center gap-1"
                             >
                                 Mark Complete <CircleCheck size={12} />
@@ -479,7 +479,7 @@
                         </h5>
                         <div class="flex justify-end mt-2">
                             <button
-                                on:click={() => moveTask(task, "todo")}
+                                onclick={() => moveTask(task, "todo")}
                                 class="text-[10px] font-bold text-muted-foreground hover:text-primary"
                                 >Re-open</button
                             >

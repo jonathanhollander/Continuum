@@ -1,11 +1,11 @@
 
-import type { FamilyMember } from "$lib/stores/familyStore.svelte.ts";
-import type { InsurancePolicy } from "$lib/stores/insuranceStore.svelte.ts";
-import type { PropertyItem } from "$lib/stores/propertyStore.svelte.ts";
-import { digitalAssetsStore, type DigitalAccount } from "$lib/stores/digitalAssetsStore.svelte.ts";
-import type { Heirloom } from "$lib/stores/heirloomStore.svelte.ts";
-import type { MedicalDirective } from "$lib/stores/medicalStore.svelte.ts";
-import type { PetEntry } from "$lib/stores/petStore.svelte.ts";
+import type { FamilyMember } from "$lib/stores/familyStore.svelte";
+import type { InsurancePolicy } from "$lib/stores/insuranceStore.svelte";
+import type { PropertyItem } from "$lib/stores/propertyStore.svelte";
+import { digitalAssetsStore, type DigitalAccount } from "$lib/stores/digitalAssetsStore.svelte";
+import type { Heirloom } from "$lib/stores/heirloomStore.svelte";
+import type { MedicalDirective } from "$lib/stores/medicalStore.svelte";
+import type { PetEntry } from "$lib/stores/petStore.svelte";
 
 // Common Financial Asset Type (matches AssetManager)
 export interface FinancialAsset {

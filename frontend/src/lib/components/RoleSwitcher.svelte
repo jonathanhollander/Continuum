@@ -6,7 +6,7 @@
      * This would typically be in Settings in production, but is useful for demos.
      */
 
-    import { contextStore } from "$lib/stores/contextStore.svelte.ts";
+    import { contextStore } from "$lib/stores/contextStore.svelte";
     import { UserCog, Users, Heart, Briefcase } from 'lucide-svelte';
 
     let isOpen = $state(false);

@@ -18,21 +18,21 @@
         X,
     } from "lucide-svelte";
     import { onMount } from "svelte";
-    import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
     // import { getStored, setStored } from "$lib/stores/persistence"; // REMOVED
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
-    import { t, language } from "$lib/stores/localization.ts";
+    import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
-    import { activityLog } from "$lib/stores/activityLog.svelte.ts";
+    import { activityLog } from "$lib/stores/activityLog.svelte";
 
     // Sync Integration
-    import { registerSync } from "$lib/services/sync.svelte.ts";
+    import { registerSync } from "$lib/services/sync.svelte";
     import {
         digitalAssetsSync,
         digitalAssetsStore,
         type DigitalAccount,
-    } from "$lib/stores/digitalAssetsStore.svelte.ts";
+    } from "$lib/stores/digitalAssetsStore.svelte";
 
     let activeGuide = $state<string | null>(null);
 
@@ -243,7 +243,7 @@
         <div
             class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex items-center gap-5"
         >
-            <div class="p-4 bg-indigo-50 text-indigo-600 rounded-2xl shrink-0">
+            <div class="p-4 bg-primary/10 text-primary rounded-2xl shrink-0">
                 <UserCheck size={28} />
             </div>
             <div>
@@ -268,9 +268,7 @@
             >
                 <Fingerprint size={80} />
             </div>
-            <div
-                class="p-4 bg-emerald-50 text-emerald-600 rounded-2xl shrink-0"
-            >
+            <div class="p-4 bg-primary/10 text-primary rounded-2xl shrink-0">
                 <Fingerprint size={28} />
             </div>
             <div>
@@ -294,7 +292,7 @@
         class="mb-12 bg-rose-50 border border-rose-100 rounded-3xl p-8 relative overflow-hidden"
     >
         <div class="relative z-10 flex flex-col md:flex-row items-start gap-6">
-            <div class="p-4 bg-rose-100 text-rose-700 rounded-2xl shrink-0">
+            <div class="p-4 bg-primary/10 text-primary rounded-2xl shrink-0">
                 <Siren size={32} />
             </div>
             <div class="flex-1">
@@ -309,20 +307,20 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <button
                         class="text-left p-4 rounded-xl border transition-all group {fireDrill.key
-                            ? 'bg-rose-500 border-rose-600 text-white shadow-md transform scale-[1.02]'
+                            ? 'bg-primary border-primary/20 text-primary-foreground'
                             : 'bg-white border-rose-200 hover:shadow-md'}"
                         onclick={() => toggleDrill("key")}
                     >
                         <span
                             class="block text-xs font-bold uppercase tracking-wide mb-1 {fireDrill.key
                                 ? 'text-white/80'
-                                : 'text-rose-500'}">Step 1</span
+                                : 'text-primary'}">Step 1</span
                         >
                         <div class="flex items-center gap-2">
                             <span
                                 class="font-bold {fireDrill.key
                                     ? 'text-white'
-                                    : 'text-gray-900 group-hover:text-rose-700'}"
+                                    : 'text-gray-900 group-hover:text-primary'}"
                                 >Locate the Key</span
                             >
                             {#if fireDrill.key}
@@ -332,20 +330,20 @@
                     </button>
                     <button
                         class="text-left p-4 rounded-xl border transition-all group {fireDrill.twoFactor
-                            ? 'bg-rose-500 border-rose-600 text-white shadow-md transform scale-[1.02]'
+                            ? 'bg-primary border-primary/20 text-primary-foreground'
                             : 'bg-white border-rose-200 hover:shadow-md'}"
                         onclick={() => toggleDrill("twoFactor")}
                     >
                         <span
                             class="block text-xs font-bold uppercase tracking-wide mb-1 {fireDrill.twoFactor
                                 ? 'text-white/80'
-                                : 'text-rose-500'}">Step 2</span
+                                : 'text-primary'}">Step 2</span
                         >
                         <div class="flex items-center gap-2">
                             <span
                                 class="font-bold {fireDrill.twoFactor
                                     ? 'text-white'
-                                    : 'text-gray-900 group-hover:text-rose-700'}"
+                                    : 'text-gray-900 group-hover:text-primary'}"
                                 >Bypass 2FA</span
                             >
                             {#if fireDrill.twoFactor}
@@ -355,20 +353,20 @@
                     </button>
                     <button
                         class="text-left p-4 rounded-xl border transition-all group {fireDrill.login
-                            ? 'bg-rose-500 border-rose-600 text-white shadow-md transform scale-[1.02]'
+                            ? 'bg-primary border-primary/20 text-primary-foreground'
                             : 'bg-white border-rose-200 hover:shadow-md'}"
                         onclick={() => toggleDrill("login")}
                     >
                         <span
                             class="block text-xs font-bold uppercase tracking-wide mb-1 {fireDrill.login
                                 ? 'text-white/80'
-                                : 'text-rose-500'}">Step 3</span
+                                : 'text-primary'}">Step 3</span
                         >
                         <div class="flex items-center gap-2">
                             <span
                                 class="font-bold {fireDrill.login
                                     ? 'text-white'
-                                    : 'text-gray-900 group-hover:text-rose-700'}"
+                                    : 'text-gray-900 group-hover:text-primary'}"
                                 >Confirm Login</span
                             >
                             {#if fireDrill.login}
@@ -378,20 +376,20 @@
                     </button>
                     <button
                         class="text-left p-4 rounded-xl border transition-all group {fireDrill.phone
-                            ? 'bg-rose-500 border-rose-600 text-white shadow-md transform scale-[1.02]'
+                            ? 'bg-primary border-primary/20 text-primary-foreground'
                             : 'bg-white border-rose-200 hover:shadow-md'}"
                         onclick={() => toggleDrill("phone")}
                     >
                         <span
                             class="block text-xs font-bold uppercase tracking-wide mb-1 {fireDrill.phone
                                 ? 'text-white/80'
-                                : 'text-rose-500'}">Step 4</span
+                                : 'text-primary'}">Step 4</span
                         >
                         <div class="flex items-center gap-2">
                             <span
                                 class="font-bold {fireDrill.phone
                                     ? 'text-white'
-                                    : 'text-gray-900 group-hover:text-rose-700'}"
+                                    : 'text-gray-900 group-hover:text-primary'}"
                                 >Unlock Phone</span
                             >
                             {#if fireDrill.phone}
@@ -401,20 +399,20 @@
                     </button>
                     <button
                         class="text-left p-4 rounded-xl border transition-all group {fireDrill.email
-                            ? 'bg-rose-500 border-rose-600 text-white shadow-md transform scale-[1.02]'
+                            ? 'bg-primary border-primary/20 text-primary-foreground'
                             : 'bg-white border-rose-200 hover:shadow-md'}"
                         onclick={() => toggleDrill("email")}
                     >
                         <span
                             class="block text-xs font-bold uppercase tracking-wide mb-1 {fireDrill.email
                                 ? 'text-white/80'
-                                : 'text-rose-500'}">Step 5</span
+                                : 'text-primary'}">Step 5</span
                         >
                         <div class="flex items-center gap-2">
                             <span
                                 class="font-bold {fireDrill.email
                                     ? 'text-white'
-                                    : 'text-gray-900 group-hover:text-rose-700'}"
+                                    : 'text-gray-900 group-hover:text-primary'}"
                                 >Access Email</span
                             >
                             {#if fireDrill.email}
@@ -424,20 +422,20 @@
                     </button>
                     <button
                         class="text-left p-4 rounded-xl border transition-all group {fireDrill.will
-                            ? 'bg-rose-500 border-rose-600 text-white shadow-md transform scale-[1.02]'
+                            ? 'bg-primary border-primary/20 text-primary-foreground'
                             : 'bg-white border-rose-200 hover:shadow-md'}"
                         onclick={() => toggleDrill("will")}
                     >
                         <span
                             class="block text-xs font-bold uppercase tracking-wide mb-1 {fireDrill.will
                                 ? 'text-white/80'
-                                : 'text-rose-500'}">Step 6</span
+                                : 'text-primary'}">Step 6</span
                         >
                         <div class="flex items-center gap-2">
                             <span
                                 class="font-bold {fireDrill.will
                                     ? 'text-white'
-                                    : 'text-gray-900 group-hover:text-rose-700'}"
+                                    : 'text-gray-900 group-hover:text-primary'}"
                                 >Locate Will</span
                             >
                             {#if fireDrill.will}
@@ -916,7 +914,7 @@
                     >
                         <div class="flex items-center gap-4">
                             <div
-                                class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600"
+                                class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary"
                             >
                                 {#if asset.type === "Email"}
                                     <Mail size={18} />

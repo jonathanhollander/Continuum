@@ -18,10 +18,10 @@
         ShieldCheck,
     } from "lucide-svelte";
     import { slide, scale, fade } from "svelte/transition";
-    import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
-    import { getStored, setStored } from "$lib/stores/persistence.ts";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
+    import { getStored, setStored } from "$lib/stores/persistence";
 
-    export let module: any;
+    let { module } = $props<{ module: any }>();
 
     type RoleType =
         | "Spouse"
@@ -44,10 +44,10 @@
         isEmergencyContact: boolean;
     }
 
-    let contacts: Contact[] = [];
-    let showAddForm = false;
+    let contacts = $state<Contact[]>([]);
+    let showAddForm = $state(false);
 
-    let newContact: Partial<Contact> = {
+    let newContact = $state<Partial<Contact>>({
         name: "",
         role: "Other",
         email: "",
@@ -55,7 +55,7 @@
         organization: "",
         notes: "",
         isEmergencyContact: false,
-    };
+    });
 
     const storageKey = `contacts_${module.id}`;
 
@@ -192,13 +192,13 @@
     }
 
     // Segregate Contacts
-    $: family = contacts.filter((c) =>
+    let family = $derived(contacts.filter((c) =>
         ["Spouse", "Child", "Parent"].includes(c.role),
-    );
-    $: professionals = contacts.filter(
+    ));
+    let professionals = $derived(contacts.filter(
         (c) => !["Spouse", "Child", "Parent"].includes(c.role),
-    );
-    $: emergencyContacts = contacts.filter((c) => c.isEmergencyContact);
+    ));
+    let emergencyContacts = $derived(contacts.filter((c) => c.isEmergencyContact));
 </script>
 
 <div class="space-y-12 animate-in fade-in duration-500">
@@ -222,7 +222,7 @@
             </p>
         </div>
         <button
-            on:click={() => (showAddForm = true)}
+            onclick={() => (showAddForm = true)}
             class="bg-indigo-600 text-white hover:bg-indigo-700 px-5 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
         >
             <Plus size={18} /> Add Trusted Person
@@ -339,12 +339,12 @@
 
             <div class="flex justify-end gap-3 mt-8">
                 <button
-                    on:click={() => (showAddForm = false)}
+                    onclick={() => (showAddForm = false)}
                     class="px-5 py-2.5 text-sm font-medium hover:bg-black/5 rounded-lg transition-colors"
                     >Not right now</button
                 >
                 <button
-                    on:click={addContact}
+                    onclick={addContact}
                     class="px-6 py-2.5 bg-indigo-600 text-white font-bold rounded-lg shadow hover:shadow-lg transition-all"
                     >Welcome to Circle</button
                 >
@@ -421,7 +421,7 @@
                             class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                             <button
-                                on:click={() => removeContact(member.id)}
+                                onclick={() => removeContact(member.id)}
                                 class="text-muted-foreground hover:text-rose-500"
                                 ><Trash2 size={16} /></button
                             >
@@ -464,7 +464,7 @@
                                 </a>
                             {/if}
                             <button
-                                on:click={() => designateExecutor(member.name)}
+                                onclick={() => designateExecutor(member.name)}
                                 class="mt-3 w-full py-1.5 text-[10px] font-bold uppercase tracking-widest border rounded transition-all flex items-center justify-center gap-1.5
                                 {$estateProfile.executorName === member.name
                                     ? 'bg-[#4A7C74] text-white border-[#4A7C74]'
@@ -496,7 +496,7 @@
                     transition:fade
                 >
                     <button
-                        on:click={() => removeContact(pro.id)}
+                        onclick={() => removeContact(pro.id)}
                         class="absolute top-3 right-3 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
                         ><Trash2 size={14} /></button
                     >

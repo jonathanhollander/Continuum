@@ -1,4 +1,4 @@
-import { registerSync } from "$lib/services/sync.svelte.ts";
+import { registerSync } from "$lib/services/sync.svelte";
 
 // --- Types ---
 
@@ -79,17 +79,20 @@ const familyManager = registerSync<FamilyMemory>('family_memories', 'family', fa
 
 export const visualMemories = {
     subscribe: visualManager.subscribe.bind(visualManager),
-    get items() { return visualManager.items; }
+    get items() { return visualManager.items; },
+    sync: () => visualManager.sync()
 };
 
 export const externalArchives = {
     subscribe: archiveManager.subscribe.bind(archiveManager),
-    get items() { return archiveManager.items; }
+    get items() { return archiveManager.items; },
+    sync: () => archiveManager.sync()
 };
 
 export const familyMemories = {
     subscribe: familyManager.subscribe.bind(familyManager),
-    get items() { return familyManager.items; }
+    get items() { return familyManager.items; },
+    sync: () => familyManager.sync()
 };
 
 // --- Helper Actions ---

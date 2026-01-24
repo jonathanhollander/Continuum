@@ -4,9 +4,9 @@
         userRole,
         language,
         t,
-    } from "$lib/stores/conciergeStore.svelte.ts";
-    import { accessibilityStore } from "$lib/stores/accessibilityStore.ts";
-    import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
+    } from "$lib/stores/conciergeStore.svelte";
+    import { accessibilityStore } from "$lib/stores/accessibilityStore";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
     import {
         Download,
         FileText,
@@ -30,8 +30,8 @@
     import { goto } from "$app/navigation";
     import type { ExportScope } from "$lib/services/exportService";
 
-    import { profiles, currentProfileId } from "$lib/stores/profileContext.ts";
-    import { triggerMagic } from "$lib/stores/magicStore.ts";
+    import { profiles, currentProfileId } from "$lib/stores/profileContext";
+    import { triggerMagic } from "$lib/stores/magicStore";
     import { get } from "svelte/store";
 
     const roles = [
@@ -483,7 +483,7 @@
                 </div>
 
                 <div class="flex items-center gap-2">
-                    {#each [{ id: "teal", color: "#4A7C74" }, { id: "indigo", color: "#6366f1" }, { id: "emerald", color: "#10b981" }, { id: "rose", color: "#f43f5e" }, { id: "amber", color: "#f59e0b" }, { id: "slate", color: "#0f172a" }] as swatch}
+                    {#each [{ id: "teal", color: "#4A7C74" }, { id: "indigo", color: "#6366f1" }, { id: "emerald", color: "#10b981" }, { id: "rose", color: "#f43f5e" }, { id: "amber", color: "#f59e0b" }, { id: "carbon", color: "#0f172a" }] as swatch}
                         <button
                             class="w-8 h-8 rounded-full border-2 transition-all duration-200 relative flex items-center justify-center
                             {$accessibilityStore.color === swatch.id

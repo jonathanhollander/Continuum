@@ -16,7 +16,7 @@
     import ContactRow from "$lib/components/modules/contacts/ContactRow.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import Affirmation from "$lib/components/Affirmation.svelte";
-    import { t, language } from "$lib/stores/localization.ts";
+    import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
     import * as registryRaw from "$lib/data/registry.json";
@@ -33,16 +33,18 @@
         familyStore,
         type FamilyMember,
         type FamilyRole,
-    } from "$lib/stores/familyStore.svelte.ts";
-    import { contextStore } from "$lib/stores/contextStore.svelte.ts";
+    } from "$lib/stores/familyStore.svelte";
+    import { contextStore } from "$lib/stores/contextStore.svelte";
     import {
         contacts as contactsText,
         getEmptyStateMessage,
         getActionLabel,
     } from "$lib/utils/contextualMessages";
     import ContextualMessage from "$lib/components/ContextualMessage.svelte";
+    import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
 
     let activeTab = $state("call-list");
+    let parsedCustomAttributes = $state<Record<string, any>>({});
 
     // Use familyStore as source of truth
     let contacts = $derived(familyStore.members);
@@ -142,6 +144,7 @@
             tier: "1_Immediate", // Simulation default
             notificationStatus: "Pending",
             avatar: newContact.avatar,
+            custom_attributes: JSON.stringify(parsedCustomAttributes),
         };
 
         // familyStore handles generation of ID and Sync
@@ -149,6 +152,7 @@
 
         showAddModal = false;
         newContact = { role: "Family", notes: "", relation: "" };
+        parsedCustomAttributes = {};
         showAffirmation = true;
     }
 
@@ -176,6 +180,8 @@
               ? "Family and friends connected to the estate"
               : module.description}
         tier={module.role === "owner" ? "preparation" : "executor"}
+        detailedDescription="This is more than a contact list—it's your circle of trust. Identify who should be notified and who can help with specific aspects of your estate, from lawyers to close friends."
+        whyMatters="In a crisis, your family needs to know exactly who to turn to. Having updated contact information for your support network removes the panic of 'who do I call?'"
     />
 {/if}
 
@@ -183,14 +189,14 @@
     <div class="flex justify-end mb-8">
         <button
             onclick={() => (showAddModal = true)}
-            class="px-5 py-2.5 bg-slate-900 text-white font-bold rounded-xl shadow-lg hover:bg-slate-800 transition-all flex items-center gap-2"
+            class="px-5 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
         >
             <Plus size={18} />
             <ContextualMessage
                 variants={{
-                    planning: "Add Contact",
-                    executor: "Add Contact",
-                    family: "Add Contact",
+                    planning: "Share contact details",
+                    executor: "Share contact details",
+                    family: "Share contact details",
                 }}
             />
         </button>
@@ -262,7 +268,7 @@
             onclick={() => (activeTab = "directory")}
             class="px-5 py-2.5 font-bold text-sm rounded-t-xl transition-all border-b-2
             {activeTab === 'directory'
-                ? 'border-indigo-500 text-indigo-600 bg-indigo-50'
+                ? 'border-primary text-primary bg-primary/10'
                 : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'}"
         >
             Full Directory
@@ -289,14 +295,14 @@
                       ? "Add contacts as information becomes available."
                       : "Start with just one person—maybe your executor, spouse, or closest friend. You can build this over time."}
                 icon={Users}
-                iconClass="text-indigo-500"
+                iconClass="text-primary"
                 ctaLabel={getActionLabel("add")}
                 onAction={() => (showAddModal = true)}
             />
         {:else if activeTab === "call-list"}
             <div in:fade class="space-y-8 max-w-4xl mx-auto">
                 <div
-                    class="bg-indigo-50 p-4 rounded-xl text-indigo-800 text-sm flex gap-3 border border-indigo-100"
+                    class="bg-primary/5 p-4 rounded-xl text-primary text-sm flex gap-3 border border-primary/10"
                 >
                     <Shield class="shrink-0" size={20} />
                     <p>
@@ -385,7 +391,7 @@
             >
                 {#each contacts as contact}
                     <div
-                        class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:border-indigo-300 transition-all group relative"
+                        class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:border-primary/30 transition-all group relative"
                     >
                         <button
                             onclick={() => deleteContact(contact.id)}
@@ -437,7 +443,7 @@
                         >
                             <span
                                 class="text-xs font-bold px-2 py-1 rounded bg-slate-100 text-slate-500"
-                                >{contact.tier.split("_")[1]}</span
+                                >{contact.tier?.split("_")[1] || "Unassigned"}</span
                             >
                         </div>
                     </div>
@@ -462,7 +468,7 @@
                         <h3
                             class="font-serif font-bold text-2xl text-slate-800"
                         >
-                            Add Someone Important
+                            Who should we include?
                         </h3>
                         <p class="text-slate-500 text-sm mt-2 leading-relaxed">
                             This person matters to you. By adding them here,
@@ -554,17 +560,17 @@
                     </div>
 
                     <div
-                        class="bg-indigo-50 p-4 rounded-xl border border-indigo-100"
+                        class="bg-primary/5 p-4 rounded-xl border border-primary/10"
                     >
                         <label
                             for="contact-tier"
-                            class="block text-xs font-bold uppercase text-indigo-700 mb-2"
+                            class="block text-xs font-bold uppercase text-primary mb-2"
                             >When Should They Know?</label
                         >
                         <select
                             id="contact-tier"
                             bind:value={newContact.tier}
-                            class="w-full px-4 py-3 rounded-xl border border-indigo-200 bg-white"
+                            class="w-full px-4 py-3 rounded-xl border border-primary/20 bg-white shadow-sm focus:border-primary outline-none"
                         >
                             <option value="1_Immediate"
                                 >First Call — Someone who should hear it from
@@ -597,10 +603,18 @@
                         />
                     </div>
 
+                    <!-- Custom Fields -->
+                    <div class="pt-4 mt-4 border-t border-gray-100">
+                        <CustomFieldsManager
+                            entityType="contact"
+                            bind:data={parsedCustomAttributes}
+                        />
+                    </div>
+
                     <button
                         onclick={addContact}
-                        class="w-full py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800"
-                        >Save Contact</button
+                        class="w-full py-4 bg-primary text-primary-foreground rounded-xl font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all"
+                        >Include this person</button
                     >
                 </div>
             </div>

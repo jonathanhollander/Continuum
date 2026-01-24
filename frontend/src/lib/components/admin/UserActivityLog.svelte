@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { engagementLog } from "$lib/stores/conciergeStore.svelte.ts";
+    import { engagementLog } from "$lib/stores/conciergeStore.svelte";
     import { Clock, Activity } from "lucide-svelte";
     import { slide } from "svelte/transition";
 

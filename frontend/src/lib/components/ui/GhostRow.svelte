@@ -8,6 +8,7 @@
         subtitle = "",
         value = null,
         onclick,
+        onClick,
         icon,
     } = $props<{
         type?: string;
@@ -15,8 +16,12 @@
         subtitle?: string;
         value?: number | null;
         onclick?: () => void;
+        onClick?: () => void;
         icon?: import("svelte").Snippet;
     }>();
+
+    // Support both onclick and onClick prop naming conventions
+    const handleClick = onclick || onClick;
 </script>
 
 <!-- 
@@ -24,7 +29,7 @@
     A clickable, empty-state placeholder that mimics a real data row but at lower opacity.
 -->
 <button
-    {onclick}
+    onclick={handleClick}
     class="w-full text-left group relative overflow-hidden rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/50 hover:bg-slate-50 hover:border-indigo-300 transition-all duration-300"
     in:fade
 >

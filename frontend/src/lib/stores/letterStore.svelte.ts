@@ -1,4 +1,4 @@
-import { registerSync } from "$lib/services/sync.svelte.ts";
+import { registerSync } from "$lib/services/sync.svelte";
 
 export interface Letter {
     id?: number;
@@ -8,6 +8,7 @@ export interface Letter {
     content: string;
     release_condition: string;
     status: string;
+    custom_attributes?: string; // JSON string of custom field values
 }
 
 const mapper = (data: any): Letter => ({
@@ -23,6 +24,7 @@ const manager = registerSync<Letter>('letters', 'letters', mapper, '/api/data')
 export const letterStore = {
     subscribe: manager.subscribe.bind(manager),
     get items() { return manager.items; },
+    get status() { return manager.status; },
     create: (item: Omit<Letter, 'id'>) => manager.create(item as Letter),
     update: (id: number, updates: Partial<Letter>) => manager.update(id, updates as Letter),
     delete: (id: number) => manager.delete(id),

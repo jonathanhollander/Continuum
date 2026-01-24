@@ -1,8 +1,8 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { t } from "$lib/stores/conciergeStore.svelte.ts";
-    import { registerAccount } from "$lib/stores/keyringStore.ts";
-    import { profiles, currentProfileId } from "$lib/stores/profileContext.ts";
+    import { t } from "$lib/stores/conciergeStore.svelte";
+    import { registerAccount } from "$lib/stores/keyringStore";
+    import { profiles, currentProfileId } from "$lib/stores/profileContext";
     import { get } from "svelte/store";
     import { fade, slide, fly } from "svelte/transition";
     import {

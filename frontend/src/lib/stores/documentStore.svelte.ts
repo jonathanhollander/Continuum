@@ -1,4 +1,4 @@
-import { registerSync } from "$lib/services/sync.svelte.ts";
+import { registerSync } from "$lib/services/sync.svelte";
 
 export interface Document {
     id?: number;
@@ -28,6 +28,7 @@ const manager = registerSync<Document>('documents', 'documents', mapper, '/api/d
 export const documentStore = {
     subscribe: manager.subscribe.bind(manager),
     get items() { return manager.items; },
+    get status() { return manager.status; },
     create: (item: Omit<Document, 'id'>) => manager.create(item as Document),
     update: (id: number, updates: Partial<Document>) => manager.update(id, updates as Document),
     delete: (id: number) => manager.delete(id),

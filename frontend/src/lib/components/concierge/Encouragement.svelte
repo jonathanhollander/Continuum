@@ -5,7 +5,7 @@
         encouragementMode,
         shouldShowPrompt,
         logInteraction,
-    } from "$lib/stores/conciergeStore.svelte.ts";
+    } from "$lib/stores/conciergeStore.svelte";
 
     export let type: "hint" | "insight" | "action" = "hint";
     export let text: string;

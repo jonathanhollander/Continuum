@@ -1,4 +1,4 @@
-import { registerSingletonSync } from "$lib/services/sync.svelte.ts";
+import { registerSingletonSync } from "$lib/services/sync.svelte";
 import { browser } from '$app/environment';
 
 export type AppTone = 'planning' | 'grief' | 'executor';

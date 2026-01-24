@@ -1,4 +1,4 @@
-import { registerSingletonSync } from "$lib/services/sync.svelte.ts";
+import { registerSingletonSync } from "$lib/services/sync.svelte";
 import { apiGet, apiPost } from '$lib/api/client';
 
 export interface PulseStatus {
@@ -49,11 +49,39 @@ export const pulseStore = {
     }
 };
 
-// Compatibility export
+// Compatibility export with store interface for derived() compatibility
 export const pulse = {
     get status() { return statusSync.data?.status || 'disabled'; },
     get next_nudge() { return statusSync.data?.next_nudge || null; },
     get lastCheckin() { return statusSync.data?.last_checkin || null; },
+    get enabled() { return settingsSync.data?.enabled ?? false; },
+    get contacts() { return []; }, // Contacts are managed separately via PulseContact API
     init: () => statusSync.sync(),
-    checkin: (note?: string) => pulseStore.checkin(note)
+    checkin: (note?: string) => pulseStore.checkin(note),
+    // Svelte store-compatible update method
+    update(fn: (current: { enabled: boolean; contacts: any[]; status: string }) => { enabled?: boolean; contacts?: any[]; status?: string }) {
+        const current = {
+            enabled: settingsSync.data?.enabled ?? false,
+            contacts: [],
+            status: statusSync.data?.status || 'disabled'
+        };
+        const updated = fn(current);
+        // Only update settings if enabled changed
+        if (updated.enabled !== undefined && updated.enabled !== current.enabled) {
+            settingsSync.update({ enabled: updated.enabled } as PulseSettings);
+        }
+    },
+    // Store compatibility for derived()
+    subscribe(run: (value: { enabled: boolean; contacts: any[]; status: string }) => void) {
+        const getValue = () => ({
+            enabled: settingsSync.data?.enabled ?? false,
+            contacts: [],
+            status: statusSync.data?.status || 'disabled'
+        });
+        run(getValue());
+        // Subscribe to both syncs and notify on changes
+        const unsub1 = settingsSync.subscribe(() => run(getValue()));
+        const unsub2 = statusSync.subscribe(() => run(getValue()));
+        return () => { unsub1(); unsub2(); };
+    }
 };

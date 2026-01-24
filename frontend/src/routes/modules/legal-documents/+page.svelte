@@ -3,23 +3,17 @@
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import { Files } from "lucide-svelte";
     import LegalDisclaimer from "$lib/components/common/LegalDisclaimer.svelte";
+    import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
 </script>
 
 <div class="max-w-6xl mx-auto p-8">
-    <div class="mb-8">
-        <h1
-            class="font-serif font-bold text-4xl text-[#304743] flex items-center gap-3"
-        >
-            <div class="p-3 bg-[#4A7C74]/10 rounded-xl text-[#4A7C74]">
-                <Files size={32} />
-            </div>
-            Document Vault
-        </h1>
-        <p class="text-muted-foreground mt-2 ml-16 max-w-xl">
-            The secure home for your legal life. Organize your Will, Trust, and
-            vital records so your family isn't left searching.
-        </p>
-    </div>
+    <LivingBlueprintHeader
+        title="Document Vault"
+        subtitle="The secure home for your legal life"
+        tier="legal"
+        detailedDescription="A central, secure home for the documents that define your legal and personal wishes. From wills to trusts, ensure the blueprints of your legacy are accessible."
+        whyMatters="Searching for a will or trust document can delay estate settlement by months. Centralizing them here provides your family with a clear roadmap when they need it most."
+    />
 
     <!-- Legal Disclaimer -->
     <div class="mb-8">

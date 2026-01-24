@@ -1,4 +1,4 @@
-import { registerSync } from "$lib/services/sync.svelte.ts";
+import { registerSync } from "$lib/services/sync.svelte";
 
 export interface PetEntry {
     id: string | number;
@@ -11,7 +11,9 @@ export interface PetEntry {
     foodInstructions: string;
     medicalNeeds: string;
     microchipNumber?: string;
+    documents?: string; // URL to uploaded document
     notes: string;
+    custom_attributes?: string; // JSON string of custom field values
 }
 
 const petMapper = (item: any) => {
@@ -24,12 +26,14 @@ const petMapper = (item: any) => {
         foodInstructions: item.food_instructions ?? item.foodInstructions ?? '',
         medicalNeeds: item.medical_needs ?? item.medicalNeeds ?? '',
         microchipNumber: item.microchip_number ?? item.microchipNumber ?? '',
+        documents: item.documents ?? '',
         // Local -> Remote
         ['vet_name']: item.vetName ?? item.vet_name,
         ['vet_phone']: item.vetPhone ?? item.vet_phone,
         ['food_instructions']: item.foodInstructions ?? item.food_instructions,
         ['medical_needs']: item.medicalNeeds ?? item.medical_needs,
-        ['microchip_number']: item.microchipNumber ?? item.microchip_number
+        ['microchip_number']: item.microchipNumber ?? item.microchip_number,
+        ['documents']: item.documents
     };
 };
 

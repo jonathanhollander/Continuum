@@ -1,25 +1,27 @@
 <script lang="ts">
     import { page } from "$app/stores";
-    import { t, userRole } from "$lib/stores/conciergeStore.svelte.ts";
-    import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
+    import { t, userRole } from "$lib/stores/conciergeStore.svelte";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { navGroups, pulseSubNav } from "$lib/config/navigation";
     import {
         ChevronDown,
         ChevronRight,
-        Settings,
         Download,
         Users,
         LogOut,
         Star,
         Zap,
+        ExternalLink,
     } from "lucide-svelte";
     import { createEventDispatcher } from "svelte";
     import { slide } from "svelte/transition";
     import logo from "$lib/assets/logo.png";
-    import { logout } from "$lib/stores/keyringStore.ts";
+    import { logout } from "$lib/stores/keyringStore";
     import ProfileSwitcher from "$lib/components/ui/ProfileSwitcher.svelte";
-    import { contextStore } from "$lib/stores/contextStore.svelte.ts";
+    import { contextStore } from "$lib/stores/contextStore.svelte";
     import GettingStartedTracker from "$lib/components/GettingStartedTracker.svelte";
+    import { notifications } from "$lib/stores/notificationStore";
+    import Tooltip from "$lib/components/ui/Tooltip.svelte";
 
     // Props
     interface Props {
@@ -102,6 +104,24 @@
         if (onClose) onClose();
         isOpen = false;
     }
+
+    function handleNavigation(event: MouseEvent, item: any) {
+        if (item.behaviour === "background-tab") {
+            event.preventDefault();
+            const newWindow = window.open(item.href, "_blank");
+            if (newWindow) {
+                newWindow.blur();
+                window.focus();
+            }
+            notifications.showInfo(
+                "Treasure Hunt opened in a new tab. Return here when you're ready to continue.",
+                "External Site Opened",
+            );
+            handleClose();
+        } else {
+            handleClose();
+        }
+    }
 </script>
 
 <aside
@@ -131,8 +151,8 @@
 
             <button
                 onclick={logout}
-                class="p-2 rounded-lg text-primary-foreground/70 hover:text-red-200 hover:bg-red-400/20 transition-all group"
-                title="Logout"
+                class="p-2 rounded-lg text-primary-foreground/70 hover:text-white hover:bg-white/10 transition-all group"
+                title="Sign out"
             >
                 <LogOut size={18} />
             </button>
@@ -218,35 +238,48 @@
                                 (item.href === "/modules/pulse" &&
                                     isInPulseSection &&
                                     item.key === "pulse")}
-                            <a
-                                href={item.href}
-                                class="flex items-center gap-3 px-3 py-2.5 mx-1 rounded-xl transition-all duration-200 group relative overflow-hidden
-                                {isActive
-                                    ? 'bg-white/20 text-white shadow-lg shadow-black/5 font-semibold'
-                                    : 'text-primary-foreground/80 hover:text-white hover:bg-white/10'}
-                                {isEssential ? 'ring-1 ring-amber-400/30' : ''}
-                                {group.isPrimary ? 'py-3' : ''}"
-                                onclick={handleClose}
-                            >
-                                {#if isActive}
-                                    <div
-                                        class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full bg-white"
-                                    ></div>
-                                {/if}
-
-                                <svelte:component
-                                    this={item.icon}
-                                    class="w-4 h-4 transition-transform duration-300 group-hover:scale-110 {isActive
-                                        ? 'text-white'
-                                        : 'text-primary-foreground/50'}"
-                                />
-                                <span class="text-sm flex-1"
-                                    >{$t[item.key] || item.label}</span
+                            <Tooltip content={item.tooltip} position="right">
+                                <a
+                                    href={item.href}
+                                    class="flex items-center gap-3 px-3 py-2.5 mx-1 rounded-xl transition-all duration-200 group relative overflow-hidden
+                                    {isActive
+                                        ? 'bg-white/20 text-white shadow-lg shadow-black/5 font-semibold'
+                                        : 'text-primary-foreground/80 hover:text-white hover:bg-white/10'}
+                                    {isEssential
+                                        ? 'ring-1 ring-amber-400/30'
+                                        : ''}
+                                    {group.isPrimary ? 'py-3' : ''}"
+                                    onclick={(e) => handleNavigation(e, item)}
                                 >
-                                {#if isEssential}
-                                    <Star size={12} class="text-amber-400/60" />
-                                {/if}
-                            </a>
+                                    {#if isActive}
+                                        <div
+                                            class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full bg-white"
+                                        ></div>
+                                    {/if}
+
+                                    <svelte:component
+                                        this={item.icon}
+                                        class="w-4 h-4 transition-transform duration-300 group-hover:scale-110 {isActive
+                                            ? 'text-white'
+                                            : 'text-primary-foreground/50'}"
+                                    />
+                                    <span class="text-sm flex-1"
+                                        >{$t[item.key] || item.label}</span
+                                    >
+                                    {#if item.isExternal}
+                                        <ExternalLink
+                                            size={12}
+                                            class="text-primary-foreground/40"
+                                        />
+                                    {/if}
+                                    {#if isEssential}
+                                        <Star
+                                            size={12}
+                                            class="text-amber-400/60"
+                                        />
+                                    {/if}
+                                </a>
+                            </Tooltip>
                         {/each}
                     </div>
                 {/if}
@@ -266,27 +299,29 @@
                 <div class="space-y-1">
                     {#each filteredPulseNav as item}
                         {@const isActive = $page.url.pathname === item.href}
-                        <a
-                            href={item.href}
-                            class="flex items-center gap-3 px-3 py-2 mx-1 rounded-xl transition-all duration-200 group relative overflow-hidden
-                            {isActive
-                                ? 'bg-white/20 text-white shadow-lg shadow-black/5 font-semibold'
-                                : 'text-primary-foreground/80 hover:text-white hover:bg-white/10'}"
-                            onclick={handleClose}
-                        >
-                            {#if isActive}
-                                <div
-                                    class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full bg-white"
-                                ></div>
-                            {/if}
-                            <svelte:component
-                                this={item.icon}
-                                class="w-4 h-4 transition-transform duration-300 group-hover:scale-110 {isActive
-                                    ? 'text-white'
-                                    : 'text-primary-foreground/50'}"
-                            />
-                            <span class="text-sm flex-1">{item.label}</span>
-                        </a>
+                        <Tooltip content={item.tooltip} position="right">
+                            <a
+                                href={item.href}
+                                class="flex items-center gap-3 px-3 py-2 mx-1 rounded-xl transition-all duration-200 group relative overflow-hidden
+                                {isActive
+                                    ? 'bg-white/20 text-white shadow-lg shadow-black/5 font-semibold'
+                                    : 'text-primary-foreground/80 hover:text-white hover:bg-white/10'}"
+                                onclick={(e) => handleNavigation(e, item)}
+                            >
+                                {#if isActive}
+                                    <div
+                                        class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full bg-white"
+                                    ></div>
+                                {/if}
+                                <svelte:component
+                                    this={item.icon}
+                                    class="w-4 h-4 transition-transform duration-300 group-hover:scale-110 {isActive
+                                        ? 'text-white'
+                                        : 'text-primary-foreground/50'}"
+                                />
+                                <span class="text-sm flex-1">{item.label}</span>
+                            </a>
+                        </Tooltip>
                     {/each}
                 </div>
             </div>
@@ -296,36 +331,11 @@
         <GettingStartedTracker variant="sidebar" />
     </nav>
 
-    <!-- Sidebar Footer: Profile & Settings -->
+    <!-- Sidebar Footer: Profile Switcher -->
     <div
-        class="p-4 border-t border-primary-foreground/10 shrink-0 bg-black/10 backdrop-blur-sm space-y-3"
+        class="p-4 border-t border-primary-foreground/10 shrink-0 bg-black/10 backdrop-blur-sm"
     >
         <ProfileSwitcher />
-
-        <a
-            href="/settings"
-            class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all group text-left"
-        >
-            <div
-                class="p-2 rounded-lg bg-black/20 group-hover:bg-black/30 transition-colors border border-white/10"
-            >
-                <Settings
-                    class="w-4 h-4 text-primary-foreground/80 group-hover:text-white transition-colors"
-                />
-            </div>
-            <div class="flex-1 min-w-0">
-                <p
-                    class="text-sm font-medium text-primary-foreground group-hover:text-white"
-                >
-                    {$t.settingsTitle}
-                </p>
-                <p
-                    class="text-xs text-primary-foreground/60 group-hover:text-primary-foreground/80"
-                >
-                    {$t.settingsDesc}
-                </p>
-            </div>
-        </a>
     </div>
 </aside>
 

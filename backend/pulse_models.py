@@ -100,6 +100,9 @@ class PulseContact(SQLModel, table=True):
     is_beneficiary: bool = Field(default=False)
     is_emergency_contact: bool = Field(default=False)
 
+    # Custom fields support
+    custom_attributes: Optional[str] = Field(default="{}")
+
     model_config = {
         "json_schema_extra": {
             "example": {
@@ -149,4 +152,9 @@ class PulseCredential(SQLModel, table=True):
     public_key: str  # COSE Key (base64url)
     sign_count: int = Field(default=0)
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    transports: Optional[str] = Field(default=None) # JSON list string
+    transports: Optional[str] = Field(default=None)  # JSON list: ["internal"], ["hybrid"], etc.
+    aaguid: Optional[str] = Field(default=None)  # Authenticator type identifier (Google, Apple, etc.)
+    # Known AAGUIDs:
+    # - Apple iCloud Keychain: fbfc3007-154e-4ecc-8c0b-6e020557d7bd
+    # - Google Password Manager: ea9b8d66-4d01-1d21-3ce4-b6b48cb575d4
+    # - Chrome on Mac: adce0002-35bc-c60a-648b-0b25f1f05503

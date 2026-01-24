@@ -1,7 +1,7 @@
 <script lang="ts">
     import { page } from "$app/stores";
     import { onMount } from "svelte";
-    import { API_BASE_URL } from "$lib/config.ts";
+    import { API_BASE_URL } from "$lib/config";
     import {
         AlertTriangle,
         Clock,

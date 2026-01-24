@@ -10,7 +10,7 @@
     } from "lucide-svelte";
     import Encouragement from "$lib/components/concierge/Encouragement.svelte";
     import EstateNetWorth from "$lib/components/dashboard/EstateNetWorth.svelte";
-    import { estateAudit } from "$lib/stores/auditStore.svelte.ts";
+    import { estateAudit } from "$lib/stores/auditStore.svelte";
     import { Search, Bell, Clock } from "lucide-svelte";
 
     let timeOfDay = "Morning";

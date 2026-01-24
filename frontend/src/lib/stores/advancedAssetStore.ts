@@ -1,4 +1,4 @@
-import { registerSingletonSync } from "$lib/services/sync.svelte.ts";
+import { registerSingletonSync } from "$lib/services/sync.svelte";
 import { getLegacy } from './persistence';
 
 // --- Transactions ---

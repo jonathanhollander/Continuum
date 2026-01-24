@@ -1,4 +1,4 @@
-import { registerSync } from "$lib/services/sync.svelte.ts";
+import { registerSync } from "$lib/services/sync.svelte";
 
 export type FamilyRole =
     | 'Family'
@@ -27,6 +27,8 @@ export interface FamilyMember {
     // UI Helpers
     tier?: string; // For simulation/display
     notificationStatus?: string;
+    // Custom fields support
+    custom_attributes?: string; // JSON string of custom field values
 }
 
 export interface Relationship {

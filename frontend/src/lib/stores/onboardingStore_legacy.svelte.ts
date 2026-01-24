@@ -1,11 +1,11 @@
 import { browser } from '$app/environment';
 import { getSmartSamples } from '$lib/data/smartSamples';
-import { propertyStore } from "$lib/stores/propertyStore.svelte.ts";
-import { familyStore } from "$lib/stores/familyStore.svelte.ts";
-import { insuranceStore } from "$lib/stores/insuranceStore.svelte.ts";
-import { heirloomStore } from "$lib/stores/heirloomStore.svelte.ts";
-import { digitalAssetsStore } from "$lib/stores/digitalAssetsStore.svelte.ts";
-import { medicalStore } from "$lib/stores/medicalStore.svelte.ts";
+import { propertyStore } from "$lib/stores/propertyStore.svelte";
+import { familyStore } from "$lib/stores/familyStore.svelte";
+import { insuranceStore } from "$lib/stores/insuranceStore.svelte";
+import { heirloomStore } from "$lib/stores/heirloomStore.svelte";
+import { digitalAssetsStore } from "$lib/stores/digitalAssetsStore.svelte";
+import { medicalStore } from "$lib/stores/medicalStore.svelte";
 import { activityLog } from '$lib/stores/activityLog';
 
 // Persistent Key

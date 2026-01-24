@@ -17,6 +17,8 @@ export interface MediaFile {
     duration?: number;
     created_at: string;
     download_url: string;
+    storage_provider?: string;
+    doc_category?: string;
 }
 
 export interface MediaUploadResponse {
@@ -37,7 +39,7 @@ export interface UploadProgress {
 const API_BASE = '/api/media';
 
 /**
- * Upload a media file to the backend
+ * Upload a media file or document to the backend
  */
 export async function uploadMedia(
     file: File,
@@ -245,7 +247,9 @@ export function isValidMediaType(file: File): boolean {
         // Videos
         'video/mp4', 'video/quicktime', 'video/webm', 'video/x-msvideo',
         // Audio
-        'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/webm'
+        'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/webm',
+        // Documents (PDF, Text, CSV) - NO Word Docs (.doc/.docx)
+        'application/pdf', 'text/plain', 'text/csv'
     ];
 
     return validTypes.includes(file.type.toLowerCase());

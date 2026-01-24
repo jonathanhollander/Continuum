@@ -1,4 +1,4 @@
-import { registerSingletonSync } from "$lib/services/sync.svelte.ts";
+import { registerSingletonSync } from "$lib/services/sync.svelte";
 import { derived } from 'svelte/store';
 import { dictionary } from './dictionary';
 import { logger } from '../utils/logger';
@@ -29,7 +29,11 @@ export const conciergeStore = {
 // Compatibility individual stores
 export const encouragementMode = {
     subscribe: (fn: any) => manager.subscribe(val => fn(val?.encouragementMode || 'Full')),
-    set: (val: EncouragementMode) => manager.update({ encouragementMode: val })
+    set: (val: EncouragementMode) => manager.update({ encouragementMode: val }),
+    update: (fn: (current: EncouragementMode) => EncouragementMode) => {
+        const current = manager.data?.encouragementMode || 'Full';
+        manager.update({ encouragementMode: fn(current) });
+    }
 };
 
 export const userRole = {
@@ -42,8 +46,13 @@ export const language = {
     set: (val: Language) => manager.update({ language: val })
 };
 
-export const t = derived(language as any, ($language: Language) => {
-    return (dictionary as Record<Language, any>)[$language] || dictionary.en;
+// Infer dictionary type from English fallback
+type Dictionary = typeof dictionary.en;
+
+export const t = derived(language, ($language: Language) => {
+    // @ts-ignore - Dynamic key access
+    const dict = (dictionary as Record<string, Dictionary>)[$language] || dictionary.en;
+    return dict as Dictionary;
 });
 
 // Engagement Logger (Analytics - Kept Local for now unless asked to sync)

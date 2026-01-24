@@ -1,5 +1,5 @@
 import { derived } from 'svelte/store';
-import { registerSync } from "$lib/services/sync.svelte.ts";
+import { registerSync } from "$lib/services/sync.svelte";
 
 export type ReleaseTrigger = 'date' | 'milestone';
 
@@ -29,6 +29,7 @@ export interface TimeCapsuleMessage {
     triggerValue: string;
     isReleased: boolean;
     createdAt: string;
+    custom_attributes?: string; // JSON string of custom field values
 }
 
 const timeCapsuleMapper = (item: any) => {
@@ -84,7 +85,7 @@ export const timeCapsuleStore = {
 };
 
 export const capsuleStatus = derived(timeCapsuleSync, ($sync) => {
-    const items = $sync.items;
+    const items = $sync?.items ?? [];
     return {
         unlocked: items.filter(m => m.isReleased),
         locked: items.filter(m => !m.isReleased)

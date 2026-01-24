@@ -22,20 +22,24 @@
     import {
         heirloomSync,
         type Heirloom,
-    } from "$lib/stores/heirloomStore.svelte.ts";
+    } from "$lib/stores/heirloomStore.svelte";
     import { qrStore } from "$lib/stores/qrStore";
-    import { activityLog } from "$lib/stores/activityLog.svelte.ts";
-    import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
+    import { activityLog } from "$lib/stores/activityLog.svelte";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
     import EvidenceGalleryUploader from "$lib/components/ui/EvidenceGalleryUploader.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import { getSmartSamples } from "$lib/data/smartSamples";
-    import { language } from "$lib/stores/localization.ts";
+    import { REFLECTION_POOLS } from "$lib/data/reflectionPools";
+    import { language } from "$lib/stores/localization";
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
+    import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
 
-    let showAddModal = false;
+    let showAddModal = $state(false);
+    let parsedCustomAttributes = $state<Record<string, any>>({});
     let showAffirmation = $state(false);
-    let selectedImage: string | null = null;
-    let showWizard = false;
+    let isEditing = $state(false);
+    let selectedImage = $state<string | null>(null);
+    let showWizard = $state(false);
 
     let newHeirloom: Partial<Heirloom> = $state({
         name: "",
@@ -224,7 +228,7 @@
     function addHeirloom() {
         if (!newHeirloom.name) return;
 
-        heirloomStore.addItem({
+        heirloomSync.create({
             name: newHeirloom.name || "Unknown Treasure",
             recipient: newHeirloom.recipient || "Undecided",
             story: newHeirloom.story || "",
@@ -234,6 +238,7 @@
                     newHeirloom.name || "",
                     newHeirloom.story || "",
                 ),
+            custom_attributes: JSON.stringify(parsedCustomAttributes),
         });
 
         showAddForm = false;
@@ -241,6 +246,7 @@
         newHeirloom = {
             image: "",
         };
+        parsedCustomAttributes = {};
     }
 
     function removeHeirloom(id: string) {
@@ -250,7 +256,7 @@
             )
         )
             return;
-        heirloomStore.deleteItem(id);
+        heirloomSync.delete(id);
     }
 
     // QR Logic
@@ -315,7 +321,7 @@
         >
             <Gift size={48} />
         </div>
-        <h1 class="font-serif font-bold text-4xl text-[#304743] mb-4">
+        <h1 class="font-serif font-bold text-4xl text-slate-900 mb-4">
             More Than Just Things
         </h1>
         <p
@@ -357,16 +363,16 @@
         <div class="flex gap-3">
             <button
                 onclick={() => (showWizard = true)}
-                class="px-5 py-3 bg-indigo-600 text-white rounded-2xl font-bold shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2"
+                class="px-5 py-3 bg-primary text-primary-foreground rounded-2xl font-bold shadow-lg hover:opacity-90 transition-all flex items-center gap-2"
             >
                 <Sparkles size={18} />
                 Start Concierge
             </button>
             <button
-                class="bg-[#304743] leading-none text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 shadow-lg hover:shadow-xl hover:bg-[#20302d] transition-all"
+                class="bg-primary text-primary-foreground shadow-primary/20 hover:opacity-90 disabled:opacity-50 transition-all font-bold px-6 py-2 rounded-xl"
                 onclick={() => (showAddForm = true)}
             >
-                <Plus size={20} /> Add Heirloom
+                <Plus size={20} /> Share a story or object
             </button>
         </div>
     </div>
@@ -419,7 +425,7 @@
                     />
                     <button
                         onclick={() => removeHeirloom(heirloom.id)}
-                        class="absolute top-2 right-2 p-2 bg-white/90 text-rose-600 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all hover:bg-rose-50"
+                        class="absolute top-2 right-2 p-2 bg-white/90 text-primary rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all hover:bg-primary/10"
                         title="Remove"
                     >
                         <X size={16} />
@@ -499,7 +505,7 @@
                         </button>
                         <button
                             onclick={printLabel}
-                            class="px-5 py-2 rounded-xl font-bold bg-[#304743] text-white hover:bg-[#20302d] flex items-center gap-2"
+                            class="px-5 py-2 rounded-xl font-bold bg-primary text-primary-foreground hover:opacity-90 transition-all flex items-center gap-2"
                         >
                             <QrCode size={18} /> Print Label
                         </button>
@@ -607,6 +613,14 @@
                             </div>
                         {/if}
                     </div>
+
+                    <!-- Custom Fields -->
+                    <div class="pt-4 mt-4 border-t border-gray-100">
+                        <CustomFieldsManager
+                            entityType="heirloom"
+                            bind:data={parsedCustomAttributes}
+                        />
+                    </div>
                 </div>
 
                 <div class="p-6 bg-gray-50 flex justify-end gap-3">
@@ -618,9 +632,12 @@
                     <button
                         onclick={addHeirloom}
                         disabled={!newHeirloom.name}
-                        class="px-6 py-2 rounded-xl font-bold bg-[#304743] text-white hover:bg-[#20302d] disabled:opacity-50"
-                        >Save Item</button
+                        class="px-6 py-2 rounded-xl font-bold bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 transition-all shadow-lg"
                     >
+                        {isEditing
+                            ? "Save these details"
+                            : "Record this treasure"}
+                    </button>
                 </div>
             </div>
         </div>

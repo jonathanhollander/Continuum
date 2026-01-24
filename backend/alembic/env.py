@@ -38,6 +38,7 @@ from backend.estate_models import (
     TimeCapsuleMessage,
     FuneralData,
     AdvancedAssetData,
+    UserCustomFieldDefinition,
 )
 from backend.pulse_models import (
     PulseSettings,

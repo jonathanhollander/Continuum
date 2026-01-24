@@ -1,6 +1,6 @@
 import { derived } from 'svelte/store';
 import { triggerMagic } from './magicStore';
-import { registerSync, registerSingletonSync } from "$lib/services/sync.svelte.ts";
+import { registerSync, registerSingletonSync } from "$lib/services/sync.svelte";
 
 export interface AcceptanceTask {
     id: number | string;

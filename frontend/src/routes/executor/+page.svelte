@@ -18,8 +18,8 @@
         Clock,
         Shield
     } from 'lucide-svelte';
-    import { contextStore } from "$lib/stores/contextStore.svelte.ts";
-    import { estateAudit } from "$lib/stores/auditStore.svelte.ts";
+    import { contextStore } from "$lib/stores/contextStore.svelte";
+    import { estateAudit } from "$lib/stores/auditStore.svelte";
     import ExecutorProgressTracker from '$lib/components/executor/ExecutorProgressTracker.svelte';
     import SupportResources from '$lib/components/executor/SupportResources.svelte';
     import { getEncouragementMessage } from '$lib/utils/contextualMessages';

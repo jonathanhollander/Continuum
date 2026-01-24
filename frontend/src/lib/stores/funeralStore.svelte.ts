@@ -1,4 +1,4 @@
-import { registerSingletonSync } from "$lib/services/sync.svelte.ts";
+import { registerSingletonSync } from "$lib/services/sync.svelte";
 
 export type FuneralWishes = {
     disposition: string;
@@ -26,6 +26,7 @@ export type FuneralBudgetItem = {
     name: string;
     cost: number;
     estimated: number;
+    custom_attributes?: string; // JSON string of custom field values
 };
 
 export type FuneralData = {
@@ -83,6 +84,13 @@ export const funeralStore = {
     get wishes() { return funeralSync.data?.wishes || DEFAULT_FUNERAL_DATA.wishes; },
     get budget() { return funeralSync.data?.budget || []; },
     get status() { return funeralSync.status; },
+
+    // Svelte store-compatible update method
+    update: (fn: (current: FuneralData) => FuneralData) => {
+        const current = funeralSync.data || DEFAULT_FUNERAL_DATA;
+        const updated = fn(current);
+        return funeralSync.update(updated);
+    },
 
     updateWishes: (updates: Partial<FuneralWishes>) => {
         const current = funeralSync.data || DEFAULT_FUNERAL_DATA;

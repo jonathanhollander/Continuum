@@ -9,12 +9,14 @@ from backend.utils.audit import log_audit, log_deletion
 
 router = APIRouter(prefix="/api/contacts", tags=["contacts"])
 
+@router.get("", response_model=List[PulseContact])
 @router.get("/", response_model=List[PulseContact])
 def get_contacts(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     """Fetch all contacts for the user (both Guardians and Non-Guardians)."""
     statement = select(PulseContact).where(PulseContact.user_id == user.id)
     return session.exec(statement).all()
 
+@router.post("", response_model=PulseContact)
 @router.post("/", response_model=PulseContact)
 def create_contact(request: Request, contact: PulseContact, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     """Create a new global contact."""

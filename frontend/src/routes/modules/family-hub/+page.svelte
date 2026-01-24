@@ -22,9 +22,9 @@
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
     import { onMount } from "svelte";
-    import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
-    import { activityLog } from "$lib/stores/activityLog.svelte.ts";
-    import { t, language } from "$lib/stores/localization.ts";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
+    import { activityLog } from "$lib/stores/activityLog.svelte";
+    import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
     import * as registryRaw from "$lib/data/registry.json";
@@ -39,7 +39,7 @@
         addFamilyMemory,
         updateFamilyMemory,
         removeFamilyMemory,
-    } from "$lib/stores/visualMemoryStore.svelte.ts";
+    } from "$lib/stores/visualMemoryStore.svelte";
 
     // --- State & Types ---
     type MemoryType = "photo" | "recipe" | "quote";

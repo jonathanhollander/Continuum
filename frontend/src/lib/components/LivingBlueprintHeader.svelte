@@ -1,7 +1,8 @@
 <script lang="ts">
     import { cn } from "$lib/utils";
     import { onMount } from "svelte";
-    import { fade, fly } from "svelte/transition";
+    import { fade, fly, slide } from "svelte/transition";
+    import GuidanceBlock from "$lib/components/guidance/GuidanceBlock.svelte";
 
     export let title: string;
     export let subtitle: string | undefined = undefined;
@@ -11,8 +12,13 @@
         | "financial"
         | "legal"
         | "family" = "preparation";
+    export let detailedDescription: string | undefined = undefined;
+    export let whyMatters: string | undefined = undefined;
+
     let className: string | undefined = undefined;
     export { className as class };
+
+    let showWhyMatters = false;
 
     let mounted = false;
 
@@ -115,6 +121,15 @@
                             {subtitle}
                         </p>
                     {/if}
+                </div>
+            {/if}
+
+            {#if mounted}
+                <GuidanceBlock {detailedDescription} {whyMatters} />
+
+                <!-- Action Slot -->
+                <div class="pt-4" in:fly={{ y: 20, duration: 800, delay: 200 }}>
+                    <slot />
                 </div>
             {/if}
         </div>

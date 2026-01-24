@@ -3,11 +3,19 @@
         currentProfileId,
         profiles,
         type Profile,
-    } from "$lib/stores/profileContext.ts";
-    import { t } from "$lib/stores/conciergeStore.svelte.ts";
-    import { User, Plus, Check, ChevronDown, Users } from "lucide-svelte";
+    } from "$lib/stores/profileContext";
+    import { t } from "$lib/stores/conciergeStore.svelte";
+    import {
+        User,
+        Plus,
+        Check,
+        ChevronDown,
+        Users,
+        Settings,
+    } from "lucide-svelte";
     import { fade, slide } from "svelte/transition";
     import { tick } from "svelte";
+    import { goto } from "$app/navigation";
 
     let isOpen = $state(false);
     let newProfileName = $state("");
@@ -73,47 +81,67 @@
 </script>
 
 <div class="relative w-full">
-    <!-- Trigger Button -->
-    <button
+    <!-- Trigger Container -->
+    <div
         class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all group text-left relative overflow-hidden"
-        onclick={toggleDropdown}
     >
-        <!-- Avatar -->
-        <div
-            class="w-10 h-10 rounded-full {getAvatarColor(
-                activeProfile.name,
-            )} flex items-center justify-center shadow-lg text-white font-bold shrink-0"
+        <!-- Clickable area for dropdown toggle -->
+        <button
+            class="flex items-center gap-3 flex-1 min-w-0"
+            onclick={toggleDropdown}
         >
-            {activeProfile.name.charAt(0).toUpperCase()}
-        </div>
-
-        <!-- Info -->
-        <div class="flex-1 min-w-0">
-            <p
-                class="text-xs text-slate-400 font-medium uppercase tracking-wider"
+            <!-- Avatar -->
+            <div
+                class="w-10 h-10 rounded-full {getAvatarColor(
+                    activeProfile.name,
+                )} flex items-center justify-center shadow-lg text-white font-bold shrink-0"
             >
-                {activeProfile.name === "Me" ||
-                activeProfile.name === "New User"
-                    ? "Secure Your Legacy"
-                    : $t.planningFor}
-            </p>
-            <p class="text-sm font-bold text-white truncate">
-                {activeProfile.name}
-            </p>
-        </div>
+                {activeProfile.name.charAt(0).toUpperCase()}
+            </div>
 
-        <ChevronDown
-            size={16}
-            class="text-slate-500 transition-transform duration-300 {isOpen
-                ? 'rotate-180'
-                : ''}"
-        />
+            <!-- Info -->
+            <div class="flex-1 min-w-0 text-left">
+                <p
+                    class="text-xs text-slate-400 font-medium uppercase tracking-wider"
+                >
+                    {activeProfile.name === "Me" ||
+                    activeProfile.name === "New User"
+                        ? "Secure Your Legacy"
+                        : $t.planningFor}
+                </p>
+                <p class="text-sm font-bold text-white truncate">
+                    {activeProfile.name}
+                </p>
+            </div>
+        </button>
+
+        <!-- Settings shortcut -->
+        <button
+            onclick={() => goto("/settings")}
+            class="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+            title="Settings"
+        >
+            <Settings size={16} class="text-slate-400 hover:text-white" />
+        </button>
+
+        <!-- Dropdown toggle icon -->
+        <button
+            onclick={toggleDropdown}
+            class="p-1 rounded-lg hover:bg-white/10 transition-colors"
+        >
+            <ChevronDown
+                size={16}
+                class="text-slate-500 transition-transform duration-300 {isOpen
+                    ? 'rotate-180'
+                    : ''}"
+            />
+        </button>
 
         <!-- Active Indicator Glow -->
         <div
-            class="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-50"
+            class="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent opacity-50"
         ></div>
-    </button>
+    </div>
 
     <!-- Dropdown Menu -->
     {#if isOpen}
@@ -149,7 +177,10 @@
                             </div>
                         </div>
                         {#if $currentProfileId === profile.id}
-                            <Check size={16} class="text-indigo-400" />
+                            <Check
+                                size={16}
+                                class="text-primary shadow-primary/20"
+                            />
                         {/if}
                     </button>
                 {/each}
@@ -170,7 +201,7 @@
                         <div class="flex gap-2">
                             <button
                                 onclick={createProfile}
-                                class="flex-1 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded"
+                                class="flex-1 py-1 bg-primary hover:opacity-90 transition-all shadow-lg"
                             >
                                 Create
                             </button>
@@ -184,7 +215,7 @@
                     </div>
                 {:else}
                     <button
-                        class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-indigo-300 hover:bg-indigo-500/10 transition-colors mt-2 border-t border-slate-700/50"
+                        class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors mt-2 border-t border-slate-700/50"
                         onclick={() => {
                             isCreating = true;
                             tick().then(() =>
@@ -202,6 +233,20 @@
                         >
                     </button>
                 {/if}
+
+                <!-- Settings link -->
+                <a
+                    href="/settings"
+                    class="w-full flex items-center gap-3 px-3 py-2.5 text-slate-300 hover:text-white hover:bg-white/5 transition-colors border-t border-slate-700/50 mt-2"
+                    onclick={() => (isOpen = false)}
+                >
+                    <div
+                        class="w-8 h-8 rounded-full bg-slate-700/50 flex items-center justify-center"
+                    >
+                        <Settings size={14} class="text-slate-400" />
+                    </div>
+                    <span class="text-sm font-medium">Settings</span>
+                </a>
             </div>
         </div>
     {/if}

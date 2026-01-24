@@ -7,8 +7,8 @@
 
     import { FileText, Users, DollarSign, Home, Heart, Clock } from 'lucide-svelte';
     import { fade, fly } from 'svelte/transition';
-    import { contextStore } from "$lib/stores/contextStore.svelte.ts";
-    import { estateAudit } from "$lib/stores/auditStore.svelte.ts";
+    import { contextStore } from "$lib/stores/contextStore.svelte";
+    import { estateAudit } from "$lib/stores/auditStore.svelte";
     import { possessive } from '$lib/utils/contextualMessages';
     import SupportResources from './SupportResources.svelte';
     import ExecutorProgressTracker from './ExecutorProgressTracker.svelte';

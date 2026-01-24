@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { VisualMemory } from "$lib/stores/visualMemoryStore.svelte.ts";
+    import type { VisualMemory } from "$lib/stores/visualMemoryStore.svelte";
     import {
         Grid,
         LayoutTemplate,
@@ -8,23 +8,35 @@
         ChevronRight,
         Heart,
     } from "lucide-svelte";
-    import { createEventDispatcher } from "svelte";
     import { fade, fly } from "svelte/transition";
 
-    export let memories: VisualMemory[] = [];
-    export let viewMode: "grid" | "carousel" = "grid";
-    export let selectedIds: string[] = [];
-    export let isSelectionMode = false;
-
-    const dispatch = createEventDispatcher();
+    let {
+        memories = [],
+        viewMode = $bindable<"grid" | "carousel">("grid"),
+        selectedIds = $bindable<string[]>([]),
+        isSelectionMode = false,
+        onToggleFavorite,
+        onSelectionChange,
+        onViewChange
+    } = $props<{
+        memories?: VisualMemory[];
+        viewMode?: "grid" | "carousel";
+        selectedIds?: string[];
+        isSelectionMode?: boolean;
+        onToggleFavorite?: (id: string) => void;
+        onSelectionChange?: (ids: string[]) => void;
+        onViewChange?: (mode: "grid" | "carousel") => void;
+    }>();
 
     // Carousel State
-    let activeIndex = 0;
+    let activeIndex = $state(0);
 
-    $: if (viewMode === "carousel" && memories.length > 0) {
-        // Reset or clamp index when switching views
-        activeIndex = Math.min(activeIndex, memories.length - 1);
-    }
+    // Reset or clamp index when switching views
+    $effect(() => {
+        if (viewMode === "carousel" && memories.length > 0) {
+            activeIndex = Math.min(activeIndex, memories.length - 1);
+        }
+    });
 
     function toggleSelection(id: string, e: Event) {
         e.stopPropagation();
@@ -33,7 +45,7 @@
         } else {
             selectedIds = [...selectedIds, id];
         }
-        dispatch("selectionChange", selectedIds);
+        onSelectionChange?.(selectedIds);
     }
 
     function handleCardClick(memory: VisualMemory) {
@@ -42,7 +54,7 @@
         } else {
             viewMode = "carousel";
             activeIndex = memories.indexOf(memory);
-            dispatch("viewChange", "carousel");
+            onViewChange?.("carousel");
         }
     }
 
@@ -56,7 +68,7 @@
 
     function toggleFavorite(id: string, e: Event) {
         e.stopPropagation();
-        dispatch("toggleFavorite", id);
+        onToggleFavorite?.(id);
     }
 </script>
 
@@ -68,9 +80,9 @@
                 class="p-2 rounded-md transition-all {viewMode === 'grid'
                     ? 'bg-white text-[#4A7C74] shadow-sm'
                     : 'text-slate-400 hover:text-slate-600'}"
-                on:click={() => {
+                onclick={() => {
                     viewMode = "grid";
-                    dispatch("viewChange", "grid");
+                    onViewChange?.("grid");
                 }}
                 title="Grid View"
             >
@@ -80,9 +92,9 @@
                 class="p-2 rounded-md transition-all {viewMode === 'carousel'
                     ? 'bg-white text-[#4A7C74] shadow-sm'
                     : 'text-slate-400 hover:text-slate-600'}"
-                on:click={() => {
+                onclick={() => {
                     viewMode = "carousel";
-                    dispatch("viewChange", "carousel");
+                    onViewChange?.("carousel");
                 }}
                 title="Carousel View"
             >
@@ -106,8 +118,8 @@
                     )
                         ? 'ring-4 ring-indigo-500 ring-offset-2'
                         : ''}"
-                    on:click={() => handleCardClick(memory)}
-                    on:keydown={(e) => {
+                    onclick={() => handleCardClick(memory)}
+                    onkeydown={(e) => {
                         if (e.key === "Enter" || e.key === " ") {
                             e.preventDefault();
                             handleCardClick(memory);
@@ -170,7 +182,7 @@
                         >
                             <button
                                 class="p-2 bg-white/80 backdrop-blur rounded-full hover:bg-white text-slate-500 hover:text-red-500 transition-colors"
-                                on:click={(e) =>
+                                onclick={(e) =>
                                     toggleFavorite(String(memory.id), e)}
                             >
                                 <Heart
@@ -205,7 +217,7 @@
             <!-- Controls -->
             <button
                 class="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/40 text-white hover:bg-black/60 disabled:opacity-30 backdrop-blur transition-all"
-                on:click={prevImage}
+                onclick={prevImage}
                 disabled={activeIndex === 0}
             >
                 <ChevronLeft size={24} />
@@ -213,7 +225,7 @@
 
             <button
                 class="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/40 text-white hover:bg-black/60 disabled:opacity-30 backdrop-blur transition-all"
-                on:click={nextImage}
+                onclick={nextImage}
                 disabled={activeIndex === memories.length - 1}
             >
                 <ChevronRight size={24} />
@@ -244,11 +256,8 @@
 
                     <button
                         class="p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors mb-1"
-                        on:click={() =>
-                            dispatch(
-                                "toggleFavorite",
-                                memories[activeIndex].id,
-                            )}
+                        onclick={() =>
+                            onToggleFavorite?.(String(memories[activeIndex].id))}
                     >
                         <Heart
                             size={20}
@@ -270,7 +279,7 @@
                             activeIndex
                                 ? 'border-white opacity-100 scale-105'
                                 : 'border-transparent opacity-50 hover:opacity-80'}"
-                            on:click={() => (activeIndex = i)}
+                            onclick={() => (activeIndex = i)}
                         >
                             <img
                                 src={mem.url}
@@ -285,7 +294,7 @@
             <!-- Close Carousel -->
             <button
                 class="absolute top-4 right-4 p-2 bg-black/20 hover:bg-black/40 rounded-full text-white backdrop-blur transition-colors"
-                on:click={() => (viewMode = "grid")}
+                onclick={() => (viewMode = "grid")}
             >
                 <X size={20} />
             </button>

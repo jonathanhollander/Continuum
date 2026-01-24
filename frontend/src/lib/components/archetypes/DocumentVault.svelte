@@ -25,8 +25,8 @@
     import FileUploader from "$lib/components/ui/FileUploader.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
-    import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
-    import { activityLog } from "$lib/stores/activityLog.svelte.ts";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
+    import { activityLog } from "$lib/stores/activityLog.svelte";
     // import { getStored, setStored } from "$lib/stores/persistence";
 
     let { module } = $props();
@@ -52,7 +52,10 @@
         fileData?: string;
     }
 
-    import { registerSync, type SyncManager } from "$lib/services/sync.svelte.ts";
+    import {
+        registerSync,
+        type SyncManager,
+    } from "$lib/services/sync.svelte";
 
     // ...
 
@@ -70,21 +73,21 @@
         }
     });
 
-    let showUpload = false;
-    let showWizard = false;
+    let showUpload = $state(false);
+    let showWizard = $state(false);
 
     // Wizard State
-    let wizardStep = 0;
-    let wizardSelection: Partial<Doc> = {};
-    let analyzingDoc: Doc | null = null;
+    let wizardStep = $state(0);
+    let wizardSelection = $state<Partial<Doc>>({});
+    let analyzingDoc = $state<Doc | null>(null);
 
-    let newDoc: Partial<Doc> & { id?: string } = {
+    let newDoc = $state<Partial<Doc> & { id?: string }>({
         name: "",
         location: "",
         type: "Other",
         status: "verified",
         fileData: "",
-    };
+    });
 
     // Removal of old persistence
     // import { getStored, setStored } from "$lib/stores/persistence";
@@ -294,8 +297,8 @@
                         class="text-sm text-muted-foreground mt-1 max-w-lg leading-relaxed"
                     >
                         {#if docs.length === 0}
-                            Uploading your Will or Trust is the single most
-                            important step you can take today. I can help you
+                            Uploading your Will or Trust is one of the most
+                            meaningful steps you can take today. I can help you
                             file it correctly.
                         {:else if needsReview > 0}
                             Reviewing these documents ensures your current

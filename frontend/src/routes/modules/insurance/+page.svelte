@@ -2,9 +2,9 @@
     import {
         insuranceStore,
         type InsurancePolicy,
-    } from "$lib/stores/insuranceStore.svelte.ts";
-    import { activityLog } from "$lib/stores/activityLog.svelte.ts";
-    import { estateProfile } from "$lib/stores/estateStore.svelte.ts";
+    } from "$lib/stores/insuranceStore.svelte";
+    import { activityLog } from "$lib/stores/activityLog.svelte";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { fade, slide, scale, fly } from "svelte/transition";
     import { quintOut } from "svelte/easing";
     import {
@@ -34,11 +34,14 @@
         Sparkles,
     } from "lucide-svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
+    import GuidanceBlock from "$lib/components/guidance/GuidanceBlock.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
+    import UniversalUploader from "$lib/components/ui/UniversalUploader.svelte";
+    import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
 
     // Concierge Imports
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
-    import { t, language } from "$lib/stores/localization.ts";
+    import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
 
     let showAddModal = $state(false);
@@ -46,6 +49,7 @@
     let searchQuery = $state("");
     let filterType = $state("All");
     let showWizard = $state(false);
+    let parsedCustomAttributes = $state<Record<string, any>>({});
 
     let newPolicy = $state<Partial<InsurancePolicy>>({
         policyName: "",
@@ -178,10 +182,17 @@
         };
         showAddModal = false;
         isEditing = false;
+        parsedCustomAttributes = {};
     }
 
     async function handleAddPolicy() {
         if (!newPolicy.policyName || !newPolicy.insurer) return;
+
+        // Serialize custom attributes
+        const policyData = {
+            ...newPolicy,
+            custom_attributes: JSON.stringify(parsedCustomAttributes)
+        };
 
         if (isEditing && newPolicy.id) {
             const oldPolicy = insuranceStore.getPolicy(newPolicy.id);
@@ -208,7 +219,7 @@
                     });
             }
 
-            insuranceStore.updatePolicy(newPolicy.id, newPolicy);
+            insuranceStore.updatePolicy(newPolicy.id, policyData);
 
             activityLog.logEvent({
                 module: "Insurance",
@@ -221,7 +232,7 @@
             });
         } else {
             const created = await insuranceStore.addPolicy(
-                newPolicy as Omit<InsurancePolicy, "id">,
+                policyData as Omit<InsurancePolicy, "id">,
             );
 
             activityLog.logEvent({
@@ -239,6 +250,12 @@
 
     function editPolicy(policy: InsurancePolicy) {
         newPolicy = { ...policy };
+        // Parse custom attributes for editing
+        try {
+            parsedCustomAttributes = JSON.parse(policy.custom_attributes || "{}");
+        } catch {
+            parsedCustomAttributes = {};
+        }
         isEditing = true;
         showAddModal = true;
     }
@@ -320,29 +337,35 @@
                 <Shield size={14} />
                 <span>Concierge v4.0</span>
                 <ChevronRight size={12} />
-                <span class="text-indigo-600">Insurance Portfolio</span>
+                <span class="text-primary">Insurance Portfolio</span>
             </nav>
             <div>
                 <h1
                     class="text-4xl font-extrabold text-slate-900 tracking-tight mb-2"
                 >
-                    Protecting <span class="text-indigo-600 font-light italic"
+                    Protecting <span class="text-primary font-light italic"
                         >Your</span
                     > Loved Ones
                 </h1>
-                <p class="text-slate-500 max-w-2xl text-lg leading-relaxed">
+                <p
+                    class="text-slate-500 max-w-2xl text-lg leading-relaxed mb-6"
+                >
                     Life insurance and protection policies are acts of love.
                     They ensure your family has financial security when you're
                     no longer here to provide it, bridging the gap when they
                     need it most.
                 </p>
+                <GuidanceBlock
+                    detailedDescription="Insurance is your family's safety net. By organizing policy details here, you ensure that if the unexpected happens, coverage can be claimed quickly and without added stress."
+                    whyMatters="Billions in insurance benefits go unclaimed every year simply because beneficiaries didn't know policies existed. Cataloging them here guarantees your foresight protects those you love."
+                />
             </div>
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
             <button
                 onclick={() => (showWizard = true)}
-                class="flex items-center gap-2 px-5 py-3 border border-indigo-100 text-indigo-700 font-bold rounded-2xl hover:bg-indigo-50 transition-colors"
+                class="flex items-center gap-2 px-5 py-3 border border-primary/10 text-primary font-bold rounded-2xl hover:bg-primary/5 transition-colors"
             >
                 <Sparkles size={18} />
                 {$t("wizard.start")}
@@ -356,8 +379,8 @@
                         onclick={() => (filterType = type)}
                         class="px-4 py-2 rounded-xl text-xs font-bold tracking-wider transition-all {filterType ===
                         type
-                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
-                            : 'text-slate-500 hover:text-indigo-600 hover:bg-slate-50'}"
+                            ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                            : 'text-slate-500 hover:text-primary hover:bg-slate-50'}"
                     >
                         {type}
                     </button>
@@ -369,7 +392,7 @@
                 class="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-2xl transition-all shadow-xl shadow-slate-900/10 font-bold"
             >
                 <Plus size={20} />
-                Add Protection
+                Share Protection
             </button>
         </div>
     </header>
@@ -406,12 +429,12 @@
         >
             <div class="flex items-start justify-between mb-4">
                 <div
-                    class="p-3 bg-indigo-50 rounded-2xl text-indigo-600 group-hover:scale-110 transition-transform"
+                    class="p-3 bg-primary/10 rounded-2xl text-primary group-hover:scale-110 transition-transform"
                 >
                     <Activity size={24} />
                 </div>
                 <div
-                    class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-1 rounded-lg font-bold"
+                    class="text-[10px] bg-primary/20 text-primary px-2 py-1 rounded-lg font-bold"
                 >
                     MONTHLY
                 </div>
@@ -487,7 +510,7 @@
                 type="text"
                 bind:value={searchQuery}
                 placeholder="Search policy name, carrier, or type..."
-                class="w-full bg-white border border-slate-200 rounded-2xl py-3 pl-12 pr-4 text-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all shadow-sm"
+                class="w-full bg-white border border-slate-200 rounded-2xl py-3 pl-12 pr-4 text-sm focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all shadow-sm"
             />
         </div>
         <div class="flex items-center gap-2">
@@ -496,7 +519,7 @@
                 >Showing {filteredPolicies.length} Policies</span
             >
             <button
-                class="p-3 bg-white border border-slate-200 rounded-2xl text-slate-500 hover:text-indigo-600 transition-colors shadow-sm"
+                class="p-3 bg-white border border-slate-200 rounded-2xl text-slate-500 hover:text-primary transition-colors shadow-sm"
             >
                 <Download size={18} />
             </button>
@@ -530,7 +553,7 @@
                             </div>
                             <div>
                                 <h3
-                                    class="text-xl font-black text-slate-900 leading-tight group-hover:text-indigo-600 transition-colors"
+                                    class="text-xl font-black text-slate-900 leading-tight group-hover:text-primary transition-colors"
                                 >
                                     {policy.policyName}
                                 </h3>
@@ -546,7 +569,7 @@
                         >
                             <button
                                 onclick={() => editPolicy(policy)}
-                                class="p-3 bg-slate-50 hover:bg-indigo-50 text-slate-400 hover:text-indigo-600 rounded-2xl transition-all"
+                                class="p-3 bg-slate-50 hover:bg-primary/5 text-slate-400 hover:text-primary rounded-2xl transition-all"
                             >
                                 <Pencil size={18} />
                             </button>
@@ -663,7 +686,7 @@
                 <!-- Card Footer / Claims Procedure CTA -->
                 <div class="mt-auto p-2">
                     <div
-                        class="bg-indigo-600 rounded-[2rem] p-6 text-white flex items-center justify-between group/footer hover:bg-slate-900 transition-colors duration-500 cursor-pointer"
+                        class="bg-primary rounded-[2rem] p-6 text-white flex items-center justify-between group/footer hover:bg-slate-900 transition-colors duration-500 cursor-pointer"
                     >
                         <div>
                             <p
@@ -721,7 +744,7 @@
             <div class="p-10 pb-0 flex items-center justify-between">
                 <div>
                     <nav
-                        class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600 mb-3"
+                        class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-3"
                     >
                         <Heart size={12} />
                         <span>Acts of Love</span>
@@ -729,8 +752,8 @@
                     <h2
                         class="text-4xl font-black text-slate-900 tracking-tighter"
                     >
-                        {isEditing ? "Update" : "Document"}
-                        <span class="text-indigo-600">Protection</span>
+                        {isEditing ? "Update" : "Share"}
+                        <span class="text-primary">Protection Details</span>
                     </h2>
                 </div>
                 <button
@@ -747,7 +770,7 @@
                     <h3
                         class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3"
                     >
-                        <span class="w-6 h-[2px] bg-indigo-600 rounded-full"
+                        <span class="w-6 h-[2px] bg-primary rounded-full"
                         ></span>
                         Policy Identity
                     </h3>
@@ -763,7 +786,7 @@
                                 type="text"
                                 bind:value={newPolicy.policyName}
                                 placeholder="e.g. Master Life Policy"
-                                class="w-full bg-slate-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all"
+                                class="w-full bg-slate-50 border-2 border-transparent focus:border-primary focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all"
                             />
                         </div>
                         <div class="space-y-3">
@@ -773,7 +796,7 @@
                             >
                             <select
                                 bind:value={newPolicy.insuranceType}
-                                class="w-full bg-slate-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all appearance-none cursor-pointer"
+                                class="w-full bg-slate-50 border-2 border-transparent focus:border-primary focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all appearance-none cursor-pointer"
                             >
                                 {#each types.filter((t) => t !== "All") as type}
                                     <option value={type}>{type}</option>
@@ -791,6 +814,39 @@
                                 placeholder="e.g. Prudential Financial"
                                 class="w-full bg-slate-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all"
                             />
+                        </div>
+                    </div>
+
+                    <!-- NEW: Policy Document Upload -->
+                    <div class="mt-8">
+                        <h3
+                            class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-3"
+                        >
+                            <span class="w-6 h-[2px] bg-indigo-600 rounded-full"
+                            ></span>
+                            Policy Documentation
+                        </h3>
+                        <div
+                            class="bg-indigo-50/30 rounded-2xl p-6 border border-indigo-100/50"
+                        >
+                            <UniversalUploader
+                                label="Upload Policy Document (PDF/Text/Image)"
+                                mode="any"
+                                module="insurance"
+                                category="financial"
+                                bind:value={newPolicy.policyDocuments}
+                            />
+                            {#if newPolicy.policyDocuments}
+                                <div
+                                    class="mt-2 text-xs text-slate-500 font-medium flex items-center gap-1"
+                                >
+                                    <CircleCheck
+                                        size={12}
+                                        class="text-green-500"
+                                    />
+                                    Document secured in vault
+                                </div>
+                            {/if}
                         </div>
                     </div>
                 </section>
@@ -916,6 +972,20 @@
                             ></textarea>
                         </div>
                     </div>
+                </section>
+
+                <!-- Custom Fields Section -->
+                <section>
+                    <h3
+                        class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3"
+                    >
+                        <span class="w-6 h-[2px] bg-indigo-500 rounded-full"></span>
+                        Additional Details
+                    </h3>
+                    <CustomFieldsManager
+                        entityType="insurance"
+                        bind:data={parsedCustomAttributes}
+                    />
                 </section>
             </div>
 

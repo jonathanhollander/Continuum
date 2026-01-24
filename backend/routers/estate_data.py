@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Body
 from backend.limiter import limiter
 from sqlmodel import Session, select
 from typing import List, Any, Dict, Optional
 from pydantic import BaseModel, field_validator, model_validator
+import json
 from backend.database import get_session, User
 from backend.auth import get_current_user
 from backend.estate_models import (
@@ -10,7 +11,7 @@ from backend.estate_models import (
     Document, Letter, JournalEntry, Subscription, CalendarEvent,
     InsurancePolicy, MedicalDirective, Pet, ContactRelationship,
     MedicalProfile, LifeEvent, TimeCapsuleMessage, FuneralData,
-    AdvancedAssetData
+    AdvancedAssetData, UserCustomFieldDefinition
 )
 from backend.models.activity_models import ActivityLogEntry
 from backend.models.qr_models import QRAccessPack, QRAssetLabel
@@ -112,11 +113,13 @@ MODEL_MAP = {
     "digital_assets": Asset,
     "heirlooms": Asset,
     "financial_accounts": FinancialAccount,
+    "financial_assets": FinancialAccount,
     "vendors": Vendor,
     "home_access": HomeAccess,
     "utilities": Utility,
     "documents": Document,
     "letters": Letter,
+    "future_letters": Letter,  # Alias for frontend SyncManager endpoint
     "journal_entries": JournalEntry,
     "subscriptions": Subscription,
     "medical_profiles": MedicalProfile,
@@ -131,6 +134,57 @@ MODEL_MAP = {
     "acceptance_tasks": AcceptanceTask,
     "automation_rules": AutomationRule
 }
+
+# --- CUSTOM FIELD DEFINITIONS ---
+# NOTE: These routes must be declared BEFORE the generic /{data_type} routes
+# so that FastAPI matches them correctly.
+
+class CustomFieldDefCreate(BaseModel):
+    entity_type: str
+    name: str
+    field_type: str = "text"
+    options: Optional[str] = None
+    order: int = 0
+
+@router.get("/custom-fields/{entity_type}", summary="Get custom field definitions")
+def get_custom_field_definitions(entity_type: str, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    """Get all custom field definitions for a specific entity type."""
+    statement = select(UserCustomFieldDefinition).where(
+        UserCustomFieldDefinition.user_id == user.id,
+        UserCustomFieldDefinition.entity_type == entity_type
+    ).order_by(UserCustomFieldDefinition.order)
+    return session.exec(statement).all()
+
+@router.post("/custom-fields", summary="Create custom field definition")
+def create_custom_field_definition(field_def: CustomFieldDefCreate, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    """Create a new custom field definition."""
+    try:
+        db_def = UserCustomFieldDefinition(
+            user_id=user.id,
+            **field_def.model_dump()
+        )
+        session.add(db_def)
+        session.commit()
+        session.refresh(db_def)
+        return db_def
+    except Exception as e:
+        logger.error(f"Failed to create custom field definition: {e}", exc_info=True)
+        raise HTTPException(status_code=400, detail="Could not create field definition")
+
+@router.delete("/custom-fields/{field_id}", summary="Delete custom field definition")
+def delete_custom_field_definition(field_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    """Delete a custom field definition."""
+    db_def = session.get(UserCustomFieldDefinition, field_id)
+    if not db_def:
+        raise HTTPException(status_code=404, detail="Field definition not found")
+    if db_def.user_id != user.id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    session.delete(db_def)
+    session.commit()
+    return {"status": "deleted"}
+
+# --- GENERIC ESTATE DATA ROUTES ---
 
 @router.get("/{data_type}", summary="Get estate items", response_model=List[Any])
 def get_items(data_type: str, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
@@ -158,17 +212,39 @@ def _log_estate_action(session: Session, request: Request, action: str, user: Us
 
 @router.post("/{data_type}", summary="Create estate item")
 @limiter.limit("30/minute")
-def create_item(request: Request, data_type: str, item: EstateItemCreate, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+def create_item(
+    request: Request,
+    data_type: str,
+    body: Dict[str, Any] = Body(...),
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
     """
     Create a new estate item with validation and audit logging.
+    Accepts raw JSON body (no wrapper needed).
     """
     model = MODEL_MAP.get(data_type)
     if not model:
         raise HTTPException(status_code=400, detail=f"Invalid type: {data_type}")
 
     try:
-        validated_data = item.data.copy()
+        # Support both raw body and wrapped { data: {...} } format for backwards compatibility
+        if "data" in body and isinstance(body["data"], dict) and len(body) == 1:
+            validated_data = body["data"].copy()
+        else:
+            validated_data = body.copy()
+
+        # Validate input - check for protected fields
+        protected_found = PROTECTED_FIELDS & set(validated_data.keys())
+        if protected_found:
+            raise ValueError(f"Cannot set protected fields: {protected_found}")
+
+        # Add user_id
         validated_data["user_id"] = user.id
+
+        # Serialize custom_attributes if provided as dict
+        if "custom_attributes" in validated_data and isinstance(validated_data["custom_attributes"], dict):
+            validated_data["custom_attributes"] = json.dumps(validated_data["custom_attributes"])
 
         db_item = model.model_validate(validated_data)
         session.add(db_item)
@@ -181,13 +257,22 @@ def create_item(request: Request, data_type: str, item: EstateItemCreate, user: 
         raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
         logger.error(f"Failed to create {data_type} item: {e}", exc_info=True)
-        raise HTTPException(status_code=400, detail="Could not create item")
+        # Include detailed error for debugging (TODO: limit this to dev mode)
+        raise HTTPException(status_code=400, detail=f"Could not create item: {str(e)}")
 
 @router.put("/{data_type}/{item_id}", summary="Update estate item")
 @limiter.limit("30/minute")
-def update_item(request: Request, data_type: str, item_id: int, updates: EstateItemUpdate, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+def update_item(
+    request: Request,
+    data_type: str,
+    item_id: int,
+    body: Dict[str, Any] = Body(...),
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
     """
     Update an existing estate item with validation and audit logging.
+    Accepts raw JSON body (no wrapper needed).
     """
     model = MODEL_MAP.get(data_type)
     if not model:
@@ -200,7 +285,21 @@ def update_item(request: Request, data_type: str, item_id: int, updates: EstateI
         if getattr(db_item, "user_id") != user.id:
             raise HTTPException(status_code=403, detail="Not authorized")
 
-        for key, value in updates.data.items():
+        # Support both raw body and wrapped { data: {...} } format for backwards compatibility
+        if "data" in body and isinstance(body["data"], dict) and len(body) == 1:
+            updates = body["data"]
+        else:
+            updates = body
+
+        # Validate input - check for protected fields
+        protected_found = PROTECTED_FIELDS & set(updates.keys())
+        if protected_found:
+            raise ValueError(f"Cannot update protected fields: {protected_found}")
+
+        for key, value in updates.items():
+            if key == "custom_attributes" and isinstance(value, dict):
+                value = json.dumps(value)
+
             if hasattr(db_item, key):
                 setattr(db_item, key, value)
 
@@ -212,6 +311,8 @@ def update_item(request: Request, data_type: str, item_id: int, updates: EstateI
         return db_item
     except HTTPException:
         raise
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
         logger.error(f"Failed to update {data_type} item {item_id}: {e}", exc_info=True)
         raise HTTPException(status_code=400, detail="Could not update item")

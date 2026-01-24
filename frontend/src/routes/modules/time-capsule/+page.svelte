@@ -5,7 +5,7 @@
         COMMON_MILESTONES,
         type TimeCapsuleMessage,
         type ReleaseTrigger,
-    } from "$lib/stores/timeCapsuleStore.svelte.ts";
+    } from "$lib/stores/timeCapsuleStore.svelte";
     import {
         Lock,
         Unlock,
@@ -27,17 +27,19 @@
     import VideoRecorder from "$lib/components/media/VideoRecorder.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
     import { mediaStorage } from "$lib/services/indexedDB";
+    import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
 
-    let showAddModal = false;
-    let isRecording = false;
-    let recordedMediaId: string | null = null;
-    let newMessage: Partial<TimeCapsuleMessage> = {
+    let showAddModal = $state(false);
+    let parsedCustomAttributes = $state<Record<string, any>>({});
+    let isRecording = $state(false);
+    let recordedMediaId = $state<string | null>(null);
+    let newMessage = $state<Partial<TimeCapsuleMessage>>({
         title: "",
         recipient: "",
         contentPreview: "",
         triggerType: "date",
         triggerValue: "",
-    };
+    });
 
     async function handleAdd() {
         if (
@@ -50,6 +52,7 @@
         const messageToAdd = {
             ...newMessage,
             mediaId: recordedMediaId,
+            custom_attributes: JSON.stringify(parsedCustomAttributes),
         };
 
         timeCapsuleStore.addMessage(messageToAdd as any);
@@ -65,6 +68,7 @@
         recordedMediaId = null;
         isRecording = false;
         showAddModal = false;
+        parsedCustomAttributes = {};
     }
 
     async function handleSaveVideo(event: CustomEvent<Blob>) {
@@ -74,7 +78,7 @@
         isRecording = false;
     }
 
-    let activeVideoUrl: string | null = null;
+    let activeVideoUrl = $state<string | null>(null);
     async function playVideo(mediaId: string) {
         if (!mediaId) return;
         const url = await mediaStorage.getUrl(mediaId);
@@ -437,6 +441,14 @@
                             ></textarea>
                         </div>
                     {/if}
+                </div>
+
+                <!-- Custom Fields -->
+                <div class="pt-4 mt-4 border-t border-slate-200">
+                    <CustomFieldsManager
+                        entityType="timecapsule"
+                        bind:data={parsedCustomAttributes}
+                    />
                 </div>
 
                 <div class="flex gap-4">

@@ -3,8 +3,8 @@
     import { Tag, Plus, Filter, Search, X } from "lucide-svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
-    import { registerSync } from "$lib/services/sync.svelte.ts";
-    import { activityLog } from "$lib/stores/activityLog.svelte.ts";
+    import { registerSync } from "$lib/services/sync.svelte";
+    import { activityLog } from "$lib/stores/activityLog.svelte";
 
     // --- Types ---
     interface Lesson {
