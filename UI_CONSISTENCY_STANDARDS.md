@@ -416,11 +416,12 @@ When a field can be populated by the AI Concierge:
 | 7 | Empty State | **MANDATORY** | `EmptyState` | Guidance when no data exists |
 | 8 | Success Feedback | **MANDATORY** | `Affirmation` | Positive reinforcement |
 | 9 | Loading State | **MANDATORY** | Skeleton/Spinner | Sync progress indicator |
-| 10 | Search/Filter | **RECOMMENDED** | Search bar + filters | Find data quickly |
-| 11 | Stats Dashboard | **RECOMMENDED** | Stat cards | Progress visibility |
-| 12 | Export Options | **RECOMMENDED** | Download/Print buttons | Data portability |
-| 13 | Contextual Help | **RECOMMENDED** | Info banners/tooltips | In-context guidance |
-| 14 | Error Handling | **MANDATORY** | Error dialog/banner | Graceful failure states |
+| 10 | **Custom Fields** | **MANDATORY** | `CustomFieldsManager` | User-extensible data fields |
+| 11 | Search/Filter | **RECOMMENDED** | Search bar + filters | Find data quickly |
+| 12 | Stats Dashboard | **RECOMMENDED** | Stat cards | Progress visibility |
+| 13 | Export Options | **RECOMMENDED** | Download/Print buttons | Data portability |
+| 14 | Contextual Help | **RECOMMENDED** | Info banners/tooltips | In-context guidance |
+| 15 | Error Handling | **MANDATORY** | Error dialog/banner | Graceful failure states |
 
 ### 5.2 Page Header (MANDATORY)
 
@@ -947,7 +948,163 @@ Provide in-context help throughout the page.
 </div>
 ```
 
-### 5.14 Complete Data Page Template
+### 5.14 Custom Fields Manager (MANDATORY)
+
+**CRITICAL:** Every add/edit modal MUST include the `CustomFieldsManager` component to allow users to add custom data fields. This is a core Continuum feature that enables users to capture information specific to their unique situations.
+
+#### 5.14.1 Component Integration
+
+**File:** `frontend/src/lib/components/CustomFieldsManager.svelte`
+
+```svelte
+<script lang="ts">
+  import CustomFieldsManager from "$lib/components/CustomFieldsManager.svelte";
+
+  // State for custom fields
+  let customFields = $state<Record<string, string>>({});
+</script>
+
+<!-- Inside your add/edit modal, after all standard form fields -->
+<div class="border-t border-slate-100 pt-4 mt-4">
+  <CustomFieldsManager
+    entityType="module_name"
+    bind:customFields
+  />
+</div>
+```
+
+#### 5.14.2 Required Props
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `entityType` | string | Module identifier (e.g., "contacts", "pets", "heirlooms") |
+| `customFields` | Record<string, string> | Bound object for custom field key-value pairs |
+
+#### 5.14.3 Backend Database Requirement
+
+**CRITICAL:** Each module's database table MUST have a `custom_attributes` column of JSON type to store custom fields.
+
+**SQLModel Definition:**
+```python
+from sqlalchemy import JSON, Column
+from sqlmodel import Field, SQLModel
+from typing import Optional, Dict, Any
+
+class ModuleName(SQLModel, table=True):
+    # ... existing fields ...
+    custom_attributes: Optional[Dict[str, Any]] = Field(
+        default=None,
+        sa_column=Column(JSON)
+    )
+```
+
+#### 5.14.4 Alembic Migration (Required for Each Module)
+
+For **LOCAL (SQLite)** and **Railway (PostgreSQL)**, create a migration:
+
+```python
+# backend/alembic/versions/xxx_add_custom_attributes_to_modulename.py
+"""Add custom_attributes to modulename table
+
+Revision ID: xxx
+Revises: previous_revision
+Create Date: YYYY-MM-DD
+"""
+from alembic import op
+import sqlalchemy as sa
+
+def upgrade():
+    op.add_column('table_name', sa.Column('custom_attributes', sa.JSON(), nullable=True))
+
+def downgrade():
+    op.drop_column('table_name', 'custom_attributes')
+```
+
+**Commands:**
+```bash
+# Generate migration
+alembic revision --autogenerate -m "add custom_attributes to modulename"
+
+# Apply locally (SQLite)
+alembic upgrade head
+
+# Apply to Railway (PostgreSQL)
+railway run alembic upgrade head
+```
+
+#### 5.14.5 Saving Custom Fields
+
+When saving data, include custom fields in the payload:
+
+```svelte
+<script>
+  async function saveItem() {
+    const payload = {
+      ...formData,
+      custom_attributes: customFields  // Include custom fields
+    };
+
+    await store.create(payload);
+    showAffirmation = true;
+  }
+</script>
+```
+
+#### 5.14.6 Loading Custom Fields (Edit Mode)
+
+When editing, populate custom fields from existing data:
+
+```svelte
+<script>
+  function editItem(item) {
+    // ... populate standard fields ...
+    customFields = item.custom_attributes || {};
+    showEditModal = true;
+  }
+</script>
+```
+
+#### 5.14.7 Modules Missing CustomFieldsManager (Action Required)
+
+The following 20 modules need CustomFieldsManager added:
+
+| Module | Backend Table | Migration Status |
+|--------|--------------|------------------|
+| activity-log | activity_log | Needed |
+| analytics | (view only) | N/A |
+| anniversary-manager | anniversaries | Needed |
+| builders-console | (admin) | N/A |
+| digital-guardian | digital_guardians | Needed |
+| executor-guide | (read only) | N/A |
+| executor-toolkit | executor_tasks | Needed |
+| family-hub | family_members | Needed |
+| financial-accounts | financial_accounts | Needed |
+| home-manual | home_items | Needed |
+| legacy-journal | journal_entries | Needed |
+| legal-documents | legal_documents | Needed |
+| letters | letters | Needed |
+| pulse | pulse_settings | N/A (settings) |
+| qr-codes | qr_codes | Needed |
+| scenario-mode | (interactive) | N/A |
+| simulator | (interactive) | N/A |
+| treasure-hunt | treasures | Needed |
+| visual-memories | memories | Needed |
+
+**Modules WITH CustomFieldsManager (12 total):**
+- advanced-registry ✓
+- calendar ✓
+- contacts ✓
+- funeral ✓
+- heirlooms ✓
+- insurance ✓
+- medical ✓
+- pets ✓
+- property ✓
+- subscriptions ✓
+- time-capsule ✓
+- timeline ✓
+
+### 5.15 Complete Data Page Template
 
 Here is a complete template showing all required elements:
 
@@ -963,6 +1120,7 @@ Here is a complete template showing all required elements:
   import EmptyState from "$lib/components/EmptyState.svelte";
   import Affirmation from "$lib/components/Affirmation.svelte";
   import Modal from "$lib/components/ui/Modal.svelte";
+  import CustomFieldsManager from "$lib/components/CustomFieldsManager.svelte";  // MANDATORY
 
   // Store
   import { myStore } from "$lib/stores/myStore.svelte";
@@ -973,6 +1131,7 @@ Here is a complete template showing all required elements:
   let isLoading = $state(true);
   let error = $state<string | null>(null);
   let searchQuery = $state("");
+  let customFields = $state<Record<string, string>>({});  // MANDATORY for custom fields
 
   // Derived
   let items = $derived(myStore.items);
@@ -1099,38 +1258,67 @@ Here is a complete template showing all required elements:
 
 <!-- ADD/EDIT MODAL (MANDATORY) -->
 <Modal bind:open={showAddModal} title="Add New Item" maxWidth="max-w-lg">
-  <!-- Form content -->
+  <div class="p-6 space-y-4">
+    <!-- Standard form fields here -->
+    <div class="space-y-1.5">
+      <label class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1">Name</label>
+      <input type="text" class="w-full px-4 py-3 rounded-xl border border-slate-200" />
+    </div>
+
+    <!-- 10. CUSTOM FIELDS MANAGER (MANDATORY) -->
+    <div class="border-t border-slate-100 pt-4 mt-4">
+      <CustomFieldsManager
+        entityType="mymodule"
+        bind:customFields
+      />
+    </div>
+  </div>
+
+  <!-- Modal Footer -->
+  <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+    <button class="px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-200">
+      Not right now
+    </button>
+    <button class="px-6 py-2.5 rounded-xl font-semibold bg-primary text-primary-foreground shadow-lg">
+      Save my thoughts
+    </button>
+  </div>
 </Modal>
 ```
 
-### 5.15 Data Page Compliance Matrix
+### 5.16 Data Page Compliance Matrix
 
 Current compliance status across modules:
 
-| Module | Header | Add Btn | AI | Display | Edit/Del | Empty | Affirm | Load | Error | Search | Stats |
-|--------|--------|---------|-----|---------|----------|-------|--------|------|-------|--------|-------|
-| contacts | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ~ | ✗ | ✓ |
-| medical | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ | ✗ | ~ | ✗ | ✗ |
-| pets | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ | ✗ | ~ | ✗ | ✗ |
-| heirlooms | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | ~ | ✓ | ✗ |
-| financial | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | ~ | ~ | ✗ | ✓ |
-| letters | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | ✓ | ✓ | ✓ | ✗ |
-| property | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | ~ | ~ | ~ | ✓ | ✓ |
-| insurance | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ~ | ~ | ✓ | ✓ |
-| digital-guardian | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | ~ | ~ | ✗ | ✗ |
-| anniversary | ✓ | ✓ | ✗ | ✓ | ✓ | ~ | ~ | ~ | ~ | ✗ | ✗ |
-| time-capsule | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ~ | ~ | ✗ | ✗ |
-| legacy-journal | ✓ | ✗ | ✗ | ✓ | ~ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| subscriptions | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ✗ | ~ | ✗ | ✓ |
-| visual-memories | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ✗ | ~ | ~ | ✗ |
+| Module | Header | Add Btn | AI | Display | Edit/Del | Empty | Affirm | Load | Error | **CustomFields** | Search | Stats |
+|--------|--------|---------|-----|---------|----------|-------|--------|------|-------|------------------|--------|-------|
+| contacts | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ~ | **✓** | ✗ | ✓ |
+| medical | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ | ✗ | ~ | **✓** | ✗ | ✗ |
+| pets | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ | ✗ | ~ | **✓** | ✗ | ✗ |
+| heirlooms | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | ~ | **✓** | ✓ | ✗ |
+| financial | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | ~ | ~ | **✗** | ✗ | ✓ |
+| letters | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | ✓ | ✓ | **✗** | ✓ | ✗ |
+| property | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | ~ | ~ | ~ | **✓** | ✓ | ✓ |
+| insurance | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ~ | ~ | **✓** | ✓ | ✓ |
+| digital-guardian | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | ~ | ~ | **✗** | ✗ | ✗ |
+| anniversary | ✓ | ✓ | ✗ | ✓ | ✓ | ~ | ~ | ~ | ~ | **✗** | ✗ | ✗ |
+| time-capsule | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ~ | ~ | **✓** | ✗ | ✗ |
+| legacy-journal | ✓ | ✗ | ✗ | ✓ | ~ | ✗ | ✗ | ✗ | ✗ | **✗** | ✗ | ✗ |
+| subscriptions | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ✗ | ~ | **✓** | ✗ | ✓ |
+| visual-memories | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ✗ | ~ | **✗** | ~ | ✗ |
+| calendar | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ~ | ~ | **✓** | ✗ | ✗ |
+| funeral | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ~ | ~ | **✓** | ✗ | ✗ |
+| timeline | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ~ | ~ | **✓** | ✗ | ✗ |
+| advanced-registry | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ~ | ~ | **✓** | ✗ | ✗ |
 
 **Legend:** ✓ = Compliant, ~ = Partial, ✗ = Missing
 
 **Priority fixes needed:**
-1. Add AI Helper to: medical, pets, anniversary, time-capsule, legacy-journal, subscriptions, visual-memories
-2. Add Loading States to: ALL modules
-3. Add Affirmation to: financial, letters, property, insurance, digital-guardian, anniversary, time-capsule, subscriptions, visual-memories
-4. Add Search to: medical, pets, contacts, financial, digital-guardian, anniversary, time-capsule, legacy-journal
+1. **Add CustomFieldsManager to:** financial, letters, digital-guardian, anniversary, legacy-journal, visual-memories, family-hub, executor-toolkit, home-manual, legal-documents, qr-codes, treasure-hunt (12 data modules missing)
+2. Add AI Helper to: medical, pets, anniversary, time-capsule, legacy-journal, subscriptions, visual-memories
+3. Add Loading States to: ALL modules
+4. Add Affirmation to: financial, letters, property, insurance, digital-guardian, anniversary, time-capsule, subscriptions, visual-memories
+5. Add Search to: medical, pets, contacts, financial, digital-guardian, anniversary, time-capsule, legacy-journal
 
 ---
 

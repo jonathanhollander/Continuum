@@ -18,7 +18,7 @@ This document provides a detailed, file-by-file implementation plan to bring all
 
 ### Required Elements Checklist
 
-Every module page MUST have these 10 elements:
+Every module page MUST have these 11 elements:
 
 | # | Element | Component | What It Does |
 |---|---------|-----------|--------------|
@@ -31,26 +31,31 @@ Every module page MUST have these 10 elements:
 | 7 | Empty State | `EmptyState` | Guidance when no data |
 | 8 | Success Feedback | `Affirmation` | Positive reinforcement |
 | 9 | Loading State | Spinner/Skeleton | Sync progress indicator |
-| 10 | Error Handling | Error banner | Graceful failure states |
+| 10 | **Custom Fields** | `CustomFieldsManager` | User-extensible data fields **(MANDATORY)** |
+| 11 | Error Handling | Error banner | Graceful failure states |
 
-### Current Compliance Matrix (15 Modules)
+### Current Compliance Matrix (18 Modules)
 
-| Module | Header | Explain | Add | AI | View | Edit | Empty | Affirm | Load | Error |
-|--------|--------|---------|-----|-----|------|------|-------|--------|------|-------|
-| contacts | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ~ |
-| medical | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ | ✗ | ~ |
-| pets | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ | ✗ | ~ |
-| heirlooms | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | ~ |
-| financial | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | ~ | ~ |
-| letters | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | ✓ | ✓ |
-| property | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | ~ | ~ | ~ |
-| insurance | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ~ | ~ |
-| digital-guardian | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | ~ | ~ |
-| anniversary | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ~ | ~ | ~ | ~ |
-| time-capsule | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ~ | ~ |
-| legacy-journal | ✓ | ✗ | ✗ | ✗ | ✓ | ~ | ✗ | ✗ | ✗ | ✗ |
-| subscriptions | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ✗ | ~ |
-| visual-memories | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ✗ | ~ |
+| Module | Header | Explain | Add | AI | View | Edit | Empty | Affirm | Load | **CustomFields** | Error |
+|--------|--------|---------|-----|-----|------|------|-------|--------|------|------------------|-------|
+| contacts | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | **✓** | ~ |
+| medical | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ | ✗ | **✓** | ~ |
+| pets | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ | ✗ | **✓** | ~ |
+| heirlooms | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | **✓** | ~ |
+| financial | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | ~ | **✗** | ~ |
+| letters | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | ✓ | **✗** | ✓ |
+| property | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | ~ | ~ | **✓** | ~ |
+| insurance | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ~ | **✓** | ~ |
+| digital-guardian | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | ~ | **✗** | ~ |
+| anniversary | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ~ | ~ | ~ | **✗** | ~ |
+| time-capsule | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ~ | **✓** | ~ |
+| legacy-journal | ✓ | ✗ | ✗ | ✗ | ✓ | ~ | ✗ | ✗ | ✗ | **✗** | ✗ |
+| subscriptions | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ✗ | **✓** | ~ |
+| visual-memories | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ✗ | **✗** | ~ |
+| calendar | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ~ | **✓** | ~ |
+| funeral | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ~ | **✓** | ~ |
+| timeline | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ~ | **✓** | ~ |
+| advanced-registry | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ~ | **✓** | ~ |
 
 **Legend:** ✓ = Compliant, ~ = Partial, ✗ = Missing
 
@@ -58,6 +63,7 @@ Every module page MUST have these 10 elements:
 
 | Gap | % Missing | Modules Affected | Priority |
 |-----|-----------|-----------------|----------|
+| **CustomFieldsManager** | **38%** | **7 data modules** | **P0** |
 | Loading States | 87% | 13 modules | **P0** |
 | AI Helper | 53% | 8 modules | **P0** |
 | Affirmation | 60% | 9 modules | **P1** |
@@ -169,6 +175,127 @@ Every module page MUST have these 10 elements:
 7. Loading state
 
 **This module needs complete rewrite to match Data Page Blueprint template.**
+
+#### 0.5 Add CustomFieldsManager to ALL Data Modules (CRITICAL)
+
+**CRITICAL:** Every add/edit modal MUST include CustomFieldsManager to allow users to capture custom data fields.
+
+**Pattern to implement:**
+```svelte
+<script>
+  import CustomFieldsManager from "$lib/components/CustomFieldsManager.svelte";
+
+  let customFields = $state<Record<string, string>>({});
+</script>
+
+<!-- Inside modal, after standard form fields -->
+<div class="border-t border-slate-100 pt-4 mt-4">
+  <CustomFieldsManager
+    entityType="modulename"
+    bind:customFields
+  />
+</div>
+```
+
+**Include in save operation:**
+```svelte
+async function saveItem() {
+  const payload = {
+    ...formData,
+    custom_attributes: customFields  // Include custom fields!
+  };
+  await store.create(payload);
+}
+```
+
+**Modules ALREADY compliant (12 modules):**
+- ✓ advanced-registry
+- ✓ calendar
+- ✓ contacts
+- ✓ funeral
+- ✓ heirlooms
+- ✓ insurance
+- ✓ medical
+- ✓ pets
+- ✓ property
+- ✓ subscriptions
+- ✓ time-capsule
+- ✓ timeline
+
+**Modules REQUIRING CustomFieldsManager (20 modules):**
+
+| Module | File | Backend Table | Migration Needed |
+|--------|------|---------------|------------------|
+| activity-log | `activity-log/+page.svelte` | activity_log | Yes |
+| analytics | `analytics/+page.svelte` | (view only) | N/A |
+| anniversary-manager | `anniversary-manager/+page.svelte` | anniversaries | Yes |
+| builders-console | `builders-console/+page.svelte` | (admin) | N/A |
+| digital-guardian | `digital-guardian/+page.svelte` | digital_guardians | Yes |
+| executor-guide | `executor-guide/+page.svelte` | (read only) | N/A |
+| executor-toolkit | `executor-toolkit/+page.svelte` | executor_tasks | Yes |
+| family-hub | `family-hub/+page.svelte` | family_members | Yes |
+| financial-accounts | `financial-accounts/+page.svelte` | financial_accounts | Yes |
+| home-manual | `home-manual/+page.svelte` | home_items | Yes |
+| legacy-journal | `legacy-journal/+page.svelte` | journal_entries | Yes |
+| legal-documents | `legal-documents/+page.svelte` | legal_documents | Yes |
+| letters | `letters/+page.svelte` | letters | Yes |
+| pulse | `pulse/+page.svelte` | pulse_settings | N/A (settings) |
+| qr-codes | `qr-codes/+page.svelte` | qr_codes | Yes |
+| scenario-mode | `scenario-mode/+page.svelte` | (interactive) | N/A |
+| simulator | `simulator/+page.svelte` | (interactive) | N/A |
+| treasure-hunt | `treasure-hunt/+page.svelte` | treasures | Yes |
+| visual-memories | `visual-memories/+page.svelte` | memories | Yes |
+
+**Database Migrations Required (13 tables):**
+
+For each table needing `custom_attributes`:
+
+```bash
+# Generate migration for each table
+alembic revision --autogenerate -m "add custom_attributes to tablename"
+```
+
+**Migration template:**
+```python
+"""Add custom_attributes to tablename
+
+Revision ID: xxx
+Revises: previous
+Create Date: YYYY-MM-DD
+"""
+from alembic import op
+import sqlalchemy as sa
+
+def upgrade():
+    op.add_column('tablename', sa.Column('custom_attributes', sa.JSON(), nullable=True))
+
+def downgrade():
+    op.drop_column('tablename', 'custom_attributes')
+```
+
+**Apply migrations:**
+```bash
+# Local (SQLite)
+alembic upgrade head
+
+# Railway (PostgreSQL)
+railway run alembic upgrade head
+```
+
+**Tables requiring migration:**
+1. `anniversaries`
+2. `digital_guardians`
+3. `executor_tasks`
+4. `family_members`
+5. `financial_accounts`
+6. `home_items`
+7. `journal_entries`
+8. `legal_documents`
+9. `letters`
+10. `qr_codes`
+11. `treasures`
+12. `memories`
+13. `activity_log` (if applicable)
 
 ---
 
