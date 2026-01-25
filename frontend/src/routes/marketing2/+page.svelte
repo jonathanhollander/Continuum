@@ -106,8 +106,8 @@
 
             <!-- Nav -->
             <nav class="hidden md:flex items-center gap-8 text-sm text-white/60">
-                <a href="#how" class="hover:text-white transition-colors">{$m2t.navHow}</a>
-                <a href="#features" class="hover:text-white transition-colors">{$m2t.navFeatures}</a>
+                <a href="/marketing2/how" class="hover:text-white transition-colors">{$m2t.navHow}</a>
+                <a href="/marketing2/features" class="hover:text-white transition-colors">{$m2t.navFeatures}</a>
                 <a href="#security" class="hover:text-white transition-colors">{$m2t.navSecurity}</a>
             </nav>
 

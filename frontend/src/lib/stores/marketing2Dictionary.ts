@@ -33,7 +33,7 @@ export const marketing2Dictionary = {
         // Section 3: The Guide
         guideTitle: "You don't have to know where to start.",
         guideDesc: "Continuum's guide walks beside you—suggesting what might matter, translating the confusing parts, helping you find words for things you've never had to say.",
-        guideReassurance: "There's no right order. No required fields. Just gentle guidance, at your pace.",
+        guideReassurance: "There's no right order. No required fields. Gentle guidance, at your pace.",
 
         // Section 4: The Pulse
         pulseTitle: "You don't have to have the difficult conversation.",
@@ -75,7 +75,7 @@ export const marketing2Dictionary = {
         signupWelcome: "Welcome,",
         signupNext: "Your space is ready. Take all the time you need.",
         signupEnter: "Enter Continuum",
-        signupBack: "Go back",
+        signupBack: "Return",
 
         // Features page (minimal)
         featuresTitle: "What's inside",
@@ -92,11 +92,32 @@ export const marketing2Dictionary = {
         // How it works (3 beats)
         howTitle: "How it works",
         howBeat1Title: "You start, wherever feels right.",
-        howBeat1Desc: "The guide asks simple questions. Suggests what might matter. You go at your own pace.",
+        howBeat1Desc: "The guide asks gentle questions. Suggests what might matter. You go at your own pace.",
         howBeat2Title: "You build, over time.",
         howBeat2Desc: "Documents. Wishes. Letters. Whatever you're ready for. Skip anything that doesn't feel right today.",
         howBeat3Title: "It opens, when needed.",
         howBeat3Desc: "Set up your Pulse. Check in now and then. If you stop, it reaches out to the people you trust—and gives them exactly what they need.",
+        howIntro: "Three gentle steps. No complexity. No overwhelm.",
+
+        // Feature list items
+        practicalItem1: "Financial accounts & policies",
+        practicalItem2: "Legal documents & wills",
+        practicalItem3: "Key contacts & advisors",
+        practicalItem4: "Home access & passwords",
+        personalItem1: "Letters for the future",
+        personalItem2: "Heirlooms with stories",
+        personalItem3: "Photos & memories",
+        personalItem4: "Life timeline & legacy journal",
+        protectiveItem1: "Medical wishes & directives",
+        protectiveItem2: "Pet care instructions",
+        protectiveItem3: "The Pulse check-in system",
+        protectiveItem4: "Safety timer for peace of mind",
+        preparedItem1: "Executor toolkit & checklists",
+        preparedItem2: "The Red Binder (printable backup)",
+        preparedItem3: "QR code access for guardians",
+        preparedItem4: "Practice run simulator",
+        featuresMore: "There's more here than you'll ever need. That's the point. Whatever your situation—complicated family, multiple properties, beloved pets, specific wishes—Continuum has a place for it.",
+        featuresMoreSub: "You'll find it when you need it. The guide will take you there.",
 
         // Footer
         footerDisclaimer: "Continuum is a documentation and organization tool. We do not provide legal, financial, tax, or medical advice.",
@@ -124,7 +145,7 @@ export const marketing2Dictionary = {
         // Section 3: The Guide
         guideTitle: "No tienes que saber por dónde empezar.",
         guideDesc: "La guía de Continuum camina a tu lado—sugiriendo lo que podría importar, traduciendo las partes confusas, ayudándote a encontrar palabras para cosas que nunca has tenido que decir.",
-        guideReassurance: "No hay un orden correcto. No hay campos obligatorios. Solo orientación gentil, a tu ritmo.",
+        guideReassurance: "No hay un orden correcto. No hay campos obligatorios. Orientación gentil, a tu ritmo.",
 
         // Section 4: The Pulse
         pulseTitle: "No tienes que tener la conversación difícil.",
@@ -182,12 +203,33 @@ export const marketing2Dictionary = {
 
         // How it works
         howTitle: "Cómo funciona",
+        howIntro: "Tres pasos amables. Sin complejidad. Sin agobio.",
         howBeat1Title: "Empiezas donde te sientas cómodo.",
-        howBeat1Desc: "La guía hace preguntas simples. Sugiere lo que podría importar. Vas a tu propio ritmo.",
+        howBeat1Desc: "La guía hace preguntas amables. Sugiere lo que podría importar. Vas a tu propio ritmo.",
         howBeat2Title: "Construyes, con el tiempo.",
         howBeat2Desc: "Documentos. Deseos. Cartas. Lo que estés listo para hacer. Salta cualquier cosa que no se sienta bien hoy.",
         howBeat3Title: "Se abre, cuando es necesario.",
         howBeat3Desc: "Configura tu Pulso. Confirma de vez en cuando. Si dejas de hacerlo, contacta a las personas en las que confías—y les da exactamente lo que necesitan.",
+
+        // Feature list items
+        practicalItem1: "Cuentas financieras y pólizas",
+        practicalItem2: "Documentos legales y testamentos",
+        practicalItem3: "Contactos clave y asesores",
+        practicalItem4: "Acceso al hogar y contraseñas",
+        personalItem1: "Cartas para el futuro",
+        personalItem2: "Reliquias con historias",
+        personalItem3: "Fotos y recuerdos",
+        personalItem4: "Línea de vida y diario de legado",
+        protectiveItem1: "Deseos y directivas médicas",
+        protectiveItem2: "Instrucciones de cuidado de mascotas",
+        protectiveItem3: "El sistema de check-in Pulso",
+        protectiveItem4: "Temporizador de seguridad para tranquilidad",
+        preparedItem1: "Kit de herramientas y listas para el albacea",
+        preparedItem2: "La Carpeta Roja (respaldo imprimible)",
+        preparedItem3: "Acceso por código QR para guardianes",
+        preparedItem4: "Simulador de prueba",
+        featuresMore: "Hay más aquí de lo que jamás necesitarás. Ese es el punto. Sea cual sea tu situación—familia complicada, múltiples propiedades, mascotas queridas, deseos específicos—Continuum tiene un lugar para ello.",
+        featuresMoreSub: "Lo encontrarás cuando lo necesites. La guía te llevará allí.",
 
         // Footer
         footerDisclaimer: "Continuum es una herramienta de documentación y organización. No proporcionamos asesoramiento legal, financiero, fiscal o médico.",
@@ -215,7 +257,7 @@ export const marketing2Dictionary = {
         // Section 3: The Guide
         guideTitle: "Vous n'avez pas besoin de savoir par où commencer.",
         guideDesc: "Le guide de Continuum marche à vos côtés—suggérant ce qui pourrait compter, traduisant les parties confuses, vous aidant à trouver les mots pour des choses que vous n'avez jamais eu à dire.",
-        guideReassurance: "Il n'y a pas d'ordre correct. Pas de champs obligatoires. Juste des conseils bienveillants, à votre rythme.",
+        guideReassurance: "Il n'y a pas d'ordre correct. Pas de champs obligatoires. Des conseils bienveillants, à votre rythme.",
 
         // Section 4: The Pulse
         pulseTitle: "Vous n'avez pas besoin d'avoir la conversation difficile.",
@@ -273,12 +315,33 @@ export const marketing2Dictionary = {
 
         // How it works
         howTitle: "Comment ça marche",
+        howIntro: "Trois étapes douces. Pas de complexité. Pas de surcharge.",
         howBeat1Title: "Vous commencez où vous vous sentez à l'aise.",
-        howBeat1Desc: "Le guide pose des questions simples. Suggère ce qui pourrait compter. Vous allez à votre propre rythme.",
+        howBeat1Desc: "Le guide pose des questions douces. Suggère ce qui pourrait compter. Vous allez à votre propre rythme.",
         howBeat2Title: "Vous construisez, au fil du temps.",
         howBeat2Desc: "Documents. Souhaits. Lettres. Ce pour quoi vous êtes prêt. Sautez tout ce qui ne vous semble pas juste aujourd'hui.",
         howBeat3Title: "Il s'ouvre, quand c'est nécessaire.",
         howBeat3Desc: "Configurez votre Pulse. Confirmez de temps en temps. Si vous arrêtez, il contacte les personnes de confiance—et leur donne exactement ce dont ils ont besoin.",
+
+        // Feature list items
+        practicalItem1: "Comptes financiers et polices",
+        practicalItem2: "Documents juridiques et testaments",
+        practicalItem3: "Contacts clés et conseillers",
+        practicalItem4: "Accès à la maison et mots de passe",
+        personalItem1: "Lettres pour l'avenir",
+        personalItem2: "Héritages avec leurs histoires",
+        personalItem3: "Photos et souvenirs",
+        personalItem4: "Chronologie de vie et journal de transmission",
+        protectiveItem1: "Souhaits et directives médicales",
+        protectiveItem2: "Instructions pour le soin des animaux",
+        protectiveItem3: "Le système de confirmation Pulse",
+        protectiveItem4: "Minuterie de sécurité pour la tranquillité d'esprit",
+        preparedItem1: "Boîte à outils et listes pour l'exécuteur",
+        preparedItem2: "Le Classeur Rouge (sauvegarde imprimable)",
+        preparedItem3: "Accès par code QR pour les tuteurs",
+        preparedItem4: "Simulateur de test",
+        featuresMore: "Il y a plus ici que vous n'en aurez jamais besoin. C'est le but. Quelle que soit votre situation—famille compliquée, propriétés multiples, animaux de compagnie adorés, souhaits spécifiques—Continuum a une place pour cela.",
+        featuresMoreSub: "Vous le trouverez quand vous en aurez besoin. Le guide vous y mènera.",
 
         // Footer
         footerDisclaimer: "Continuum est un outil de documentation et d'organisation. Nous ne fournissons pas de conseils juridiques, financiers, fiscaux ou médicaux.",
@@ -306,7 +369,7 @@ export const marketing2Dictionary = {
         // Section 3: The Guide
         guideTitle: "Sie müssen nicht wissen, wo Sie anfangen sollen.",
         guideDesc: "Der Continuum-Leitfaden begleitet Sie—schlägt vor, was wichtig sein könnte, übersetzt verwirrende Teile, hilft Ihnen, Worte für Dinge zu finden, die Sie nie sagen mussten.",
-        guideReassurance: "Es gibt keine richtige Reihenfolge. Keine Pflichtfelder. Nur sanfte Anleitung, in Ihrem Tempo.",
+        guideReassurance: "Es gibt keine richtige Reihenfolge. Keine Pflichtfelder. Sanfte Anleitung, in Ihrem Tempo.",
 
         // Section 4: The Pulse
         pulseTitle: "Sie müssen das schwierige Gespräch nicht führen.",
@@ -364,12 +427,33 @@ export const marketing2Dictionary = {
 
         // How it works
         howTitle: "So funktioniert es",
+        howIntro: "Drei sanfte Schritte. Keine Komplexität. Keine Überforderung.",
         howBeat1Title: "Sie beginnen, wo es sich richtig anfühlt.",
-        howBeat1Desc: "Der Leitfaden stellt einfache Fragen. Schlägt vor, was wichtig sein könnte. Sie gehen in Ihrem eigenen Tempo.",
+        howBeat1Desc: "Der Leitfaden stellt sanfte Fragen. Schlägt vor, was wichtig sein könnte. Sie gehen in Ihrem eigenen Tempo.",
         howBeat2Title: "Sie bauen auf, mit der Zeit.",
         howBeat2Desc: "Dokumente. Wünsche. Briefe. Wofür Sie bereit sind. Überspringen Sie alles, was sich heute nicht richtig anfühlt.",
         howBeat3Title: "Es öffnet sich, wenn nötig.",
         howBeat3Desc: "Richten Sie Ihren Puls ein. Bestätigen Sie ab und zu. Wenn Sie aufhören, kontaktiert es die Menschen, denen Sie vertrauen—und gibt ihnen genau das, was sie brauchen.",
+
+        // Feature list items
+        practicalItem1: "Finanzkonten und Policen",
+        practicalItem2: "Rechtliche Dokumente und Testamente",
+        practicalItem3: "Wichtige Kontakte und Berater",
+        practicalItem4: "Hauszugang und Passwörter",
+        personalItem1: "Briefe für die Zukunft",
+        personalItem2: "Erbstücke mit Geschichten",
+        personalItem3: "Fotos und Erinnerungen",
+        personalItem4: "Lebenszeitlinie und Vermächtnistagebuch",
+        protectiveItem1: "Medizinische Wünsche und Verfügungen",
+        protectiveItem2: "Anweisungen zur Tierpflege",
+        protectiveItem3: "Das Puls-Check-in-System",
+        protectiveItem4: "Sicherheitstimer für Seelenruhe",
+        preparedItem1: "Werkzeugkasten und Checklisten für den Testamentsvollstrecker",
+        preparedItem2: "Der Rote Ordner (druckbare Sicherung)",
+        preparedItem3: "QR-Code-Zugang für Vertrauenspersonen",
+        preparedItem4: "Probelauf-Simulator",
+        featuresMore: "Es gibt hier mehr, als Sie jemals brauchen werden. Das ist der Punkt. Was auch immer Ihre Situation ist—komplizierte Familie, mehrere Immobilien, geliebte Haustiere, spezielle Wünsche—Continuum hat einen Platz dafür.",
+        featuresMoreSub: "Sie werden es finden, wenn Sie es brauchen. Der Leitfaden bringt Sie dorthin.",
 
         // Footer
         footerDisclaimer: "Continuum ist ein Dokumentations- und Organisationswerkzeug. Wir bieten keine rechtliche, finanzielle, steuerliche oder medizinische Beratung.",
@@ -397,7 +481,7 @@ export const marketing2Dictionary = {
         // Section 3: The Guide
         guideTitle: "Вам не нужно знать, с чего начать.",
         guideDesc: "Гид Continuum идёт рядом с вами—подсказывает, что может быть важным, переводит запутанные части, помогает найти слова для того, что вам никогда не приходилось говорить.",
-        guideReassurance: "Нет правильного порядка. Нет обязательных полей. Только мягкое руководство в вашем темпе.",
+        guideReassurance: "Нет правильного порядка. Нет обязательных полей. Мягкое руководство в вашем темпе.",
 
         // Section 4: The Pulse
         pulseTitle: "Вам не нужно вести трудный разговор.",
@@ -455,12 +539,33 @@ export const marketing2Dictionary = {
 
         // How it works
         howTitle: "Как это работает",
+        howIntro: "Три мягких шага. Без сложностей. Без перегрузки.",
         howBeat1Title: "Вы начинаете там, где чувствуете себя комфортно.",
-        howBeat1Desc: "Гид задаёт простые вопросы. Подсказывает, что может быть важным. Вы идёте в своём темпе.",
+        howBeat1Desc: "Гид задаёт мягкие вопросы. Подсказывает, что может быть важным. Вы идёте в своём темпе.",
         howBeat2Title: "Вы строите со временем.",
         howBeat2Desc: "Документы. Пожелания. Письма. То, к чему вы готовы. Пропускайте всё, что сегодня не кажется правильным.",
         howBeat3Title: "Оно открывается, когда нужно.",
         howBeat3Desc: "Настройте свой Пульс. Подтверждайте время от времени. Если вы перестанете, оно свяжется с людьми, которым вы доверяете—и даст им именно то, что нужно.",
+
+        // Feature list items
+        practicalItem1: "Финансовые счета и полисы",
+        practicalItem2: "Юридические документы и завещания",
+        practicalItem3: "Ключевые контакты и консультанты",
+        practicalItem4: "Доступ к дому и пароли",
+        personalItem1: "Письма в будущее",
+        personalItem2: "Реликвии с историями",
+        personalItem3: "Фотографии и воспоминания",
+        personalItem4: "Хроника жизни и дневник наследия",
+        protectiveItem1: "Медицинские пожелания и распоряжения",
+        protectiveItem2: "Инструкции по уходу за питомцами",
+        protectiveItem3: "Система подтверждения Пульс",
+        protectiveItem4: "Таймер безопасности для спокойствия",
+        preparedItem1: "Набор инструментов и чек-листы для душеприказчика",
+        preparedItem2: "Красная Папка (печатная резервная копия)",
+        preparedItem3: "QR-код доступа для опекунов",
+        preparedItem4: "Симулятор пробного запуска",
+        featuresMore: "Здесь больше, чем вам когда-либо понадобится. В этом и смысл. Какова бы ни была ваша ситуация—сложная семья, несколько объектов недвижимости, любимые питомцы, особые пожелания—в Continuum есть место для всего.",
+        featuresMoreSub: "Вы найдёте это, когда понадобится. Гид приведёт вас туда.",
 
         // Footer
         footerDisclaimer: "Continuum — это инструмент документирования и организации. Мы не предоставляем юридических, финансовых, налоговых или медицинских консультаций.",
@@ -488,7 +593,7 @@ export const marketing2Dictionary = {
         // Section 3: The Guide
         guideTitle: "אתם לא צריכים לדעת מאיפה להתחיל.",
         guideDesc: "המדריך של Continuum הולך לצידכם—מציע מה עשוי להיות חשוב, מתרגם את החלקים המבלבלים, עוזר לכם למצוא מילים לדברים שמעולם לא הייתם צריכים לומר.",
-        guideReassurance: "אין סדר נכון. אין שדות חובה. רק הדרכה עדינה, בקצב שלכם.",
+        guideReassurance: "אין סדר נכון. אין שדות חובה. הדרכה עדינה, בקצב שלכם.",
 
         // Section 4: The Pulse
         pulseTitle: "אתם לא צריכים לנהל את השיחה הקשה.",
@@ -546,12 +651,33 @@ export const marketing2Dictionary = {
 
         // How it works
         howTitle: "איך זה עובד",
+        howIntro: "שלושה צעדים עדינים. בלי מורכבות. בלי עומס.",
         howBeat1Title: "אתם מתחילים איפה שמרגיש נכון.",
-        howBeat1Desc: "המדריך שואל שאלות פשוטות. מציע מה עשוי להיות חשוב. אתם הולכים בקצב שלכם.",
+        howBeat1Desc: "המדריך שואל שאלות עדינות. מציע מה עשוי להיות חשוב. אתם הולכים בקצב שלכם.",
         howBeat2Title: "אתם בונים, עם הזמן.",
         howBeat2Desc: "מסמכים. משאלות. מכתבים. מה שאתם מוכנים אליו. דלגו על כל מה שלא מרגיש נכון היום.",
         howBeat3Title: "זה נפתח, כשצריך.",
         howBeat3Desc: "הגדירו את הפולס שלכם. אשרו מדי פעם. אם תפסיקו, זה פונה לאנשים שאתם סומכים עליהם—ונותן להם בדיוק מה שהם צריכים.",
+
+        // Feature list items
+        practicalItem1: "חשבונות פיננסיים ופוליסות",
+        practicalItem2: "מסמכים משפטיים וצוואות",
+        practicalItem3: "אנשי קשר מרכזיים ויועצים",
+        practicalItem4: "גישה לבית וסיסמאות",
+        personalItem1: "מכתבים לעתיד",
+        personalItem2: "חפצי ערך עם סיפורים",
+        personalItem3: "תמונות וזיכרונות",
+        personalItem4: "ציר זמן החיים ויומן מורשת",
+        protectiveItem1: "משאלות והנחיות רפואיות",
+        protectiveItem2: "הוראות לטיפול בחיות מחמד",
+        protectiveItem3: "מערכת האישור פולס",
+        protectiveItem4: "טיימר בטיחות לשקט נפשי",
+        preparedItem1: "ערכת כלים ורשימות למנהל העיזבון",
+        preparedItem2: "הקלסר האדום (גיבוי להדפסה)",
+        preparedItem3: "גישה בקוד QR לאפוטרופוסים",
+        preparedItem4: "סימולטור ניסיון",
+        featuresMore: "יש כאן יותר ממה שתצטרכו אי פעם. זו הנקודה. לא משנה מה המצב שלכם—משפחה מסובכת, נכסים מרובים, חיות מחמד אהובות, משאלות ספציפיות—ל-Continuum יש מקום לזה.",
+        featuresMoreSub: "תמצאו את זה כשתצטרכו. המדריך ייקח אתכם לשם.",
 
         // Footer
         footerDisclaimer: "Continuum הוא כלי תיעוד וארגון. איננו מספקים ייעוץ משפטי, פיננסי, מס או רפואי.",
