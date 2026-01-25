@@ -99,7 +99,7 @@ grep -rn ">Submit<\|>Delete<\|>Cancel<" frontend/src/routes/modules/
 ```
 
 #### Data Page Blueprint (Section 5) - CRITICAL
-Every data page MUST have these 14 elements:
+Every data page MUST have these elements:
 
 ```bash
 # Check for LivingBlueprintHeader
@@ -119,6 +119,9 @@ grep -L "Affirmation" frontend/src/routes/modules/*/+page.svelte
 
 # Check for CustomFieldsManager (MANDATORY)
 grep -L "CustomFieldsManager" frontend/src/routes/modules/*/+page.svelte
+
+# Check for Sample Data via GhostRow (MANDATORY)
+grep -L "GhostRow\|getSmartSamples" frontend/src/routes/modules/*/+page.svelte
 
 # Check for loading state
 grep -L "isLoading\|loading" frontend/src/routes/modules/*/+page.svelte
@@ -143,11 +146,11 @@ grep -rn "from.*icon\|from.*svg" frontend/src/routes/modules/
 
 ### Step 3: Generate Compliance Matrix
 
-For each module, score compliance on 14 Data Page Blueprint elements:
+For each module, score compliance on Data Page Blueprint elements:
 
-| Module | Header | Add Btn | Empty | AI | Affirmation | CustomFields | Loading | Error | Edit | Delete | Modal | Cards | Lang | Overall |
-|--------|--------|---------|-------|----|----|------|------|-------|------|--------|-------|-------|------|---------|
-| contacts | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ | ⚠️ | 67% |
+| Module | Header | Add Btn | Empty | AI | Affirmation | CustomFields | SampleData | Loading | Error | Edit | Delete | Modal | Cards | Lang | Overall |
+|--------|--------|---------|-------|----|----|------|----------|------|-------|------|--------|-------|-------|------|---------|
+| contacts | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ | ⚠️ | 60% |
 
 ### Step 4: Generate Detailed Report
 
@@ -163,6 +166,7 @@ For each module, score compliance on 14 Data Page Blueprint elements:
 ### Critical Violations (Blocking)
 - Modal backdrop: X modules use bg-black/50 instead of bg-slate-900/60
 - CustomFieldsManager: X modules missing (MANDATORY)
+- Sample Data (GhostRow): X modules missing (MANDATORY)
 - Close buttons: X modules use non-standard patterns
 
 ### High Priority Violations

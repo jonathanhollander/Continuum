@@ -1005,71 +1005,185 @@ When no data exists, MUST show the `EmptyState` component with full content.
 
 #### 5.7.3 Sample Data Display (MANDATORY)
 
-**CRITICAL:** When no user data exists, the page MUST display sample/example data to show users what the completed page will look like. This helps users understand the value and structure of the data.
+**CRITICAL:** When no user data exists, the page MUST display sample/example data using the established `smartSamples.ts` + `GhostRow.svelte` pattern. This helps users understand the value and structure of the data.
+
+##### Centralized Sample Data: `smartSamples.ts`
+
+All sample data is centralized in `frontend/src/lib/data/smartSamples.ts`:
+
+```typescript
+// Location: frontend/src/lib/data/smartSamples.ts
+
+export interface SmartSampleCollection {
+  financial: FinancialAsset[];
+  insurance: InsurancePolicy[];
+  property: PropertyItem[];
+  family: FamilyMember[];
+  digital: DigitalAccount[];
+  heirlooms: Heirloom[];
+  medical: MedicalDirective[];
+  pets: PetEntry[];
+  subscriptions: any[];
+  contacts: any[];
+  memories: any[];
+}
+
+// Multi-language support via dictionaries
+const dictionaries = {
+  en: { /* English sample content */ },
+  es: { /* Spanish sample content */ }
+};
+
+// Usage
+export const getSmartSamples = (locale: string = 'en'): SmartSampleCollection => {
+  const dict = dictionaries[locale] || dictionaries.en;
+  // Returns typed sample data with IDs prefixed "sample-"
+  // Each item has isSmartSample: true marker
+};
+```
+
+##### GhostRow Component: `GhostRow.svelte`
+
+Interactive placeholder component that displays sample data with click-to-add functionality:
+
+```svelte
+<!-- Location: frontend/src/lib/components/ui/GhostRow.svelte -->
+<script lang="ts">
+  let {
+    type = "Item",        // Entity type (e.g., "Property", "Contact")
+    name = "",            // Sample item name
+    subtitle = "",        // Secondary text
+    value = null,         // Optional numeric value
+    onclick,              // Click handler to open add modal
+    icon,                 // Optional custom icon snippet
+  } = $props();
+</script>
+
+<!-- Dashed border, 50% opacity (80% on hover), "Example {type}" badge -->
+<!-- Hover overlay: "Click to Add Real {type}" -->
+```
+
+##### Module Implementation Pattern
 
 ```svelte
 <script>
-  // Sample data for empty state demonstration
-  const sampleContacts = [
-    {
-      id: 'sample-1',
-      name: 'Sarah Mitchell',
-      relationship: 'Sister',
-      phone: '(555) 123-4567',
-      isSample: true  // Flag to identify sample data
-    },
-    {
-      id: 'sample-2',
-      name: 'Dr. James Chen',
-      relationship: 'Primary Physician',
-      phone: '(555) 987-6543',
-      isSample: true
-    }
-  ];
+  import GhostRow from "$lib/components/ui/GhostRow.svelte";
+  import { getSmartSamples } from "$lib/data/smartSamples";
+  import { language } from "$lib/stores/localization";
+  import { Info } from "lucide-svelte";
 
-  // Show sample data when user has no real data
-  let displayItems = $derived(
-    items.length > 0 ? items : sampleContacts
-  );
+  let showAddModal = $state(false);
+  let newItem = $state({ /* form fields */ });
 </script>
 
-<!-- Sample data banner -->
-{#if items.length === 0}
-  <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex items-start gap-3">
-    <Info class="text-amber-500 shrink-0 mt-0.5" size={20} />
-    <div>
-      <p class="text-amber-800 font-medium">This is sample data</p>
-      <p class="text-amber-700 text-sm mt-1">
-        These examples show how your contacts will appear. Add your first contact to replace them.
+<!-- When no data exists, show sample data via GhostRow -->
+{#if filteredItems.length === 0 && searchQuery === ""}
+  <div class="col-span-full space-y-4">
+    <!-- Concierge Mode Banner -->
+    <div class="border border-blue-200 bg-blue-50/50 rounded-xl p-4 mb-4 flex items-center gap-3 text-blue-800">
+      <Info size={20} />
+      <p class="text-sm font-medium">
+        Concierge Mode: Showing examples based on your region.
       </p>
+    </div>
+
+    <!-- GhostRow for each sample item -->
+    {#each getSmartSamples($language).property || [] as sample}
+      <GhostRow
+        name={sample.name}
+        subtitle={sample.type}
+        value={sample.valuation}
+        type="Property"
+        onClick={() => {
+          // Pre-fill form with sample data
+          newItem = {
+            ...newItem,
+            name: sample.name,
+            type: sample.type,
+            valuation: sample.valuation || 0,
+          };
+          showAddModal = true;
+        }}
+      >
+        <svelte:fragment slot="icon">
+          <Building size={20} class="text-slate-400" />
+        </svelte:fragment>
+      </GhostRow>
+    {/each}
+
+    <!-- CTA Button -->
+    <div class="flex justify-center mt-6">
+      <button
+        onclick={() => (showAddModal = true)}
+        class="bg-primary text-primary-foreground px-8 py-3 rounded-2xl font-bold shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+      >
+        <Plus size={18} />
+        Add Your First Item
+      </button>
     </div>
   </div>
 {/if}
-
-<!-- Sample cards have muted styling -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-  {#each displayItems as item}
-    <div class="{item.isSample ? 'opacity-60 border-dashed' : ''} ...">
-      <!-- Card content -->
-    </div>
-  {/each}
-</div>
 ```
 
-**Sample Data Requirements:**
+##### Sample Data Requirements
 
-| Requirement | Details |
-|-------------|---------|
-| Minimum samples | 2-3 realistic examples |
-| Visual distinction | Muted opacity (0.6), dashed border |
-| Banner message | Explain this is sample data |
-| Realistic content | Use believable names, values, relationships |
-| No interaction | Sample cards should NOT have edit/delete buttons |
+| Requirement | Implementation |
+|-------------|----------------|
+| Data source | `getSmartSamples($language)` from `smartSamples.ts` |
+| Component | `GhostRow.svelte` for interactive placeholders |
+| Minimum samples | 2-3 per module (already defined in smartSamples.ts) |
+| Multi-language | Automatic via `$language` store |
+| Visual distinction | Dashed border, 50% opacity, hover effect |
+| Banner | Blue info banner explaining "Concierge Mode" |
+| Interactivity | Click pre-fills form and opens add modal |
+| ID prefix | Sample IDs start with "sample-" |
+| Sample marker | `isSmartSample: true` flag on sample objects |
 
-**Modules requiring sample data (check implementation):**
-- ALL data modules must have sample data
-- Sample data stored in component or separate file
-- Must be compassionate and realistic (not "John Doe")
+##### GhostRow Styling Standards
+
+```css
+/* Dashed border, muted appearance */
+.ghost-row {
+  border: 2px dashed theme('colors.slate.300');
+  background: theme('colors.slate.50/50');
+  opacity: 0.5;
+}
+
+/* Hover state - increased visibility */
+.ghost-row:hover {
+  border-color: theme('colors.indigo.300');
+  background: theme('colors.slate.50');
+  opacity: 0.8;
+}
+
+/* Hover overlay */
+.ghost-row-overlay {
+  background: theme('colors.white/60');
+  backdrop-filter: blur(1px);
+}
+```
+
+##### Modules with Sample Data (in smartSamples.ts)
+
+| Module Key | Sample Count | Notes |
+|------------|--------------|-------|
+| `financial` | 3 | Checking, savings, crypto |
+| `insurance` | 2 | Life, auto policies |
+| `property` | 2 | Home, vehicle |
+| `family` | 2 | Doctor, lawyer contacts |
+| `digital` | 2 | Password manager, email |
+| `heirlooms` | 2 | Watch, photos |
+| `pets` | 1 | Dog with care instructions |
+| `medical` | 2 | DNR, healthcare proxy |
+| `contacts` | 2 | Medical, legal contacts |
+| `subscriptions` | 2 | Netflix, Amazon Prime |
+| `memories` | 2 | Beach trip, wedding day |
+
+**To add sample data for a new module:**
+1. Add type to `SmartSampleCollection` interface
+2. Add dictionary entries for `en` (required) and other languages
+3. Add sample objects in `getSmartSamples()` return value
+4. Use `GhostRow` component in module page with `getSmartSamples($language).module_name`
 
 ### 5.8 Success Feedback - Affirmation (MANDATORY)
 

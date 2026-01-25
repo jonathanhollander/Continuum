@@ -331,6 +331,7 @@ When creating or modifying a page, verify:
 - [ ] Has page explanation (compassionate tone)
 - [ ] Has AI helper (AIPromptBar or ConciergeFlow)
 - [ ] Has EmptyState for empty data
+- [ ] **Has Sample Data via GhostRow when empty**
 - [ ] Has edit functionality
 - [ ] Has delete functionality with confirmation
 - [ ] Uses standard Modal component
@@ -394,6 +395,47 @@ const dataToSave = {
   custom_attributes: customFields
 };
 ```
+
+### Add Missing Sample Data (GhostRow)
+```svelte
+// Add imports
+import GhostRow from "$lib/components/ui/GhostRow.svelte";
+import { getSmartSamples } from "$lib/data/smartSamples";
+import { language } from "$lib/stores/localization";
+import { Info } from "lucide-svelte";
+
+// In template, when items.length === 0
+{#if filteredItems.length === 0 && searchQuery === ""}
+  <div class="col-span-full space-y-4">
+    <!-- Concierge Mode Banner -->
+    <div class="border border-blue-200 bg-blue-50/50 rounded-xl p-4 mb-4 flex items-center gap-3 text-blue-800">
+      <Info size={20} />
+      <p class="text-sm font-medium">
+        Concierge Mode: Showing examples based on your region.
+      </p>
+    </div>
+
+    {#each getSmartSamples($language).module_name || [] as sample}
+      <GhostRow
+        name={sample.name}
+        subtitle={sample.description}
+        value={sample.value}
+        type="ModuleType"
+        onClick={() => {
+          // Pre-fill form with sample data
+          newItem = { ...newItem, ...sample };
+          showAddModal = true;
+        }}
+      />
+    {/each}
+  </div>
+{/if}
+```
+
+**Note:** If sample data for this module doesn't exist in `smartSamples.ts`, add it:
+1. Add type definition to `SmartSampleCollection`
+2. Add dictionary entries for all languages
+3. Add sample objects in `getSmartSamples()` return
 
 ## Success Criteria
 
