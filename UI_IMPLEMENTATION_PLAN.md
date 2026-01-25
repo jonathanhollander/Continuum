@@ -4,8 +4,171 @@
 
 This document provides a detailed, file-by-file implementation plan to bring all Continuum modules into compliance with the UI Consistency Standards.
 
-**Estimated Scope:** 47 changes across 20+ files
+**Related Document:** `UI_CONSISTENCY_STANDARDS.md` - The binding source of truth
+**Critical Section:** Section 5 "DATA PAGE BLUEPRINT" - Every data page MUST comply
+
+**Estimated Scope:** 75+ changes across 20+ files
 **Priority Levels:** P0 (Critical), P1 (High), P2 (Medium), P3 (Low)
+
+---
+
+## NEW PHASE 0: Data Page Blueprint Compliance (P0 - HIGHEST PRIORITY)
+
+**Before fixing modal styling, EVERY data page must include ALL required elements from Section 5 of the UI Standards.**
+
+### Required Elements Checklist
+
+Every module page MUST have these 10 elements:
+
+| # | Element | Component | What It Does |
+|---|---------|-----------|--------------|
+| 1 | Page Header | `LivingBlueprintHeader` | Title, subtitle, emotional context |
+| 2 | Page Explanation | `detailedDescription` + `whyMatters` props | How to use the page (tone-compliant) |
+| 3 | Add Data Button | Primary button with Plus icon | Clear entry point (compassionate text) |
+| 4 | AI Helper Section | `AIPromptBar` or `ConciergeFlow` | What AI will do for the user |
+| 5 | Data Display | Cards/Grid/List | View existing data |
+| 6 | Edit/Delete Actions | Icon buttons on hover | Modify existing data |
+| 7 | Empty State | `EmptyState` | Guidance when no data |
+| 8 | Success Feedback | `Affirmation` | Positive reinforcement |
+| 9 | Loading State | Spinner/Skeleton | Sync progress indicator |
+| 10 | Error Handling | Error banner | Graceful failure states |
+
+### Current Compliance Matrix (15 Modules)
+
+| Module | Header | Explain | Add | AI | View | Edit | Empty | Affirm | Load | Error |
+|--------|--------|---------|-----|-----|------|------|-------|--------|------|-------|
+| contacts | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ~ |
+| medical | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ | ✗ | ~ |
+| pets | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ | ✗ | ~ |
+| heirlooms | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | ~ |
+| financial | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | ~ | ~ |
+| letters | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | ✓ | ✓ |
+| property | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | ~ | ~ | ~ |
+| insurance | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ~ | ~ |
+| digital-guardian | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | ~ | ~ |
+| anniversary | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ~ | ~ | ~ | ~ |
+| time-capsule | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ~ | ~ |
+| legacy-journal | ✓ | ✗ | ✗ | ✗ | ✓ | ~ | ✗ | ✗ | ✗ | ✗ |
+| subscriptions | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ✗ | ~ |
+| visual-memories | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ✗ | ~ |
+
+**Legend:** ✓ = Compliant, ~ = Partial, ✗ = Missing
+
+### Critical Gaps Summary
+
+| Gap | % Missing | Modules Affected | Priority |
+|-----|-----------|-----------------|----------|
+| Loading States | 87% | 13 modules | **P0** |
+| AI Helper | 53% | 8 modules | **P0** |
+| Affirmation | 60% | 9 modules | **P1** |
+| Error Handling | 80% | 12 modules | **P1** |
+
+### Phase 0 Implementation Tasks
+
+#### 0.1 Add Loading States to ALL Modules
+
+**Pattern to implement:**
+```svelte
+<script>
+  let isLoading = $state(true);
+
+  onMount(async () => {
+    try {
+      await store.sync();
+    } finally {
+      isLoading = false;
+    }
+  });
+</script>
+
+{#if isLoading}
+  <div class="flex items-center justify-center py-12">
+    <Loader2 class="w-8 h-8 animate-spin text-primary" />
+  </div>
+{:else}
+  <!-- Content -->
+{/if}
+```
+
+**Files to update:**
+- `contacts/+page.svelte`
+- `medical/+page.svelte`
+- `pets/+page.svelte`
+- `heirlooms/+page.svelte`
+- `financial-accounts/+page.svelte`
+- `property/+page.svelte`
+- `insurance/+page.svelte`
+- `digital-guardian/+page.svelte`
+- `anniversary-manager/+page.svelte`
+- `time-capsule/+page.svelte`
+- `legacy-journal/+page.svelte`
+- `subscriptions/+page.svelte`
+- `visual-memories/+page.svelte`
+
+#### 0.2 Add AIPromptBar to Missing Modules
+
+**Pattern to implement:**
+```svelte
+<div class="max-w-3xl mx-auto mb-12">
+  <AIPromptBar context="modulename" />
+</div>
+```
+
+**Files to update:**
+- `medical/+page.svelte` - context: `"medical"`
+- `pets/+page.svelte` - context: `"pets"`
+- `insurance/+page.svelte` - context: `"insurance"`
+- `anniversary-manager/+page.svelte` - context: `"anniversary"`
+- `time-capsule/+page.svelte` - context: `"timecapsule"`
+- `legacy-journal/+page.svelte` - context: `"legacy"`
+- `subscriptions/+page.svelte` - context: `"subscriptions"`
+- `visual-memories/+page.svelte` - context: `"memories"`
+
+**Also requires:** Adding new context types to `AIPromptBar.svelte` quickPrompts object.
+
+#### 0.3 Add Affirmation to Missing Modules
+
+**Pattern:**
+```svelte
+<script>
+  let showAffirmation = $state(false);
+
+  async function saveItem() {
+    await store.create(data);
+    showAffirmation = true;  // Trigger on success
+  }
+</script>
+
+<Affirmation module="modulename" bind:show={showAffirmation} />
+```
+
+**Files to update:**
+- `financial-accounts/+page.svelte`
+- `letters/+page.svelte`
+- `property/+page.svelte`
+- `insurance/+page.svelte`
+- `digital-guardian/+page.svelte`
+- `anniversary-manager/+page.svelte`
+- `time-capsule/+page.svelte`
+- `subscriptions/+page.svelte`
+- `visual-memories/+page.svelte`
+
+**Also requires:** Adding affirmation messages to `lib/data/affirmations.ts`.
+
+#### 0.4 Fix legacy-journal (7 Missing Elements)
+
+**File:** `frontend/src/routes/modules/legacy-journal/+page.svelte`
+
+**Missing elements:**
+1. Page explanation (`detailedDescription`, `whyMatters`)
+2. Add button
+3. AI helper
+4. Edit/delete actions
+5. Empty state
+6. Affirmation
+7. Loading state
+
+**This module needs complete rewrite to match Data Page Blueprint template.**
 
 ---
 
