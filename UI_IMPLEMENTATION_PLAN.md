@@ -303,6 +303,24 @@ railway run alembic upgrade head
 
 **CRITICAL:** Every data page MUST allow users to switch between Card View and Table View. Preference is stored on the backend (NOT localStorage) and syncs across devices.
 
+##### Implementation Task Checklist
+
+| Task | File to Create/Modify | Status |
+|------|----------------------|--------|
+| 1. Create user preferences store | `frontend/src/lib/stores/userPreferencesStore.svelte.ts` | ⬜ |
+| 2. Add view_preferences to User model | `backend/models.py` | ⬜ |
+| 3. Create Alembic migration | `backend/alembic/versions/xxx_add_view_preferences.py` | ⬜ |
+| 4. Run migration (local SQLite) | `alembic upgrade head` | ⬜ |
+| 5. Run migration (Railway PostgreSQL) | `railway run alembic upgrade head` | ⬜ |
+| 6. Add preferences API endpoints | `backend/routers/users.py` | ⬜ |
+| 7. Create DataViewToggle component | `frontend/src/lib/components/ui/DataViewToggle.svelte` | ⬜ |
+| 8. Create DataTable component | `frontend/src/lib/components/ui/DataTable.svelte` | ⬜ |
+| 9. Create DataView wrapper | `frontend/src/lib/components/ui/DataView.svelte` | ⬜ |
+| 10. Pilot: Update contacts module | `frontend/src/routes/modules/contacts/+page.svelte` | ⬜ |
+| 11. Roll out to all 17 remaining data modules | See module list below | ⬜ |
+
+**Reference:** See `UI_CONSISTENCY_STANDARDS.md` Section 5.6 for complete component specifications.
+
 **Step 1: Create Global Components**
 
 Create these files in `frontend/src/lib/components/ui/`:
@@ -435,6 +453,80 @@ For EVERY data module, update to use the view components:
 6. Create `DataView.svelte`
 7. Update contacts module (pilot)
 8. Roll out to remaining modules
+
+#### 0.7 Extend Sample Data Coverage in smartSamples.ts (CRITICAL)
+
+**File:** `frontend/src/lib/data/smartSamples.ts`
+
+**Reference:** See `UI_CONSISTENCY_STANDARDS.md` Section 5.7.3 for sample data requirements.
+
+##### Current Coverage
+
+| Module | Sample Data Key | Status |
+|--------|-----------------|--------|
+| contacts | `contacts` | ✅ Complete |
+| medical | `medical` | ✅ Complete |
+| pets | `pets` | ✅ Complete |
+| heirlooms | `heirlooms` | ✅ Complete |
+| financial-accounts | `financial` | ✅ Complete |
+| property | `property` | ✅ Complete |
+| insurance | `insurance` | ✅ Complete |
+| subscriptions | `subscriptions` | ✅ Complete |
+| visual-memories | `memories` | ✅ Complete |
+| digital-guardian | `digital` | ✅ Complete |
+| family-hub | `family` | ✅ Complete |
+
+##### Missing Sample Data (9 modules)
+
+| Module | Proposed Key | Sample Items Needed |
+|--------|--------------|---------------------|
+| letters | `letters` | "Letter to my daughter", "Farewell to a friend" |
+| time-capsule | `timeCapsule` | "2030 Family Goals", "Message for graduation" |
+| calendar | `calendar` | "Anniversary", "Annual checkup reminder" |
+| timeline | `timeline` | "Met my spouse", "Started business" |
+| funeral | `funeral` | "Service preference", "Music selection" |
+| legal-documents | `legalDocuments` | "Will", "Power of Attorney" |
+| home-manual | `homeManual` | "HVAC maintenance", "Garage door code" |
+| anniversary-manager | `anniversaries` | "Wedding anniversary", "Mom's birthday" |
+| legacy-journal | `journal` | "Life lessons for kids", "My childhood memories" |
+
+##### Implementation Steps
+
+1. Add new keys to `SmartSampleCollection` interface
+2. Add dictionary entries for `en` (required) and `es` (optional)
+3. Add sample objects in `getSmartSamples()` return value
+4. Update each module to use `GhostRow` with the new sample data
+
+##### Sample Template for New Module
+
+```typescript
+// Add to SmartSampleCollection interface
+export interface SmartSampleCollection {
+  // ... existing
+  letters: LetterSample[];  // Add new type
+}
+
+// Add to dictionaries.en
+letters: {
+  daughter: "Letter to My Daughter",
+  friend: "A Note of Gratitude",
+  notes_daughter: "Words of wisdom for her wedding day.",
+  notes_friend: "Thanking someone who changed my life."
+}
+
+// Add to getSmartSamples() return
+letters: [
+  {
+    id: commonId('letter-1'),
+    title: dict.letters.daughter,
+    recipient: "My Daughter",
+    type: "Personal",
+    notes: dict.letters.notes_daughter,
+    isSmartSample: true
+  },
+  // ... more samples
+]
+```
 
 ---
 

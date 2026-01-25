@@ -26,7 +26,11 @@ This document establishes binding UI standards for Continuum to ensure a cohesiv
 12. [Empty State Standards](#12-empty-state-standards)
 13. [Action Placement Standards](#13-action-placement-standards)
 14. [Compassionate Language Standards](#14-compassionate-language-standards)
-15. [Implementation Checklist](#15-implementation-checklist)
+15. [**Context-Aware UI** (Executor/Grief Mode)](#15-context-aware-ui-executorgrief-mode)
+16. [Implementation Checklist](#16-implementation-checklist)
+17. [Accessibility Standards](#17-accessibility-standards)
+18. [Form Validation Patterns](#18-form-validation-patterns)
+19. [Responsive & Mobile Standards](#19-responsive--mobile-standards)
 
 ---
 
@@ -2137,46 +2141,243 @@ class="transition-opacity duration-200"
 
 ## 14. Compassionate Language Standards
 
-### 14.1 Button Text Patterns
+> **CRITICAL:** Continuum is end-of-life planning software. Every user-facing string must be reviewed for emotional tone compliance.
+>
+> **Primary Reference: `TONE_GUIDE.md`** - The complete language framework
 
-| Context | Pattern | Example |
-|---------|---------|---------|
-| Save action | "Save my [noun]" | "Save my thoughts" |
-| Add action | "Share [noun]" or "Include [noun]" | "Share contact details" |
-| Cancel | "Not right now" | - |
-| Continue | "Continue when ready" | - |
-| Remove | "Remove this [item]" | "Remove this contact" |
+### 14.1 Core Philosophy (from TONE_GUIDE.md)
 
-### 14.2 Modal Titles
+**Our voice is:**
+- Patient, never urgent
+- Inviting, never demanding
+- Supportive, never clinical
+- Present, never dismissive
 
-- Use questions or inclusive phrases
-- Example: "Who should we include?" instead of "Add Contact"
-- Example: "Preserve a Treasure" instead of "Add Heirloom"
+### 14.2 The Three Principles
 
-### 14.3 Confirmation Dialogs
+| Principle | Meaning | Example |
+|-----------|---------|---------|
+| **Invitation over Instruction** | Invite participation, never command | "When you're ready..." not "You must..." |
+| **Acknowledgment over Efficiency** | Honor emotional weight, not speed | "Take your time" not "Quick setup" |
+| **Presence over Positivity** | Sit with users, don't rush to cheerfulness | "We're here with you" not "Don't worry!" |
 
-**WRONG:**
-```js
+### 14.3 Button Text Quick Reference
+
+| Action Type | Pattern | Examples |
+|-------------|---------|----------|
+| Primary save | "Save my [noun]" | "Save my thoughts", "Keep this safe" |
+| Add/create | "Share [noun]" or "Include [noun]" | "Share contact details", "Include this person" |
+| Cancel | Soft alternatives | "Not right now", "Maybe later", "Take a break" |
+| Continue | Permission-based | "Continue when ready", "Done for now" |
+| Remove/delete | Gentle framing | "Remove this item", "Let this go" |
+
+### 14.4 Modal Titles
+
+Use questions or inclusive phrases, never commands:
+
+| Avoid | Use Instead |
+|-------|-------------|
+| Add Contact | Who should we include? |
+| Add Heirloom | Preserve a treasure |
+| Delete Item | Remove this? |
+| Edit Contact | Update their details |
+
+### 14.5 Confirmation Dialogs
+
+Always include reassurance and path forward:
+
+```javascript
+// WRONG
 confirm("Delete this item?")
-```
 
-**CORRECT:**
-```js
+// CORRECT
 confirm("Remove this contact? You can always add them back later if needed.")
+confirm("Remove this heirloom? Your story will be preserved in the activity log.")
 ```
 
-### 14.4 Empty State Messaging
+### 14.6 Empty State Pattern
 
-- Lead with emotional value
-- Bold the key insight
-- Offer gentle encouragement
-- Never use imperative language like "Add your first item"
+```
+[Gentle acknowledgment] - "Nothing here yet—and that's okay."
+[Value proposition] - "When you're ready, this is where..."
+[Soft call to action] - "Begin when ready" (button)
+```
+
+### 14.7 Error Message Pattern
+
+```
+[Acknowledgment] - "We couldn't save that just now."
+[Reassurance] - "Your words are still here."
+[Path forward] - "Let's try again in a moment."
+```
+
+### 14.8 Loading States
+
+Use presence language, not waiting language:
+
+| Avoid | Use Instead |
+|-------|-------------|
+| Loading... | Taking a moment... |
+| Please wait | Gathering your thoughts... |
+| Processing | Preparing your space... |
+
+### 14.9 Words to Avoid
+
+| Never Use | Why | Alternative |
+|-----------|-----|-------------|
+| Submit | Too transactional | Save my thoughts |
+| Delete | Too harsh | Remove this |
+| Required | Demanding | This helps us... |
+| Error | Alarming | Something needs attention |
+| Failed | Discouraging | Couldn't complete that |
+| Invalid | Technical/cold | Please check this |
+| Hurry | Creates pressure | Whenever you're ready |
+| Easy | Dismissive | We'll guide you through |
 
 ---
 
-## 15. Implementation Checklist
+## 15. Context-Aware UI (Executor/Grief Mode)
 
-### 15.1 When Creating a New Module
+Continuum serves three distinct user contexts, each requiring different UI treatment:
+
+### 15.1 User Contexts
+
+| Context | Who | Emotional State | UI Priority |
+|---------|-----|-----------------|-------------|
+| **Planner** | Person planning their own estate | Confronting mortality, courage | Honor courage, validate difficulty |
+| **Executor** | Managing deceased's estate | Grieving + administrative burden | Simplify, acknowledge grief, no urgency |
+| **Family** | Family member viewing/contributing | Processing, possibly conflicted | Space for complexity, no assumptions |
+
+### 15.2 Context Detection
+
+Use `contextStore` to detect user context:
+
+```svelte
+<script>
+  import { contextStore } from "$lib/stores/contextStore.svelte";
+
+  // Context flags
+  let isExecutor = $derived(contextStore.isExecutor);
+  let isFamily = $derived(contextStore.isFamily);
+  let isPlanner = $derived(!contextStore.isExecutor && !contextStore.isFamily);
+</script>
+```
+
+### 15.3 Executor Mode UI Adjustments
+
+When `contextStore.isExecutor === true`:
+
+#### 15.3.1 Simplified Workflows
+- Reduce number of required fields
+- Offer "Skip for now" options on non-critical data
+- Batch similar tasks when possible
+
+#### 15.3.2 Language Adjustments
+
+| Standard Language | Executor Language |
+|-------------------|-------------------|
+| "Your contacts" | "Important contacts to notify" |
+| "Add your first..." | "Begin gathering..." |
+| "Complete this section" | "Whenever you're ready" |
+| "Task incomplete" | "You can return to this anytime" |
+
+#### 15.3.3 Visual Indicators
+
+```svelte
+<!-- Executor mode banner -->
+{#if contextStore.isExecutor}
+  <div class="bg-slate-100 border-l-4 border-slate-400 p-4 mb-6 rounded-r-xl">
+    <p class="text-slate-700 text-sm">
+      <strong>You're managing an estate.</strong>
+      Take your time—this work is important, not urgent.
+    </p>
+  </div>
+{/if}
+```
+
+#### 15.3.4 Progress Messaging
+
+| Avoid | Use Instead |
+|-------|-------------|
+| "Great job!" | "This has been recorded" |
+| "You're almost done!" | "Progress is being made" |
+| "Complete!" | "Saved for the estate" |
+
+### 15.4 Planner Mode UI
+
+When user is planning their own estate:
+
+#### 15.4.1 Courage Acknowledgment
+
+```svelte
+<EmptyState
+  title="Your circle of trust"
+  whyMatters="<strong>It takes courage to prepare for those you love.</strong>
+              These contacts will be there when your family needs them most."
+  encouragement="Start with just one person—the rest will follow naturally."
+/>
+```
+
+#### 15.4.2 Legacy Framing
+
+Frame tasks as gifts, not chores:
+- "This is a gift to your family"
+- "You're doing something meaningful"
+- "Future you will be grateful"
+
+### 15.5 Family Mode UI
+
+When `contextStore.isFamily === true`:
+
+- Use neutral language (not "your" or "their")
+- Acknowledge complexity of family dynamics
+- Provide clear role boundaries
+
+### 15.6 Implementation Pattern
+
+```svelte
+<script>
+  import { contextStore } from "$lib/stores/contextStore.svelte";
+  import ContextualMessage from "$lib/components/ContextualMessage.svelte";
+</script>
+
+<!-- Use ContextualMessage for role-aware text -->
+<ContextualMessage
+  variants={{
+    planning: "Share your contact details",
+    executor: "Record contact information",
+    family: "Add contact details"
+  }}
+/>
+
+<!-- Or conditional rendering -->
+<LivingBlueprintHeader
+  title="Contacts"
+  subtitle={contextStore.isExecutor
+    ? "Important contacts and relationships to notify"
+    : contextStore.isFamily
+      ? "Family and friends connected to the estate"
+      : "Your trusted circle of support"}
+/>
+```
+
+### 15.7 Grief-Aware Patterns
+
+For users who may be grieving:
+
+| Pattern | Implementation |
+|---------|----------------|
+| **Permission to pause** | "This can wait if you need it to" |
+| **Delegation offers** | "You don't have to do this alone" |
+| **No urgency** | Remove all deadline language |
+| **Simplified options** | Reduce cognitive load |
+| **Acknowledgment** | "You're carrying a lot right now" |
+
+---
+
+## 16. Implementation Checklist
+
+### 16.1 When Creating a New Module
 
 - [ ] Use `max-w-6xl mx-auto p-6 md:p-8` container
 - [ ] Add `animate-in fade-in duration-500` to container
@@ -2188,8 +2389,10 @@ confirm("Remove this contact? You can always add them back later if needed.")
 - [ ] Use Lucide icons only
 - [ ] Follow card styling: `rounded-2xl border border-slate-200 shadow-sm`
 - [ ] Use compassionate language for all user-facing text
+- [ ] **Check TONE_GUIDE.md for language compliance**
+- [ ] **Add context-aware messaging for executor/family modes**
 
-### 15.2 When Creating a Modal
+### 16.2 When Creating a Modal
 
 - [ ] Use `<Modal />` component (never custom div)
 - [ ] Set appropriate `maxWidth` prop
@@ -2198,8 +2401,9 @@ confirm("Remove this contact? You can always add them back later if needed.")
 - [ ] Use standard input styling
 - [ ] Include footer with cancel + primary buttons
 - [ ] Use compassionate button text
+- [ ] **Include CustomFieldsManager**
 
-### 15.3 When Creating a Card
+### 16.3 When Creating a Card
 
 - [ ] Use `rounded-2xl` border radius
 - [ ] Use `border border-slate-200` border
@@ -2207,6 +2411,353 @@ confirm("Remove this contact? You can always add them back later if needed.")
 - [ ] Use `p-6` padding
 - [ ] Add `hover:shadow-md hover:border-primary/30` for interactive cards
 - [ ] Place edit/delete icons top-right with group-hover visibility
+
+---
+
+## 17. Accessibility Standards
+
+Continuum must be accessible to all users, including those using assistive technologies.
+
+### 17.1 ARIA Labels (MANDATORY)
+
+All interactive elements must have accessible names:
+
+```svelte
+<!-- Buttons with icons only -->
+<button
+  onclick={() => editItem(item)}
+  aria-label="Edit {item.name}"
+  class="p-2 text-slate-400 hover:text-blue-600"
+>
+  <Pencil size={16} />
+</button>
+
+<!-- Close buttons -->
+<button
+  onclick={closeModal}
+  aria-label="Close dialog"
+  class="..."
+>
+  <X size={20} />
+</button>
+
+<!-- Form inputs -->
+<label for="contact-name" class="sr-only">Contact name</label>
+<input
+  id="contact-name"
+  type="text"
+  placeholder="Full name"
+  aria-describedby="name-hint"
+/>
+<span id="name-hint" class="text-xs text-slate-500">
+  How they're known to family
+</span>
+```
+
+### 17.2 Keyboard Navigation (MANDATORY)
+
+All interactive elements must be keyboard accessible:
+
+| Element | Keyboard Support |
+|---------|------------------|
+| Buttons | `Enter` or `Space` to activate |
+| Modals | `Escape` to close, focus trapped inside |
+| Tabs | Arrow keys to navigate, `Enter` to select |
+| Menus | Arrow keys to navigate, `Escape` to close |
+| Cards | `Tab` to focus, `Enter` to interact |
+
+```svelte
+<!-- Modal with keyboard support -->
+<Modal
+  bind:open={showModal}
+  on:keydown={(e) => {
+    if (e.key === 'Escape') showModal = false;
+  }}
+>
+  <!-- Content -->
+</Modal>
+```
+
+### 17.3 Focus Management
+
+```svelte
+<script>
+  let inputRef: HTMLInputElement;
+
+  $effect(() => {
+    if (showModal && inputRef) {
+      // Focus first input when modal opens
+      inputRef.focus();
+    }
+  });
+</script>
+
+<input bind:this={inputRef} ... />
+```
+
+### 17.4 Color Contrast
+
+| Element | Minimum Contrast | Standard |
+|---------|------------------|----------|
+| Body text | 4.5:1 | WCAG AA |
+| Large text (18px+) | 3:1 | WCAG AA |
+| UI components | 3:1 | WCAG AA |
+| Focus indicators | 3:1 | WCAG AA |
+
+**Never rely on color alone** to convey information:
+
+```svelte
+<!-- WRONG: Color only -->
+<span class="text-red-500">Error</span>
+
+<!-- CORRECT: Color + icon + text -->
+<span class="text-red-500 flex items-center gap-1">
+  <AlertCircle size={14} />
+  Something needs attention
+</span>
+```
+
+### 17.5 Screen Reader Support
+
+```svelte
+<!-- Live regions for dynamic content -->
+<div aria-live="polite" aria-atomic="true" class="sr-only">
+  {#if showAffirmation}
+    Your changes have been saved
+  {/if}
+</div>
+
+<!-- Skip link for keyboard users -->
+<a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-white p-2 rounded">
+  Skip to main content
+</a>
+```
+
+### 17.6 Reduced Motion
+
+Respect user's motion preferences:
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+```
+
+```svelte
+<script>
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+</script>
+
+<div transition:fade={{ duration: prefersReducedMotion ? 0 : 300 }}>
+```
+
+---
+
+## 18. Form Validation Patterns
+
+### 18.1 Inline Validation
+
+Show validation feedback as users type, but be gentle:
+
+```svelte
+<script>
+  let email = $state('');
+  let touched = $state(false);
+
+  let isValid = $derived(email.includes('@') && email.includes('.'));
+  let showError = $derived(touched && !isValid && email.length > 0);
+</script>
+
+<div class="relative">
+  <input
+    type="email"
+    bind:value={email}
+    onblur={() => touched = true}
+    class="w-full px-4 py-3 rounded-xl border transition-colors
+           {showError ? 'border-amber-400 bg-amber-50/50' : 'border-slate-200'}"
+    aria-invalid={showError}
+    aria-describedby={showError ? 'email-error' : undefined}
+  />
+  {#if showError}
+    <p id="email-error" class="text-amber-600 text-sm mt-1 flex items-center gap-1">
+      <AlertCircle size={14} />
+      Please check the email format
+    </p>
+  {/if}
+</div>
+```
+
+### 18.2 Validation Message Tone
+
+| Avoid | Use Instead |
+|-------|-------------|
+| "Invalid email" | "Please check the email format" |
+| "Required field" | "This helps us reach you" |
+| "Error: Name too short" | "A bit more detail would help" |
+| "Password must contain..." | "For your security, please include..." |
+
+### 18.3 Required Field Indicators
+
+Don't use asterisks alone. Explain why fields matter:
+
+```svelte
+<label class="block text-sm font-medium text-slate-700 mb-1">
+  Their name
+  <span class="text-slate-400 font-normal">— helps us personalize communications</span>
+</label>
+```
+
+### 18.4 Form Submission Errors
+
+Show errors at the form level with compassionate messaging:
+
+```svelte
+{#if formError}
+  <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6" role="alert">
+    <div class="flex items-start gap-3">
+      <AlertCircle class="text-amber-500 shrink-0 mt-0.5" size={20} />
+      <div>
+        <p class="text-amber-800 font-medium">
+          Something needs a bit more attention
+        </p>
+        <p class="text-amber-700 text-sm mt-1">
+          {formError}
+        </p>
+      </div>
+    </div>
+  </div>
+{/if}
+```
+
+### 18.5 Success States
+
+After successful validation, provide subtle positive feedback:
+
+```svelte
+<div class="relative">
+  <input
+    class="{isValid && touched ? 'border-green-300 bg-green-50/30' : ''} ..."
+  />
+  {#if isValid && touched}
+    <Check class="absolute right-3 top-1/2 -translate-y-1/2 text-green-500" size={18} />
+  {/if}
+</div>
+```
+
+---
+
+## 19. Responsive & Mobile Standards
+
+### 19.1 Mobile-First Approach
+
+Write styles mobile-first, then add breakpoints for larger screens:
+
+```svelte
+<div class="
+  p-4              <!-- Mobile: 16px padding -->
+  md:p-6           <!-- Tablet: 24px padding -->
+  lg:p-8           <!-- Desktop: 32px padding -->
+">
+```
+
+### 19.2 Breakpoints
+
+| Prefix | Min Width | Use For |
+|--------|-----------|---------|
+| (none) | 0px | Mobile phones |
+| `sm:` | 640px | Large phones |
+| `md:` | 768px | Tablets |
+| `lg:` | 1024px | Laptops |
+| `xl:` | 1280px | Desktops |
+| `2xl:` | 1536px | Large monitors |
+
+### 19.3 Touch Targets (MANDATORY)
+
+Minimum touch target size is 44x44px on mobile:
+
+```svelte
+<!-- WRONG: Too small -->
+<button class="p-1">
+  <Pencil size={14} />
+</button>
+
+<!-- CORRECT: Adequate touch target -->
+<button class="p-3 min-w-[44px] min-h-[44px]">
+  <Pencil size={18} />
+</button>
+```
+
+### 19.4 Responsive Grid Patterns
+
+```svelte
+<!-- Cards: 1 col mobile, 2 tablet, 3 desktop -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+
+<!-- Form: Full width mobile, 2 cols tablet+ -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <input placeholder="First name" />
+  <input placeholder="Last name" />
+</div>
+```
+
+### 19.5 Mobile Navigation
+
+For complex navigation, use bottom sheet pattern on mobile:
+
+```svelte
+<!-- Desktop: Sidebar -->
+<nav class="hidden lg:block w-64">
+  <!-- Sidebar content -->
+</nav>
+
+<!-- Mobile: Bottom sheet or hamburger -->
+<button class="lg:hidden fixed bottom-4 right-4 ...">
+  <Menu size={24} />
+</button>
+```
+
+### 19.6 Modal Sizing on Mobile
+
+Modals should be full-screen or near-full on mobile:
+
+```svelte
+<div class="
+  fixed inset-0
+  lg:inset-auto lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2
+  w-full lg:max-w-lg
+  h-full lg:h-auto lg:max-h-[90vh]
+  rounded-none lg:rounded-2xl
+">
+```
+
+### 19.7 Responsive Typography
+
+```svelte
+<h1 class="
+  text-2xl          <!-- Mobile -->
+  md:text-3xl       <!-- Tablet -->
+  lg:text-4xl       <!-- Desktop -->
+  font-serif font-bold
+">
+```
+
+### 19.8 Safe Areas (iOS)
+
+Account for device safe areas:
+
+```css
+.modal-content {
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+}
+
+.bottom-nav {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+```
 
 ---
 

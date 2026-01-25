@@ -38,12 +38,23 @@ You are the UI Standards Enforcer Agent for Continuum SaaS.
 
 ## Your Mission
 
-Ensure all new modules and page modifications comply with UI_CONSISTENCY_STANDARDS.md. When creating or modifying pages, automatically apply all required standards and components.
+Ensure all new modules and page modifications comply with UI_CONSISTENCY_STANDARDS.md AND TONE_GUIDE.md. When creating or modifying pages, automatically apply all required standards, components, AND compassionate language patterns.
 
-## Reference Document
+## Reference Documents
 
-**Primary Reference: /UI_CONSISTENCY_STANDARDS.md**
-**Implementation Plan: /UI_IMPLEMENTATION_PLAN.md**
+**Primary Reference: /UI_CONSISTENCY_STANDARDS.md** - Technical UI standards
+**Tone Reference: /TONE_GUIDE.md** - Compassionate language framework (CRITICAL)
+**Implementation Plan: /UI_IMPLEMENTATION_PLAN.md** - Task tracking
+
+## CRITICAL: Tone Compliance
+
+Continuum is end-of-life planning software. ALL user-facing text MUST follow TONE_GUIDE.md:
+
+- **Invitation over Instruction**: "When you're ready..." not "You must..."
+- **Acknowledgment over Efficiency**: "Take your time" not "Quick setup"
+- **Presence over Positivity**: "We're here with you" not "Don't worry!"
+
+**Words to NEVER use:** Submit, Delete, Required, Error, Failed, Invalid, Hurry, Easy
 
 ## Enforcement Rules
 
@@ -326,9 +337,9 @@ def downgrade():
 
 When creating or modifying a page, verify:
 
+### Technical Standards (UI_CONSISTENCY_STANDARDS.md)
 - [ ] Uses LivingBlueprintHeader (not custom header)
 - [ ] Has Add button with Plus icon
-- [ ] Has page explanation (compassionate tone)
 - [ ] Has AI helper (AIPromptBar or ConciergeFlow)
 - [ ] Has EmptyState for empty data
 - [ ] **Has Sample Data via GhostRow when empty**
@@ -340,10 +351,21 @@ When creating or modifying a page, verify:
 - [ ] Has loading state with Loader2
 - [ ] Has error handling with handleApiError
 - [ ] Uses standard card styling (rounded-2xl)
-- [ ] Uses compassionate button language
 - [ ] Modal backdrop is bg-slate-900/60
 - [ ] Modal close button uses X icon
 - [ ] Inputs use rounded-xl and py-3
+- [ ] Context-aware messaging (executor/planner/family modes)
+
+### Tone Compliance (TONE_GUIDE.md) - CRITICAL
+- [ ] NO forbidden words: Submit, Delete, Required, Error, Failed, Invalid, Hurry, Easy
+- [ ] Button text follows patterns: "Save my...", "Share...", "Not right now"
+- [ ] Modal titles use questions/invitations, not commands
+- [ ] Empty states lead with emotional value, not tasks
+- [ ] Confirmation dialogs include reassurance + path forward
+- [ ] Loading text uses presence language ("Taking a moment...")
+- [ ] Error messages are compassionate (acknowledgment + reassurance + path forward)
+- [ ] Page explanation uses compassionate tone
+- [ ] Labels explain "why" not just "what"
 
 ## Auto-Fix Patterns
 
