@@ -11,10 +11,13 @@
         FileText,
         Heart,
         Shield,
-        Briefcase
+        Briefcase,
+        Menu,
+        X
     } from "lucide-svelte";
 
     let langMenuOpen = $state(false);
+    let mobileMenuOpen = $state(false);
 
     function reveal(node: HTMLElement) {
         const observer = new IntersectionObserver(
@@ -41,6 +44,17 @@
     });
 </script>
 
+<svelte:head>
+    <title>{$m2t.metaTitleFeatures}</title>
+    <meta name="description" content={$m2t.metaDescFeatures} />
+    <meta property="og:title" content={$m2t.metaTitleFeatures} />
+    <meta property="og:description" content={$m2t.metaDescFeatures} />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={$m2t.metaTitleFeatures} />
+    <meta name="twitter:description" content={$m2t.metaDescFeatures} />
+</svelte:head>
+
 <div class="min-h-screen bg-[#0a0a0b] text-white" dir={$isRTL ? "rtl" : "ltr"}>
     <!-- Subtle Background -->
     <div class="fixed inset-0 z-0 pointer-events-none">
@@ -65,6 +79,19 @@
             </nav>
 
             <div class="flex items-center gap-4">
+                <!-- Mobile menu button -->
+                <button
+                    onclick={() => mobileMenuOpen = !mobileMenuOpen}
+                    class="md:hidden text-white/60 hover:text-white transition-colors p-2"
+                    aria-label="Toggle menu"
+                >
+                    {#if mobileMenuOpen}
+                        <X size={24} />
+                    {:else}
+                        <Menu size={24} />
+                    {/if}
+                </button>
+
                 <div class="relative">
                     <button
                         onclick={() => langMenuOpen = !langMenuOpen}
@@ -102,6 +129,38 @@
                 </a>
             </div>
         </div>
+
+        <!-- Mobile menu -->
+        {#if mobileMenuOpen}
+            <div
+                class="md:hidden border-t border-white/5 bg-black/95 backdrop-blur-md"
+                transition:fade={{ duration: 150 }}
+            >
+                <nav class="flex flex-col px-6 py-4 space-y-4">
+                    <a
+                        href="/marketing2/how"
+                        class="text-white/60 hover:text-white transition-colors py-2"
+                        onclick={() => mobileMenuOpen = false}
+                    >
+                        {$m2t.navHow}
+                    </a>
+                    <a
+                        href="/marketing2/features"
+                        class="text-white py-2"
+                        onclick={() => mobileMenuOpen = false}
+                    >
+                        {$m2t.navFeatures}
+                    </a>
+                    <a
+                        href="/marketing2#security"
+                        class="text-white/60 hover:text-white transition-colors py-2"
+                        onclick={() => mobileMenuOpen = false}
+                    >
+                        {$m2t.navSecurity}
+                    </a>
+                </nav>
+            </div>
+        {/if}
     </header>
 
     <main class="relative z-10 pt-24">
@@ -272,13 +331,20 @@
 
     <!-- Footer -->
     <footer class="py-12 px-6 border-t border-white/5">
-        <div class="max-w-4xl mx-auto text-center space-y-4">
-            <p class="text-xs text-white/30">
-                {$m2t.footerDisclaimer}
-            </p>
-            <p class="text-sm text-white/20 font-serif italic">
-                {$m2t.footerTagline}
-            </p>
+        <div class="max-w-4xl mx-auto">
+            <nav class="flex justify-center gap-8 mb-8 text-sm text-white/40">
+                <a href="/marketing2/how" class="hover:text-white/60 transition-colors">{$m2t.navHow}</a>
+                <a href="/marketing2/features" class="text-white/60">{$m2t.navFeatures}</a>
+                <a href="/marketing2#security" class="hover:text-white/60 transition-colors">{$m2t.navSecurity}</a>
+            </nav>
+            <div class="text-center space-y-4">
+                <p class="text-xs text-white/30">
+                    {$m2t.footerDisclaimer}
+                </p>
+                <p class="text-sm text-white/20 font-serif italic">
+                    {$m2t.footerTagline}
+                </p>
+            </div>
         </div>
     </footer>
 </div>

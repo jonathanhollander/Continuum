@@ -11,7 +11,10 @@
         Heart,
         Compass,
         Shield,
-        BookOpen
+        BookOpen,
+        Menu,
+        X,
+        Lock
     } from "lucide-svelte";
     import {
         keyringEmails,
@@ -24,6 +27,7 @@
     let innerHeight = $state(0);
     let introVisible = $state(false);
     let langMenuOpen = $state(false);
+    let mobileMenuOpen = $state(false);
 
     // Signup flow state
     let name = $state("");
@@ -82,6 +86,17 @@
     const heroOpacity = $derived(Math.max(0, 1 - scrollY / (innerHeight * 0.5)));
 </script>
 
+<svelte:head>
+    <title>{$m2t.metaTitle}</title>
+    <meta name="description" content={$m2t.metaDescription} />
+    <meta property="og:title" content={$m2t.metaTitle} />
+    <meta property="og:description" content={$m2t.metaDescription} />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={$m2t.metaTitle} />
+    <meta name="twitter:description" content={$m2t.metaDescription} />
+</svelte:head>
+
 <svelte:window bind:scrollY bind:innerHeight />
 
 <div class="min-h-screen bg-[#0a0a0b] text-white" dir={$isRTL ? "rtl" : "ltr"}>
@@ -113,6 +128,19 @@
 
             <!-- Right side -->
             <div class="flex items-center gap-4">
+                <!-- Mobile menu button -->
+                <button
+                    onclick={() => mobileMenuOpen = !mobileMenuOpen}
+                    class="md:hidden text-white/60 hover:text-white transition-colors p-2"
+                    aria-label="Toggle menu"
+                >
+                    {#if mobileMenuOpen}
+                        <X size={24} />
+                    {:else}
+                        <Menu size={24} />
+                    {/if}
+                </button>
+
                 <!-- Language selector -->
                 <div class="relative">
                     <button
@@ -152,6 +180,38 @@
                 </a>
             </div>
         </div>
+
+        <!-- Mobile menu -->
+        {#if mobileMenuOpen}
+            <div
+                class="md:hidden border-t border-white/5 bg-black/95 backdrop-blur-md"
+                transition:fade={{ duration: 150 }}
+            >
+                <nav class="flex flex-col px-6 py-4 space-y-4">
+                    <a
+                        href="/marketing2/how"
+                        class="text-white/60 hover:text-white transition-colors py-2"
+                        onclick={() => mobileMenuOpen = false}
+                    >
+                        {$m2t.navHow}
+                    </a>
+                    <a
+                        href="/marketing2/features"
+                        class="text-white/60 hover:text-white transition-colors py-2"
+                        onclick={() => mobileMenuOpen = false}
+                    >
+                        {$m2t.navFeatures}
+                    </a>
+                    <a
+                        href="#security"
+                        class="text-white/60 hover:text-white transition-colors py-2"
+                        onclick={() => mobileMenuOpen = false}
+                    >
+                        {$m2t.navSecurity}
+                    </a>
+                </nav>
+            </div>
+        {/if}
     </header>
 
     <main class="relative z-10">
@@ -175,9 +235,16 @@
                         <p class="text-2xl md:text-3xl font-serif text-amber-400/90 mb-8">
                             {$m2t.heroLine3}
                         </p>
-                        <p class="text-lg text-white/50 max-w-xl mx-auto">
+                        <p class="text-lg text-white/50 max-w-xl mx-auto mb-10">
                             {$m2t.heroDesc}
                         </p>
+                        <a
+                            href="/marketing2/features"
+                            class="inline-flex items-center gap-2 text-sm text-white/40 hover:text-white/60 transition-colors"
+                        >
+                            {$m2t.ctaExplore}
+                            <ArrowRight size={16} />
+                        </a>
                     </div>
                 {/if}
             </div>
@@ -185,6 +252,21 @@
             <!-- Scroll indicator -->
             <div class="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 text-white/30" style="opacity: {heroOpacity};">
                 <div class="w-px h-12 bg-gradient-to-b from-white/20 to-transparent"></div>
+            </div>
+        </section>
+
+        <!-- Section 1.5: The Kitchen Story -->
+        <section class="py-24 px-6 bg-gradient-to-b from-transparent via-rose-950/5 to-transparent">
+            <div class="max-w-2xl mx-auto reveal-section" use:reveal>
+                <h2 class="text-2xl md:text-3xl font-serif text-white/80 text-center mb-10">
+                    {$m2t.kitchenTitle}
+                </h2>
+                <p class="text-lg text-white/40 leading-relaxed mb-10 italic">
+                    {$m2t.kitchenDesc}
+                </p>
+                <p class="text-xl text-rose-400/70 font-serif text-center">
+                    {$m2t.kitchenPunchline}
+                </p>
             </div>
         </section>
 
@@ -240,6 +322,9 @@
                     <p class="text-lg text-white/50 leading-relaxed">
                         {$m2t.pulseHow}
                     </p>
+                    <p class="text-base text-white/40 leading-relaxed">
+                        {$m2t.pulseTiers}
+                    </p>
                     <p class="text-xl text-teal-400/80 font-serif italic">
                         {$m2t.pulseGift}
                     </p>
@@ -248,7 +333,7 @@
         </section>
 
         <!-- Section 5: The Distinction -->
-        <section class="py-32 px-6 bg-gradient-to-b from-transparent via-white/[0.02] to-transparent" id="security">
+        <section class="py-32 px-6 bg-gradient-to-b from-transparent via-white/[0.02] to-transparent">
             <div class="max-w-3xl mx-auto text-center reveal-section" use:reveal>
                 <div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-8">
                     <Shield size={24} class="text-white/50" />
@@ -265,6 +350,38 @@
                 <p class="text-lg text-white/60 font-serif italic">
                     {$m2t.distinctionTagline}
                 </p>
+            </div>
+        </section>
+
+        <!-- Section 5.5: Security -->
+        <section class="py-32 px-6" id="security">
+            <div class="max-w-4xl mx-auto reveal-section" use:reveal>
+                <div class="text-center mb-16">
+                    <div class="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-8">
+                        <Lock size={24} class="text-emerald-400/70" />
+                    </div>
+                    <h2 class="text-3xl md:text-4xl font-serif text-white/90 mb-6">
+                        {$m2t.securityTitle}
+                    </h2>
+                    <p class="text-lg text-white/50 leading-relaxed max-w-2xl mx-auto">
+                        {$m2t.securityDesc}
+                    </p>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="text-center p-6 rounded-2xl bg-white/[0.02] border border-white/5">
+                        <h3 class="text-lg font-serif text-emerald-400/90 mb-3">{$m2t.securityEncryption}</h3>
+                        <p class="text-sm text-white/40">{$m2t.securityEncryptionDesc}</p>
+                    </div>
+                    <div class="text-center p-6 rounded-2xl bg-white/[0.02] border border-white/5">
+                        <h3 class="text-lg font-serif text-emerald-400/90 mb-3">{$m2t.securityPrivacy}</h3>
+                        <p class="text-sm text-white/40">{$m2t.securityPrivacyDesc}</p>
+                    </div>
+                    <div class="text-center p-6 rounded-2xl bg-white/[0.02] border border-white/5">
+                        <h3 class="text-lg font-serif text-emerald-400/90 mb-3">{$m2t.securityControl}</h3>
+                        <p class="text-sm text-white/40">{$m2t.securityControlDesc}</p>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -389,13 +506,20 @@
 
     <!-- Footer -->
     <footer class="py-12 px-6 border-t border-white/5">
-        <div class="max-w-4xl mx-auto text-center space-y-4">
-            <p class="text-xs text-white/30">
-                {$m2t.footerDisclaimer}
-            </p>
-            <p class="text-sm text-white/20 font-serif italic">
-                {$m2t.footerTagline}
-            </p>
+        <div class="max-w-4xl mx-auto">
+            <nav class="flex justify-center gap-8 mb-8 text-sm text-white/40">
+                <a href="/marketing2/how" class="hover:text-white/60 transition-colors">{$m2t.navHow}</a>
+                <a href="/marketing2/features" class="hover:text-white/60 transition-colors">{$m2t.navFeatures}</a>
+                <a href="#security" class="hover:text-white/60 transition-colors">{$m2t.navSecurity}</a>
+            </nav>
+            <div class="text-center space-y-4">
+                <p class="text-xs text-white/30">
+                    {$m2t.footerDisclaimer}
+                </p>
+                <p class="text-sm text-white/20 font-serif italic">
+                    {$m2t.footerTagline}
+                </p>
+            </div>
         </div>
     </footer>
 </div>

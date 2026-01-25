@@ -25,6 +25,11 @@ export const marketing2Dictionary = {
         heroLine3: "You have Continuum.",
         heroDesc: "A calm place to organize your life for the people you love.",
 
+        // Section 1.5: The Kitchen Story (emotional contrast)
+        kitchenTitle: "Picture the kitchen.",
+        kitchenDesc: "After they're gone, you're standing in their kitchen. You don't know where anything is. Which drawer has the insurance papers? Who was their accountant? Did they want to be cremated? The kettle boils. You realize you don't even know where they kept the tea.",
+        kitchenPunchline: "That feeling? You can spare your family from it.",
+
         // Section 2: The Weight
         weightTitle: "Someday, someone will need to figure out your life.",
         weightDesc: "Where's the will? What accounts exist? What did you want? They'll be grieving. And searching. Unless you leave them something better than a drawer full of questions.",
@@ -39,6 +44,7 @@ export const marketing2Dictionary = {
         pulseTitle: "You don't have to have the difficult conversation.",
         pulseDesc: "Set up your Pulse. Check in every few days—a simple \"I'm here.\" And if one day you're not there to check in, Continuum notices.",
         pulseHow: "It reaches out to the people you chose. Opens the right doors, at the right time. Your executor won't face a mystery. They'll receive clarity.",
+        pulseTiers: "Different people see different things, in the order you choose. A trusted friend gets a gentle alert first. Later tiers receive more access. You decide who gets what.",
         pulseGift: "You already took care of them. This was your final gift.",
 
         // Section 5: The Distinction
@@ -46,6 +52,16 @@ export const marketing2Dictionary = {
         distinctionDesc: "Continuum doesn't write wills or give financial advice. Your professionals do that.",
         distinctionRole: "We're the organization layer. We help you gather what they create—and what you want to say—so it's found, understood, and used.",
         distinctionTagline: "They create the plan. We make sure it works.",
+
+        // Section 5.5: Security
+        securityTitle: "Your life, protected.",
+        securityDesc: "Everything you store in Continuum is encrypted. Your data stays yours—we can't read it, sell it, or share it.",
+        securityEncryption: "End-to-end encryption",
+        securityEncryptionDesc: "Your information is encrypted before it leaves your device.",
+        securityPrivacy: "No data selling",
+        securityPrivacyDesc: "We make money from subscriptions, not your personal information.",
+        securityControl: "You control access",
+        securityControlDesc: "Choose exactly who sees what, and when.",
 
         // Section 6: The Gift
         giftTitle: "What they'll receive",
@@ -119,6 +135,14 @@ export const marketing2Dictionary = {
         featuresMore: "There's more here than you'll ever need. That's the point. Whatever your situation—complicated family, multiple properties, beloved pets, specific wishes—Continuum has a place for it.",
         featuresMoreSub: "You'll find it when you need it. The guide will take you there.",
 
+        // SEO
+        metaTitle: "Continuum — Organize your life for the people you love",
+        metaDescription: "A calm place to document everything your family will need. Encrypted, private, and ready when the time comes.",
+        metaTitleFeatures: "What's Inside — Continuum",
+        metaDescFeatures: "Explore the tools inside Continuum: practical documents, personal letters, protective systems, and executor preparation.",
+        metaTitleHow: "How It Works — Continuum",
+        metaDescHow: "Three gentle steps: start where feels right, build over time, and let it open when needed.",
+
         // Footer
         footerDisclaimer: "Continuum is a documentation and organization tool. We do not provide legal, financial, tax, or medical advice.",
         footerTagline: "The organized life. The gentle handover.",
@@ -137,6 +161,11 @@ export const marketing2Dictionary = {
         heroLine3: "Tú tienes Continuum.",
         heroDesc: "Un lugar tranquilo para organizar tu vida para las personas que amas.",
 
+        // Section 1.5: The Kitchen Story
+        kitchenTitle: "Imagina la cocina.",
+        kitchenDesc: "Después de que se fueron, estás en su cocina. No sabes dónde está nada. ¿Qué cajón tiene los papeles del seguro? ¿Quién era su contador? ¿Querían ser cremados? La tetera hierve. Te das cuenta de que ni siquiera sabes dónde guardaban el té.",
+        kitchenPunchline: "¿Ese sentimiento? Puedes evitárselo a tu familia.",
+
         // Section 2: The Weight
         weightTitle: "Algún día, alguien tendrá que descifrar tu vida.",
         weightDesc: "¿Dónde está el testamento? ¿Qué cuentas existen? ¿Qué querías? Estarán de duelo. Y buscando. A menos que les dejes algo mejor que un cajón lleno de preguntas.",
@@ -151,6 +180,7 @@ export const marketing2Dictionary = {
         pulseTitle: "No tienes que tener la conversación difícil.",
         pulseDesc: "Configura tu Pulso. Confirma cada pocos días—un simple \"Estoy aquí.\" Y si un día no estás para confirmar, Continuum lo nota.",
         pulseHow: "Se comunica con las personas que elegiste. Abre las puertas correctas, en el momento correcto. Tu albacea no enfrentará un misterio. Recibirá claridad.",
+        pulseTiers: "Diferentes personas ven diferentes cosas, en el orden que tú elijas. Un amigo de confianza recibe una alerta suave primero. Los niveles posteriores reciben más acceso. Tú decides quién recibe qué.",
         pulseGift: "Ya cuidaste de ellos. Este fue tu último regalo.",
 
         // Section 5: The Distinction
@@ -158,6 +188,16 @@ export const marketing2Dictionary = {
         distinctionDesc: "Continuum no redacta testamentos ni da asesoramiento financiero. Tus profesionales hacen eso.",
         distinctionRole: "Somos la capa de organización. Te ayudamos a reunir lo que ellos crean—y lo que quieres decir—para que se encuentre, se entienda y se use.",
         distinctionTagline: "Ellos crean el plan. Nosotros nos aseguramos de que funcione.",
+
+        // Section 5.5: Security
+        securityTitle: "Tu vida, protegida.",
+        securityDesc: "Todo lo que almacenas en Continuum está cifrado. Tus datos son tuyos—no podemos leerlos, venderlos ni compartirlos.",
+        securityEncryption: "Cifrado de extremo a extremo",
+        securityEncryptionDesc: "Tu información se cifra antes de salir de tu dispositivo.",
+        securityPrivacy: "No vendemos datos",
+        securityPrivacyDesc: "Ganamos dinero con suscripciones, no con tu información personal.",
+        securityControl: "Tú controlas el acceso",
+        securityControlDesc: "Elige exactamente quién ve qué, y cuándo.",
 
         // Section 6: The Gift
         giftTitle: "Lo que recibirán",
@@ -231,6 +271,14 @@ export const marketing2Dictionary = {
         featuresMore: "Hay más aquí de lo que jamás necesitarás. Ese es el punto. Sea cual sea tu situación—familia complicada, múltiples propiedades, mascotas queridas, deseos específicos—Continuum tiene un lugar para ello.",
         featuresMoreSub: "Lo encontrarás cuando lo necesites. La guía te llevará allí.",
 
+        // SEO
+        metaTitle: "Continuum — Organiza tu vida para las personas que amas",
+        metaDescription: "Un lugar tranquilo para documentar todo lo que tu familia necesitará. Cifrado, privado y listo cuando llegue el momento.",
+        metaTitleFeatures: "Lo que hay dentro — Continuum",
+        metaDescFeatures: "Explora las herramientas dentro de Continuum: documentos prácticos, cartas personales, sistemas de protección y preparación para el albacea.",
+        metaTitleHow: "Cómo funciona — Continuum",
+        metaDescHow: "Tres pasos amables: empieza donde te sientas cómodo, construye con el tiempo, y deja que se abra cuando sea necesario.",
+
         // Footer
         footerDisclaimer: "Continuum es una herramienta de documentación y organización. No proporcionamos asesoramiento legal, financiero, fiscal o médico.",
         footerTagline: "La vida organizada. La entrega gentil.",
@@ -249,6 +297,11 @@ export const marketing2Dictionary = {
         heroLine3: "Vous avez Continuum.",
         heroDesc: "Un espace serein pour organiser votre vie pour ceux que vous aimez.",
 
+        // Section 1.5: The Kitchen Story
+        kitchenTitle: "Imaginez la cuisine.",
+        kitchenDesc: "Après leur départ, vous êtes dans leur cuisine. Vous ne savez pas où se trouve quoi que ce soit. Quel tiroir contient les papiers d'assurance ? Qui était leur comptable ? Voulaient-ils être incinérés ? La bouilloire chauffe. Vous réalisez que vous ne savez même pas où ils rangeaient le thé.",
+        kitchenPunchline: "Ce sentiment ? Vous pouvez l'épargner à votre famille.",
+
         // Section 2: The Weight
         weightTitle: "Un jour, quelqu'un devra comprendre votre vie.",
         weightDesc: "Où est le testament ? Quels comptes existent ? Que vouliez-vous ? Ils seront en deuil. Et à la recherche. À moins que vous ne leur laissiez quelque chose de mieux qu'un tiroir plein de questions.",
@@ -263,6 +316,7 @@ export const marketing2Dictionary = {
         pulseTitle: "Vous n'avez pas besoin d'avoir la conversation difficile.",
         pulseDesc: "Configurez votre Pulse. Confirmez tous les quelques jours—un simple « Je suis là ». Et si un jour vous n'êtes pas là pour confirmer, Continuum le remarque.",
         pulseHow: "Il contacte les personnes que vous avez choisies. Ouvre les bonnes portes, au bon moment. Votre exécuteur ne fera pas face à un mystère. Il recevra de la clarté.",
+        pulseTiers: "Différentes personnes voient différentes choses, dans l'ordre que vous choisissez. Un ami de confiance reçoit d'abord une alerte douce. Les niveaux suivants reçoivent plus d'accès. Vous décidez qui reçoit quoi.",
         pulseGift: "Vous avez déjà pris soin d'eux. C'était votre dernier cadeau.",
 
         // Section 5: The Distinction
@@ -270,6 +324,16 @@ export const marketing2Dictionary = {
         distinctionDesc: "Continuum ne rédige pas de testaments et ne donne pas de conseils financiers. Vos professionnels font cela.",
         distinctionRole: "Nous sommes la couche d'organisation. Nous vous aidons à rassembler ce qu'ils créent—et ce que vous voulez dire—pour que cela soit trouvé, compris et utilisé.",
         distinctionTagline: "Ils créent le plan. Nous nous assurons qu'il fonctionne.",
+
+        // Section 5.5: Security
+        securityTitle: "Votre vie, protégée.",
+        securityDesc: "Tout ce que vous stockez dans Continuum est chiffré. Vos données restent les vôtres—nous ne pouvons ni les lire, ni les vendre, ni les partager.",
+        securityEncryption: "Chiffrement de bout en bout",
+        securityEncryptionDesc: "Vos informations sont chiffrées avant de quitter votre appareil.",
+        securityPrivacy: "Pas de vente de données",
+        securityPrivacyDesc: "Nous gagnons de l'argent avec les abonnements, pas avec vos informations personnelles.",
+        securityControl: "Vous contrôlez l'accès",
+        securityControlDesc: "Choisissez exactement qui voit quoi, et quand.",
 
         // Section 6: The Gift
         giftTitle: "Ce qu'ils recevront",
@@ -343,6 +407,14 @@ export const marketing2Dictionary = {
         featuresMore: "Il y a plus ici que vous n'en aurez jamais besoin. C'est le but. Quelle que soit votre situation—famille compliquée, propriétés multiples, animaux de compagnie adorés, souhaits spécifiques—Continuum a une place pour cela.",
         featuresMoreSub: "Vous le trouverez quand vous en aurez besoin. Le guide vous y mènera.",
 
+        // SEO
+        metaTitle: "Continuum — Organisez votre vie pour ceux que vous aimez",
+        metaDescription: "Un espace serein pour documenter tout ce dont votre famille aura besoin. Chiffré, privé et prêt le moment venu.",
+        metaTitleFeatures: "Ce qu'il y a à l'intérieur — Continuum",
+        metaDescFeatures: "Découvrez les outils de Continuum : documents pratiques, lettres personnelles, systèmes de protection et préparation pour l'exécuteur.",
+        metaTitleHow: "Comment ça marche — Continuum",
+        metaDescHow: "Trois étapes douces : commencez où vous vous sentez à l'aise, construisez au fil du temps, et laissez-le s'ouvrir quand c'est nécessaire.",
+
         // Footer
         footerDisclaimer: "Continuum est un outil de documentation et d'organisation. Nous ne fournissons pas de conseils juridiques, financiers, fiscaux ou médicaux.",
         footerTagline: "La vie organisée. La transmission douce.",
@@ -361,6 +433,11 @@ export const marketing2Dictionary = {
         heroLine3: "Sie haben Continuum.",
         heroDesc: "Ein ruhiger Ort, um Ihr Leben für die Menschen zu organisieren, die Sie lieben.",
 
+        // Section 1.5: The Kitchen Story
+        kitchenTitle: "Stellen Sie sich die Küche vor.",
+        kitchenDesc: "Nachdem sie gegangen sind, stehen Sie in ihrer Küche. Sie wissen nicht, wo irgendetwas ist. In welcher Schublade sind die Versicherungspapiere? Wer war ihr Buchhalter? Wollten sie eingeäschert werden? Der Wasserkocher kocht. Sie merken, dass Sie nicht einmal wissen, wo sie den Tee aufbewahrt haben.",
+        kitchenPunchline: "Dieses Gefühl? Sie können es Ihrer Familie ersparen.",
+
         // Section 2: The Weight
         weightTitle: "Eines Tages wird jemand Ihr Leben verstehen müssen.",
         weightDesc: "Wo ist das Testament? Welche Konten gibt es? Was wollten Sie? Sie werden trauern. Und suchen. Es sei denn, Sie hinterlassen ihnen etwas Besseres als eine Schublade voller Fragen.",
@@ -375,6 +452,7 @@ export const marketing2Dictionary = {
         pulseTitle: "Sie müssen das schwierige Gespräch nicht führen.",
         pulseDesc: "Richten Sie Ihren Puls ein. Bestätigen Sie alle paar Tage—ein einfaches „Ich bin hier." Und wenn Sie eines Tages nicht da sind, um zu bestätigen, bemerkt es Continuum.",
         pulseHow: "Es wendet sich an die Menschen, die Sie gewählt haben. Öffnet die richtigen Türen, zur richtigen Zeit. Ihr Testamentsvollstrecker steht nicht vor einem Rätsel. Er erhält Klarheit.",
+        pulseTiers: "Verschiedene Personen sehen verschiedene Dinge, in der Reihenfolge, die Sie wählen. Ein vertrauter Freund erhält zuerst eine sanfte Benachrichtigung. Spätere Stufen erhalten mehr Zugang. Sie entscheiden, wer was bekommt.",
         pulseGift: "Sie haben bereits für sie gesorgt. Das war Ihr letztes Geschenk.",
 
         // Section 5: The Distinction
@@ -382,6 +460,16 @@ export const marketing2Dictionary = {
         distinctionDesc: "Continuum verfasst keine Testamente und gibt keine Finanzberatung. Das machen Ihre Fachleute.",
         distinctionRole: "Wir sind die Organisationsebene. Wir helfen Ihnen, das zu sammeln, was sie erstellen—und was Sie sagen möchten—damit es gefunden, verstanden und verwendet wird.",
         distinctionTagline: "Sie erstellen den Plan. Wir sorgen dafür, dass er funktioniert.",
+
+        // Section 5.5: Security
+        securityTitle: "Ihr Leben, geschützt.",
+        securityDesc: "Alles, was Sie in Continuum speichern, ist verschlüsselt. Ihre Daten gehören Ihnen—wir können sie nicht lesen, verkaufen oder teilen.",
+        securityEncryption: "Ende-zu-Ende-Verschlüsselung",
+        securityEncryptionDesc: "Ihre Informationen werden verschlüsselt, bevor sie Ihr Gerät verlassen.",
+        securityPrivacy: "Kein Datenverkauf",
+        securityPrivacyDesc: "Wir verdienen Geld mit Abonnements, nicht mit Ihren persönlichen Daten.",
+        securityControl: "Sie kontrollieren den Zugang",
+        securityControlDesc: "Wählen Sie genau aus, wer was sieht und wann.",
 
         // Section 6: The Gift
         giftTitle: "Was sie erhalten werden",
@@ -455,6 +543,14 @@ export const marketing2Dictionary = {
         featuresMore: "Es gibt hier mehr, als Sie jemals brauchen werden. Das ist der Punkt. Was auch immer Ihre Situation ist—komplizierte Familie, mehrere Immobilien, geliebte Haustiere, spezielle Wünsche—Continuum hat einen Platz dafür.",
         featuresMoreSub: "Sie werden es finden, wenn Sie es brauchen. Der Leitfaden bringt Sie dorthin.",
 
+        // SEO
+        metaTitle: "Continuum — Organisieren Sie Ihr Leben für die Menschen, die Sie lieben",
+        metaDescription: "Ein ruhiger Ort, um alles zu dokumentieren, was Ihre Familie brauchen wird. Verschlüsselt, privat und bereit, wenn die Zeit kommt.",
+        metaTitleFeatures: "Was drin ist — Continuum",
+        metaDescFeatures: "Entdecken Sie die Werkzeuge in Continuum: praktische Dokumente, persönliche Briefe, Schutzsysteme und Vorbereitung für den Testamentsvollstrecker.",
+        metaTitleHow: "So funktioniert es — Continuum",
+        metaDescHow: "Drei sanfte Schritte: Beginnen Sie, wo es sich richtig anfühlt, bauen Sie mit der Zeit auf, und lassen Sie es sich öffnen, wenn nötig.",
+
         // Footer
         footerDisclaimer: "Continuum ist ein Dokumentations- und Organisationswerkzeug. Wir bieten keine rechtliche, finanzielle, steuerliche oder medizinische Beratung.",
         footerTagline: "Das organisierte Leben. Die sanfte Übergabe.",
@@ -473,6 +569,11 @@ export const marketing2Dictionary = {
         heroLine3: "У вас есть Continuum.",
         heroDesc: "Спокойное место для организации вашей жизни для тех, кого вы любите.",
 
+        // Section 1.5: The Kitchen Story
+        kitchenTitle: "Представьте кухню.",
+        kitchenDesc: "После их ухода вы стоите на их кухне. Вы не знаете, где что лежит. В каком ящике страховые документы? Кто был их бухгалтером? Хотели ли они быть кремированы? Чайник кипит. Вы понимаете, что даже не знаете, где они хранили чай.",
+        kitchenPunchline: "Это чувство? Вы можете избавить от него свою семью.",
+
         // Section 2: The Weight
         weightTitle: "Когда-нибудь кому-то придётся разобраться в вашей жизни.",
         weightDesc: "Где завещание? Какие счета существуют? Чего вы хотели? Они будут горевать. И искать. Если только вы не оставите им что-то лучшее, чем ящик, полный вопросов.",
@@ -487,6 +588,7 @@ export const marketing2Dictionary = {
         pulseTitle: "Вам не нужно вести трудный разговор.",
         pulseDesc: "Настройте свой Пульс. Подтверждайте каждые несколько дней—простое «Я здесь». И если однажды вас не будет, чтобы подтвердить, Continuum это заметит.",
         pulseHow: "Он связывается с людьми, которых вы выбрали. Открывает нужные двери в нужное время. Ваш душеприказчик не столкнётся с загадкой. Он получит ясность.",
+        pulseTiers: "Разные люди видят разное, в том порядке, который вы выберете. Доверенный друг получит мягкое уведомление первым. Следующие уровни получат больше доступа. Вы решаете, кто что получит.",
         pulseGift: "Вы уже позаботились о них. Это был ваш последний подарок.",
 
         // Section 5: The Distinction
@@ -494,6 +596,16 @@ export const marketing2Dictionary = {
         distinctionDesc: "Continuum не составляет завещания и не даёт финансовых советов. Этим занимаются ваши специалисты.",
         distinctionRole: "Мы — уровень организации. Мы помогаем вам собрать то, что они создают—и то, что вы хотите сказать—чтобы это было найдено, понято и использовано.",
         distinctionTagline: "Они создают план. Мы следим за тем, чтобы он работал.",
+
+        // Section 5.5: Security
+        securityTitle: "Ваша жизнь под защитой.",
+        securityDesc: "Всё, что вы храните в Continuum, зашифровано. Ваши данные остаются вашими—мы не можем их читать, продавать или передавать.",
+        securityEncryption: "Сквозное шифрование",
+        securityEncryptionDesc: "Ваша информация шифруется до того, как покинет ваше устройство.",
+        securityPrivacy: "Никакой продажи данных",
+        securityPrivacyDesc: "Мы зарабатываем на подписках, а не на вашей личной информации.",
+        securityControl: "Вы контролируете доступ",
+        securityControlDesc: "Выбирайте, кто именно что видит и когда.",
 
         // Section 6: The Gift
         giftTitle: "Что они получат",
@@ -567,6 +679,14 @@ export const marketing2Dictionary = {
         featuresMore: "Здесь больше, чем вам когда-либо понадобится. В этом и смысл. Какова бы ни была ваша ситуация—сложная семья, несколько объектов недвижимости, любимые питомцы, особые пожелания—в Continuum есть место для всего.",
         featuresMoreSub: "Вы найдёте это, когда понадобится. Гид приведёт вас туда.",
 
+        // SEO
+        metaTitle: "Continuum — Организуйте свою жизнь для тех, кого вы любите",
+        metaDescription: "Спокойное место для документирования всего, что понадобится вашей семье. Зашифровано, конфиденциально и готово, когда придёт время.",
+        metaTitleFeatures: "Что внутри — Continuum",
+        metaDescFeatures: "Исследуйте инструменты Continuum: практичные документы, личные письма, защитные системы и подготовка для душеприказчика.",
+        metaTitleHow: "Как это работает — Continuum",
+        metaDescHow: "Три мягких шага: начните там, где чувствуете себя комфортно, стройте со временем, и позвольте ему открыться, когда нужно.",
+
         // Footer
         footerDisclaimer: "Continuum — это инструмент документирования и организации. Мы не предоставляем юридических, финансовых, налоговых или медицинских консультаций.",
         footerTagline: "Организованная жизнь. Мягкая передача.",
@@ -585,6 +705,11 @@ export const marketing2Dictionary = {
         heroLine3: "לכם יש את Continuum.",
         heroDesc: "מקום שקט לארגן את החיים שלכם עבור האנשים שאתם אוהבים.",
 
+        // Section 1.5: The Kitchen Story
+        kitchenTitle: "דמיינו את המטבח.",
+        kitchenDesc: "אחרי שהם הלכו, אתם עומדים במטבח שלהם. אתם לא יודעים איפה שום דבר. באיזו מגירה יש את מסמכי הביטוח? מי היה רואה החשבון שלהם? האם הם רצו להישרף? הקומקום רותח. אתם מבינים שאתם אפילו לא יודעים איפה הם שמרו את התה.",
+        kitchenPunchline: "ההרגשה הזו? אתם יכולים לחסוך אותה מהמשפחה שלכם.",
+
         // Section 2: The Weight
         weightTitle: "יום אחד, מישהו יצטרך להבין את החיים שלכם.",
         weightDesc: "איפה הצוואה? אילו חשבונות קיימים? מה רציתם? הם יהיו באבל. ויחפשו. אלא אם תשאירו להם משהו טוב יותר ממגירה מלאה בשאלות.",
@@ -599,6 +724,7 @@ export const marketing2Dictionary = {
         pulseTitle: "אתם לא צריכים לנהל את השיחה הקשה.",
         pulseDesc: "הגדירו את הפולס שלכם. אשרו כל כמה ימים—פשוט \"אני כאן\". ואם יום אחד לא תהיו שם כדי לאשר, Continuum שם לב.",
         pulseHow: "הוא פונה לאנשים שבחרתם. פותח את הדלתות הנכונות, בזמן הנכון. מנהל העיזבון שלכם לא יתמודד עם תעלומה. הוא יקבל בהירות.",
+        pulseTiers: "אנשים שונים רואים דברים שונים, בסדר שאתם בוחרים. חבר מהימן מקבל התראה עדינה קודם. הרמות הבאות מקבלות יותר גישה. אתם מחליטים מי מקבל מה.",
         pulseGift: "כבר דאגתם להם. זו הייתה המתנה האחרונה שלכם.",
 
         // Section 5: The Distinction
@@ -606,6 +732,16 @@ export const marketing2Dictionary = {
         distinctionDesc: "Continuum לא כותב צוואות ולא נותן ייעוץ פיננסי. אנשי המקצוע שלכם עושים את זה.",
         distinctionRole: "אנחנו שכבת הארגון. אנחנו עוזרים לכם לאסוף את מה שהם יוצרים—ומה שאתם רוצים לומר—כדי שזה יימצא, יובן וישמש.",
         distinctionTagline: "הם יוצרים את התוכנית. אנחנו מוודאים שהיא עובדת.",
+
+        // Section 5.5: Security
+        securityTitle: "החיים שלכם, מוגנים.",
+        securityDesc: "כל מה שאתם שומרים ב-Continuum מוצפן. המידע שלכם נשאר שלכם—אנחנו לא יכולים לקרוא אותו, למכור אותו או לשתף אותו.",
+        securityEncryption: "הצפנה מקצה לקצה",
+        securityEncryptionDesc: "המידע שלכם מוצפן לפני שהוא עוזב את המכשיר שלכם.",
+        securityPrivacy: "ללא מכירת נתונים",
+        securityPrivacyDesc: "אנחנו מרוויחים כסף מהנויים, לא מהמידע האישי שלכם.",
+        securityControl: "אתם שולטים בגישה",
+        securityControlDesc: "בחרו בדיוק מי רואה מה, ומתי.",
 
         // Section 6: The Gift
         giftTitle: "מה הם יקבלו",
@@ -678,6 +814,14 @@ export const marketing2Dictionary = {
         preparedItem4: "סימולטור ניסיון",
         featuresMore: "יש כאן יותר ממה שתצטרכו אי פעם. זו הנקודה. לא משנה מה המצב שלכם—משפחה מסובכת, נכסים מרובים, חיות מחמד אהובות, משאלות ספציפיות—ל-Continuum יש מקום לזה.",
         featuresMoreSub: "תמצאו את זה כשתצטרכו. המדריך ייקח אתכם לשם.",
+
+        // SEO
+        metaTitle: "Continuum — ארגנו את החיים שלכם עבור האנשים שאתם אוהבים",
+        metaDescription: "מקום שקט לתעד את כל מה שהמשפחה שלכם תצטרך. מוצפן, פרטי ומוכן כשיגיע הזמן.",
+        metaTitleFeatures: "מה בפנים — Continuum",
+        metaDescFeatures: "גלו את הכלים בתוך Continuum: מסמכים פרקטיים, מכתבים אישיים, מערכות הגנה והכנה למנהל העיזבון.",
+        metaTitleHow: "איך זה עובד — Continuum",
+        metaDescHow: "שלושה צעדים עדינים: התחילו איפה שמרגיש נכון, בנו עם הזמן, ותנו לזה להיפתח כשצריך.",
 
         // Footer
         footerDisclaimer: "Continuum הוא כלי תיעוד וארגון. איננו מספקים ייעוץ משפטי, פיננסי, מס או רפואי.",
