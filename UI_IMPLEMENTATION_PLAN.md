@@ -18,7 +18,7 @@ This document provides a detailed, file-by-file implementation plan to bring all
 
 ### Required Elements Checklist
 
-Every module page MUST have these 11 elements:
+Every module page MUST have these 12 elements:
 
 | # | Element | Component | What It Does |
 |---|---------|-----------|--------------|
@@ -27,35 +27,36 @@ Every module page MUST have these 11 elements:
 | 3 | Add Data Button | Primary button with Plus icon | Clear entry point (compassionate text) |
 | 4 | AI Helper Section | `AIPromptBar` or `ConciergeFlow` | What AI will do for the user |
 | 5 | Data Display | Cards/Grid/List | View existing data |
-| 6 | Edit/Delete Actions | Icon buttons on hover | Modify existing data |
-| 7 | Empty State | `EmptyState` | Guidance when no data |
-| 8 | Success Feedback | `Affirmation` | Positive reinforcement |
-| 9 | Loading State | Spinner/Skeleton | Sync progress indicator |
-| 10 | **Custom Fields** | `CustomFieldsManager` | User-extensible data fields **(MANDATORY)** |
-| 11 | Error Handling | Error banner | Graceful failure states |
+| 6 | **View Toggle** | `DataViewToggle` + `DataView` | Switch between Card and Table views **(MANDATORY)** |
+| 7 | Edit/Delete Actions | Icon buttons on hover | Modify existing data |
+| 8 | Empty State | `EmptyState` | Guidance when no data |
+| 9 | Success Feedback | `Affirmation` | Positive reinforcement |
+| 10 | Loading State | Spinner/Skeleton | Sync progress indicator |
+| 11 | **Custom Fields** | `CustomFieldsManager` | User-extensible data fields **(MANDATORY)** |
+| 12 | Error Handling | Error banner | Graceful failure states |
 
 ### Current Compliance Matrix (18 Modules)
 
-| Module | Header | Explain | Add | AI | View | Edit | Empty | Affirm | Load | **CustomFields** | Error |
-|--------|--------|---------|-----|-----|------|------|-------|--------|------|------------------|-------|
-| contacts | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | **✓** | ~ |
-| medical | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ | ✗ | **✓** | ~ |
-| pets | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ | ✗ | **✓** | ~ |
-| heirlooms | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | **✓** | ~ |
-| financial | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | ~ | **✗** | ~ |
-| letters | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | ✓ | **✗** | ✓ |
-| property | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | ~ | ~ | **✓** | ~ |
-| insurance | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ~ | **✓** | ~ |
-| digital-guardian | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | ~ | **✗** | ~ |
-| anniversary | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ~ | ~ | ~ | **✗** | ~ |
-| time-capsule | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ~ | **✓** | ~ |
-| legacy-journal | ✓ | ✗ | ✗ | ✗ | ✓ | ~ | ✗ | ✗ | ✗ | **✗** | ✗ |
-| subscriptions | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ✗ | **✓** | ~ |
-| visual-memories | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ✗ | **✗** | ~ |
-| calendar | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ~ | **✓** | ~ |
-| funeral | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ~ | **✓** | ~ |
-| timeline | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ~ | **✓** | ~ |
-| advanced-registry | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ~ | **✓** | ~ |
+| Module | Header | Explain | Add | AI | View | **ViewToggle** | Edit | Empty | Affirm | Load | **CustomFields** | Error |
+|--------|--------|---------|-----|-----|------|----------------|------|-------|--------|------|------------------|-------|
+| contacts | ✓ | ✓ | ✓ | ✓ | ✓ | **✗** | ✓ | ✓ | ✓ | ✗ | **✓** | ~ |
+| medical | ✓ | ✓ | ✓ | ✗ | ✓ | **✗** | ✓ | ✓ | ✓ | ✗ | **✓** | ~ |
+| pets | ✓ | ✓ | ✓ | ✗ | ✓ | **✗** | ✓ | ✓ | ✓ | ✗ | **✓** | ~ |
+| heirlooms | ✓ | ✓ | ✓ | ✓ | ✓ | **✗** | ✓ | ✓ | ✓ | ~ | **✓** | ~ |
+| financial | ✓ | ✓ | ✓ | ✓ | ✓ | **✗** | ✓ | ✓ | ~ | ~ | **✗** | ~ |
+| letters | ✓ | ✓ | ✓ | ✓ | ✓ | **✗** | ✓ | ✓ | ~ | ✓ | **✗** | ✓ |
+| property | ✓ | ✓ | ✓ | ✓ | ✓ | **✗** | ✓ | ~ | ~ | ~ | **✓** | ~ |
+| insurance | ✓ | ✓ | ✓ | ✗ | ✓ | **✗** | ✓ | ✓ | ~ | ~ | **✓** | ~ |
+| digital-guardian | ✓ | ✓ | ✓ | ✓ | ✓ | **✗** | ✓ | ✓ | ~ | ~ | **✗** | ~ |
+| anniversary | ✓ | ✓ | ✓ | ✗ | ✓ | **✗** | ✓ | ~ | ~ | ~ | **✗** | ~ |
+| time-capsule | ✓ | ✓ | ✓ | ✗ | ✓ | **✗** | ✓ | ✓ | ~ | ~ | **✓** | ~ |
+| legacy-journal | ✓ | ✗ | ✗ | ✗ | ✓ | **✗** | ~ | ✗ | ✗ | ✗ | **✗** | ✗ |
+| subscriptions | ✓ | ✓ | ✓ | ✗ | ✓ | **✗** | ✓ | ✓ | ~ | ✗ | **✓** | ~ |
+| visual-memories | ✓ | ✓ | ✓ | ✗ | ✓ | **✗** | ✓ | ✓ | ~ | ✗ | **✗** | ~ |
+| calendar | ✓ | ✓ | ✓ | ✗ | ✓ | **✗** | ✓ | ✓ | ~ | ~ | **✓** | ~ |
+| funeral | ✓ | ✓ | ✓ | ✗ | ✓ | **✗** | ✓ | ✓ | ~ | ~ | **✓** | ~ |
+| timeline | ✓ | ✓ | ✓ | ✗ | ✓ | **✗** | ✓ | ✓ | ~ | ~ | **✓** | ~ |
+| advanced-registry | ✓ | ✓ | ✓ | ✗ | ✓ | **✗** | ✓ | ✓ | ~ | ~ | **✓** | ~ |
 
 **Legend:** ✓ = Compliant, ~ = Partial, ✗ = Missing
 
@@ -63,6 +64,7 @@ Every module page MUST have these 11 elements:
 
 | Gap | % Missing | Modules Affected | Priority |
 |-----|-----------|-----------------|----------|
+| **View Toggle (Card/Table)** | **100%** | **ALL 18 data modules** | **P0** |
 | **CustomFieldsManager** | **38%** | **7 data modules** | **P0** |
 | Loading States | 87% | 13 modules | **P0** |
 | AI Helper | 53% | 8 modules | **P0** |
@@ -296,6 +298,143 @@ railway run alembic upgrade head
 11. `treasures`
 12. `memories`
 13. `activity_log` (if applicable)
+
+#### 0.6 Add Card/Table View Toggle to ALL Data Modules (CRITICAL)
+
+**CRITICAL:** Every data page MUST allow users to switch between Card View and Table View. Preference is stored on the backend (NOT localStorage) and syncs across devices.
+
+**Step 1: Create Global Components**
+
+Create these files in `frontend/src/lib/components/ui/`:
+
+| File | Purpose |
+|------|---------|
+| `DataViewToggle.svelte` | Toggle button (Card \| Table) |
+| `DataTable.svelte` | Reusable table view with edit/delete actions |
+| `DataView.svelte` | Wrapper that renders Card or Table based on mode |
+
+**Step 2: Create User Preferences Store**
+
+**File:** `frontend/src/lib/stores/userPreferencesStore.svelte.ts`
+
+```typescript
+import { apiFetch } from "$lib/utils/errorHandler";
+
+interface ViewPreferences {
+  [module: string]: 'card' | 'table';
+}
+
+class UserPreferencesStore {
+  preferences = $state<ViewPreferences>({});
+
+  async init() {
+    const response = await apiFetch('/api/users/me/preferences');
+    this.preferences = response.view_preferences || {};
+  }
+
+  getViewMode(module: string): 'card' | 'table' {
+    return this.preferences[module] || 'card';
+  }
+
+  async setViewMode(module: string, mode: 'card' | 'table') {
+    this.preferences[module] = mode;
+    await apiFetch('/api/users/me/preferences', {
+      method: 'PATCH',
+      body: JSON.stringify({ view_preferences: this.preferences })
+    });
+  }
+}
+
+export const userPreferencesStore = new UserPreferencesStore();
+```
+
+**Step 3: Add Backend Endpoint**
+
+**Model update:** `backend/models.py` - Add to User model:
+```python
+view_preferences: Optional[Dict[str, str]] = Field(default=None, sa_column=Column(JSON))
+```
+
+**Router update:** `backend/routers/users.py`:
+```python
+@router.patch("/me/preferences")
+async def update_preferences(preferences: dict, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    current_user.view_preferences = preferences.get("view_preferences", {})
+    db.add(current_user)
+    db.commit()
+    return {"status": "ok"}
+
+@router.get("/me/preferences")
+async def get_preferences(current_user: User = Depends(get_current_user)):
+    return {"view_preferences": current_user.view_preferences or {}}
+```
+
+**Migration required:** Add `view_preferences` column to `users` table.
+
+**Step 4: Update Each Module Page**
+
+For EVERY data module, update to use the view components:
+
+```svelte
+<script>
+  import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
+  import DataView from "$lib/components/ui/DataView.svelte";
+  import ContactCard from "./ContactCard.svelte";
+
+  const columns = [
+    { key: 'name', label: 'Name' },
+    { key: 'relationship', label: 'Relationship' },
+    { key: 'phone', label: 'Phone' },
+  ];
+</script>
+
+<div class="flex justify-between items-center mb-6">
+  <h2 class="text-lg font-bold">Your Contacts</h2>
+  <DataViewToggle module="contacts" />
+</div>
+
+<DataView
+  module="contacts"
+  items={contacts}
+  {columns}
+  onEdit={editContact}
+  onDelete={deleteContact}
+  cardComponent={ContactCard}
+/>
+```
+
+**Modules requiring View Toggle (ALL data modules):**
+
+| Module | Card Component Exists | Table Columns Needed |
+|--------|----------------------|---------------------|
+| contacts | Yes | name, relationship, phone, email |
+| medical | Partial | directive_type, date, notes |
+| pets | Yes | name, species, breed, caregiver |
+| heirlooms | Yes | name, category, recipient |
+| financial-accounts | Yes | name, institution, type, balance |
+| property | Yes | name, address, type, value |
+| insurance | Yes | name, provider, type, coverage |
+| subscriptions | Yes | name, cost, frequency, status |
+| letters | Partial | recipient, type, date |
+| time-capsule | Yes | title, unlock_date, recipients |
+| calendar | Yes | title, date, type |
+| timeline | Yes | title, date, type |
+| funeral | Yes | item, provider, cost |
+| legal-documents | Partial | name, type, date |
+| home-manual | Partial | item, location, notes |
+| anniversary-manager | Partial | name, date, type |
+| visual-memories | Partial | title, date, tags |
+| legacy-journal | Partial | title, date, content_preview |
+
+**Implementation Order:**
+1. Create `userPreferencesStore.svelte.ts`
+2. Add backend migration for `view_preferences`
+3. Create backend endpoints
+4. Create `DataViewToggle.svelte`
+5. Create `DataTable.svelte`
+6. Create `DataView.svelte`
+7. Update contacts module (pilot)
+8. Roll out to remaining modules
 
 ---
 

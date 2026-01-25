@@ -412,16 +412,18 @@ When a field can be populated by the AI Concierge:
 | 3 | Add Data Button | **MANDATORY** | Primary button | Clear entry point for adding data |
 | 4 | AI Helper Section | **MANDATORY** | `AIPromptBar` or `ConciergeFlow` | AI assistance for data entry |
 | 5 | Data Display Area | **MANDATORY** | Cards/Grid/List | View existing data |
-| 6 | Edit/Delete Actions | **MANDATORY** | Icon buttons | Modify existing data |
-| 7 | Empty State | **MANDATORY** | `EmptyState` | Guidance when no data exists |
-| 8 | Success Feedback | **MANDATORY** | `Affirmation` | Positive reinforcement |
-| 9 | Loading State | **MANDATORY** | Skeleton/Spinner | Sync progress indicator |
-| 10 | **Custom Fields** | **MANDATORY** | `CustomFieldsManager` | User-extensible data fields |
-| 11 | Search/Filter | **RECOMMENDED** | Search bar + filters | Find data quickly |
-| 12 | Stats Dashboard | **RECOMMENDED** | Stat cards | Progress visibility |
-| 13 | Export Options | **RECOMMENDED** | Download/Print buttons | Data portability |
-| 14 | Contextual Help | **RECOMMENDED** | Info banners/tooltips | In-context guidance |
-| 15 | Error Handling | **MANDATORY** | Error dialog/banner | Graceful failure states |
+| 6 | **View Toggle** | **MANDATORY** | `DataViewToggle` | Switch between Card and Table views |
+| 7 | **Sample Data** | **MANDATORY** | Sample cards/rows | Show examples when empty (backend synced) |
+| 8 | Edit/Delete Actions | **MANDATORY** | Icon buttons | Modify existing data |
+| 9 | Empty State | **MANDATORY** | `EmptyState` | Guidance when no data exists |
+| 10 | Success Feedback | **MANDATORY** | `Affirmation` | Positive reinforcement |
+| 11 | Loading State | **MANDATORY** | Skeleton/Spinner | Sync progress indicator |
+| 12 | **Custom Fields** | **MANDATORY** | `CustomFieldsManager` | User-extensible data fields |
+| 13 | Search/Filter | **RECOMMENDED** | Search bar + filters | Find data quickly |
+| 14 | Stats Dashboard | **RECOMMENDED** | Stat cards | Progress visibility |
+| 15 | Export Options | **RECOMMENDED** | Download/Print buttons | Data portability |
+| 16 | Contextual Help | **RECOMMENDED** | Info banners/tooltips | In-context guidance |
+| 17 | Error Handling | **MANDATORY** | Error dialog/banner | Graceful failure states |
 
 ### 5.2 Page Header (MANDATORY)
 
@@ -667,7 +669,302 @@ confirm("Remove this heirloom? Your story will be preserved in the activity log.
 confirm("Remove this directive? This should only be done if the document has been revoked.")
 ```
 
-### 5.6 Empty State (MANDATORY)
+### 5.6 View Toggle - Card/Table Display (MANDATORY)
+
+**CRITICAL:** Every data page MUST allow users to switch between Card View and Table View. This is a global feature implemented once and used across ALL modules.
+
+#### 5.6.1 Global Components Required
+
+Create these reusable components in `frontend/src/lib/components/ui/`:
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| `DataViewToggle` | `DataViewToggle.svelte` | Toggle button (Card \| Table) |
+| `DataTable` | `DataTable.svelte` | Reusable table view with edit/delete |
+| `DataView` | `DataView.svelte` | Wrapper that renders Card or Table based on mode |
+
+#### 5.6.2 DataViewToggle Component
+
+```svelte
+<!-- frontend/src/lib/components/ui/DataViewToggle.svelte -->
+<script lang="ts">
+  import { LayoutGrid, Table } from "lucide-svelte";
+  import { userPreferencesStore } from "$lib/stores/userPreferencesStore.svelte";
+
+  interface Props {
+    module: string;  // Module identifier for preference storage
+  }
+
+  let { module }: Props = $props();
+
+  // Get/set view mode from user preferences (synced to backend)
+  let viewMode = $derived(userPreferencesStore.getViewMode(module));
+
+  function setViewMode(mode: 'card' | 'table') {
+    userPreferencesStore.setViewMode(module, mode);  // Saves to backend
+  }
+</script>
+
+<div class="flex items-center gap-1 p-1 bg-slate-100 rounded-xl">
+  <button
+    onclick={() => setViewMode('card')}
+    class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all
+           {viewMode === 'card' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}"
+    title="Card view"
+  >
+    <LayoutGrid size={16} />
+    Cards
+  </button>
+  <button
+    onclick={() => setViewMode('table')}
+    class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all
+           {viewMode === 'table' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}"
+    title="Table view"
+  >
+    <Table size={16} />
+    Table
+  </button>
+</div>
+```
+
+#### 5.6.3 DataTable Component (Table View)
+
+```svelte
+<!-- frontend/src/lib/components/ui/DataTable.svelte -->
+<script lang="ts">
+  import { Pencil, Trash2 } from "lucide-svelte";
+
+  interface Column {
+    key: string;
+    label: string;
+    width?: string;  // e.g., "w-1/4"
+    render?: (value: any, item: any) => string;  // Custom renderer
+  }
+
+  interface Props {
+    items: any[];
+    columns: Column[];
+    onEdit: (item: any) => void;
+    onDelete: (item: any) => void;
+  }
+
+  let { items, columns, onEdit, onDelete }: Props = $props();
+</script>
+
+<div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+  <table class="w-full">
+    <thead>
+      <tr class="bg-slate-50 border-b border-slate-200">
+        {#each columns as col}
+          <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500 tracking-wide {col.width || ''}">
+            {col.label}
+          </th>
+        {/each}
+        <th class="px-4 py-3 text-right text-xs font-bold uppercase text-slate-500 tracking-wide w-24">
+          Actions
+        </th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100">
+      {#each items as item (item.id)}
+        <tr class="hover:bg-slate-50 transition-colors group">
+          {#each columns as col}
+            <td class="px-4 py-3 text-sm text-slate-700">
+              {col.render ? col.render(item[col.key], item) : item[col.key] || '-'}
+            </td>
+          {/each}
+          <td class="px-4 py-3 text-right">
+            <div class="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                onclick={() => onEdit(item)}
+                class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                title="Edit"
+              >
+                <Pencil size={14} />
+              </button>
+              <button
+                onclick={() => onDelete(item)}
+                class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                title="Remove"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          </td>
+        </tr>
+      {/each}
+    </tbody>
+  </table>
+
+  {#if items.length === 0}
+    <div class="px-4 py-8 text-center text-slate-400 text-sm">
+      No data to display
+    </div>
+  {/if}
+</div>
+```
+
+#### 5.6.4 DataView Wrapper Component
+
+```svelte
+<!-- frontend/src/lib/components/ui/DataView.svelte -->
+<script lang="ts">
+  import DataTable from "./DataTable.svelte";
+  import { userPreferencesStore } from "$lib/stores/userPreferencesStore.svelte";
+
+  interface Props {
+    module: string;
+    items: any[];
+    columns: { key: string; label: string; width?: string; render?: Function }[];
+    onEdit: (item: any) => void;
+    onDelete: (item: any) => void;
+    cardComponent?: any;  // The card component to render in card view
+  }
+
+  let { module, items, columns, onEdit, onDelete, cardComponent }: Props = $props();
+
+  let viewMode = $derived(userPreferencesStore.getViewMode(module));
+</script>
+
+{#if viewMode === 'table'}
+  <DataTable {items} {columns} {onEdit} {onDelete} />
+{:else}
+  <!-- Card view (default) -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {#each items as item (item.id)}
+      <svelte:component this={cardComponent} {item} {onEdit} {onDelete} />
+    {/each}
+  </div>
+{/if}
+```
+
+#### 5.6.5 User Preferences Store (Backend Sync)
+
+**CRITICAL:** View preferences MUST be stored on the backend, not just localStorage. This ensures preferences persist across devices and browsers.
+
+```typescript
+// frontend/src/lib/stores/userPreferencesStore.svelte.ts
+import { apiFetch } from "$lib/utils/errorHandler";
+
+interface ViewPreferences {
+  [module: string]: 'card' | 'table';
+}
+
+class UserPreferencesStore {
+  preferences = $state<ViewPreferences>({});
+  private syncedToBackend = false;
+
+  async init() {
+    // Load from backend on app start
+    try {
+      const response = await apiFetch('/api/users/me/preferences');
+      this.preferences = response.view_preferences || {};
+      this.syncedToBackend = true;
+    } catch (e) {
+      console.error('Failed to load preferences:', e);
+    }
+  }
+
+  getViewMode(module: string): 'card' | 'table' {
+    return this.preferences[module] || 'card';  // Default to card
+  }
+
+  async setViewMode(module: string, mode: 'card' | 'table') {
+    this.preferences[module] = mode;
+
+    // Sync to backend
+    try {
+      await apiFetch('/api/users/me/preferences', {
+        method: 'PATCH',
+        body: JSON.stringify({ view_preferences: this.preferences })
+      });
+    } catch (e) {
+      console.error('Failed to save preference:', e);
+    }
+  }
+}
+
+export const userPreferencesStore = new UserPreferencesStore();
+```
+
+#### 5.6.6 Backend API Endpoint Required
+
+Add to user model and create endpoint:
+
+```python
+# backend/models.py - Add to User model
+view_preferences: Optional[Dict[str, str]] = Field(
+    default=None,
+    sa_column=Column(JSON)
+)
+
+# backend/routers/users.py - Add endpoint
+@router.patch("/me/preferences")
+async def update_preferences(
+    preferences: dict,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    current_user.view_preferences = preferences.get("view_preferences", {})
+    db.add(current_user)
+    db.commit()
+    return {"status": "ok"}
+
+@router.get("/me/preferences")
+async def get_preferences(
+    current_user: User = Depends(get_current_user)
+):
+    return {"view_preferences": current_user.view_preferences or {}}
+```
+
+#### 5.6.7 Usage in Module Pages
+
+```svelte
+<script>
+  import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
+  import DataView from "$lib/components/ui/DataView.svelte";
+  import ContactCard from "./ContactCard.svelte";  // Module-specific card
+
+  const columns = [
+    { key: 'name', label: 'Name', width: 'w-1/4' },
+    { key: 'relationship', label: 'Relationship' },
+    { key: 'phone', label: 'Phone' },
+    { key: 'email', label: 'Email' },
+  ];
+</script>
+
+<!-- Toggle placement: right side, above data -->
+<div class="flex justify-between items-center mb-6">
+  <h2 class="text-lg font-bold text-slate-800">Your Contacts</h2>
+  <DataViewToggle module="contacts" />
+</div>
+
+<!-- Data display using wrapper -->
+<DataView
+  module="contacts"
+  items={filteredContacts}
+  {columns}
+  onEdit={editContact}
+  onDelete={deleteContact}
+  cardComponent={ContactCard}
+/>
+```
+
+#### 5.6.8 Current Implementation Status
+
+| Module | Has View Toggle | Table View | Notes |
+|--------|-----------------|------------|-------|
+| ALL MODULES | ✗ | ✗ | NOT IMPLEMENTED - requires global components first |
+
+**Implementation Order:**
+1. Create `userPreferencesStore.svelte.ts`
+2. Add backend endpoint for preferences
+3. Create `DataViewToggle.svelte`
+4. Create `DataTable.svelte`
+5. Create `DataView.svelte`
+6. Update each module to use the components
+
+### 5.7 Empty State (MANDATORY)
 
 When no data exists, MUST show the `EmptyState` component with full content.
 
@@ -689,7 +986,7 @@ When no data exists, MUST show the `EmptyState` component with full content.
 {/if}
 ```
 
-#### 5.6.1 Empty State Content Requirements
+#### 5.7.1 Empty State Content Requirements
 
 | Prop | Length | Requirements |
 |------|--------|--------------|
@@ -698,7 +995,7 @@ When no data exists, MUST show the `EmptyState` component with full content.
 | `encouragement` | 1 sentence | Start with "When you're ready..." or "Start with just one..." |
 | `ctaLabel` | 2-4 words | Compassionate verb + object |
 
-#### 5.6.2 Empty State Pattern
+#### 5.7.2 Empty State Pattern
 
 1. **Hook** (title): Draw them in with emotional benefit
 2. **Stakes** (whyMatters first half): What happens without this data? **Bold this.**
@@ -706,7 +1003,75 @@ When no data exists, MUST show the `EmptyState` component with full content.
 4. **Gentle nudge** (encouragement): Low-pressure invitation to start small
 5. **Action** (ctaLabel): Clear, compassionate call-to-action
 
-### 5.7 Success Feedback - Affirmation (MANDATORY)
+#### 5.7.3 Sample Data Display (MANDATORY)
+
+**CRITICAL:** When no user data exists, the page MUST display sample/example data to show users what the completed page will look like. This helps users understand the value and structure of the data.
+
+```svelte
+<script>
+  // Sample data for empty state demonstration
+  const sampleContacts = [
+    {
+      id: 'sample-1',
+      name: 'Sarah Mitchell',
+      relationship: 'Sister',
+      phone: '(555) 123-4567',
+      isSample: true  // Flag to identify sample data
+    },
+    {
+      id: 'sample-2',
+      name: 'Dr. James Chen',
+      relationship: 'Primary Physician',
+      phone: '(555) 987-6543',
+      isSample: true
+    }
+  ];
+
+  // Show sample data when user has no real data
+  let displayItems = $derived(
+    items.length > 0 ? items : sampleContacts
+  );
+</script>
+
+<!-- Sample data banner -->
+{#if items.length === 0}
+  <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex items-start gap-3">
+    <Info class="text-amber-500 shrink-0 mt-0.5" size={20} />
+    <div>
+      <p class="text-amber-800 font-medium">This is sample data</p>
+      <p class="text-amber-700 text-sm mt-1">
+        These examples show how your contacts will appear. Add your first contact to replace them.
+      </p>
+    </div>
+  </div>
+{/if}
+
+<!-- Sample cards have muted styling -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  {#each displayItems as item}
+    <div class="{item.isSample ? 'opacity-60 border-dashed' : ''} ...">
+      <!-- Card content -->
+    </div>
+  {/each}
+</div>
+```
+
+**Sample Data Requirements:**
+
+| Requirement | Details |
+|-------------|---------|
+| Minimum samples | 2-3 realistic examples |
+| Visual distinction | Muted opacity (0.6), dashed border |
+| Banner message | Explain this is sample data |
+| Realistic content | Use believable names, values, relationships |
+| No interaction | Sample cards should NOT have edit/delete buttons |
+
+**Modules requiring sample data (check implementation):**
+- ALL data modules must have sample data
+- Sample data stored in component or separate file
+- Must be compassionate and realistic (not "John Doe")
+
+### 5.8 Success Feedback - Affirmation (MANDATORY)
 
 After every create/update operation, show the `Affirmation` component.
 
@@ -724,14 +1089,14 @@ After every create/update operation, show the `Affirmation` component.
 <Affirmation module="contacts" bind:show={showAffirmation} />
 ```
 
-#### 5.7.1 Affirmation Behavior
+#### 5.8.1 Affirmation Behavior
 
 - Auto-dismisses after 4 seconds
 - Shows random message from module's affirmation pool
 - Includes primary (bold) and secondary (supporting) text
 - Green gradient background for positive reinforcement
 
-#### 5.7.2 Available Module Contexts
+#### 5.8.2 Available Module Contexts
 
 Ensure your module has affirmations defined in `lib/data/affirmations.ts`:
 
@@ -743,11 +1108,11 @@ Ensure your module has affirmations defined in `lib/data/affirmations.ts`:
 | `heirlooms` | "Another treasure's story preserved for generations." |
 | `general` | "Progress made. Every step matters." |
 
-### 5.8 Loading State (MANDATORY)
+### 5.9 Loading State (MANDATORY)
 
 Every page MUST show loading feedback during data sync.
 
-#### 5.8.1 Initial Load Pattern
+#### 5.9.1 Initial Load Pattern
 
 ```svelte
 <script>
@@ -769,7 +1134,7 @@ Every page MUST show loading feedback during data sync.
 {/if}
 ```
 
-#### 5.8.2 Skeleton Loading (Preferred for Lists/Grids)
+#### 5.9.2 Skeleton Loading (Preferred for Lists/Grids)
 
 ```svelte
 {#if isLoading}
@@ -781,11 +1146,11 @@ Every page MUST show loading feedback during data sync.
 {/if}
 ```
 
-### 5.9 Error Handling (MANDATORY)
+### 5.10 Error Handling (MANDATORY)
 
 Every page MUST handle and display errors gracefully.
 
-#### 5.9.1 Error State Pattern
+#### 5.10.1 Error State Pattern
 
 ```svelte
 <script>
@@ -813,7 +1178,7 @@ Every page MUST handle and display errors gracefully.
 {/if}
 ```
 
-#### 5.9.2 Error Message Tone
+#### 5.10.2 Error Message Tone
 
 **WRONG:**
 ```
@@ -828,11 +1193,11 @@ Every page MUST handle and display errors gracefully.
 "We couldn't connect to the server. Check your connection and try again."
 ```
 
-### 5.10 Search & Filter (RECOMMENDED)
+### 5.11 Search & Filter (RECOMMENDED)
 
 For modules with 5+ items, provide search and/or filter capabilities.
 
-#### 5.10.1 Search Bar
+#### 5.11.1 Search Bar
 
 ```svelte
 <div class="relative w-full md:w-96 mb-8">
@@ -847,7 +1212,7 @@ For modules with 5+ items, provide search and/or filter capabilities.
 </div>
 ```
 
-#### 5.10.2 Filter Tabs
+#### 5.11.2 Filter Tabs
 
 ```svelte
 <div class="flex gap-2 mb-8 border-b border-slate-200 pb-1">
@@ -865,7 +1230,7 @@ For modules with 5+ items, provide search and/or filter capabilities.
 </div>
 ```
 
-### 5.11 Stats Dashboard (RECOMMENDED)
+### 5.12 Stats Dashboard (RECOMMENDED)
 
 For modules tracking progress or quantities, show summary statistics.
 
@@ -897,7 +1262,7 @@ For modules tracking progress or quantities, show summary statistics.
 </div>
 ```
 
-### 5.12 Export & Print Options (RECOMMENDED)
+### 5.13 Export & Print Options (RECOMMENDED)
 
 For data that users may need offline or in physical form.
 
@@ -920,11 +1285,11 @@ For data that users may need offline or in physical form.
 </div>
 ```
 
-### 5.13 Contextual Help & Guidance (RECOMMENDED)
+### 5.14 Contextual Help & Guidance (RECOMMENDED)
 
 Provide in-context help throughout the page.
 
-#### 5.13.1 Info Banner
+#### 5.14.1 Info Banner
 
 ```svelte
 <div class="bg-primary/5 p-4 rounded-xl text-primary text-sm flex gap-3 border border-primary/10 mb-6">
@@ -936,7 +1301,7 @@ Provide in-context help throughout the page.
 </div>
 ```
 
-#### 5.13.2 Field-Level Help Text
+#### 5.14.2 Field-Level Help Text
 
 ```svelte
 <div>
@@ -948,11 +1313,11 @@ Provide in-context help throughout the page.
 </div>
 ```
 
-### 5.14 Custom Fields Manager (MANDATORY)
+### 5.15 Custom Fields Manager (MANDATORY)
 
 **CRITICAL:** Every add/edit modal MUST include the `CustomFieldsManager` component to allow users to add custom data fields. This is a core Continuum feature that enables users to capture information specific to their unique situations.
 
-#### 5.14.1 Component Integration
+#### 5.15.1 Component Integration
 
 **File:** `frontend/src/lib/components/CustomFieldsManager.svelte`
 
@@ -973,14 +1338,14 @@ Provide in-context help throughout the page.
 </div>
 ```
 
-#### 5.14.2 Required Props
+#### 5.15.2 Required Props
 
 | Prop | Type | Description |
 |------|------|-------------|
 | `entityType` | string | Module identifier (e.g., "contacts", "pets", "heirlooms") |
 | `customFields` | Record<string, string> | Bound object for custom field key-value pairs |
 
-#### 5.14.3 Backend Database Requirement
+#### 5.15.3 Backend Database Requirement
 
 **CRITICAL:** Each module's database table MUST have a `custom_attributes` column of JSON type to store custom fields.
 
@@ -998,7 +1363,7 @@ class ModuleName(SQLModel, table=True):
     )
 ```
 
-#### 5.14.4 Alembic Migration (Required for Each Module)
+#### 5.15.4 Alembic Migration (Required for Each Module)
 
 For **LOCAL (SQLite)** and **Railway (PostgreSQL)**, create a migration:
 
@@ -1032,7 +1397,7 @@ alembic upgrade head
 railway run alembic upgrade head
 ```
 
-#### 5.14.5 Saving Custom Fields
+#### 5.15.5 Saving Custom Fields
 
 When saving data, include custom fields in the payload:
 
@@ -1050,7 +1415,7 @@ When saving data, include custom fields in the payload:
 </script>
 ```
 
-#### 5.14.6 Loading Custom Fields (Edit Mode)
+#### 5.15.6 Loading Custom Fields (Edit Mode)
 
 When editing, populate custom fields from existing data:
 
@@ -1064,7 +1429,7 @@ When editing, populate custom fields from existing data:
 </script>
 ```
 
-#### 5.14.7 Modules Missing CustomFieldsManager (Action Required)
+#### 5.15.7 Modules Missing CustomFieldsManager (Action Required)
 
 The following 20 modules need CustomFieldsManager added:
 
@@ -1104,7 +1469,7 @@ The following 20 modules need CustomFieldsManager added:
 - time-capsule ✓
 - timeline ✓
 
-### 5.15 Complete Data Page Template
+### 5.16 Complete Data Page Template
 
 Here is a complete template showing all required elements:
 
@@ -1286,7 +1651,7 @@ Here is a complete template showing all required elements:
 </Modal>
 ```
 
-### 5.16 Data Page Compliance Matrix
+### 5.17 Data Page Compliance Matrix
 
 Current compliance status across modules:
 
