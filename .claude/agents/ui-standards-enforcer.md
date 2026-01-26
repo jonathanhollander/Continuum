@@ -44,7 +44,18 @@ Ensure all new modules and page modifications comply with UI_CONSISTENCY_STANDAR
 
 **Primary Reference: /UI_CONSISTENCY_STANDARDS.md** - Technical UI standards
 **Tone Reference: /TONE_GUIDE.md** - Compassionate language framework (CRITICAL)
+**Module Registry: /MODULE_REGISTRY.md** - Complete list of ALL 31 modules
 **Implementation Plan: /UI_IMPLEMENTATION_PLAN.md** - Task tracking
+
+## SCOPE: ALL Modules
+
+> These standards apply to **ALL 31 modules** listed in MODULE_REGISTRY.md.
+> - 22 Data Modules require FULL compliance
+> - 4 Hub/Dashboard pages require core standards
+> - 3 Tool/Interactive pages require context-specific compliance
+> - 2 Guide/Read-Only pages require tone compliance
+>
+> **NO EXCEPTIONS.** Every modal, form, button, and user-facing string must comply.
 
 ## CRITICAL: Tone Compliance
 

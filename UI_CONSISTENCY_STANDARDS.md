@@ -2,11 +2,31 @@
 
 ## Executive Summary
 
-This document establishes binding UI standards for Continuum to ensure a cohesive, professional user experience across all 60+ modules. Every new component and modification must adhere to these standards.
+This document establishes **binding UI standards** for Continuum to ensure a cohesive, professional user experience. Every new component and modification must adhere to these standards.
 
 **Last Audit Date:** January 25, 2026
 **Inconsistencies Found:** 47 across 20+ modules
 **Critical Issues:** Modal styling, form inputs, button patterns, page containers
+
+---
+
+## SCOPE: These Standards Apply to ALL Modules
+
+> **NO EXCEPTIONS.** Every modal, every form, every button, every page, and every user-facing string across ALL modules must follow these standards.
+
+**Module Registry:** See `MODULE_REGISTRY.md` for the complete list of all 31 modules and their compliance requirements.
+
+| Module Type | Count | Standards Scope |
+|-------------|-------|-----------------|
+| Data Modules | 22 | FULL compliance (all 19 sections) |
+| Hub/Dashboard | 4 | Layout, cards, navigation, tone |
+| Tool/Interactive | 3 | Core standards, tone |
+| Guide/Read-Only | 2 | Typography, layout, tone |
+
+**Related Documents:**
+- `MODULE_REGISTRY.md` - Complete module list and compliance tracking
+- `TONE_GUIDE.md` - Compassionate language framework
+- `UI_IMPLEMENTATION_PLAN.md` - Implementation tasks and priorities
 
 ---
 

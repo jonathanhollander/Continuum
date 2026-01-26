@@ -41,6 +41,17 @@ Comprehensively audit all Continuum modules against UI_CONSISTENCY_STANDARDS.md 
 
 **Primary Reference: /UI_CONSISTENCY_STANDARDS.md** - Technical UI standards
 **Tone Reference: /TONE_GUIDE.md** - Compassionate language framework (CRITICAL)
+**Module Registry: /MODULE_REGISTRY.md** - Complete list of ALL 31 modules
+
+## SCOPE: Audit ALL Modules
+
+> This auditor must check **ALL 31 modules** listed in MODULE_REGISTRY.md:
+> - 22 Data Modules - FULL compliance audit
+> - 4 Hub/Dashboard pages - Core standards audit
+> - 3 Tool/Interactive pages - Context-specific audit
+> - 2 Guide/Read-Only pages - Tone compliance audit
+>
+> **No module is exempt.** Generate compliance reports for the entire application.
 
 ### UI_CONSISTENCY_STANDARDS.md covers:
 - Modal standards (backdrop, panels, headers, footers, animations)

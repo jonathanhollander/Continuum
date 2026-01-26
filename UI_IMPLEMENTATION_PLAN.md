@@ -2,12 +2,33 @@
 
 ## Overview
 
-This document provides a detailed, file-by-file implementation plan to bring all Continuum modules into compliance with the UI Consistency Standards.
+This document provides a detailed, file-by-file implementation plan to bring **ALL Continuum modules** into compliance with the UI Consistency Standards.
 
-**Related Document:** `UI_CONSISTENCY_STANDARDS.md` - The binding source of truth
+**Related Documents:**
+- `UI_CONSISTENCY_STANDARDS.md` - The binding source of truth for all UI patterns
+- `MODULE_REGISTRY.md` - Complete list of all 31 modules and compliance status
+- `TONE_GUIDE.md` - Compassionate language framework
+
 **Critical Section:** Section 5 "DATA PAGE BLUEPRINT" - Every data page MUST comply
 
-**Estimated Scope:** 75+ changes across 20+ files
+---
+
+## Scope: ALL Modules Must Be Updated
+
+> **The standards apply to every modal, every form, every button, and every user-facing string in ALL 31 modules.**
+
+| Module Type | Count | Implementation Priority |
+|-------------|-------|------------------------|
+| Data Modules | 22 | P0 - Full compliance required |
+| Hub/Dashboard | 4 | P1 - Core standards |
+| Tool/Interactive | 3 | P2 - Context-specific |
+| Guide/Read-Only | 2 | P3 - Tone compliance |
+
+**See `MODULE_REGISTRY.md` for the complete module list with current compliance percentages.**
+
+---
+
+**Estimated Scope:** 150+ changes across 31 modules
 **Priority Levels:** P0 (Critical), P1 (High), P2 (Medium), P3 (Low)
 
 ---
