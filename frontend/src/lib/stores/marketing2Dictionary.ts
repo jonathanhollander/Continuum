@@ -450,7 +450,7 @@ export const marketing2Dictionary = {
 
         // Section 4: The Pulse
         pulseTitle: "Sie müssen das schwierige Gespräch nicht führen.",
-        pulseDesc: "Richten Sie Ihren Puls ein. Bestätigen Sie alle paar Tage—ein einfaches „Ich bin hier." Und wenn Sie eines Tages nicht da sind, um zu bestätigen, bemerkt es Continuum.",
+        pulseDesc: "Richten Sie Ihren Puls ein. Bestätigen Sie alle paar Tage—ein einfaches „Ich bin hier.“ Und wenn Sie eines Tages nicht da sind, um zu bestätigen, bemerkt es Continuum.",
         pulseHow: "Es wendet sich an die Menschen, die Sie gewählt haben. Öffnet die richtigen Türen, zur richtigen Zeit. Ihr Testamentsvollstrecker steht nicht vor einem Rätsel. Er erhält Klarheit.",
         pulseTiers: "Verschiedene Personen sehen verschiedene Dinge, in der Reihenfolge, die Sie wählen. Ein vertrauter Freund erhält zuerst eine sanfte Benachrichtigung. Spätere Stufen erhalten mehr Zugang. Sie entscheiden, wer was bekommt.",
         pulseGift: "Sie haben bereits für sie gesorgt. Das war Ihr letztes Geschenk.",

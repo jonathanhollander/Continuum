@@ -19,7 +19,7 @@ description: |
   User: "Generate a UI consistency report"
   Agent: Use ui-standards-auditor to create compliance report
   </example>
-model: sonnet
+model: claude-sonnet-4-20250514
 color: blue
 tools:
   - Read

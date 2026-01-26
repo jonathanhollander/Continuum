@@ -15,6 +15,7 @@ export interface ErrorDetails {
     code?: string; // Error code for programmatic handling
     details?: Record<string, any>; // Additional context
     timestamp?: string;
+    technicalDetails?: string; // Raw technical error info for debugging
 }
 
 export interface ApiErrorResponse {
@@ -214,6 +215,7 @@ export interface ErrorNotification {
     code?: string;
     canRetry: boolean;
     timestamp: Date;
+    technicalDetails?: string; // Raw error info users can copy
 }
 
 /**
@@ -228,7 +230,8 @@ export function createErrorNotification(error: ErrorDetails): ErrorNotification 
         message: error.message,
         code: error.code,
         canRetry: action.canRetry,
-        timestamp: new Date()
+        timestamp: new Date(),
+        technicalDetails: error.technicalDetails
     };
 }
 

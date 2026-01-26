@@ -1,7 +1,8 @@
 import os
 from datetime import datetime
-from typing import Optional, List
-from sqlmodel import Field, SQLModel, create_engine, Session, select
+from typing import Optional, List, Dict
+from sqlmodel import Field, SQLModel, create_engine, Session, select, Column
+from sqlalchemy import JSON
 from backend.config import settings
 
 class User(SQLModel, table=True):
@@ -26,6 +27,8 @@ class User(SQLModel, table=True):
     onboarding_completed: bool = Field(default=False)  # Whether onboarding is complete
     language: Optional[str] = Field(default="en")  # Preferred language
     font_size: Optional[str] = Field(default="normal")  # Preferred font size (normal, large, xlarge)
+    # View preferences for UI (card/table view toggles per module)
+    view_preferences: Optional[Dict[str, str]] = Field(default=None, sa_column=Column(JSON))
 
 
 class RefreshToken(SQLModel, table=True):
@@ -144,6 +147,19 @@ def migrate_db():
                     except Exception as col_e:
                         logger.warning(f"Migration Error adding {col_name}: {col_e}")
                         session.rollback()
+            # Add view_preferences field
+            if "view_preferences" not in user_columns:
+                logger.info("Migrating: Adding view_preferences to users table")
+                try:
+                    # Use JSON type for PostgreSQL, TEXT for SQLite
+                    if engine.dialect.name == "postgresql":
+                        session.execute(text("ALTER TABLE users ADD COLUMN view_preferences JSON"))
+                    else:
+                        session.execute(text("ALTER TABLE users ADD COLUMN view_preferences TEXT"))
+                    session.commit()
+                except Exception as col_e:
+                    logger.warning(f"Migration Error adding view_preferences: {col_e}")
+                    session.rollback()
             # Make public_key nullable
             if "public_key" in user_columns:
                 # Execute for PostgreSQL only

@@ -19,7 +19,7 @@ description: |
   User: "Check if this page follows UI standards"
   Agent: Use ui-standards-enforcer to validate the page
   </example>
-model: sonnet
+model: claude-sonnet-4-20250514
 color: green
 tools:
   - Read
