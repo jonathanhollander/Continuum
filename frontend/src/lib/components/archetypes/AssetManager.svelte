@@ -468,6 +468,14 @@
             </div>
         </div>
         <div class="flex gap-3">
+            {#if $userRole !== "Family"}
+                <button
+                    onclick={() => (showAddForm = true)}
+                    class="px-4 py-2 rounded-lg bg-[#4A7C74] text-white text-sm font-bold hover:bg-[#3b635d] transition-colors flex items-center gap-2 shadow-lg shadow-[#4A7C74]/20"
+                >
+                    <Plus size={16} /> Add Asset
+                </button>
+            {/if}
             <button
                 onclick={exportToCSV}
                 class="px-4 py-2 rounded-lg bg-gray-100 text-gray-600 text-sm font-bold hover:bg-gray-200 transition-colors flex items-center gap-2"

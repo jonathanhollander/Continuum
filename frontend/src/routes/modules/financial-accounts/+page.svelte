@@ -1,6 +1,6 @@
 <script lang="ts">
     import AssetManager from "$lib/components/archetypes/AssetManager.svelte";
-    import { Sparkles, Loader2 } from "lucide-svelte";
+    import { Sparkles, Loader2, Plus } from "lucide-svelte";
     import { onMount } from "svelte";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
     import LegalDisclaimer from "$lib/components/common/LegalDisclaimer.svelte";
