@@ -23,6 +23,7 @@
     // import { getStored, setStored } from "$lib/stores/persistence"; // REMOVED
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
+    import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import { activityLog } from "$lib/stores/activityLog.svelte";
@@ -30,6 +31,7 @@
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
     import Affirmation from "$lib/components/Affirmation.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
+    import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
 
     let viewMode = $state<ViewMode>('card');
     let customAttributes = $state<Record<string, any>>({});
@@ -247,24 +249,21 @@
 {:else}
 <div class="max-w-5xl mx-auto p-8 animate-in fade-in duration-500">
     <!-- Header -->
-    <div class="mb-12 text-center">
-        <div
-            class="inline-flex items-center justify-center p-4 bg-sky-100 text-sky-700 rounded-full mb-6"
-        >
-            <Shield size={48} />
-        </div>
-        <h1 class="font-serif font-bold text-4xl text-[#304743] mb-4">
-            Digital Guardian
-        </h1>
-        <p class="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Your physical assets are protected by law. Your digital assets are
-            protected by passwords. Without these specific setups, your family
-            will be locked out of your photos, emails, and accounts forever.
-        </p>
-    </div>
+    <LivingBlueprintHeader
+        title="Digital Guardian"
+        subtitle="Protect your digital legacy from being locked away forever"
+        tier="protection"
+        detailedDescription="Your physical assets are protected by law. Your digital assets are protected by passwords. Set up legacy contacts, inactive account managers, and document your digital inventory so your family isn't locked out of your photos, emails, and accounts."
+        whyMatters="Without these specific setups, your family may lose access to irreplaceable memories, important accounts, and digital assets. Taking action now ensures your digital life can be properly managed."
+    />
 
     <!-- Affirmation Message -->
     <Affirmation module="general" bind:show={showAffirmation} />
+
+    <!-- AI Prompt Bar -->
+    <div class="max-w-3xl mx-auto mb-8">
+        <AIPromptBar context="digital-guardian" />
+    </div>
 
     <!-- Global Successor Sync Card -->
     <div class="mb-12 grid grid-cols-1 md:grid-cols-2 gap-6">

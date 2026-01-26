@@ -23,6 +23,8 @@
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import GriefSupportBanner from "$lib/components/GriefSupportBanner.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
+    import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
+    import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
     import { onMount } from "svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { activityLog } from "$lib/stores/activityLog.svelte";
@@ -50,6 +52,7 @@
     let parsedCustomAttributes = $state<Record<string, any>>({});
     let isLoading = $state(true);
     let showAffirmation = $state(false);
+    let viewMode = $state<ViewMode>('card');
 
     onMount(async () => {
         await funeralStore.sync?.();
@@ -271,7 +274,8 @@
     </div>
 
     <!-- Tabs -->
-    <div class="flex justify-center mb-8">
+    <div class="flex justify-center items-center gap-4 mb-8">
+        <DataViewToggle module="funeral" onchange={(mode) => viewMode = mode} />
         <div class="bg-gray-100 p-1.5 rounded-xl inline-flex gap-2">
             <button
                 class="px-6 py-2.5 rounded-lg font-bold text-sm transition-all {activeTab ===

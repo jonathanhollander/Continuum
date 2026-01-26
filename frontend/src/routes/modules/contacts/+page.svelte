@@ -14,6 +14,7 @@
         Loader2,
     } from "lucide-svelte";
     import Modal from "$lib/components/ui/Modal.svelte";
+    import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import { onMount } from "svelte";
     import ContactRow from "$lib/components/modules/contacts/ContactRow.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
@@ -218,6 +219,11 @@
 
     <!-- Affirmation Message -->
     <Affirmation module="contacts" bind:show={showAffirmation} />
+
+    <!-- AI Prompt Bar -->
+    <div class="max-w-3xl mx-auto mb-8">
+        <AIPromptBar context="contacts" />
+    </div>
 
     <!-- Stats -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">

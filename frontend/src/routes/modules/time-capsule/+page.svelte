@@ -34,6 +34,7 @@
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
+    import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
@@ -118,6 +119,25 @@
     }
 </script>
 
+<LivingBlueprintHeader
+    title="Time Capsule Vault"
+    subtitle="Preserving wisdom, voice, and presence across time"
+    tier="legacy"
+    detailedDescription="Messages safely locked until the perfect milestone. Record video messages, write letters, or preserve your voice for graduations, weddings, and life's meaningful moments."
+    whyMatters="The messages you write here will comfort your loved ones when you're no longer here to say them yourself. Imagine your daughter graduating, getting married, or having her first child—and finding your voice waiting for her at each milestone."
+>
+    <div class="flex items-center gap-3">
+        <DataViewToggle module="time-capsule" onchange={(mode) => viewMode = mode} />
+        <button
+            on:click={() => (showAddModal = true)}
+            class="px-8 py-4 bg-indigo-600 text-white rounded-full font-bold shadow-xl shadow-indigo-200 hover:bg-indigo-700 hover:scale-105 transition-all flex items-center gap-3 shrink-0"
+        >
+            <Plus size={24} />
+            Seal New Message
+        </button>
+    </div>
+</LivingBlueprintHeader>
+
 {#if isLoading}
     <div class="flex items-center justify-center py-12">
         <Loader2 class="w-8 h-8 animate-spin text-primary" />
@@ -126,47 +146,6 @@
 <div
     class="max-w-6xl mx-auto p-6 md:p-8 space-y-10 animate-in fade-in duration-700"
 >
-    <!-- Vault Header -->
-    <div
-        class="flex flex-col md:flex-row items-center justify-between gap-8 bg-white rounded-[2.5rem] border border-slate-200 p-8 md:p-12 shadow-sm overflow-hidden relative"
-    >
-        <div
-            class="absolute top-0 right-0 p-20 opacity-[0.03] pointer-events-none rotate-12 scale-150"
-        >
-            <ShieldCheck size={300} />
-        </div>
-
-        <div class="space-y-4 text-center md:text-left">
-            <div
-                class="flex items-center justify-center md:justify-start gap-4"
-            >
-                <div class="p-3 bg-indigo-900 text-white rounded-2xl">
-                    <Lock size={32} />
-                </div>
-                <h1
-                    class="font-serif text-3xl md:text-4xl font-black text-slate-900 tracking-tight"
-                >
-                    Time Capsule Vault
-                </h1>
-            </div>
-            <p class="text-slate-500 text-lg max-w-lg font-medium">
-                Preserving wisdom, voice, and presence. Messages safely locked
-                until the perfect milestone.
-            </p>
-        </div>
-
-        <div class="flex items-center gap-3">
-            <DataViewToggle module="time-capsule" onchange={(mode) => viewMode = mode} />
-            <button
-                on:click={() => (showAddModal = true)}
-                class="px-8 py-4 bg-indigo-600 text-white rounded-full font-bold shadow-xl shadow-indigo-200 hover:bg-indigo-700 hover:scale-105 transition-all flex items-center gap-3 shrink-0"
-            >
-                <Plus size={24} />
-                Seal New Message
-            </button>
-        </div>
-    </div>
-
     <!-- Affirmation Message -->
     <Affirmation module="timeCapsule" bind:show={showAffirmation} />
 

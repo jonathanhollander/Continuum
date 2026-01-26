@@ -35,6 +35,7 @@
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
     import Affirmation from "$lib/components/Affirmation.svelte";
+    import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
 
     let viewMode = $state<ViewMode>('card');
     let showAffirmation = $state(false);
@@ -116,33 +117,13 @@
     class="p-8 max-w-[1400px] mx-auto space-y-12 animate-in fade-in duration-700"
 >
     <!-- Header Section -->
-    <header
-        class="flex flex-col xl:flex-row xl:items-end justify-between gap-8 pb-4"
+    <LivingBlueprintHeader
+        title="QR Access Center"
+        subtitle="Bridge the gap between physical reality and digital security"
+        tier="protection"
+        detailedDescription="Generate encrypted access keys and asset labels that connect your physical belongings to digital documentation. Create QR codes for your Red Binder that give your executor instant access to critical information."
+        whyMatters="QR codes transform static documents into dynamic access points. Your executor can scan a single code to access exactly what they need, when they need it, without searching through files."
     >
-        <div class="space-y-4">
-            <nav
-                class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#4A7C74]"
-            >
-                <QrCode size={14} />
-                <span>Concierge v4.0</span>
-                <ChevronRight size={12} />
-                <span class="text-slate-900">QR Access Center</span>
-            </nav>
-            <div>
-                <h1
-                    class="text-5xl font-black text-slate-900 tracking-tight mb-3 font-serif"
-                >
-                    QR Access <span class="text-[#4A7C74] font-light italic"
-                        >Center</span
-                    >
-                </h1>
-                <p class="text-slate-500 max-w-3xl text-xl leading-relaxed">
-                    Bridge the gap between physical reality and digital security
-                    with encrypted access keys and asset labels.
-                </p>
-            </div>
-        </div>
-
         <div class="flex items-center gap-4">
             <div
                 class="bg-[#FDFBF7] border border-stone-200 p-4 rounded-2xl flex items-center gap-6 shadow-sm"
@@ -165,7 +146,7 @@
                 </div>
             </div>
         </div>
-    </header>
+    </LivingBlueprintHeader>
 
     <!-- Affirmation Message -->
     <Affirmation module="general" bind:show={showAffirmation} />

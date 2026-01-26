@@ -38,9 +38,12 @@
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
+    import Affirmation from "$lib/components/Affirmation.svelte";
+    import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
 
     // Concierge Imports
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
+    import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import { fly } from "svelte/transition"; // Ensure fly is imported
@@ -49,6 +52,7 @@
     let showAddModal = $state(false);
     let isLoading = $state(true);
     let viewMode = $state<ViewMode>('card');
+    let showAffirmation = $state(false);
 
     onMount(async () => {
         await propertyStore.sync?.();
@@ -246,6 +250,7 @@
             });
         }
 
+        showAffirmation = true;
         resetForm();
     }
 
@@ -318,6 +323,32 @@
     }
 </script>
 
+<LivingBlueprintHeader
+    title="Property & Real Estate"
+    subtitle="Your home, your vehicles, the possessions that matter"
+    tier="preparation"
+    detailedDescription="These are the physical things you've built, bought, and cared for. Documenting them now means your family won't have to search for deeds, titles, or proof of ownership during an already difficult time."
+    whyMatters="Without clear records of what you own and where the documents are, your family could face legal complications, miss valuable assets, or struggle to prove ownership when they need access most."
+>
+    <div class="flex flex-wrap items-center gap-3">
+        <DataViewToggle module="property" onchange={(mode) => viewMode = mode} />
+        <button
+            onclick={() => (showWizard = true)}
+            class="flex items-center gap-2 px-5 py-3 border border-primary/20 text-primary font-bold rounded-2xl hover:bg-primary/5 transition-colors"
+        >
+            <Info size={18} />
+            {$t("wizard.start")}
+        </button>
+        <button
+            onclick={() => (showAddModal = true)}
+            class="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-2xl transition-all shadow-xl shadow-primary/10 font-bold"
+        >
+            <Plus size={20} />
+            Share a property detail
+        </button>
+    </div>
+</LivingBlueprintHeader>
+
 {#if isLoading}
     <div class="flex items-center justify-center py-12">
         <Loader2 class="w-8 h-8 animate-spin text-primary" />
@@ -345,70 +376,32 @@
         </div>
     {/if}
 
-    <!-- Header Section -->
-    <header
-        class="flex flex-col xl:flex-row xl:items-end justify-between gap-6 pb-2"
-    >
-        <div class="space-y-4">
-            <nav
-                class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400"
-            >
-                <Home size={14} />
-                <span>Concierge v4.0</span>
-                <ChevronRight size={12} />
-                <span class="text-primary">Property & Real Estate</span>
-            </nav>
-            <div>
-                <h1
-                    class="text-4xl font-extrabold text-slate-900 tracking-tight mb-2"
+    <!-- Affirmation Message -->
+    <Affirmation module="property" bind:show={showAffirmation} />
+
+    <!-- Filter Controls -->
+    <div class="flex flex-wrap items-center gap-3">
+        <div
+            class="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm"
+        >
+            {#each types as type}
+                <button
+                    onclick={() => (filterType = type)}
+                    class="px-4 py-2 rounded-xl text-xs font-bold tracking-wider transition-all {filterType ===
+                    type
+                        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                        : 'text-slate-500 hover:text-primary hover:bg-slate-50'}"
                 >
-                    Your Home, Your Legacy
-                </h1>
-                <p class="text-slate-500 max-w-2xl text-lg leading-relaxed">
-                    These are the physical things you've built, bought, and
-                    cared for—your home, your vehicles, the possessions that
-                    matter. Documenting them now means your family won't have to
-                    search for deeds, titles, or proof of ownership during an
-                    already difficult time.
-                </p>
-            </div>
+                    {type}
+                </button>
+            {/each}
         </div>
+    </div>
 
-        <div class="flex flex-wrap items-center gap-3">
-            <DataViewToggle module="property" onchange={(mode) => viewMode = mode} />
-
-            <button
-                onclick={() => (showWizard = true)}
-                class="flex items-center gap-2 px-5 py-3 border border-primary/20 text-primary font-bold rounded-2xl hover:bg-primary/5 transition-colors"
-            >
-                <Info size={18} />
-                {$t("wizard.start")}
-            </button>
-            <div
-                class="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm"
-            >
-                {#each types as type}
-                    <button
-                        onclick={() => (filterType = type)}
-                        class="px-4 py-2 rounded-xl text-xs font-bold tracking-wider transition-all {filterType ===
-                        type
-                            ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
-                            : 'text-slate-500 hover:text-primary hover:bg-slate-50'}"
-                    >
-                        {type}
-                    </button>
-                {/each}
-            </div>
-
-            <button
-                onclick={() => (showAddModal = true)}
-                class="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-2xl transition-all shadow-xl shadow-primary/10 font-bold"
-            >
-                <Plus size={20} />
-                Share a property detail
-            </button>
-        </div>
-    </header>
+    <!-- AI Prompt Bar -->
+    <div class="max-w-3xl mx-auto mb-8">
+        <AIPromptBar context="property" />
+    </div>
 
     <!-- Asset Stats Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

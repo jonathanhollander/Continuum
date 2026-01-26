@@ -16,6 +16,7 @@
         Loader2,
     } from "lucide-svelte";
     import Modal from "$lib/components/ui/Modal.svelte";
+    import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import {
         medicalStore,
         type MedicalDirective,
@@ -195,6 +196,11 @@
 
     <!-- Affirmation Message -->
     <Affirmation module="medical" bind:show={showAffirmation} />
+
+    <!-- AI Prompt Bar -->
+    <div class="max-w-3xl mb-8">
+        <AIPromptBar context="medical" />
+    </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Life Saving Profile -->

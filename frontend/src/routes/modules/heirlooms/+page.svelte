@@ -37,6 +37,7 @@
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
+    import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
 
     let showAddModal = $state(false);
     let viewMode = $state<ViewMode>('card');
@@ -320,32 +321,37 @@
     </div>
 {/if}
 
+<LivingBlueprintHeader
+    title="Heirlooms & Treasures"
+    subtitle="Objects carry stories that deserve to be told"
+    tier="legacy"
+    detailedDescription="When you document the history and meaning behind your treasured possessions, you're ensuring these stories survive—transforming objects into heirlooms that connect generations."
+    whyMatters="Objects without stories become 'stuff' that gets donated or thrown away. That watch your grandfather wore every day? Without its story documented, it loses its meaning. You're preserving the emotional value that makes these items irreplaceable."
+>
+    <div class="flex items-center gap-3">
+        <DataViewToggle module="heirlooms" onchange={(mode) => viewMode = mode} />
+        <button
+            onclick={() => (showWizard = true)}
+            class="px-5 py-3 bg-primary text-primary-foreground rounded-2xl font-bold shadow-lg hover:opacity-90 transition-all flex items-center gap-2"
+        >
+            <Sparkles size={18} />
+            Start Concierge
+        </button>
+        <button
+            class="bg-primary text-primary-foreground shadow-primary/20 hover:opacity-90 disabled:opacity-50 transition-all font-bold px-6 py-2 rounded-xl"
+            onclick={() => (showAddForm = true)}
+        >
+            <Plus size={20} /> Share a story or object
+        </button>
+    </div>
+</LivingBlueprintHeader>
+
 {#if isLoading}
     <div class="flex items-center justify-center py-12">
         <Loader2 class="w-8 h-8 animate-spin text-primary" />
     </div>
 {:else}
 <div class="max-w-7xl mx-auto p-8 animate-in fade-in duration-500">
-    <!-- Hero / Header -->
-    <div class="text-center mb-12">
-        <div
-            class="inline-flex items-center justify-center p-4 bg-amber-100 text-amber-800 rounded-full mb-6"
-        >
-            <Gift size={48} />
-        </div>
-        <h1 class="font-serif font-bold text-4xl text-slate-900 mb-4">
-            More Than Just Things
-        </h1>
-        <p
-            class="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed"
-        >
-            Objects carry stories that deserve to be told. When you document the
-            history and meaning behind your treasured possessions, you're
-            ensuring these stories survive—transforming objects into heirlooms
-            that connect generations.
-        </p>
-    </div>
-
     <!-- Affirmation Message -->
     <Affirmation module="heirlooms" bind:show={showAffirmation} />
 
@@ -371,22 +377,6 @@
                 placeholder="Search by item, story, or recipient..."
                 class="w-full pl-10 pr-4 py-3 rounded-2xl border border-stone-200 focus:border-[#4A7C74] focus:ring-0 shadow-sm"
             />
-        </div>
-        <div class="flex items-center gap-3">
-            <DataViewToggle module="heirlooms" onchange={(mode) => viewMode = mode} />
-            <button
-                onclick={() => (showWizard = true)}
-                class="px-5 py-3 bg-primary text-primary-foreground rounded-2xl font-bold shadow-lg hover:opacity-90 transition-all flex items-center gap-2"
-            >
-                <Sparkles size={18} />
-                Start Concierge
-            </button>
-            <button
-                class="bg-primary text-primary-foreground shadow-primary/20 hover:opacity-90 disabled:opacity-50 transition-all font-bold px-6 py-2 rounded-xl"
-                onclick={() => (showAddForm = true)}
-            >
-                <Plus size={20} /> Share a story or object
-            </button>
         </div>
     </div>
 

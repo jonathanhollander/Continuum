@@ -24,6 +24,7 @@
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import Affirmation from "$lib/components/Affirmation.svelte";
+    import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
 
     let viewMode = $state<ViewMode>('card');
     let showAffirmation = $state(false);
@@ -292,22 +293,13 @@
 {:else}
 <div class="max-w-4xl mx-auto p-8 animate-in fade-in duration-500">
     <!-- Header -->
-    <div class="mb-12 flex justify-between items-end">
-        <div>
-            <div
-                class="inline-flex items-center justify-center p-3 bg-[#304743]/10 text-[#304743] rounded-full mb-4"
-            >
-                <Clock size={32} />
-            </div>
-            <h1 class="font-serif font-bold text-4xl text-[#304743] mb-2">
-                Afterlife Calendar
-            </h1>
-            <p class="text-lg text-muted-foreground max-w-2xl">
-                Transform difficult dates into moments of connection. Ensure
-                your birthday, holidays, and anniversaries are celebrated
-                exactly how you want them to be.
-            </p>
-        </div>
+    <LivingBlueprintHeader
+        title="Afterlife Calendar"
+        subtitle="Transform difficult dates into moments of connection"
+        tier="legacy"
+        detailedDescription="Ensure your birthday, holidays, and anniversaries are celebrated exactly how you want them to be. Create meaningful rituals and messages for the dates that matter most."
+        whyMatters="Without your guidance, special dates become painful reminders instead of opportunities for connection. By documenting your wishes, you transform grief into intentional remembrance."
+    >
         <div class="flex items-center gap-3">
             <DataViewToggle module="calendar" onchange={(mode) => viewMode = mode} />
             <button
@@ -317,7 +309,7 @@
                 <Plus size={20} /> Add Significant Date
             </button>
         </div>
-    </div>
+    </LivingBlueprintHeader>
 
     <!-- Affirmation Message -->
     <Affirmation module="general" bind:show={showAffirmation} />

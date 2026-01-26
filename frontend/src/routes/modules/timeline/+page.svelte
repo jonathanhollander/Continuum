@@ -22,6 +22,9 @@
     import { onMount } from "svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
+    import GhostRow from "$lib/components/ui/GhostRow.svelte";
+    import { getSmartSamples } from "$lib/data/smartSamples";
+    import { language } from "$lib/stores/localization";
 
     import {
         timelineStore,
@@ -32,6 +35,7 @@
     import Affirmation from "$lib/components/Affirmation.svelte";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
+    import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
 
     let parsedCustomAttributes = $state<Record<string, any>>({});
     let showAffirmation = $state(false);
@@ -207,10 +211,24 @@
     </div>
 {:else}
 <div class="max-w-6xl mx-auto p-8 animate-in fade-in duration-500">
-    <!-- View Toggle -->
-    <div class="flex justify-end mb-4">
-        <DataViewToggle module="timeline" onchange={(mode) => viewMode = mode} />
-    </div>
+    <!-- Header -->
+    <LivingBlueprintHeader
+        title="The Life Timeline"
+        subtitle="Your story isn't just a list of assets. It's a series of moments."
+        tier="legacy"
+        detailedDescription="Document the milestones, accomplishments, and meaningful moments that shaped your life. Create a visual narrative that helps your family understand who you were and what mattered to you."
+        whyMatters="Your life story deserves to be told. Without these memories preserved, the context of your journey may be lost. Your timeline becomes a gift of understanding for future generations."
+    >
+        <div class="flex items-center gap-3">
+            <DataViewToggle module="timeline" onchange={(mode) => viewMode = mode} />
+            <button
+                class="px-4 py-2 rounded-lg text-sm font-bold bg-[#4A7C74] text-white shadow-md flex items-center gap-2 hover:bg-[#3b635d]"
+                onclick={() => (showAddModal = true)}
+            >
+                <Plus size={16} /> Add Event
+            </button>
+        </div>
+    </LivingBlueprintHeader>
 
     <!-- Affirmation Message -->
     <Affirmation module="timeline" bind:show={showAffirmation} />
@@ -438,6 +456,50 @@
             "Write about a turning point in my story..."
         ]}
     />
+
+    <!-- Empty State with GhostRow Samples -->
+    {#if lifeEvents.length === 0 && !showMemento}
+        <div class="mb-8" in:fade>
+            <div class="border border-amber-200 bg-amber-50/50 rounded-xl p-4 mb-4 flex items-center gap-3 text-amber-800">
+                <Sparkles size={20} />
+                <p class="text-sm font-medium">
+                    Concierge Mode: Showing example life events to inspire you.
+                </p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {#each getSmartSamples($language)['timeline'] || [] as sample}
+                    {@const SampleIcon = getIcon(sample.type || 'milestone')}
+                    <GhostRow
+                        name={sample.name || sample.label}
+                        subtitle={sample.type || 'Milestone'}
+                        type="Life Event"
+                        onclick={() => {
+                            newEvent = {
+                                ...newEvent,
+                                label: sample.name || sample.label,
+                                type: sample.type || 'milestone',
+                                year: sample.year || currentYear,
+                                description: sample.description || '',
+                            };
+                            showAddModal = true;
+                        }}
+                    >
+                        {#snippet icon()}
+                            <SampleIcon size={20} class="text-slate-400" />
+                        {/snippet}
+                    </GhostRow>
+                {/each}
+            </div>
+            <div class="flex justify-center mt-4">
+                <button
+                    onclick={() => (showAddModal = true)}
+                    class="text-sm font-bold text-[#4A7C74] hover:bg-[#4A7C74]/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                >
+                    <Plus size={14} /> Add Your First Life Event
+                </button>
+            </div>
+        </div>
+    {/if}
 
     <!-- The Trophy Case (Accomplishments) -->
     {#if !showMemento && lifeEvents.some((e) => e.type === "accomplishment")}

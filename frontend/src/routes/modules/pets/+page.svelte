@@ -17,6 +17,7 @@
     } from "lucide-svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
     import UniversalUploader from "$lib/components/ui/UniversalUploader.svelte";
+    import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import Affirmation from "$lib/components/Affirmation.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
@@ -30,6 +31,7 @@
     import { activityLog } from "$lib/stores/activityLog.svelte";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
+    import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
 
     let showAddForm = $state(false);
     let showAffirmation = $state(false);
@@ -148,43 +150,38 @@
     }
 </script>
 
+<LivingBlueprintHeader
+    title="Pet Care"
+    subtitle="Your companions deserve a plan for their future care"
+    tier="preparation"
+    detailedDescription="Your pets depend on you completely. This plan ensures they'll be loved and cared for by someone you trust, no matter what happens. It's one of the kindest things you can do for them—and for the person who steps in to help."
+    whyMatters="Without a documented plan, your pets could end up in a shelter or with someone who doesn't know their needs, fears, or routines. Creating this plan ensures they'll be loved and cared for by someone you trust."
+>
+    <div class="flex items-center gap-4">
+        <DataViewToggle module="pets" onchange={(mode) => viewMode = mode} />
+        <button
+            class="bg-primary text-primary-foreground px-6 py-2 rounded-xl font-bold hover:opacity-90 transition-colors flex items-center gap-2 shadow-lg shadow-primary/20"
+            onclick={() => (showAddForm = !showAddForm)}
+        >
+            <Plus size={20} /> Share a pet detail
+        </button>
+    </div>
+</LivingBlueprintHeader>
+
 {#if isLoading}
     <div class="flex items-center justify-center py-12">
         <Loader2 class="w-8 h-8 animate-spin text-primary" />
     </div>
 {:else}
 <div class="max-w-4xl mx-auto p-8 animate-in fade-in duration-500">
-    <!-- Header -->
-    <div class="mb-12 flex justify-between items-end">
-        <div>
-            <div
-                class="inline-flex items-center justify-center p-3 bg-primary/10 text-primary rounded-full mb-4"
-            >
-                <Dog size={32} />
-            </div>
-            <h1 class="font-serif font-bold text-4xl text-slate-900 mb-2">
-                Care for Your Companions
-            </h1>
-            <p class="text-lg text-muted-foreground leading-relaxed max-w-2xl">
-                Your pets depend on you completely. This plan ensures they'll be
-                loved and cared for by someone you trust, no matter what
-                happens. It's one of the kindest things you can do for them—and
-                for the person who steps in to help.
-            </p>
-        </div>
-        <div class="flex items-center gap-4">
-            <DataViewToggle module="pets" onchange={(mode) => viewMode = mode} />
-            <button
-                class="bg-primary text-primary-foreground px-6 py-2 rounded-xl font-bold hover:opacity-90 transition-colors flex items-center gap-2 shadow-lg shadow-primary/20"
-                onclick={() => (showAddForm = !showAddForm)}
-            >
-                <Plus size={20} /> Share a pet detail
-            </button>
-        </div>
-    </div>
 
     <!-- Affirmation Message -->
     <Affirmation module="pets" bind:show={showAffirmation} />
+
+    <!-- AI Prompt Bar -->
+    <div class="max-w-3xl mx-auto mb-8">
+        <AIPromptBar context="pets" />
+    </div>
 
     <!-- Pet Views -->
     {#if viewMode === 'card'}

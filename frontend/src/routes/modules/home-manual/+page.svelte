@@ -32,6 +32,7 @@
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
+    import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
 
     let viewMode = $state<ViewMode>('card');
     let customAttributes = $state<Record<string, any>>({});
@@ -441,24 +442,13 @@
 
 <div class="max-w-6xl mx-auto p-6 md:p-8 animate-in fade-in duration-500">
     <!-- Header -->
-    <div class="mb-8">
-        <div class="flex items-center gap-4 mb-2">
-            <div
-                class="p-3 bg-primary/10 text-primary rounded-xl shadow-lg shadow-primary/10"
-            >
-                <Hammer size={32} />
-            </div>
-            <div>
-                <h1 class="font-serif font-bold text-3xl text-foreground">
-                    The Home Operating Manual
-                </h1>
-                <p class="text-slate-500">
-                    The "Instruction Manual" for your physical house. Don't
-                    leave them guessing how to turn off the water.
-                </p>
-            </div>
-        </div>
-    </div>
+    <LivingBlueprintHeader
+        title="The Home Operating Manual"
+        subtitle="The instruction manual for your physical house"
+        tier="preparation"
+        detailedDescription="Document your trusted vendors, access codes, and utility shutoff locations. Don't leave your family guessing how to turn off the water or who to call when something breaks."
+        whyMatters="In a crisis, your family needs immediate access to critical home information. Without these details, simple tasks become overwhelming challenges during an already difficult time."
+    />
 
     <!-- AI Concierge Drafting Assistant -->
     <AIPromptBar

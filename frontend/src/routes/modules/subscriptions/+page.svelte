@@ -26,6 +26,7 @@
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
+    import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
 
     type Subscription = {
         id: string;
@@ -275,6 +276,25 @@
     );
 </script>
 
+<LivingBlueprintHeader
+    title="Subscriptions & Services"
+    subtitle="Prevent forgotten charges that drain your estate"
+    tier="preparation"
+    detailedDescription="Every subscription you document is money your family won't lose to forgotten charges. This simple list can save them hundreds—or even thousands—in the months after you're gone."
+    whyMatters="After you're gone, these charges will keep hitting your bank account until someone notices and cancels them. Without a record, your family won't know what to look for or how to cancel them. Each service you document is one less headache for them."
+>
+    <div class="flex items-center gap-4">
+        <DataViewToggle module="subscriptions" onchange={(mode) => viewMode = mode} />
+        <button
+            class="px-4 py-2.5 bg-primary text-primary-foreground font-semibold rounded-xl flex items-center gap-2 hover:opacity-90 transition-all shadow-sm group"
+            onclick={() => (showAddForm = true)}
+        >
+            <Plus class="w-4 h-4 group-hover:scale-110 transition-transform" />
+            Record a service
+        </button>
+    </div>
+</LivingBlueprintHeader>
+
 {#if isLoading}
     <div class="flex items-center justify-center py-12">
         <Loader2 class="w-8 h-8 animate-spin text-primary" />
@@ -283,38 +303,6 @@
 <div
     class="max-w-5xl mx-auto p-6 md:p-8 space-y-8 animate-in fade-in duration-500"
 >
-    <!-- Header -->
-    <div
-        class="flex flex-col md:flex-row md:items-center justify-between gap-6 mr-100"
-    >
-        <div>
-            <h1
-                class="font-serif font-bold text-3xl text-slate-900 flex items-center gap-3"
-            >
-                <div class="p-2.5 bg-primary/10 rounded-xl text-primary">
-                    <Receipt class="w-8 h-8" />
-                </div>
-                Accounts to Close or Transfer
-            </h1>
-            <p class="text-slate-500 mt-2 text-lg leading-relaxed max-w-2xl">
-                Every subscription you document is money your family won't lose
-                to forgotten charges. This simple list can save them hundreds—or
-                even thousands—in the months after you're gone. It's a small
-                task now that prevents a big headache later.
-            </p>
-        </div>
-
-        <div class="flex items-center gap-4">
-            <DataViewToggle module="subscriptions" onchange={(mode) => viewMode = mode} />
-            <button
-                class="px-4 py-2.5 bg-primary text-primary-foreground font-semibold rounded-xl flex items-center gap-2 hover:opacity-90 transition-all shadow-sm group"
-                onclick={() => (showAddForm = true)}
-            >
-                <Plus class="w-4 h-4 group-hover:scale-110 transition-transform" />
-                Record a service
-            </button>
-        </div>
-    </div>
 
     <!-- AI Concierge Drafting Assistant -->
     <AIPromptBar

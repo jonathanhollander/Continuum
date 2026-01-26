@@ -13,6 +13,7 @@
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
+    import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import {
         visualMemories,
         externalArchives,
@@ -304,6 +305,12 @@
 <div class="max-w-7xl mx-auto p-8 animate-in fade-in duration-500">
     <!-- Affirmation Message -->
     <Affirmation module="general" bind:show={showAffirmation} />
+
+    <!-- AI Prompt Bar -->
+    <div class="max-w-3xl mx-auto mb-8">
+        <AIPromptBar context="visual-memories" />
+    </div>
+
     <!-- Tabs / Navigation -->
     <div
         class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 border-b border-slate-100 pb-4"

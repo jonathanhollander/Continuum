@@ -37,12 +37,14 @@
     import { onMount } from "svelte";
     import Modal from "$lib/components/ui/Modal.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
+    import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import GuidanceBlock from "$lib/components/guidance/GuidanceBlock.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
     import UniversalUploader from "$lib/components/ui/UniversalUploader.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
+    import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
 
     // Concierge Imports
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
@@ -316,6 +318,32 @@
     };
 </script>
 
+<LivingBlueprintHeader
+    title="Insurance Portfolio"
+    subtitle="Protecting your loved ones with financial security"
+    tier="protection"
+    detailedDescription="Life insurance and protection policies are acts of love. They ensure your family has financial security when you're no longer here to provide it, bridging the gap when they need it most."
+    whyMatters="Billions in insurance benefits go unclaimed every year simply because beneficiaries didn't know policies existed. Cataloging them here guarantees your foresight protects those you love."
+>
+    <div class="flex flex-wrap items-center gap-3">
+        <DataViewToggle module="insurance" onchange={(mode) => viewMode = mode} />
+        <button
+            onclick={() => (showWizard = true)}
+            class="flex items-center gap-2 px-5 py-3 border border-primary/10 text-primary font-bold rounded-2xl hover:bg-primary/5 transition-colors"
+        >
+            <Sparkles size={18} />
+            {$t("wizard.start")}
+        </button>
+        <button
+            onclick={() => (showAddModal = true)}
+            class="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-2xl transition-all shadow-xl shadow-slate-900/10 font-bold"
+        >
+            <Plus size={20} />
+            Share Protection
+        </button>
+    </div>
+</LivingBlueprintHeader>
+
 {#if isLoading}
     <div class="flex items-center justify-center py-12">
         <Loader2 class="w-8 h-8 animate-spin text-primary" />
@@ -343,78 +371,29 @@
         </div>
     {/if}
 
-    <!-- Header Section -->
-    <header
-        class="flex flex-col xl:flex-row xl:items-end justify-between gap-6 pb-2"
-    >
-        <div class="space-y-4">
-            <nav
-                class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400"
-            >
-                <Shield size={14} />
-                <span>Concierge v4.0</span>
-                <ChevronRight size={12} />
-                <span class="text-primary">Insurance Portfolio</span>
-            </nav>
-            <div>
-                <h1
-                    class="text-4xl font-extrabold text-slate-900 tracking-tight mb-2"
+    <!-- Filter Controls -->
+    <div class="flex flex-wrap items-center gap-3">
+        <div
+            class="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm"
+        >
+            {#each types as type}
+                <button
+                    onclick={() => (filterType = type)}
+                    class="px-4 py-2 rounded-xl text-xs font-bold tracking-wider transition-all {filterType ===
+                    type
+                        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                        : 'text-slate-500 hover:text-primary hover:bg-slate-50'}"
                 >
-                    Protecting <span class="text-primary font-light italic"
-                        >Your</span
-                    > Loved Ones
-                </h1>
-                <p
-                    class="text-slate-500 max-w-2xl text-lg leading-relaxed mb-6"
-                >
-                    Life insurance and protection policies are acts of love.
-                    They ensure your family has financial security when you're
-                    no longer here to provide it, bridging the gap when they
-                    need it most.
-                </p>
-                <GuidanceBlock
-                    detailedDescription="Insurance is your family's safety net. By organizing policy details here, you ensure that if the unexpected happens, coverage can be claimed quickly and without added stress."
-                    whyMatters="Billions in insurance benefits go unclaimed every year simply because beneficiaries didn't know policies existed. Cataloging them here guarantees your foresight protects those you love."
-                />
-            </div>
+                    {type}
+                </button>
+            {/each}
         </div>
+    </div>
 
-        <div class="flex flex-wrap items-center gap-3">
-            <DataViewToggle module="insurance" onchange={(mode) => viewMode = mode} />
-
-            <button
-                onclick={() => (showWizard = true)}
-                class="flex items-center gap-2 px-5 py-3 border border-primary/10 text-primary font-bold rounded-2xl hover:bg-primary/5 transition-colors"
-            >
-                <Sparkles size={18} />
-                {$t("wizard.start")}
-            </button>
-
-            <div
-                class="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm"
-            >
-                {#each types as type}
-                    <button
-                        onclick={() => (filterType = type)}
-                        class="px-4 py-2 rounded-xl text-xs font-bold tracking-wider transition-all {filterType ===
-                        type
-                            ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
-                            : 'text-slate-500 hover:text-primary hover:bg-slate-50'}"
-                    >
-                        {type}
-                    </button>
-                {/each}
-            </div>
-
-            <button
-                onclick={() => (showAddModal = true)}
-                class="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-2xl transition-all shadow-xl shadow-slate-900/10 font-bold"
-            >
-                <Plus size={20} />
-                Share Protection
-            </button>
-        </div>
-    </header>
+    <!-- AI Prompt Bar -->
+    <div class="max-w-3xl mx-auto mb-8">
+        <AIPromptBar context="insurance" />
+    </div>
 
     <!-- Stats Dashboard -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

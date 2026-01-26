@@ -9,7 +9,14 @@
         | "letters"
         | "executor"
         | "heirlooms"
-        | "legal_explainer" = "obituary";
+        | "legal_explainer"
+        | "contacts"
+        | "medical"
+        | "pets"
+        | "property"
+        | "insurance"
+        | "digital-guardian"
+        | "visual-memories" = "obituary";
     export let prompts: string[] = [];
     export let promptPool: string[] = []; // NEW: Dynamic pool support
 
@@ -19,7 +26,7 @@
     let result = "";
     let visiblePrompts: string[] = [];
 
-    const quickPrompts = {
+    const quickPrompts: Record<string, string[]> = {
         obituary: [
             "Draft a standard obituary based on these notes...",
             "Write a warm, humorous eulogy...",
@@ -44,6 +51,41 @@
             "Explain what a Living Will is...",
             "Summarize the role of a Healthcare Proxy...",
             "What is a Power of Attorney?",
+        ],
+        contacts: [
+            "Help me organize my emergency contact list...",
+            "Draft a message to notify loved ones...",
+            "Who should be in my inner circle?",
+        ],
+        medical: [
+            "Explain advance healthcare directives...",
+            "Help me document my medical wishes...",
+            "What should my healthcare proxy know?",
+        ],
+        pets: [
+            "Help me write care instructions for my pet...",
+            "Draft a letter to my pet's future guardian...",
+            "What details should I include about my pet?",
+        ],
+        property: [
+            "Help me document property ownership details...",
+            "What information do executors need about real estate?",
+            "Draft a property description for my records...",
+        ],
+        insurance: [
+            "Help me organize my insurance policies...",
+            "What insurance information should I document?",
+            "Explain how beneficiaries claim insurance...",
+        ],
+        "digital-guardian": [
+            "Help me document my digital accounts...",
+            "What happens to online accounts when I pass?",
+            "How do I set up a digital legacy contact?",
+        ],
+        "visual-memories": [
+            "Help me organize my photo archives...",
+            "How should I document my memory locations?",
+            "Draft notes about my photo collection...",
         ],
     };
 

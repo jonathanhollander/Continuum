@@ -31,6 +31,7 @@
     import { getSmartSamples } from "$lib/data/smartSamples";
     import Affirmation from "$lib/components/Affirmation.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
+    import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
 
     let viewMode = $state<ViewMode>('card');
     let customAttributes = $state<Record<string, any>>({});
@@ -102,46 +103,22 @@
 <div
     class="max-w-5xl mx-auto p-6 md:p-8 space-y-10 animate-in fade-in duration-1000"
 >
-    <!-- Hero Header -->
-    <div
-        class="relative rounded-[2.5rem] bg-gradient-to-br from-indigo-900 via-slate-900 to-black p-10 md:p-16 overflow-hidden shadow-2xl"
+    <!-- Header -->
+    <LivingBlueprintHeader
+        title="Anniversary Manager"
+        subtitle="Transforming sensitive dates into intentional moments of connection"
+        tier="legacy"
+        detailedDescription="Create meaningful rituals for birthdays, anniversaries, and remembrance days. Guide your family on how to observe these dates with intention, healing, and legacy."
+        whyMatters="Without guidance on how to observe significant dates, your family may struggle with overwhelming emotions and uncertain rituals. Creating rituals transforms grief into intentional remembrance."
     >
-        <div
-            class="absolute top-0 right-0 p-12 opacity-10 blur-xl scale-150 rotate-12"
+        <button
+            onclick={() => (showAddModal = true)}
+            class="px-8 py-3.5 bg-indigo-600 text-white rounded-full font-bold shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
         >
-            <Calendar size={200} class="text-white" />
-        </div>
-
-        <div
-            class="relative z-10 flex flex-col items-center text-center space-y-6"
-        >
-            <div
-                class="p-4 bg-white/10 backdrop-blur-md rounded-full border border-white/20 shadow-inner"
-            >
-                <Heart class="w-10 h-10 text-rose-400 fill-rose-400/20" />
-            </div>
-            <div class="space-y-3 max-w-2xl">
-                <h1
-                    class="font-serif text-4xl md:text-5xl font-bold text-white tracking-tight"
-                >
-                    Anniversary Manager
-                </h1>
-                <p
-                    class="text-indigo-200/80 text-lg md:text-xl font-light leading-relaxed"
-                >
-                    Transforming sensitive dates into intentional moments of
-                    connection, healing, and legacy.
-                </p>
-            </div>
-            <button
-                onclick={() => (showAddModal = true)}
-                class="mt-4 px-8 py-3.5 bg-white text-indigo-900 rounded-full font-bold shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
-            >
-                <Plus size={20} />
-                Add New Remembrance
-            </button>
-        </div>
-    </div>
+            <Plus size={20} />
+            Add New Remembrance
+        </button>
+    </LivingBlueprintHeader>
 
     <!-- Affirmation Message -->
     <Affirmation module="general" bind:show={showAffirmation} />

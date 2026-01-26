@@ -48,7 +48,9 @@
     import RefreshControl from "$lib/components/ui/RefreshControl.svelte";
     import { notifications } from "$lib/stores/notificationStore";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
+    import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
+    import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
 
     type SavedLetter = {
         id: string;
@@ -74,6 +76,7 @@
     let searchQuery = $state("");
     let isLoading = $state(true);
     let viewMode = $state<ViewMode>('card');
+    let customAttributes = $state<Record<string, any>>({});
 
     onMount(async () => {
         await letterSync.init();
@@ -368,6 +371,50 @@
     );
 </script>
 
+<LivingBlueprintHeader
+    title="Legacy Correspondence"
+    subtitle="Automate notifications and preserve emotional legacies"
+    tier="legacy"
+    detailedDescription="Write letters that will be delivered after you're gone—ethical wills sharing your values, heartfelt messages to loved ones, or formal notifications to institutions."
+    whyMatters="The words you write today will comfort, guide, and inspire your loved ones when you're no longer here to say them yourself. These letters become your voice across time, offering presence at moments you can't physically attend."
+>
+    <div class="flex items-center gap-4">
+        <DataViewToggle module="letters" onchange={(mode) => viewMode = mode} />
+        <div
+            class="bg-[#FDFBF7] border border-stone-200 p-4 rounded-2xl flex items-center gap-6 shadow-sm"
+        >
+            <div class="flex -space-x-3">
+                {#each [1, 2, 3] as i}
+                    <div
+                        class="w-10 h-10 rounded-full border-2 border-[#FDFBF7] bg-stone-100 flex items-center justify-center"
+                    >
+                        <FileText size={16} class="text-stone-400" />
+                    </div>
+                {/each}
+            </div>
+            <div>
+                <p
+                    class="text-[10px] font-black uppercase tracking-widest text-stone-400"
+                >
+                    Vault Status
+                </p>
+                <p class="text-sm font-bold text-slate-700">
+                    {savedLetters.length} Drafts Saved
+                </p>
+            </div>
+            <button
+                onclick={() => {
+                    if (savedLetters.length > 0)
+                        viewLetter(savedLetters[0]);
+                }}
+                class="p-2 bg-stone-100 hover:bg-[#4A7C74] hover:text-white rounded-xl transition-all"
+            >
+                <ArrowRight size={18} />
+            </button>
+        </div>
+    </div>
+</LivingBlueprintHeader>
+
 {#if isLoading}
     <div class="flex items-center justify-center py-12">
         <Loader2 class="w-8 h-8 animate-spin text-primary" />
@@ -376,71 +423,7 @@
 <div
     class="p-8 max-w-[1400px] mx-auto space-y-12 animate-in fade-in duration-700"
 >
-    <!-- Header Section -->
     {#if mode === "menu"}
-        <header
-            class="flex flex-col xl:flex-row xl:items-end justify-between gap-8 pb-4"
-        >
-            <div class="space-y-4">
-                <nav
-                    class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary"
-                >
-                    <PenTool size={14} />
-                    <span>Concierge v4.0</span>
-                    <ChevronRight size={12} />
-                    <span class="text-slate-900">Legacy Correspondence</span>
-                </nav>
-                <div>
-                    <h1
-                        class="text-5xl font-black text-slate-900 tracking-tight mb-3 font-serif"
-                    >
-                        Legacy <span class="text-primary font-light italic"
-                            >Correspondence</span
-                        >
-                    </h1>
-                    <p class="text-slate-500 max-w-3xl text-xl leading-relaxed">
-                        Automate administrative notifications and preserve
-                        emotional legacies with AI-guided templates.
-                    </p>
-                </div>
-            </div>
-
-            <div class="flex items-center gap-4">
-                <DataViewToggle module="letters" onchange={(mode) => viewMode = mode} />
-                <div
-                    class="bg-[#FDFBF7] border border-stone-200 p-4 rounded-2xl flex items-center gap-6 shadow-sm"
-                >
-                    <div class="flex -space-x-3">
-                        {#each [1, 2, 3] as i}
-                            <div
-                                class="w-10 h-10 rounded-full border-2 border-[#FDFBF7] bg-stone-100 flex items-center justify-center"
-                            >
-                                <FileText size={16} class="text-stone-400" />
-                            </div>
-                        {/each}
-                    </div>
-                    <div>
-                        <p
-                            class="text-[10px] font-black uppercase tracking-widest text-stone-400"
-                        >
-                            Vault Status
-                        </p>
-                        <p class="text-sm font-bold text-slate-700">
-                            {savedLetters.length} Drafts Saved
-                        </p>
-                    </div>
-                    <button
-                        onclick={() => {
-                            if (savedLetters.length > 0)
-                                viewLetter(savedLetters[0]);
-                        }}
-                        class="p-2 bg-stone-100 hover:bg-[#4A7C74] hover:text-white rounded-xl transition-all"
-                    >
-                        <ArrowRight size={18} />
-                    </button>
-                </div>
-            </div>
-        </header>
 
         <!-- AI Concierge Drafting Assistant -->
         <AIPromptBar
@@ -942,6 +925,14 @@
                             If set, this letter will remain "Locked" in your
                             vault until the trigger condition is met.
                         </p>
+
+                        <!-- Custom Fields -->
+                        <div class="pt-4 mt-4 border-t border-indigo-100">
+                            <CustomFieldsManager
+                                entityType="letter"
+                                bind:data={customAttributes}
+                            />
+                        </div>
                     </div>
 
                     <div class="relative group">
