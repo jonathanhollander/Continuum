@@ -31,15 +31,19 @@
         ShieldAlert,
         Monitor,
         Loader2,
+        Sparkles,
     } from "lucide-svelte";
+    import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import { onMount } from "svelte";
     import { fade, slide, scale } from "svelte/transition";
     import EmptyState from "$lib/components/EmptyState.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
+    import Affirmation from "$lib/components/Affirmation.svelte";
 
     let viewMode = $state<ViewMode>('card');
+    let showAffirmation = $state(false);
     let isLoading = $state(true);
 
     onMount(async () => {
@@ -109,6 +113,7 @@
 
         parsedCustomAttributes = {};
         showAddModal = false;
+        showAffirmation = true;
     }
 
     const tabs = [
@@ -197,6 +202,20 @@
             </button>
         </div>
     </header>
+
+    <!-- Affirmation Message -->
+    <Affirmation module="general" bind:show={showAffirmation} />
+
+    <!-- AI Concierge Drafting Assistant -->
+    <AIPromptBar
+        context="executor"
+        prompts={[
+            "Help me document this asset transaction...",
+            "Draft maintenance notes for this property...",
+            "Explain how to handle this insurance claim...",
+            "Write instructions for managing my digital accounts..."
+        ]}
+    />
 
     <!-- Tabs -->
     <div
@@ -320,7 +339,7 @@
                 >
                     {#each filteredMaintenance as log (log.id)}
                         <div
-                            class="bg-slate-50 rounded-3xl p-6 border border-slate-100 space-y-4 hover:shadow-md transition-all"
+                            class="bg-slate-50 rounded-2xl p-6 border border-slate-100 space-y-4 hover:shadow-md transition-all"
                         >
                             <div class="flex items-center justify-between">
                                 <div
@@ -371,7 +390,7 @@
                 <div class="space-y-4">
                     {#each filteredClaims as claim (claim.id)}
                         <div
-                            class="flex items-center justify-between p-6 bg-white border border-slate-100 rounded-3xl hover:border-indigo-200 transition-all group"
+                            class="flex items-center justify-between p-6 bg-white border border-slate-100 rounded-2xl hover:border-indigo-200 transition-all group"
                         >
                             <div class="flex items-center gap-6">
                                 <div
@@ -457,7 +476,7 @@
                         <ShieldAlert size={200} />
                     </div>
                     <div
-                        class="w-20 h-20 bg-rose-100 text-rose-600 rounded-3xl flex items-center justify-center shrink-0 shadow-inner"
+                        class="w-20 h-20 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center shrink-0 shadow-inner"
                     >
                         <Skull size={40} />
                     </div>

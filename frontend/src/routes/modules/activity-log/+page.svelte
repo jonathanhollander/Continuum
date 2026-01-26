@@ -17,12 +17,16 @@
         FileDown,
         Settings,
         Loader2,
+        Sparkles,
     } from "lucide-svelte";
     import { fade, slide } from "svelte/transition";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
+    import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
+    import Affirmation from "$lib/components/Affirmation.svelte";
 
     let viewMode = $state<ViewMode>('card');
+    let showAffirmation = $state(false);
     let isLoading = $state(true);
 
     let entries = $state<ActivityLogEntry[]>([]);
@@ -119,6 +123,7 @@
         a.download = `activity-log-${new Date().toISOString().split("T")[0]}.json`;
         a.click();
         URL.revokeObjectURL(url);
+        showAffirmation = true;
     }
 
     function exportAsCSV() {
@@ -130,6 +135,7 @@
         a.download = `activity-log-${new Date().toISOString().split("T")[0]}.csv`;
         a.click();
         URL.revokeObjectURL(url);
+        showAffirmation = true;
     }
 
     function clearLog() {
@@ -190,6 +196,20 @@
             {/if}
         </div>
     </div>
+
+    <!-- Affirmation Message -->
+    <Affirmation module="general" bind:show={showAffirmation} />
+
+    <!-- AI Concierge Drafting Assistant -->
+    <AIPromptBar
+        context="executor"
+        prompts={[
+            "Summarize my recent activity across all modules...",
+            "Find changes made to my financial accounts...",
+            "List all updates from the past week...",
+            "Help me understand what was modified recently..."
+        ]}
+    />
 
     <!-- Filters & Actions -->
     <div

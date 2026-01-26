@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { createEventDispatcher, onMount } from "svelte";
+    import { onMount } from "svelte";
     import {
         X,
         Sparkles,
@@ -14,19 +14,17 @@
         type AnalyzedLegalese,
     } from "$lib/services/legalService";
     import { fade, slide, scale } from "svelte/transition";
+    import { cubicOut } from "svelte/easing";
 
-    export let docName: string;
-    export let docType: string;
+    let { docName, docType, onclose }: { docName: string; docType: string; onclose: () => void } = $props();
 
-    const dispatch = createEventDispatcher();
-
-    let status: "scanning" | "ready" = "scanning";
-    let analysis: AnalyzedLegalese | null = null;
-    let selectedTerm: {
+    let status = $state<"scanning" | "ready">("scanning");
+    let analysis = $state<AnalyzedLegalese | null>(null);
+    let selectedTerm = $state<{
         term: string;
         definition: string;
         severity: "info" | "warning";
-    } | null = null;
+    } | null>(null);
 
     onMount(async () => {
         try {
@@ -62,22 +60,44 @@
             selectedTerm = null;
         }
     }
+
+    function handleKeydown(e: KeyboardEvent) {
+        if (e.key === "Escape") {
+            onclose();
+        }
+    }
 </script>
 
+<svelte:window onkeydown={handleKeydown} />
+
 <div
-    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm"
-    transition:fade
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+    role="dialog"
+    aria-modal="true"
 >
+    <!-- Backdrop -->
     <div
-        class="bg-white rounded-3xl shadow-2xl w-full max-w-4xl h-[80vh] flex overflow-hidden relative"
-        in:scale={{ start: 0.95 }}
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
+        transition:fade={{ duration: 200 }}
+        onclick={onclose}
+        onkeydown={(e) => e.key === "Enter" && onclose()}
+        role="button"
+        tabindex="0"
+        aria-label="Close modal"
+    ></div>
+
+    <!-- Panel -->
+    <div
+        class="relative bg-white rounded-2xl shadow-2xl ring-1 ring-slate-900/5 w-full max-w-4xl h-[80vh] flex overflow-hidden"
+        transition:scale={{ duration: 250, start: 0.95, easing: cubicOut }}
     >
-        <!-- Header -->
+        <!-- Header Close Button -->
         <button
-            on:click={() => dispatch("close")}
-            class="absolute top-6 right-6 p-2 bg-slate-100 hover:bg-slate-200 rounded-full z-10 transition-colors"
+            onclick={onclose}
+            class="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full z-10 transition-colors"
+            aria-label="Close"
         >
-            <X size={20} />
+            <X class="w-5 h-5" />
         </button>
 
         {#if status === "scanning"}
@@ -134,7 +154,7 @@
                     <div
                         role="presentation"
                         class="w-full text-left prose prose-lg max-w-none font-serif text-slate-800 leading-loose whitespace-pre-wrap appearance-none block bg-transparent border-none p-0"
-                        on:click={handleTextClick}
+                        onclick={handleTextClick}
                     >
                         {@html highlightText(analysis.fullText, analysis.terms)}
                     </div>

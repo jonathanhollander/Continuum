@@ -17,9 +17,11 @@
         Trash2,
         Mail,
         Loader2,
+        Sparkles,
     } from "lucide-svelte";
     import { onMount } from "svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
+    import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
 
     import {
         timelineStore,
@@ -27,8 +29,10 @@
     } from "$lib/stores/timelineStore.svelte";
     import { familyStore } from "$lib/stores/familyStore.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
+    import Affirmation from "$lib/components/Affirmation.svelte";
 
     let parsedCustomAttributes = $state<Record<string, any>>({});
+    let showAffirmation = $state(false);
     let isLoading = $state(true);
 
     onMount(async () => {
@@ -78,6 +82,7 @@
             timelineStore.addEvent(eventData);
         }
 
+        showAffirmation = true;
         resetForm();
     }
 
@@ -199,6 +204,9 @@
     </div>
 {:else}
 <div class="max-w-6xl mx-auto p-8 animate-in fade-in duration-500">
+    <!-- Affirmation Message -->
+    <Affirmation module="timeline" bind:show={showAffirmation} />
+
     <!-- Add Modal -->
     {#if showAddModal}
         <div
@@ -412,6 +420,17 @@
         </div>
     </div>
 
+    <!-- AI Concierge Drafting Assistant -->
+    <AIPromptBar
+        context="heirlooms"
+        prompts={[
+            "Help me capture a milestone from my life...",
+            "Draft a reflection on a major life event...",
+            "Describe the meaning of this accomplishment...",
+            "Write about a turning point in my story..."
+        ]}
+    />
+
     <!-- The Trophy Case (Accomplishments) -->
     {#if !showMemento && lifeEvents.some((e) => e.type === "accomplishment")}
         <div class="mb-12" in:slide>
@@ -542,7 +561,7 @@
     {#if showMemento}
         <!-- Memento Mori Grid -->
         <div
-            class="bg-white rounded-3xl border border-border shadow-sm p-8"
+            class="bg-white rounded-2xl border border-border shadow-sm p-8"
             in:fade
         >
             <div
@@ -647,7 +666,7 @@
     {:else}
         <!-- Timeline View -->
         <div
-            class="bg-white rounded-3xl shadow-xl border border-stone-100 p-8 overflow-hidden relative"
+            class="bg-white rounded-2xl shadow-xl border border-stone-100 p-8 overflow-hidden relative"
         >
             <!-- Controls -->
             <div class="flex justify-between items-center mb-6">

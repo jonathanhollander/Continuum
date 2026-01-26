@@ -82,7 +82,7 @@
             {#each guides as guide}
                 <button
                     on:click={() => (activeGuideId = guide.id)}
-                    class="w-full p-6 text-left rounded-3xl border transition-all flex items-center gap-4
+                    class="w-full p-6 text-left rounded-2xl border transition-all flex items-center gap-4
                     {activeGuideId === guide.id
                         ? 'bg-white border-blue-200 shadow-md ring-1 ring-blue-100'
                         : 'bg-gray-50/50 border-transparent hover:bg-white hover:border-gray-200'}"
@@ -164,7 +164,7 @@
 
                     <div class="mt-20 pt-12 border-t border-gray-100">
                         <div
-                            class="flex items-start gap-4 p-6 bg-yellow-50 rounded-3xl border border-yellow-100"
+                            class="flex items-start gap-4 p-6 bg-yellow-50 rounded-2xl border border-yellow-100"
                         >
                             <CircleAlert
                                 class="text-yellow-600 mt-1 shrink-0"

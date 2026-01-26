@@ -143,7 +143,7 @@
 </script>
 
 <div
-    class="w-full h-full min-h-[400px] flex flex-col items-center justify-center p-8 bg-slate-50 rounded-3xl border border-slate-200 relative overflow-hidden"
+    class="w-full h-full min-h-[400px] flex flex-col items-center justify-center p-8 bg-slate-50 rounded-2xl border border-slate-200 relative overflow-hidden"
 >
     <!-- Progress Bar -->
     <div class="absolute top-0 left-0 w-full h-2 bg-slate-200">

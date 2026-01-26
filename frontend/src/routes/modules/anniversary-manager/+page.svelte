@@ -19,6 +19,7 @@
         Clock,
         Loader2,
     } from "lucide-svelte";
+    import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import { onMount } from "svelte";
     import { fade, slide, scale } from "svelte/transition";
     import { quintOut } from "svelte/easing";
@@ -28,8 +29,12 @@
     import EmptyState from "$lib/components/EmptyState.svelte";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
+    import Affirmation from "$lib/components/Affirmation.svelte";
+    import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
 
     let viewMode = $state<ViewMode>('card');
+    let customAttributes = $state<Record<string, any>>({});
+    let showAffirmation = $state(false);
     let isLoading = $state(true);
 
     onMount(async () => {
@@ -75,6 +80,7 @@
             tags: [],
         };
         showAddModal = false;
+        showAffirmation = true;
     }
 
     function formatDate(dateStr: string) {
@@ -137,6 +143,20 @@
         </div>
     </div>
 
+    <!-- Affirmation Message -->
+    <Affirmation module="general" bind:show={showAffirmation} />
+
+    <!-- AI Concierge Drafting Assistant -->
+    <AIPromptBar
+        context="heirlooms"
+        prompts={[
+            "Suggest a meaningful ritual for this anniversary...",
+            "Help me write about the significance of this date...",
+            "Draft instructions for commemorating this day...",
+            "Create a remembrance message for my family..."
+        ]}
+    />
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
         <!-- Upcoming Timeline -->
         <div class="lg:col-span-2 space-y-8">
@@ -198,7 +218,7 @@
                 <div class="space-y-6">
                     {#each $upcomingEvents as event (event.id)}
                         <div
-                            class="group relative bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl hover:border-indigo-200 transition-all duration-500 overflow-hidden"
+                            class="group relative bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-xl hover:border-indigo-200 transition-all duration-500 overflow-hidden"
                             transition:slide
                         >
                             <div class="flex items-start gap-6">
@@ -501,6 +521,14 @@
                             placeholder="Step-by-step guidance for remembrance..."
                             class="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all resize-none h-24 text-sm italic"
                         ></textarea>
+                    </div>
+
+                    <!-- Custom Fields -->
+                    <div class="pt-2 border-t border-slate-100">
+                        <CustomFieldsManager
+                            entityType="anniversary_event"
+                            bind:data={customAttributes}
+                        />
                     </div>
                 </div>
 

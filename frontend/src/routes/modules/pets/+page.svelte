@@ -192,7 +192,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             {#each petStore.items as pet}
                 <div
-                    class="bg-white rounded-3xl border border-border shadow-sm overflow-hidden group hover:shadow-md transition-all"
+                    class="bg-white rounded-2xl border border-border shadow-sm overflow-hidden group hover:shadow-md transition-all"
                 >
                     <!-- Pet Header -->
                     <div

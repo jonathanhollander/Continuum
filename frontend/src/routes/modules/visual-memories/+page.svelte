@@ -38,8 +38,11 @@
     import BulkActionBar from "$lib/components/modules/visual-memories/BulkActionBar.svelte";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
+    import Affirmation from "$lib/components/Affirmation.svelte";
+    import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
 
     let activeTab = $state<"gallery" | "archives">("gallery");
+    let customAttributes = $state<Record<string, any>>({});
     let dataViewMode = $state<ViewMode>('card');
 
     // Gallery State
@@ -65,6 +68,7 @@
     let hasArchives = $derived(externalArchives.items.length > 0);
     let selectedCount = $derived(selectedIds.length);
     let isLoading = $state(true);
+    let showAffirmation = $state(false);
 
     onMount(async () => {
         await syncAllMemories();
@@ -105,6 +109,7 @@
             });
         }
         showArchiveModal = false;
+        showAffirmation = true;
     }
 
     function handleDeleteArchive(id: number) {
@@ -256,6 +261,14 @@
                         />
                     </div>
                 </div>
+
+                <!-- Custom Fields -->
+                <div class="pt-4 border-t border-slate-100">
+                    <CustomFieldsManager
+                        entityType="external_archive"
+                        bind:data={customAttributes}
+                    />
+                </div>
             </div>
 
             <div
@@ -289,6 +302,8 @@
 {/if}
 
 <div class="max-w-7xl mx-auto p-8 animate-in fade-in duration-500">
+    <!-- Affirmation Message -->
+    <Affirmation module="general" bind:show={showAffirmation} />
     <!-- Tabs / Navigation -->
     <div
         class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 border-b border-slate-100 pb-4"

@@ -118,7 +118,7 @@
                 <!-- Guided Choice -->
                 <button
                     onclick={startGuided}
-                    class="group relative p-8 bg-indigo-600/10 border border-indigo-500/30 rounded-3xl text-left hover:bg-indigo-600/20 transition-all hover:scale-[1.02] active:scale-95 overflow-hidden"
+                    class="group relative p-8 bg-indigo-600/10 border border-indigo-500/30 rounded-2xl text-left hover:bg-indigo-600/20 transition-all hover:scale-[1.02] active:scale-95 overflow-hidden"
                 >
                     <div class="flex flex-col h-full space-y-4 relative z-10">
                         <div
@@ -150,7 +150,7 @@
                 <!-- Expert Choice -->
                 <button
                     onclick={startExpert}
-                    class="group relative p-8 bg-white/5 border border-white/10 rounded-3xl text-left hover:bg-white/10 transition-all hover:scale-[1.02] active:scale-95"
+                    class="group relative p-8 bg-white/5 border border-white/10 rounded-2xl text-left hover:bg-white/10 transition-all hover:scale-[1.02] active:scale-95"
                 >
                     <div class="flex flex-col h-full space-y-4">
                         <div
@@ -183,7 +183,7 @@
             <!-- AI Concierge Active States -->
             <div class="space-y-6" transition:fly={{ y: 20 }}>
                 <div
-                    class="p-6 bg-white/5 border border-white/10 rounded-3xl flex items-center gap-4 text-left"
+                    class="p-6 bg-white/5 border border-white/10 rounded-2xl flex items-center gap-4 text-left"
                 >
                     <div
                         class="p-3 bg-indigo-500/20 rounded-2xl text-indigo-400"

@@ -265,7 +265,7 @@
                         <!-- Local Search Discovery -->
                         <div
                             in:fly={{ y: 20, delay: 500, duration: 600 }}
-                            class="p-8 rounded-3xl bg-gradient-to-br from-indigo-500/10 to-rose-500/10 backdrop-blur-xl border border-white/10 flex flex-col items-start text-left group transition-all duration-500 {showDiscovery
+                            class="p-8 rounded-2xl bg-gradient-to-br from-indigo-500/10 to-rose-500/10 backdrop-blur-xl border border-white/10 flex flex-col items-start text-left group transition-all duration-500 {showDiscovery
                                 ? 'md:col-span-2'
                                 : ''}"
                         >
@@ -394,7 +394,7 @@
                                             : 'justify-start'}"
                                     >
                                         <div
-                                            class="max-w-[85%] p-4 rounded-3xl {msg.role ===
+                                            class="max-w-[85%] p-4 rounded-2xl {msg.role ===
                                             'user'
                                                 ? 'bg-indigo-500/20 border border-indigo-500/20 text-indigo-100 rounded-tr-none'
                                                 : 'bg-white/5 border border-white/10 text-slate-300 rounded-tl-none'}"
@@ -408,7 +408,7 @@
                                 {#if isTyping}
                                     <div class="flex justify-start">
                                         <div
-                                            class="px-6 py-4 rounded-3xl bg-white/5 border border-white/10"
+                                            class="px-6 py-4 rounded-2xl bg-white/5 border border-white/10"
                                         >
                                             <div class="flex gap-1">
                                                 <div
@@ -450,7 +450,7 @@
                 <!-- Crisis Center Sidebar -->
                 <aside
                     in:fly={{ x: 20, delay: 600, duration: 600 }}
-                    class="p-8 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 h-fit sticky top-8"
+                    class="p-8 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 h-fit sticky top-8"
                 >
                     <div class="flex items-center justify-between gap-3 mb-8">
                         <div class="flex items-center gap-3">

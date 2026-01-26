@@ -104,6 +104,14 @@ export const affirmations = {
         { primary: "Your family will know you're okay", secondary: "Pulse configured" },
         { primary: "This simple check-in might save your life", secondary: "Preferences updated" },
     ],
+
+    journal: [
+        { primary: "Your story will be remembered", secondary: "Reflection saved" },
+        { primary: "You're giving your loved ones a window into your heart", secondary: "Memory preserved" },
+        { primary: "These words are a treasure they'll return to again and again", secondary: "Entry saved" },
+        { primary: "You're passing down wisdom that can't be Googled", secondary: "Reflection documented" },
+        { primary: "This is how legacies are built - one memory at a time", secondary: "Story captured" },
+    ],
 } as const;
 
 /**

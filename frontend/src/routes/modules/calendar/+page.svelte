@@ -23,8 +23,10 @@
     import EmptyState from "$lib/components/EmptyState.svelte";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
+    import Affirmation from "$lib/components/Affirmation.svelte";
 
     let viewMode = $state<ViewMode>('card');
+    let showAffirmation = $state(false);
 
     // --- Types ---
     type CalendarEvent = {
@@ -167,6 +169,7 @@
             await calendarSync.create(eventData);
         }
 
+        showAffirmation = true;
         resetForm();
     }
 
@@ -316,6 +319,9 @@
         </div>
     </div>
 
+    <!-- Affirmation Message -->
+    <Affirmation module="general" bind:show={showAffirmation} />
+
     {#if events.length === 0}
         <EmptyState
             title="Create meaningful moments for the future"
@@ -359,7 +365,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             {#each events as evt}
                 <div
-                    class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-all group relative overflow-hidden"
+                    class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-all group relative overflow-hidden"
                 >
                     <!-- Type Badge -->
                     <div class="absolute top-0 right-0 p-4 opacity-10">
@@ -448,7 +454,7 @@
 
             <!-- AI Suggestion Card (Mock) -->
             <button
-                class="w-full border-2 border-dashed border-gray-200 rounded-3xl p-6 flex flex-col items-center justify-center text-center text-gray-400 gap-4 min-h-[300px] hover:border-[#304743]/50 hover:bg-gray-50/50 transition-all cursor-pointer"
+                class="w-full border-2 border-dashed border-gray-200 rounded-2xl p-6 flex flex-col items-center justify-center text-center text-gray-400 gap-4 min-h-[300px] hover:border-[#304743]/50 hover:bg-gray-50/50 transition-all cursor-pointer"
                 onclick={() => (showAddForm = true)}
             >
                 <div class="p-4 bg-gray-100 rounded-full">

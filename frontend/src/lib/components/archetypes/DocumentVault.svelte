@@ -25,12 +25,14 @@
     import FileUploader from "$lib/components/ui/FileUploader.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
+    import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { activityLog } from "$lib/stores/activityLog.svelte";
     // import { getStored, setStored } from "$lib/stores/persistence";
     import type { ViewMode } from "$lib/stores/userPreferencesStore.svelte";
 
     let { module, viewMode = 'card' }: { module: { id: string }, viewMode?: ViewMode } = $props();
+    let customAttributes = $state<Record<string, any>>({});
 
     type DocType =
         | "Will"
@@ -535,6 +537,14 @@
                                 class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
                             />
                         </div>
+                    </div>
+
+                    <!-- Custom Fields -->
+                    <div class="mb-4 pt-4 border-t border-slate-100">
+                        <CustomFieldsManager
+                            entityType="legal_document"
+                            bind:data={customAttributes}
+                        />
                     </div>
 
                     <div class="flex justify-end gap-3 pt-4">

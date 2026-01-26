@@ -22,7 +22,9 @@
         ShieldCheck,
         X,
         Loader2,
+        Sparkles,
     } from "lucide-svelte";
+    import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import { onMount } from "svelte";
     import { fade, slide, scale } from "svelte/transition";
     import { quintOut } from "svelte/easing";
@@ -35,8 +37,10 @@
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
+    import Affirmation from "$lib/components/Affirmation.svelte";
 
     let viewMode = $state<ViewMode>('card');
+    let showAffirmation = $state(false);
     let isLoading = $state(true);
 
     onMount(async () => {
@@ -84,6 +88,7 @@
         isRecording = false;
         showAddModal = false;
         parsedCustomAttributes = {};
+        showAffirmation = true;
     }
 
     async function handleSaveVideo(event: CustomEvent<Blob>) {
@@ -161,6 +166,20 @@
             </button>
         </div>
     </div>
+
+    <!-- Affirmation Message -->
+    <Affirmation module="timeCapsule" bind:show={showAffirmation} />
+
+    <!-- AI Concierge Drafting Assistant -->
+    <AIPromptBar
+        context="letters"
+        prompts={[
+            "Help me write a message to my daughter for her wedding...",
+            "Draft words of wisdom for my grandchild's graduation...",
+            "Write a letter expressing my love and hopes for the future...",
+            "Create a meaningful message for my spouse to read later..."
+        ]}
+    />
 
     <!-- Active Capsules Grid -->
     {#if viewMode === 'card'}
@@ -505,7 +524,7 @@
                         <VideoRecorder on:save={handleSaveVideo} />
                     {:else if recordedMediaId}
                         <div
-                            class="p-6 bg-emerald-50 rounded-3xl border border-emerald-100 flex items-center justify-between"
+                            class="p-6 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center justify-between"
                         >
                             <div
                                 class="flex items-center gap-3 text-emerald-700"
@@ -529,7 +548,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <button
                                 on:click={() => (isRecording = true)}
-                                class="p-6 border-2 border-dashed border-slate-200 rounded-3xl flex flex-col items-center gap-3 text-slate-400 hover:border-indigo-300 hover:text-indigo-600 transition-all"
+                                class="p-6 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center gap-3 text-slate-400 hover:border-indigo-300 hover:text-indigo-600 transition-all"
                             >
                                 <Video size={32} />
                                 <span class="text-xs font-bold uppercase"
@@ -539,7 +558,7 @@
                             <textarea
                                 bind:value={newMessage.contentPreview}
                                 placeholder="Or type a written legacy note..."
-                                class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-3xl h-full focus:ring-2 focus:ring-indigo-500 outline-none font-medium resize-none"
+                                class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl h-full focus:ring-2 focus:ring-indigo-500 outline-none font-medium resize-none"
                             ></textarea>
                         </div>
                     {/if}
@@ -602,7 +621,7 @@
                 <X size={32} />
             </button>
             <div
-                class="w-full max-w-4xl aspect-video rounded-3xl overflow-hidden shadow-2xl bg-black"
+                class="w-full max-w-4xl aspect-video rounded-2xl overflow-hidden shadow-2xl bg-black"
             >
                 <video
                     src={activeVideoUrl}

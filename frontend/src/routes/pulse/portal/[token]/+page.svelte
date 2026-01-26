@@ -91,7 +91,7 @@
             </div>
         {:else if state.error}
             <div
-                class="bg-slate-900/60 border border-rose-500/30 rounded-3xl p-12 text-center backdrop-blur-xl"
+                class="bg-slate-900/60 border border-rose-500/30 rounded-2xl p-12 text-center backdrop-blur-xl"
             >
                 <ShieldAlert class="w-16 h-16 text-rose-500 mx-auto mb-4" />
                 <h2 class="text-2xl font-serif text-white mb-2">
@@ -189,7 +189,7 @@
             <div class="grid md:grid-cols-2 gap-6">
                 <!-- Pulse Heartbeat (Mock Memories) -->
                 <div
-                    class="bg-slate-900/40 border border-slate-800 rounded-3xl p-8 backdrop-blur-md"
+                    class="bg-slate-900/40 border border-slate-800 rounded-2xl p-8 backdrop-blur-md"
                 >
                     <div class="flex items-center gap-3 mb-6">
                         <div
@@ -232,7 +232,7 @@
 
                 <!-- Emergency Docs (Simulated Safe Pass) -->
                 <div
-                    class="bg-slate-900/40 border border-slate-800 rounded-3xl p-8 backdrop-blur-md"
+                    class="bg-slate-900/40 border border-slate-800 rounded-2xl p-8 backdrop-blur-md"
                 >
                     <div class="flex items-center gap-3 mb-6">
                         <div
@@ -288,7 +288,7 @@
             <!-- VAULT DISCLOSURE (Gate codes / Pet care) -->
             {#if state.vaultItems.length > 0}
                 <div
-                    class="bg-indigo-950/20 border border-indigo-500/20 rounded-3xl p-8 backdrop-blur-md"
+                    class="bg-indigo-950/20 border border-indigo-500/20 rounded-2xl p-8 backdrop-blur-md"
                     in:slide
                 >
                     <div class="flex items-center gap-3 mb-6">

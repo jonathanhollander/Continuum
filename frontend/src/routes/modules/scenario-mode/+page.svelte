@@ -75,7 +75,7 @@
             </p>
         </div>
         <div
-            class="px-6 py-4 bg-gray-900 rounded-3xl text-white flex items-center gap-4"
+            class="px-6 py-4 bg-gray-900 rounded-2xl text-white flex items-center gap-4"
         >
             <div
                 class="text-xs font-black uppercase tracking-widest text-gray-400"
@@ -155,7 +155,7 @@
                             <div
                                 class="p-6 {readiness.hasExecutor
                                     ? 'bg-green-50 border-green-100'
-                                    : 'bg-red-50 border-red-100'} border-2 rounded-3xl flex items-center gap-4 transition-colors"
+                                    : 'bg-red-50 border-red-100'} border-2 rounded-2xl flex items-center gap-4 transition-colors"
                             >
                                 {#if readiness.hasExecutor}
                                     <CircleCheck
@@ -192,7 +192,7 @@
                             <div
                                 class="p-6 {readiness.hasProxy
                                     ? 'bg-green-50 border-green-100'
-                                    : 'bg-red-50 border-red-100'} border-2 rounded-3xl flex items-center gap-4 transition-colors"
+                                    : 'bg-red-50 border-red-100'} border-2 rounded-2xl flex items-center gap-4 transition-colors"
                             >
                                 {#if readiness.hasProxy}
                                     <CircleCheck
@@ -235,7 +235,7 @@
                         </h3>
                         <div class="space-y-4">
                             <div
-                                class="flex items-center justify-between p-6 bg-gray-50 rounded-3xl group hover:bg-white hover:shadow-md hover:border-gray-200 border border-transparent transition-all"
+                                class="flex items-center justify-between p-6 bg-gray-50 rounded-2xl group hover:bg-white hover:shadow-md hover:border-gray-200 border border-transparent transition-all"
                             >
                                 <div class="flex items-center gap-4">
                                     <div
@@ -270,7 +270,7 @@
                             </div>
 
                             <div
-                                class="flex items-center justify-between p-6 bg-gray-50 rounded-3xl group hover:bg-white hover:shadow-md hover:border-gray-200 border border-transparent transition-all"
+                                class="flex items-center justify-between p-6 bg-gray-50 rounded-2xl group hover:bg-white hover:shadow-md hover:border-gray-200 border border-transparent transition-all"
                             >
                                 <div class="flex items-center gap-4">
                                     <div
@@ -324,7 +324,7 @@
                             </p>
                         </div>
                         <button
-                            class="px-8 py-4 bg-white text-indigo-600 rounded-3xl font-black text-sm hover:scale-105 transition-transform active:scale-95 shadow-lg shadow-black/10"
+                            class="px-8 py-4 bg-white text-indigo-600 rounded-2xl font-black text-sm hover:scale-105 transition-transform active:scale-95 shadow-lg shadow-black/10"
                         >
                             GENERATE PDF REPORT
                         </button>

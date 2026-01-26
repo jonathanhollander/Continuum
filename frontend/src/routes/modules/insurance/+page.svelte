@@ -333,7 +333,7 @@
             <div class="w-full max-w-2xl relative" in:fly={{ y: 20 }}>
                 <button
                     class="absolute -top-12 right-0 text-white/50 hover:text-white"
-                    onclick={() => (showWizard = false)}>Close</button
+                    onclick={() => (showWizard = false)}>Go back</button
                 >
                 <ConciergeFlow
                     steps={wizardSteps}

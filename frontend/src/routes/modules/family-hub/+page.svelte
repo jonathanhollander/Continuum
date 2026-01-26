@@ -14,6 +14,7 @@
         ChevronRight,
         Pencil,
         Loader2,
+        Sparkles,
     } from "lucide-svelte";
     import { fade, slide, scale } from "svelte/transition";
     import FileUploader from "$lib/components/ui/FileUploader.svelte";
@@ -22,6 +23,7 @@
     import BlueprintCard from "$lib/components/ui/BlueprintCard.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
+    import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import { onMount } from "svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { activityLog } from "$lib/stores/activityLog.svelte";
@@ -31,8 +33,12 @@
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
     import * as registryRaw from "$lib/data/registry.json";
+    import Affirmation from "$lib/components/Affirmation.svelte";
+    import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
 
     let dataViewMode = $state<ViewMode>('card');
+    let customAttributes = $state<Record<string, any>>({});
+    let showAffirmation = $state(false);
 
     // Registry Data Handling
     const registryData = (registryRaw as any).default || registryRaw;
@@ -163,6 +169,7 @@
             });
         }
 
+        showAffirmation = true;
         resetForm();
     }
 
@@ -274,6 +281,11 @@
     </div>
 {:else}
 <div class="min-h-screen bg-[#FDFBF7]">
+    <!-- Affirmation Message -->
+    <div class="max-w-6xl mx-auto px-8 pt-8">
+        <Affirmation module="heirlooms" bind:show={showAffirmation} />
+    </div>
+
     <!-- Add Memory Modal -->
     {#if showAddModal}
         <div
@@ -412,6 +424,14 @@
                         </div>
                     {/if}
 
+                    <!-- Custom Fields -->
+                    <div class="pt-4 border-t border-gray-100">
+                        <CustomFieldsManager
+                            entityType="family_memory"
+                            bind:data={customAttributes}
+                        />
+                    </div>
+
                     <button
                         onclick={saveMemory}
                         class="w-full py-4 bg-[#4A7C74] text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:bg-[#3b635d] transition-all transform active:scale-95"
@@ -434,7 +454,7 @@
     <!-- Family Network Visualizer -->
     <section class="max-w-7xl mx-auto px-6 -mt-16 relative z-30 mb-20">
         <div
-            class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100"
+            class="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100"
         >
             <div
                 class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50"
@@ -519,6 +539,17 @@
                     ]}
                 />
             </div>
+
+            <!-- AI Concierge Drafting Assistant -->
+            <AIPromptBar
+                context="heirlooms"
+                prompts={[
+                    "Help me capture a family memory...",
+                    "Draft a story about this family tradition...",
+                    "Write about the significance of this photo...",
+                    "Help me preserve a family recipe with its history..."
+                ]}
+            />
 
             <!-- Quick Access Collections -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">

@@ -37,7 +37,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
             <UserActivityLog />
             <div
-                class="bg-white rounded-3xl border border-stone-200 shadow-sm p-8 opacity-50 grayscale"
+                class="bg-white rounded-2xl border border-stone-200 shadow-sm p-8 opacity-50 grayscale"
             >
                 <h3 class="font-bold text-lg mb-2">Zombie Data Detector</h3>
                 <p class="text-sm">
@@ -46,7 +46,7 @@
             </div>
         </div>
         <div
-            class="bg-white rounded-3xl border border-stone-200 shadow-sm p-8 opacity-50 grayscale"
+            class="bg-white rounded-2xl border border-stone-200 shadow-sm p-8 opacity-50 grayscale"
         >
             <h3 class="font-bold text-lg mb-2">Raw JSON Inspector</h3>
             <p class="text-sm">Developer tools for deep data inspection.</p>

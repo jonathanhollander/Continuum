@@ -34,6 +34,7 @@
     import * as registryRaw from "$lib/data/registry.json";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
+    import Affirmation from "$lib/components/Affirmation.svelte";
 
     // Registry Data Handling
     const registryData = (registryRaw as any).default || registryRaw;
@@ -48,6 +49,7 @@
     });
     let parsedCustomAttributes = $state<Record<string, any>>({});
     let isLoading = $state(true);
+    let showAffirmation = $state(false);
 
     onMount(async () => {
         await funeralStore.sync?.();
@@ -149,6 +151,7 @@
                 userContext: $estateProfile.ownerName || "User",
             });
         }
+        showAffirmation = true;
         resetExpenseForm();
     }
 
@@ -262,6 +265,9 @@
         <div class="max-w-3xl mx-auto mt-8 text-left">
             <GriefSupportBanner compact={true} />
         </div>
+
+        <!-- Affirmation Message -->
+        <Affirmation module="funeral" bind:show={showAffirmation} />
     </div>
 
     <!-- Tabs -->
@@ -289,7 +295,7 @@
     </div>
 
     <div
-        class="bg-white rounded-3xl border border-border shadow-sm overflow-hidden min-h-[500px] p-8"
+        class="bg-white rounded-2xl border border-border shadow-sm overflow-hidden min-h-[500px] p-8"
     >
         <!-- Memorial Subject Header (Synced) -->
         <div

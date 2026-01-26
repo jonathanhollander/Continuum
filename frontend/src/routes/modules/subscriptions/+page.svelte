@@ -8,7 +8,9 @@
         X,
         Pencil,
         Loader2,
+        Sparkles,
     } from "lucide-svelte";
+    import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import SubscriptionRow from "$lib/components/modules/subscriptions/SubscriptionRow.svelte";
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
@@ -313,6 +315,17 @@
             </button>
         </div>
     </div>
+
+    <!-- AI Concierge Drafting Assistant -->
+    <AIPromptBar
+        context="executor"
+        prompts={[
+            "Help me write cancellation instructions for this service...",
+            "Draft a message to close my account...",
+            "List the steps my executor should take to cancel subscriptions...",
+            "Explain how to handle automatic renewals..."
+        ]}
+    />
 
     <!-- Content -->
     {#if subscriptions.length === 0}

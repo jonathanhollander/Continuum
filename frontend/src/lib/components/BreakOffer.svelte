@@ -141,7 +141,7 @@
         aria-describedby="overwhelm-description"
     >
         <div
-            class="max-w-lg w-full bg-white dark:bg-zinc-900 rounded-3xl p-8 shadow-2xl border border-zinc-200 dark:border-zinc-800"
+            class="max-w-lg w-full bg-white dark:bg-zinc-900 rounded-2xl p-8 shadow-2xl border border-zinc-200 dark:border-zinc-800"
             transition:fly={{ y: 20, duration: 400, easing: quintOut }}
         >
             <!-- Icon -->

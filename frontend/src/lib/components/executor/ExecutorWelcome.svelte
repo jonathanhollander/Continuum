@@ -59,7 +59,7 @@
 
 <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4" in:fade>
     <div
-        class="max-w-2xl w-full bg-slate-900 rounded-3xl border border-slate-700 shadow-2xl overflow-hidden"
+        class="max-w-2xl w-full bg-slate-900 rounded-2xl border border-slate-700 shadow-2xl overflow-hidden"
         in:fly={{ y: 20, duration: 500 }}
     >
         {#if step === 0}

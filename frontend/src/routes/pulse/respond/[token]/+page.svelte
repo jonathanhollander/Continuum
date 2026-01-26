@@ -80,7 +80,7 @@
 
             {#if state.loading}
                 <div
-                    class="bg-slate-900/40 rounded-3xl p-12 text-center border border-slate-800"
+                    class="bg-slate-900/40 rounded-2xl p-12 text-center border border-slate-800"
                 >
                     <div
                         class="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"
@@ -88,7 +88,7 @@
                 </div>
             {:else if state.error}
                 <div
-                    class="bg-rose-950/20 border border-rose-900/50 rounded-3xl p-8 text-center backdrop-blur-md"
+                    class="bg-rose-950/20 border border-rose-900/50 rounded-2xl p-8 text-center backdrop-blur-md"
                 >
                     <Shield class="w-12 h-12 text-rose-500 mx-auto mb-4" />
                     <h2 class="text-lg font-medium text-white mb-2">

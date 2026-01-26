@@ -84,7 +84,7 @@
     </div>
   {:else}
     <div
-      class="max-w-md w-full bg-slate-800 rounded-3xl overflow-hidden shadow-2xl border border-slate-700"
+      class="max-w-md w-full bg-slate-800 rounded-2xl overflow-hidden shadow-2xl border border-slate-700"
       in:fade
     >
       <!-- Header -->

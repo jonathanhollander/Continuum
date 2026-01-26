@@ -33,6 +33,7 @@
         CircleCheck,
         Loader2,
     } from "lucide-svelte";
+    import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import {
         LETTER_TEMPLATES,
         EMOTIONAL_PROMPTS,
@@ -403,7 +404,7 @@
 
             <div class="flex items-center gap-4">
                 <div
-                    class="bg-[#FDFBF7] border border-stone-200 p-4 rounded-3xl flex items-center gap-6 shadow-sm"
+                    class="bg-[#FDFBF7] border border-stone-200 p-4 rounded-2xl flex items-center gap-6 shadow-sm"
                 >
                     <div class="flex -space-x-3">
                         {#each [1, 2, 3] as i}
@@ -437,6 +438,17 @@
             </div>
         </header>
 
+        <!-- AI Concierge Drafting Assistant -->
+        <AIPromptBar
+            context="letters"
+            prompts={[
+                "Help me write a letter to my daughter...",
+                "Draft a note expressing my forgiveness...",
+                "Write an ethical will sharing my values...",
+                "Help me craft a goodbye message to my spouse..."
+            ]}
+        />
+
         <div class="mb-12">
             <GriefSupportBanner compact={true} />
         </div>
@@ -451,7 +463,7 @@
                     class="absolute top-0 right-0 w-32 h-32 bg-amber-50/50 rounded-bl-[5rem] -mr-8 -mt-8 group-hover:scale-110 transition-transform"
                 ></div>
                 <div
-                    class="w-20 h-20 bg-amber-100 text-amber-700 rounded-3xl flex items-center justify-center shrink-0 shadow-inner group-hover:rotate-6 transition-transform"
+                    class="w-20 h-20 bg-amber-100 text-amber-700 rounded-2xl flex items-center justify-center shrink-0 shadow-inner group-hover:rotate-6 transition-transform"
                 >
                     <PenTool size={36} />
                 </div>
@@ -481,7 +493,7 @@
                     class="absolute top-0 right-0 w-32 h-32 bg-rose-50/50 rounded-bl-[5rem] -mr-8 -mt-8 group-hover:scale-110 transition-transform"
                 ></div>
                 <div
-                    class="w-20 h-20 bg-primary/10 text-primary rounded-3xl flex items-center justify-center shrink-0 shadow-inner group-hover:-rotate-6 transition-transform"
+                    class="w-20 h-20 bg-primary/10 text-primary rounded-2xl flex items-center justify-center shrink-0 shadow-inner group-hover:-rotate-6 transition-transform"
                 >
                     <Heart size={36} />
                 </div>
@@ -957,7 +969,7 @@
                     <!-- Status Cards Stacked -->
                     <div class="space-y-4">
                         <div
-                            class="bg-blue-50 p-6 rounded-3xl border border-blue-100 flex gap-4"
+                            class="bg-blue-50 p-6 rounded-2xl border border-blue-100 flex gap-4"
                         >
                             <div
                                 class="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center shrink-0"
@@ -978,7 +990,7 @@
                             </div>
                         </div>
                         <div
-                            class="bg-amber-50 p-6 rounded-3xl border border-amber-100 flex gap-4"
+                            class="bg-amber-50 p-6 rounded-2xl border border-amber-100 flex gap-4"
                         >
                             <div
                                 class="w-10 h-10 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center shrink-0"
@@ -999,7 +1011,7 @@
                             </div>
                         </div>
                         <div
-                            class="bg-emerald-50 p-6 rounded-3xl border border-emerald-100 flex gap-4"
+                            class="bg-emerald-50 p-6 rounded-2xl border border-emerald-100 flex gap-4"
                         >
                             <div
                                 class="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center shrink-0"

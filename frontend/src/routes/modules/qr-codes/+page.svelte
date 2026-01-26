@@ -32,9 +32,12 @@
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { onMount } from "svelte";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
+    import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
+    import Affirmation from "$lib/components/Affirmation.svelte";
 
     let viewMode = $state<ViewMode>('card');
+    let showAffirmation = $state(false);
     let isLoading = $state(true);
 
     onMount(async () => {
@@ -59,6 +62,7 @@
                 userContext: $estateProfile.ownerName || "User",
             });
         }
+        showAffirmation = true;
     }
 
     function printPack(pack: AccessPack) {
@@ -141,7 +145,7 @@
 
         <div class="flex items-center gap-4">
             <div
-                class="bg-[#FDFBF7] border border-stone-200 p-4 rounded-3xl flex items-center gap-6 shadow-sm"
+                class="bg-[#FDFBF7] border border-stone-200 p-4 rounded-2xl flex items-center gap-6 shadow-sm"
             >
                 <div
                     class="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center text-stone-400"
@@ -162,6 +166,20 @@
             </div>
         </div>
     </header>
+
+    <!-- Affirmation Message -->
+    <Affirmation module="general" bind:show={showAffirmation} />
+
+    <!-- AI Concierge Drafting Assistant -->
+    <AIPromptBar
+        context="executor"
+        prompts={[
+            "Explain how QR access codes work for my estate...",
+            "Draft instructions for my executor on using these keys...",
+            "Help me set up secure access for my family...",
+            "Summarize what information each access pack contains..."
+        ]}
+    />
 
     <!-- Essential Access Packs -->
     <section class="space-y-8">
@@ -251,7 +269,7 @@
                     >
                         {#if pack.qrUrl}
                             <div
-                                class="bg-white p-4 rounded-3xl shadow- inner ring-8 ring-slate-100 group-hover:scale-105 transition-transform duration-500"
+                                class="bg-white p-4 rounded-2xl shadow- inner ring-8 ring-slate-100 group-hover:scale-105 transition-transform duration-500"
                             >
                                 <img
                                     src={pack.qrUrl}
@@ -266,7 +284,7 @@
                             </p>
                         {:else}
                             <div
-                                class="w-40 h-40 rounded-3xl border-4 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-300"
+                                class="w-40 h-40 rounded-2xl border-4 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-300"
                             >
                                 <Smartphone size={32} class="mb-2 opacity-20" />
                                 <span

@@ -101,7 +101,7 @@
 
     <!-- Intro Card -->
     <div
-        class="bg-slate-900/50 border border-slate-800 rounded-3xl p-8 backdrop-blur-sm relative overflow-hidden"
+        class="bg-slate-900/50 border border-slate-800 rounded-2xl p-8 backdrop-blur-sm relative overflow-hidden"
     >
         <div class="flex flex-col md:flex-row gap-8 items-center relative z-10">
             <div
@@ -127,7 +127,7 @@
 
     <!-- Entry Form -->
     <div
-        class="bg-slate-950/40 border border-slate-800 rounded-3xl p-8 space-y-6"
+        class="bg-slate-950/40 border border-slate-800 rounded-2xl p-8 space-y-6"
     >
         <div class="flex items-center gap-2 mb-2">
             <Plus class="w-4 h-4 text-teal-400" />
@@ -297,7 +297,7 @@
 
         {#if items.length === 0 && !loading}
             <div
-                class="text-center py-16 px-8 bg-slate-900/30 border border-dashed border-slate-700 rounded-3xl max-w-2xl mx-auto"
+                class="text-center py-16 px-8 bg-slate-900/30 border border-dashed border-slate-700 rounded-2xl max-w-2xl mx-auto"
                 in:fade
             >
                 <div class="w-20 h-20 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">

@@ -192,7 +192,7 @@
         <!-- Life Saving Profile -->
         <div class="lg:col-span-1 space-y-8">
             <section
-                class="bg-white rounded-3xl border border-primary/10 shadow-sm overflow-hidden"
+                class="bg-white rounded-2xl border border-primary/10 shadow-sm overflow-hidden"
             >
                 <div class="p-6 bg-primary/5 border-b border-primary/10">
                     <h2
@@ -343,7 +343,7 @@
         <!-- Directives List -->
         <div class="lg:col-span-2 space-y-6">
             <div
-                class="bg-primary/5 p-6 rounded-3xl border border-primary/10 flex items-start gap-4"
+                class="bg-primary/5 p-6 rounded-2xl border border-primary/10 flex items-start gap-4"
             >
                 <Shield class="text-primary mt-1 shrink-0" size={24} />
                 <div>
@@ -360,7 +360,7 @@
 
             {#each medicalStore.directives as dir}
                 <div
-                    class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-shadow relative group"
+                    class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-shadow relative group"
                 >
                     <div class="flex items-start justify-between">
                         <div class="flex gap-4">

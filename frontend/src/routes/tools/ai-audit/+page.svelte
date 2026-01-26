@@ -145,7 +145,7 @@
         <div in:slide={{ duration: 400, axis: "y" }}>
             <!-- Score Card -->
             <div
-                class="bg-[#304743] text-white rounded-3xl p-10 mb-12 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8 shadow-xl"
+                class="bg-[#304743] text-white rounded-2xl p-10 mb-12 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8 shadow-xl"
             >
                 <div class="relative z-10">
                     <h2

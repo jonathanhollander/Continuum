@@ -14,7 +14,7 @@
     <div class="max-w-3xl mx-auto">
         <!-- Header -->
         <div class="text-center mb-12">
-            <div class="inline-flex p-5 rounded-3xl bg-amber-500/10 text-amber-400 mb-6 border border-amber-500/20">
+            <div class="inline-flex p-5 rounded-2xl bg-amber-500/10 text-amber-400 mb-6 border border-amber-500/20">
                 <MapPin size={48} />
             </div>
             <h1 class="text-4xl md:text-5xl font-serif font-bold text-white mb-4">

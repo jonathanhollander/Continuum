@@ -28,8 +28,12 @@
     import { activityLog } from "$lib/stores/activityLog.svelte";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
+    import Affirmation from "$lib/components/Affirmation.svelte";
+    import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
 
     let viewMode = $state<ViewMode>('card');
+    let customAttributes = $state<Record<string, any>>({});
+    let showAffirmation = $state(false);
 
     // Sync Integration
     import { registerSync } from "$lib/services/sync.svelte";
@@ -205,6 +209,7 @@
             entityName: platform,
             userContext: $estateProfile.ownerName || "User",
         });
+        showAffirmation = true;
     }
 
     function deleteAsset(id: string) {
@@ -258,10 +263,13 @@
         </p>
     </div>
 
+    <!-- Affirmation Message -->
+    <Affirmation module="general" bind:show={showAffirmation} />
+
     <!-- Global Successor Sync Card -->
     <div class="mb-12 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div
-            class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex items-center gap-5"
+            class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex items-center gap-5"
         >
             <div class="p-4 bg-primary/10 text-primary rounded-2xl shrink-0">
                 <UserCheck size={28} />
@@ -281,7 +289,7 @@
         </div>
 
         <div
-            class="bg-white border border-indigo-100 rounded-3xl p-6 shadow-sm flex items-center gap-5 relative overflow-hidden group"
+            class="bg-white border border-indigo-100 rounded-2xl p-6 shadow-sm flex items-center gap-5 relative overflow-hidden group"
         >
             <div
                 class="absolute right-0 top-0 p-8 opacity-[0.03] group-hover:scale-110 transition-transform"
@@ -309,7 +317,7 @@
 
     <!-- Access Drill (Verification Mode) -->
     <div
-        class="mb-12 bg-rose-50 border border-rose-100 rounded-3xl p-8 relative overflow-hidden"
+        class="mb-12 bg-rose-50 border border-rose-100 rounded-2xl p-8 relative overflow-hidden"
     >
         <div class="relative z-10 flex flex-col md:flex-row items-start gap-6">
             <div class="p-4 bg-primary/10 text-primary rounded-2xl shrink-0">
