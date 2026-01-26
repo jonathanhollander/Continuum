@@ -45,6 +45,7 @@
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
+    import Affirmation from "$lib/components/Affirmation.svelte";
 
     // Concierge Imports
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
@@ -59,6 +60,7 @@
     let showWizard = $state(false);
     let parsedCustomAttributes = $state<Record<string, any>>({});
     let isLoading = $state(true);
+    let showAffirmation = $state(false);
 
     onMount(async () => {
         await insuranceStore.sync?.();
@@ -259,6 +261,7 @@
             });
         }
 
+        showAffirmation = true;
         resetForm();
     }
 
@@ -389,6 +392,9 @@
             {/each}
         </div>
     </div>
+
+    <!-- Affirmation Message -->
+    <Affirmation module="insurance" bind:show={showAffirmation} />
 
     <!-- AI Prompt Bar -->
     <div class="max-w-3xl mx-auto mb-8">

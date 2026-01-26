@@ -36,6 +36,9 @@
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
     import Affirmation from "$lib/components/Affirmation.svelte";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
+    import GhostRow from "$lib/components/ui/GhostRow.svelte";
+    import { getSmartSamples } from "$lib/data/smartSamples";
+    import { language } from "$lib/stores/localization";
 
     let viewMode = $state<ViewMode>('card');
     let showAffirmation = $state(false);
@@ -332,6 +335,30 @@
                     >
                         Go to Assets <ArrowRight size={14} />
                     </a>
+                </div>
+            </div>
+
+            <!-- Sample Assets That Can Get QR Labels -->
+            <div class="mt-8">
+                <p class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-4 text-center">Assets that could have QR labels</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 opacity-60">
+                    {#each getSmartSamples($language).heirlooms || [] as sample}
+                        <GhostRow
+                            name={sample.name}
+                            subtitle={`For: ${sample.recipient}`}
+                            type="Heirloom"
+                            onClick={() => window.location.href = '/modules/heirlooms'}
+                        />
+                    {/each}
+                    {#each getSmartSamples($language).property?.slice(0, 2) || [] as sample}
+                        <GhostRow
+                            name={sample.name}
+                            subtitle={sample.location}
+                            type="Property"
+                            value={sample.valuation}
+                            onClick={() => window.location.href = '/modules/property'}
+                        />
+                    {/each}
                 </div>
             </div>
         {:else}

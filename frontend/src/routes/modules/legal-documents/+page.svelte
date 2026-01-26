@@ -6,8 +6,10 @@
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
+    import Affirmation from "$lib/components/Affirmation.svelte";
 
     let viewMode = $state<ViewMode>('card');
+    let showAffirmation = $state(false);
 </script>
 
 <div class="max-w-6xl mx-auto p-8">
@@ -22,6 +24,9 @@
             <DataViewToggle module="legal-documents" onchange={(mode) => viewMode = mode} />
         </svelte:fragment>
     </LivingBlueprintHeader>
+
+    <!-- Affirmation Message -->
+    <Affirmation module="legal" bind:show={showAffirmation} />
 
     <!-- Legal Disclaimer -->
     <div class="mb-8">

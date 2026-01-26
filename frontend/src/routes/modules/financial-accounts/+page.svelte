@@ -8,10 +8,13 @@
     import Modal from "$lib/components/ui/Modal.svelte";
     import { registerSync } from "$lib/services/sync.svelte";
     import { t } from "$lib/stores/localization";
+    import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
+    import Affirmation from "$lib/components/Affirmation.svelte";
 
     let showWizard = $state(false);
     let reloadKey = $state(0);
     let isLoading = $state(true);
+    let showAffirmation = $state(false);
 
     // Initialize Sync Service for Financial Assets
     const assetSync = registerSync("financial_assets", "financial_accounts");
@@ -89,6 +92,7 @@
         if (promises.length > 0) {
             await Promise.all(promises);
             reloadKey++; // Force refresh
+            showAffirmation = true;
         }
 
         showWizard = false;
@@ -135,6 +139,14 @@
             {$t("wizard.start")}
         </button>
     </LivingBlueprintHeader>
+
+    <!-- Affirmation Message -->
+    <Affirmation module="financial" bind:show={showAffirmation} />
+
+    <!-- AI Prompt Bar -->
+    <div class="max-w-3xl mx-auto mb-8">
+        <AIPromptBar context="financial" />
+    </div>
 
     <!-- Core Manager -->
     {#key reloadKey}
