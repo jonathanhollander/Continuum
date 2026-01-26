@@ -7,6 +7,7 @@
         Filter,
         X,
         Pencil,
+        Loader2,
     } from "lucide-svelte";
     import SubscriptionRow from "$lib/components/modules/subscriptions/SubscriptionRow.svelte";
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
@@ -21,6 +22,8 @@
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
+    import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
+    import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
 
     type Subscription = {
         id: string;
@@ -44,6 +47,13 @@
         "subscriptions",
     ).setAffirmationContext("subscriptions");
     let subscriptions = $derived(subscriptionSync.items);
+    let isLoading = $state(true);
+    let viewMode = $state<ViewMode>('card');
+
+    onMount(async () => {
+        await subscriptionSync.init();
+        isLoading = false;
+    });
 
     // Migration Logic (One-time check)
     $effect(() => {
@@ -263,6 +273,11 @@
     );
 </script>
 
+{#if isLoading}
+    <div class="flex items-center justify-center py-12">
+        <Loader2 class="w-8 h-8 animate-spin text-primary" />
+    </div>
+{:else}
 <div
     class="max-w-5xl mx-auto p-6 md:p-8 space-y-8 animate-in fade-in duration-500"
 >
@@ -287,13 +302,16 @@
             </p>
         </div>
 
-        <button
-            class="px-4 py-2.5 bg-primary text-primary-foreground font-semibold rounded-xl flex items-center gap-2 hover:opacity-90 transition-all shadow-sm group"
-            onclick={() => (showAddForm = true)}
-        >
-            <Plus class="w-4 h-4 group-hover:scale-110 transition-transform" />
-            Record a service
-        </button>
+        <div class="flex items-center gap-4">
+            <DataViewToggle module="subscriptions" onchange={(mode) => viewMode = mode} />
+            <button
+                class="px-4 py-2.5 bg-primary text-primary-foreground font-semibold rounded-xl flex items-center gap-2 hover:opacity-90 transition-all shadow-sm group"
+                onclick={() => (showAddForm = true)}
+            >
+                <Plus class="w-4 h-4 group-hover:scale-110 transition-transform" />
+                Record a service
+            </button>
+        </div>
     </div>
 
     <!-- Content -->
@@ -307,6 +325,35 @@
             ctaLabel="Document first subscription"
             onAction={() => (showAddForm = true)}
         />
+
+        <!-- Sample Data GhostRows -->
+        <div class="mt-8">
+            <p class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-4 text-center">Example entries to inspire you</p>
+            <div class="space-y-3 opacity-60">
+                {#each getSmartSamples($language).subscriptions || [] as sample}
+                    <GhostRow
+                        name={sample.name}
+                        subtitle={`${sample.category} - ${sample.cycle}`}
+                        type="Subscription"
+                        value={sample.cost}
+                        onClick={() => {
+                            newSub = {
+                                ...newSub,
+                                name: sample.name,
+                                cost: sample.cost,
+                                cycle: sample.cycle as "Monthly" | "Yearly",
+                                notes: sample.notes
+                            };
+                            showAddForm = true;
+                        }}
+                    >
+                        <svelte:fragment slot="icon">
+                            <Receipt size={20} class="text-slate-400" />
+                        </svelte:fragment>
+                    </GhostRow>
+                {/each}
+            </div>
+        </div>
     {:else}
         <!-- Stats Grid -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -374,33 +421,104 @@
                 </button>
             </div>
 
-            {#each subscriptions as sub (sub.id)}
-                <div class="relative group">
-                    <SubscriptionRow
-                        {sub}
-                        onCancel={() => removeSubscription(sub.id)}
-                        onGenerateLetter={() => openLetterModal(sub)}
-                    />
-                    <div
-                        class="absolute top-3 right-2 flex gap-1 bg-white/50 backdrop-blur-sm rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                        <button
-                            onclick={() => editSubscription(sub)}
-                            class="p-1.5 hover:bg-primary/10 text-slate-400 hover:text-primary rounded-full transition-colors"
-                            title="Edit"
+            {#if viewMode === 'card'}
+                {#each subscriptions as sub (sub.id)}
+                    <div class="relative group">
+                        <SubscriptionRow
+                            {sub}
+                            onCancel={() => removeSubscription(sub.id)}
+                            onGenerateLetter={() => openLetterModal(sub)}
+                        />
+                        <div
+                            class="absolute top-3 right-2 flex gap-1 bg-white/50 backdrop-blur-sm rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                         >
-                            <Pencil size={14} />
-                        </button>
-                        <button
-                            onclick={() => removeSubscription(sub.id)}
-                            class="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-full transition-colors"
-                            title="Remove"
-                        >
-                            <X size={14} />
-                        </button>
+                            <button
+                                onclick={() => editSubscription(sub)}
+                                class="p-1.5 hover:bg-primary/10 text-slate-400 hover:text-primary rounded-full transition-colors"
+                                title="Edit"
+                            >
+                                <Pencil size={14} />
+                            </button>
+                            <button
+                                onclick={() => removeSubscription(sub.id)}
+                                class="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-full transition-colors"
+                                title="Remove"
+                            >
+                                <X size={14} />
+                            </button>
+                        </div>
                     </div>
+                {/each}
+            {:else}
+                <!-- Table View -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <table class="w-full">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Service</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Cost</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Cycle</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Difficulty</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Payment</th>
+                                <th class="px-4 py-3 text-right text-xs font-bold uppercase text-slate-500">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            {#each subscriptions as sub (sub.id)}
+                                <tr class="hover:bg-slate-50 transition-colors group">
+                                    <td class="px-4 py-3">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center text-slate-500">
+                                                <Receipt size={16} />
+                                            </div>
+                                            <span class="font-medium text-slate-800">{sub.name}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-slate-600 font-medium">
+                                        {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(sub.cost)}
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-slate-600">{sub.cycle}</td>
+                                    <td class="px-4 py-3">
+                                        <span class="text-xs font-medium px-2 py-1 rounded-lg {
+                                            sub.difficulty === 'Easy' ? 'bg-green-100 text-green-700' :
+                                            sub.difficulty === 'Medium' ? 'bg-amber-100 text-amber-700' :
+                                            'bg-red-100 text-red-700'
+                                        }">
+                                            {sub.difficulty}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-slate-600 max-w-[150px] truncate">
+                                        {sub.paymentMethod || '-'}
+                                    </td>
+                                    <td class="px-4 py-3 text-right">
+                                        <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button
+                                                onclick={() => openLetterModal(sub)}
+                                                class="p-1.5 text-slate-400 hover:text-primary transition-colors"
+                                                title="Generate Letter"
+                                            >
+                                                <FileText size={14} />
+                                            </button>
+                                            <button
+                                                onclick={() => editSubscription(sub)}
+                                                class="p-1.5 text-slate-400 hover:text-primary transition-colors"
+                                            >
+                                                <Pencil size={14} />
+                                            </button>
+                                            <button
+                                                onclick={() => removeSubscription(sub.id)}
+                                                class="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {/each}
+                        </tbody>
+                    </table>
                 </div>
-            {/each}
+            {/if}
 
             <!-- Empty State Helper -->
             <button
@@ -418,7 +536,7 @@
     <!-- Add Form Modal -->
     {#if showAddForm}
         <div
-            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
         >
             <div
                 class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto"
@@ -664,3 +782,4 @@
         </div>
     {/if}
 </div>
+{/if}

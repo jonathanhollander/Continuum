@@ -6,7 +6,7 @@
     import { activityLog } from "$lib/stores/activityLog.svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { fade, slide, scale } from "svelte/transition";
-    import { quintOut } from "svelte/easing";
+    import { quintOut, cubicOut } from "svelte/easing";
     import { qrStore } from "$lib/stores/qrStore";
     import { goto } from "$app/navigation";
     import {
@@ -15,37 +15,45 @@
         Gem,
         Plus,
         Trash2,
-        Pencil,
+        Edit2,
         MapPin,
         Search,
         X,
         DollarSign,
-        Calendar,
         ChevronRight,
         ArrowRight,
-        Filter,
         Download,
         LayoutGrid,
         Building,
-        Key,
         FileText,
         Briefcase,
         Info,
         ShieldCheck,
         QrCode,
+        Loader2,
     } from "lucide-svelte";
     import EvidenceGalleryUploader from "$lib/components/ui/EvidenceGalleryUploader.svelte";
     import UniversalUploader from "$lib/components/ui/UniversalUploader.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
+    import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
+    import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
 
     // Concierge Imports
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import { fly } from "svelte/transition"; // Ensure fly is imported
+    import { onMount } from "svelte";
 
     let showAddModal = $state(false);
+    let isLoading = $state(true);
+    let viewMode = $state<ViewMode>('card');
+
+    onMount(async () => {
+        await propertyStore.sync?.();
+        isLoading = false;
+    });
     let isEditing = $state(false);
     let searchQuery = $state("");
     let filterType = $state<string>("All");
@@ -310,13 +318,18 @@
     }
 </script>
 
+{#if isLoading}
+    <div class="flex items-center justify-center py-12">
+        <Loader2 class="w-8 h-8 animate-spin text-primary" />
+    </div>
+{:else}
 <div
     class="p-8 max-w-[1400px] mx-auto space-y-8 animate-in fade-in duration-700"
 >
     <!-- Wizard Modal -->
     {#if showWizard}
         <div
-            class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+            class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
             transition:fade
         >
             <div class="w-full max-w-2xl relative" in:fly={{ y: 20 }}>
@@ -362,6 +375,8 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
+            <DataViewToggle module="property" onchange={(mode) => viewMode = mode} />
+
             <button
                 onclick={() => (showWizard = true)}
                 class="flex items-center gap-2 px-5 py-3 border border-primary/20 text-primary font-bold rounded-2xl hover:bg-primary/5 transition-colors"
@@ -398,7 +413,7 @@
     <!-- Asset Stats Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div
-            class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
+            class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
         >
             <div class="flex items-start justify-between mb-4">
                 <div
@@ -423,7 +438,7 @@
         </div>
 
         <div
-            class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
+            class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
         >
             <div class="flex items-start justify-between mb-4">
                 <div
@@ -448,7 +463,7 @@
         </div>
 
         <div
-            class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
+            class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
         >
             <div class="flex items-start justify-between mb-4">
                 <div
@@ -473,7 +488,7 @@
         </div>
 
         <div
-            class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
+            class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
         >
             <div class="flex items-start justify-between mb-4">
                 <div
@@ -498,7 +513,7 @@
 
     <!-- Search & Filters -->
     <div
-        class="flex flex-col md:flex-row gap-4 items-center justify-between bg-white/50 backdrop-blur-sm p-4 rounded-3xl border border-slate-200 shadow-sm"
+        class="flex flex-col md:flex-row gap-4 items-center justify-between bg-white/50 backdrop-blur-sm p-4 rounded-2xl border border-slate-200 shadow-sm"
     >
         <div class="relative w-full md:w-96">
             <Search class="absolute left-4 top-3.5 text-slate-400" size={18} />
@@ -506,7 +521,7 @@
                 type="text"
                 bind:value={searchQuery}
                 placeholder="Search by asset name or location..."
-                class="w-full bg-white border border-slate-200 rounded-2xl py-3 pl-12 pr-4 text-sm focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all"
+                class="w-full px-4 py-3 pl-12 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
             />
         </div>
         <div class="flex items-center gap-2">
@@ -515,18 +530,20 @@
                 >Inventory: {filteredItems.length} Assets</span
             >
             <button
-                class="p-3 bg-white border border-slate-200 rounded-2xl text-slate-500 hover:text-primary transition-colors shadow-sm"
+                class="p-3 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-primary transition-colors shadow-sm"
             >
                 <Download size={18} />
             </button>
         </div>
     </div>
 
+    <!-- Property Views -->
+    {#if viewMode === 'card'}
     <!-- Property Cards Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-8">
         {#each filteredItems as item (item.id)}
             <div
-                class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 overflow-hidden group flex flex-col relative"
+                class="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 overflow-hidden group flex flex-col relative"
                 transition:scale={{
                     duration: 400,
                     delay: 0,
@@ -681,7 +698,7 @@
 
                 <div class="mt-auto p-2">
                     <div
-                        class="bg-primary rounded-[2rem] p-6 text-primary-foreground flex items-center justify-between group/footer hover:bg-slate-900 transition-colors duration-500 cursor-pointer"
+                        class="bg-primary rounded-2xl p-6 text-primary-foreground flex items-center justify-between group/footer hover:bg-slate-900 transition-colors duration-500 cursor-pointer"
                     >
                         <div>
                             <p
@@ -750,95 +767,188 @@
             {/if}
         {/each}
     </div>
+    {:else}
+        <!-- Table View -->
+        {#if filteredItems.length === 0 && searchQuery === ""}
+            <div class="border border-blue-200 bg-blue-50/50 rounded-xl p-4 mb-4 flex items-center gap-3 text-blue-800">
+                <Info size={20} />
+                <p class="text-sm font-medium">Concierge Mode: Showing examples based on your region.</p>
+            </div>
+            {#each getSmartSamples($language).property || [] as sample}
+                <GhostRow
+                    name={sample.name}
+                    subtitle={sample.type}
+                    value={sample.valuation}
+                    type="Property"
+                    onClick={() => {
+                        newItem = {
+                            ...newItem,
+                            name: sample.name,
+                            type: sample.type as any,
+                            valuation: sample.valuation || 0,
+                        };
+                        showAddModal = true;
+                    }}
+                >
+                    <svelte:fragment slot="icon">
+                        <Building size={20} class="text-slate-400" />
+                    </svelte:fragment>
+                </GhostRow>
+            {/each}
+        {:else}
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <table class="w-full">
+                    <thead class="bg-slate-50 border-b border-slate-200">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Asset</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Type</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Location</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Value</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Status</th>
+                            <th class="px-4 py-3 text-right text-xs font-bold uppercase text-slate-500">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {#each filteredItems as item (item.id)}
+                            {@const Icon = typeIcons[item.type] || LayoutGrid}
+                            <tr class="hover:bg-slate-50 transition-colors group">
+                                <td class="px-4 py-3">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-lg flex items-center justify-center {typeColors[item.type]}">
+                                            <Icon size={16} />
+                                        </div>
+                                        <span class="font-medium text-slate-800">{item.name}</span>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-slate-600">{item.type}</td>
+                                <td class="px-4 py-3 text-sm text-slate-600">{item.location || '-'}</td>
+                                <td class="px-4 py-3 text-sm text-slate-600 font-medium">${item.valuation?.toLocaleString() || '0'}</td>
+                                <td class="px-4 py-3">
+                                    <span class="text-xs font-medium text-slate-600 capitalize">{item.status || 'owned'}</span>
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                            onclick={() => generateQR(item)}
+                                            class="p-1.5 text-slate-400 hover:text-amber-600 transition-colors"
+                                            title="Generate QR Label"
+                                        >
+                                            <QrCode size={14} />
+                                        </button>
+                                        <button
+                                            onclick={() => editItem(item)}
+                                            class="p-1.5 text-slate-400 hover:text-primary transition-colors"
+                                        >
+                                            <Edit2 size={14} />
+                                        </button>
+                                        <button
+                                            onclick={() => deleteItem(item.id, item.name)}
+                                            class="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        {/each}
+                    </tbody>
+                </table>
+            </div>
+        {/if}
+    {/if}
 </div>
+{/if}
 
 <!-- Add/Edit Asset Modal -->
 {#if showAddModal}
     <div
-        class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6"
-        transition:fade={{ duration: 300 }}
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+        role="dialog"
+        aria-modal="true"
     >
+        <!-- Backdrop -->
         <div
-            class="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+            class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+            transition:fade={{ duration: 200 }}
             onclick={resetForm}
+            onkeydown={(e) => e.key === "Enter" && resetForm()}
+            role="button"
+            tabindex="0"
+            aria-label="Close modal"
         ></div>
 
+        <!-- Panel -->
         <div
-            class="bg-white rounded-[3rem] shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col relative"
-            transition:slide={{ duration: 500, easing: quintOut }}
+            class="relative bg-white rounded-2xl shadow-2xl ring-1 ring-slate-900/5 w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+            transition:scale={{ duration: 250, start: 0.95, easing: cubicOut }}
         >
-            <div class="p-10 pb-0 flex items-center justify-between">
-                <div>
-                    <nav
-                        class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-3"
-                    >
-                        <Plus size={12} />
-                        <span>Asset Inventory</span>
-                    </nav>
-                    <h2
-                        class="text-4xl font-black text-slate-900 tracking-tighter"
-                    >
-                        {isEditing ? "Update" : "Record"}
-                        <span class="text-primary">Asset Detail</span>
+            <!-- Header -->
+            <div class="flex items-start justify-between px-6 py-4 border-b border-slate-100 bg-white sticky top-0 z-10">
+                <div class="flex-1 pr-4">
+                    <h2 class="font-serif font-bold text-xl text-slate-800">
+                        {isEditing ? "Update" : "Record"} Asset Detail
                     </h2>
+                    <p class="text-slate-500 text-sm mt-2 leading-relaxed">
+                        Document your property details to help your family understand what you own and where to find important documents.
+                    </p>
                 </div>
                 <button
                     onclick={resetForm}
-                    class="w-14 h-14 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:rotate-90 transition-all duration-500"
+                    class="p-2 -mr-2 -mt-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors flex-shrink-0"
+                    aria-label="Close"
                 >
-                    <X size={24} strokeWidth={3} />
+                    <X class="w-5 h-5" />
                 </button>
             </div>
 
-            <div class="flex-1 overflow-y-auto p-10 space-y-12">
+            <!-- Content -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-6">
                 <!-- Group 1: General Info -->
-                <section>
+                <section class="space-y-4">
                     <h3
-                        class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3"
+                        class="text-xs font-bold uppercase text-slate-500 tracking-wide"
                     >
-                        <span class="w-6 h-[2px] bg-primary rounded-full"
-                        ></span>
                         Asset Description
                     </h3>
                     <div
-                        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
                     >
-                        <div class="space-y-3">
+                        <div class="space-y-1.5">
                             <label
-                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-sans"
+                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Asset Name</label
                             >
                             <input
                                 type="text"
                                 bind:value={newItem.name}
                                 placeholder="e.g. Primary Residence"
-                                class="w-full bg-slate-50 border-2 border-transparent focus:border-primary focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all"
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
                             />
                         </div>
-                        <div class="space-y-3">
+                        <div class="space-y-1.5">
                             <label
-                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-sans"
+                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Asset Type</label
                             >
                             <select
                                 bind:value={newItem.type}
-                                class="w-full bg-slate-50 border-2 border-transparent focus:border-primary focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all appearance-none cursor-pointer"
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800 appearance-none cursor-pointer"
                             >
                                 {#each types.filter((t) => t !== "All") as type}
                                     <option value={type}>{type}</option>
                                 {/each}
                             </select>
                         </div>
-                        <div class="space-y-3">
+                        <div class="space-y-1.5">
                             <label
-                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-sans"
+                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Primary Location</label
                             >
                             <input
                                 type="text"
                                 bind:value={newItem.location}
                                 placeholder="City, State / Full Address"
-                                class="w-full bg-slate-50 border-2 border-transparent focus:border-primary focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all"
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
                             />
                         </div>
                     </div>
@@ -846,95 +956,91 @@
 
                 <!-- Group 2: Financials & Status -->
                 <section
-                    class="bg-blue-50/50 rounded-[2.5rem] p-8 border border-blue-100/50"
+                    class="bg-primary/5 rounded-2xl p-6 border border-primary/10 space-y-4"
                 >
                     <h3
-                        class="text-xs font-black text-primary uppercase tracking-[0.2em] mb-6 flex items-center gap-3"
+                        class="text-xs font-bold uppercase text-primary tracking-wide"
                     >
-                        <span class="w-6 h-[2px] bg-primary rounded-full"
-                        ></span>
                         Ownership & Value
                     </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <div class="space-y-3">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="space-y-1.5">
                             <label
-                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-sans"
+                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Current Valuation ($)</label
                             >
                             <div class="relative">
                                 <DollarSign
                                     size={16}
-                                    class="absolute left-4 top-4.5 text-primary"
+                                    class="absolute left-4 top-3.5 text-primary"
                                 />
                                 <input
                                     type="number"
                                     bind:value={newItem.valuation}
-                                    class="w-full bg-white border-2 border-transparent focus:border-primary rounded-2xl p-4 pl-10 text-sm font-black outline-none transition-all shadow-sm"
+                                    class="w-full px-4 py-3 pl-10 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
                                 />
                             </div>
                         </div>
-                        <div class="space-y-3">
+                        <div class="space-y-1.5">
                             <label
-                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-sans"
+                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Current Status</label
                             >
                             <div
-                                class="flex bg-white rounded-2xl p-1 shadow-sm border border-slate-100"
+                                class="flex bg-white rounded-xl p-1 border border-slate-200"
                             >
                                 {#each ["Owned", "Mortgaged", "Leased"] as status}
                                     <button
                                         type="button"
                                         onclick={() =>
                                             (newItem.status = status as any)}
-                                        class="flex-1 py-3 text-[10px] font-black uppercase tracking-tighter rounded-xl transition-all {newItem.status ===
+                                        class="flex-1 py-2.5 text-xs font-semibold rounded-lg transition-all {newItem.status ===
                                         status
                                             ? 'bg-primary text-white shadow-lg'
-                                            : 'text-slate-400 hover:bg-slate-50'}"
+                                            : 'text-slate-500 hover:bg-slate-50'}"
                                     >
                                         {status}
                                     </button>
                                 {/each}
                             </div>
                         </div>
-                        <div class="space-y-3">
+                        <div class="space-y-1.5">
                             <label
-                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-sans"
+                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Purchase/Acquisition Date</label
                             >
                             <input
                                 type="date"
                                 bind:value={newItem.purchaseDate}
-                                class="w-full bg-white border-2 border-transparent focus:border-primary rounded-2xl p-4 text-sm font-bold outline-none transition-all shadow-sm cursor-pointer"
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800 cursor-pointer"
                             />
                         </div>
                     </div>
                 </section>
 
                 <!-- Group 3: Legacy Details -->
-                <section>
+                <section class="space-y-4">
                     <h3
-                        class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3"
+                        class="text-xs font-bold uppercase text-slate-500 tracking-wide"
                     >
-                        <span class="w-6 h-[2px] bg-slate-400 rounded-full"
-                        ></span>
-                        Ownership & Docs
+                        Ownership & Documents
                     </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div class="space-y-3">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-1.5">
                             <label
-                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-sans"
+                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Title / Ownership Group</label
                             >
                             <input
                                 type="text"
                                 bind:value={newItem.ownershipDetails}
                                 placeholder="e.g. Individual Title, Joint with Spouse"
-                                class="w-full bg-slate-50 border-2 border-transparent focus:border-primary focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all"
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
                             />
                         </div>
-                        <div class="space-y-3">
+                        <div class="space-y-1.5">
                             <label
-                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-sans"
+                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Critical Documents</label
                             >
                             <UniversalUploader
@@ -944,28 +1050,26 @@
                                 module="properties"
                             />
                         </div>
-                        <div class="space-y-3 md:col-span-2">
+                        <div class="space-y-1.5 md:col-span-2">
                             <label
-                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-sans"
+                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Inventory Notes</label
                             >
                             <textarea
                                 bind:value={newItem.notes}
-                                rows="3"
-                                placeholder="Additional details, disposal instructions, or historical Significance..."
-                                class="w-full bg-slate-50 border-2 border-transparent focus:border-primary focus:bg-white rounded-2xl p-6 text-sm font-bold outline-none transition-all resize-none leading-relaxed"
+                                rows="4"
+                                placeholder="Additional details, disposal instructions, or historical significance..."
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800 resize-none"
                             ></textarea>
                         </div>
                     </div>
                 </section>
 
                 <!-- Group 4: Visual Evidence -->
-                <section>
+                <section class="space-y-4">
                     <h3
-                        class="text-xs font-black text-primary uppercase tracking-[0.2em] mb-6 flex items-center gap-3"
+                        class="text-xs font-bold uppercase text-slate-500 tracking-wide"
                     >
-                        <span class="w-6 h-[2px] bg-primary rounded-full"
-                        ></span>
                         Insurance Evidence
                     </h3>
 
@@ -976,7 +1080,7 @@
                 </section>
 
                 <!-- Custom Fields -->
-                <section class="pt-6 mt-6 border-t border-slate-100">
+                <section class="pt-4 mt-4 border-t border-slate-100">
                     <CustomFieldsManager
                         entityType="property"
                         bind:data={parsedCustomAttributes}
@@ -984,22 +1088,22 @@
                 </section>
             </div>
 
-            <!-- Modal Actions -->
+            <!-- Footer -->
             <div
-                class="p-10 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-6"
+                class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3"
             >
                 <button
                     onclick={resetForm}
-                    class="text-sm font-black text-slate-400 hover:text-slate-900 uppercase tracking-[0.2em] transition-colors"
+                    class="px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-200 transition-colors"
                 >
-                    Discard Changes
+                    Not right now
                 </button>
                 <button
                     onclick={handleAddItem}
                     disabled={!newItem.name || !newItem.location}
-                    class="bg-primary text-primary-foreground px-12 py-5 rounded-3xl font-black shadow-2xl shadow-primary/30 hover:scale-[1.03] active:scale-[0.98] transition-all disabled:opacity-30"
+                    class="px-6 py-2.5 rounded-xl font-semibold bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    Save these details
+                    Save my thoughts
                 </button>
             </div>
         </div>

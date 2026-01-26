@@ -4,6 +4,10 @@
     import { Files } from "lucide-svelte";
     import LegalDisclaimer from "$lib/components/common/LegalDisclaimer.svelte";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
+    import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
+    import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
+
+    let viewMode = $state<ViewMode>('card');
 </script>
 
 <div class="max-w-6xl mx-auto p-8">
@@ -13,7 +17,11 @@
         tier="legal"
         detailedDescription="A central, secure home for the documents that define your legal and personal wishes. From wills to trusts, ensure the blueprints of your legacy are accessible."
         whyMatters="Searching for a will or trust document can delay estate settlement by months. Centralizing them here provides your family with a clear roadmap when they need it most."
-    />
+    >
+        <svelte:fragment slot="actions">
+            <DataViewToggle module="legal-documents" onchange={(mode) => viewMode = mode} />
+        </svelte:fragment>
+    </LivingBlueprintHeader>
 
     <!-- Legal Disclaimer -->
     <div class="mb-8">
@@ -26,5 +34,5 @@
     </div>
 
     <!-- The Vault -->
-    <DocumentVault module={{ id: "legal-vault" }} />
+    <DocumentVault module={{ id: "legal-vault" }} {viewMode} />
 </div>

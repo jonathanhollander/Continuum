@@ -16,8 +16,14 @@
         X,
         FileDown,
         Settings,
+        Loader2,
     } from "lucide-svelte";
     import { fade, slide } from "svelte/transition";
+    import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
+    import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
+
+    let viewMode = $state<ViewMode>('card');
+    let isLoading = $state(true);
 
     let entries = $state<ActivityLogEntry[]>([]);
     let filteredEntries = $state<ActivityLogEntry[]>([]);
@@ -57,10 +63,11 @@
         SETTINGS_CHANGE: Settings,
     };
 
-    onMount(() => {
+    onMount(async () => {
         entries = activityLog.getAll();
         filteredEntries = entries;
         todayCount = activityLog.getTodayCount();
+        isLoading = false;
     });
 
     $effect(() => {
@@ -145,6 +152,11 @@
     }
 </script>
 
+{#if isLoading}
+    <div class="flex items-center justify-center py-12">
+        <Loader2 class="w-8 h-8 animate-spin text-primary" />
+    </div>
+{:else}
 <div
     class="max-w-6xl mx-auto p-6 md:p-8 space-y-8 animate-in fade-in duration-500"
 >
@@ -167,6 +179,7 @@
         </div>
 
         <div class="flex items-center gap-3">
+            <DataViewToggle module="activity-log" onchange={(mode) => viewMode = mode} />
             {#if todayCount > 0}
                 <div
                     class="px-4 py-2 bg-indigo-50 text-indigo-700 rounded-xl font-bold text-sm"
@@ -402,3 +415,4 @@
         </div>
     {/if}
 </div>
+{/if}

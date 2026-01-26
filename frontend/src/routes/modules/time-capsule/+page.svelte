@@ -21,13 +21,28 @@
         ExternalLink,
         ShieldCheck,
         X,
+        Loader2,
     } from "lucide-svelte";
+    import { onMount } from "svelte";
     import { fade, slide, scale } from "svelte/transition";
     import { quintOut } from "svelte/easing";
     import VideoRecorder from "$lib/components/media/VideoRecorder.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
     import { mediaStorage } from "$lib/services/indexedDB";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
+    import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
+    import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
+    import GhostRow from "$lib/components/ui/GhostRow.svelte";
+    import { t, language } from "$lib/stores/localization";
+    import { getSmartSamples } from "$lib/data/smartSamples";
+
+    let viewMode = $state<ViewMode>('card');
+    let isLoading = $state(true);
+
+    onMount(async () => {
+        await timeCapsuleStore.sync?.();
+        isLoading = false;
+    });
 
     let showAddModal = $state(false);
     let parsedCustomAttributes = $state<Record<string, any>>({});
@@ -98,6 +113,11 @@
     }
 </script>
 
+{#if isLoading}
+    <div class="flex items-center justify-center py-12">
+        <Loader2 class="w-8 h-8 animate-spin text-primary" />
+    </div>
+{:else}
 <div
     class="max-w-6xl mx-auto p-6 md:p-8 space-y-10 animate-in fade-in duration-700"
 >
@@ -130,16 +150,20 @@
             </p>
         </div>
 
-        <button
-            on:click={() => (showAddModal = true)}
-            class="px-8 py-4 bg-indigo-600 text-white rounded-full font-bold shadow-xl shadow-indigo-200 hover:bg-indigo-700 hover:scale-105 transition-all flex items-center gap-3 shrink-0"
-        >
-            <Plus size={24} />
-            Seal New Message
-        </button>
+        <div class="flex items-center gap-3">
+            <DataViewToggle module="time-capsule" onchange={(mode) => viewMode = mode} />
+            <button
+                on:click={() => (showAddModal = true)}
+                class="px-8 py-4 bg-indigo-600 text-white rounded-full font-bold shadow-xl shadow-indigo-200 hover:bg-indigo-700 hover:scale-105 transition-all flex items-center gap-3 shrink-0"
+            >
+                <Plus size={24} />
+                Seal New Message
+            </button>
+        </div>
     </div>
 
     <!-- Active Capsules Grid -->
+    {#if viewMode === 'card'}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <!-- Locked Capsules -->
         {#each $capsuleStatus.locked as msg (msg.id)}
@@ -266,6 +290,35 @@
                     ctaLabel="Write your first message"
                     onAction={() => (showAddModal = true)}
                 />
+
+                <!-- Sample Data GhostRows -->
+                <div class="mt-8">
+                    <p class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-4 text-center">Example entries to inspire you</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 opacity-60">
+                        {#each getSmartSamples($language).timeCapsule || [] as sample}
+                            <GhostRow
+                                name={sample.title}
+                                subtitle={`For ${sample.recipient} - ${sample.contentPreview}`}
+                                type={sample.triggerType === 'milestone' ? 'Milestone' : 'Date'}
+                                onClick={() => {
+                                    newMessage = {
+                                        ...newMessage,
+                                        title: sample.title,
+                                        recipient: sample.recipient,
+                                        contentPreview: sample.contentPreview,
+                                        triggerType: sample.triggerType,
+                                        triggerValue: sample.triggerValue
+                                    };
+                                    showAddModal = true;
+                                }}
+                            >
+                                <svelte:fragment slot="icon">
+                                    <Lock size={20} class="text-slate-400" />
+                                </svelte:fragment>
+                            </GhostRow>
+                        {/each}
+                    </div>
+                </div>
             </div>
             <button
                 on:click={() => (showAddModal = true)}
@@ -276,6 +329,55 @@
             </button>
         {/if}
     </div>
+    {:else}
+        <!-- Table View -->
+        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <table class="w-full">
+                <thead class="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Title</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Recipient</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Trigger</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Status</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Preview</th>
+                        <th class="text-right px-4 py-3 text-xs font-bold uppercase text-slate-500">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {#each [...$capsuleStatus.locked, ...$capsuleStatus.unlocked] as msg (msg.id)}
+                        <tr class="hover:bg-slate-50 transition-colors group">
+                            <td class="px-4 py-3 font-medium text-slate-800">{msg.title}</td>
+                            <td class="px-4 py-3 text-slate-600">{msg.recipient}</td>
+                            <td class="px-4 py-3">
+                                <span class="text-xs font-medium text-amber-600">
+                                    {msg.triggerType === 'milestone' ? getMilestoneLabel(msg.triggerValue) : msg.triggerValue}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="px-2 py-1 rounded text-xs font-bold {$capsuleStatus.unlocked.includes(msg) ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-500'}">
+                                    {$capsuleStatus.unlocked.includes(msg) ? 'Unlocked' : 'Locked'}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-slate-500 text-sm max-w-[200px] truncate">{msg.contentPreview || '-'}</td>
+                            <td class="px-4 py-3 text-right">
+                                <button
+                                    on:click={() => timeCapsuleStore.removeMessage(msg.id)}
+                                    class="opacity-0 group-hover:opacity-100 p-1 text-slate-300 hover:text-rose-500 transition-all"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                            </td>
+                        </tr>
+                    {/each}
+                </tbody>
+            </table>
+            {#if $timeCapsuleStore.length === 0}
+                <div class="p-8 text-center text-slate-500">
+                    No time capsules yet. Create your first message to preserve your voice across time.
+                </div>
+            {/if}
+        </div>
+    {/if}
 
     <!-- Modal for New Capsule -->
     {#if showAddModal}
@@ -512,6 +614,7 @@
         </div>
     {/if}
 </div>
+{/if}
 
 <style>
     :global(body) {

@@ -30,10 +30,23 @@
         CircleAlert,
         ShieldAlert,
         Monitor,
+        Loader2,
     } from "lucide-svelte";
+    import { onMount } from "svelte";
     import { fade, slide, scale } from "svelte/transition";
     import EmptyState from "$lib/components/EmptyState.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
+    import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
+    import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
+
+    let viewMode = $state<ViewMode>('card');
+    let isLoading = $state(true);
+
+    onMount(async () => {
+        await advancedAssetStore.sync?.();
+        await digitalAssetsStore.sync?.();
+        isLoading = false;
+    });
 
     let activeTab = $state<
         "transactions" | "maintenance" | "claims" | "killswitch"
@@ -131,6 +144,11 @@
     );
 </script>
 
+{#if isLoading}
+    <div class="flex items-center justify-center py-12">
+        <Loader2 class="w-8 h-8 animate-spin text-primary" />
+    </div>
+{:else}
 <div
     class="max-w-[1400px] mx-auto p-8 space-y-10 animate-in fade-in duration-500"
 >
@@ -163,6 +181,7 @@
                     class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm"
                 />
             </div>
+            <DataViewToggle module="advanced-registry" onchange={(mode) => viewMode = mode} />
             <button
                 onclick={() => {
                     addType =
@@ -566,6 +585,7 @@
         {/if}
     </div>
 </div>
+{/if}
 
 {#if showAddModal}
     <div

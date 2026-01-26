@@ -28,8 +28,9 @@
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { activityLog } from "$lib/stores/activityLog.svelte";
     // import { getStored, setStored } from "$lib/stores/persistence";
+    import type { ViewMode } from "$lib/stores/userPreferencesStore.svelte";
 
-    let { module } = $props();
+    let { module, viewMode = 'card' }: { module: { id: string }, viewMode?: ViewMode } = $props();
 
     type DocType =
         | "Will"
@@ -235,7 +236,7 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Protection Score Card -->
         <div
-            class="glass-panel p-6 rounded-xl relative overflow-hidden group border-[#4A7C74]/20"
+            class="glass-panel p-6 rounded-2xl relative overflow-hidden group border-[#4A7C74]/20"
         >
             <div
                 class="absolute -right-4 -top-4 opacity-10 rotate-12 transition-transform group-hover:scale-110 text-[#4A7C74]"
@@ -275,7 +276,7 @@
 
         <!-- Assistant Banner -->
         <div
-            class="md:col-span-2 glass-panel p-6 rounded-xl flex flex-col justify-center bg-gradient-to-r from-background to-[#4A7C74]/5"
+            class="md:col-span-2 glass-panel p-6 rounded-2xl flex flex-col justify-center bg-gradient-to-r from-background to-[#4A7C74]/5"
         >
             <div class="flex items-center gap-6 h-full">
                 <div
@@ -324,7 +325,7 @@
 
     <!-- Actions -->
     <div
-        class="flex justify-between items-center bg-secondary/5 p-2 rounded-lg border border-border"
+        class="flex justify-between items-center bg-secondary/5 p-3 rounded-2xl border border-slate-200"
     >
         <div class="relative flex-1 max-w-sm ml-2">
             <Search
@@ -341,9 +342,9 @@
                 showUpload = true;
                 showWizard = false;
             }}
-            class="bg-[#4A7C74] hover:bg-[#3b635d] text-white px-4 py-2 rounded-md text-sm font-bold flex items-center gap-2 shadow-sm transition-all shadow-[#4A7C74]/20"
+            class="px-5 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
         >
-            <CloudUpload size={16} /> Secure a Document
+            <CloudUpload size={16} /> Add a document
         </button>
     </div>
 
@@ -351,7 +352,7 @@
     {#if showUpload}
         <div
             transition:fly={{ y: 10 }}
-            class="glass-panel p-0 rounded-xl border-l-4 border-l-[#4A7C74] overflow-hidden"
+            class="glass-panel p-0 rounded-2xl border-l-4 border-l-[#4A7C74] overflow-hidden"
         >
             <!-- Wizard Mode -->
             {#if showWizard && wizardStep === 1}
@@ -367,12 +368,13 @@
                                 I'll help you categorize this correctly.
                             </p>
                         </div>
-                        <button onclick={() => (showUpload = false)}
-                            ><X
-                                size={20}
-                                class="text-muted-foreground"
-                            /></button
+                        <button
+                            onclick={() => (showUpload = false)}
+                            class="p-2 -mr-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+                            aria-label="Close"
                         >
+                            <X class="w-5 h-5" />
+                        </button>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -382,7 +384,7 @@
                                     "Will",
                                     "Last Will & Testament",
                                 )}
-                            class="p-4 bg-white border border-border hover:border-[#4A7C74] rounded-xl text-left transition-all hover:shadow-md group"
+                            class="p-4 bg-white border border-slate-200 hover:border-[#4A7C74] rounded-2xl text-left transition-all hover:shadow-md group"
                         >
                             <span
                                 class="block font-bold text-[#4A7C74] mb-1 group-hover:underline"
@@ -396,7 +398,7 @@
                         <button
                             onclick={() =>
                                 selectWizardOption("Trust", "Living Trust")}
-                            class="p-4 bg-white border border-border hover:border-[#4A7C74] rounded-xl text-left transition-all hover:shadow-md group"
+                            class="p-4 bg-white border border-slate-200 hover:border-[#4A7C74] rounded-2xl text-left transition-all hover:shadow-md group"
                         >
                             <span
                                 class="block font-bold text-[#4A7C74] mb-1 group-hover:underline"
@@ -413,7 +415,7 @@
                                     "Insurance",
                                     "Life Insurance Policy",
                                 )}
-                            class="p-4 bg-white border border-border hover:border-[#4A7C74] rounded-xl text-left transition-all hover:shadow-md group"
+                            class="p-4 bg-white border border-slate-200 hover:border-[#4A7C74] rounded-2xl text-left transition-all hover:shadow-md group"
                         >
                             <span
                                 class="block font-bold text-[#4A7C74] mb-1 group-hover:underline"
@@ -454,23 +456,23 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div class="space-y-1.5">
                             <label
-                                class="text-xs font-bold uppercase text-muted-foreground"
+                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Document Title</label
                             >
                             <input
                                 bind:value={newDoc.name}
-                                class="w-full p-2.5 rounded border border-border bg-white/50 focus:bg-white focus:ring-2 focus:ring-[#4A7C74]/20 outline-none"
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
                                 placeholder="e.g. Last Will"
                             />
                         </div>
                         <div class="space-y-1.5">
                             <label
-                                class="text-xs font-bold uppercase text-muted-foreground"
+                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Category</label
                             >
                             <select
                                 bind:value={newDoc.type}
-                                class="w-full p-2.5 rounded border border-border bg-white/50 focus:bg-white focus:ring-2 focus:ring-[#4A7C74]/20 outline-none"
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
                             >
                                 <option value="Will">Will</option>
                                 <option value="Trust">Trust</option>
@@ -495,30 +497,30 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <div class="space-y-1.5">
                             <label
-                                class="text-xs font-bold uppercase text-muted-foreground"
+                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Physical Location</label
                             >
                             <input
                                 bind:value={newDoc.location}
-                                class="w-full p-2.5 rounded border border-border bg-white/50 focus:bg-white focus:ring-2 focus:ring-[#4A7C74]/20 outline-none"
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
                                 placeholder="e.g. Blue Fire Safe"
                             />
                         </div>
                         <div class="space-y-1.5">
                             <label
-                                class="text-xs font-bold uppercase text-muted-foreground"
+                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Witnesses</label
                             >
                             <input
                                 bind:value={newDoc.witnesses}
-                                class="w-full p-2.5 rounded border border-border bg-white/50 focus:bg-white focus:ring-2 focus:ring-[#4A7C74]/20 outline-none"
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
                                 placeholder="Optional"
                             />
                         </div>
                         <div class="space-y-1.5">
                             <div class="flex justify-between">
                                 <label
-                                    class="text-xs font-bold uppercase text-muted-foreground"
+                                    class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                     >Next Review</label
                                 >
                                 <span
@@ -530,22 +532,22 @@
                             <input
                                 type="date"
                                 bind:value={newDoc.nextReviewDate}
-                                class="w-full p-2.5 rounded border border-border bg-white/50 focus:bg-white focus:ring-2 focus:ring-[#4A7C74]/20 outline-none"
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
                             />
                         </div>
                     </div>
 
-                    <div class="flex justify-end gap-3 pt-2">
+                    <div class="flex justify-end gap-3 pt-4">
                         <button
                             onclick={resetForm}
-                            class="px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
+                            class="px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
                             >Not right now</button
                         >
                         <button
                             onclick={saveDoc}
-                            class="px-5 py-2 bg-[#4A7C74] text-white text-sm font-bold rounded shadow hover:shadow-lg hover:-translate-y-0.5 transition-all"
+                            class="px-6 py-2.5 rounded-xl font-semibold bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50"
                         >
-                            {newDoc.id ? "Update Record" : "Secure this Record"}
+                            {newDoc.id ? "Save my updates" : "Save my document"}
                         </button>
                     </div>
                 </div>
@@ -554,126 +556,222 @@
     {/if}
 
     <!-- Doc Grid -->
-    <div class="grid grid-cols-1 gap-4">
-        {#each docs as doc (doc.id)}
-            <div
-                class="group glass-card p-5 rounded-xl flex flex-col md:flex-row md:items-center justify-between hover:bg-white/80 transition-all border border-transparent hover:border-[#4A7C74]/20 gap-4"
-            >
-                <div class="flex items-start gap-5">
-                    <div
-                        class="w-12 h-12 shrink-0 rounded-xl bg-[#FBF9EB] border border-[#4A7C74]/10 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform text-[#4A7C74]"
-                    >
-                        <FileText size={22} />
-                    </div>
-                    <div>
-                        <div class="flex items-center gap-3 mb-1">
-                            <h4
-                                class="font-serif font-bold text-lg leading-tight text-[#304743]"
-                            >
-                                {doc.name}
-                            </h4>
-                            <span
-                                class="text-[10px] font-bold px-2 py-0.5 rounded border {getStatusColor(
-                                    doc,
-                                )} uppercase tracking-wider"
-                            >
-                                {doc.status?.replace("_", " ")}
-                            </span>
-                        </div>
-
-                        <div
-                            class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground"
-                        >
-                            <span
-                                class="font-bold text-gray-500 uppercase tracking-wide flex items-center gap-1"
-                            >
-                                <Shield size={10} />
-                                {doc.type}
-                            </span>
-                            <span>Signed: {doc.date}</span>
-                            <span class="flex items-center gap-1"
-                                ><Lock size={10} /> {doc.location}</span
-                            >
-                            {#if doc.nextReviewDate}
-                                <span
-                                    class="flex items-center gap-1 {doc.status ===
-                                    'needs_review'
-                                        ? 'text-amber-700 font-bold'
-                                        : ''}"
-                                >
-                                    <Calendar size={10} /> Review: {doc.nextReviewDate}
-                                </span>
-                            {/if}
-                            {#if doc.fileData}
-                                <span
-                                    class="flex items-center gap-1 text-emerald-600 font-bold"
-                                >
-                                    <FileCheck size={10} /> Digital Copy Stored
-                                </span>
-                            {/if}
-                        </div>
-
-                        {#if doc.witnesses}
-                            <div
-                                class="mt-2 flex items-center gap-1 text-[10px] text-muted-foreground bg-secondary/10 px-2 py-1 rounded w-fit italic"
-                            >
-                                <Users size={10} /> Witnessed by {doc.witnesses}
-                            </div>
-                        {/if}
-                    </div>
-                </div>
-
+    {#if viewMode === 'card'}
+        <div class="grid grid-cols-1 gap-4">
+            {#each docs as doc (doc.id)}
                 <div
-                    class="flex items-center gap-2 md:opacity-0 group-hover:opacity-100 transition-opacity justify-end"
+                    class="group glass-card p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between hover:bg-white/80 transition-all border border-transparent hover:border-[#4A7C74]/20 gap-4"
                 >
-                    {#if doc.fileData}
-                        <a
-                            href={doc.fileData}
-                            download="{doc.name}-DigitalCopy"
-                            class="p-2 hover:bg-secondary/10 text-muted-foreground hover:text-[#4A7C74] rounded-full transition-colors"
-                            title="Download Digital Copy"
+                    <div class="flex items-start gap-5">
+                        <div
+                            class="w-12 h-12 shrink-0 rounded-2xl bg-[#FBF9EB] border border-[#4A7C74]/10 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform text-[#4A7C74]"
                         >
-                            <Download size={18} />
-                        </a>
-                    {/if}
-                    <button
-                        onclick={() => (analyzingDoc = doc)}
-                        class="p-2 hover:bg-indigo-50 text-muted-foreground hover:text-indigo-600 rounded-full transition-colors"
-                        title="Analyze with Jargon Slayer"
+                            <FileText size={22} />
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-3 mb-1">
+                                <h4
+                                    class="font-serif font-bold text-lg leading-tight text-[#304743]"
+                                >
+                                    {doc.name}
+                                </h4>
+                                <span
+                                    class="text-[10px] font-bold px-2 py-0.5 rounded border {getStatusColor(
+                                        doc,
+                                    )} uppercase tracking-wider"
+                                >
+                                    {doc.status?.replace("_", " ")}
+                                </span>
+                            </div>
+
+                            <div
+                                class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground"
+                            >
+                                <span
+                                    class="font-bold text-gray-500 uppercase tracking-wide flex items-center gap-1"
+                                >
+                                    <Shield size={10} />
+                                    {doc.type}
+                                </span>
+                                <span>Signed: {doc.date}</span>
+                                <span class="flex items-center gap-1"
+                                    ><Lock size={10} /> {doc.location}</span
+                                >
+                                {#if doc.nextReviewDate}
+                                    <span
+                                        class="flex items-center gap-1 {doc.status ===
+                                        'needs_review'
+                                            ? 'text-amber-700 font-bold'
+                                            : ''}"
+                                    >
+                                        <Calendar size={10} /> Review: {doc.nextReviewDate}
+                                    </span>
+                                {/if}
+                                {#if doc.fileData}
+                                    <span
+                                        class="flex items-center gap-1 text-emerald-600 font-bold"
+                                    >
+                                        <FileCheck size={10} /> Digital Copy Stored
+                                    </span>
+                                {/if}
+                            </div>
+
+                            {#if doc.witnesses}
+                                <div
+                                    class="mt-2 flex items-center gap-1 text-[10px] text-muted-foreground bg-secondary/10 px-2 py-1 rounded w-fit italic"
+                                >
+                                    <Users size={10} /> Witnessed by {doc.witnesses}
+                                </div>
+                            {/if}
+                        </div>
+                    </div>
+
+                    <div
+                        class="flex items-center gap-2 md:opacity-0 group-hover:opacity-100 transition-opacity justify-end"
                     >
-                        <Sparkles size={18} />
-                    </button>
+                        {#if doc.fileData}
+                            <a
+                                href={doc.fileData}
+                                download="{doc.name}-DigitalCopy"
+                                class="p-2 hover:bg-secondary/10 text-muted-foreground hover:text-[#4A7C74] rounded-full transition-colors"
+                                title="Download Digital Copy"
+                            >
+                                <Download size={18} />
+                            </a>
+                        {/if}
+                        <button
+                            onclick={() => (analyzingDoc = doc)}
+                            class="p-2 hover:bg-indigo-50 text-muted-foreground hover:text-indigo-600 rounded-full transition-colors"
+                            title="Analyze with Jargon Slayer"
+                        >
+                            <Sparkles size={18} />
+                        </button>
+                        <button
+                            onclick={() => editDoc(doc)}
+                            class="p-2 hover:bg-secondary/10 text-muted-foreground hover:text-[#4A7C74] rounded-full transition-colors"
+                            title="Edit Details"
+                        >
+                            <Pencil size={18} />
+                        </button>
+                        <button
+                            onclick={() => removeDoc(doc.id)}
+                            class="p-2 hover:bg-destructive/10 text-muted-foreground hover:text-destructive rounded-full transition-colors"
+                            title="Remove"
+                        >
+                            <Trash2 size={18} />
+                        </button>
+                    </div>
+                </div>
+            {/each}
+            {#if docs.length === 0}
+                <GhostRow type="Document" onclick={startWizard} />
+                <GhostRow type="Document" onclick={startWizard} />
+                <GhostRow type="Document" onclick={startWizard} />
+                <div class="flex justify-center mt-4">
                     <button
-                        onclick={() => editDoc(doc)}
-                        class="p-2 hover:bg-secondary/10 text-muted-foreground hover:text-[#4A7C74] rounded-full transition-colors"
-                        title="Edit Details"
+                        onclick={startWizard}
+                        class="text-sm font-bold text-[#4A7C74] hover:bg-[#4A7C74]/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
                     >
-                        <Pencil size={18} />
-                    </button>
-                    <button
-                        onclick={() => removeDoc(doc.id)}
-                        class="p-2 hover:bg-destructive/10 text-muted-foreground hover:text-destructive rounded-full transition-colors"
-                        title="Remove"
-                    >
-                        <Trash2 size={18} />
+                        <Sparkles size={14} /> Start Vault Assistant
                     </button>
                 </div>
-            </div>
-        {/each}
-        {#if docs.length === 0}
-            <GhostRow type="Document" onclick={startWizard} />
-            <GhostRow type="Document" onclick={startWizard} />
-            <GhostRow type="Document" onclick={startWizard} />
-            <div class="flex justify-center mt-4">
-                <button
-                    onclick={startWizard}
-                    class="text-sm font-bold text-[#4A7C74] hover:bg-[#4A7C74]/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
-                >
-                    <Sparkles size={14} /> Start Vault Assistant
-                </button>
-            </div>
-        {/if}
-    </div>
+            {/if}
+        </div>
+    {:else}
+        <!-- Table View -->
+        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <table class="w-full">
+                <thead class="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Document</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Type</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Status</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Date Signed</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Location</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Next Review</th>
+                        <th class="text-right px-4 py-3 text-xs font-bold uppercase text-slate-500">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {#each docs as doc (doc.id)}
+                        <tr class="hover:bg-slate-50 transition-colors group">
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 shrink-0 rounded-lg bg-[#FBF9EB] border border-[#4A7C74]/10 flex items-center justify-center text-[#4A7C74]">
+                                        <FileText size={16} />
+                                    </div>
+                                    <span class="font-medium text-slate-800">{doc.name}</span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-medium">
+                                    {doc.type}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="text-xs font-bold px-2 py-1 rounded border {getStatusColor(doc)} uppercase">
+                                    {doc.status?.replace("_", " ")}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-slate-600 text-sm">{doc.date}</td>
+                            <td class="px-4 py-3 text-slate-600 text-sm">{doc.location}</td>
+                            <td class="px-4 py-3 text-slate-500 text-sm">{doc.nextReviewDate || '-'}</td>
+                            <td class="px-4 py-3 text-right">
+                                <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    {#if doc.fileData}
+                                        <a
+                                            href={doc.fileData}
+                                            download="{doc.name}-DigitalCopy"
+                                            class="p-1 hover:bg-slate-100 text-slate-400 hover:text-[#4A7C74] rounded transition-colors"
+                                            title="Download"
+                                        >
+                                            <Download size={14} />
+                                        </a>
+                                    {/if}
+                                    <button
+                                        onclick={() => (analyzingDoc = doc)}
+                                        class="p-1 hover:bg-indigo-50 text-slate-400 hover:text-indigo-600 rounded transition-colors"
+                                        title="Analyze"
+                                    >
+                                        <Sparkles size={14} />
+                                    </button>
+                                    <button
+                                        onclick={() => editDoc(doc)}
+                                        class="p-1 hover:bg-slate-100 text-slate-400 hover:text-[#4A7C74] rounded transition-colors"
+                                        title="Edit"
+                                    >
+                                        <Pencil size={14} />
+                                    </button>
+                                    <button
+                                        onclick={() => removeDoc(doc.id)}
+                                        class="p-1 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded transition-colors"
+                                        title="Remove"
+                                    >
+                                        <Trash2 size={14} />
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    {/each}
+                </tbody>
+            </table>
+            {#if docs.length === 0}
+                <div class="p-8 text-center text-slate-500">
+                    <GhostRow type="Document" onclick={startWizard} />
+                    <GhostRow type="Document" onclick={startWizard} />
+                    <GhostRow type="Document" onclick={startWizard} />
+                    <div class="flex justify-center mt-4">
+                        <button
+                            onclick={startWizard}
+                            class="text-sm font-bold text-[#4A7C74] hover:bg-[#4A7C74]/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                        >
+                            <Sparkles size={14} /> Start Vault Assistant
+                        </button>
+                    </div>
+                </div>
+            {/if}
+        </div>
+    {/if}
 
     <!-- Jargon Slayer Modal -->
     {#if analyzingDoc}

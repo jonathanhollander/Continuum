@@ -8,6 +8,7 @@
         List as ListIcon,
         X,
         Save,
+        Loader2,
     } from "lucide-svelte";
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
@@ -35,8 +36,11 @@
     import ExternalArchiveCard from "$lib/components/modules/visual-memories/ExternalArchiveCard.svelte";
     import MemoryGallery from "$lib/components/modules/visual-memories/MemoryGallery.svelte";
     import BulkActionBar from "$lib/components/modules/visual-memories/BulkActionBar.svelte";
+    import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
+    import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
 
     let activeTab = $state<"gallery" | "archives">("gallery");
+    let dataViewMode = $state<ViewMode>('card');
 
     // Gallery State
     let viewMode = $state<"grid" | "carousel">("grid");
@@ -60,9 +64,11 @@
     let hasMemories = $derived(visualMemories.items.length > 0);
     let hasArchives = $derived(externalArchives.items.length > 0);
     let selectedCount = $derived(selectedIds.length);
+    let isLoading = $state(true);
 
-    onMount(() => {
-        syncAllMemories();
+    onMount(async () => {
+        await syncAllMemories();
+        isLoading = false;
     });
 
     // --- Archive Functions ---
@@ -177,6 +183,11 @@
     }
 </script>
 
+{#if isLoading}
+    <div class="flex items-center justify-center py-12">
+        <Loader2 class="w-8 h-8 animate-spin text-primary" />
+    </div>
+{:else}
 <!-- Archive Modal -->
 {#if showArchiveModal}
     <div
@@ -303,21 +314,24 @@
             </button>
         </div>
 
-        {#if activeTab === "archives"}
-            <button
-                onclick={() => openArchiveModal()}
-                class="flex items-center gap-2 px-4 py-2 bg-[#4A7C74] text-white rounded-lg font-bold text-sm hover:bg-[#3b635d] transition-colors shadow-sm"
-            >
-                <Plus size={16} /> Add Location
-            </button>
-        {:else}
-            <button
-                onclick={triggerUpload}
-                class="flex items-center gap-2 px-4 py-2 bg-[#4A7C74] text-white rounded-lg font-bold text-sm hover:bg-[#3b635d] transition-colors shadow-sm"
-            >
-                <Plus size={16} /> Add Memories
-            </button>
-        {/if}
+        <div class="flex items-center gap-3">
+            <DataViewToggle module="visual-memories" onchange={(mode) => dataViewMode = mode} />
+            {#if activeTab === "archives"}
+                <button
+                    onclick={() => openArchiveModal()}
+                    class="flex items-center gap-2 px-4 py-2 bg-[#4A7C74] text-white rounded-lg font-bold text-sm hover:bg-[#3b635d] transition-colors shadow-sm"
+                >
+                    <Plus size={16} /> Add Location
+                </button>
+            {:else}
+                <button
+                    onclick={triggerUpload}
+                    class="flex items-center gap-2 px-4 py-2 bg-[#4A7C74] text-white rounded-lg font-bold text-sm hover:bg-[#3b635d] transition-colors shadow-sm"
+                >
+                    <Plus size={16} /> Add Memories
+                </button>
+            {/if}
+        </div>
     </div>
 
     <!-- Content Area -->
@@ -436,3 +450,4 @@
         </div>
     {/if}
 </div>
+{/if}

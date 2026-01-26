@@ -31,6 +31,7 @@
         Info,
         MicOff,
         CircleCheck,
+        Loader2,
     } from "lucide-svelte";
     import {
         LETTER_TEMPLATES,
@@ -68,6 +69,12 @@
     let savedLetters = $derived(letterSync.items);
 
     let searchQuery = $state("");
+    let isLoading = $state(true);
+
+    onMount(async () => {
+        await letterSync.init();
+        isLoading = false;
+    });
     let filterCategory = $state("All");
 
     // Removal of old persistence
@@ -357,6 +364,11 @@
     );
 </script>
 
+{#if isLoading}
+    <div class="flex items-center justify-center py-12">
+        <Loader2 class="w-8 h-8 animate-spin text-primary" />
+    </div>
+{:else}
 <div
     class="p-8 max-w-[1400px] mx-auto space-y-12 animate-in fade-in duration-700"
 >
@@ -433,7 +445,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
             <button
                 onclick={() => startEmotionalFlow("ethical_will")}
-                class="group relative overflow-hidden bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 text-left flex gap-8 items-center"
+                class="group relative overflow-hidden bg-white p-10 rounded-2xl border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 text-left flex gap-8 items-center"
             >
                 <div
                     class="absolute top-0 right-0 w-32 h-32 bg-amber-50/50 rounded-bl-[5rem] -mr-8 -mt-8 group-hover:scale-110 transition-transform"
@@ -463,7 +475,7 @@
 
             <button
                 onclick={() => startEmotionalFlow("spouse")}
-                class="group relative overflow-hidden bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 text-left flex gap-8 items-center"
+                class="group relative overflow-hidden bg-white p-10 rounded-2xl border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 text-left flex gap-8 items-center"
             >
                 <div
                     class="absolute top-0 right-0 w-32 h-32 bg-rose-50/50 rounded-bl-[5rem] -mr-8 -mt-8 group-hover:scale-110 transition-transform"
@@ -520,7 +532,7 @@
                         type="text"
                         bind:value={searchQuery}
                         placeholder="Search templates..."
-                        class="w-full bg-white border border-slate-200 rounded-2xl py-3.5 pl-12 pr-4 text-sm font-medium focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 outline-none transition-all shadow-sm"
+                        class="w-full px-4 py-3 pl-12 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
                     />
                 </div>
             </div>
@@ -529,7 +541,7 @@
                 {#each filteredTemplates as template (template.id)}
                     <button
                         onclick={() => selectTransactional(template)}
-                        class="group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 text-left flex flex-col justify-between min-h-[160px]"
+                        class="group bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 text-left flex flex-col justify-between min-h-[160px]"
                     >
                         <div>
                             <div class="flex items-center gap-3 mb-4">
@@ -588,7 +600,7 @@
             </div>
 
             <div
-                class="bg-white p-12 rounded-[3rem] border border-slate-100 shadow-2xl shadow-slate-900/5 space-y-10"
+                class="bg-white p-12 rounded-2xl border border-slate-100 shadow-2xl shadow-slate-900/5 space-y-10"
             >
                 <div class="text-center space-y-2">
                     <h2 class="text-3xl font-black text-slate-900 font-serif">
@@ -610,7 +622,7 @@
                             <input
                                 type="text"
                                 bind:value={templateVariables[variable]}
-                                class="w-full px-6 py-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-primary focus:bg-white outline-none font-bold transition-all"
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
                                 placeholder="Enter {variable.toLowerCase()}..."
                             />
                         </div>
@@ -625,13 +637,13 @@
                         }}
                         class="text-sm font-black text-slate-400 hover:text-slate-900 uppercase tracking-widest transition-colors"
                     >
-                        Skip & Modify Draft
+                        Continue with blank fields
                     </button>
                     <button
                         onclick={applyVariables}
-                        class="px-12 py-5 bg-primary text-primary-foreground shadow-primary/20 hover:opacity-90"
+                        class="px-12 py-5 bg-primary text-primary-foreground shadow-primary/20 hover:opacity-90 rounded-xl"
                     >
-                        Generate Document
+                        Create my document
                     </button>
                 </div>
             </div>
@@ -672,7 +684,7 @@
                 </div>
 
                 <div
-                    class="bg-indigo-50/50 border border-indigo-100 p-8 rounded-[2.5rem] flex gap-6 items-center"
+                    class="bg-indigo-50/50 border border-indigo-100 p-8 rounded-2xl flex gap-6 items-center"
                 >
                     <div
                         class="w-14 h-14 bg-primary/10 text-primary rounded-2xl flex items-center justify-center shrink-0 shadow-inner"
@@ -697,7 +709,7 @@
                 </div>
 
                 <div
-                    class="bg-white p-12 rounded-[3.5rem] border shadow-2xl shadow-slate-900/5 font-mono text-base leading-relaxed whitespace-pre-wrap text-slate-700 h-[600px] overflow-y-auto paper-texture ring-8 ring-slate-50/50"
+                    class="bg-white p-12 rounded-2xl border shadow-2xl shadow-slate-900/5 font-mono text-base leading-relaxed whitespace-pre-wrap text-slate-700 h-[600px] overflow-y-auto paper-texture ring-8 ring-slate-50/50"
                 >
                     {generatedLetter ||
                         "(Empty draft - please go back and fill in the form)"}
@@ -708,7 +720,7 @@
             <div class="space-y-8 lg:pt-24">
                 {#if selectedTemplate.requiredDocs && selectedTemplate.requiredDocs.length > 0}
                     <div
-                        class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-6"
+                        class="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm space-y-6"
                         in:slide
                     >
                         <h4
@@ -740,7 +752,7 @@
 
                 {#if selectedTemplate.followUp}
                     <div
-                        class="bg-[#FDFBF7] p-8 rounded-[2.5rem] border border-stone-200 shadow-sm space-y-4"
+                        class="bg-[#FDFBF7] p-8 rounded-2xl border border-stone-200 shadow-sm space-y-4"
                         in:slide
                     >
                         <h4
@@ -759,9 +771,9 @@
 
                 <button
                     onclick={saveToVault}
-                    class="w-full bg-slate-900 text-white p-6 rounded-[2rem] font-black flex items-center justify-center gap-3 shadow-2xl shadow-slate-900/30 hover:scale-105 active:scale-95 transition-all"
+                    class="w-full bg-slate-900 text-white p-6 rounded-2xl font-black flex items-center justify-center gap-3 shadow-2xl shadow-slate-900/30 hover:scale-105 active:scale-95 transition-all"
                 >
-                    Finalize & Save <ArrowRight size={20} />
+                    Save my letter <ArrowRight size={20} />
                 </button>
             </div>
         </div>
@@ -850,10 +862,10 @@
                     </button>
                     <button
                         onclick={saveToVault}
-                        class="flex items-center gap-2 px-8 py-3 bg-[#4A7C74] text-white rounded-2xl font-black shadow-xl shadow-[#4A7C74]/20 hover:scale-105 active:scale-95 transition-all"
+                        class="flex items-center gap-2 px-8 py-3 bg-[#4A7C74] text-white rounded-xl font-black shadow-xl shadow-[#4A7C74]/20 hover:scale-105 active:scale-95 transition-all"
                     >
                         <Save size={18} />
-                        Seal in Vault
+                        Save my letter
                     </button>
                 </div>
             </div>
@@ -863,7 +875,7 @@
                 <div class="lg:col-span-2 space-y-8">
                     <!-- Legacy Trigger Settings (New Feature) -->
                     <div
-                        class="bg-indigo-50/50 border border-indigo-100 p-8 rounded-[2.5rem] space-y-6"
+                        class="bg-indigo-50/50 border border-indigo-100 p-8 rounded-2xl space-y-6"
                     >
                         <div class="flex items-center gap-3">
                             <History size={20} class="text-primary" />
@@ -882,7 +894,7 @@
                                 <input
                                     type="date"
                                     bind:value={letterTriggerDate}
-                                    class="w-full px-5 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/40 text-sm font-medium"
+                                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
                                 />
                             </div>
                             <div class="space-y-2">
@@ -892,7 +904,7 @@
                                 >
                                 <select
                                     bind:value={letterTriggerMilestone}
-                                    class="w-full px-5 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/40 text-sm font-medium appearance-none"
+                                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800 appearance-none"
                                 >
                                     <option value=""
                                         >No Milestone Trigger</option
@@ -918,10 +930,10 @@
 
                     <div class="relative group">
                         <div
-                            class="absolute -inset-4 bg-gradient-to-r from-[#4A7C74]/5 to-blue-500/5 rounded-[4rem] blur-2xl opacity-50 group-hover:opacity-100 transition-opacity"
+                            class="absolute -inset-4 bg-gradient-to-r from-[#4A7C74]/5 to-blue-500/5 rounded-2xl blur-2xl opacity-50 group-hover:opacity-100 transition-opacity"
                         ></div>
                         <div
-                            class="relative bg-[#FDFBF7] p-16 rounded-[3.5rem] border border-stone-200 shadow-2xl font-serif text-xl leading-[2] text-stone-800 paper-texture ring-8 ring-stone-50/30 min-h-[700px]"
+                            class="relative bg-[#FDFBF7] p-16 rounded-2xl border border-stone-200 shadow-2xl font-serif text-xl leading-[2] text-stone-800 paper-texture ring-8 ring-stone-50/30 min-h-[700px]"
                         >
                             <SmartTextarea
                                 bind:value={generatedLetter}
@@ -1031,7 +1043,7 @@
                     onclick={resetSelection}
                     class="text-xs font-black uppercase tracking-widest text-slate-400 hover:text-primary transition-colors"
                 >
-                    Cancel Interview
+                    Not right now
                 </button>
             </div>
 
@@ -1056,11 +1068,11 @@
 
             <div class="relative group">
                 <div
-                    class="absolute -inset-4 bg-gradient-to-b from-[#4A7C74]/10 to-transparent rounded-[3rem] blur-xl opacity-50 group-hover:opacity-80 transition-opacity"
+                    class="absolute -inset-4 bg-gradient-to-b from-[#4A7C74]/10 to-transparent rounded-2xl blur-xl opacity-50 group-hover:opacity-80 transition-opacity"
                 ></div>
                 {#key currentPromptIndex}
                     <div
-                        class="relative w-full h-80 bg-white border-2 border-slate-100 rounded-[3rem] shadow-2xl focus-within:border-[#4A7C74] transition-all overflow-hidden p-8"
+                        class="relative w-full h-80 bg-white border-2 border-slate-100 rounded-2xl shadow-2xl focus-within:border-[#4A7C74] transition-all overflow-hidden p-8"
                     >
                         <SmartTextarea
                             bind:value={
@@ -1122,11 +1134,11 @@
                               ? "values"
                               : "hopes"
                     ]}
-                    class="group flex items-center gap-4 bg-[#4A7C74] text-white px-16 py-6 rounded-[2.5rem] font-black text-xl shadow-2xl shadow-[#4A7C74]/30 hover:scale-105 active:scale-95 transition-all disabled:opacity-20 disabled:grayscale"
+                    class="group flex items-center gap-4 bg-[#4A7C74] text-white px-16 py-6 rounded-2xl font-black text-xl shadow-2xl shadow-[#4A7C74]/30 hover:scale-105 active:scale-95 transition-all disabled:opacity-20 disabled:grayscale"
                 >
                     {currentPromptIndex === 2
-                        ? "Generate Legacy Letter"
-                        : "Next Reflection"}
+                        ? "Create my letter"
+                        : "Continue when ready"}
                     <div
                         class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center group-hover:translate-x-2 transition-transform"
                     >
@@ -1137,6 +1149,7 @@
         </div>
     {/if}
 </div>
+{/if}
 
 <style>
     :global(.animate-in) {

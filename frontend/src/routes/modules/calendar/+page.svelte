@@ -13,9 +13,18 @@
         Clock,
         X,
         ChevronRight,
+        Loader2,
     } from "lucide-svelte";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
+    import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
+    import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
+    import GhostRow from "$lib/components/ui/GhostRow.svelte";
+    import EmptyState from "$lib/components/EmptyState.svelte";
+    import { t, language } from "$lib/stores/localization";
+    import { getSmartSamples } from "$lib/data/smartSamples";
+
+    let viewMode = $state<ViewMode>('card');
 
     // --- Types ---
     type CalendarEvent = {
@@ -72,6 +81,12 @@
         "calendar_events",
     );
     let events = $derived(calendarSync.items);
+    let isLoading = $state(true);
+
+    onMount(async () => {
+        await calendarSync.init();
+        isLoading = false;
+    });
 
     // Seeding Logic (only if empty)
     $effect(() => {
@@ -267,6 +282,11 @@
     };
 </script>
 
+{#if isLoading}
+    <div class="flex items-center justify-center py-12">
+        <Loader2 class="w-8 h-8 animate-spin text-primary" />
+    </div>
+{:else}
 <div class="max-w-4xl mx-auto p-8 animate-in fade-in duration-500">
     <!-- Header -->
     <div class="mb-12 flex justify-between items-end">
@@ -285,120 +305,218 @@
                 exactly how you want them to be.
             </p>
         </div>
-        <button
-            class="bg-[#304743] text-white px-6 py-2 rounded-xl font-bold hover:bg-[#2a3f3b] transition-colors flex items-center gap-2"
-            onclick={() => (showAddForm = true)}
-        >
-            <Plus size={20} /> Add Significant Date
-        </button>
+        <div class="flex items-center gap-3">
+            <DataViewToggle module="calendar" onchange={(mode) => viewMode = mode} />
+            <button
+                class="bg-[#304743] text-white px-6 py-2 rounded-xl font-bold hover:bg-[#2a3f3b] transition-colors flex items-center gap-2"
+                onclick={() => (showAddForm = true)}
+            >
+                <Plus size={20} /> Add Significant Date
+            </button>
+        </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {#each events as evt}
-            <div
-                class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-all group relative overflow-hidden"
-            >
-                <!-- Type Badge -->
-                <div class="absolute top-0 right-0 p-4 opacity-10">
-                    <svelte:component
-                        this={eventTypeIcons[evt.type]}
-                        size={120}
-                    />
-                </div>
+    {#if events.length === 0}
+        <EmptyState
+            title="Create meaningful moments for the future"
+            whyMatters="<strong>Birthdays, anniversaries, and holidays will still arrive after you're gone.</strong> Without your guidance, these dates may become painful reminders instead of opportunities for connection.<br/><br/>By documenting your wishes for these special days, you transform difficult dates into moments of joy. Your family will know exactly how to honor you, celebrate together, and feel your presence even in your absence."
+            encouragement="Start with your birthday or a holiday you love. Add others as they come to mind."
+            icon={Clock}
+            iconClass="text-[#304743]"
+            ctaLabel="Add your first significant date"
+            onAction={() => (showAddForm = true)}
+        />
 
-                <div class="relative z-10">
-                    <div class="flex justify-between items-start mb-4">
-                        <div
-                            class={`p-3 rounded-2xl ${eventTypeColors[evt.type]} inline-flex`}
-                        >
-                            <svelte:component
-                                this={eventTypeIcons[evt.type]}
-                                size={24}
-                            />
-                        </div>
-                        <div
-                            class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                            <button
-                                onclick={() => editEvent(evt)}
-                                class="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-blue-500"
-                            >
-                                <Pencil size={16} />
-                            </button>
-                            <button
-                                onclick={() => removeEvent(evt.id)}
-                                class="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-red-500"
-                            >
-                                <Trash2 size={16} />
-                            </button>
-                        </div>
+        <!-- Sample Data GhostRows -->
+        <div class="mt-8">
+            <p class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-4 text-center">Example entries to inspire you</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 opacity-60">
+                {#each getSmartSamples($language).calendar || [] as sample}
+                    <GhostRow
+                        name={sample.title}
+                        subtitle={sample.wish}
+                        type={sample.type}
+                        onClick={() => {
+                            newEvent = {
+                                ...newEvent,
+                                title: sample.title,
+                                type: sample.type,
+                                isRecurring: sample.isRecurring,
+                                wish: sample.wish
+                            };
+                            showAddForm = true;
+                        }}
+                    >
+                        <svelte:fragment slot="icon">
+                            {@const Icon = eventTypeIcons[sample.type] || CalendarIcon}
+                            <Icon size={20} class="text-slate-400" />
+                        </svelte:fragment>
+                    </GhostRow>
+                {/each}
+            </div>
+        </div>
+    {:else if viewMode === 'card'}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {#each events as evt}
+                <div
+                    class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-all group relative overflow-hidden"
+                >
+                    <!-- Type Badge -->
+                    <div class="absolute top-0 right-0 p-4 opacity-10">
+                        <svelte:component
+                            this={eventTypeIcons[evt.type]}
+                            size={120}
+                        />
                     </div>
 
-                    <div class="mb-6">
-                        <span
-                            class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1 block"
-                        >
-                            {evt.isRecurring ? "Every Year" : "One Time Event"}
-                        </span>
-                        <h3
-                            class="font-serif font-bold text-2xl text-gray-900 leading-tight mb-1"
-                        >
-                            {evt.title}
-                        </h3>
-                        <div
-                            class="text-[#304743] font-medium flex items-center gap-2"
-                        >
-                            <CalendarIcon size={14} />
-                            {formatDisplayDate(evt.date, evt.isRecurring)}
-                        </div>
-                    </div>
-
-                    {#if evt.wish}
-                        <div
-                            class="bg-gray-50 p-4 rounded-xl mb-4 border border-gray-100"
-                        >
-                            <div class="flex items-start gap-2">
-                                <Sparkles
-                                    class="text-amber-400 shrink-0 mt-0.5"
-                                    size={16}
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start mb-4">
+                            <div
+                                class={`p-3 rounded-2xl ${eventTypeColors[evt.type]} inline-flex`}
+                            >
+                                <svelte:component
+                                    this={eventTypeIcons[evt.type]}
+                                    size={24}
                                 />
-                                <p class="text-gray-600 text-sm italic">
-                                    "{evt.wish}"
-                                </p>
+                            </div>
+                            <div
+                                class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                                <button
+                                    onclick={() => editEvent(evt)}
+                                    class="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-blue-500"
+                                >
+                                    <Pencil size={16} />
+                                </button>
+                                <button
+                                    onclick={() => removeEvent(evt.id)}
+                                    class="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-red-500"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
                             </div>
                         </div>
-                    {/if}
 
-                    {#if evt.emailTemplate}
-                        <a
-                            href={getMailtoLink(evt)}
-                            target="_blank"
-                            class="w-full flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-xl text-gray-600 font-bold text-sm hover:border-[#304743] hover:text-[#304743] transition-colors bg-white"
-                        >
-                            <Mail size={16} />
-                            Prepare "Future Email"
-                        </a>
-                    {/if}
+                        <div class="mb-6">
+                            <span
+                                class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1 block"
+                            >
+                                {evt.isRecurring ? "Every Year" : "One Time Event"}
+                            </span>
+                            <h3
+                                class="font-serif font-bold text-2xl text-gray-900 leading-tight mb-1"
+                            >
+                                {evt.title}
+                            </h3>
+                            <div
+                                class="text-[#304743] font-medium flex items-center gap-2"
+                            >
+                                <CalendarIcon size={14} />
+                                {formatDisplayDate(evt.date, evt.isRecurring)}
+                            </div>
+                        </div>
+
+                        {#if evt.wish}
+                            <div
+                                class="bg-gray-50 p-4 rounded-xl mb-4 border border-gray-100"
+                            >
+                                <div class="flex items-start gap-2">
+                                    <Sparkles
+                                        class="text-amber-400 shrink-0 mt-0.5"
+                                        size={16}
+                                    />
+                                    <p class="text-gray-600 text-sm italic">
+                                        "{evt.wish}"
+                                    </p>
+                                </div>
+                            </div>
+                        {/if}
+
+                        {#if evt.emailTemplate}
+                            <a
+                                href={getMailtoLink(evt)}
+                                target="_blank"
+                                class="w-full flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-xl text-gray-600 font-bold text-sm hover:border-[#304743] hover:text-[#304743] transition-colors bg-white"
+                            >
+                                <Mail size={16} />
+                                Prepare "Future Email"
+                            </a>
+                        {/if}
+                    </div>
                 </div>
-            </div>
-        {/each}
+            {/each}
 
-        <!-- AI Suggestion Card (Mock) -->
-        <button
-            class="w-full border-2 border-dashed border-gray-200 rounded-3xl p-6 flex flex-col items-center justify-center text-center text-gray-400 gap-4 min-h-[300px] hover:border-[#304743]/50 hover:bg-gray-50/50 transition-all cursor-pointer"
-            onclick={() => (showAddForm = true)}
-        >
-            <div class="p-4 bg-gray-100 rounded-full">
-                <Plus size={32} />
-            </div>
-            <div>
-                <h3 class="font-bold text-gray-600 mb-1">Add Another Date</h3>
-                <p class="text-sm">
-                    Birthdays, anniversaries, or just a Tuesday.
-                </p>
-            </div>
-        </button>
-    </div>
+            <!-- AI Suggestion Card (Mock) -->
+            <button
+                class="w-full border-2 border-dashed border-gray-200 rounded-3xl p-6 flex flex-col items-center justify-center text-center text-gray-400 gap-4 min-h-[300px] hover:border-[#304743]/50 hover:bg-gray-50/50 transition-all cursor-pointer"
+                onclick={() => (showAddForm = true)}
+            >
+                <div class="p-4 bg-gray-100 rounded-full">
+                    <Plus size={32} />
+                </div>
+                <div>
+                    <h3 class="font-bold text-gray-600 mb-1">Add Another Date</h3>
+                    <p class="text-sm">
+                        Birthdays, anniversaries, or just a Tuesday.
+                    </p>
+                </div>
+            </button>
+        </div>
+    {:else}
+        <!-- Table View -->
+        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <table class="w-full">
+                <thead class="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Event</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Date</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Type</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Recurring</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Wish</th>
+                        <th class="text-right px-4 py-3 text-xs font-bold uppercase text-slate-500">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {#each events as evt}
+                        <tr class="hover:bg-slate-50 transition-colors group">
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-2">
+                                    <div class={`p-1.5 rounded-lg ${eventTypeColors[evt.type]}`}>
+                                        <svelte:component this={eventTypeIcons[evt.type]} size={14} />
+                                    </div>
+                                    <span class="font-medium text-slate-800">{evt.title}</span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-slate-600">{formatDisplayDate(evt.date, evt.isRecurring)}</td>
+                            <td class="px-4 py-3">
+                                <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-medium capitalize">
+                                    {evt.type}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-slate-500 text-sm">{evt.isRecurring ? 'Yes' : 'No'}</td>
+                            <td class="px-4 py-3 text-slate-500 text-sm max-w-[200px] truncate">{evt.wish || '-'}</td>
+                            <td class="px-4 py-3 text-right">
+                                <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button
+                                        onclick={() => editEvent(evt)}
+                                        class="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-blue-500"
+                                    >
+                                        <Pencil size={14} />
+                                    </button>
+                                    <button
+                                        onclick={() => removeEvent(evt.id)}
+                                        class="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-red-500"
+                                    >
+                                        <Trash2 size={14} />
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    {/each}
+                </tbody>
+            </table>
+        </div>
+    {/if}
 
     <!-- AI Bar -->
     <div class="mt-12">
@@ -414,7 +532,7 @@
     <!-- Modal -->
     {#if showAddForm}
         <div
-            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
             transition:fade
         >
             <div
@@ -587,3 +705,4 @@
         </div>
     {/if}
 </div>
+{/if}

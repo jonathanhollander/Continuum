@@ -3,7 +3,7 @@ from backend.limiter import limiter
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session, select
 from pydantic import BaseModel, EmailStr
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from datetime import timedelta
 from backend.database import User, get_session
 from backend.auth import (
@@ -83,6 +83,7 @@ class UserResponse(BaseModel):
     onboarding_completed: bool = False
     language: Optional[str] = "en"
     font_size: Optional[str] = "normal"
+    view_preferences: Optional[Dict[str, str]] = None
 
 
 # --- WebAuthn Pydantic Validation Models (P1-High Security) ---
@@ -730,6 +731,66 @@ def update_preferences(
     session.commit()
     session.refresh(current_user)
     return current_user
+
+
+# --- View Preferences Endpoints ---
+
+class ViewPreferencesResponse(BaseModel):
+    """Response model for view preferences."""
+    view_preferences: Optional[Dict[str, str]] = None
+
+class ViewPreferencesUpdate(BaseModel):
+    """Request model for updating view preferences."""
+    view_preferences: Dict[str, str]
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "view_preferences": {
+                    "contacts": "card",
+                    "assets": "table",
+                    "documents": "card"
+                }
+            }
+        }
+    }
+
+@router.get("/me/preferences", response_model=ViewPreferencesResponse, summary="Get user view preferences", description="Returns the user's view preferences for UI toggles (card/table view per module).")
+def get_view_preferences(
+    current_user: User = Depends(get_current_user)
+):
+    """Get current user's view preferences."""
+    return ViewPreferencesResponse(
+        view_preferences=current_user.view_preferences or {}
+    )
+
+@router.patch("/me/preferences", response_model=ViewPreferencesResponse, summary="Update user view preferences", description="Update the user's view preferences for UI toggles (card/table view per module).")
+def update_view_preferences(
+    preferences: ViewPreferencesUpdate,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    """Update user's view preferences."""
+    # Merge with existing preferences if any
+    current_prefs = current_user.view_preferences or {}
+    current_prefs.update(preferences.view_preferences)
+
+    current_user.view_preferences = current_prefs
+    session.add(current_user)
+    session.commit()
+    session.refresh(current_user)
+
+    logger.info(
+        "View preferences updated",
+        extra={"context": {
+            "user_id": current_user.id,
+            "view_preferences": current_user.view_preferences
+        }}
+    )
+
+    return ViewPreferencesResponse(
+        view_preferences=current_user.view_preferences
+    )
 
 
 # --- Onboarding Endpoint ---

@@ -6,7 +6,7 @@
     import { activityLog } from "$lib/stores/activityLog.svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { fade, slide, scale, fly } from "svelte/transition";
-    import { quintOut } from "svelte/easing";
+    import { quintOut, cubicOut } from "svelte/easing";
     import {
         Shield,
         Plus,
@@ -32,12 +32,17 @@
         Filter,
         Download,
         Sparkles,
+        Loader2,
     } from "lucide-svelte";
-    import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
+    import { onMount } from "svelte";
+    import Modal from "$lib/components/ui/Modal.svelte";
+    import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import GuidanceBlock from "$lib/components/guidance/GuidanceBlock.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
     import UniversalUploader from "$lib/components/ui/UniversalUploader.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
+    import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
+    import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
 
     // Concierge Imports
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
@@ -45,11 +50,18 @@
     import { getSmartSamples } from "$lib/data/smartSamples";
 
     let showAddModal = $state(false);
+    let viewMode = $state<ViewMode>('card');
     let isEditing = $state(false);
     let searchQuery = $state("");
     let filterType = $state("All");
     let showWizard = $state(false);
     let parsedCustomAttributes = $state<Record<string, any>>({});
+    let isLoading = $state(true);
+
+    onMount(async () => {
+        await insuranceStore.sync?.();
+        isLoading = false;
+    });
 
     let newPolicy = $state<Partial<InsurancePolicy>>({
         policyName: "",
@@ -304,13 +316,18 @@
     };
 </script>
 
+{#if isLoading}
+    <div class="flex items-center justify-center py-12">
+        <Loader2 class="w-8 h-8 animate-spin text-primary" />
+    </div>
+{:else}
 <div
     class="p-8 max-w-[1400px] mx-auto space-y-8 animate-in fade-in duration-700"
 >
     <!-- Wizard Modal -->
     {#if showWizard}
         <div
-            class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+            class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
             transition:fade
         >
             <div class="w-full max-w-2xl relative" in:fly={{ y: 20 }}>
@@ -363,6 +380,8 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
+            <DataViewToggle module="insurance" onchange={(mode) => viewMode = mode} />
+
             <button
                 onclick={() => (showWizard = true)}
                 class="flex items-center gap-2 px-5 py-3 border border-primary/10 text-primary font-bold rounded-2xl hover:bg-primary/5 transition-colors"
@@ -400,7 +419,7 @@
     <!-- Stats Dashboard -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div
-            class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
+            class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
         >
             <div class="flex items-start justify-between mb-4">
                 <div
@@ -425,7 +444,7 @@
         </div>
 
         <div
-            class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
+            class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
         >
             <div class="flex items-start justify-between mb-4">
                 <div
@@ -450,7 +469,7 @@
         </div>
 
         <div
-            class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
+            class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
         >
             <div class="flex items-start justify-between mb-4">
                 <div
@@ -475,7 +494,7 @@
         </div>
 
         <div
-            class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
+            class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
         >
             <div class="flex items-start justify-between mb-4">
                 <div
@@ -502,7 +521,7 @@
 
     <!-- Search & Filters -->
     <div
-        class="flex flex-col md:flex-row gap-4 items-center justify-between bg-slate-50/50 p-4 rounded-3xl border border-slate-100"
+        class="flex flex-col md:flex-row gap-4 items-center justify-between bg-slate-50/50 p-4 rounded-2xl border border-slate-100"
     >
         <div class="relative w-full md:w-96">
             <Search class="absolute left-4 top-3.5 text-slate-400" size={18} />
@@ -510,7 +529,7 @@
                 type="text"
                 bind:value={searchQuery}
                 placeholder="Search policy name, carrier, or type..."
-                class="w-full bg-white border border-slate-200 rounded-2xl py-3 pl-12 pr-4 text-sm focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all shadow-sm"
+                class="w-full px-4 py-3 pl-12 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
             />
         </div>
         <div class="flex items-center gap-2">
@@ -519,19 +538,21 @@
                 >Showing {filteredPolicies.length} Policies</span
             >
             <button
-                class="p-3 bg-white border border-slate-200 rounded-2xl text-slate-500 hover:text-primary transition-colors shadow-sm"
+                class="p-3 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-primary transition-colors shadow-sm"
             >
                 <Download size={18} />
             </button>
         </div>
     </div>
 
+    <!-- Policy Views -->
+    {#if viewMode === 'card'}
     <!-- Policy Cards Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
         {#each filteredPolicies as policy (policy.id)}
             {@const Icon = typeIcons[policy.insuranceType] || Shield}
             <div
-                class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 overflow-hidden group flex flex-col"
+                class="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 overflow-hidden group flex flex-col ring-1 ring-slate-900/5"
                 transition:scale={{
                     duration: 400,
                     delay: 0,
@@ -540,25 +561,25 @@
                     easing: quintOut,
                 }}
             >
-                <div class="p-8 pb-0">
+                <div class="p-6 pb-0">
                     <!-- Card Top -->
-                    <div class="flex items-start justify-between mb-8">
+                    <div class="flex items-start justify-between mb-6">
                         <div class="flex items-center gap-4">
                             <div
-                                class="w-14 h-14 rounded-2xl shadow-inner flex items-center justify-center transition-all duration-500 {typeColors[
+                                class="w-12 h-12 rounded-xl shadow-inner flex items-center justify-center transition-all duration-500 {typeColors[
                                     policy.insuranceType
                                 ]}"
                             >
-                                <Icon size={28} strokeWidth={2.5} />
+                                <Icon size={24} strokeWidth={2.5} />
                             </div>
                             <div>
                                 <h3
-                                    class="text-xl font-black text-slate-900 leading-tight group-hover:text-primary transition-colors"
+                                    class="text-lg font-semibold text-slate-900 leading-tight group-hover:text-primary transition-colors"
                                 >
                                     {policy.policyName}
                                 </h3>
                                 <p
-                                    class="text-slate-400 text-sm font-bold tracking-tight"
+                                    class="text-slate-500 text-sm"
                                 >
                                     {policy.insurer}
                                 </p>
@@ -569,9 +590,9 @@
                         >
                             <button
                                 onclick={() => editPolicy(policy)}
-                                class="p-3 bg-slate-50 hover:bg-primary/5 text-slate-400 hover:text-primary rounded-2xl transition-all"
+                                class="p-2 bg-slate-50 hover:bg-primary/5 text-slate-400 hover:text-primary rounded-xl transition-all"
                             >
-                                <Pencil size={18} />
+                                <Pencil size={16} />
                             </button>
                             <button
                                 onclick={() =>
@@ -579,48 +600,48 @@
                                         String(policy.id),
                                         policy.policyName,
                                     )}
-                                class="p-3 bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-2xl transition-all"
+                                class="p-2 bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-xl transition-all"
                             >
-                                <Trash2 size={18} />
+                                <Trash2 size={16} />
                             </button>
                         </div>
                     </div>
 
                     <!-- Mini Stats Grid -->
-                    <div class="grid grid-cols-3 gap-4 mb-8">
+                    <div class="grid grid-cols-3 gap-3 mb-6">
                         <div
-                            class="bg-slate-50 rounded-2xl p-4 border border-slate-100/50"
+                            class="bg-slate-50 rounded-xl p-3 border border-slate-100/50"
                         >
                             <p
-                                class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1"
+                                class="text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1"
                             >
                                 Premium
                             </p>
                             <p
-                                class="text-sm font-black text-slate-700 tracking-tight"
+                                class="text-sm font-semibold text-slate-700"
                             >
                                 ${policy.premiumAmount}
                             </p>
                         </div>
                         <div
-                            class="bg-slate-50 rounded-2xl p-4 border border-slate-100/50"
+                            class="bg-slate-50 rounded-xl p-3 border border-slate-100/50"
                         >
                             <p
-                                class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1"
+                                class="text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1"
                             >
                                 Interval
                             </p>
                             <p
-                                class="text-sm font-black text-slate-700 tracking-tight"
+                                class="text-sm font-semibold text-slate-700"
                             >
                                 {policy.premiumFrequency}
                             </p>
                         </div>
                         <div
-                            class="bg-slate-50 rounded-2xl p-4 border border-slate-100/50"
+                            class="bg-slate-50 rounded-xl p-3 border border-slate-100/50"
                         >
                             <p
-                                class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1"
+                                class="text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1"
                             >
                                 Status
                             </p>
@@ -632,15 +653,15 @@
                                         : 'bg-slate-300'}"
                                 ></div>
                                 <span
-                                    class="text-[11px] font-black text-slate-800 uppercase tracking-tight"
+                                    class="text-xs font-semibold text-slate-800"
                                     >{policy.status}</span
                                 >
                             </div>
                         </div>
                     </div>
 
-                    <!-- Details Accordion Section (Simplified View) -->
-                    <div class="space-y-5 mb-8">
+                    <!-- Details Section -->
+                    <div class="space-y-4 mb-6">
                         <div class="flex items-center gap-4 text-slate-600">
                             <div
                                 class="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400"
@@ -684,24 +705,24 @@
                 </div>
 
                 <!-- Card Footer / Claims Procedure CTA -->
-                <div class="mt-auto p-2">
+                <div class="mt-auto p-3">
                     <div
-                        class="bg-primary rounded-[2rem] p-6 text-white flex items-center justify-between group/footer hover:bg-slate-900 transition-colors duration-500 cursor-pointer"
+                        class="bg-primary rounded-xl p-4 text-white flex items-center justify-between group/footer hover:bg-slate-900 transition-colors duration-300 cursor-pointer"
                     >
                         <div>
                             <p
-                                class="text-[10px] font-black uppercase tracking-widest opacity-70 mb-1"
+                                class="text-[10px] font-semibold uppercase tracking-wide opacity-70 mb-1"
                             >
                                 Claims Procedure
                             </p>
-                            <h4 class="font-bold text-sm tracking-tight">
+                            <h4 class="font-semibold text-sm">
                                 Access Support Guides
                             </h4>
                         </div>
                         <div
-                            class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center group-hover/footer:translate-x-1 transition-transform"
+                            class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center group-hover/footer:translate-x-1 transition-transform"
                         >
-                            <ArrowRight size={20} />
+                            <ArrowRight size={18} />
                         </div>
                     </div>
                 </div>
@@ -716,118 +737,241 @@
                         encouragement="Start with just your life insurance. Add health, auto, and home policies as you have time."
                         icon={Shield}
                         iconClass="text-indigo-500"
-                        ctaLabel="Document first policy"
+                        ctaLabel="Share my first policy"
                         onAction={() => (showAddModal = true)}
                     />
+                </div>
+
+                <!-- Sample Data GhostRows -->
+                <div class="col-span-full mt-8">
+                    <p class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-4 text-center">Example entries to inspire you</p>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4 opacity-60">
+                        {#each getSmartSamples($language).insurance || [] as sample}
+                            <GhostRow
+                                name={sample.policyName}
+                                subtitle={`${sample.insurer} - ${sample.insuranceType}`}
+                                type="Policy"
+                                value={sample.premiumAmount}
+                                onClick={() => {
+                                    newPolicy = {
+                                        ...newPolicy,
+                                        policyName: sample.policyName,
+                                        insuranceType: sample.insuranceType,
+                                        insurer: sample.insurer,
+                                        policyNumber: sample.policyNumber,
+                                        premiumAmount: sample.premiumAmount,
+                                        premiumFrequency: sample.premiumFrequency,
+                                        beneficiaries: sample.beneficiaries,
+                                        status: sample.status,
+                                        notes: sample.notes
+                                    };
+                                    showAddModal = true;
+                                }}
+                            >
+                                <svelte:fragment slot="icon">
+                                    {@const Icon = typeIcons[sample.insuranceType] || Shield}
+                                    <Icon size={20} class="text-slate-400" />
+                                </svelte:fragment>
+                            </GhostRow>
+                        {/each}
+                    </div>
                 </div>
             {/if}
         {/each}
     </div>
+    {:else}
+        <!-- Table View -->
+        {#if filteredPolicies.length === 0 && searchQuery === ""}
+            <EmptyState
+                title="Protect your family's financial future"
+                whyMatters="<strong>Life insurance ensures your family has financial security when you're no longer here to provide it.</strong> Without documentation, they may never find these benefits—policies sit unclaimed, beneficiaries go unpaid, and the protection you worked for goes to waste.<br/><br/>Cataloging your policies here means your family will know exactly what coverage exists, who to contact, and how to file claims. It turns a confusing maze of paperwork into a clear roadmap during their darkest time."
+                encouragement="Start with just your life insurance. Add health, auto, and home policies as you have time."
+                icon={Shield}
+                iconClass="text-indigo-500"
+                ctaLabel="Share my first policy"
+                onAction={() => (showAddModal = true)}
+            />
+        {:else}
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <table class="w-full">
+                    <thead class="bg-slate-50 border-b border-slate-200">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Policy</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Type</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Carrier</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Premium</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Beneficiary</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Status</th>
+                            <th class="px-4 py-3 text-right text-xs font-bold uppercase text-slate-500">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {#each filteredPolicies as policy (policy.id)}
+                            {@const Icon = typeIcons[policy.insuranceType] || Shield}
+                            <tr class="hover:bg-slate-50 transition-colors group">
+                                <td class="px-4 py-3">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-lg flex items-center justify-center {typeColors[policy.insuranceType]}">
+                                            <Icon size={16} />
+                                        </div>
+                                        <div>
+                                            <span class="font-medium text-slate-800">{policy.policyName}</span>
+                                            <div class="text-xs text-slate-400">{policy.policyNumber || '-'}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-slate-600">{policy.insuranceType}</td>
+                                <td class="px-4 py-3 text-sm text-slate-600">{policy.insurer}</td>
+                                <td class="px-4 py-3 text-sm text-slate-600">
+                                    ${policy.premiumAmount}/{policy.premiumFrequency?.slice(0, 3) || 'mo'}
+                                </td>
+                                <td class="px-4 py-3 text-sm text-slate-600 max-w-[150px] truncate">
+                                    {policy.beneficiaries || '-'}
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="flex items-center gap-1.5">
+                                        <div class="w-2 h-2 rounded-full {policy.status === 'Active' ? 'bg-emerald-500' : 'bg-slate-300'}"></div>
+                                        <span class="text-xs font-medium text-slate-600">{policy.status}</span>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                            onclick={() => editPolicy(policy)}
+                                            class="p-1.5 text-slate-400 hover:text-primary transition-colors"
+                                        >
+                                            <Pencil size={14} />
+                                        </button>
+                                        <button
+                                            onclick={() => deletePolicy(String(policy.id), policy.policyName)}
+                                            class="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        {/each}
+                    </tbody>
+                </table>
+            </div>
+        {/if}
+    {/if}
 </div>
+{/if}
 
 <!-- Premium Add/Edit Modal -->
 {#if showAddModal}
     <div
-        class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6"
-        transition:fade={{ duration: 300 }}
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+        role="dialog"
+        aria-modal="true"
     >
+        <!-- Backdrop -->
         <div
-            class="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+            class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+            transition:fade={{ duration: 200 }}
             onclick={resetForm}
+            onkeydown={(e) => e.key === "Enter" && resetForm()}
+            role="button"
+            tabindex="0"
+            aria-label="Close modal"
         ></div>
 
+        <!-- Panel -->
         <div
-            class="bg-white rounded-[3rem] shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col relative"
-            transition:slide={{ duration: 500, easing: quintOut }}
+            class="relative bg-white rounded-2xl shadow-2xl ring-1 ring-slate-900/5 w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+            transition:scale={{ duration: 250, start: 0.95, easing: cubicOut }}
         >
             <!-- Modal Header -->
-            <div class="p-10 pb-0 flex items-center justify-between">
-                <div>
+            <div class="flex items-start justify-between px-6 py-4 border-b border-slate-100 bg-white sticky top-0 z-10">
+                <div class="flex-1 pr-4">
                     <nav
-                        class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-3"
+                        class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-2"
                     >
                         <Heart size={12} />
                         <span>Acts of Love</span>
                     </nav>
-                    <h2
-                        class="text-4xl font-black text-slate-900 tracking-tighter"
-                    >
-                        {isEditing ? "Update" : "Share"}
-                        <span class="text-primary">Protection Details</span>
+                    <h2 class="font-serif font-bold text-xl text-slate-800">
+                        {isEditing ? "Update" : "Share"} Protection Details
                     </h2>
+                    <p class="text-slate-500 text-sm mt-2 leading-relaxed">
+                        Document your insurance coverage so your family knows what protection exists when they need it most.
+                    </p>
                 </div>
                 <button
                     onclick={resetForm}
-                    class="w-14 h-14 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:rotate-90 transition-all duration-500"
+                    class="p-2 -mr-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors flex-shrink-0"
+                    aria-label="Close"
                 >
-                    <X size={24} strokeWidth={3} />
+                    <X class="w-5 h-5" />
                 </button>
             </div>
 
-            <div class="flex-1 overflow-y-auto p-10 space-y-12">
+            <div class="flex-1 overflow-y-auto p-6 space-y-8">
                 <!-- Group 1: Identity -->
                 <section>
                     <h3
-                        class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3"
+                        class="text-xs font-bold uppercase text-slate-500 tracking-wide mb-4 flex items-center gap-3"
                     >
                         <span class="w-6 h-[2px] bg-primary rounded-full"
                         ></span>
                         Policy Identity
                     </h3>
                     <div
-                        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
                     >
-                        <div class="space-y-3">
+                        <div class="space-y-1.5">
                             <label
-                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Policy Title</label
                             >
                             <input
                                 type="text"
                                 bind:value={newPolicy.policyName}
                                 placeholder="e.g. Master Life Policy"
-                                class="w-full bg-slate-50 border-2 border-transparent focus:border-primary focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all"
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
                             />
                         </div>
-                        <div class="space-y-3">
+                        <div class="space-y-1.5">
                             <label
-                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Insurance Classification</label
                             >
                             <select
                                 bind:value={newPolicy.insuranceType}
-                                class="w-full bg-slate-50 border-2 border-transparent focus:border-primary focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all appearance-none cursor-pointer"
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800 appearance-none cursor-pointer"
                             >
                                 {#each types.filter((t) => t !== "All") as type}
                                     <option value={type}>{type}</option>
                                 {/each}
                             </select>
                         </div>
-                        <div class="space-y-3">
+                        <div class="space-y-1.5">
                             <label
-                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Insurance Carrier</label
                             >
                             <input
                                 type="text"
                                 bind:value={newPolicy.insurer}
                                 placeholder="e.g. Prudential Financial"
-                                class="w-full bg-slate-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all"
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
                             />
                         </div>
                     </div>
 
-                    <!-- NEW: Policy Document Upload -->
-                    <div class="mt-8">
+                    <!-- Policy Document Upload -->
+                    <div class="mt-6">
                         <h3
-                            class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-3"
+                            class="text-xs font-bold uppercase text-slate-500 tracking-wide mb-4 flex items-center gap-3"
                         >
-                            <span class="w-6 h-[2px] bg-indigo-600 rounded-full"
+                            <span class="w-6 h-[2px] bg-primary rounded-full"
                             ></span>
                             Policy Documentation
                         </h3>
                         <div
-                            class="bg-indigo-50/30 rounded-2xl p-6 border border-indigo-100/50"
+                            class="bg-slate-50 rounded-xl p-4 border border-slate-200"
                         >
                             <UniversalUploader
                                 label="Upload Policy Document (PDF/Text/Image)"
@@ -853,63 +997,63 @@
 
                 <!-- Group 2: Financial -->
                 <section
-                    class="bg-indigo-50/50 rounded-[2.5rem] p-8 border border-indigo-100/50"
+                    class="bg-slate-50 rounded-2xl p-6 border border-slate-200"
                 >
                     <h3
-                        class="text-xs font-black text-indigo-600 uppercase tracking-[0.2em] mb-6 flex items-center gap-3"
+                        class="text-xs font-bold uppercase text-primary tracking-wide mb-4 flex items-center gap-3"
                     >
-                        <span class="w-6 h-[2px] bg-indigo-600 rounded-full"
+                        <span class="w-6 h-[2px] bg-primary rounded-full"
                         ></span>
                         Premium Structure
                     </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <div class="space-y-3">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="space-y-1.5">
                             <label
-                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-mono"
+                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Premium Amount ($)</label
                             >
                             <div class="relative">
                                 <DollarSign
                                     size={16}
-                                    class="absolute left-4 top-4.5 text-indigo-600"
+                                    class="absolute left-4 top-3.5 text-primary"
                                 />
                                 <input
                                     type="number"
                                     bind:value={newPolicy.premiumAmount}
-                                    class="w-full bg-white border-2 border-transparent focus:border-indigo-600 rounded-2xl p-4 pl-10 text-sm font-black outline-none transition-all shadow-sm"
+                                    class="w-full px-4 py-3 pl-10 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
                                 />
                             </div>
                         </div>
-                        <div class="space-y-3">
+                        <div class="space-y-1.5">
                             <label
-                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Billing Interval</label
                             >
                             <select
                                 bind:value={newPolicy.premiumFrequency}
-                                class="w-full bg-white border-2 border-transparent focus:border-indigo-600 rounded-2xl p-4 text-sm font-black outline-none transition-all shadow-sm appearance-none cursor-pointer"
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800 appearance-none cursor-pointer"
                             >
                                 <option>Monthly</option>
                                 <option>Quarterly</option>
                                 <option>Annually</option>
                             </select>
                         </div>
-                        <div class="space-y-3">
+                        <div class="space-y-1.5">
                             <label
-                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Status Tracking</label
                             >
                             <div
-                                class="flex bg-white rounded-2xl p-1 shadow-sm border border-slate-100"
+                                class="flex bg-white rounded-xl p-1 border border-slate-200"
                             >
                                 {#each ["Active", "Pending", "Inactive"] as status}
                                     <button
                                         type="button"
                                         onclick={() =>
                                             (newPolicy.status = status as any)}
-                                        class="flex-1 py-3 text-[10px] font-black uppercase tracking-tighter rounded-xl transition-all {newPolicy.status ===
+                                        class="flex-1 py-2.5 text-xs font-semibold rounded-lg transition-all {newPolicy.status ===
                                         status
-                                            ? 'bg-indigo-600 text-white'
+                                            ? 'bg-primary text-primary-foreground'
                                             : 'text-slate-400 hover:bg-slate-50'}"
                                     >
                                         {status}
@@ -923,52 +1067,52 @@
                 <!-- Group 3: Legacy Details -->
                 <section>
                     <h3
-                        class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3"
+                        class="text-xs font-bold uppercase text-slate-500 tracking-wide mb-4 flex items-center gap-3"
                     >
                         <span class="w-6 h-[2px] bg-rose-500 rounded-full"
                         ></span>
                         Legacy Information
                     </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div class="space-y-3">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-1.5">
                             <label
-                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Designated Beneficiaries</label
                             >
                             <input
                                 type="text"
                                 bind:value={newPolicy.beneficiaries}
                                 placeholder="Split 50/50 between children..."
-                                class="w-full bg-slate-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all"
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
                             />
                         </div>
-                        <div class="space-y-3">
+                        <div class="space-y-1.5">
                             <label
-                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Agent / Point of Contact</label
                             >
                             <input
                                 type="text"
                                 bind:value={newPolicy.agentName}
                                 placeholder="Full name and company name"
-                                class="w-full bg-slate-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all"
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
                             />
                         </div>
-                        <div class="space-y-3 md:col-span-2">
+                        <div class="space-y-1.5 md:col-span-2">
                             <label
-                                class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 flex items-center gap-2"
+                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1 flex items-center gap-2"
                             >
                                 Claims Filing Instructions
                                 <span
-                                    class="bg-rose-100 text-rose-600 px-2 py-0.5 rounded-lg text-[8px] font-black tracking-[0.2em]"
+                                    class="bg-rose-100 text-rose-600 px-2 py-0.5 rounded-lg text-[8px] font-bold tracking-wide"
                                     >CRITICAL</span
                                 >
                             </label>
                             <textarea
                                 bind:value={newPolicy.claimsProcedure}
-                                rows="3"
+                                rows="4"
                                 placeholder="Detailed step-by-step for the family..."
-                                class="w-full bg-slate-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl p-6 text-sm font-bold outline-none transition-all resize-none leading-relaxed"
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800 resize-none"
                             ></textarea>
                         </div>
                     </div>
@@ -977,9 +1121,9 @@
                 <!-- Custom Fields Section -->
                 <section>
                     <h3
-                        class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3"
+                        class="text-xs font-bold uppercase text-slate-500 tracking-wide mb-4 flex items-center gap-3"
                     >
-                        <span class="w-6 h-[2px] bg-indigo-500 rounded-full"></span>
+                        <span class="w-6 h-[2px] bg-primary rounded-full"></span>
                         Additional Details
                     </h3>
                     <CustomFieldsManager
@@ -989,22 +1133,22 @@
                 </section>
             </div>
 
-            <!-- Modal Actions -->
+            <!-- Modal Footer -->
             <div
-                class="p-10 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-6"
+                class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3"
             >
                 <button
                     onclick={resetForm}
-                    class="text-sm font-black text-slate-400 hover:text-slate-900 uppercase tracking-[0.2em] transition-colors"
+                    class="px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-200 transition-colors"
                 >
-                    Discard Changes
+                    Not right now
                 </button>
                 <button
                     onclick={handleAddPolicy}
                     disabled={!newPolicy.policyName || !newPolicy.insurer}
-                    class="bg-indigo-600 text-white px-12 py-5 rounded-3xl font-black shadow-2xl shadow-indigo-600/30 hover:scale-[1.03] active:scale-[0.98] transition-all disabled:opacity-30 disabled:hover:scale-100"
+                    class="px-6 py-2.5 rounded-xl font-semibold bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    Commit to Vault
+                    {isEditing ? "Save my updates" : "Save my thoughts"}
                 </button>
             </div>
         </div>

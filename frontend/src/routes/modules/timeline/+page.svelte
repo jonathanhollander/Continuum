@@ -16,7 +16,9 @@
         Trophy,
         Trash2,
         Mail,
+        Loader2,
     } from "lucide-svelte";
+    import { onMount } from "svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
 
     import {
@@ -27,6 +29,12 @@
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
 
     let parsedCustomAttributes = $state<Record<string, any>>({});
+    let isLoading = $state(true);
+
+    onMount(async () => {
+        await timelineStore.sync?.();
+        isLoading = false;
+    });
 
     // --- State & Types ---
     // LifeEvent imported from store
@@ -185,11 +193,16 @@
     }
 </script>
 
+{#if isLoading}
+    <div class="flex items-center justify-center py-12">
+        <Loader2 class="w-8 h-8 animate-spin text-primary" />
+    </div>
+{:else}
 <div class="max-w-6xl mx-auto p-8 animate-in fade-in duration-500">
     <!-- Add Modal -->
     {#if showAddModal}
         <div
-            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
             transition:fade
         >
             <div
@@ -810,6 +823,7 @@
         </div>
     {/if}
 </div>
+{/if}
 
 <style>
     /* Custom Scrollbar for the Memento Grid */

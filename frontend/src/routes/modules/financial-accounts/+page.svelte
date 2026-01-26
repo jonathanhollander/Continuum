@@ -1,18 +1,25 @@
 <script lang="ts">
     import AssetManager from "$lib/components/archetypes/AssetManager.svelte";
-    import { Wallet, Search, ExternalLink, Sparkles } from "lucide-svelte"; // icons from original
+    import { Sparkles, Loader2 } from "lucide-svelte";
+    import { onMount } from "svelte";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
     import LegalDisclaimer from "$lib/components/common/LegalDisclaimer.svelte";
-    import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte"; // Moved inside
+    import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
+    import Modal from "$lib/components/ui/Modal.svelte";
     import { registerSync } from "$lib/services/sync.svelte";
     import { t } from "$lib/stores/localization";
-    import { fade, fly } from "svelte/transition";
 
     let showWizard = $state(false);
     let reloadKey = $state(0);
+    let isLoading = $state(true);
 
     // Initialize Sync Service for Financial Assets
     const assetSync = registerSync("financial_assets", "financial_accounts");
+
+    onMount(async () => {
+        await assetSync.init();
+        isLoading = false;
+    });
 
     const wizardSteps = [
         {
@@ -100,23 +107,17 @@
     }
 </script>
 
-{#if showWizard}
-    <div
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
-        transition:fade
-    >
-        <div class="w-full max-w-2xl relative" in:fly={{ y: 20 }}>
-            <button
-                class="absolute -top-12 right-0 text-white/50 hover:text-white"
-                onclick={() => (showWizard = false)}>Close</button
-            >
-            <ConciergeFlow
-                steps={wizardSteps}
-                on:complete={handleWizardComplete}
-            />
-        </div>
+{#if isLoading}
+    <div class="flex items-center justify-center py-12">
+        <Loader2 class="w-8 h-8 animate-spin text-primary" />
     </div>
-{/if}
+{:else}
+<Modal bind:open={showWizard} title={$t("wizard.start")} maxWidth="max-w-2xl">
+    <ConciergeFlow
+        steps={wizardSteps}
+        on:complete={handleWizardComplete}
+    />
+</Modal>
 
 <div class="max-w-6xl mx-auto p-8">
     <LivingBlueprintHeader
@@ -140,3 +141,4 @@
         <AssetManager module={{ id: "assets-main" }} />
     {/key}
 </div>
+{/if}

@@ -16,6 +16,7 @@
         UserCheck,
         FingerprintPattern as Fingerprint,
         X,
+        Loader2,
     } from "lucide-svelte";
     import { onMount } from "svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
@@ -25,6 +26,10 @@
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import { activityLog } from "$lib/stores/activityLog.svelte";
+    import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
+    import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
+
+    let viewMode = $state<ViewMode>('card');
 
     // Sync Integration
     import { registerSync } from "$lib/services/sync.svelte";
@@ -97,6 +102,16 @@
     // Use the unified store's sync instance
     let assets = $derived(digitalAssetsSync.items);
     let showWizard = $state(false);
+    let isLoading = $state(true);
+
+    onMount(async () => {
+        await Promise.all([
+            statusSync.init(),
+            drillSync.init(),
+            digitalAssetsSync.init()
+        ]);
+        isLoading = false;
+    });
 
     // Initialization Logic
     $effect(() => {
@@ -220,6 +235,11 @@
     }
 </script>
 
+{#if isLoading}
+    <div class="flex items-center justify-center py-12">
+        <Loader2 class="w-8 h-8 animate-spin text-primary" />
+    </div>
+{:else}
 <div class="max-w-5xl mx-auto p-8 animate-in fade-in duration-500">
     <!-- Header -->
     <div class="mb-12 text-center">
@@ -858,18 +878,21 @@
                     Key accounts your executor needs access to.
                 </p>
             </div>
-            <button
-                onclick={() => (showWizard = true)}
-                class="bg-[#304743] text-white px-4 py-2 rounded-full font-bold hover:bg-[#2a3f3b] transition-colors flex items-center gap-2 text-sm"
-            >
-                <Siren size={16} /> Run Discovery Wizard
-            </button>
+            <div class="flex items-center gap-3">
+                <DataViewToggle module="digital-guardian" onchange={(mode) => viewMode = mode} />
+                <button
+                    onclick={() => (showWizard = true)}
+                    class="bg-[#304743] text-white px-4 py-2 rounded-full font-bold hover:bg-[#2a3f3b] transition-colors flex items-center gap-2 text-sm"
+                >
+                    <Siren size={16} /> Run Discovery Wizard
+                </button>
+            </div>
         </div>
 
         <div class="space-y-3">
             {#if showWizard}
                 <div
-                    class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+                    class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
                     transition:fade
                 >
                     <div
@@ -907,41 +930,81 @@
                     </GhostRow>
                 {/each}
             {:else}
-                {#each assets as asset (asset.id)}
-                    <div
-                        class="bg-white p-4 rounded-xl border border-slate-100 flex justify-between items-center shadow-sm"
-                        transition:slide
-                    >
-                        <div class="flex items-center gap-4">
-                            <div
-                                class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary"
-                            >
-                                {#if asset.type === "Email"}
-                                    <Mail size={18} />
-                                {:else}
-                                    <Key size={18} />
-                                {/if}
-                            </div>
-                            <div>
-                                <div class="font-bold text-slate-800">
-                                    {asset.platform}
-                                </div>
-                                <div
-                                    class="text-xs text-slate-500 uppercase tracking-wider"
-                                >
-                                    {asset.username} - {asset.description}
-                                </div>
-                            </div>
-                        </div>
-                        <button
-                            onclick={() => deleteAsset(asset.id)}
-                            class="text-red-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-full transition-colors"
+                {#if viewMode === 'card'}
+                    {#each assets as asset (asset.id)}
+                        <div
+                            class="bg-white p-4 rounded-xl border border-slate-100 flex justify-between items-center shadow-sm"
+                            transition:slide
                         >
-                            <X size={16} />
-                        </button>
+                            <div class="flex items-center gap-4">
+                                <div
+                                    class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary"
+                                >
+                                    {#if asset.type === "Email"}
+                                        <Mail size={18} />
+                                    {:else}
+                                        <Key size={18} />
+                                    {/if}
+                                </div>
+                                <div>
+                                    <div class="font-bold text-slate-800">
+                                        {asset.platform}
+                                    </div>
+                                    <div
+                                        class="text-xs text-slate-500 uppercase tracking-wider"
+                                    >
+                                        {asset.username} - {asset.description}
+                                    </div>
+                                </div>
+                            </div>
+                            <button
+                                onclick={() => deleteAsset(asset.id)}
+                                class="text-red-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-full transition-colors"
+                            >
+                                <X size={16} />
+                            </button>
+                        </div>
+                    {/each}
+                {:else}
+                    <!-- Table View -->
+                    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                        <table class="w-full">
+                            <thead class="bg-slate-50 border-b border-slate-200">
+                                <tr>
+                                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Platform</th>
+                                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Username</th>
+                                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Type</th>
+                                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Description</th>
+                                    <th class="text-right px-4 py-3 text-xs font-bold uppercase text-slate-500">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                {#each assets as asset (asset.id)}
+                                    <tr class="hover:bg-slate-50 transition-colors">
+                                        <td class="px-4 py-3 font-medium text-slate-800">{asset.platform}</td>
+                                        <td class="px-4 py-3 text-slate-600">{asset.username}</td>
+                                        <td class="px-4 py-3">
+                                            <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-medium">
+                                                {asset.type}
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-3 text-slate-500 text-sm">{asset.description}</td>
+                                        <td class="px-4 py-3 text-right">
+                                            <button
+                                                onclick={() => deleteAsset(asset.id)}
+                                                class="text-red-400 hover:text-red-600 p-1 hover:bg-red-50 rounded transition-colors"
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                {/each}
+                            </tbody>
+                        </table>
                     </div>
-                {/each}
+                {/if}
             {/if}
         </div>
     </div>
 </div>
+{/if}
