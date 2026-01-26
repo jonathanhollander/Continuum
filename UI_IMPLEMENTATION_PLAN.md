@@ -39,7 +39,7 @@ This document provides a detailed, file-by-file implementation plan to bring **A
 
 ### Required Elements Checklist
 
-Every module page MUST have these 12 elements:
+Every module page MUST have these 13 mandatory elements (+ 4 recommended):
 
 | # | Element | Component | What It Does |
 |---|---------|-----------|--------------|
@@ -48,36 +48,41 @@ Every module page MUST have these 12 elements:
 | 3 | Add Data Button | Primary button with Plus icon | Clear entry point (compassionate text) |
 | 4 | AI Helper Section | `AIPromptBar` or `ConciergeFlow` | What AI will do for the user |
 | 5 | Data Display | Cards/Grid/List | View existing data |
-| 6 | **View Toggle** | `DataViewToggle` + `DataView` | Switch between Card and Table views **(MANDATORY)** |
-| 7 | Edit/Delete Actions | Icon buttons on hover | Modify existing data |
-| 8 | Empty State | `EmptyState` | Guidance when no data |
-| 9 | Success Feedback | `Affirmation` | Positive reinforcement |
-| 10 | Loading State | Spinner/Skeleton | Sync progress indicator |
-| 11 | **Custom Fields** | `CustomFieldsManager` | User-extensible data fields **(MANDATORY)** |
-| 12 | Error Handling | Error banner | Graceful failure states |
+| 6 | **View Toggle** | `DataViewToggle` + `DataView` | Switch between Card and Table views |
+| 7 | **Sample Data** | `GhostRow` + `smartSamples.ts` | Show examples when empty |
+| 8 | Edit/Delete Actions | Icon buttons on hover | Modify existing data |
+| 9 | Empty State | `EmptyState` | Guidance when no data |
+| 10 | Success Feedback | `Affirmation` | Positive reinforcement |
+| 11 | Loading State | Spinner/Skeleton | Sync progress indicator |
+| 12 | **Custom Fields** | `CustomFieldsManager` | User-extensible data fields |
+| 13 | Error Handling | Error banner | Graceful failure states |
 
-### Current Compliance Matrix (18 Modules)
+### Current Compliance Matrix (22 Data Modules)
 
-| Module | Header | Explain | Add | AI | View | **ViewToggle** | Edit | Empty | Affirm | Load | **CustomFields** | Error |
-|--------|--------|---------|-----|-----|------|----------------|------|-------|--------|------|------------------|-------|
-| contacts | ✓ | ✓ | ✓ | ✓ | ✓ | **✗** | ✓ | ✓ | ✓ | ✗ | **✓** | ~ |
-| medical | ✓ | ✓ | ✓ | ✗ | ✓ | **✗** | ✓ | ✓ | ✓ | ✗ | **✓** | ~ |
-| pets | ✓ | ✓ | ✓ | ✗ | ✓ | **✗** | ✓ | ✓ | ✓ | ✗ | **✓** | ~ |
-| heirlooms | ✓ | ✓ | ✓ | ✓ | ✓ | **✗** | ✓ | ✓ | ✓ | ~ | **✓** | ~ |
-| financial | ✓ | ✓ | ✓ | ✓ | ✓ | **✗** | ✓ | ✓ | ~ | ~ | **✗** | ~ |
-| letters | ✓ | ✓ | ✓ | ✓ | ✓ | **✗** | ✓ | ✓ | ~ | ✓ | **✗** | ✓ |
-| property | ✓ | ✓ | ✓ | ✓ | ✓ | **✗** | ✓ | ~ | ~ | ~ | **✓** | ~ |
-| insurance | ✓ | ✓ | ✓ | ✗ | ✓ | **✗** | ✓ | ✓ | ~ | ~ | **✓** | ~ |
-| digital-guardian | ✓ | ✓ | ✓ | ✓ | ✓ | **✗** | ✓ | ✓ | ~ | ~ | **✗** | ~ |
-| anniversary | ✓ | ✓ | ✓ | ✗ | ✓ | **✗** | ✓ | ~ | ~ | ~ | **✗** | ~ |
-| time-capsule | ✓ | ✓ | ✓ | ✗ | ✓ | **✗** | ✓ | ✓ | ~ | ~ | **✓** | ~ |
-| legacy-journal | ✓ | ✗ | ✗ | ✗ | ✓ | **✗** | ~ | ✗ | ✗ | ✗ | **✗** | ✗ |
-| subscriptions | ✓ | ✓ | ✓ | ✗ | ✓ | **✗** | ✓ | ✓ | ~ | ✗ | **✓** | ~ |
-| visual-memories | ✓ | ✓ | ✓ | ✗ | ✓ | **✗** | ✓ | ✓ | ~ | ✗ | **✗** | ~ |
-| calendar | ✓ | ✓ | ✓ | ✗ | ✓ | **✗** | ✓ | ✓ | ~ | ~ | **✓** | ~ |
-| funeral | ✓ | ✓ | ✓ | ✗ | ✓ | **✗** | ✓ | ✓ | ~ | ~ | **✓** | ~ |
-| timeline | ✓ | ✓ | ✓ | ✗ | ✓ | **✗** | ✓ | ✓ | ~ | ~ | **✓** | ~ |
-| advanced-registry | ✓ | ✓ | ✓ | ✗ | ✓ | **✗** | ✓ | ✓ | ~ | ~ | **✓** | ~ |
+| Module | Header | Explain | Add | AI | View | ViewToggle | SampleData | Edit | Empty | Affirm | Load | CustomFields | Error |
+|--------|--------|---------|-----|-----|------|------------|------------|------|-------|--------|------|--------------|-------|
+| contacts | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✗ | ✓ | ✓ | ✓ | ✗ | ✓ | ~ |
+| medical | ✓ | ✓ | ✓ | ✗ | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | ~ |
+| pets | ✓ | ✓ | ✓ | ✗ | ✓ | ✗ | ✗ | ✓ | ✓ | ✓ | ✗ | ✓ | ~ |
+| heirlooms | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ | ~ | ✓ | ~ |
+| financial-accounts | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✗ | ✓ | ✓ | ~ | ~ | ✗ | ~ |
+| property | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ~ | ~ | ~ | ✓ | ~ |
+| insurance | ✓ | ✓ | ✓ | ✗ | ✓ | ✗ | ✗ | ✓ | ✓ | ~ | ~ | ✓ | ~ |
+| subscriptions | ✓ | ✓ | ✓ | ✗ | ✓ | ✗ | ✗ | ✓ | ✓ | ~ | ✗ | ✓ | ~ |
+| letters | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✗ | ✓ | ✓ | ~ | ✓ | ✗ | ✓ |
+| time-capsule | ✓ | ✓ | ✓ | ✗ | ✓ | ✗ | ✗ | ✓ | ✓ | ~ | ~ | ✓ | ~ |
+| calendar | ✓ | ✓ | ✓ | ✗ | ✓ | ✗ | ✗ | ✓ | ✓ | ~ | ~ | ✓ | ~ |
+| timeline | ✓ | ✓ | ✓ | ✗ | ✓ | ✗ | ✗ | ✓ | ✓ | ~ | ~ | ✓ | ~ |
+| funeral | ✓ | ✓ | ✓ | ✗ | ✓ | ✗ | ✗ | ✓ | ✓ | ~ | ~ | ✓ | ~ |
+| legal-documents | ✓ | ✓ | ✓ | ✗ | ✓ | ✗ | ✗ | ✓ | ✓ | ~ | ~ | ✗ | ~ |
+| home-manual | ✓ | ~ | ✓ | ✗ | ✓ | ✗ | ✗ | ✓ | ~ | ~ | ~ | ✗ | ~ |
+| anniversary-manager | ✓ | ✓ | ✓ | ✗ | ✓ | ✗ | ✗ | ✓ | ~ | ~ | ~ | ✗ | ~ |
+| visual-memories | ✓ | ✓ | ✓ | ✗ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ✗ | ✗ | ~ |
+| legacy-journal | ✓ | ✗ | ✗ | ✗ | ✓ | ✗ | ✗ | ~ | ✗ | ✗ | ✗ | ✗ | ✗ |
+| digital-guardian | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ~ | ~ | ✗ | ~ |
+| advanced-registry | ✓ | ✓ | ✓ | ✗ | ✓ | ✗ | ✗ | ✓ | ✓ | ~ | ~ | ✓ | ~ |
+| treasure-hunt | ✓ | ~ | ✓ | ✗ | ✓ | ✗ | ✗ | ✓ | ~ | ~ | ~ | ✗ | ~ |
+| qr-codes | ✓ | ~ | ✓ | ✗ | ✓ | ✗ | ✗ | ✓ | ~ | ~ | ~ | ✗ | ~ |
 
 **Legend:** ✓ = Compliant, ~ = Partial, ✗ = Missing
 
@@ -85,12 +90,13 @@ Every module page MUST have these 12 elements:
 
 | Gap | % Missing | Modules Affected | Priority |
 |-----|-----------|-----------------|----------|
-| **View Toggle (Card/Table)** | **100%** | **ALL 18 data modules** | **P0** |
-| **CustomFieldsManager** | **38%** | **7 data modules** | **P0** |
-| Loading States | 87% | 13 modules | **P0** |
-| AI Helper | 53% | 8 modules | **P0** |
-| Affirmation | 60% | 9 modules | **P1** |
-| Error Handling | 80% | 12 modules | **P1** |
+| **View Toggle (Card/Table)** | **100%** | **ALL 22 data modules** | **P0** |
+| **Sample Data (GhostRow)** | **77%** | **17 data modules** | **P0** |
+| **CustomFieldsManager** | **45%** | **10 data modules** | **P0** |
+| Loading States | 77% | 17 modules | **P0** |
+| AI Helper | 68% | 15 modules | **P0** |
+| Affirmation | 77% | 17 modules | **P1** |
+| Error Handling | 86% | 19 modules | **P1** |
 
 ### Phase 0 Implementation Tasks
 
@@ -481,23 +487,24 @@ For EVERY data module, update to use the view components:
 
 **Reference:** See `UI_CONSISTENCY_STANDARDS.md` Section 5.7.3 for sample data requirements.
 
-##### Current Coverage
+##### Current Coverage (Verified via Code Audit)
 
-| Module | Sample Data Key | Status |
-|--------|-----------------|--------|
-| contacts | `contacts` | ✅ Complete |
-| medical | `medical` | ✅ Complete |
-| pets | `pets` | ✅ Complete |
-| heirlooms | `heirlooms` | ✅ Complete |
-| financial-accounts | `financial` | ✅ Complete |
-| property | `property` | ✅ Complete |
-| insurance | `insurance` | ✅ Complete |
-| subscriptions | `subscriptions` | ✅ Complete |
-| visual-memories | `memories` | ✅ Complete |
-| digital-guardian | `digital` | ✅ Complete |
-| family-hub | `family` | ✅ Complete |
+**smartSamples.ts has data for these modules, but only 5 modules actually RENDER GhostRow:**
 
-##### Missing Sample Data (9 modules)
+| Module | Sample Data in smartSamples.ts | Actually Renders GhostRow | Status |
+|--------|-------------------------------|---------------------------|--------|
+| medical | ✅ Yes | ✅ Yes | ✅ Complete |
+| heirlooms | ✅ Yes | ✅ Yes | ✅ Complete |
+| property | ✅ Yes | ✅ Yes | ✅ Complete |
+| visual-memories | ✅ Yes | ✅ Yes | ✅ Complete |
+| digital-guardian | ✅ Yes | ✅ Yes | ✅ Complete |
+| contacts | ✅ Yes | ❌ No | ⚠️ Needs GhostRow |
+| pets | ✅ Yes | ❌ No | ⚠️ Needs GhostRow |
+| financial-accounts | ✅ Yes | ❌ No | ⚠️ Needs GhostRow |
+| insurance | ✅ Yes | ❌ No | ⚠️ Needs GhostRow |
+| subscriptions | ✅ Yes | ❌ No | ⚠️ Needs GhostRow |
+
+##### Missing Both Sample Data AND GhostRow Rendering (12 modules)
 
 | Module | Proposed Key | Sample Items Needed |
 |--------|--------------|---------------------|
@@ -510,6 +517,9 @@ For EVERY data module, update to use the view components:
 | home-manual | `homeManual` | "HVAC maintenance", "Garage door code" |
 | anniversary-manager | `anniversaries` | "Wedding anniversary", "Mom's birthday" |
 | legacy-journal | `journal` | "Life lessons for kids", "My childhood memories" |
+| advanced-registry | `registry` | "Art collection", "Wine cellar" |
+| treasure-hunt | `treasures` | "Hidden safe location", "Time capsule buried" |
+| qr-codes | `qrCodes` | "Medicine cabinet label", "Safe contents tag" |
 
 ##### Implementation Steps
 

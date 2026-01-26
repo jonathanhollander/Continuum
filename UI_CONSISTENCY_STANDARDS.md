@@ -30,6 +30,25 @@ This document establishes **binding UI standards** for Continuum to ensure a coh
 
 ---
 
+## Best Exemplar References
+
+When implementing a pattern, reference these modules as examples (verified via code audit):
+
+| Pattern | Best Exemplar Module | File Location |
+|---------|---------------------|---------------|
+| **LivingBlueprintHeader** | `medical` | `routes/modules/medical/+page.svelte` |
+| **Sample Data (GhostRow)** | `heirlooms` | `routes/modules/heirlooms/+page.svelte` |
+| **CustomFieldsManager** | `heirlooms`, `property` | `routes/modules/heirlooms/+page.svelte` |
+| **Affirmation Component** | `medical`, `contacts` | `routes/modules/medical/+page.svelte` |
+| **EmptyState Component** | `contacts` | `routes/modules/contacts/+page.svelte` |
+| **AI Helper Integration** | `heirlooms`, `contacts` | `routes/modules/heirlooms/+page.svelte` |
+| **Card Grid Layout** | `heirlooms` | `routes/modules/heirlooms/+page.svelte` |
+| **Modal with Description** | `medical` | `routes/modules/medical/+page.svelte` |
+
+**Note:** No module currently uses the standard `Modal.svelte` component or `DataViewToggle` - these must be implemented.
+
+---
+
 ## Table of Contents
 
 1. [Modal Standards](#1-modal-standards)

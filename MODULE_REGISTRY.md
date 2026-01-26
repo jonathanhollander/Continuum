@@ -127,30 +127,32 @@ Informational content without data entry.
 
 | Module | Modal | Forms | Blueprint | ViewToggle | SampleData | CustomFields | Tone | Overall |
 |--------|-------|-------|-----------|------------|------------|--------------|------|---------|
-| contacts | ⚠️ | ⚠️ | ✅ | ❌ | ❌ | ✅ | ⚠️ | 50% |
+| contacts | ⚠️ | ⚠️ | ✅ | ❌ | ❌ | ✅ | ⚠️ | 45% |
 | medical | ⚠️ | ⚠️ | ✅ | ❌ | ✅ | ✅ | ⚠️ | 55% |
-| pets | ⚠️ | ⚠️ | ✅ | ❌ | ✅ | ✅ | ⚠️ | 55% |
+| pets | ⚠️ | ⚠️ | ✅ | ❌ | ❌ | ✅ | ⚠️ | 45% |
 | heirlooms | ⚠️ | ⚠️ | ✅ | ❌ | ✅ | ✅ | ⚠️ | 55% |
-| financial-accounts | ⚠️ | ⚠️ | ✅ | ❌ | ✅ | ❌ | ⚠️ | 45% |
+| financial-accounts | ⚠️ | ⚠️ | ✅ | ❌ | ❌ | ❌ | ⚠️ | 35% |
 | property | ⚠️ | ⚠️ | ✅ | ❌ | ✅ | ✅ | ⚠️ | 55% |
-| insurance | ⚠️ | ⚠️ | ✅ | ❌ | ✅ | ✅ | ⚠️ | 55% |
-| subscriptions | ⚠️ | ⚠️ | ✅ | ❌ | ✅ | ✅ | ⚠️ | 55% |
+| insurance | ⚠️ | ⚠️ | ✅ | ❌ | ❌ | ✅ | ⚠️ | 45% |
+| subscriptions | ⚠️ | ⚠️ | ✅ | ❌ | ❌ | ✅ | ⚠️ | 45% |
 | letters | ⚠️ | ⚠️ | ✅ | ❌ | ❌ | ❌ | ⚠️ | 35% |
 | time-capsule | ⚠️ | ⚠️ | ✅ | ❌ | ❌ | ✅ | ⚠️ | 45% |
 | calendar | ⚠️ | ⚠️ | ✅ | ❌ | ❌ | ✅ | ⚠️ | 45% |
 | timeline | ⚠️ | ⚠️ | ✅ | ❌ | ❌ | ✅ | ⚠️ | 45% |
 | funeral | ⚠️ | ⚠️ | ✅ | ❌ | ❌ | ✅ | ⚠️ | 45% |
 | legal-documents | ⚠️ | ⚠️ | ✅ | ❌ | ❌ | ❌ | ⚠️ | 35% |
-| home-manual | ⚠️ | ⚠️ | ⚠️ | ❌ | ❌ | ❌ | ⚠️ | 30% |
-| anniversary-manager | ⚠️ | ⚠️ | ⚠️ | ❌ | ❌ | ❌ | ⚠️ | 30% |
+| home-manual | ⚠️ | ⚠️ | ⚠️ | ❌ | ❌ | ❌ | ⚠️ | 25% |
+| anniversary-manager | ⚠️ | ⚠️ | ⚠️ | ❌ | ❌ | ❌ | ⚠️ | 25% |
 | visual-memories | ⚠️ | ⚠️ | ✅ | ❌ | ✅ | ❌ | ⚠️ | 45% |
 | legacy-journal | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ⚠️ | 10% |
 | digital-guardian | ⚠️ | ⚠️ | ✅ | ❌ | ✅ | ❌ | ⚠️ | 45% |
 | advanced-registry | ⚠️ | ⚠️ | ✅ | ❌ | ❌ | ✅ | ⚠️ | 45% |
-| treasure-hunt | ⚠️ | ⚠️ | ⚠️ | ❌ | ❌ | ❌ | ⚠️ | 30% |
-| qr-codes | ⚠️ | ⚠️ | ⚠️ | ❌ | ❌ | ❌ | ⚠️ | 30% |
+| treasure-hunt | ⚠️ | ⚠️ | ⚠️ | ❌ | ❌ | ❌ | ⚠️ | 25% |
+| qr-codes | ⚠️ | ⚠️ | ⚠️ | ❌ | ❌ | ❌ | ⚠️ | 25% |
 
 **Legend:** ✅ Compliant | ⚠️ Partial | ❌ Missing/Non-compliant
+
+**Note:** SampleData compliance requires actual GhostRow rendering (5 modules verified compliant: medical, heirlooms, property, visual-memories, digital-guardian)
 
 ---
 
@@ -165,7 +167,7 @@ Informational content without data entry.
 | Guide/read-only pages | 2 |
 | Modules with View Toggle | 0 / 22 (0%) |
 | Modules with CustomFieldsManager | 12 / 22 (55%) |
-| Modules with Sample Data | 11 / 22 (50%) |
+| Modules with Sample Data (GhostRow) | 5 / 22 (23%) |
 | Modules with standard Modal | 0 / 22 (0%) |
 
 ---

@@ -69,7 +69,7 @@ Continuum is end-of-life planning software. ALL user-facing text MUST follow TON
 
 ## Enforcement Rules
 
-### MANDATORY: Every Data Page MUST Have These 14 Elements
+### MANDATORY: Every Data Page MUST Have These 13 Elements
 
 #### 1. LivingBlueprintHeader
 ```svelte
