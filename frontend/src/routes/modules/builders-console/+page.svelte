@@ -358,7 +358,7 @@
 
         {#if Object.keys(groupedTasks).length === 0}
             <div
-                class="bg-slate-50 rounded-3xl p-16 text-center border-2 border-dashed border-slate-200"
+                class="bg-slate-50 rounded-2xl p-16 text-center border-2 border-dashed border-slate-200"
             >
                 <div
                     class="p-4 bg-slate-100 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center text-slate-400"

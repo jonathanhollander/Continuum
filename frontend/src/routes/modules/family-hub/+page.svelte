@@ -13,6 +13,8 @@
         ChevronLeft,
         ChevronRight,
         Pencil,
+        Loader2,
+        Sparkles,
     } from "lucide-svelte";
     import { fade, slide, scale } from "svelte/transition";
     import FileUploader from "$lib/components/ui/FileUploader.svelte";
@@ -21,13 +23,22 @@
     import BlueprintCard from "$lib/components/ui/BlueprintCard.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
+    import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import { onMount } from "svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { activityLog } from "$lib/stores/activityLog.svelte";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
+    import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
+    import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
     import * as registryRaw from "$lib/data/registry.json";
+    import Affirmation from "$lib/components/Affirmation.svelte";
+    import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
+
+    let dataViewMode = $state<ViewMode>('card');
+    let customAttributes = $state<Record<string, any>>({});
+    let showAffirmation = $state(false);
 
     // Registry Data Handling
     const registryData = (registryRaw as any).default || registryRaw;
@@ -59,6 +70,7 @@
 
     let memories = $derived(familyMemories.items);
     let showAddModal = $state(false);
+    let isLoading = $state(true);
 
     // Form Mock-Model
     let newMemory = $state<Partial<Memory> & { id?: number }>({
@@ -70,8 +82,9 @@
         date: new Date().getFullYear().toString(),
     });
 
-    onMount(() => {
-        familyMemories.sync();
+    onMount(async () => {
+        await familyMemories.sync();
+        isLoading = false;
     });
 
     function handleConciergeAnswer(e: CustomEvent) {
@@ -156,6 +169,7 @@
             });
         }
 
+        showAffirmation = true;
         resetForm();
     }
 
@@ -261,11 +275,21 @@
     }
 </script>
 
+{#if isLoading}
+    <div class="flex items-center justify-center py-12">
+        <Loader2 class="w-8 h-8 animate-spin text-primary" />
+    </div>
+{:else}
 <div class="min-h-screen bg-[#FDFBF7]">
+    <!-- Affirmation Message -->
+    <div class="max-w-6xl mx-auto px-8 pt-8">
+        <Affirmation module="heirlooms" bind:show={showAffirmation} />
+    </div>
+
     <!-- Add Memory Modal -->
     {#if showAddModal}
         <div
-            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
             transition:fade
         >
             <div
@@ -400,6 +424,14 @@
                         </div>
                     {/if}
 
+                    <!-- Custom Fields -->
+                    <div class="pt-4 border-t border-gray-100">
+                        <CustomFieldsManager
+                            entityType="family_memory"
+                            bind:data={customAttributes}
+                        />
+                    </div>
+
                     <button
                         onclick={saveMemory}
                         class="w-full py-4 bg-[#4A7C74] text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:bg-[#3b635d] transition-all transform active:scale-95"
@@ -422,7 +454,7 @@
     <!-- Family Network Visualizer -->
     <section class="max-w-7xl mx-auto px-6 -mt-16 relative z-30 mb-20">
         <div
-            class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100"
+            class="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100"
         >
             <div
                 class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50"
@@ -508,6 +540,17 @@
                 />
             </div>
 
+            <!-- AI Concierge Drafting Assistant -->
+            <AIPromptBar
+                context="heirlooms"
+                prompts={[
+                    "Help me capture a family memory...",
+                    "Draft a story about this family tradition...",
+                    "Write about the significance of this photo...",
+                    "Help me preserve a family recipe with its history..."
+                ]}
+            />
+
             <!-- Quick Access Collections -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
                 {#each collections as item}
@@ -552,12 +595,15 @@
                                 </button>
                             {/if}
                         </div>
-                        <button
-                            onclick={() => (showAddModal = true)}
-                            class="flex items-center gap-2 px-4 py-2 bg-rose-100 text-rose-700 rounded-full font-bold hover:bg-rose-200 transition-colors"
-                        >
-                            <Plus size={18} /> Add Memory
-                        </button>
+                        <div class="flex items-center gap-3">
+                            <DataViewToggle module="family-hub" onchange={(mode) => dataViewMode = mode} />
+                            <button
+                                onclick={() => (showAddModal = true)}
+                                class="flex items-center gap-2 px-4 py-2 bg-rose-100 text-rose-700 rounded-full font-bold hover:bg-rose-200 transition-colors"
+                            >
+                                <Plus size={18} /> Add Memory
+                            </button>
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -607,87 +653,134 @@
                                 </GhostRow>
                             {/each}
                         {:else}
-                            {#each memories as memory (memory.id)}
-                                <div
-                                    class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group relative"
-                                    in:fade
-                                >
-                                    <!-- Delete Button (Hover) -->
-                                    <button
-                                        onclick={() => editMemory(memory)}
-                                        class="absolute top-2 right-10 p-1.5 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-blue-100 text-blue-500"
-                                        title="Edit Memory"
+                            {#if dataViewMode === 'card'}
+                                {#each memories as memory (memory.id)}
+                                    <div
+                                        class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group relative"
+                                        in:fade
                                     >
-                                        <Pencil size={14} />
-                                    </button>
-                                    <button
-                                        onclick={() => deleteMemory(memory.id)}
-                                        class="absolute top-2 right-2 p-1.5 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-red-100 text-red-500"
-                                        title="Delete Memory"
-                                    >
-                                        <X size={14} />
-                                    </button>
+                                        <!-- Delete Button (Hover) -->
+                                        <button
+                                            onclick={() => editMemory(memory)}
+                                            class="absolute top-2 right-10 p-1.5 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-blue-100 text-blue-500"
+                                            title="Edit Memory"
+                                        >
+                                            <Pencil size={14} />
+                                        </button>
+                                        <button
+                                            onclick={() => deleteMemory(memory.id)}
+                                            class="absolute top-2 right-2 p-1.5 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-red-100 text-red-500"
+                                            title="Delete Memory"
+                                        >
+                                            <X size={14} />
+                                        </button>
 
-                                    {#if memory.type === "photo"}
-                                        <div
-                                            class="aspect-[4/3] overflow-hidden bg-gray-100"
-                                        >
-                                            <img
-                                                src={memory.image}
-                                                alt={memory.title}
-                                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                            />
-                                        </div>
-                                        <div class="p-4">
-                                            <h3
-                                                class="font-bold text-slate-800 text-lg leading-tight group-hover:text-rose-600 transition-colors"
-                                            >
-                                                {memory.title}
-                                            </h3>
-                                            <p
-                                                class="text-xs text-slate-400 mt-2 font-medium tracking-wide uppercase"
-                                            >
-                                                {memory.date}
-                                            </p>
-                                        </div>
-                                    {:else if memory.type === "recipe"}
-                                        <div
-                                            class="p-6 bg-amber-50 h-full flex flex-col"
-                                        >
+                                        {#if memory.type === "photo"}
                                             <div
-                                                class="w-10 h-10 bg-white rounded-full flex items-center justify-center mb-4 text-amber-500 shadow-sm"
+                                                class="aspect-[4/3] overflow-hidden bg-gray-100"
                                             >
-                                                <Scroll class="w-5 h-5" />
+                                                <img
+                                                    src={memory.image}
+                                                    alt={memory.title}
+                                                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                />
                                             </div>
-                                            <h3
-                                                class="font-serif text-xl text-amber-900 font-bold mb-2"
-                                            >
-                                                {memory.title}
-                                            </h3>
-                                            <p
-                                                class="text-sm text-amber-800/80 leading-relaxed italic"
-                                            >
-                                                "{memory.desc}"
-                                            </p>
-                                        </div>
-                                    {:else if memory.type === "quote"}
-                                        <div
-                                            class="p-8 bg-slate-800 h-full flex flex-col justify-center text-center items-center"
-                                        >
-                                            <p
-                                                class="font-serif text-xl text-white leading-relaxed mb-4"
-                                            >
-                                                "{memory.text}"
-                                            </p>
+                                            <div class="p-4">
+                                                <h3
+                                                    class="font-bold text-slate-800 text-lg leading-tight group-hover:text-rose-600 transition-colors"
+                                                >
+                                                    {memory.title}
+                                                </h3>
+                                                <p
+                                                    class="text-xs text-slate-400 mt-2 font-medium tracking-wide uppercase"
+                                                >
+                                                    {memory.date}
+                                                </p>
+                                            </div>
+                                        {:else if memory.type === "recipe"}
                                             <div
-                                                class="text-xs font-bold text-slate-400 uppercase tracking-widest"
+                                                class="p-6 bg-amber-50 h-full flex flex-col"
                                             >
-                                                — {memory.author}
+                                                <div
+                                                    class="w-10 h-10 bg-white rounded-full flex items-center justify-center mb-4 text-amber-500 shadow-sm"
+                                                >
+                                                    <Scroll class="w-5 h-5" />
+                                                </div>
+                                                <h3
+                                                    class="font-serif text-xl text-amber-900 font-bold mb-2"
+                                                >
+                                                    {memory.title}
+                                                </h3>
+                                                <p
+                                                    class="text-sm text-amber-800/80 leading-relaxed italic"
+                                                >
+                                                    "{memory.desc}"
+                                                </p>
                                             </div>
-                                        </div>
-                                    {/if}
+                                        {:else if memory.type === "quote"}
+                                            <div
+                                                class="p-8 bg-slate-800 h-full flex flex-col justify-center text-center items-center"
+                                            >
+                                                <p
+                                                    class="font-serif text-xl text-white leading-relaxed mb-4"
+                                                >
+                                                    "{memory.text}"
+                                                </p>
+                                                <div
+                                                    class="text-xs font-bold text-slate-400 uppercase tracking-widest"
+                                                >
+                                                    — {memory.author}
+                                                </div>
+                                            </div>
+                                        {/if}
+                                    </div>
+                                {/each}
+                            {:else}
+                                <!-- Table View -->
+                                <div class="col-span-full bg-white rounded-xl border border-slate-200 overflow-hidden">
+                                    <table class="w-full">
+                                        <thead class="bg-slate-50 border-b border-slate-200">
+                                            <tr>
+                                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Title</th>
+                                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Type</th>
+                                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Date</th>
+                                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Author</th>
+                                                <th class="text-right px-4 py-3 text-xs font-bold uppercase text-slate-500">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-slate-100">
+                                            {#each memories as memory (memory.id)}
+                                                <tr class="hover:bg-slate-50 transition-colors group">
+                                                    <td class="px-4 py-3 font-medium text-slate-800">{memory.title}</td>
+                                                    <td class="px-4 py-3">
+                                                        <span class="px-2 py-1 rounded text-xs font-medium capitalize {memory.type === 'photo' ? 'bg-blue-100 text-blue-600' : memory.type === 'recipe' ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-600'}">
+                                                            {memory.type}
+                                                        </span>
+                                                    </td>
+                                                    <td class="px-4 py-3 text-slate-600 text-sm">{memory.date || '-'}</td>
+                                                    <td class="px-4 py-3 text-slate-500 text-sm">{memory.author || '-'}</td>
+                                                    <td class="px-4 py-3 text-right">
+                                                        <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <button
+                                                                onclick={() => editMemory(memory)}
+                                                                class="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-blue-500"
+                                                            >
+                                                                <Pencil size={14} />
+                                                            </button>
+                                                            <button
+                                                                onclick={() => deleteMemory(memory.id)}
+                                                                class="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-red-500"
+                                                            >
+                                                                <X size={14} />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            {/each}
+                                        </tbody>
+                                    </table>
                                 </div>
-                            {/each}
+                            {/if}
                         {/if}
                     </div>
                 </div>
@@ -893,3 +986,4 @@
         </div>
     {/if}
 </div>
+{/if}

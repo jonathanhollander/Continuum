@@ -10,12 +10,12 @@
 </script>
 
 <div
-    class="relative group rounded-3xl p-[1px] bg-gradient-to-br from-white/20 via-white/5 to-transparent backdrop-blur-md overflow-hidden transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_0_50px_-10px_rgba(99,102,241,0.3)]"
+    class="relative group rounded-2xl p-[1px] bg-gradient-to-br from-white/20 via-white/5 to-transparent backdrop-blur-md overflow-hidden transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_0_50px_-10px_rgba(99,102,241,0.3)]"
     in:fly={{ y: 20, duration: 1000, delay: 500 }}
 >
     <!-- Inner Glass -->
     <div
-        class="bg-slate-950/40 h-full w-full rounded-3xl p-8 flex flex-col items-start gap-4 relative z-10"
+        class="bg-slate-950/40 h-full w-full rounded-2xl p-8 flex flex-col items-start gap-4 relative z-10"
     >
         <!-- Badge -->
         <div

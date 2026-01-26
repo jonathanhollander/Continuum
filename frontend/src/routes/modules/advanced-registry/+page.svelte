@@ -30,10 +30,31 @@
         CircleAlert,
         ShieldAlert,
         Monitor,
+        Loader2,
+        Sparkles,
     } from "lucide-svelte";
+    import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
+    import { onMount } from "svelte";
     import { fade, slide, scale } from "svelte/transition";
     import EmptyState from "$lib/components/EmptyState.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
+    import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
+    import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
+    import Affirmation from "$lib/components/Affirmation.svelte";
+    import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
+    import GhostRow from "$lib/components/ui/GhostRow.svelte";
+    import { getSmartSamples } from "$lib/data/smartSamples";
+    import { language } from "$lib/stores/localization";
+
+    let viewMode = $state<ViewMode>('card');
+    let showAffirmation = $state(false);
+    let isLoading = $state(true);
+
+    onMount(async () => {
+        await advancedAssetStore.sync?.();
+        await digitalAssetsStore.sync?.();
+        isLoading = false;
+    });
 
     let activeTab = $state<
         "transactions" | "maintenance" | "claims" | "killswitch"
@@ -96,6 +117,7 @@
 
         parsedCustomAttributes = {};
         showAddModal = false;
+        showAffirmation = true;
     }
 
     const tabs = [
@@ -131,26 +153,22 @@
     );
 </script>
 
+{#if isLoading}
+    <div class="flex items-center justify-center py-12">
+        <Loader2 class="w-8 h-8 animate-spin text-primary" />
+    </div>
+{:else}
 <div
     class="max-w-[1400px] mx-auto p-8 space-y-10 animate-in fade-in duration-500"
 >
     <!-- Header -->
-    <header
-        class="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2"
+    <LivingBlueprintHeader
+        title="Advanced Registry Hub"
+        subtitle="Precision tracking for assets, maintenance, and digital legacies"
+        tier="protection"
+        detailedDescription="The Advanced Registry brings together all detailed records about your assets—purchase history, maintenance logs, insurance claims, and digital account management. This comprehensive documentation helps your family understand not just what you own, but its complete history."
+        whyMatters="Detailed asset records prevent costly mistakes and lost value. Your family will know when the roof was last inspected, what warranties still apply, and how to manage your digital footprint—information that would otherwise take months to piece together."
     >
-        <div class="space-y-2">
-            <h1
-                class="text-4xl font-black text-slate-900 tracking-tight font-serif flex items-center gap-4"
-            >
-                <Layers class="text-indigo-600" size={36} />
-                Advanced Registry Hub
-            </h1>
-            <p class="text-slate-500 text-lg font-medium">
-                Precision tracking for assets, maintenance, and digital
-                legacies.
-            </p>
-        </div>
-
         <div class="flex items-center gap-4">
             <div class="relative w-full md:w-64">
                 <Search
@@ -163,6 +181,7 @@
                     class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm"
                 />
             </div>
+            <DataViewToggle module="advanced-registry" onchange={(mode) => viewMode = mode} />
             <button
                 onclick={() => {
                     addType =
@@ -177,7 +196,21 @@
                 Add Record
             </button>
         </div>
-    </header>
+    </LivingBlueprintHeader>
+
+    <!-- Affirmation Message -->
+    <Affirmation module="general" bind:show={showAffirmation} />
+
+    <!-- AI Concierge Drafting Assistant -->
+    <AIPromptBar
+        context="executor"
+        prompts={[
+            "Help me document this asset transaction...",
+            "Draft maintenance notes for this property...",
+            "Explain how to handle this insurance claim...",
+            "Write instructions for managing my digital accounts..."
+        ]}
+    />
 
     <!-- Tabs -->
     <div
@@ -291,6 +324,45 @@
                         ctaLabel="Record first transaction"
                         onAction={() => { addType = 'transaction'; showAddModal = true; }}
                     />
+                    <!-- Sample Data GhostRows -->
+                    <div class="px-8 pb-8">
+                        <p class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-4 text-center">Example entries to inspire you</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 opacity-60">
+                            <GhostRow
+                                name="Home Purchase - 123 Oak Street"
+                                subtitle="Real Estate Transaction"
+                                type="Purchase"
+                                value={450000}
+                                onClick={() => {
+                                    newTx = { ...newTx, description: 'Home Purchase - 123 Oak Street', type: 'purchase', amount: 450000 };
+                                    addType = 'transaction';
+                                    showAddModal = true;
+                                }}
+                            />
+                            <GhostRow
+                                name="Vehicle Sale - 2019 Honda Accord"
+                                subtitle="Auto Transaction"
+                                type="Sale"
+                                value={18500}
+                                onClick={() => {
+                                    newTx = { ...newTx, description: 'Vehicle Sale - 2019 Honda Accord', type: 'sale', amount: 18500 };
+                                    addType = 'transaction';
+                                    showAddModal = true;
+                                }}
+                            />
+                            <GhostRow
+                                name="Annual Property Valuation"
+                                subtitle="Assessment Update"
+                                type="Valuation"
+                                value={525000}
+                                onClick={() => {
+                                    newTx = { ...newTx, description: 'Annual Property Valuation', type: 'valuation_update', amount: 525000 };
+                                    addType = 'transaction';
+                                    showAddModal = true;
+                                }}
+                            />
+                        </div>
+                    </div>
                 {/if}
             </div>
         {:else if activeTab === "maintenance"}
@@ -301,7 +373,7 @@
                 >
                     {#each filteredMaintenance as log (log.id)}
                         <div
-                            class="bg-slate-50 rounded-3xl p-6 border border-slate-100 space-y-4 hover:shadow-md transition-all"
+                            class="bg-slate-50 rounded-2xl p-6 border border-slate-100 space-y-4 hover:shadow-md transition-all"
                         >
                             <div class="flex items-center justify-between">
                                 <div
@@ -344,6 +416,45 @@
                         ctaLabel="Log first maintenance"
                         onAction={() => { addType = 'maintenance'; showAddModal = true; }}
                     />
+                    <!-- Sample Data GhostRows -->
+                    <div class="mt-8">
+                        <p class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-4 text-center">Example entries to inspire you</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 opacity-60">
+                            <GhostRow
+                                name="HVAC Annual Service"
+                                subtitle="Heating & Cooling"
+                                type="Maintenance"
+                                value={189}
+                                onClick={() => {
+                                    newMaint = { ...newMaint, item: 'HVAC Annual Service', cost: 189, provider: 'ABC Climate Co.' };
+                                    addType = 'maintenance';
+                                    showAddModal = true;
+                                }}
+                            />
+                            <GhostRow
+                                name="Roof Inspection"
+                                subtitle="Annual Check"
+                                type="Inspection"
+                                value={250}
+                                onClick={() => {
+                                    newMaint = { ...newMaint, item: 'Roof Inspection', cost: 250, provider: 'Top Roofing Inc.' };
+                                    addType = 'maintenance';
+                                    showAddModal = true;
+                                }}
+                            />
+                            <GhostRow
+                                name="Septic Pumping"
+                                subtitle="3-Year Service"
+                                type="Maintenance"
+                                value={375}
+                                onClick={() => {
+                                    newMaint = { ...newMaint, item: 'Septic Pumping', cost: 375, provider: 'Clean Septic LLC' };
+                                    addType = 'maintenance';
+                                    showAddModal = true;
+                                }}
+                            />
+                        </div>
+                    </div>
                 {/if}
             </div>
         {:else if activeTab === "claims"}
@@ -352,7 +463,7 @@
                 <div class="space-y-4">
                     {#each filteredClaims as claim (claim.id)}
                         <div
-                            class="flex items-center justify-between p-6 bg-white border border-slate-100 rounded-3xl hover:border-indigo-200 transition-all group"
+                            class="flex items-center justify-between p-6 bg-white border border-slate-100 rounded-2xl hover:border-indigo-200 transition-all group"
                         >
                             <div class="flex items-center gap-6">
                                 <div
@@ -423,6 +534,34 @@
                             ctaLabel="Track first claim"
                             onAction={() => { addType = 'claim'; showAddModal = true; }}
                         />
+                        <!-- Sample Data GhostRows -->
+                        <div class="mt-8">
+                            <p class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-4 text-center">Example entries to inspire you</p>
+                            <div class="space-y-4 opacity-60">
+                                <GhostRow
+                                    name="Storm Damage - Roof Repair"
+                                    subtitle="Home Insurance Claim"
+                                    type="Claim"
+                                    value={8500}
+                                    onClick={() => {
+                                        newClaim = { ...newClaim, claimNumber: 'HM-2024-001', note: 'Storm Damage - Roof Repair', amountClaimed: 8500, status: 'pending' };
+                                        addType = 'claim';
+                                        showAddModal = true;
+                                    }}
+                                />
+                                <GhostRow
+                                    name="Fender Bender - Rear Bumper"
+                                    subtitle="Auto Insurance Claim"
+                                    type="Claim"
+                                    value={2200}
+                                    onClick={() => {
+                                        newClaim = { ...newClaim, claimNumber: 'AU-2024-015', note: 'Fender Bender - Rear Bumper', amountClaimed: 2200, status: 'pending' };
+                                        addType = 'claim';
+                                        showAddModal = true;
+                                    }}
+                                />
+                            </div>
+                        </div>
                     {/if}
                 </div>
             </div>
@@ -438,7 +577,7 @@
                         <ShieldAlert size={200} />
                     </div>
                     <div
-                        class="w-20 h-20 bg-rose-100 text-rose-600 rounded-3xl flex items-center justify-center shrink-0 shadow-inner"
+                        class="w-20 h-20 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center shrink-0 shadow-inner"
                     >
                         <Skull size={40} />
                     </div>
@@ -566,6 +705,7 @@
         {/if}
     </div>
 </div>
+{/if}
 
 {#if showAddModal}
     <div

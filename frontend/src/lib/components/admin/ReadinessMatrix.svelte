@@ -18,7 +18,7 @@
     });
 </script>
 
-<div class="bg-white rounded-3xl border border-stone-200 shadow-sm p-8">
+<div class="bg-white rounded-2xl border border-stone-200 shadow-sm p-8">
     <div class="flex items-center justify-between mb-8">
         <div>
             <h2 class="text-2xl font-bold text-[#304743]">

@@ -16,8 +16,18 @@
         X,
         FileDown,
         Settings,
+        Loader2,
+        Sparkles,
     } from "lucide-svelte";
     import { fade, slide } from "svelte/transition";
+    import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
+    import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
+    import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
+    import Affirmation from "$lib/components/Affirmation.svelte";
+
+    let viewMode = $state<ViewMode>('card');
+    let showAffirmation = $state(false);
+    let isLoading = $state(true);
 
     let entries = $state<ActivityLogEntry[]>([]);
     let filteredEntries = $state<ActivityLogEntry[]>([]);
@@ -57,10 +67,11 @@
         SETTINGS_CHANGE: Settings,
     };
 
-    onMount(() => {
+    onMount(async () => {
         entries = activityLog.getAll();
         filteredEntries = entries;
         todayCount = activityLog.getTodayCount();
+        isLoading = false;
     });
 
     $effect(() => {
@@ -112,6 +123,7 @@
         a.download = `activity-log-${new Date().toISOString().split("T")[0]}.json`;
         a.click();
         URL.revokeObjectURL(url);
+        showAffirmation = true;
     }
 
     function exportAsCSV() {
@@ -123,6 +135,7 @@
         a.download = `activity-log-${new Date().toISOString().split("T")[0]}.csv`;
         a.click();
         URL.revokeObjectURL(url);
+        showAffirmation = true;
     }
 
     function clearLog() {
@@ -145,6 +158,11 @@
     }
 </script>
 
+{#if isLoading}
+    <div class="flex items-center justify-center py-12">
+        <Loader2 class="w-8 h-8 animate-spin text-primary" />
+    </div>
+{:else}
 <div
     class="max-w-6xl mx-auto p-6 md:p-8 space-y-8 animate-in fade-in duration-500"
 >
@@ -167,6 +185,7 @@
         </div>
 
         <div class="flex items-center gap-3">
+            <DataViewToggle module="activity-log" onchange={(mode) => viewMode = mode} />
             {#if todayCount > 0}
                 <div
                     class="px-4 py-2 bg-indigo-50 text-indigo-700 rounded-xl font-bold text-sm"
@@ -177,6 +196,20 @@
             {/if}
         </div>
     </div>
+
+    <!-- Affirmation Message -->
+    <Affirmation module="general" bind:show={showAffirmation} />
+
+    <!-- AI Concierge Drafting Assistant -->
+    <AIPromptBar
+        context="executor"
+        prompts={[
+            "Summarize my recent activity across all modules...",
+            "Find changes made to my financial accounts...",
+            "List all updates from the past week...",
+            "Help me understand what was modified recently..."
+        ]}
+    />
 
     <!-- Filters & Actions -->
     <div
@@ -402,3 +435,4 @@
         </div>
     {/if}
 </div>
+{/if}

@@ -126,7 +126,7 @@
 </script>
 
 <div
-    class="bg-white rounded-3xl border border-stone-100 shadow-xl overflow-hidden min-h-[600px] flex flex-col"
+    class="bg-white rounded-2xl border border-stone-100 shadow-xl overflow-hidden min-h-[600px] flex flex-col"
 >
     <!-- Progress Header -->
     <div class="bg-stone-50 border-b border-stone-100 p-6">

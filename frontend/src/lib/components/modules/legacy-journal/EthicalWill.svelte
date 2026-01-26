@@ -257,7 +257,7 @@ With all my love,
                 </h2>
                 <div class="relative">
                     <div
-                        class="absolute -top-3 -left-3 -right-3 -bottom-3 bg-stone-100 rounded-3xl -z-10 rotate-1"
+                        class="absolute -top-3 -left-3 -right-3 -bottom-3 bg-stone-100 rounded-2xl -z-10 rotate-1"
                     ></div>
                     <div
                         class="bg-white p-8 md:p-12 rounded-2xl border border-stone-200 shadow-sm relative"

@@ -13,7 +13,7 @@
     }
 </script>
 
-<div class="bg-white rounded-3xl border border-stone-200 shadow-sm p-8">
+<div class="bg-white rounded-2xl border border-stone-200 shadow-sm p-8">
     <div class="flex items-center gap-3 mb-6">
         <div class="p-2 bg-stone-100 rounded-lg text-stone-600">
             <Activity size={20} />

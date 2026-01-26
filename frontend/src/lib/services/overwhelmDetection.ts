@@ -41,6 +41,7 @@ class OverwhelmDetector {
     private inactivityCheckInterval?: number;
     private lastTriggerTime: number = 0;
     private isMuted: boolean = false;
+    public state: Writable<OverwhelmState>;
 
     // Configurable thresholds
     private RAPID_NAV_COUNT = 12; // navigations (increased from 6 to 12)
@@ -74,7 +75,7 @@ class OverwhelmDetector {
      */
     public initialize(isMuted: boolean) {
         this.isMuted = isMuted;
-        this.state.update(s => ({ ...s, isPermanentlyMuted: isMuted }));
+        this.state.update((s: OverwhelmState) => ({ ...s, isPermanentlyMuted: isMuted }));
         logger.debug('OverwhelmDetector synced with user preferences', { isMuted });
     }
 
@@ -255,6 +256,7 @@ class OverwhelmDetector {
         this.lastTriggerTime = now;
         this.state.set({
             isOverwhelmed: true,
+            isPermanentlyMuted: this.isMuted,
             signals,
             triggerReason: reason
         });
@@ -268,7 +270,7 @@ class OverwhelmDetector {
         if (typeof window !== 'undefined') {
             localStorage.setItem('continuum_overwhelm_muted', 'true');
         }
-        this.state.update(s => ({ ...s, isPermanentlyMuted: true, isOverwhelmed: false }));
+        this.state.update((s: OverwhelmState) => ({ ...s, isPermanentlyMuted: true, isOverwhelmed: false }));
         logger.info('Overwhelm support permanently muted by user');
 
         // Sync to backend if authenticated
@@ -304,6 +306,7 @@ class OverwhelmDetector {
         this.startTime = Date.now();
         this.state.set({
             isOverwhelmed: false,
+            isPermanentlyMuted: this.isMuted,
             signals: []
         });
         logger.info('Overwhelm state reset');

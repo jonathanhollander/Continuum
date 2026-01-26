@@ -19,7 +19,7 @@
     {#if tradition}
         <div
             in:fade
-            class="bg-white rounded-3xl p-10 shadow-sm border border-stone-100"
+            class="bg-white rounded-2xl p-10 shadow-sm border border-stone-100"
         >
             <!-- Header -->
             <div class="text-center mb-12 border-b border-stone-100 pb-10">

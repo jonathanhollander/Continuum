@@ -74,7 +74,7 @@
 </script>
 
 <div
-    class="relative w-full h-96 bg-slate-900/50 rounded-3xl border border-white/10 backdrop-blur-sm overflow-hidden p-8"
+    class="relative w-full h-96 bg-slate-900/50 rounded-2xl border border-white/10 backdrop-blur-sm overflow-hidden p-8"
 >
     <!-- Simulation Label -->
     <div class="absolute top-6 left-6 z-10">

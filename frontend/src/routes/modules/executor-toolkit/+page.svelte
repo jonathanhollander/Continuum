@@ -134,7 +134,7 @@
 
     <!-- Content Area -->
     <div
-        class="bg-white rounded-3xl border border-stone-200 shadow-sm p-8 min-h-[500px]"
+        class="bg-white rounded-2xl border border-stone-200 shadow-sm p-8 min-h-[500px]"
     >
         {#if selectedTask}
             <!-- Task Detail View -->

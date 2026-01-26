@@ -21,6 +21,7 @@
         Layers,
         LayoutGrid,
         ScanLine,
+        Loader2,
     } from "lucide-svelte";
     import {
         qrStore,
@@ -30,6 +31,23 @@
     import { activityLog } from "$lib/stores/activityLog.svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { onMount } from "svelte";
+    import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
+    import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
+    import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
+    import Affirmation from "$lib/components/Affirmation.svelte";
+    import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
+    import GhostRow from "$lib/components/ui/GhostRow.svelte";
+    import { getSmartSamples } from "$lib/data/smartSamples";
+    import { language } from "$lib/stores/localization";
+
+    let viewMode = $state<ViewMode>('card');
+    let showAffirmation = $state(false);
+    let isLoading = $state(true);
+
+    onMount(async () => {
+        await qrStore.sync?.();
+        isLoading = false;
+    });
 
     let selectedPack = $state<AccessPack | null>(null);
     let showGenerateModal = $state(false);
@@ -48,6 +66,7 @@
                 userContext: $estateProfile.ownerName || "User",
             });
         }
+        showAffirmation = true;
     }
 
     function printPack(pack: AccessPack) {
@@ -92,40 +111,25 @@
     );
 </script>
 
+{#if isLoading}
+    <div class="flex items-center justify-center py-12">
+        <Loader2 class="w-8 h-8 animate-spin text-primary" />
+    </div>
+{:else}
 <div
     class="p-8 max-w-[1400px] mx-auto space-y-12 animate-in fade-in duration-700"
 >
     <!-- Header Section -->
-    <header
-        class="flex flex-col xl:flex-row xl:items-end justify-between gap-8 pb-4"
+    <LivingBlueprintHeader
+        title="QR Access Center"
+        subtitle="Bridge the gap between physical reality and digital security"
+        tier="protection"
+        detailedDescription="Generate encrypted access keys and asset labels that connect your physical belongings to digital documentation. Create QR codes for your Red Binder that give your executor instant access to critical information."
+        whyMatters="QR codes transform static documents into dynamic access points. Your executor can scan a single code to access exactly what they need, when they need it, without searching through files."
     >
-        <div class="space-y-4">
-            <nav
-                class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#4A7C74]"
-            >
-                <QrCode size={14} />
-                <span>Concierge v4.0</span>
-                <ChevronRight size={12} />
-                <span class="text-slate-900">QR Access Center</span>
-            </nav>
-            <div>
-                <h1
-                    class="text-5xl font-black text-slate-900 tracking-tight mb-3 font-serif"
-                >
-                    QR Access <span class="text-[#4A7C74] font-light italic"
-                        >Center</span
-                    >
-                </h1>
-                <p class="text-slate-500 max-w-3xl text-xl leading-relaxed">
-                    Bridge the gap between physical reality and digital security
-                    with encrypted access keys and asset labels.
-                </p>
-            </div>
-        </div>
-
         <div class="flex items-center gap-4">
             <div
-                class="bg-[#FDFBF7] border border-stone-200 p-4 rounded-3xl flex items-center gap-6 shadow-sm"
+                class="bg-[#FDFBF7] border border-stone-200 p-4 rounded-2xl flex items-center gap-6 shadow-sm"
             >
                 <div
                     class="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center text-stone-400"
@@ -145,7 +149,21 @@
                 </div>
             </div>
         </div>
-    </header>
+    </LivingBlueprintHeader>
+
+    <!-- Affirmation Message -->
+    <Affirmation module="general" bind:show={showAffirmation} />
+
+    <!-- AI Concierge Drafting Assistant -->
+    <AIPromptBar
+        context="executor"
+        prompts={[
+            "Explain how QR access codes work for my estate...",
+            "Draft instructions for my executor on using these keys...",
+            "Help me set up secure access for my family...",
+            "Summarize what information each access pack contains..."
+        ]}
+    />
 
     <!-- Essential Access Packs -->
     <section class="space-y-8">
@@ -235,7 +253,7 @@
                     >
                         {#if pack.qrUrl}
                             <div
-                                class="bg-white p-4 rounded-3xl shadow- inner ring-8 ring-slate-100 group-hover:scale-105 transition-transform duration-500"
+                                class="bg-white p-4 rounded-2xl shadow- inner ring-8 ring-slate-100 group-hover:scale-105 transition-transform duration-500"
                             >
                                 <img
                                     src={pack.qrUrl}
@@ -250,7 +268,7 @@
                             </p>
                         {:else}
                             <div
-                                class="w-40 h-40 rounded-3xl border-4 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-300"
+                                class="w-40 h-40 rounded-2xl border-4 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-300"
                             >
                                 <Smartphone size={32} class="mb-2 opacity-20" />
                                 <span
@@ -277,17 +295,20 @@
                 </h2>
             </div>
 
-            <div class="relative w-80">
-                <Search
-                    class="absolute left-4 top-3 text-slate-400"
-                    size={18}
-                />
-                <input
-                    type="text"
-                    bind:value={searchQuery}
-                    placeholder="Search labels..."
-                    class="w-full bg-white border border-slate-200 rounded-2xl py-3 pl-12 pr-4 text-sm font-medium focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 outline-none transition-all shadow-sm"
-                />
+            <div class="flex items-center gap-4">
+                <DataViewToggle module="qr-codes" onchange={(mode) => viewMode = mode} />
+                <div class="relative w-80">
+                    <Search
+                        class="absolute left-4 top-3 text-slate-400"
+                        size={18}
+                    />
+                    <input
+                        type="text"
+                        bind:value={searchQuery}
+                        placeholder="Search labels..."
+                        class="w-full bg-white border border-slate-200 rounded-2xl py-3 pl-12 pr-4 text-sm font-medium focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 outline-none transition-all shadow-sm"
+                    />
+                </div>
             </div>
         </div>
 
@@ -316,68 +337,142 @@
                     </a>
                 </div>
             </div>
-        {:else}
-            <div
-                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-            >
-                {#each filteredAssets as label}
-                    <div
-                        class="group bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300"
-                    >
-                        <div class="flex gap-4 items-start mb-6">
-                            <div
-                                class="w-24 h-24 bg-slate-50 p-2 rounded-2xl ring-4 ring-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden"
-                            >
-                                <img
-                                    src={label.qrUrl}
-                                    alt="QR"
-                                    class="w-full h-full object-contain"
-                                />
-                            </div>
-                            <div class="flex-1">
-                                <div
-                                    class="flex items-center justify-between mb-1"
-                                >
-                                    <span
-                                        class="text-[10px] font-black uppercase tracking-tighter text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full"
-                                        >{label.assetType}</span
-                                    >
-                                    <button
-                                        onclick={() =>
-                                            deleteAssetQR(
-                                                label.assetId,
-                                                label.assetName,
-                                            )}
-                                        class="text-slate-200 hover:text-rose-500 transition-colors"
-                                    >
-                                        <Trash2 size={14} />
-                                    </button>
-                                </div>
-                                <h4
-                                    class="font-bold text-slate-900 leading-tight truncate"
-                                >
-                                    {label.assetName}
-                                </h4>
-                                <div
-                                    class="mt-2 flex items-center gap-1.5 text-slate-400"
-                                >
-                                    <Smartphone size={12} />
-                                    <span
-                                        class="text-[10px] font-medium truncate"
-                                        >Deep Link Active</span
-                                    >
-                                </div>
-                            </div>
-                        </div>
-                        <button
-                            onclick={() => window.print()}
-                            class="w-full py-3 bg-slate-50 hover:bg-slate-900 hover:text-white text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
-                        >
-                            <Printer size={14} /> Print Label
-                        </button>
-                    </div>
-                {/each}
+
+            <!-- Sample Assets That Can Get QR Labels -->
+            <div class="mt-8">
+                <p class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-4 text-center">Assets that could have QR labels</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 opacity-60">
+                    {#each getSmartSamples($language).heirlooms || [] as sample}
+                        <GhostRow
+                            name={sample.name}
+                            subtitle={`For: ${sample.recipient}`}
+                            type="Heirloom"
+                            onClick={() => window.location.href = '/modules/heirlooms'}
+                        />
+                    {/each}
+                    {#each getSmartSamples($language).property?.slice(0, 2) || [] as sample}
+                        <GhostRow
+                            name={sample.name}
+                            subtitle={sample.location}
+                            type="Property"
+                            value={sample.valuation}
+                            onClick={() => window.location.href = '/modules/property'}
+                        />
+                    {/each}
+                </div>
             </div>
+        {:else}
+            {#if viewMode === 'card'}
+                <div
+                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                >
+                    {#each filteredAssets as label}
+                        <div
+                            class="group bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300"
+                        >
+                            <div class="flex gap-4 items-start mb-6">
+                                <div
+                                    class="w-24 h-24 bg-slate-50 p-2 rounded-2xl ring-4 ring-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden"
+                                >
+                                    <img
+                                        src={label.qrUrl}
+                                        alt="QR"
+                                        class="w-full h-full object-contain"
+                                    />
+                                </div>
+                                <div class="flex-1">
+                                    <div
+                                        class="flex items-center justify-between mb-1"
+                                    >
+                                        <span
+                                            class="text-[10px] font-black uppercase tracking-tighter text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full"
+                                            >{label.assetType}</span
+                                        >
+                                        <button
+                                            onclick={() =>
+                                                deleteAssetQR(
+                                                    label.assetId,
+                                                    label.assetName,
+                                                )}
+                                            class="text-slate-200 hover:text-rose-500 transition-colors"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </div>
+                                    <h4
+                                        class="font-bold text-slate-900 leading-tight truncate"
+                                    >
+                                        {label.assetName}
+                                    </h4>
+                                    <div
+                                        class="mt-2 flex items-center gap-1.5 text-slate-400"
+                                    >
+                                        <Smartphone size={12} />
+                                        <span
+                                            class="text-[10px] font-medium truncate"
+                                            >Deep Link Active</span
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+                            <button
+                                onclick={() => window.print()}
+                                class="w-full py-3 bg-slate-50 hover:bg-slate-900 hover:text-white text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                            >
+                                <Printer size={14} /> Print Label
+                            </button>
+                        </div>
+                    {/each}
+                </div>
+            {:else}
+                <!-- Table View -->
+                <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                    <table class="w-full">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">QR</th>
+                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Asset Name</th>
+                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Type</th>
+                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Status</th>
+                                <th class="text-right px-4 py-3 text-xs font-bold uppercase text-slate-500">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            {#each filteredAssets as label}
+                                <tr class="hover:bg-slate-50 transition-colors group">
+                                    <td class="px-4 py-3">
+                                        <img src={label.qrUrl} alt="QR" class="w-12 h-12 object-contain" />
+                                    </td>
+                                    <td class="px-4 py-3 font-medium text-slate-800">{label.assetName}</td>
+                                    <td class="px-4 py-3">
+                                        <span class="text-xs font-bold px-2 py-1 bg-amber-50 text-amber-600 rounded">
+                                            {label.assetType}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 text-slate-500 text-sm">Deep Link Active</td>
+                                    <td class="px-4 py-3 text-right">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <button
+                                                onclick={() => window.print()}
+                                                class="p-1 text-slate-400 hover:text-slate-600 transition-colors"
+                                                title="Print"
+                                            >
+                                                <Printer size={16} />
+                                            </button>
+                                            <button
+                                                onclick={() => deleteAssetQR(label.assetId, label.assetName)}
+                                                class="p-1 text-slate-300 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {/each}
+                        </tbody>
+                    </table>
+                </div>
+            {/if}
         {/if}
     </section>
 
@@ -486,6 +581,7 @@
         </div>
     </section>
 </div>
+{/if}
 
 <!-- Print Styles -->
 <style>

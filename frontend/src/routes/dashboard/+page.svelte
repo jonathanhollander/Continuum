@@ -12,6 +12,7 @@
     import { insuranceStore } from "$lib/stores/insuranceStore.svelte";
     import { medicalStore } from "$lib/stores/medicalStore.svelte";
     import { propertyStore } from "$lib/stores/propertyStore.svelte";
+    import { financialAssetsStore } from "$lib/stores/financialAssetsStore.svelte";
     import { preferenceStore } from "$lib/stores/preferenceStore";
     import {
         getModuleSyncStatus,
@@ -111,8 +112,8 @@
                 return {
                     inProgress:
                         scores["financial"] > 0 ||
-                        propertyStore.items.length > 0,
-                    count: propertyStore.items.length,
+                        financialAssetsStore.items.length > 0,
+                    count: financialAssetsStore.items.length,
                     label: "accounts",
                 };
             case "insurance":
@@ -213,8 +214,8 @@
     // Concrete progress counts for stats row
     let contactCount = $derived(familyStore.members.length);
     let policyCount = $derived(insuranceStore.policies.length);
-    let documentCount = $derived(
-        digitalAssetsStore.items.filter((a) => !a.isClosed).length,
+    let accountCount = $derived(
+        financialAssetsStore.items.filter((a) => !a.is_closed).length,
     );
     let medicalCount = $derived(medicalStore.directives.length);
 
@@ -366,7 +367,7 @@
                             <FileText size={20} class="text-primary" />
                         </div>
                         <div class="text-2xl font-bold text-white">
-                            {documentCount}
+                            {accountCount}
                         </div>
                         <div class="text-sm text-slate-400">Accounts</div>
                     </a>

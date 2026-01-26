@@ -1,4 +1,5 @@
 import { getStored, setStored } from "$lib/stores/persistence";
+import { API_BASE_URL } from "$lib/config";
 
 import { auth } from "../stores/auth.ts";
 import { get } from "svelte/store";
@@ -18,7 +19,8 @@ const convertKeys = (obj: any, converter: (s: string) => string): any => {
     return newObj;
 };
 
-const BASE_URL = import.meta.env.VITE_API_URL || "";
+// Use centralized config for API base URL (fixes dev mode sync issue)
+const BASE_URL = API_BASE_URL;
 
 export type SyncStatus = "idle" | "syncing" | "error" | "synced";
 
@@ -71,6 +73,12 @@ export class SyncManager<T extends { id: number | string }> {
     async sync() {
         this.status = "syncing";
         this.error = null;
+
+        // CRITICAL: Capture local state BEFORE any async operations
+        // This prevents race conditions where reactive $state gets updated
+        // before we can check for migration eligibility
+        const localItemsSnapshot = [...this.items];
+
         try {
             // Fetch Remote
             const token = get(auth).token;
@@ -92,9 +100,10 @@ export class SyncManager<T extends { id: number | string }> {
 
             // Logic: Up-Sync vs Down-Sync
             // If Remote is empty but Local has data -> Migration (Up-Sync)
-            if (remoteItems.length === 0 && this.items.length > 0) {
-                console.log(`[Sync:${this.key}] Migrating ${this.items.length} items to cloud...`);
-                await this.migrateUp(this.items);
+            // Use captured snapshot to avoid race condition with reactive state
+            if (remoteItems.length === 0 && localItemsSnapshot.length > 0) {
+                console.log(`[Sync:${this.key}] Migrating ${localItemsSnapshot.length} local items to cloud...`);
+                await this.migrateUp(localItemsSnapshot);
                 // Re-fetch to get canon IDs
                 const res2 = await fetch(`${BASE_URL}${this.apiBase}/${this.endpoint}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -154,7 +163,17 @@ export class SyncManager<T extends { id: number | string }> {
                 body: JSON.stringify(payload)
             });
 
-            if (!res.ok) throw new Error("Failed to save");
+            if (!res.ok) {
+                const errorBody = await res.text();
+                let errorDetail = `HTTP ${res.status}: ${res.statusText}`;
+                try {
+                    const errorJson = JSON.parse(errorBody);
+                    errorDetail = errorJson.detail || errorJson.message || errorJson.error?.message || errorBody;
+                } catch { errorDetail = errorBody || errorDetail; }
+                const error = new Error("Failed to save") as any;
+                error.technicalDetails = `${errorDetail}\n\nEndpoint: POST ${this.apiBase}/${this.endpoint}`;
+                throw error;
+            }
 
             const raw = await res.json();
             const newItemRaw = convertKeys(raw, toCamel);
@@ -171,8 +190,13 @@ export class SyncManager<T extends { id: number | string }> {
                 }
             }
             return newItem;
-        } catch (e) {
+        } catch (e: any) {
             console.error("Create failed", e);
+            // Show detailed error notification
+            notifications.showError({
+                message: 'We couldn\'t save your new item. Please try again.',
+                technicalDetails: e.technicalDetails || e.message || String(e)
+            });
             throw e;
         }
     }
@@ -206,6 +230,12 @@ export class SyncManager<T extends { id: number | string }> {
             const payloadRaw = this.mapper ? this.mapper(updatedItem) : updatedItem;
             const payload = convertKeys(payloadRaw, toSnake);
 
+            // Remove protected fields that backend won't accept
+            delete payload.id;
+            delete payload.user_id;
+            delete payload.created_at;
+            delete payload.updated_at;
+
             const res = await fetch(`${BASE_URL}${this.apiBase}/${this.endpoint}/${id}`, {
                 method: "PUT",
                 headers: {
@@ -215,7 +245,17 @@ export class SyncManager<T extends { id: number | string }> {
                 body: JSON.stringify(payload)
             });
 
-            if (!res.ok) throw new Error("Failed to update remote");
+            if (!res.ok) {
+                const errorBody = await res.text();
+                let errorDetail = `HTTP ${res.status}: ${res.statusText}`;
+                try {
+                    const errorJson = JSON.parse(errorBody);
+                    errorDetail = errorJson.detail || errorJson.message || errorJson.error?.message || errorBody;
+                } catch { errorDetail = errorBody || errorDetail; }
+                const error = new Error("Failed to update remote") as any;
+                error.technicalDetails = `${errorDetail}\n\nEndpoint: PUT ${this.apiBase}/${this.endpoint}/${id}`;
+                throw error;
+            }
             const raw = await res.json();
             const remoteItemRaw = convertKeys(raw, toCamel);
             const remoteItem = this.mapper ? this.mapper(remoteItemRaw) : remoteItemRaw;
@@ -231,11 +271,16 @@ export class SyncManager<T extends { id: number | string }> {
             }
 
             return remoteItem;
-        } catch (e) {
+        } catch (e: any) {
             console.error("Update failed, rolling back", e);
             this.items = original;
             setStored(this.key, this.items);
             this.notify();
+            // Show detailed error notification
+            notifications.showError({
+                message: 'We couldn\'t save your changes. Please try again, or check your connection.',
+                technicalDetails: e.technicalDetails || e.message || String(e)
+            });
             throw e;
         }
     }
@@ -252,13 +297,28 @@ export class SyncManager<T extends { id: number | string }> {
                 method: "DELETE",
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (!res.ok) throw new Error("Delete failed remote");
-        } catch (e) {
+            if (!res.ok) {
+                const errorBody = await res.text();
+                let errorDetail = `HTTP ${res.status}: ${res.statusText}`;
+                try {
+                    const errorJson = JSON.parse(errorBody);
+                    errorDetail = errorJson.detail || errorJson.message || errorJson.error?.message || errorBody;
+                } catch { errorDetail = errorBody || errorDetail; }
+                const error = new Error("Delete failed remote") as any;
+                error.technicalDetails = `${errorDetail}\n\nEndpoint: DELETE ${this.apiBase}/${this.endpoint}/${id}`;
+                throw error;
+            }
+        } catch (e: any) {
             // Rollback
             console.error("Delete failed, rolling back", e);
             this.items = original;
             setStored(this.key, this.items);
             this.status = "error";
+            // Show detailed error notification
+            notifications.showError({
+                message: 'We couldn\'t remove this item. Please try again.',
+                technicalDetails: e.technicalDetails || e.message || String(e)
+            });
         }
     }
 
@@ -369,9 +429,9 @@ export class SingletonSyncManager<T extends object> {
         }
     }
 
-    async update(newData: T) {
+    async update(newData: Partial<T>) {
         const original = this.data;
-        this.data = { ...(this.data || {} as T), ...newData };
+        this.data = { ...(this.data || {} as T), ...newData } as T;
         setStored(this.key, this.data);
         this.notify();
 
@@ -450,7 +510,7 @@ export function getRegistry() {
     return _plainRegistry;
 }
 
-export function registerSync<T>(key: string, endpoint: string, mapper?: any, apiBase?: string) {
+export function registerSync<T extends { id: number | string }>(key: string, endpoint: string, mapper?: any, apiBase?: string) {
     const reg = getRegistry();
     if (!reg[key]) {
         reg[key] = new SyncManager<T>(key, endpoint, mapper, apiBase);

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { fade, slide, fly } from "svelte/transition";
+    import { fade, slide } from "svelte/transition";
     import { onMount } from "svelte";
     import {
         Heart,
@@ -13,7 +13,10 @@
         CircleAlert,
         CircleCheck,
         User,
+        Loader2,
     } from "lucide-svelte";
+    import Modal from "$lib/components/ui/Modal.svelte";
+    import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import {
         medicalStore,
         type MedicalDirective,
@@ -29,11 +32,15 @@
     import GriefSupportBanner from "$lib/components/GriefSupportBanner.svelte";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
+    import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
+    import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
 
     let showAddForm = $state(false);
     let parsedCustomAttributes = $state<Record<string, any>>({});
     let editMode = $state(false);
     let showAffirmation = $state(false);
+    let isLoading = $state(true);
+    let viewMode = $state<ViewMode>('card');
     let newDirective: Partial<MedicalDirective> = $state({
         type: "healthcare_proxy",
         title: "",
@@ -54,8 +61,9 @@
     let currentProfile = $state(medicalStore.profile);
 
     // Sync medical data on mount and update reactive profile
-    onMount(() => {
-        medicalStore.sync();
+    onMount(async () => {
+        await medicalStore.sync();
+        isLoading = false;
         // Subscribe to store changes to update reactive profile
         return medicalStore.subscribe(() => {
             currentProfile = medicalStore.profile;
@@ -154,6 +162,11 @@
     };
 </script>
 
+{#if isLoading}
+    <div class="flex items-center justify-center py-12">
+        <Loader2 class="w-8 h-8 animate-spin text-primary" />
+    </div>
+{:else}
 <div class="max-w-5xl mx-auto space-y-8 p-4 md:p-8">
     <!-- Header -->
     <LivingBlueprintHeader
@@ -172,6 +185,11 @@
         </button>
     </LivingBlueprintHeader>
 
+    <!-- View Toggle -->
+    <div class="flex justify-end mb-4">
+        <DataViewToggle module="medical" onchange={(mode) => viewMode = mode} />
+    </div>
+
     <div class="max-w-3xl">
         <GriefSupportBanner compact={true} />
     </div>
@@ -179,11 +197,16 @@
     <!-- Affirmation Message -->
     <Affirmation module="medical" bind:show={showAffirmation} />
 
+    <!-- AI Prompt Bar -->
+    <div class="max-w-3xl mb-8">
+        <AIPromptBar context="medical" />
+    </div>
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Life Saving Profile -->
         <div class="lg:col-span-1 space-y-8">
             <section
-                class="bg-white rounded-3xl border border-primary/10 shadow-sm overflow-hidden"
+                class="bg-white rounded-2xl border border-primary/10 shadow-sm overflow-hidden"
             >
                 <div class="p-6 bg-primary/5 border-b border-primary/10">
                     <h2
@@ -276,7 +299,7 @@
                                 >
                                 <select
                                     bind:value={tempProfile.bloodType}
-                                    class="w-full px-4 py-2 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-red-500"
+                                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                 >
                                     <option value="">Unknown</option>
                                     <option value="A+">A+</option>
@@ -296,7 +319,7 @@
                                 >
                                 <textarea
                                     bind:value={tempProfile.allergies}
-                                    class="w-full px-4 py-2 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-red-500"
+                                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                     rows="3"
                                     placeholder="Latex, Penicillin, Peanuts..."
                                 ></textarea>
@@ -334,7 +357,7 @@
         <!-- Directives List -->
         <div class="lg:col-span-2 space-y-6">
             <div
-                class="bg-primary/5 p-6 rounded-3xl border border-primary/10 flex items-start gap-4"
+                class="bg-primary/5 p-6 rounded-2xl border border-primary/10 flex items-start gap-4"
             >
                 <Shield class="text-primary mt-1 shrink-0" size={24} />
                 <div>
@@ -351,7 +374,7 @@
 
             {#each medicalStore.directives as dir}
                 <div
-                    class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-shadow relative group"
+                    class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-shadow relative group"
                 >
                     <div class="flex items-start justify-between">
                         <div class="flex gap-4">
@@ -471,160 +494,128 @@
 </div>
 
 <!-- Add/Edit Modal -->
-{#if showAddForm}
-    <div
-        class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-        transition:fade
+<Modal
+    bind:open={showAddForm}
+    title={newDirective.id ? "Share Your Voice" : "Who should hear your voice?"}
+    description="These choices reflect your values and ensure you're cared for exactly as you wish. It's okay to take your time."
+    maxWidth="max-w-lg"
+>
+    <form
+        onsubmit={(e) => {
+            e.preventDefault();
+            saveDirective();
+        }}
+        class="space-y-6"
     >
-        <div
-            class="bg-white rounded-[32px] w-full max-w-lg overflow-hidden shadow-2xl"
-            transition:fly={{ y: 20 }}
-        >
-            <div
-                class="p-8 border-b border-gray-100 flex justify-between items-center"
-            >
-                <div>
-                    <h2 class="text-2xl font-bold text-gray-900">
-                        {newDirective.id
-                            ? "Share Your Voice"
-                            : "Who should hear your voice?"}
-                    </h2>
-                    <p class="text-gray-500 leading-relaxed">
-                        These choices reflect your values and ensure you're
-                        cared for exactly as you wish. It's okay to take your
-                        time.
-                    </p>
-                </div>
-                <button
-                    onclick={resetForm}
-                    class="p-2 hover:bg-gray-100 rounded-full text-gray-400"
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label
+                    class="block text-xs font-bold uppercase text-slate-500 mb-1"
+                    >Directive Type</label
                 >
-                    <Plus size={24} class="rotate-45" />
-                </button>
+                <select
+                    bind:value={newDirective.type}
+                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                >
+                    <option value="healthcare_proxy">Healthcare Proxy</option>
+                    <option value="living_will">Living Will</option>
+                    <option value="dnr">DNR Order</option>
+                    <option value="palliative_care">Palliative Care</option>
+                    <option value="other">Other</option>
+                </select>
             </div>
-
-            <form
-                onsubmit={(e) => {
-                    e.preventDefault();
-                    saveDirective();
-                }}
-                class="p-8 space-y-6"
-            >
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label
-                            class="block text-xs font-bold uppercase text-gray-500 mb-1"
-                            >Directive Type</label
-                        >
-                        <select
-                            bind:value={newDirective.type}
-                            class="w-full px-4 py-2 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-red-500"
-                        >
-                            <option value="healthcare_proxy"
-                                >Healthcare Proxy</option
-                            >
-                            <option value="living_will">Living Will</option>
-                            <option value="dnr">DNR Order</option>
-                            <option value="palliative_care"
-                                >Palliative Care</option
-                            >
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label
-                            class="block text-xs font-bold uppercase text-gray-500 mb-1"
-                            >Title</label
-                        >
-                        <input
-                            type="text"
-                            bind:value={newDirective.title}
-                            placeholder="e.g. Living Will 2024"
-                            class="w-full px-4 py-2 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-red-500"
-                        />
-                    </div>
-                </div>
-
-                <div>
-                    <label
-                        class="block text-xs font-bold uppercase text-gray-500 mb-1"
-                        >Summary of Wishes</label
-                    >
-                    <textarea
-                        bind:value={newDirective.summary}
-                        placeholder="Key points of this directive..."
-                        class="w-full px-4 py-2 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-primary"
-                        rows="3"
-                    ></textarea>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="space-y-3">
-                        <label
-                            class="block text-xs font-bold uppercase text-gray-500 mb-1"
-                            >Primary Proxy/Contact</label
-                        >
-                        <input
-                            type="text"
-                            bind:value={newDirective.primaryContact}
-                            placeholder="e.g. Dr. Sarah Chen"
-                            class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
-                        />
-                    </div>
-                    <div class="space-y-3">
-                        <label
-                            for="contactPhone"
-                            class="text-xs font-black text-slate-400 uppercase tracking-widest ml-1"
-                            >Contact Phone</label
-                        >
-                        <input
-                            type="text"
-                            bind:value={newDirective.contactPhone}
-                            placeholder="e.g. +1 (555) 000-0000"
-                            class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
-                        />
-                    </div>
-                </div>
-
-                <div>
-                    <label
-                        class="block text-xs font-bold uppercase text-gray-500 mb-1"
-                        >Location of Original Document</label
-                    >
-                    <input
-                        type="text"
-                        bind:value={newDirective.locationOfOriginal}
-                        placeholder="e.g. Safe deposit box at First National Bank"
-                        class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
-                    />
-                </div>
-
-                <!-- Custom Fields -->
-                <div class="pt-4 mt-4 border-t border-gray-100">
-                    <CustomFieldsManager
-                        entityType="medical"
-                        bind:data={parsedCustomAttributes}
-                    />
-                </div>
-
-                <div class="flex gap-4 pt-4">
-                    <button
-                        type="button"
-                        onclick={resetForm}
-                        class="flex-1 py-4 px-6 bg-gray-100 text-gray-600 rounded-2xl font-bold hover:bg-gray-200 transition-colors"
-                    >
-                        Not right now
-                    </button>
-                    <button
-                        type="submit"
-                        class="flex-1 py-4 px-6 bg-primary text-primary-foreground rounded-2xl font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all"
-                    >
-                        {newDirective.id
-                            ? "Save my updates"
-                            : "Include this directive"}
-                    </button>
-                </div>
-            </form>
+            <div>
+                <label
+                    class="block text-xs font-bold uppercase text-slate-500 mb-1"
+                    >Title</label
+                >
+                <input
+                    type="text"
+                    bind:value={newDirective.title}
+                    placeholder="e.g. Living Will 2024"
+                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                />
+            </div>
         </div>
-    </div>
+
+        <div>
+            <label
+                class="block text-xs font-bold uppercase text-slate-500 mb-1"
+                >Summary of Wishes</label
+            >
+            <textarea
+                bind:value={newDirective.summary}
+                placeholder="Key points of this directive..."
+                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                rows="3"
+            ></textarea>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label
+                    class="block text-xs font-bold uppercase text-slate-500 mb-1"
+                    >Primary Proxy/Contact</label
+                >
+                <input
+                    type="text"
+                    bind:value={newDirective.primaryContact}
+                    placeholder="e.g. Dr. Sarah Chen"
+                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                />
+            </div>
+            <div>
+                <label
+                    class="block text-xs font-bold uppercase text-slate-500 mb-1"
+                    >Contact Phone</label
+                >
+                <input
+                    type="text"
+                    bind:value={newDirective.contactPhone}
+                    placeholder="e.g. +1 (555) 000-0000"
+                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                />
+            </div>
+        </div>
+
+        <div>
+            <label
+                class="block text-xs font-bold uppercase text-slate-500 mb-1"
+                >Location of Original Document</label
+            >
+            <input
+                type="text"
+                bind:value={newDirective.locationOfOriginal}
+                placeholder="e.g. Safe deposit box at First National Bank"
+                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+            />
+        </div>
+
+        <!-- Custom Fields -->
+        <div class="pt-4 mt-4 border-t border-slate-100">
+            <CustomFieldsManager
+                entityType="medical"
+                bind:data={parsedCustomAttributes}
+            />
+        </div>
+
+        <div class="flex gap-4 pt-4">
+            <button
+                type="button"
+                onclick={resetForm}
+                class="flex-1 py-3 px-6 bg-slate-100 text-slate-600 rounded-xl font-semibold hover:bg-slate-200 transition-colors"
+            >
+                Not right now
+            </button>
+            <button
+                type="submit"
+                class="flex-1 py-3 px-6 bg-primary text-primary-foreground rounded-xl font-semibold shadow-lg shadow-primary/20 hover:opacity-90 transition-all"
+            >
+                {newDirective.id
+                    ? "Save my updates"
+                    : "Include this directive"}
+            </button>
+        </div>
+    </form>
+</Modal>
 {/if}

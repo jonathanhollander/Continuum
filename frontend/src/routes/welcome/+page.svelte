@@ -83,7 +83,7 @@
 
             <!-- Main Action Card -->
             <div
-                class="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden"
+                class="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden"
                 in:fly={{ y: 30, delay: 400 }}
             >
                 <!-- Card Header -->

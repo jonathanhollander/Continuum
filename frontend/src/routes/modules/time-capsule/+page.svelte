@@ -21,13 +21,33 @@
         ExternalLink,
         ShieldCheck,
         X,
+        Loader2,
+        Sparkles,
     } from "lucide-svelte";
+    import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
+    import { onMount } from "svelte";
     import { fade, slide, scale } from "svelte/transition";
     import { quintOut } from "svelte/easing";
     import VideoRecorder from "$lib/components/media/VideoRecorder.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
     import { mediaStorage } from "$lib/services/indexedDB";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
+    import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
+    import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
+    import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
+    import GhostRow from "$lib/components/ui/GhostRow.svelte";
+    import { t, language } from "$lib/stores/localization";
+    import { getSmartSamples } from "$lib/data/smartSamples";
+    import Affirmation from "$lib/components/Affirmation.svelte";
+
+    let viewMode = $state<ViewMode>('card');
+    let showAffirmation = $state(false);
+    let isLoading = $state(true);
+
+    onMount(async () => {
+        await timeCapsuleStore.sync?.();
+        isLoading = false;
+    });
 
     let showAddModal = $state(false);
     let parsedCustomAttributes = $state<Record<string, any>>({});
@@ -69,6 +89,7 @@
         isRecording = false;
         showAddModal = false;
         parsedCustomAttributes = {};
+        showAffirmation = true;
     }
 
     async function handleSaveVideo(event: CustomEvent<Blob>) {
@@ -98,38 +119,15 @@
     }
 </script>
 
-<div
-    class="max-w-6xl mx-auto p-6 md:p-8 space-y-10 animate-in fade-in duration-700"
+<LivingBlueprintHeader
+    title="Time Capsule Vault"
+    subtitle="Preserving wisdom, voice, and presence across time"
+    tier="legacy"
+    detailedDescription="Messages safely locked until the perfect milestone. Record video messages, write letters, or preserve your voice for graduations, weddings, and life's meaningful moments."
+    whyMatters="The messages you write here will comfort your loved ones when you're no longer here to say them yourself. Imagine your daughter graduating, getting married, or having her first child—and finding your voice waiting for her at each milestone."
 >
-    <!-- Vault Header -->
-    <div
-        class="flex flex-col md:flex-row items-center justify-between gap-8 bg-white rounded-[2.5rem] border border-slate-200 p-8 md:p-12 shadow-sm overflow-hidden relative"
-    >
-        <div
-            class="absolute top-0 right-0 p-20 opacity-[0.03] pointer-events-none rotate-12 scale-150"
-        >
-            <ShieldCheck size={300} />
-        </div>
-
-        <div class="space-y-4 text-center md:text-left">
-            <div
-                class="flex items-center justify-center md:justify-start gap-4"
-            >
-                <div class="p-3 bg-indigo-900 text-white rounded-2xl">
-                    <Lock size={32} />
-                </div>
-                <h1
-                    class="font-serif text-3xl md:text-4xl font-black text-slate-900 tracking-tight"
-                >
-                    Time Capsule Vault
-                </h1>
-            </div>
-            <p class="text-slate-500 text-lg max-w-lg font-medium">
-                Preserving wisdom, voice, and presence. Messages safely locked
-                until the perfect milestone.
-            </p>
-        </div>
-
+    <div class="flex items-center gap-3">
+        <DataViewToggle module="time-capsule" onchange={(mode) => viewMode = mode} />
         <button
             on:click={() => (showAddModal = true)}
             class="px-8 py-4 bg-indigo-600 text-white rounded-full font-bold shadow-xl shadow-indigo-200 hover:bg-indigo-700 hover:scale-105 transition-all flex items-center gap-3 shrink-0"
@@ -138,8 +136,32 @@
             Seal New Message
         </button>
     </div>
+</LivingBlueprintHeader>
+
+{#if isLoading}
+    <div class="flex items-center justify-center py-12">
+        <Loader2 class="w-8 h-8 animate-spin text-primary" />
+    </div>
+{:else}
+<div
+    class="max-w-6xl mx-auto p-6 md:p-8 space-y-10 animate-in fade-in duration-700"
+>
+    <!-- Affirmation Message -->
+    <Affirmation module="timeCapsule" bind:show={showAffirmation} />
+
+    <!-- AI Concierge Drafting Assistant -->
+    <AIPromptBar
+        context="letters"
+        prompts={[
+            "Help me write a message to my daughter for her wedding...",
+            "Draft words of wisdom for my grandchild's graduation...",
+            "Write a letter expressing my love and hopes for the future...",
+            "Create a meaningful message for my spouse to read later..."
+        ]}
+    />
 
     <!-- Active Capsules Grid -->
+    {#if viewMode === 'card'}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <!-- Locked Capsules -->
         {#each $capsuleStatus.locked as msg (msg.id)}
@@ -266,6 +288,35 @@
                     ctaLabel="Write your first message"
                     onAction={() => (showAddModal = true)}
                 />
+
+                <!-- Sample Data GhostRows -->
+                <div class="mt-8">
+                    <p class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-4 text-center">Example entries to inspire you</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 opacity-60">
+                        {#each getSmartSamples($language).timeCapsule || [] as sample}
+                            <GhostRow
+                                name={sample.title}
+                                subtitle={`For ${sample.recipient} - ${sample.contentPreview}`}
+                                type={sample.triggerType === 'milestone' ? 'Milestone' : 'Date'}
+                                onClick={() => {
+                                    newMessage = {
+                                        ...newMessage,
+                                        title: sample.title,
+                                        recipient: sample.recipient,
+                                        contentPreview: sample.contentPreview,
+                                        triggerType: sample.triggerType,
+                                        triggerValue: sample.triggerValue
+                                    };
+                                    showAddModal = true;
+                                }}
+                            >
+                                <svelte:fragment slot="icon">
+                                    <Lock size={20} class="text-slate-400" />
+                                </svelte:fragment>
+                            </GhostRow>
+                        {/each}
+                    </div>
+                </div>
             </div>
             <button
                 on:click={() => (showAddModal = true)}
@@ -276,6 +327,55 @@
             </button>
         {/if}
     </div>
+    {:else}
+        <!-- Table View -->
+        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <table class="w-full">
+                <thead class="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Title</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Recipient</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Trigger</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Status</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Preview</th>
+                        <th class="text-right px-4 py-3 text-xs font-bold uppercase text-slate-500">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {#each [...$capsuleStatus.locked, ...$capsuleStatus.unlocked] as msg (msg.id)}
+                        <tr class="hover:bg-slate-50 transition-colors group">
+                            <td class="px-4 py-3 font-medium text-slate-800">{msg.title}</td>
+                            <td class="px-4 py-3 text-slate-600">{msg.recipient}</td>
+                            <td class="px-4 py-3">
+                                <span class="text-xs font-medium text-amber-600">
+                                    {msg.triggerType === 'milestone' ? getMilestoneLabel(msg.triggerValue) : msg.triggerValue}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="px-2 py-1 rounded text-xs font-bold {$capsuleStatus.unlocked.includes(msg) ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-500'}">
+                                    {$capsuleStatus.unlocked.includes(msg) ? 'Unlocked' : 'Locked'}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-slate-500 text-sm max-w-[200px] truncate">{msg.contentPreview || '-'}</td>
+                            <td class="px-4 py-3 text-right">
+                                <button
+                                    on:click={() => timeCapsuleStore.removeMessage(msg.id)}
+                                    class="opacity-0 group-hover:opacity-100 p-1 text-slate-300 hover:text-rose-500 transition-all"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                            </td>
+                        </tr>
+                    {/each}
+                </tbody>
+            </table>
+            {#if $timeCapsuleStore.length === 0}
+                <div class="p-8 text-center text-slate-500">
+                    No time capsules yet. Create your first message to preserve your voice across time.
+                </div>
+            {/if}
+        </div>
+    {/if}
 
     <!-- Modal for New Capsule -->
     {#if showAddModal}
@@ -403,7 +503,7 @@
                         <VideoRecorder on:save={handleSaveVideo} />
                     {:else if recordedMediaId}
                         <div
-                            class="p-6 bg-emerald-50 rounded-3xl border border-emerald-100 flex items-center justify-between"
+                            class="p-6 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center justify-between"
                         >
                             <div
                                 class="flex items-center gap-3 text-emerald-700"
@@ -427,7 +527,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <button
                                 on:click={() => (isRecording = true)}
-                                class="p-6 border-2 border-dashed border-slate-200 rounded-3xl flex flex-col items-center gap-3 text-slate-400 hover:border-indigo-300 hover:text-indigo-600 transition-all"
+                                class="p-6 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center gap-3 text-slate-400 hover:border-indigo-300 hover:text-indigo-600 transition-all"
                             >
                                 <Video size={32} />
                                 <span class="text-xs font-bold uppercase"
@@ -437,7 +537,7 @@
                             <textarea
                                 bind:value={newMessage.contentPreview}
                                 placeholder="Or type a written legacy note..."
-                                class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-3xl h-full focus:ring-2 focus:ring-indigo-500 outline-none font-medium resize-none"
+                                class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl h-full focus:ring-2 focus:ring-indigo-500 outline-none font-medium resize-none"
                             ></textarea>
                         </div>
                     {/if}
@@ -500,7 +600,7 @@
                 <X size={32} />
             </button>
             <div
-                class="w-full max-w-4xl aspect-video rounded-3xl overflow-hidden shadow-2xl bg-black"
+                class="w-full max-w-4xl aspect-video rounded-2xl overflow-hidden shadow-2xl bg-black"
             >
                 <video
                     src={activeVideoUrl}
@@ -512,6 +612,7 @@
         </div>
     {/if}
 </div>
+{/if}
 
 <style>
     :global(body) {

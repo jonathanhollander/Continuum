@@ -14,6 +14,7 @@
         Plus,
         X,
         Sparkles,
+        Loader2,
     } from "lucide-svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
@@ -22,6 +23,8 @@
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import GriefSupportBanner from "$lib/components/GriefSupportBanner.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
+    import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
+    import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
     import { onMount } from "svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { activityLog } from "$lib/stores/activityLog.svelte";
@@ -31,6 +34,9 @@
     import LegalDisclaimer from "$lib/components/common/LegalDisclaimer.svelte";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
     import * as registryRaw from "$lib/data/registry.json";
+    import { t, language } from "$lib/stores/localization";
+    import { getSmartSamples } from "$lib/data/smartSamples";
+    import Affirmation from "$lib/components/Affirmation.svelte";
 
     // Registry Data Handling
     const registryData = (registryRaw as any).default || registryRaw;
@@ -44,6 +50,14 @@
         cost: 0,
     });
     let parsedCustomAttributes = $state<Record<string, any>>({});
+    let isLoading = $state(true);
+    let showAffirmation = $state(false);
+    let viewMode = $state<ViewMode>('card');
+
+    onMount(async () => {
+        await funeralStore.sync?.();
+        isLoading = false;
+    });
 
     let wishes = $derived($funeralStore.wishes);
     let budgetItems = $derived($funeralStore.budget);
@@ -140,6 +154,7 @@
                 userContext: $estateProfile.ownerName || "User",
             });
         }
+        showAffirmation = true;
         resetExpenseForm();
     }
 
@@ -223,6 +238,11 @@
     }
 </script>
 
+{#if isLoading}
+    <div class="flex items-center justify-center py-12">
+        <Loader2 class="w-8 h-8 animate-spin text-primary" />
+    </div>
+{:else}
 {#if module}
     <LivingBlueprintHeader
         title={module.title}
@@ -248,10 +268,14 @@
         <div class="max-w-3xl mx-auto mt-8 text-left">
             <GriefSupportBanner compact={true} />
         </div>
+
+        <!-- Affirmation Message -->
+        <Affirmation module="funeral" bind:show={showAffirmation} />
     </div>
 
     <!-- Tabs -->
-    <div class="flex justify-center mb-8">
+    <div class="flex justify-center items-center gap-4 mb-8">
+        <DataViewToggle module="funeral" onchange={(mode) => viewMode = mode} />
         <div class="bg-gray-100 p-1.5 rounded-xl inline-flex gap-2">
             <button
                 class="px-6 py-2.5 rounded-lg font-bold text-sm transition-all {activeTab ===
@@ -275,7 +299,7 @@
     </div>
 
     <div
-        class="bg-white rounded-3xl border border-border shadow-sm overflow-hidden min-h-[500px] p-8"
+        class="bg-white rounded-2xl border border-border shadow-sm overflow-hidden min-h-[500px] p-8"
     >
         <!-- Memorial Subject Header (Synced) -->
         <div
@@ -350,6 +374,35 @@
                         onAction={prefillEstimates}
                         skipMessage="Come back to this when you're ready. There's no rush."
                     />
+
+                    <!-- Sample Data GhostRows -->
+                    <div class="mt-8">
+                        <p class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-4 text-center">Example entries to inspire you</p>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 opacity-60">
+                            {#each getSmartSamples($language).funeral || [] as sample}
+                                <GhostRow
+                                    name={sample.name}
+                                    subtitle={sample.description}
+                                    type={sample.type}
+                                    onClick={() => {
+                                        newExpense = {
+                                            name: sample.name,
+                                            cost: 0
+                                        };
+                                        showAddExpense = true;
+                                    }}
+                                >
+                                    <svelte:fragment slot="icon">
+                                        {#if sample.type === 'music'}
+                                            <Music size={20} class="text-slate-400" />
+                                        {:else}
+                                            <Flower size={20} class="text-slate-400" />
+                                        {/if}
+                                    </svelte:fragment>
+                                </GhostRow>
+                            {/each}
+                        </div>
+                    </div>
                 {:else}
                     <!-- Total Cost / Comparison -->
                     <div
@@ -485,7 +538,7 @@
         <!-- Expense Modal -->
         {#if showAddExpense}
             <div
-                class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+                class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
                 transition:fade
             >
                 <div
@@ -559,3 +612,4 @@
         {/if}
     </div>
 </div>
+{/if}

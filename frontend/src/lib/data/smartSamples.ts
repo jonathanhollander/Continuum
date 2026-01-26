@@ -32,6 +32,16 @@ export interface SmartSampleCollection {
     subscriptions: any[]; // Subscriptions use a simpler generic structure often
     contacts: any[];
     memories: any[];
+    funeral: any[];
+    calendar: any[];
+    homeManual: {
+        vendors: any[];
+        accessCodes: any[];
+        utilities: any[];
+    };
+    anniversary: any[];
+    timeCapsule: any[];
+    timeline: any[];
 }
 
 const dictionaries = {
@@ -107,6 +117,45 @@ const dictionaries = {
             wedding: "Our Wedding Day",
             notes_beach: "Beautiful sunset at Cancun.",
             notes_wedding: "The best day of our lives."
+        },
+        funeral: {
+            music1: "Amazing Grace",
+            music2: "What a Wonderful World",
+            flowers: "White lilies and roses",
+            venue: "St. Mary's Church",
+            dress_code: "Celebration of life - wear bright colors"
+        },
+        calendar: {
+            birthday: "My Birthday",
+            anniversary: "Wedding Anniversary",
+            wish_birthday: "Have a slice of cheesecake for me. It was my favorite.",
+            wish_anniversary: "Play our song and dance together."
+        },
+        homeManual: {
+            plumber: "Joe's Plumbing",
+            electrician: "City Electric Co.",
+            gate_code: "Front Gate",
+            alarm_code: "House Alarm",
+            water_shutoff: "Water Main",
+            gas_shutoff: "Gas Line"
+        },
+        anniversary: {
+            mom_birthday: "Mom's Birthday",
+            dad_passing: "Dad's Passing",
+            ritual_birthday: "Visit her favorite garden and leave flowers.",
+            ritual_passing: "Light a candle and share a memory."
+        },
+        timeCapsule: {
+            graduation: "Graduation Message",
+            wedding: "Wedding Day Wishes",
+            preview_graduation: "I'm so proud of how far you've come...",
+            preview_wedding: "Today marks the beginning of a beautiful journey..."
+        },
+        timeline: {
+            birth: "Born",
+            graduation: "College Graduation",
+            career: "Started Career",
+            marriage: "Got Married"
         }
     },
     es: {
@@ -181,6 +230,45 @@ const dictionaries = {
             wedding: "El Día de Nuestra Boda",
             notes_beach: "Hermoso atardecer en Cancún.",
             notes_wedding: "El mejor día de nuestras vidas."
+        },
+        funeral: {
+            music1: "Amazing Grace",
+            music2: "Qué Mundo Tan Maravilloso",
+            flowers: "Lirios blancos y rosas",
+            venue: "Iglesia Santa María",
+            dress_code: "Celebración de vida - usar colores alegres"
+        },
+        calendar: {
+            birthday: "Mi Cumpleaños",
+            anniversary: "Aniversario de Boda",
+            wish_birthday: "Coman un trozo de pastel por mí. Era mi favorito.",
+            wish_anniversary: "Pongan nuestra canción y bailen juntos."
+        },
+        homeManual: {
+            plumber: "Plomería de José",
+            electrician: "Electricidad de la Ciudad",
+            gate_code: "Portón Principal",
+            alarm_code: "Alarma de Casa",
+            water_shutoff: "Llave de Agua Principal",
+            gas_shutoff: "Llave de Gas"
+        },
+        anniversary: {
+            mom_birthday: "Cumpleaños de Mamá",
+            dad_passing: "Fallecimiento de Papá",
+            ritual_birthday: "Visitar su jardín favorito y dejar flores.",
+            ritual_passing: "Encender una vela y compartir un recuerdo."
+        },
+        timeCapsule: {
+            graduation: "Mensaje de Graduación",
+            wedding: "Deseos para el Día de la Boda",
+            preview_graduation: "Estoy tan orgulloso de lo lejos que has llegado...",
+            preview_wedding: "Hoy marca el comienzo de un hermoso viaje..."
+        },
+        timeline: {
+            birth: "Nacimiento",
+            graduation: "Graduación Universitaria",
+            career: "Inicio de Carrera",
+            marriage: "Matrimonio"
         }
     }
     // Add other languages as needed, default to EN
@@ -454,6 +542,158 @@ export const getSmartSamples = (locale: string = 'en'): SmartSampleCollection =>
                 description: dict.memories.notes_wedding,
                 tags: ['milestone', 'wedding'],
                 mediaUrl: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=400&q=80'
+            }
+        ],
+        funeral: [
+            {
+                id: commonId('fun-1'),
+                name: dict.funeral?.music1 || "Amazing Grace",
+                type: 'music',
+                description: 'Traditional hymn for the service'
+            },
+            {
+                id: commonId('fun-2'),
+                name: dict.funeral?.music2 || "What a Wonderful World",
+                type: 'music',
+                description: 'Louis Armstrong - play during reception'
+            },
+            {
+                id: commonId('fun-3'),
+                name: dict.funeral?.flowers || "White lilies and roses",
+                type: 'flowers',
+                description: 'Simple, elegant arrangements'
+            }
+        ],
+        calendar: [
+            {
+                id: commonId('cal-1'),
+                title: dict.calendar?.birthday || "My Birthday",
+                date: '0615',
+                type: 'birthday',
+                isRecurring: true,
+                wish: dict.calendar?.wish_birthday || "Have a slice of cheesecake for me."
+            },
+            {
+                id: commonId('cal-2'),
+                title: dict.calendar?.anniversary || "Wedding Anniversary",
+                date: '0620',
+                type: 'anniversary',
+                isRecurring: true,
+                wish: dict.calendar?.wish_anniversary || "Play our song and dance together."
+            }
+        ],
+        homeManual: {
+            vendors: [
+                {
+                    id: commonId('ven-1'),
+                    category: 'Plumber',
+                    name: dict.homeManual?.plumber || "Joe's Plumbing",
+                    phone: '(555) 123-4567',
+                    notes: 'Reliable, knows our old pipes well'
+                },
+                {
+                    id: commonId('ven-2'),
+                    category: 'Electrician',
+                    name: dict.homeManual?.electrician || "City Electric Co.",
+                    phone: '(555) 987-6543',
+                    notes: 'Licensed and bonded'
+                }
+            ],
+            accessCodes: [
+                {
+                    id: commonId('acc-1'),
+                    location: dict.homeManual?.gate_code || "Front Gate",
+                    code_encrypted: '1234',
+                    instructions: 'Press # after code'
+                },
+                {
+                    id: commonId('acc-2'),
+                    location: dict.homeManual?.alarm_code || "House Alarm",
+                    code_encrypted: '5678',
+                    instructions: 'Disarm within 30 seconds'
+                }
+            ],
+            utilities: [
+                {
+                    id: commonId('util-1'),
+                    service_type: 'Water',
+                    provider: 'City Water Dept',
+                    location: dict.homeManual?.water_shutoff || "Basement, left of water heater",
+                    shutoffInstructions: 'Turn red valve clockwise'
+                },
+                {
+                    id: commonId('util-2'),
+                    service_type: 'Gas',
+                    provider: 'PG&E',
+                    location: dict.homeManual?.gas_shutoff || "Outside, east wall",
+                    shutoffInstructions: 'Use wrench, quarter turn'
+                }
+            ]
+        },
+        anniversary: [
+            {
+                id: commonId('ann-1'),
+                title: dict.anniversary?.mom_birthday || "Mom's Birthday",
+                date: '03-15',
+                type: 'birthday',
+                description: 'She loved yellow roses',
+                ritualInstructions: dict.anniversary?.ritual_birthday || "Visit her favorite garden and leave flowers."
+            },
+            {
+                id: commonId('ann-2'),
+                title: dict.anniversary?.dad_passing || "Dad's Passing",
+                date: '11-22',
+                type: 'passing',
+                description: 'A day for quiet reflection',
+                ritualInstructions: dict.anniversary?.ritual_passing || "Light a candle and share a memory."
+            }
+        ],
+        timeCapsule: [
+            {
+                id: commonId('cap-1'),
+                title: dict.timeCapsule?.graduation || "Graduation Message",
+                recipient: 'Emily (Daughter)',
+                contentPreview: dict.timeCapsule?.preview_graduation || "I'm so proud of how far you've come...",
+                triggerType: 'milestone',
+                triggerValue: 'graduation'
+            },
+            {
+                id: commonId('cap-2'),
+                title: dict.timeCapsule?.wedding || "Wedding Day Wishes",
+                recipient: 'James (Son)',
+                contentPreview: dict.timeCapsule?.preview_wedding || "Today marks the beginning of a beautiful journey...",
+                triggerType: 'milestone',
+                triggerValue: 'wedding'
+            }
+        ],
+        timeline: [
+            {
+                id: commonId('time-1'),
+                year: 1990,
+                label: dict.timeline?.birth || "Born",
+                type: 'milestone',
+                description: 'The beginning of everything'
+            },
+            {
+                id: commonId('time-2'),
+                year: 2012,
+                label: dict.timeline?.graduation || "College Graduation",
+                type: 'education',
+                description: 'First in the family to graduate'
+            },
+            {
+                id: commonId('time-3'),
+                year: 2013,
+                label: dict.timeline?.career || "Started Career",
+                type: 'work',
+                description: 'Joined the company that shaped my life'
+            },
+            {
+                id: commonId('time-4'),
+                year: 2018,
+                label: dict.timeline?.marriage || "Got Married",
+                type: 'relationship',
+                description: 'The best decision I ever made'
             }
         ]
     };

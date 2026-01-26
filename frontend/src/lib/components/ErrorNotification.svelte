@@ -9,13 +9,16 @@
 	}
 
 	let { notification, onDismiss, onRetry }: Props = $props();
+	let showDetails = $state(false);
+	let copied = $state(false);
 
-	// Auto-dismiss after 10 seconds
+	// Auto-dismiss after 15 seconds (longer when has details)
 	let autoDismissTimer: number | undefined;
 	$effect(() => {
+		const timeout = notification.technicalDetails ? 15000 : 10000;
 		autoDismissTimer = window.setTimeout(() => {
 			onDismiss();
-		}, 10000);
+		}, timeout);
 
 		return () => {
 			if (autoDismissTimer) clearTimeout(autoDismissTimer);
@@ -31,6 +34,17 @@
 		if (code === 'RATE_LIMITED') return '⏱️';
 		return '⚠️';
 	};
+
+	async function copyError() {
+		const errorText = `Error: ${notification.title}\nMessage: ${notification.message}\nTime: ${notification.timestamp.toISOString()}\n\nTechnical Details:\n${notification.technicalDetails || 'No additional details'}`;
+		try {
+			await navigator.clipboard.writeText(errorText);
+			copied = true;
+			setTimeout(() => copied = false, 2000);
+		} catch (err) {
+			console.error('Failed to copy:', err);
+		}
+	}
 </script>
 
 <div
@@ -47,10 +61,24 @@
 		<div class="error-title">{notification.title}</div>
 		<div class="error-message">{notification.message}</div>
 
+		{#if notification.technicalDetails}
+			<button class="details-toggle" onclick={() => showDetails = !showDetails}>
+				{showDetails ? 'Hide' : 'Show'} details
+			</button>
+			{#if showDetails}
+				<div class="technical-details" transition:fade={{ duration: 150 }}>
+					<pre>{notification.technicalDetails}</pre>
+				</div>
+			{/if}
+		{/if}
+
 		<div class="error-actions">
 			{#if notification.canRetry && onRetry}
 				<button class="retry-button" onclick={onRetry}>Try Again</button>
 			{/if}
+			<button class="copy-button" onclick={copyError}>
+				{copied ? 'Copied!' : 'Copy Error'}
+			</button>
 			<button class="dismiss-button" onclick={onDismiss}>Dismiss</button>
 		</div>
 	</div>
@@ -107,8 +135,42 @@
 		margin-top: 8px;
 	}
 
+	.details-toggle {
+		background: none;
+		border: none;
+		color: #3182ce;
+		font-size: 12px;
+		cursor: pointer;
+		padding: 0;
+		text-decoration: underline;
+	}
+
+	.details-toggle:hover {
+		color: #2c5aa0;
+	}
+
+	.technical-details {
+		background: #f7fafc;
+		border: 1px solid #e2e8f0;
+		border-radius: 4px;
+		padding: 8px;
+		margin-top: 8px;
+		max-height: 150px;
+		overflow: auto;
+	}
+
+	.technical-details pre {
+		margin: 0;
+		font-size: 11px;
+		font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+		white-space: pre-wrap;
+		word-break: break-word;
+		color: #4a5568;
+	}
+
 	.retry-button,
-	.dismiss-button {
+	.dismiss-button,
+	.copy-button {
 		padding: 6px 12px;
 		border-radius: 6px;
 		font-size: 13px;
@@ -125,6 +187,15 @@
 
 	.retry-button:hover {
 		background: #2c5aa0;
+	}
+
+	.copy-button {
+		background: #805ad5;
+		color: white;
+	}
+
+	.copy-button:hover {
+		background: #6b46c1;
 	}
 
 	.dismiss-button {

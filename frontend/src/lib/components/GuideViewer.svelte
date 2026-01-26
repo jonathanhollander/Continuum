@@ -39,7 +39,7 @@
 
         <!-- Modal Content -->
         <div
-            class="relative w-full max-w-3xl max-h-[90vh] overflow-hidden rounded-3xl bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 border border-white/10 shadow-2xl"
+            class="relative w-full max-w-3xl max-h-[90vh] overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 border border-white/10 shadow-2xl"
             transition:fly={{ y: 20, duration: 300 }}
         >
             <!-- Header -->

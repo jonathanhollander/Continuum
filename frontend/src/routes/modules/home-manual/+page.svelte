@@ -17,14 +17,25 @@
         Shield,
         X,
         Save,
+        Loader2,
     } from "lucide-svelte";
     import { fly } from "svelte/transition";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
+    import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
+    import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
     import { onMount } from "svelte";
     import { registerSync } from "$lib/services/sync.svelte";
     import { getStored } from "$lib/stores/persistence";
+    import GhostRow from "$lib/components/ui/GhostRow.svelte";
+    import { t, language } from "$lib/stores/localization";
+    import { getSmartSamples } from "$lib/data/smartSamples";
+    import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
+    import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
+
+    let viewMode = $state<ViewMode>('card');
+    let customAttributes = $state<Record<string, any>>({});
 
     // MAPPERS
     // Maps local/legacy objects to backend schema
@@ -101,6 +112,7 @@
     ).setAffirmationContext("general");
 
     let activeTab = $state("vendors");
+    let isLoading = $state(true);
 
     // Modal States
     let showVendorModal = $state(false);
@@ -118,6 +130,7 @@
             accessSync.init(),
             utilitySync.init(),
         ]);
+        isLoading = false;
     });
 
     // Handlers
@@ -180,6 +193,11 @@
     }
 </script>
 
+{#if isLoading}
+    <div class="flex items-center justify-center py-12">
+        <Loader2 class="w-8 h-8 animate-spin text-primary" />
+    </div>
+{:else}
 <!-- Vendor Modal -->
 {#if showVendorModal}
     <div
@@ -236,6 +254,14 @@
                         bind:value={vendorForm.phone}
                         placeholder="(555) 123-4567"
                         class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium"
+                    />
+                </div>
+
+                <!-- Custom Fields -->
+                <div class="pt-4 border-t border-slate-100">
+                    <CustomFieldsManager
+                        entityType="home_vendor"
+                        bind:data={customAttributes}
                     />
                 </div>
             </div>
@@ -303,6 +329,14 @@
                         bind:value={codeForm.code}
                         placeholder="e.g. 1234"
                         class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-mono text-lg tracking-widest"
+                    />
+                </div>
+
+                <!-- Custom Fields -->
+                <div class="pt-4 border-t border-slate-100">
+                    <CustomFieldsManager
+                        entityType="home_access_code"
+                        bind:data={customAttributes}
                     />
                 </div>
             </div>
@@ -377,6 +411,14 @@
                         class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium"
                     />
                 </div>
+
+                <!-- Custom Fields -->
+                <div class="pt-4 border-t border-slate-100">
+                    <CustomFieldsManager
+                        entityType="home_utility"
+                        bind:data={customAttributes}
+                    />
+                </div>
             </div>
 
             <div class="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
@@ -400,54 +442,57 @@
 
 <div class="max-w-6xl mx-auto p-6 md:p-8 animate-in fade-in duration-500">
     <!-- Header -->
-    <div class="mb-8">
-        <div class="flex items-center gap-4 mb-2">
-            <div
-                class="p-3 bg-primary/10 text-primary rounded-xl shadow-lg shadow-primary/10"
-            >
-                <Hammer size={32} />
-            </div>
-            <div>
-                <h1 class="font-serif font-bold text-3xl text-foreground">
-                    The Home Operating Manual
-                </h1>
-                <p class="text-slate-500">
-                    The "Instruction Manual" for your physical house. Don't
-                    leave them guessing how to turn off the water.
-                </p>
-            </div>
-        </div>
-    </div>
+    <LivingBlueprintHeader
+        title="The Home Operating Manual"
+        subtitle="The instruction manual for your physical house"
+        tier="preparation"
+        detailedDescription="Document your trusted vendors, access codes, and utility shutoff locations. Don't leave your family guessing how to turn off the water or who to call when something breaks."
+        whyMatters="In a crisis, your family needs immediate access to critical home information. Without these details, simple tasks become overwhelming challenges during an already difficult time."
+    />
+
+    <!-- AI Concierge Drafting Assistant -->
+    <AIPromptBar
+        context="executor"
+        prompts={[
+            "Help me document my home's maintenance schedule...",
+            "Write instructions for the utility shutoffs...",
+            "Draft a guide to the security system...",
+            "Explain how to contact my trusted vendors..."
+        ]}
+    />
 
     <!-- Navigation Tabs -->
-    <div class="flex gap-2 mb-8 border-b border-slate-200 pb-1">
-        <button
-            onclick={() => (activeTab = "vendors")}
-            class="px-5 py-2.5 font-bold text-sm rounded-t-xl transition-all border-b-2
-            {activeTab === 'vendors'
-                ? 'border-primary text-primary bg-primary/10'
-                : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'}"
-        >
-            Trusted Vendors
-        </button>
-        <button
-            onclick={() => (activeTab = "access")}
-            class="px-5 py-2.5 font-bold text-sm rounded-t-xl transition-all border-b-2
-            {activeTab === 'access'
-                ? 'border-primary text-primary bg-primary/10'
-                : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'}"
-        >
-            Access Codes
-        </button>
-        <button
-            onclick={() => (activeTab = "utilities")}
-            class="px-5 py-2.5 font-bold text-sm rounded-t-xl transition-all border-b-2
-            {activeTab === 'utilities'
-                ? 'border-primary text-primary bg-primary/10'
-                : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'}"
-        >
-            Utilities & Shutoffs
-        </button>
+    <div class="flex items-center justify-between mb-8 border-b border-slate-200 pb-1">
+        <div class="flex gap-2">
+            <button
+                onclick={() => (activeTab = "vendors")}
+                class="px-5 py-2.5 font-bold text-sm rounded-t-xl transition-all border-b-2
+                {activeTab === 'vendors'
+                    ? 'border-primary text-primary bg-primary/10'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'}"
+            >
+                Trusted Vendors
+            </button>
+            <button
+                onclick={() => (activeTab = "access")}
+                class="px-5 py-2.5 font-bold text-sm rounded-t-xl transition-all border-b-2
+                {activeTab === 'access'
+                    ? 'border-primary text-primary bg-primary/10'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'}"
+            >
+                Access Codes
+            </button>
+            <button
+                onclick={() => (activeTab = "utilities")}
+                class="px-5 py-2.5 font-bold text-sm rounded-t-xl transition-all border-b-2
+                {activeTab === 'utilities'
+                    ? 'border-primary text-primary bg-primary/10'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'}"
+            >
+                Utilities & Shutoffs
+            </button>
+        </div>
+        <DataViewToggle module="home-manual" onchange={(mode) => viewMode = mode} />
     </div>
 
     <!-- Tab Content -->
@@ -464,6 +509,32 @@
                         ctaLabel="Share your first vendor"
                         onAction={openVendorModal}
                     />
+
+                    <!-- Sample Data GhostRows -->
+                    <div class="mt-8">
+                        <p class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-4 text-center">Example entries to inspire you</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 opacity-60">
+                            {#each getSmartSamples($language).homeManual?.vendors || [] as sample}
+                                <GhostRow
+                                    name={sample.name}
+                                    subtitle={`${sample.category} - ${sample.phone}`}
+                                    type="Vendor"
+                                    onClick={() => {
+                                        vendorForm = {
+                                            category: sample.category,
+                                            name: sample.name,
+                                            phone: sample.phone
+                                        };
+                                        showVendorModal = true;
+                                    }}
+                                >
+                                    <svelte:fragment slot="icon">
+                                        <Phone size={20} class="text-slate-400" />
+                                    </svelte:fragment>
+                                </GhostRow>
+                            {/each}
+                        </div>
+                    </div>
                 {:else}
                     <div class="space-y-6">
                         <div class="flex justify-between items-center">
@@ -478,65 +549,106 @@
                             </button>
                         </div>
 
-                        <div
-                            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-                        >
-                            {#each vendorSync.items as vendor}
-                                <div
-                                    class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:border-orange-200 transition-all group"
-                                >
-                                    <div
-                                        class="flex justify-between items-start mb-3"
-                                    >
-                                        <span
-                                            class="px-2 py-1 bg-primary/10 text-primary text-[10px] font-bold uppercase rounded-md tracking-wider"
-                                            >{vendor.category}</span
-                                        >
-                                        <button
-                                            onclick={() =>
-                                                deleteVendor(vendor.id)}
-                                            class="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                                        >
-                                            &times;
-                                        </button>
-                                    </div>
-                                    <h3
-                                        class="font-bold text-slate-800 text-lg"
-                                    >
-                                        {vendor.name}
-                                    </h3>
-                                    <div class="text-sm text-slate-500 mb-4">
-                                        {vendor.company}
-                                    </div>
-
-                                    <div
-                                        class="flex items-center gap-2 text-slate-600 font-mono bg-slate-50 p-2 rounded-lg mb-3"
-                                    >
-                                        <Phone size={14} />
-                                        {vendor.phone}
-                                    </div>
-
-                                    {#if vendor.notes}
-                                        <p
-                                            class="text-xs text-slate-400 italic"
-                                        >
-                                            "{vendor.notes}"
-                                        </p>
-                                    {/if}
-                                </div>
-                            {/each}
-
-                            <!-- Empty State Add -->
-                            <button
-                                onclick={openVendorModal}
-                                class="border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-slate-400 hover:border-slate-300 hover:bg-slate-50 transition-all min-h-[200px]"
+                        {#if viewMode === 'card'}
+                            <div
+                                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
                             >
-                                <Plus size={24} class="mb-2" />
-                                <span class="font-bold text-sm"
-                                    >Include a helper</span
+                                {#each vendorSync.items as vendor}
+                                    <div
+                                        class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:border-orange-200 transition-all group"
+                                    >
+                                        <div
+                                            class="flex justify-between items-start mb-3"
+                                        >
+                                            <span
+                                                class="px-2 py-1 bg-primary/10 text-primary text-[10px] font-bold uppercase rounded-md tracking-wider"
+                                                >{vendor.category}</span
+                                            >
+                                            <button
+                                                onclick={() =>
+                                                    deleteVendor(vendor.id)}
+                                                class="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                &times;
+                                            </button>
+                                        </div>
+                                        <h3
+                                            class="font-bold text-slate-800 text-lg"
+                                        >
+                                            {vendor.name}
+                                        </h3>
+                                        <div class="text-sm text-slate-500 mb-4">
+                                            {vendor.company}
+                                        </div>
+
+                                        <div
+                                            class="flex items-center gap-2 text-slate-600 font-mono bg-slate-50 p-2 rounded-lg mb-3"
+                                        >
+                                            <Phone size={14} />
+                                            {vendor.phone}
+                                        </div>
+
+                                        {#if vendor.notes}
+                                            <p
+                                                class="text-xs text-slate-400 italic"
+                                            >
+                                                "{vendor.notes}"
+                                            </p>
+                                        {/if}
+                                    </div>
+                                {/each}
+
+                                <!-- Empty State Add -->
+                                <button
+                                    onclick={openVendorModal}
+                                    class="border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-slate-400 hover:border-slate-300 hover:bg-slate-50 transition-all min-h-[200px]"
                                 >
-                            </button>
-                        </div>
+                                    <Plus size={24} class="mb-2" />
+                                    <span class="font-bold text-sm"
+                                        >Include a helper</span
+                                    >
+                                </button>
+                            </div>
+                        {:else}
+                            <!-- Table View -->
+                            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                                <table class="w-full">
+                                    <thead class="bg-slate-50 border-b border-slate-200">
+                                        <tr>
+                                            <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Name</th>
+                                            <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Category</th>
+                                            <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Company</th>
+                                            <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Phone</th>
+                                            <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Notes</th>
+                                            <th class="text-right px-4 py-3 text-xs font-bold uppercase text-slate-500">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100">
+                                        {#each vendorSync.items as vendor}
+                                            <tr class="hover:bg-slate-50 transition-colors group">
+                                                <td class="px-4 py-3 font-medium text-slate-800">{vendor.name}</td>
+                                                <td class="px-4 py-3">
+                                                    <span class="px-2 py-1 bg-primary/10 text-primary rounded text-xs font-medium">
+                                                        {vendor.category}
+                                                    </span>
+                                                </td>
+                                                <td class="px-4 py-3 text-slate-600">{vendor.company || '-'}</td>
+                                                <td class="px-4 py-3 text-slate-600 font-mono">{vendor.phone || '-'}</td>
+                                                <td class="px-4 py-3 text-slate-500 text-sm max-w-[150px] truncate">{vendor.notes || '-'}</td>
+                                                <td class="px-4 py-3 text-right">
+                                                    <button
+                                                        onclick={() => deleteVendor(vendor.id)}
+                                                        class="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        {/each}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {/if}
                     </div>
                 {/if}
             </div>
@@ -552,6 +664,31 @@
                         ctaLabel="Share your first code"
                         onAction={openCodeModal}
                     />
+
+                    <!-- Sample Data GhostRows -->
+                    <div class="mt-8">
+                        <p class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-4 text-center">Example entries to inspire you</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 opacity-60">
+                            {#each getSmartSamples($language).homeManual?.accessCodes || [] as sample}
+                                <GhostRow
+                                    name={sample.location}
+                                    subtitle={sample.instructions}
+                                    type="Code"
+                                    onClick={() => {
+                                        codeForm = {
+                                            location: sample.location,
+                                            code: sample.code_encrypted
+                                        };
+                                        showCodeModal = true;
+                                    }}
+                                >
+                                    <svelte:fragment slot="icon">
+                                        <Key size={20} class="text-slate-400" />
+                                    </svelte:fragment>
+                                </GhostRow>
+                            {/each}
+                        </div>
+                    </div>
                 {:else}
                     <div class="space-y-6">
                         <div class="flex justify-between items-center">
@@ -621,6 +758,37 @@
                         ctaLabel="Share your first shutoff"
                         onAction={openUtilityModal}
                     />
+
+                    <!-- Sample Data GhostRows -->
+                    <div class="mt-8">
+                        <p class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-4 text-center">Example entries to inspire you</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 opacity-60">
+                            {#each getSmartSamples($language).homeManual?.utilities || [] as sample}
+                                <GhostRow
+                                    name={`${sample.service_type} Shutoff`}
+                                    subtitle={sample.location}
+                                    type="Utility"
+                                    onClick={() => {
+                                        utilityForm = {
+                                            service_type: sample.service_type,
+                                            provider: sample.provider
+                                        };
+                                        showUtilityModal = true;
+                                    }}
+                                >
+                                    <svelte:fragment slot="icon">
+                                        {#if sample.service_type === 'Water'}
+                                            <Droplets size={20} class="text-slate-400" />
+                                        {:else if sample.service_type === 'Gas'}
+                                            <Thermometer size={20} class="text-slate-400" />
+                                        {:else}
+                                            <Zap size={20} class="text-slate-400" />
+                                        {/if}
+                                    </svelte:fragment>
+                                </GhostRow>
+                            {/each}
+                        </div>
+                    </div>
                 {:else}
                     <div class="space-y-6">
                         <div class="flex justify-between items-center">
@@ -716,3 +884,4 @@
         {/if}
     </div>
 </div>
+{/if}

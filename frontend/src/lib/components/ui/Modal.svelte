@@ -6,11 +6,13 @@
 
     let {
         title = "",
+        description = "",
         open = $bindable(false),
         maxWidth = "max-w-md",
         children,
     } = $props<{
         title?: string;
+        description?: string;
         open: boolean;
         maxWidth?: string;
         children?: import("svelte").Snippet;
@@ -67,11 +69,18 @@
         >
             <!-- Header -->
             <div
-                class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white sticky top-0 z-10"
+                class="flex items-start justify-between px-6 py-4 border-b border-slate-100 bg-white sticky top-0 z-10"
             >
-                <h2 class="text-lg font-semibold text-slate-800">{title}</h2>
+                <div class="flex-1 pr-4">
+                    {#if title}
+                        <h2 class="{description ? 'font-serif font-bold text-xl' : 'text-lg font-semibold'} text-slate-800">{title}</h2>
+                    {/if}
+                    {#if description}
+                        <p class="text-slate-500 text-sm mt-2 leading-relaxed">{description}</p>
+                    {/if}
+                </div>
                 <button
-                    class="p-2 -mr-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+                    class="p-2 -mr-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors flex-shrink-0"
                     onclick={close}
                     aria-label="Close"
                 >
