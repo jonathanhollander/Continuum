@@ -47,6 +47,8 @@
     import { REFLECTION_POOLS } from "$lib/data/reflectionPools";
     import RefreshControl from "$lib/components/ui/RefreshControl.svelte";
     import { notifications } from "$lib/stores/notificationStore";
+    import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
+    import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
 
     type SavedLetter = {
         id: string;
@@ -71,6 +73,7 @@
 
     let searchQuery = $state("");
     let isLoading = $state(true);
+    let viewMode = $state<ViewMode>('card');
 
     onMount(async () => {
         await letterSync.init();
@@ -403,6 +406,7 @@
             </div>
 
             <div class="flex items-center gap-4">
+                <DataViewToggle module="letters" onchange={(mode) => viewMode = mode} />
                 <div
                     class="bg-[#FDFBF7] border border-stone-200 p-4 rounded-2xl flex items-center gap-6 shadow-sm"
                 >

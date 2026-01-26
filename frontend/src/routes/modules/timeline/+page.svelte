@@ -30,10 +30,13 @@
     import { familyStore } from "$lib/stores/familyStore.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
     import Affirmation from "$lib/components/Affirmation.svelte";
+    import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
+    import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
 
     let parsedCustomAttributes = $state<Record<string, any>>({});
     let showAffirmation = $state(false);
     let isLoading = $state(true);
+    let viewMode = $state<ViewMode>('card');
 
     onMount(async () => {
         await timelineStore.sync?.();
@@ -204,6 +207,11 @@
     </div>
 {:else}
 <div class="max-w-6xl mx-auto p-8 animate-in fade-in duration-500">
+    <!-- View Toggle -->
+    <div class="flex justify-end mb-4">
+        <DataViewToggle module="timeline" onchange={(mode) => viewMode = mode} />
+    </div>
+
     <!-- Affirmation Message -->
     <Affirmation module="timeline" bind:show={showAffirmation} />
 

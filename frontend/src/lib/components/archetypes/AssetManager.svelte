@@ -37,6 +37,8 @@
     import { registerSync } from "$lib/services/sync.svelte"; // ADDDED
     import { getSmartSamples } from "$lib/data/smartSamples";
     import { conciergeEngine } from "$lib/stores/conciergeEngine";
+    import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
+    import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
 
     let { module } = $props<{ module: any }>();
 
@@ -82,6 +84,7 @@
 
     let assets = $derived(assetSync.items);
     let showAddForm = $state(false);
+    let viewMode = $state<ViewMode>('card');
 
     let newAsset = $state<Partial<Asset> & { id?: string; documents?: string }>({
         name: "",
@@ -467,7 +470,8 @@
                 {/if}
             </div>
         </div>
-        <div class="flex gap-3">
+        <div class="flex gap-3 items-center">
+            <DataViewToggle module="financial-accounts" onchange={(mode) => viewMode = mode} />
             {#if $userRole !== "Family"}
                 <button
                     onclick={() => (showAddForm = true)}

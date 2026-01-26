@@ -26,12 +26,14 @@
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
+    import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { activityLog } from "$lib/stores/activityLog.svelte";
     // import { getStored, setStored } from "$lib/stores/persistence";
     import type { ViewMode } from "$lib/stores/userPreferencesStore.svelte";
 
-    let { module, viewMode = 'card' }: { module: { id: string }, viewMode?: ViewMode } = $props();
+    let { module, viewMode: initialViewMode = 'card' }: { module: { id: string }, viewMode?: ViewMode } = $props();
+    let viewMode = $state<ViewMode>(initialViewMode);
     let customAttributes = $state<Record<string, any>>({});
 
     type DocType =
@@ -339,15 +341,18 @@
                 class="w-full bg-transparent border-none outline-none pl-9 text-sm h-10 placeholder:text-muted-foreground/50"
             />
         </div>
-        <button
-            onclick={() => {
-                showUpload = true;
-                showWizard = false;
-            }}
-            class="px-5 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
-        >
-            <CloudUpload size={16} /> Add a document
-        </button>
+        <div class="flex items-center gap-3">
+            <DataViewToggle module="legal-documents" onchange={(mode) => viewMode = mode} />
+            <button
+                onclick={() => {
+                    showUpload = true;
+                    showWizard = false;
+                }}
+                class="px-5 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
+            >
+                <CloudUpload size={16} /> Add a document
+            </button>
+        </div>
     </div>
 
     <!-- Wizard / Upload Form -->

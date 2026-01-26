@@ -31,12 +31,15 @@
     import GriefSupportBanner from "$lib/components/GriefSupportBanner.svelte";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
+    import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
+    import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
 
     let showAddForm = $state(false);
     let parsedCustomAttributes = $state<Record<string, any>>({});
     let editMode = $state(false);
     let showAffirmation = $state(false);
     let isLoading = $state(true);
+    let viewMode = $state<ViewMode>('card');
     let newDirective: Partial<MedicalDirective> = $state({
         type: "healthcare_proxy",
         title: "",
@@ -180,6 +183,11 @@
             Save my medical wishes
         </button>
     </LivingBlueprintHeader>
+
+    <!-- View Toggle -->
+    <div class="flex justify-end mb-4">
+        <DataViewToggle module="medical" onchange={(mode) => viewMode = mode} />
+    </div>
 
     <div class="max-w-3xl">
         <GriefSupportBanner compact={true} />
