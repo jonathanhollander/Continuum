@@ -126,6 +126,6 @@ export function getRandomAffirmation(module: keyof typeof affirmations = 'genera
 /**
  * Get all affirmations for a module (useful for cycling through them)
  */
-export function getModuleAffirmations(module: keyof typeof affirmations): Affirmation[] {
+export function getModuleAffirmations(module: keyof typeof affirmations): readonly Affirmation[] {
     return affirmations[module] || affirmations.general;
 }

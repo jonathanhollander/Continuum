@@ -1,5 +1,8 @@
 import { API_URL } from '../config';
 import { logger } from '../utils/logger';
+import { get } from 'svelte/store';
+import { activeAccountId } from '../stores/keyringStore';
+import { auth } from '../stores/auth';
 
 interface SyncPayload {
     transparent_data: string;
