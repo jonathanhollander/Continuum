@@ -148,7 +148,7 @@
     <!-- Progress Bar -->
     <div class="absolute top-0 left-0 w-full h-2 bg-slate-200">
         <div
-            class="h-full bg-indigo-500 transition-all duration-500"
+            class="h-full bg-primary transition-all duration-500"
             style="width: {progress}%"
         ></div>
     </div>
@@ -215,7 +215,7 @@
                         bind:value={currentInput}
                         onkeydown={handleKeydown}
                         placeholder={$t(currentStep.placeholder || "")}
-                        class="w-full text-2xl bg-transparent border-b-2 border-slate-200 focus:border-indigo-500 outline-none py-2 placeholder:text-slate-300 min-h-[100px] resize-none"
+                        class="w-full text-2xl bg-transparent border-b-2 border-slate-200 focus:border-primary outline-none py-2 placeholder:text-slate-300 min-h-[100px] resize-none"
                         autofocus
                     ></textarea>
                 {:else if currentStep.type === "select"}
@@ -224,8 +224,8 @@
                             <button
                                 class="text-left p-4 rounded-xl border-2 transition-all {currentInput ===
                                 option
-                                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                                    : 'border-slate-200 hover:border-indigo-200 bg-white'}"
+                                    ? 'border-primary bg-primary/10 text-primary'
+                                    : 'border-slate-200 hover:border-primary/30 bg-white'}"
                                 onclick={() => {
                                     currentInput = option;
                                     nextStep();
@@ -241,7 +241,7 @@
                         bind:value={currentInput}
                         onkeydown={handleKeydown}
                         placeholder={$t(currentStep.placeholder || "")}
-                        class="w-full text-3xl bg-transparent border-b-2 border-slate-200 focus:border-indigo-500 outline-none py-2 placeholder:text-slate-300"
+                        class="w-full text-3xl bg-transparent border-b-2 border-slate-200 focus:border-primary outline-none py-2 placeholder:text-slate-300"
                         autofocus
                     />
                 {/if}
@@ -253,7 +253,7 @@
                     <button
                         onclick={nextStep}
                         disabled={currentStep.required && !currentInput}
-                        class="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-lg flex items-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-200"
+                        class="px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl text-lg flex items-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20 focus-ring"
                     >
                         {#if currentStepIndex === steps.length - 1 && !currentStep.logic}
                             <span>{$t("wizard.finish")}</span>

@@ -62,7 +62,7 @@
                     <button
                         onclick={() => selectLanguage(lang.code)}
                         class="px-4 py-3 rounded-xl text-sm font-medium transition-all {selectedLanguage === lang.code
-                            ? 'bg-indigo-600 text-white'
+                            ? 'bg-primary text-white'
                             : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white border border-white/10'}"
                     >
                         {lang.name}
@@ -82,7 +82,7 @@
                     <button
                         onclick={() => selectFontSize(size.value)}
                         class="p-4 rounded-xl text-center transition-all {selectedFontSize === size.value
-                            ? 'bg-indigo-600/20 border-2 border-indigo-500/50'
+                            ? 'bg-primary/20 border-2 border-indigo-500/50'
                             : 'bg-white/5 border border-white/10 hover:bg-white/10'}"
                     >
                         <div
@@ -116,7 +116,7 @@
 
         <button
             onclick={proceed}
-            class="group flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-xl transition-all hover:scale-105 active:scale-95"
+            class="group flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-white font-medium rounded-xl transition-all hover:scale-105 active:scale-95"
         >
             <span>Almost there</span>
             <ArrowRight size={16} class="group-hover:translate-x-1 transition-transform" />

@@ -44,7 +44,7 @@
                 </div>
 
                 <div class="flex items-start gap-4 p-4 bg-white/5 rounded-2xl border border-white/10">
-                    <div class="p-2 bg-indigo-500/20 rounded-xl text-indigo-400 shrink-0">
+                    <div class="p-2 bg-primary/20 rounded-xl text-primary shrink-0">
                         <Shield size={20} />
                     </div>
                     <div>
@@ -73,8 +73,9 @@
             </p>
 
             <button
+                type="button"
                 onclick={proceed}
-                class="group inline-flex items-center gap-3 px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-2xl transition-all hover:scale-105 active:scale-95"
+                class="group inline-flex items-center gap-3 px-8 py-4 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-2xl transition-all hover:scale-105 active:scale-95 focus-ring"
             >
                 <span>Let's begin</span>
                 <ArrowRight size={18} class="group-hover:translate-x-1 transition-transform" />

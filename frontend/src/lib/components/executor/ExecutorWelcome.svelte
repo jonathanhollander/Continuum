@@ -103,8 +103,8 @@
         {:else if step === 1}
             <!-- Step 2: Take Your Time -->
             <div class="p-8 md:p-12" in:fade>
-                <div class="w-16 h-16 rounded-full bg-indigo-500/20 flex items-center justify-center mb-6">
-                    <Clock size={32} class="text-indigo-400" />
+                <div class="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mb-6">
+                    <Clock size={32} class="text-primary" />
                 </div>
 
                 <h1 class="text-3xl md:text-4xl font-serif font-bold text-white mb-4">

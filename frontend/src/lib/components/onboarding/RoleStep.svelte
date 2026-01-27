@@ -50,7 +50,7 @@
     }
 
     const colorClasses: Record<string, { bg: string; border: string; text: string }> = {
-        indigo: { bg: 'bg-indigo-500/20', border: 'border-indigo-500/50', text: 'text-indigo-400' },
+        indigo: { bg: 'bg-primary/20', border: 'border-primary/50', text: 'text-primary' },
         amber: { bg: 'bg-amber-500/20', border: 'border-amber-500/50', text: 'text-amber-400' },
         rose: { bg: 'bg-rose-500/20', border: 'border-rose-500/50', text: 'text-rose-400' },
         emerald: { bg: 'bg-emerald-500/20', border: 'border-emerald-500/50', text: 'text-emerald-400' }
@@ -110,8 +110,9 @@
         </button>
 
         <button
+            type="button"
             onclick={proceed}
-            class="group flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-xl transition-all hover:scale-105 active:scale-95"
+            class="group flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-xl transition-all hover:scale-105 active:scale-95 focus-ring"
         >
             <span>Continue</span>
             <ArrowRight size={16} class="group-hover:translate-x-1 transition-transform" />
