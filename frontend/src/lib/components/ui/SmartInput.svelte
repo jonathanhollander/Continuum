@@ -23,11 +23,11 @@
     );
 </script>
 
-<div class="space-y-2">
+<div class="space-y-1.5">
     {#if label}
         <div class="flex items-center justify-between px-1">
             <label
-                class="text-[11px] font-black text-slate-800 uppercase tracking-wider"
+                class="text-xs font-bold text-slate-500 uppercase tracking-wide"
                 >{label}</label
             >
             {#if isAIPopulated}
@@ -47,7 +47,7 @@
             {type}
             bind:value
             {placeholder}
-            class="w-full {glowClass} border-2 focus:border-indigo-600 focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all"
+            class="w-full {glowClass} border focus:border-primary focus:ring-2 focus:ring-primary/20 focus:bg-white rounded-xl px-4 py-3 text-sm font-medium text-slate-800 outline-none transition-all"
         />
     </div>
 </div>

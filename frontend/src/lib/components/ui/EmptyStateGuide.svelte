@@ -202,9 +202,9 @@
             </div>
         {/each}
         <div
-            class="bg-indigo-50 p-4 rounded-xl border-2 border-indigo-200 border-dashed flex items-center justify-center gap-2 animate-pulse"
+            class="bg-primary/10 p-4 rounded-xl border-2 border-primary/30 border-dashed flex items-center justify-center gap-2 animate-pulse"
         >
-            <span class="text-indigo-400 text-sm font-bold"
+            <span class="text-primary/70 text-sm font-bold"
                 >Your Entry Goes Here</span
             >
         </div>
@@ -212,8 +212,9 @@
 
     <!-- CTA -->
     <button
+        type="button"
         on:click={onAdd}
-        class="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2 mx-auto"
+        class="bg-primary text-primary-foreground px-8 py-3 rounded-xl font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2 mx-auto focus-ring"
     >
         <Plus size={20} />
         {displayAction}

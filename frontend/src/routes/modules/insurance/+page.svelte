@@ -331,15 +331,19 @@
     <div class="flex flex-wrap items-center gap-3">
         <DataViewToggle module="insurance" onchange={(mode) => viewMode = mode} />
         <button
+            type="button"
             onclick={() => (showWizard = true)}
-            class="flex items-center gap-2 px-5 py-3 border border-primary/10 text-primary font-bold rounded-2xl hover:bg-primary/5 transition-colors"
+            aria-label="Start insurance wizard"
+            class="flex items-center gap-2 px-5 py-3 border border-primary/20 text-primary font-bold rounded-2xl hover:bg-primary/5 transition-colors focus-ring"
         >
             <Sparkles size={18} />
             {$t("wizard.start")}
         </button>
         <button
+            type="button"
             onclick={() => (showAddModal = true)}
-            class="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-2xl transition-all shadow-xl shadow-slate-900/10 font-bold"
+            aria-label="Share protection details"
+            class="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 rounded-2xl transition-all shadow-xl shadow-primary/10 font-bold hover:scale-[1.02] active:scale-[0.98] focus-ring"
         >
             <Plus size={20} />
             Share Protection

@@ -35,11 +35,15 @@
 
 {#if isOpen}
     <div
-        class="fixed inset-0 z-[150] flex items-center justify-center p-4 sm:p-6"
+        class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6"
         transition:fade={{ duration: 400 }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="welcome-modal-title"
+        onkeydown={(e) => e.key === 'Escape' && handleStart()}
     >
         <!-- Backdrop -->
-        <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-md"></div>
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
 
         <!-- Modal Content -->
         <div
@@ -78,6 +82,7 @@
             <div class="w-full md:w-3/5 p-8 md:p-10 flex flex-col">
                 <div class="mb-auto space-y-4">
                     <h3
+                        id="welcome-modal-title"
                         class="text-3xl font-black text-slate-800 tracking-tight"
                     >
                         Welcome Aboard.
@@ -129,8 +134,10 @@
 
                 <div class="mt-10 space-y-3">
                     <button
+                        type="button"
                         onclick={handleStart}
-                        class="w-full py-4 bg-slate-900 text-white rounded-xl font-bold text-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-2 group shadow-xl shadow-slate-900/20"
+                        aria-label="Start my legacy"
+                        class="w-full py-4 bg-primary text-primary-foreground rounded-xl font-bold text-lg hover:bg-primary/90 transition-all flex items-center justify-center gap-2 group shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] focus-ring"
                     >
                         Start My Legacy
                         <ArrowRight
@@ -140,15 +147,17 @@
                     </button>
 
                     <button
+                        type="button"
                         onclick={handleDemo}
                         disabled={isPopulating}
-                        class="w-full py-3 bg-white border-2 border-slate-100 text-slate-500 rounded-xl font-bold hover:border-slate-300 hover:text-slate-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                        aria-label="Explore with sample data"
+                        class="w-full py-3 bg-white border-2 border-slate-100 text-slate-500 rounded-xl font-bold hover:border-slate-300 hover:text-slate-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 focus-ring"
                     >
                         {#if isPopulating}
                             <span class="animate-pulse"
                                 >Injecting Demo Data...</span
                             >
-                            else
+                        {:else}
                             <Database size={18} />
                             <span>Explore with Sample Data</span>
                         {/if}

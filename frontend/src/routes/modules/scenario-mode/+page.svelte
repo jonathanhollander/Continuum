@@ -307,7 +307,7 @@
                     </section>
 
                     <div
-                        class="p-10 bg-indigo-600 rounded-[48px] text-white flex flex-col md:flex-row items-center gap-8 shadow-2xl shadow-indigo-200"
+                        class="p-10 bg-primary rounded-[48px] text-white flex flex-col md:flex-row items-center gap-8 shadow-2xl shadow-primary/20"
                     >
                         <div class="flex-1">
                             <h3 class="text-2xl font-black mb-2">

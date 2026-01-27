@@ -333,15 +333,19 @@
     <div class="flex flex-wrap items-center gap-3">
         <DataViewToggle module="property" onchange={(mode) => viewMode = mode} />
         <button
+            type="button"
             onclick={() => (showWizard = true)}
-            class="flex items-center gap-2 px-5 py-3 border border-primary/20 text-primary font-bold rounded-2xl hover:bg-primary/5 transition-colors"
+            aria-label="Start property wizard"
+            class="flex items-center gap-2 px-5 py-3 border border-primary/20 text-primary font-bold rounded-2xl hover:bg-primary/5 transition-colors focus-ring"
         >
             <Info size={18} />
             {$t("wizard.start")}
         </button>
         <button
+            type="button"
             onclick={() => (showAddModal = true)}
-            class="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-2xl transition-all shadow-xl shadow-primary/10 font-bold"
+            aria-label="Share a property detail"
+            class="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-2xl transition-all shadow-xl shadow-primary/10 font-bold hover:scale-[1.02] active:scale-[0.98] focus-ring"
         >
             <Plus size={20} />
             Share a property detail

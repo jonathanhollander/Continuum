@@ -255,4 +255,91 @@
             /* Optional: print save ink */
         }
     }
+
+    /* ===== BUTTON SYSTEM ===== */
+
+    /* Focus-visible for keyboard navigation accessibility */
+    .focus-ring {
+        @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
+    }
+
+    /* Button size tokens */
+    .btn-xs {
+        @apply px-2 py-1 text-xs rounded-lg font-medium min-h-[32px];
+    }
+    .btn-sm {
+        @apply px-4 py-2 text-sm rounded-lg font-semibold min-h-[36px];
+    }
+    .btn-md {
+        @apply px-6 py-2.5 text-base rounded-xl font-semibold min-h-[44px];
+    }
+    .btn-lg {
+        @apply px-8 py-3 text-lg rounded-xl font-semibold min-h-[48px];
+    }
+    .btn-xl {
+        @apply px-10 py-4 text-xl rounded-2xl font-bold min-h-[56px];
+    }
+
+    /* Button variant tokens */
+    .btn-primary {
+        @apply bg-primary text-primary-foreground
+               hover:scale-[1.02] active:scale-[0.98]
+               transition-all duration-200
+               disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
+    }
+    .btn-secondary {
+        @apply bg-slate-100 text-slate-700
+               hover:bg-slate-200 active:scale-[0.98]
+               transition-all duration-200
+               disabled:opacity-50 disabled:cursor-not-allowed
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2;
+    }
+    .btn-outline {
+        @apply bg-transparent border-2 border-primary text-primary
+               hover:bg-primary/10 active:scale-[0.98]
+               transition-all duration-200
+               disabled:opacity-50 disabled:cursor-not-allowed
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
+    }
+    .btn-ghost {
+        @apply bg-transparent text-slate-600
+               hover:bg-slate-100 active:scale-[0.98]
+               transition-all duration-200
+               disabled:opacity-50 disabled:cursor-not-allowed
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2;
+    }
+    .btn-danger {
+        @apply bg-red-600 text-white
+               hover:bg-red-700 hover:scale-[1.02] active:scale-[0.98]
+               transition-all duration-200
+               disabled:opacity-50 disabled:cursor-not-allowed
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2;
+    }
+
+    /* ===== INPUT SYSTEM ===== */
+
+    /* Standard input styling */
+    .input-standard {
+        @apply w-full px-4 py-3 rounded-xl border border-slate-200 bg-white
+               text-slate-800 placeholder:text-slate-400
+               focus:border-primary focus:ring-2 focus:ring-primary/20
+               outline-none transition-all duration-200;
+    }
+    .input-error {
+        @apply border-red-400 focus:border-red-500 focus:ring-red-500/20;
+    }
+
+    /* Standard label styling */
+    .label-standard {
+        @apply text-xs font-bold uppercase text-slate-500 tracking-wide;
+    }
+
+    /* ===== MODAL BACKDROP STANDARD ===== */
+    .modal-backdrop {
+        @apply fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50;
+    }
+    .modal-backdrop-priority {
+        @apply fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100];
+    }
 }

@@ -211,7 +211,7 @@
         <!-- Header -->
         <div class="text-center mb-12">
             <div
-                class="inline-flex p-5 rounded-3xl bg-teal-500/10 text-teal-400 mb-8 border border-teal-500/20 shadow-2xl shadow-teal-500/10"
+                class="inline-flex p-5 rounded-3xl bg-primary/10 text-primary mb-8 border border-primary/20 shadow-2xl shadow-primary/10"
             >
                 <Shield size={56} />
             </div>
@@ -233,9 +233,11 @@
                 <!-- Passkey Login (Primary) -->
                 <div class="space-y-6">
                     <button
+                        type="button"
                         onclick={handlePasskeyLogin}
                         disabled={isLoading}
-                        class="w-full bg-gradient-to-r from-teal-500 to-teal-400 hover:from-teal-400 hover:to-teal-300 text-slate-950 font-black py-6 px-8 rounded-2xl transition-all text-2xl disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl shadow-teal-500/20 flex items-center justify-center gap-4 group relative overflow-hidden"
+                        aria-label="Login with passkey"
+                        class="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black py-6 px-8 rounded-2xl transition-all text-2xl disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl shadow-primary/20 flex items-center justify-center gap-4 group relative overflow-hidden hover:scale-[1.02] active:scale-[0.98] focus-ring"
                     >
                         <div
                             class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"
@@ -248,8 +250,10 @@
 
                     <!-- Help Text for Passkeys -->
                     <button
+                        type="button"
                         onclick={() => (showHelp = !showHelp)}
-                        class="w-full text-slate-400 hover:text-teal-400 text-sm flex items-center justify-center gap-2 transition-colors"
+                        aria-label="What is a passkey"
+                        class="w-full text-slate-400 hover:text-primary text-sm flex items-center justify-center gap-2 transition-colors focus-ring rounded-lg py-2"
                     >
                         <Info size={16} />
                         What is a passkey?
@@ -257,11 +261,11 @@
 
                     {#if showHelp}
                         <div
-                            class="bg-indigo-500/5 border border-indigo-500/20 rounded-2xl p-6 space-y-3"
+                            class="bg-primary/5 border border-primary/20 rounded-2xl p-6 space-y-3"
                             in:fly={{ y: -10, duration: 300 }}
                         >
                             <h3 class="text-white font-bold text-lg flex items-center gap-2">
-                                <Info size={20} class="text-teal-400" />
+                                <Info size={20} class="text-primary" />
                                 What is a Passkey?
                             </h3>
                             <p class="text-slate-300 text-base leading-relaxed">
@@ -292,8 +296,10 @@
 
                     <!-- Magic Link Option -->
                     <button
+                        type="button"
                         onclick={() => (showMagicLink = true)}
-                        class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-5 px-6 rounded-2xl transition-all text-lg flex items-center justify-center gap-3 border border-slate-700"
+                        aria-label="Use email link instead"
+                        class="w-full btn-secondary py-5 px-6 rounded-2xl text-lg flex items-center justify-center gap-3 border border-slate-200/10"
                     >
                         <Mail size={24} />
                         Use Email Link Instead
@@ -317,15 +323,17 @@
                                     bind:value={magicLinkEmail}
                                     onkeydown={handleKeydown}
                                     placeholder="you@example.com"
-                                    class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-6 py-5 text-white text-xl placeholder-slate-500 focus:border-teal-500 focus:outline-none transition-colors"
+                                    class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-6 py-5 text-white text-xl placeholder-slate-500 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-colors"
                                     disabled={isLoading}
                                 />
                             </div>
 
                             <button
+                                type="button"
                                 onclick={handleMagicLink}
                                 disabled={isLoading || !magicLinkEmail}
-                                class="w-full bg-gradient-to-r from-teal-500 to-teal-400 hover:from-teal-400 hover:to-teal-300 text-slate-950 font-black py-6 px-8 rounded-2xl transition-all text-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl shadow-teal-500/20 flex items-center justify-center gap-4 group relative overflow-hidden"
+                                aria-label="Send sign-in link"
+                                class="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black py-6 px-8 rounded-2xl transition-all text-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl shadow-primary/20 flex items-center justify-center gap-4 group relative overflow-hidden hover:scale-[1.02] active:scale-[0.98] focus-ring"
                             >
                                 <div
                                     class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"
@@ -337,8 +345,10 @@
                             </button>
 
                             <button
+                                type="button"
                                 onclick={() => (showMagicLink = false)}
-                                class="w-full text-slate-400 hover:text-white font-medium py-3 transition-colors text-base"
+                                aria-label="Back to passkey login"
+                                class="w-full text-slate-400 hover:text-white font-medium py-3 transition-colors text-base focus-ring rounded-lg"
                             >
                                 Back to Passkey Login
                             </button>
@@ -346,10 +356,10 @@
                     {:else}
                         <!-- Magic Link Sent Confirmation -->
                         <div
-                            class="bg-teal-500/10 border border-teal-500/30 rounded-2xl p-8 text-center"
+                            class="bg-primary/10 border border-primary/30 rounded-2xl p-8 text-center"
                             in:fly={{ y: 20, duration: 300 }}
                         >
-                            <Mail size={48} class="text-teal-400 mx-auto mb-4" />
+                            <Mail size={48} class="text-primary mx-auto mb-4" />
                             <h3 class="text-white font-bold text-2xl mb-3">
                                 Check Your Email
                             </h3>
@@ -364,8 +374,10 @@
                         </div>
 
                         <button
+                            type="button"
                             onclick={() => (magicLinkSent = false)}
-                            class="w-full text-slate-400 hover:text-white font-medium py-3 transition-colors text-base"
+                            aria-label="Use a different email"
+                            class="w-full text-slate-400 hover:text-white font-medium py-3 transition-colors text-base focus-ring rounded-lg"
                         >
                             Use a different email
                         </button>
@@ -379,7 +391,7 @@
                     Don't have an account?
                     <a
                         href="/signup"
-                        class="text-teal-400 hover:text-teal-300 font-bold transition-colors"
+                        class="text-primary hover:text-primary/80 font-bold transition-colors focus-ring rounded"
                     >
                         Create one
                     </a>

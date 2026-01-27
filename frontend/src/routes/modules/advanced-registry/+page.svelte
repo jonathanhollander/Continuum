@@ -190,7 +190,7 @@
                             : (activeTab as any);
                     showAddModal = true;
                 }}
-                class="px-5 py-2.5 bg-slate-900 text-white rounded-xl font-bold flex items-center gap-2 hover:bg-indigo-600 transition-all shadow-lg active:scale-95"
+                class="px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-bold flex items-center gap-2 hover:bg-primary/90 transition-all shadow-lg active:scale-[0.98] focus-ring"
             >
                 <Plus size={18} />
                 Add Record

@@ -130,7 +130,7 @@
         <DataViewToggle module="time-capsule" onchange={(mode) => viewMode = mode} />
         <button
             on:click={() => (showAddModal = true)}
-            class="px-8 py-4 bg-indigo-600 text-white rounded-full font-bold shadow-xl shadow-indigo-200 hover:bg-indigo-700 hover:scale-105 transition-all flex items-center gap-3 shrink-0"
+            class="px-8 py-4 bg-primary text-white rounded-full font-bold shadow-xl shadow-primary/20 hover:bg-primary/90 hover:scale-105 transition-all flex items-center gap-3 shrink-0"
         >
             <Plus size={24} />
             Seal New Message
@@ -320,7 +320,7 @@
             </div>
             <button
                 on:click={() => (showAddModal = true)}
-                class="px-8 py-3.5 bg-indigo-600 text-white rounded-full font-bold shadow-lg hover:shadow-indigo-200 transition-all flex items-center mx-auto gap-2"
+                class="px-8 py-3.5 bg-primary text-white rounded-full font-bold shadow-lg hover:shadow-primary/20 transition-all flex items-center mx-auto gap-2"
             >
                 <Plus size={20} />
                 Begin a Legacy

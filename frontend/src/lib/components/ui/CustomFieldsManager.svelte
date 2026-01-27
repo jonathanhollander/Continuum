@@ -72,7 +72,7 @@
                     <input
                         type="date"
                         bind:value={data[def.name]}
-                        class="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:bg-white rounded-xl p-2.5 text-sm font-medium outline-none transition-all"
+                        class="w-full bg-slate-50 border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:bg-white rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
                     />
                 {:else if def.field_type === "boolean"}
                     <div class="flex items-center gap-2 mt-1">
@@ -80,7 +80,7 @@
                             class="px-4 py-2 rounded-lg text-xs font-bold border transition-all {data[
                                 def.name
                             ] === true
-                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-md'
+                                ? 'bg-primary text-primary-foreground border-primary shadow-md'
                                 : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}"
                             onclick={() => (data[def.name] = true)}>Yes</button
                         >
@@ -88,7 +88,7 @@
                             class="px-4 py-2 rounded-lg text-xs font-bold border transition-all {data[
                                 def.name
                             ] === false
-                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-md'
+                                ? 'bg-primary text-primary-foreground border-primary shadow-md'
                                 : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}"
                             onclick={() => (data[def.name] = false)}>No</button
                         >
@@ -97,21 +97,21 @@
                     <textarea
                         bind:value={data[def.name]}
                         placeholder={`Enter ${def.name}...`}
-                        class="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:bg-white rounded-xl p-3 text-sm font-medium outline-none transition-all min-h-[80px] resize-none"
+                        class="w-full bg-slate-50 border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:bg-white rounded-xl p-3 text-sm font-medium outline-none transition-all min-h-[80px] resize-none"
                     ></textarea>
                 {:else if def.field_type === "number"}
                     <input
                         type="number"
                         bind:value={data[def.name]}
                         placeholder="0.00"
-                        class="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:bg-white rounded-xl p-2.5 text-sm font-medium outline-none transition-all"
+                        class="w-full bg-slate-50 border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:bg-white rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
                     />
                 {:else}
                     <input
                         type="text"
                         bind:value={data[def.name]}
                         placeholder={`Enter ${def.name}...`}
-                        class="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:bg-white rounded-xl p-2.5 text-sm font-medium outline-none transition-all"
+                        class="w-full bg-slate-50 border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:bg-white rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
                     />
                 {/if}
             </div>
@@ -126,8 +126,10 @@
             {/if}
 
             <button
+                type="button"
                 onclick={() => (isManaging = !isManaging)}
-                class="text-xs text-indigo-600 font-bold hover:text-indigo-800 flex items-center gap-1 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors"
+                aria-label={isManaging ? 'Done managing fields' : 'Add custom field'}
+                class="text-xs text-primary font-bold hover:text-primary/80 flex items-center gap-1 bg-primary/10 px-3 py-1.5 rounded-lg transition-colors focus-ring"
             >
                 {#if isManaging}
                     Done
@@ -142,20 +144,20 @@
     {#if isManaging}
         <div
             transition:slide
-            class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 space-y-3"
+            class="bg-primary/5 p-4 rounded-xl border border-primary/10 space-y-3"
         >
-            <h5 class="text-xs font-bold text-indigo-800">Create New Field</h5>
+            <h5 class="text-xs font-bold text-primary">Create New Field</h5>
             <div class="flex flex-col gap-3">
                 <input
                     type="text"
                     bind:value={newFieldName}
                     placeholder="Field Name (e.g. Warranty Date)"
-                    class="w-full px-3 py-2 rounded-lg border border-indigo-200 text-sm focus:border-indigo-500 outline-none"
+                    class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
                     autofocus
                 />
                 <select
                     bind:value={newFieldType}
-                    class="w-full px-3 py-2 rounded-lg border border-indigo-200 text-sm focus:border-indigo-500 outline-none bg-white"
+                    class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none bg-white"
                 >
                     {#each fieldTypes as type}
                         <option value={type.value}>{type.label}</option>
@@ -163,15 +165,17 @@
                 </select>
                 <div class="flex justify-end gap-2">
                     <button
+                        type="button"
                         onclick={() => (isManaging = false)}
-                        class="px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-700"
+                        class="px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-700 focus-ring rounded-lg"
                     >
                         Cancel
                     </button>
                     <button
+                        type="button"
                         onclick={addField}
                         disabled={!newFieldName}
-                        class="px-4 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-500 disabled:opacity-50 shadow-sm"
+                        class="px-4 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-bold hover:bg-primary/90 disabled:opacity-50 shadow-sm focus-ring"
                     >
                         Create Field
                     </button>
@@ -180,9 +184,9 @@
 
             <!-- List of existing definitions to allow deletion -->
             {#if definitions.length > 0}
-                <div class="border-t border-indigo-200/50 pt-3 mt-2">
+                <div class="border-t border-primary/20 pt-3 mt-2">
                     <label
-                        class="text-[10px] uppercase font-bold text-indigo-400 mb-2 block"
+                        class="text-[10px] uppercase font-bold text-primary/60 mb-2 block"
                         >Existing Fields</label
                     >
                     <div class="space-y-1">

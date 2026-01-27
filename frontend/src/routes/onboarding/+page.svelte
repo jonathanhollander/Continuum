@@ -132,13 +132,13 @@
     <!-- Ambient Background -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
         <div
-            class="absolute -top-24 -left-24 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"
+            class="absolute -top-24 -left-24 w-96 h-96 bg-primary/10 rounded-full blur-3xl"
         ></div>
         <div
-            class="absolute -bottom-24 -right-24 w-96 h-96 bg-rose-500/5 rounded-full blur-3xl"
+            class="absolute -bottom-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl"
         ></div>
         <div
-            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500/5 rounded-full blur-3xl"
+            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl"
         ></div>
     </div>
 
@@ -154,7 +154,7 @@
                 <!-- Welcome & Name Section -->
                 <div class="text-center space-y-6">
                     <div
-                        class="mx-auto w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/30"
+                        class="mx-auto w-16 h-16 bg-primary rounded-2xl flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/30"
                     >
                         <Sparkles size={32} />
                     </div>
@@ -191,15 +191,17 @@
                                 onkeydown={handleNameKeydown}
                                 placeholder="Your first name"
                                 disabled={nameSubmitted}
-                                class="w-full px-5 py-4 bg-white/5 border border-white/20 rounded-2xl text-white placeholder-slate-500 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                                class="w-full px-5 py-4 bg-white/5 border border-white/20 rounded-2xl text-white placeholder-slate-500 text-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                             />
                         </div>
 
                         {#if !nameSubmitted}
                             <button
+                                type="button"
                                 onclick={handleNameSubmit}
                                 disabled={!nameIsValid}
-                                class="w-full group flex items-center justify-center gap-2 px-6 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-xl transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed"
+                                aria-label="Continue to next step"
+                                class="w-full group flex items-center justify-center gap-2 px-6 py-4 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed focus-ring"
                             >
                                 <span>Continue</span>
                                 <ArrowRight
@@ -241,13 +243,15 @@
                         <div class="grid gap-4">
                             <!-- AI Guide Option -->
                             <button
+                                type="button"
                                 onclick={() => completeOnboarding(true)}
                                 disabled={isCompleting}
-                                class="group relative p-5 bg-indigo-600/20 border-2 border-indigo-500/50 rounded-2xl text-left hover:bg-indigo-600/30 transition-all disabled:opacity-70"
+                                aria-label="Guide me through it with AI"
+                                class="group relative p-5 bg-primary/20 border-2 border-primary/50 rounded-2xl text-left hover:bg-primary/30 transition-all disabled:opacity-70 focus-ring"
                             >
                                 <div class="flex items-start gap-4">
                                     <div
-                                        class="p-2.5 bg-indigo-500 rounded-xl text-white shrink-0"
+                                        class="p-2.5 bg-primary rounded-xl text-primary-foreground shrink-0"
                                     >
                                         <MessageCircle size={22} />
                                     </div>
@@ -257,7 +261,7 @@
                                         >
                                             Guide me through it
                                             <span
-                                                class="text-xs bg-indigo-500/30 text-indigo-300 px-2 py-0.5 rounded-full"
+                                                class="text-xs bg-primary/30 text-primary px-2 py-0.5 rounded-full"
                                                 >Recommended</span
                                             >
                                         </h3>
@@ -272,9 +276,11 @@
 
                             <!-- Explore Option -->
                             <button
+                                type="button"
                                 onclick={() => completeOnboarding(false)}
                                 disabled={isCompleting}
-                                class="group p-5 bg-white/5 border border-white/10 rounded-2xl text-left hover:bg-white/10 transition-all disabled:opacity-70"
+                                aria-label="Explore on my own"
+                                class="group p-5 bg-white/5 border border-white/10 rounded-2xl text-left hover:bg-white/10 transition-all disabled:opacity-70 focus-ring"
                             >
                                 <div class="flex items-start gap-4">
                                     <div
@@ -302,15 +308,15 @@
             <div class="flex flex-col items-center gap-4">
                 <div class="flex gap-2">
                     <div
-                        class="w-2 h-2 rounded-full bg-indigo-500 animate-bounce"
+                        class="w-2 h-2 rounded-full bg-primary animate-bounce"
                         style="animation-delay: 0s"
                     ></div>
                     <div
-                        class="w-2 h-2 rounded-full bg-indigo-500 animate-bounce"
+                        class="w-2 h-2 rounded-full bg-primary animate-bounce"
                         style="animation-delay: 0.1s"
                     ></div>
                     <div
-                        class="w-2 h-2 rounded-full bg-indigo-500 animate-bounce"
+                        class="w-2 h-2 rounded-full bg-primary animate-bounce"
                         style="animation-delay: 0.2s"
                     ></div>
                 </div>

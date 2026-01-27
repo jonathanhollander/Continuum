@@ -113,7 +113,7 @@
     >
         <button
             onclick={() => (showAddModal = true)}
-            class="px-8 py-3.5 bg-indigo-600 text-white rounded-full font-bold shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+            class="px-8 py-3.5 bg-primary text-primary-foreground rounded-full font-bold shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2 focus-ring"
         >
             <Plus size={20} />
             Add New Remembrance
@@ -203,7 +203,7 @@
                                     class="flex flex-col items-center shrink-0 w-16 h-16 rounded-2xl bg-slate-50 border border-slate-100 overflow-hidden group-hover:bg-indigo-50 transition-colors"
                                 >
                                     <span
-                                        class="bg-indigo-600 w-full text-center text-[10px] font-black text-white py-1"
+                                        class="bg-primary w-full text-center text-[10px] font-black text-white py-1"
                                     >
                                         {event.nextDate
                                             .toLocaleDateString("en-US", {
@@ -518,7 +518,7 @@
                     </button>
                     <button
                         onclick={handleAdd}
-                        class="flex-2 px-10 py-3.5 bg-indigo-600 text-white rounded-2xl font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all font-sans"
+                        class="flex-2 px-10 py-3.5 bg-primary text-white rounded-2xl font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all font-sans"
                     >
                         Save Memory
                     </button>

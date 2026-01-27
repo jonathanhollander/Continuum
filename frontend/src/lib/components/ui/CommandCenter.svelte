@@ -220,9 +220,13 @@
 </script>
 
 <div
-    class="fixed inset-0 z-[200] flex items-start justify-center pt-24 px-4 bg-slate-900/40 backdrop-blur-sm"
-    on:click|self={() => dispatch("close")}
+    class="fixed inset-0 z-[200] flex items-start justify-center pt-24 px-4 bg-slate-900/60 backdrop-blur-sm"
+    onclick={(e) => e.target === e.currentTarget && dispatch("close")}
+    onkeydown={(e) => e.key === 'Escape' && dispatch("close")}
     transition:fade={{ duration: 200 }}
+    role="dialog"
+    aria-modal="true"
+    aria-label="Command center search"
 >
     <div
         class="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200"
@@ -257,12 +261,13 @@
                 </div>
                 {#each filteredItems as item, i}
                     <button
+                        type="button"
                         class="w-full flex items-center gap-4 px-4 py-3 rounded-2xl transition-all text-left
                         {i === selectedIndex
-                            ? 'bg-indigo-50 text-indigo-700'
+                            ? 'bg-primary/10 text-primary'
                             : 'text-slate-600 hover:bg-slate-50'}"
-                        on:click={() => navigate(item.href)}
-                        on:mouseenter={() => (selectedIndex = i)}
+                        onclick={() => navigate(item.href)}
+                        onmouseenter={() => (selectedIndex = i)}
                     >
                         <div
                             class="p-2 rounded-xl {i === selectedIndex

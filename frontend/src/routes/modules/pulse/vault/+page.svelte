@@ -177,7 +177,7 @@
         <button
             onclick={addItem}
             disabled={saving || !newItem.name || !newItem.content}
-            class="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2"
+            class="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2"
         >
             <Save class="w-4 h-4" /> Save to Vault
         </button>

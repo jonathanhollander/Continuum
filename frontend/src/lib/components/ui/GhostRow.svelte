@@ -30,7 +30,7 @@
 -->
 <button
     onclick={handleClick}
-    class="w-full text-left group relative overflow-hidden rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/50 hover:bg-slate-50 hover:border-indigo-300 transition-all duration-300"
+    class="w-full text-left group relative overflow-hidden rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/50 hover:bg-slate-50 hover:border-primary/50 transition-all duration-300"
     in:fade
 >
     <div
@@ -38,14 +38,14 @@
     >
         <!-- Pseudo Icon Placeholder -->
         <div
-            class="w-10 h-10 rounded-full bg-slate-200 group-hover:bg-indigo-100 transition-colors flex items-center justify-center shrink-0"
+            class="w-10 h-10 rounded-full bg-slate-200 group-hover:bg-primary/10 transition-colors flex items-center justify-center shrink-0"
         >
             {#if icon}
                 {@render icon()}
             {:else}
                 <Plus
                     size={20}
-                    class="text-slate-400 group-hover:text-indigo-500"
+                    class="text-slate-400 group-hover:text-primary"
                 />
             {/if}
         </div>
@@ -66,14 +66,14 @@
 
         {#if value !== null}
             <div
-                class="font-serif font-bold text-slate-400 group-hover:text-indigo-600 transition-colors"
+                class="font-serif font-bold text-slate-400 group-hover:text-primary transition-colors"
             >
                 ${value.toLocaleString()}
             </div>
         {:else}
             <!-- Call to Action Badge -->
             <div
-                class="px-3 py-1 rounded-full bg-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider group-hover:bg-indigo-500 group-hover:text-white transition-colors shadow-sm"
+                class="px-3 py-1 rounded-full bg-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider group-hover:bg-primary group-hover:text-white transition-colors shadow-sm"
             >
                 Example {type}
             </div>
@@ -84,7 +84,7 @@
     <div
         class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-white/60 backdrop-blur-[1px]"
     >
-        <span class="font-bold text-indigo-600 text-sm flex items-center gap-2">
+        <span class="font-bold text-primary text-sm flex items-center gap-2">
             <Plus size={16} /> Click to Add Real {type}
         </span>
     </div>
