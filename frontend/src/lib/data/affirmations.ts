@@ -75,6 +75,12 @@ export const affirmations = {
         { primary: "They'll know exactly what to cancel", secondary: "Information updated" },
     ],
 
+    financial: [
+        { primary: "You're giving them clarity in a confusing time", secondary: "Account saved" },
+        { primary: "Financial peace of mind, documented", secondary: "Asset recorded" },
+        { primary: "One less thing for them to search for", secondary: "Information updated" },
+    ],
+
     heirlooms: [
         { primary: "You're preserving stories for generations", secondary: "Heirloom saved" },
         { primary: "These objects will carry your voice forward", secondary: "Story documented" },

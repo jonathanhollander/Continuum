@@ -300,17 +300,29 @@
         }
     }
 
-    function getSparklinePoints(history: number[]): string {
-        if (!history || history.length < 2) return "";
-        const min = Math.min(...history);
-        const max = Math.max(...history);
+    function getSparklinePoints(history: number[] | string | undefined): string {
+        // Parse JSON string if needed (backend stores as JSON string)
+        let parsedHistory: number[];
+        if (typeof history === 'string') {
+            try {
+                parsedHistory = JSON.parse(history);
+            } catch {
+                return "";
+            }
+        } else {
+            parsedHistory = history || [];
+        }
+
+        if (!parsedHistory || parsedHistory.length < 2) return "";
+        const min = Math.min(...parsedHistory);
+        const max = Math.max(...parsedHistory);
         const range = max - min || 1;
         const width = 100;
         const height = 30;
 
-        return history
+        return parsedHistory
             .map((val, i) => {
-                const x = (i / (history.length - 1)) * width;
+                const x = (i / (parsedHistory.length - 1)) * width;
                 const y = height - ((val - min) / range) * height;
                 return `${x},${y}`;
             })
@@ -763,6 +775,8 @@
         {/if}
     {/if}
 
+    <!-- Card/Table View Toggle -->
+    {#if viewMode === 'card'}
     <!-- Asset Cards Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         <!-- ... (Each asset block remains same) ... -->
@@ -936,4 +950,73 @@
             </div>
         {/if}
     </div>
+    {:else}
+    <!-- Table View -->
+    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <table class="w-full">
+            <thead class="bg-slate-50 border-b border-slate-200">
+                <tr>
+                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Asset</th>
+                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Type</th>
+                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Location</th>
+                    <th class="text-right px-4 py-3 text-xs font-bold uppercase text-slate-500">Value</th>
+                    <th class="text-right px-4 py-3 text-xs font-bold uppercase text-slate-500">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                {#each assets as asset (asset.id)}
+                    {@const Icon = getIcon(asset.type)}
+                    <tr class="hover:bg-slate-50 transition-colors group">
+                        <td class="px-4 py-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 shrink-0 rounded-lg bg-secondary/30 flex items-center justify-center text-[#4A7C74]">
+                                    <Icon size={16} />
+                                </div>
+                                <span class="font-medium text-slate-800">{asset.name}</span>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-medium">
+                                {asset.type}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-slate-600 text-sm">{asset.location || '-'}</td>
+                        <td class="px-4 py-3 text-right">
+                            {#if $userRole !== "Family"}
+                                <span class="font-bold text-slate-800">${(asset.value || 0).toLocaleString()}</span>
+                            {:else}
+                                <span class="font-bold text-muted-foreground blur-sm select-none">$•••,•••</span>
+                            {/if}
+                        </td>
+                        <td class="px-4 py-3 text-right">
+                            <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                    onclick={() => editAsset(asset)}
+                                    class="p-1 hover:bg-slate-100 text-slate-400 hover:text-[#4A7C74] rounded transition-colors"
+                                    title="Edit"
+                                >
+                                    <Pencil size={14} />
+                                </button>
+                                <button
+                                    onclick={() => removeAsset(asset.id)}
+                                    class="p-1 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded transition-colors"
+                                    title="Delete"
+                                >
+                                    <Trash2 size={14} />
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                {/each}
+                {#if assets.length === 0}
+                    <tr>
+                        <td colspan="5" class="px-4 py-8 text-center text-slate-400">
+                            No assets yet. Click "Add Asset" to get started.
+                        </td>
+                    </tr>
+                {/if}
+            </tbody>
+        </table>
+    </div>
+    {/if}
 </div>

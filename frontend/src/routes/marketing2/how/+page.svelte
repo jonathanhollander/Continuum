@@ -3,7 +3,12 @@
     import { fade, fly, slide } from "svelte/transition";
     import { backOut, elasticOut } from "svelte/easing";
     import { spring, tweened } from "svelte/motion";
-    import { m2Language, m2t, availableLanguages, isRTL } from "$lib/stores/marketing2";
+    import {
+        m2Language,
+        m2t,
+        availableLanguages,
+        isRTL,
+    } from "$lib/stores/marketing2";
     import type { Marketing2Language } from "$lib/stores/marketing2Dictionary";
     import {
         ArrowRight,
@@ -14,7 +19,7 @@
         Layers,
         Bell,
         Menu,
-        X
+        X,
     } from "lucide-svelte";
 
     let langMenuOpen = $state(false);
@@ -33,7 +38,9 @@
     const floatOffset2 = $derived(scrollY * 0.07);
 
     // Connector line animation based on scroll
-    const connectorProgress = $derived(Math.min(1, scrollY / (innerHeight * 2)));
+    const connectorProgress = $derived(
+        Math.min(1, scrollY / (innerHeight * 2)),
+    );
 
     function reveal(node: HTMLElement, options: { delay?: number } = {}) {
         if (prefersReducedMotion) {
@@ -52,7 +59,7 @@
                     }
                 });
             },
-            { threshold: 0.1, rootMargin: "0px 0px -50px 0px" }
+            { threshold: 0.1, rootMargin: "0px 0px -50px 0px" },
         );
         observer.observe(node);
         return { destroy: () => observer.disconnect() };
@@ -77,7 +84,7 @@
             destroy() {
                 node.removeEventListener("mouseenter", handleMouseEnter);
                 node.removeEventListener("mouseleave", handleMouseLeave);
-            }
+            },
         };
     }
 
@@ -88,10 +95,13 @@
 
     onMount(() => {
         window.scrollTo(0, 0);
-        prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        prefersReducedMotion = window.matchMedia(
+            "(prefers-reduced-motion: reduce)",
+        ).matches;
 
         const updateScroll = () => {
-            const docHeight = document.documentElement.scrollHeight - innerHeight;
+            const docHeight =
+                document.documentElement.scrollHeight - innerHeight;
             scrollProgress.set(docHeight > 0 ? scrollY / docHeight : 0);
         };
 
@@ -115,7 +125,7 @@
             desc: $m2t.howBeat1Desc,
             icon: Compass,
             color: "amber",
-            iconClass: "text-amber-400/60"
+            iconClass: "text-amber-400/60",
         },
         {
             num: "02",
@@ -123,7 +133,7 @@
             desc: $m2t.howBeat2Desc,
             icon: Layers,
             color: "teal",
-            iconClass: "text-teal-400/60"
+            iconClass: "text-teal-400/60",
         },
         {
             num: "03",
@@ -131,9 +141,10 @@
             desc: $m2t.howBeat3Desc,
             icon: Bell,
             color: "rose",
-            iconClass: "text-rose-400/60"
-        }
+            iconClass: "text-rose-400/60",
+        },
     ]);
+    const grainBg = `background-image: url('data:image/svg+xml,%3Csvg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noise"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%" height="100%" filter="url(%23noise)"/%3E%3C/svg%3E');`;
 </script>
 
 <svelte:head>
@@ -149,7 +160,10 @@
 
 <svelte:window bind:scrollY bind:innerHeight bind:innerWidth />
 
-<div class="min-h-screen bg-[#0a0a0b] text-white overflow-x-hidden" dir={$isRTL ? "rtl" : "ltr"}>
+<div
+    class="min-h-screen bg-[#0a0a0b] text-white overflow-x-hidden"
+    dir={$isRTL ? "rtl" : "ltr"}
+>
     <!-- Cursor Glow Effect (Desktop only) -->
     {#if innerWidth > 768 && !prefersReducedMotion}
         <div
@@ -195,8 +209,8 @@
                 <div
                     class="absolute w-1 h-1 rounded-full bg-white/10 animate-float-particle"
                     style="
-                        left: {12 + (i * 8)}%;
-                        top: {15 + (i * 7) % 60}%;
+                        left: {12 + i * 8}%;
+                        top: {15 + ((i * 7) % 60)}%;
                         animation-delay: {i * 0.6}s;
                         animation-duration: {6 + (i % 4)}s;
                     "
@@ -204,34 +218,47 @@
             {/each}
         {/if}
 
-        <div
-            class="absolute inset-0 opacity-[0.03]"
-            style="background-image: url('data:image/svg+xml,%3Csvg viewBox=\"0 0 256 256\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cfilter id=\"noise\"%3E%3CfeTurbulence type=\"fractalNoise\" baseFrequency=\"0.9\" numOctaves=\"4\" stitchTiles=\"stitch\"/%3E%3C/filter%3E%3Crect width=\"100%25\" height=\"100%25\" filter=\"url(%23noise)\"/%3E%3C/svg%3E');"
-        ></div>
+        <div class="absolute inset-0 opacity-[0.03]" style={grainBg}></div>
     </div>
 
     <!-- Header -->
-    <header class="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
-        <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-            <a href="/marketing2" class="text-xl font-serif tracking-wide text-white/90 hover:text-white transition-all duration-300 hover:tracking-wider">
+    <header
+        class="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/5"
+    >
+        <div
+            class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between"
+        >
+            <a
+                href="/marketing2"
+                class="text-xl font-serif tracking-wide text-white/90 hover:text-white transition-all duration-300 hover:tracking-wider"
+            >
                 Continuum
             </a>
 
-            <nav class="hidden md:flex items-center gap-8 text-sm text-white/60">
+            <nav
+                class="hidden md:flex items-center gap-8 text-sm text-white/60"
+            >
                 <a href="/marketing2/how" class="text-white">{$m2t.navHow}</a>
-                <a href="/marketing2/features" class="nav-link">{$m2t.navFeatures}</a>
-                <a href="/marketing2#security" class="nav-link">{$m2t.navSecurity}</a>
+                <a href="/marketing2/features" class="nav-link"
+                    >{$m2t.navFeatures}</a
+                >
+                <a href="/marketing2#security" class="nav-link"
+                    >{$m2t.navSecurity}</a
+                >
             </nav>
 
             <div class="flex items-center gap-4">
                 <button
-                    onclick={() => mobileMenuOpen = !mobileMenuOpen}
+                    onclick={() => (mobileMenuOpen = !mobileMenuOpen)}
                     class="md:hidden text-white/60 hover:text-white transition-colors p-2"
                     aria-label="Toggle menu"
                 >
                     <div class="relative w-6 h-6">
                         {#if mobileMenuOpen}
-                            <X size={24} class="absolute inset-0 animate-spin-in" />
+                            <X
+                                size={24}
+                                class="absolute inset-0 animate-spin-in"
+                            />
                         {:else}
                             <Menu size={24} class="absolute inset-0" />
                         {/if}
@@ -240,12 +267,24 @@
 
                 <div class="relative">
                     <button
-                        onclick={() => langMenuOpen = !langMenuOpen}
+                        onclick={() => (langMenuOpen = !langMenuOpen)}
                         class="flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm group"
                     >
-                        <Globe size={16} class="group-hover:animate-spin-slow" />
-                        <span class="hidden sm:inline">{availableLanguages.find(l => l.code === $m2Language)?.native}</span>
-                        <ChevronDown size={14} class="transition-transform duration-300" class:rotate-180={langMenuOpen} />
+                        <Globe
+                            size={16}
+                            class="group-hover:animate-spin-slow"
+                        />
+                        <span class="hidden sm:inline"
+                            >{availableLanguages.find(
+                                (l) => l.code === $m2Language,
+                            )?.native}</span
+                        >
+                        <ChevronDown
+                            size={14}
+                            class="transition-transform duration-300 {langMenuOpen
+                                ? 'rotate-180'
+                                : ''}"
+                        />
                     </button>
 
                     {#if langMenuOpen}
@@ -255,11 +294,16 @@
                         >
                             {#each availableLanguages as lang, i}
                                 <button
-                                    onclick={() => setLanguage(lang.code as Marketing2Language)}
-                                    class="w-full px-4 py-2 text-left text-sm hover:bg-white/5 transition-all duration-200"
-                                    class:text-amber-400={$m2Language === lang.code}
-                                    class:text-white/70={$m2Language !== lang.code}
-                                    style="animation: slideIn 0.2s ease {i * 0.05}s both"
+                                    onclick={() =>
+                                        setLanguage(
+                                            lang.code as Marketing2Language,
+                                        )}
+                                    class="w-full px-4 py-2 text-left text-sm hover:bg-white/5 transition-all duration-200 {$m2Language ===
+                                    lang.code
+                                        ? 'text-amber-400'
+                                        : 'text-white/70'}"
+                                    style="animation: slideIn 0.2s ease {i *
+                                        0.05}s both"
                                 >
                                     {lang.native}
                                 </button>
@@ -283,17 +327,13 @@
                 transition:slide={{ duration: 300 }}
             >
                 <nav class="flex flex-col px-6 py-4 space-y-2">
-                    {#each [
-                        { href: "/marketing2/how", label: $m2t.navHow, active: true },
-                        { href: "/marketing2/features", label: $m2t.navFeatures, active: false },
-                        { href: "/marketing2#security", label: $m2t.navSecurity, active: false }
-                    ] as item, i}
+                    {#each [{ href: "/marketing2/how", label: $m2t.navHow, active: true }, { href: "/marketing2/features", label: $m2t.navFeatures, active: false }, { href: "/marketing2#security", label: $m2t.navSecurity, active: false }] as item, i}
                         <a
                             href={item.href}
-                            class="transition-all duration-200 py-3 border-b border-white/5 last:border-0"
-                            class:text-white={item.active}
-                            class:text-white/60={!item.active}
-                            onclick={() => mobileMenuOpen = false}
+                            class="transition-all duration-200 py-3 border-b border-white/5 last:border-0 {item.active
+                                ? 'text-white'
+                                : 'text-white/60'}"
+                            onclick={() => (mobileMenuOpen = false)}
                             style="animation: slideIn 0.3s ease {i * 0.1}s both"
                         >
                             {item.label}
@@ -314,16 +354,27 @@
                     in:fade={{ duration: 300, delay: 100 }}
                 >
                     {#if $isRTL}
-                        <ArrowRight size={16} class="group-hover:translate-x-1 transition-transform" />
+                        <ArrowRight
+                            size={16}
+                            class="group-hover:translate-x-1 transition-transform"
+                        />
                     {:else}
-                        <ArrowLeft size={16} class="group-hover:-translate-x-1 transition-transform" />
+                        <ArrowLeft
+                            size={16}
+                            class="group-hover:-translate-x-1 transition-transform"
+                        />
                     {/if}
                     Continuum
                 </a>
 
                 <h1
                     class="text-4xl md:text-5xl font-serif text-white/90 mb-6"
-                    in:fly={{ y: 30, duration: 600, delay: 200, easing: backOut }}
+                    in:fly={{
+                        y: 30,
+                        duration: 600,
+                        delay: 200,
+                        easing: backOut,
+                    }}
                 >
                     {$m2t.howTitle}
                 </h1>
@@ -355,29 +406,50 @@
                             use:reveal={{ delay: i * 100 }}
                         >
                             <!-- Text content -->
-                            <div class={i % 2 === 0 ? "order-2 md:order-1" : ""}>
+                            <div
+                                class={i % 2 === 0 ? "order-2 md:order-1" : ""}
+                            >
                                 <div
                                     class="text-6xl font-serif text-white/10 mb-4 number-reveal"
-                                    style="animation: numberPop 0.6s ease {i * 0.2}s both"
+                                    style="animation: numberPop 0.6s ease {i *
+                                        0.2}s both"
                                 >
                                     {beat.num}
                                 </div>
-                                <h2 class="text-3xl font-serif text-white/90 mb-6">{beat.title}</h2>
-                                <p class="text-lg text-white/50 leading-relaxed">
+                                <h2
+                                    class="text-3xl font-serif text-white/90 mb-6"
+                                >
+                                    {beat.title}
+                                </h2>
+                                <p
+                                    class="text-lg text-white/50 leading-relaxed"
+                                >
                                     {beat.desc}
                                 </p>
                             </div>
 
                             <!-- Icon -->
-                            <div class={i % 2 === 0 ? "order-1 md:order-2 flex justify-center" : "flex justify-center"}>
+                            <div
+                                class={i % 2 === 0
+                                    ? "order-1 md:order-2 flex justify-center"
+                                    : "flex justify-center"}
+                            >
                                 <div
                                     class="icon-orb w-32 h-32 rounded-full bg-{beat.color}-500/10 flex items-center justify-center relative"
                                     use:iconAnimate
                                 >
                                     <!-- Animated rings -->
-                                    <div class="icon-ring icon-ring-1 bg-{beat.color}-500/10"></div>
-                                    <div class="icon-ring icon-ring-2 bg-{beat.color}-500/5"></div>
-                                    <svelte:component this={beat.icon} size={48} class={beat.iconClass} />
+                                    <div
+                                        class="icon-ring icon-ring-1 bg-{beat.color}-500/10"
+                                    ></div>
+                                    <div
+                                        class="icon-ring icon-ring-2 bg-{beat.color}-500/5"
+                                    ></div>
+                                    <svelte:component
+                                        this={beat.icon}
+                                        size={48}
+                                        class={beat.iconClass}
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -394,13 +466,24 @@
         </div>
 
         <!-- The Gift Quote -->
-        <section class="py-24 px-6 bg-gradient-to-b from-transparent via-white/[0.02] to-transparent">
-            <div class="max-w-3xl mx-auto text-center reveal-section" use:reveal>
-                <div class="quote-marks text-6xl text-white/5 font-serif mb-4">"</div>
-                <p class="text-2xl font-serif text-white/70 leading-relaxed mb-8 italic">
+        <section
+            class="py-24 px-6 bg-gradient-to-b from-transparent via-white/[0.02] to-transparent"
+        >
+            <div
+                class="max-w-3xl mx-auto text-center reveal-section"
+                use:reveal
+            >
+                <div class="quote-marks text-6xl text-white/5 font-serif mb-4">
+                    "
+                </div>
+                <p
+                    class="text-2xl font-serif text-white/70 leading-relaxed mb-8 italic"
+                >
                     {$m2t.pulseGift}
                 </p>
-                <div class="w-16 h-px bg-gradient-to-r from-transparent via-amber-500/30 to-transparent mx-auto animate-pulse-glow"></div>
+                <div
+                    class="w-16 h-px bg-gradient-to-r from-transparent via-amber-500/30 to-transparent mx-auto animate-pulse-glow"
+                ></div>
             </div>
         </section>
 
@@ -415,7 +498,10 @@
                     class="inline-flex items-center gap-3 px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-full text-white/80 transition-all duration-300 group hover:shadow-[0_0_30px_rgba(251,191,36,0.2)]"
                 >
                     {$m2t.ctaPrimary}
-                    <ArrowRight size={18} class="group-hover:translate-x-1 transition-transform duration-300" />
+                    <ArrowRight
+                        size={18}
+                        class="group-hover:translate-x-1 transition-transform duration-300"
+                    />
                 </a>
             </div>
         </section>
@@ -425,9 +511,18 @@
     <footer class="py-12 px-6 border-t border-white/5">
         <div class="max-w-4xl mx-auto">
             <nav class="flex justify-center gap-8 mb-8 text-sm text-white/40">
-                <a href="/marketing2/how" class="text-white/60">{$m2t.navHow}</a>
-                <a href="/marketing2/features" class="hover:text-white/60 transition-colors duration-300">{$m2t.navFeatures}</a>
-                <a href="/marketing2#security" class="hover:text-white/60 transition-colors duration-300">{$m2t.navSecurity}</a>
+                <a href="/marketing2/how" class="text-white/60">{$m2t.navHow}</a
+                >
+                <a
+                    href="/marketing2/features"
+                    class="hover:text-white/60 transition-colors duration-300"
+                    >{$m2t.navFeatures}</a
+                >
+                <a
+                    href="/marketing2#security"
+                    class="hover:text-white/60 transition-colors duration-300"
+                    >{$m2t.navSecurity}</a
+                >
             </nav>
             <div class="text-center space-y-4">
                 <p class="text-xs text-white/30">
@@ -445,7 +540,9 @@
     .reveal-section {
         opacity: 0;
         transform: translateY(30px);
-        transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        transition:
+            opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+            transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .reveal-section.revealed {
@@ -459,13 +556,17 @@
     }
 
     .nav-link::after {
-        content: '';
+        content: "";
         position: absolute;
         bottom: 0;
         left: 0;
         width: 0;
         height: 1px;
-        background: linear-gradient(90deg, rgba(251, 191, 36, 0.5), rgba(20, 184, 166, 0.5));
+        background: linear-gradient(
+            90deg,
+            rgba(251, 191, 36, 0.5),
+            rgba(20, 184, 166, 0.5)
+        );
         transition: width 0.3s ease;
     }
 
@@ -501,15 +602,30 @@
     }
 
     @keyframes iconRingPulse {
-        0%, 100% { transform: scale(1); opacity: 0.3; }
-        50% { transform: scale(1.1); opacity: 0.1; }
+        0%,
+        100% {
+            transform: scale(1);
+            opacity: 0.3;
+        }
+        50% {
+            transform: scale(1.1);
+            opacity: 0.1;
+        }
     }
 
     /* Number pop animation */
     @keyframes numberPop {
-        0% { transform: scale(0.5); opacity: 0; }
-        50% { transform: scale(1.1); }
-        100% { transform: scale(1); opacity: 1; }
+        0% {
+            transform: scale(0.5);
+            opacity: 0;
+        }
+        50% {
+            transform: scale(1.1);
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
     }
 
     /* Quote styling */
@@ -523,39 +639,81 @@
     }
 
     @keyframes pulseGlow {
-        0%, 100% { opacity: 0.3; box-shadow: 0 0 10px rgba(251, 191, 36, 0.1); }
-        50% { opacity: 0.6; box-shadow: 0 0 20px rgba(251, 191, 36, 0.3); }
+        0%,
+        100% {
+            opacity: 0.3;
+            box-shadow: 0 0 10px rgba(251, 191, 36, 0.1);
+        }
+        50% {
+            opacity: 0.6;
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+        }
     }
 
     /* Floating animations */
     @keyframes float-slow {
-        0%, 100% { transform: translateY(0) rotate(0deg); }
-        50% { transform: translateY(-25px) rotate(2deg); }
+        0%,
+        100% {
+            transform: translateY(0) rotate(0deg);
+        }
+        50% {
+            transform: translateY(-25px) rotate(2deg);
+        }
     }
 
     @keyframes float-medium {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-20px); }
+        0%,
+        100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-20px);
+        }
     }
 
     @keyframes float-particle {
-        0%, 100% { transform: translateY(0) translateX(0); opacity: 0.1; }
-        25% { transform: translateY(-30px) translateX(10px); opacity: 0.25; }
-        50% { transform: translateY(-45px) translateX(-5px); opacity: 0.15; }
-        75% { transform: translateY(-30px) translateX(5px); opacity: 0.25; }
+        0%,
+        100% {
+            transform: translateY(0) translateX(0);
+            opacity: 0.1;
+        }
+        25% {
+            transform: translateY(-30px) translateX(10px);
+            opacity: 0.25;
+        }
+        50% {
+            transform: translateY(-45px) translateX(-5px);
+            opacity: 0.15;
+        }
+        75% {
+            transform: translateY(-30px) translateX(5px);
+            opacity: 0.25;
+        }
     }
 
-    .animate-float-slow { animation: float-slow 18s ease-in-out infinite; }
-    .animate-float-medium { animation: float-medium 14s ease-in-out infinite; }
-    .animate-float-particle { animation: float-particle 8s ease-in-out infinite; }
+    .animate-float-slow {
+        animation: float-slow 18s ease-in-out infinite;
+    }
+    .animate-float-medium {
+        animation: float-medium 14s ease-in-out infinite;
+    }
+    .animate-float-particle {
+        animation: float-particle 8s ease-in-out infinite;
+    }
 
     .animate-spin-in {
         animation: spinIn 0.3s ease;
     }
 
     @keyframes spinIn {
-        from { transform: rotate(-90deg); opacity: 0; }
-        to { transform: rotate(0deg); opacity: 1; }
+        from {
+            transform: rotate(-90deg);
+            opacity: 0;
+        }
+        to {
+            transform: rotate(0deg);
+            opacity: 1;
+        }
     }
 
     .animate-spin-slow {
@@ -563,13 +721,23 @@
     }
 
     @keyframes spinSlow {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
     }
 
     @keyframes slideIn {
-        from { opacity: 0; transform: translateX(-10px); }
-        to { opacity: 1; transform: translateX(0); }
+        from {
+            opacity: 0;
+            transform: translateX(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
     }
 
     @media (prefers-reduced-motion: reduce) {

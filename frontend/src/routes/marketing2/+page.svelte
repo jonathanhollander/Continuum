@@ -3,7 +3,12 @@
     import { fade, fly, scale, slide } from "svelte/transition";
     import { cubicOut, backOut, elasticOut } from "svelte/easing";
     import { spring, tweened } from "svelte/motion";
-    import { m2Language, m2t, availableLanguages, isRTL } from "$lib/stores/marketing2";
+    import {
+        m2Language,
+        m2t,
+        availableLanguages,
+        isRTL,
+    } from "$lib/stores/marketing2";
     import type { Marketing2Language } from "$lib/stores/marketing2Dictionary";
     import {
         ArrowRight,
@@ -15,7 +20,7 @@
         BookOpen,
         Menu,
         X,
-        Lock
+        Lock,
     } from "lucide-svelte";
     import {
         keyringEmails,
@@ -43,7 +48,18 @@
     // Easter egg state
     let easterEggActive = $state(false);
     let konamiIndex = $state(0);
-    const konamiCode = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "b", "a"];
+    const konamiCode = [
+        "ArrowUp",
+        "ArrowUp",
+        "ArrowDown",
+        "ArrowDown",
+        "ArrowLeft",
+        "ArrowRight",
+        "ArrowLeft",
+        "ArrowRight",
+        "b",
+        "a",
+    ];
 
     // Touch gesture state
     let touchStartY = $state(0);
@@ -67,7 +83,10 @@
     let currentSection = $state(0);
 
     // Intersection observer for staggered reveals
-    function reveal(node: HTMLElement, options: { delay?: number; stagger?: boolean } = {}) {
+    function reveal(
+        node: HTMLElement,
+        options: { delay?: number; stagger?: boolean } = {},
+    ) {
         if (prefersReducedMotion) {
             node.classList.add("revealed");
             return { destroy: () => {} };
@@ -84,7 +103,7 @@
                     }
                 });
             },
-            { threshold: 0.1, rootMargin: "0px 0px -50px 0px" }
+            { threshold: 0.1, rootMargin: "0px 0px -50px 0px" },
         );
         observer.observe(node);
         return { destroy: () => observer.disconnect() };
@@ -108,7 +127,8 @@
         };
 
         const handleMouseLeave = () => {
-            node.style.transform = "perspective(1000px) rotateX(0) rotateY(0) scale(1)";
+            node.style.transform =
+                "perspective(1000px) rotateX(0) rotateY(0) scale(1)";
             node.style.boxShadow = "0 0 0 rgba(0,0,0,0)";
         };
 
@@ -119,7 +139,7 @@
             destroy() {
                 node.removeEventListener("mousemove", handleMouseMove);
                 node.removeEventListener("mouseleave", handleMouseLeave);
-            }
+            },
         };
     }
 
@@ -149,12 +169,13 @@
                         const spans = node.querySelectorAll("span");
                         spans.forEach((span) => {
                             (span as HTMLElement).style.opacity = "1";
-                            (span as HTMLElement).style.transform = "translateY(0)";
+                            (span as HTMLElement).style.transform =
+                                "translateY(0)";
                         });
                     }
                 });
             },
-            { threshold: 0.5 }
+            { threshold: 0.5 },
         );
         observer.observe(node);
         return { destroy: () => observer.disconnect() };
@@ -165,11 +186,14 @@
         setTimeout(() => (introVisible = true), 300);
 
         // Check for reduced motion preference
-        prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        prefersReducedMotion = window.matchMedia(
+            "(prefers-reduced-motion: reduce)",
+        ).matches;
 
         // Update scroll progress
         const updateScroll = () => {
-            const docHeight = document.documentElement.scrollHeight - innerHeight;
+            const docHeight =
+                document.documentElement.scrollHeight - innerHeight;
             scrollProgress.set(scrollY / docHeight);
         };
 
@@ -224,8 +248,12 @@
         window.addEventListener("scroll", updateScroll);
         window.addEventListener("mousemove", handleMouseMove);
         window.addEventListener("keydown", handleKeyDown);
-        document.addEventListener("touchstart", handleTouchStart, { passive: true });
-        document.addEventListener("touchend", handleTouchEnd, { passive: true });
+        document.addEventListener("touchstart", handleTouchStart, {
+            passive: true,
+        });
+        document.addEventListener("touchend", handleTouchEnd, {
+            passive: true,
+        });
 
         return () => {
             window.removeEventListener("scroll", updateScroll);
@@ -263,8 +291,11 @@
     }
 
     // Computed values
-    const heroOpacity = $derived(Math.max(0, 1 - scrollY / (innerHeight * 0.5)));
+    const heroOpacity = $derived(
+        Math.max(0, 1 - scrollY / (innerHeight * 0.5)),
+    );
     const heroScale = $derived(1 - scrollY / (innerHeight * 3));
+    const grainBg = `background-image: url('data:image/svg+xml,%3Csvg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noise"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%" height="100%" filter="url(%23noise)"/%3E%3C/svg%3E');`;
 </script>
 
 <svelte:head>
@@ -280,10 +311,15 @@
 
 <svelte:window bind:scrollY bind:innerHeight bind:innerWidth />
 
-<div class="min-h-screen bg-[#0a0a0b] text-white overflow-x-hidden" dir={$isRTL ? "rtl" : "ltr"}>
+<div
+    class="min-h-screen bg-[#0a0a0b] text-white overflow-x-hidden"
+    dir={$isRTL ? "rtl" : "ltr"}
+>
     <!-- Easter Egg Animation (Konami Code: ↑↑↓↓←→←→BA) -->
     {#if easterEggActive}
-        <div class="fixed inset-0 z-[200] pointer-events-none overflow-hidden easter-egg-container">
+        <div
+            class="fixed inset-0 z-[200] pointer-events-none overflow-hidden easter-egg-container"
+        >
             {#each Array(30) as _, i}
                 <div
                     class="absolute text-4xl easter-heart"
@@ -295,9 +331,15 @@
                     💛
                 </div>
             {/each}
-            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center easter-message">
-                <p class="text-2xl font-serif text-amber-400">Thank you for caring.</p>
-                <p class="text-sm text-white/50 mt-2">Your loved ones are lucky to have you.</p>
+            <div
+                class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center easter-message"
+            >
+                <p class="text-2xl font-serif text-amber-400">
+                    Thank you for caring.
+                </p>
+                <p class="text-sm text-white/50 mt-2">
+                    Your loved ones are lucky to have you.
+                </p>
             </div>
         </div>
     {/if}
@@ -358,8 +400,8 @@
                 <div
                     class="absolute w-1 h-1 rounded-full bg-white/10 animate-float-particle"
                     style="
-                        left: {10 + (i * 7)}%;
-                        top: {20 + (i * 5) % 60}%;
+                        left: {10 + i * 7}%;
+                        top: {20 + ((i * 5) % 60)}%;
                         animation-delay: {i * 0.5}s;
                         animation-duration: {8 + (i % 4)}s;
                     "
@@ -368,19 +410,19 @@
         {/if}
 
         <!-- Subtle grain -->
-        <div
-            class="absolute inset-0 opacity-[0.03]"
-            style="background-image: url('data:image/svg+xml,%3Csvg viewBox=\"0 0 256 256\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cfilter id=\"noise\"%3E%3CfeTurbulence type=\"fractalNoise\" baseFrequency=\"0.9\" numOctaves=\"4\" stitchTiles=\"stitch\"/%3E%3C/filter%3E%3Crect width=\"100%25\" height=\"100%25\" filter=\"url(%23noise)\"/%3E%3C/svg%3E');"
-        ></div>
+        <div class="absolute inset-0 opacity-[0.03]" style={grainBg}></div>
     </div>
 
     <!-- Header -->
     <header
-        class="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
-        class:bg-black/80={scrollY > 100}
-        class:backdrop-blur-md={scrollY > 100}
+        class="fixed top-0 left-0 right-0 z-50 transition-all duration-500 {scrollY >
+        100
+            ? 'bg-black/80 backdrop-blur-md'
+            : ''}"
     >
-        <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div
+            class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between"
+        >
             <!-- Logo with hover animation -->
             <a
                 href="/marketing2"
@@ -390,9 +432,13 @@
             </a>
 
             <!-- Nav with hover underlines -->
-            <nav class="hidden md:flex items-center gap-8 text-sm text-white/60">
+            <nav
+                class="hidden md:flex items-center gap-8 text-sm text-white/60"
+            >
                 <a href="/marketing2/how" class="nav-link">{$m2t.navHow}</a>
-                <a href="/marketing2/features" class="nav-link">{$m2t.navFeatures}</a>
+                <a href="/marketing2/features" class="nav-link"
+                    >{$m2t.navFeatures}</a
+                >
                 <a href="#security" class="nav-link">{$m2t.navSecurity}</a>
             </nav>
 
@@ -400,13 +446,16 @@
             <div class="flex items-center gap-4">
                 <!-- Mobile menu button -->
                 <button
-                    onclick={() => mobileMenuOpen = !mobileMenuOpen}
+                    onclick={() => (mobileMenuOpen = !mobileMenuOpen)}
                     class="md:hidden text-white/60 hover:text-white transition-colors p-2"
                     aria-label="Toggle menu"
                 >
                     <div class="relative w-6 h-6">
                         {#if mobileMenuOpen}
-                            <X size={24} class="absolute inset-0 animate-spin-in" />
+                            <X
+                                size={24}
+                                class="absolute inset-0 animate-spin-in"
+                            />
                         {:else}
                             <Menu size={24} class="absolute inset-0" />
                         {/if}
@@ -416,12 +465,24 @@
                 <!-- Language selector -->
                 <div class="relative">
                     <button
-                        onclick={() => langMenuOpen = !langMenuOpen}
+                        onclick={() => (langMenuOpen = !langMenuOpen)}
                         class="flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm group"
                     >
-                        <Globe size={16} class="group-hover:animate-spin-slow" />
-                        <span class="hidden sm:inline">{availableLanguages.find(l => l.code === $m2Language)?.native}</span>
-                        <ChevronDown size={14} class="transition-transform duration-300" class:rotate-180={langMenuOpen} />
+                        <Globe
+                            size={16}
+                            class="group-hover:animate-spin-slow"
+                        />
+                        <span class="hidden sm:inline"
+                            >{availableLanguages.find(
+                                (l) => l.code === $m2Language,
+                            )?.native}</span
+                        >
+                        <ChevronDown
+                            size={14}
+                            class="transition-transform duration-300 {langMenuOpen
+                                ? 'rotate-180'
+                                : ''}"
+                        />
                     </button>
 
                     {#if langMenuOpen}
@@ -431,11 +492,16 @@
                         >
                             {#each availableLanguages as lang, i}
                                 <button
-                                    onclick={() => setLanguage(lang.code as Marketing2Language)}
-                                    class="w-full px-4 py-2 text-left text-sm hover:bg-white/5 transition-all duration-200"
-                                    class:text-amber-400={$m2Language === lang.code}
-                                    class:text-white/70={$m2Language !== lang.code}
-                                    style="animation: slideIn 0.2s ease {i * 0.05}s both"
+                                    onclick={() =>
+                                        setLanguage(
+                                            lang.code as Marketing2Language,
+                                        )}
+                                    class="w-full px-4 py-2 text-left text-sm hover:bg-white/5 transition-all duration-200 {$m2Language ===
+                                    lang.code
+                                        ? 'text-amber-400'
+                                        : 'text-white/70'}"
+                                    style="animation: slideIn 0.2s ease {i *
+                                        0.05}s both"
                                 >
                                     {lang.native}
                                 </button>
@@ -461,15 +527,11 @@
                 transition:slide={{ duration: 300 }}
             >
                 <nav class="flex flex-col px-6 py-4 space-y-2">
-                    {#each [
-                        { href: "/marketing2/how", label: $m2t.navHow },
-                        { href: "/marketing2/features", label: $m2t.navFeatures },
-                        { href: "#security", label: $m2t.navSecurity }
-                    ] as item, i}
+                    {#each [{ href: "/marketing2/how", label: $m2t.navHow }, { href: "/marketing2/features", label: $m2t.navFeatures }, { href: "#security", label: $m2t.navSecurity }] as item, i}
                         <a
                             href={item.href}
                             class="text-white/60 hover:text-white transition-all duration-200 py-3 border-b border-white/5 last:border-0"
-                            onclick={() => mobileMenuOpen = false}
+                            onclick={() => (mobileMenuOpen = false)}
                             style="animation: slideIn 0.3s ease {i * 0.1}s both"
                         >
                             {item.label}
@@ -482,25 +544,41 @@
 
     <main class="relative z-10">
         <!-- Section 1: The Shoebox (Hero) -->
-        <section class="min-h-screen flex items-center justify-center px-6 relative" bind:this={heroRef}>
+        <section
+            class="min-h-screen flex items-center justify-center px-6 relative"
+            bind:this={heroRef}
+        >
             <div
                 class="text-center max-w-3xl mx-auto"
                 style="
                     opacity: {heroOpacity};
-                    transform: translateY({scrollY * 0.15}px) scale({Math.max(0.9, heroScale)});
+                    transform: translateY({scrollY * 0.15}px) scale({Math.max(
+                    0.9,
+                    heroScale,
+                )});
                 "
             >
                 {#if introVisible}
                     <div class="space-y-4 mb-8">
                         <h1
                             class="text-4xl md:text-6xl lg:text-7xl font-serif font-light text-white/90 leading-tight"
-                            in:fly={{ y: 30, duration: 800, delay: 200, easing: backOut }}
+                            in:fly={{
+                                y: 30,
+                                duration: 800,
+                                delay: 200,
+                                easing: backOut,
+                            }}
                         >
                             {$m2t.heroLine1}
                         </h1>
                         <h1
                             class="text-4xl md:text-6xl lg:text-7xl font-serif font-light text-white/60 leading-tight"
-                            in:fly={{ y: 30, duration: 800, delay: 400, easing: backOut }}
+                            in:fly={{
+                                y: 30,
+                                duration: 800,
+                                delay: 400,
+                                easing: backOut,
+                            }}
                         >
                             {$m2t.heroLine2}
                         </h1>
@@ -509,7 +587,12 @@
                     <div in:fade={{ duration: 800, delay: 600 }}>
                         <p
                             class="text-2xl md:text-3xl font-serif text-amber-400/90 mb-8"
-                            in:fly={{ y: 20, duration: 800, delay: 800, easing: backOut }}
+                            in:fly={{
+                                y: 20,
+                                duration: 800,
+                                delay: 800,
+                                easing: backOut,
+                            }}
                         >
                             {$m2t.heroLine3}
                         </p>
@@ -525,7 +608,10 @@
                             in:fade={{ duration: 500, delay: 1200 }}
                         >
                             {$m2t.ctaExplore}
-                            <ArrowRight size={16} class="group-hover:translate-x-1 transition-transform duration-300" />
+                            <ArrowRight
+                                size={16}
+                                class="group-hover:translate-x-1 transition-transform duration-300"
+                            />
                         </a>
                     </div>
                 {/if}
@@ -543,7 +629,10 @@
         </section>
 
         <!-- Section 1.5: The Kitchen Story -->
-        <section class="py-24 px-6 bg-gradient-to-b from-transparent via-rose-950/5 to-transparent" bind:this={kitchenRef}>
+        <section
+            class="py-24 px-6 bg-gradient-to-b from-transparent via-rose-950/5 to-transparent"
+            bind:this={kitchenRef}
+        >
             <div class="max-w-2xl mx-auto reveal-section" use:reveal>
                 <h2
                     class="text-2xl md:text-3xl font-serif text-white/80 text-center mb-10"
@@ -568,35 +657,61 @@
 
         <!-- Section 2: The Weight -->
         <section class="py-32 px-6" bind:this={weightRef}>
-            <div class="max-w-3xl mx-auto text-center reveal-section" use:reveal>
+            <div
+                class="max-w-3xl mx-auto text-center reveal-section"
+                use:reveal
+            >
                 <h2
                     class="text-3xl md:text-4xl font-serif text-white/90 mb-8 leading-relaxed"
                     use:textReveal
                 >
                     {$m2t.weightTitle}
                 </h2>
-                <p class="text-lg text-white/50 leading-relaxed mb-12 reveal-section" use:reveal={{ delay: 200 }}>
+                <p
+                    class="text-lg text-white/50 leading-relaxed mb-12 reveal-section"
+                    use:reveal={{ delay: 200 }}
+                >
                     {$m2t.weightDesc}
                 </p>
-                <p class="text-xl text-amber-400/80 font-serif italic reveal-section" use:reveal={{ delay: 400 }}>
+                <p
+                    class="text-xl text-amber-400/80 font-serif italic reveal-section"
+                    use:reveal={{ delay: 400 }}
+                >
                     {$m2t.weightBridge}
                 </p>
             </div>
         </section>
 
         <!-- Section 3: The Guide -->
-        <section class="py-32 px-6 bg-gradient-to-b from-transparent via-amber-950/5 to-transparent" bind:this={guideRef}>
-            <div class="max-w-3xl mx-auto text-center reveal-section" use:reveal>
-                <div class="icon-container w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-8">
+        <section
+            class="py-32 px-6 bg-gradient-to-b from-transparent via-amber-950/5 to-transparent"
+            bind:this={guideRef}
+        >
+            <div
+                class="max-w-3xl mx-auto text-center reveal-section"
+                use:reveal
+            >
+                <div
+                    class="icon-container w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-8"
+                >
                     <Compass size={24} class="text-amber-400/70 icon-spin" />
                 </div>
-                <h2 class="text-3xl md:text-4xl font-serif text-white/90 mb-8" use:textReveal>
+                <h2
+                    class="text-3xl md:text-4xl font-serif text-white/90 mb-8"
+                    use:textReveal
+                >
                     {$m2t.guideTitle}
                 </h2>
-                <p class="text-lg text-white/50 leading-relaxed mb-8 reveal-section" use:reveal={{ delay: 200 }}>
+                <p
+                    class="text-lg text-white/50 leading-relaxed mb-8 reveal-section"
+                    use:reveal={{ delay: 200 }}
+                >
                     {$m2t.guideDesc}
                 </p>
-                <p class="text-base text-white/40 italic reveal-section" use:reveal={{ delay: 400 }}>
+                <p
+                    class="text-base text-white/40 italic reveal-section"
+                    use:reveal={{ delay: 400 }}
+                >
                     {$m2t.guideReassurance}
                 </p>
             </div>
@@ -611,11 +726,16 @@
                         <div class="pulse-ring pulse-ring-1"></div>
                         <div class="pulse-ring pulse-ring-2"></div>
                         <div class="pulse-ring pulse-ring-3"></div>
-                        <div class="w-12 h-12 rounded-full bg-teal-500/20 flex items-center justify-center absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                        <div
+                            class="w-12 h-12 rounded-full bg-teal-500/20 flex items-center justify-center absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                        >
                             <Heart size={24} class="text-teal-400 heart-beat" />
                         </div>
                     </div>
-                    <h2 class="text-3xl md:text-4xl font-serif text-white/90 mb-8" use:textReveal>
+                    <h2
+                        class="text-3xl md:text-4xl font-serif text-white/90 mb-8"
+                        use:textReveal
+                    >
                         {$m2t.pulseTitle}
                     </h2>
                     <p class="text-lg text-white/50 leading-relaxed">
@@ -624,13 +744,22 @@
                 </div>
 
                 <div class="space-y-8 text-center">
-                    <p class="text-lg text-white/50 leading-relaxed reveal-section" use:reveal={{ delay: 200 }}>
+                    <p
+                        class="text-lg text-white/50 leading-relaxed reveal-section"
+                        use:reveal={{ delay: 200 }}
+                    >
                         {$m2t.pulseHow}
                     </p>
-                    <p class="text-base text-white/40 leading-relaxed reveal-section" use:reveal={{ delay: 400 }}>
+                    <p
+                        class="text-base text-white/40 leading-relaxed reveal-section"
+                        use:reveal={{ delay: 400 }}
+                    >
                         {$m2t.pulseTiers}
                     </p>
-                    <p class="text-xl text-teal-400/80 font-serif italic reveal-section" use:reveal={{ delay: 600 }}>
+                    <p
+                        class="text-xl text-teal-400/80 font-serif italic reveal-section"
+                        use:reveal={{ delay: 600 }}
+                    >
                         {$m2t.pulseGift}
                     </p>
                 </div>
@@ -638,9 +767,16 @@
         </section>
 
         <!-- Section 5: The Distinction -->
-        <section class="py-32 px-6 bg-gradient-to-b from-transparent via-white/[0.02] to-transparent">
-            <div class="max-w-3xl mx-auto text-center reveal-section" use:reveal>
-                <div class="icon-container w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-8">
+        <section
+            class="py-32 px-6 bg-gradient-to-b from-transparent via-white/[0.02] to-transparent"
+        >
+            <div
+                class="max-w-3xl mx-auto text-center reveal-section"
+                use:reveal
+            >
+                <div
+                    class="icon-container w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-8"
+                >
                     <Shield size={24} class="text-white/50 icon-pulse" />
                 </div>
                 <h2 class="text-2xl md:text-3xl font-serif text-white/80 mb-6">
@@ -662,29 +798,38 @@
         <section class="py-32 px-6" id="security">
             <div class="max-w-4xl mx-auto reveal-section" use:reveal>
                 <div class="text-center mb-16">
-                    <div class="icon-container w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-8">
-                        <Lock size={24} class="text-emerald-400/70 icon-shimmer" />
+                    <div
+                        class="icon-container w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-8"
+                    >
+                        <Lock
+                            size={24}
+                            class="text-emerald-400/70 icon-shimmer"
+                        />
                     </div>
-                    <h2 class="text-3xl md:text-4xl font-serif text-white/90 mb-6">
+                    <h2
+                        class="text-3xl md:text-4xl font-serif text-white/90 mb-6"
+                    >
                         {$m2t.securityTitle}
                     </h2>
-                    <p class="text-lg text-white/50 leading-relaxed max-w-2xl mx-auto">
+                    <p
+                        class="text-lg text-white/50 leading-relaxed max-w-2xl mx-auto"
+                    >
                         {$m2t.securityDesc}
                     </p>
                 </div>
 
                 <div class="grid md:grid-cols-3 gap-8">
-                    {#each [
-                        { title: $m2t.securityEncryption, desc: $m2t.securityEncryptionDesc },
-                        { title: $m2t.securityPrivacy, desc: $m2t.securityPrivacyDesc },
-                        { title: $m2t.securityControl, desc: $m2t.securityControlDesc }
-                    ] as card, i}
+                    {#each [{ title: $m2t.securityEncryption, desc: $m2t.securityEncryptionDesc }, { title: $m2t.securityPrivacy, desc: $m2t.securityPrivacyDesc }, { title: $m2t.securityControl, desc: $m2t.securityControlDesc }] as card, i}
                         <div
                             class="card-3d text-center p-6 rounded-2xl bg-white/[0.02] border border-white/5 reveal-section transition-all duration-500"
                             use:reveal={{ delay: i * 150 }}
                             use:tilt3D
                         >
-                            <h3 class="text-lg font-serif text-emerald-400/90 mb-3">{card.title}</h3>
+                            <h3
+                                class="text-lg font-serif text-emerald-400/90 mb-3"
+                            >
+                                {card.title}
+                            </h3>
                             <p class="text-sm text-white/40">{card.desc}</p>
                         </div>
                     {/each}
@@ -695,22 +840,24 @@
         <!-- Section 6: The Gift -->
         <section class="py-32 px-6" id="features">
             <div class="max-w-4xl mx-auto reveal-section" use:reveal>
-                <h2 class="text-3xl md:text-4xl font-serif text-white/90 text-center mb-16">
+                <h2
+                    class="text-3xl md:text-4xl font-serif text-white/90 text-center mb-16"
+                >
                     {$m2t.giftTitle}
                 </h2>
 
                 <div class="grid md:grid-cols-3 gap-8">
-                    {#each [
-                        { title: $m2t.giftClarity, desc: $m2t.giftClarityDesc, color: "amber" },
-                        { title: $m2t.giftGuidance, desc: $m2t.giftGuidanceDesc, color: "amber" },
-                        { title: $m2t.giftVoice, desc: $m2t.giftVoiceDesc, color: "amber" }
-                    ] as card, i}
+                    {#each [{ title: $m2t.giftClarity, desc: $m2t.giftClarityDesc, color: "amber" }, { title: $m2t.giftGuidance, desc: $m2t.giftGuidanceDesc, color: "amber" }, { title: $m2t.giftVoice, desc: $m2t.giftVoiceDesc, color: "amber" }] as card, i}
                         <div
                             class="card-3d text-center p-8 rounded-2xl bg-white/[0.02] border border-white/5 reveal-section transition-all duration-500"
                             use:reveal={{ delay: i * 150 }}
                             use:tilt3D
                         >
-                            <h3 class="text-xl font-serif text-amber-400/90 mb-3">{card.title}</h3>
+                            <h3
+                                class="text-xl font-serif text-amber-400/90 mb-3"
+                            >
+                                {card.title}
+                            </h3>
                             <p class="text-sm text-white/40">{card.desc}</p>
                         </div>
                     {/each}
@@ -719,16 +866,26 @@
         </section>
 
         <!-- Testimonial Section -->
-        <section class="py-24 px-6 bg-gradient-to-b from-transparent via-white/[0.01] to-transparent">
+        <section
+            class="py-24 px-6 bg-gradient-to-b from-transparent via-white/[0.01] to-transparent"
+        >
             <div class="max-w-3xl mx-auto reveal-section" use:reveal>
                 <div class="text-center">
                     <div class="flex justify-center mb-6">
                         {#each Array(5) as _, i}
-                            <span class="text-amber-400/60 text-sm" style="animation: starPop 0.3s ease {i * 0.1}s both">★</span>
+                            <span
+                                class="text-amber-400/60 text-sm"
+                                style="animation: starPop 0.3s ease {i *
+                                    0.1}s both">★</span
+                            >
                         {/each}
                     </div>
-                    <blockquote class="text-xl md:text-2xl font-serif text-white/70 italic mb-8 leading-relaxed">
-                        "I spent months putting off this conversation with my family. Continuum let me say everything I needed to say, in my own time, in my own words."
+                    <blockquote
+                        class="text-xl md:text-2xl font-serif text-white/70 italic mb-8 leading-relaxed"
+                    >
+                        "I spent months putting off this conversation with my
+                        family. Continuum let me say everything I needed to say,
+                        in my own time, in my own words."
                     </blockquote>
                     <p class="text-sm text-white/40">— A Continuum user</p>
                 </div>
@@ -740,7 +897,9 @@
             <div class="max-w-2xl mx-auto w-full reveal-section" use:reveal>
                 {#if signupStep === 0}
                     <div class="text-center" in:fade={{ duration: 400 }}>
-                        <h2 class="text-3xl md:text-4xl font-serif text-white/90 mb-4">
+                        <h2
+                            class="text-3xl md:text-4xl font-serif text-white/90 mb-4"
+                        >
                             {$m2t.invitationTitle}
                         </h2>
                         <p class="text-lg text-white/50 mb-12">
@@ -748,12 +907,15 @@
                         </p>
 
                         <div class="max-w-md mx-auto space-y-6">
-                            <p class="text-sm text-white/40">{$m2t.signupNamePrompt}</p>
+                            <p class="text-sm text-white/40">
+                                {$m2t.signupNamePrompt}
+                            </p>
                             <input
                                 type="text"
                                 bind:value={name}
                                 placeholder={$m2t.signupNamePlaceholder}
-                                onkeydown={(e) => e.key === "Enter" && handleNameSubmit()}
+                                onkeydown={(e) =>
+                                    e.key === "Enter" && handleNameSubmit()}
                                 class="w-full bg-transparent border-b border-white/20 focus:border-amber-500/50 py-4 text-2xl font-serif text-center text-white/90 outline-none transition-all duration-300 placeholder:text-white/20 focus:shadow-[0_4px_20px_-4px_rgba(251,191,36,0.3)]"
                             />
 
@@ -761,22 +923,32 @@
                                 <button
                                     onclick={handleNameSubmit}
                                     class="mt-8 inline-flex items-center gap-3 px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-full text-white/80 transition-all duration-300 group hover:shadow-[0_0_30px_rgba(251,191,36,0.2)]"
-                                    in:scale={{ duration: 300, start: 0.9, easing: backOut }}
+                                    in:scale={{
+                                        duration: 300,
+                                        start: 0.9,
+                                        easing: backOut,
+                                    }}
                                 >
                                     {$m2t.signupButton}
-                                    <ArrowRight size={18} class="group-hover:translate-x-1 transition-transform" />
+                                    <ArrowRight
+                                        size={18}
+                                        class="group-hover:translate-x-1 transition-transform"
+                                    />
                                 </button>
                             {/if}
                         </div>
                     </div>
                 {:else if signupStep === 1}
                     <div class="text-center" in:fly={{ x: 50, duration: 400 }}>
-                        <p class="text-sm text-white/40 mb-8">{$m2t.signupEmailPrompt}</p>
+                        <p class="text-sm text-white/40 mb-8">
+                            {$m2t.signupEmailPrompt}
+                        </p>
                         <input
                             type="email"
                             bind:value={email}
                             placeholder={$m2t.signupEmailPlaceholder}
-                            onkeydown={(e) => e.key === "Enter" && handleEmailSubmit()}
+                            onkeydown={(e) =>
+                                e.key === "Enter" && handleEmailSubmit()}
                             class="w-full max-w-md mx-auto block bg-transparent border-b border-white/20 focus:border-amber-500/50 py-4 text-xl text-center text-white/90 outline-none transition-all duration-300 placeholder:text-white/20 focus:shadow-[0_4px_20px_-4px_rgba(251,191,36,0.3)]"
                         />
 
@@ -784,30 +956,47 @@
                             <button
                                 onclick={handleEmailSubmit}
                                 class="mt-8 inline-flex items-center gap-3 px-8 py-4 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 rounded-full text-amber-200 transition-all duration-300 group hover:shadow-[0_0_30px_rgba(251,191,36,0.3)]"
-                                in:scale={{ duration: 300, start: 0.9, easing: backOut }}
+                                in:scale={{
+                                    duration: 300,
+                                    start: 0.9,
+                                    easing: backOut,
+                                }}
                             >
                                 {$m2t.signupButton}
-                                <ArrowRight size={18} class="group-hover:translate-x-1 transition-transform" />
+                                <ArrowRight
+                                    size={18}
+                                    class="group-hover:translate-x-1 transition-transform"
+                                />
                             </button>
                         {/if}
 
                         <button
-                            onclick={() => signupStep = 0}
+                            onclick={() => (signupStep = 0)}
                             class="mt-6 block mx-auto text-sm text-white/30 hover:text-white/50 transition-colors"
                         >
                             {$m2t.signupBack}
                         </button>
                     </div>
                 {:else}
-                    <div class="text-center" in:scale={{ duration: 500, start: 0.9, easing: elasticOut }}>
+                    <div
+                        class="text-center"
+                        in:scale={{
+                            duration: 500,
+                            start: 0.9,
+                            easing: elasticOut,
+                        }}
+                    >
                         <div class="relative w-20 h-20 mx-auto mb-8">
                             <div class="success-ring"></div>
-                            <div class="w-16 h-16 rounded-full bg-teal-500/10 border border-teal-500/30 flex items-center justify-center absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                            <div
+                                class="w-16 h-16 rounded-full bg-teal-500/10 border border-teal-500/30 flex items-center justify-center absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                            >
                                 <Heart size={28} class="text-teal-400" />
                             </div>
                         </div>
                         <h2 class="text-3xl font-serif text-white/90 mb-2">
-                            {$m2t.signupWelcome} {name}.
+                            {$m2t.signupWelcome}
+                            {name}.
                         </h2>
                         <p class="text-lg text-white/50 mb-8">
                             {$m2t.signupNext}
@@ -817,7 +1006,10 @@
                             class="inline-flex items-center gap-3 px-8 py-4 bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/30 rounded-full text-teal-200 transition-all duration-300 group hover:shadow-[0_0_30px_rgba(20,184,166,0.3)]"
                         >
                             {$m2t.signupEnter}
-                            <ArrowRight size={18} class="group-hover:translate-x-1 transition-transform" />
+                            <ArrowRight
+                                size={18}
+                                class="group-hover:translate-x-1 transition-transform"
+                            />
                         </a>
                     </div>
                 {/if}
@@ -829,9 +1021,21 @@
     <footer class="py-12 px-6 border-t border-white/5">
         <div class="max-w-4xl mx-auto">
             <nav class="flex justify-center gap-8 mb-8 text-sm text-white/40">
-                <a href="/marketing2/how" class="hover:text-white/60 transition-colors duration-300">{$m2t.navHow}</a>
-                <a href="/marketing2/features" class="hover:text-white/60 transition-colors duration-300">{$m2t.navFeatures}</a>
-                <a href="#security" class="hover:text-white/60 transition-colors duration-300">{$m2t.navSecurity}</a>
+                <a
+                    href="/marketing2/how"
+                    class="hover:text-white/60 transition-colors duration-300"
+                    >{$m2t.navHow}</a
+                >
+                <a
+                    href="/marketing2/features"
+                    class="hover:text-white/60 transition-colors duration-300"
+                    >{$m2t.navFeatures}</a
+                >
+                <a
+                    href="#security"
+                    class="hover:text-white/60 transition-colors duration-300"
+                    >{$m2t.navSecurity}</a
+                >
             </nav>
             <div class="text-center space-y-4">
                 <p class="text-xs text-white/30">
@@ -850,7 +1054,9 @@
     .reveal-section {
         opacity: 0;
         transform: translateY(30px);
-        transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        transition:
+            opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+            transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .reveal-section.revealed {
@@ -860,7 +1066,9 @@
 
     /* 3D Card transitions */
     .card-3d {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        transition:
+            transform 0.3s ease,
+            box-shadow 0.3s ease;
         transform-style: preserve-3d;
     }
 
@@ -871,13 +1079,17 @@
     }
 
     .nav-link::after {
-        content: '';
+        content: "";
         position: absolute;
         bottom: 0;
         left: 0;
         width: 0;
         height: 1px;
-        background: linear-gradient(90deg, rgba(251, 191, 36, 0.5), rgba(20, 184, 166, 0.5));
+        background: linear-gradient(
+            90deg,
+            rgba(251, 191, 36, 0.5),
+            rgba(20, 184, 166, 0.5)
+        );
         transition: width 0.3s ease;
     }
 
@@ -891,31 +1103,67 @@
 
     /* Floating animations */
     @keyframes float-slow {
-        0%, 100% { transform: translateY(0) rotate(0deg); }
-        50% { transform: translateY(-30px) rotate(3deg); }
+        0%,
+        100% {
+            transform: translateY(0) rotate(0deg);
+        }
+        50% {
+            transform: translateY(-30px) rotate(3deg);
+        }
     }
 
     @keyframes float-medium {
-        0%, 100% { transform: translateY(0) rotate(0deg); }
-        50% { transform: translateY(-20px) rotate(-2deg); }
+        0%,
+        100% {
+            transform: translateY(0) rotate(0deg);
+        }
+        50% {
+            transform: translateY(-20px) rotate(-2deg);
+        }
     }
 
     @keyframes float-fast {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-15px); }
+        0%,
+        100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-15px);
+        }
     }
 
     @keyframes float-particle {
-        0%, 100% { transform: translateY(0) translateX(0); opacity: 0.1; }
-        25% { transform: translateY(-30px) translateX(10px); opacity: 0.3; }
-        50% { transform: translateY(-50px) translateX(-5px); opacity: 0.2; }
-        75% { transform: translateY(-30px) translateX(5px); opacity: 0.3; }
+        0%,
+        100% {
+            transform: translateY(0) translateX(0);
+            opacity: 0.1;
+        }
+        25% {
+            transform: translateY(-30px) translateX(10px);
+            opacity: 0.3;
+        }
+        50% {
+            transform: translateY(-50px) translateX(-5px);
+            opacity: 0.2;
+        }
+        75% {
+            transform: translateY(-30px) translateX(5px);
+            opacity: 0.3;
+        }
     }
 
-    .animate-float-slow { animation: float-slow 20s ease-in-out infinite; }
-    .animate-float-medium { animation: float-medium 15s ease-in-out infinite; }
-    .animate-float-fast { animation: float-fast 10s ease-in-out infinite; }
-    .animate-float-particle { animation: float-particle 8s ease-in-out infinite; }
+    .animate-float-slow {
+        animation: float-slow 20s ease-in-out infinite;
+    }
+    .animate-float-medium {
+        animation: float-medium 15s ease-in-out infinite;
+    }
+    .animate-float-fast {
+        animation: float-fast 10s ease-in-out infinite;
+    }
+    .animate-float-particle {
+        animation: float-particle 8s ease-in-out infinite;
+    }
 
     /* Scroll indicator */
     .scroll-indicator {
@@ -939,8 +1187,15 @@
     }
 
     @keyframes scrollDot {
-        0%, 100% { top: 8px; opacity: 1; }
-        50% { top: 24px; opacity: 0.3; }
+        0%,
+        100% {
+            top: 8px;
+            opacity: 1;
+        }
+        50% {
+            top: 24px;
+            opacity: 0.3;
+        }
     }
 
     /* Pulse visualization */
@@ -954,13 +1209,31 @@
         animation: pulseRing 3s ease-out infinite;
     }
 
-    .pulse-ring-1 { width: 48px; height: 48px; animation-delay: 0s; }
-    .pulse-ring-2 { width: 72px; height: 72px; animation-delay: 1s; }
-    .pulse-ring-3 { width: 96px; height: 96px; animation-delay: 2s; }
+    .pulse-ring-1 {
+        width: 48px;
+        height: 48px;
+        animation-delay: 0s;
+    }
+    .pulse-ring-2 {
+        width: 72px;
+        height: 72px;
+        animation-delay: 1s;
+    }
+    .pulse-ring-3 {
+        width: 96px;
+        height: 96px;
+        animation-delay: 2s;
+    }
 
     @keyframes pulseRing {
-        0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0.8; }
-        100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+        0% {
+            transform: translate(-50%, -50%) scale(0.5);
+            opacity: 0.8;
+        }
+        100% {
+            transform: translate(-50%, -50%) scale(1.5);
+            opacity: 0;
+        }
     }
 
     /* Heart beat */
@@ -969,11 +1242,22 @@
     }
 
     @keyframes heartBeat {
-        0%, 100% { transform: scale(1); }
-        14% { transform: scale(1.15); }
-        28% { transform: scale(1); }
-        42% { transform: scale(1.15); }
-        56% { transform: scale(1); }
+        0%,
+        100% {
+            transform: scale(1);
+        }
+        14% {
+            transform: scale(1.15);
+        }
+        28% {
+            transform: scale(1);
+        }
+        42% {
+            transform: scale(1.15);
+        }
+        56% {
+            transform: scale(1);
+        }
     }
 
     /* Icon animations */
@@ -982,8 +1266,12 @@
     }
 
     @keyframes iconSpin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
     }
 
     .icon-pulse {
@@ -991,8 +1279,15 @@
     }
 
     @keyframes iconPulse {
-        0%, 100% { opacity: 0.5; transform: scale(1); }
-        50% { opacity: 0.8; transform: scale(1.1); }
+        0%,
+        100% {
+            opacity: 0.5;
+            transform: scale(1);
+        }
+        50% {
+            opacity: 0.8;
+            transform: scale(1.1);
+        }
     }
 
     .icon-shimmer {
@@ -1000,13 +1295,20 @@
     }
 
     @keyframes iconShimmer {
-        0%, 100% { filter: brightness(1); }
-        50% { filter: brightness(1.3); }
+        0%,
+        100% {
+            filter: brightness(1);
+        }
+        50% {
+            filter: brightness(1.3);
+        }
     }
 
     /* Icon container hover */
     .icon-container {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        transition:
+            transform 0.3s ease,
+            box-shadow 0.3s ease;
     }
 
     .icon-container:hover {
@@ -1028,9 +1330,17 @@
     }
 
     @keyframes successRing {
-        0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
-        50% { opacity: 1; }
-        100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+        0% {
+            transform: translate(-50%, -50%) scale(0);
+            opacity: 0;
+        }
+        50% {
+            opacity: 1;
+        }
+        100% {
+            transform: translate(-50%, -50%) scale(1.5);
+            opacity: 0;
+        }
     }
 
     /* Menu animations */
@@ -1039,8 +1349,14 @@
     }
 
     @keyframes spinIn {
-        from { transform: rotate(-90deg); opacity: 0; }
-        to { transform: rotate(0deg); opacity: 1; }
+        from {
+            transform: rotate(-90deg);
+            opacity: 0;
+        }
+        to {
+            transform: rotate(0deg);
+            opacity: 1;
+        }
     }
 
     .animate-spin-slow {
@@ -1048,21 +1364,39 @@
     }
 
     @keyframes spinSlow {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
     }
 
     /* Slide in animation */
     @keyframes slideIn {
-        from { opacity: 0; transform: translateX(-10px); }
-        to { opacity: 1; transform: translateX(0); }
+        from {
+            opacity: 0;
+            transform: translateX(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
     }
 
     /* Star pop animation */
     @keyframes starPop {
-        0% { transform: scale(0); opacity: 0; }
-        50% { transform: scale(1.2); }
-        100% { transform: scale(1); opacity: 1; }
+        0% {
+            transform: scale(0);
+            opacity: 0;
+        }
+        50% {
+            transform: scale(1.2);
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
     }
 
     /* Smooth scroll */
@@ -1102,7 +1436,9 @@
 
     /* Easter egg animations */
     .easter-egg-container {
-        animation: easterFadeIn 0.5s ease, easterFadeOut 0.5s ease 4.5s forwards;
+        animation:
+            easterFadeIn 0.5s ease,
+            easterFadeOut 0.5s ease 4.5s forwards;
     }
 
     .easter-heart {
@@ -1110,10 +1446,20 @@
     }
 
     @keyframes heartFloat {
-        0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
-        10% { opacity: 1; }
-        90% { opacity: 1; }
-        100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+        0% {
+            transform: translateY(100vh) rotate(0deg);
+            opacity: 0;
+        }
+        10% {
+            opacity: 1;
+        }
+        90% {
+            opacity: 1;
+        }
+        100% {
+            transform: translateY(-100px) rotate(360deg);
+            opacity: 0;
+        }
     }
 
     .easter-message {
@@ -1121,31 +1467,56 @@
     }
 
     @keyframes easterMessagePop {
-        0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
-        50% { transform: translate(-50%, -50%) scale(1.1); }
-        100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        0% {
+            transform: translate(-50%, -50%) scale(0);
+            opacity: 0;
+        }
+        50% {
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+        100% {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
     }
 
     @keyframes easterFadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
     }
 
     @keyframes easterFadeOut {
-        from { opacity: 1; }
-        to { opacity: 0; }
+        from {
+            opacity: 1;
+        }
+        to {
+            opacity: 0;
+        }
     }
 
     /* Loading skeleton */
     .skeleton {
-        background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+        background: linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.05) 25%,
+            rgba(255, 255, 255, 0.1) 50%,
+            rgba(255, 255, 255, 0.05) 75%
+        );
         background-size: 200% 100%;
         animation: shimmer 1.5s infinite;
     }
 
     @keyframes shimmer {
-        0% { background-position: 200% 0; }
-        100% { background-position: -200% 0; }
+        0% {
+            background-position: 200% 0;
+        }
+        100% {
+            background-position: -200% 0;
+        }
     }
 
     /* Touch feedback */

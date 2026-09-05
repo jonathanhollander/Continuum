@@ -3,7 +3,12 @@
     import { fade, fly, slide } from "svelte/transition";
     import { backOut } from "svelte/easing";
     import { spring, tweened } from "svelte/motion";
-    import { m2Language, m2t, availableLanguages, isRTL } from "$lib/stores/marketing2";
+    import {
+        m2Language,
+        m2t,
+        availableLanguages,
+        isRTL,
+    } from "$lib/stores/marketing2";
     import type { Marketing2Language } from "$lib/stores/marketing2Dictionary";
     import {
         ArrowRight,
@@ -15,7 +20,7 @@
         Shield,
         Briefcase,
         Menu,
-        X
+        X,
     } from "lucide-svelte";
 
     let langMenuOpen = $state(false);
@@ -50,7 +55,7 @@
                     }
                 });
             },
-            { threshold: 0.1, rootMargin: "0px 0px -50px 0px" }
+            { threshold: 0.1, rootMargin: "0px 0px -50px 0px" },
         );
         observer.observe(node);
         return { destroy: () => observer.disconnect() };
@@ -74,7 +79,8 @@
         };
 
         const handleMouseLeave = () => {
-            node.style.transform = "perspective(1000px) rotateX(0) rotateY(0) translateY(0) scale(1)";
+            node.style.transform =
+                "perspective(1000px) rotateX(0) rotateY(0) translateY(0) scale(1)";
             node.style.boxShadow = "0 0 0 rgba(0,0,0,0)";
         };
 
@@ -85,7 +91,7 @@
             destroy() {
                 node.removeEventListener("mousemove", handleMouseMove);
                 node.removeEventListener("mouseleave", handleMouseLeave);
-            }
+            },
         };
     }
 
@@ -96,10 +102,13 @@
 
     onMount(() => {
         window.scrollTo(0, 0);
-        prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        prefersReducedMotion = window.matchMedia(
+            "(prefers-reduced-motion: reduce)",
+        ).matches;
 
         const updateScroll = () => {
-            const docHeight = document.documentElement.scrollHeight - innerHeight;
+            const docHeight =
+                document.documentElement.scrollHeight - innerHeight;
             scrollProgress.set(docHeight > 0 ? scrollY / docHeight : 0);
         };
 
@@ -121,35 +130,56 @@
             icon: FileText,
             title: $m2t.featurePracticalTitle,
             desc: $m2t.featurePracticalDesc,
-            items: [$m2t.practicalItem1, $m2t.practicalItem2, $m2t.practicalItem3, $m2t.practicalItem4],
+            items: [
+                $m2t.practicalItem1,
+                $m2t.practicalItem2,
+                $m2t.practicalItem3,
+                $m2t.practicalItem4,
+            ],
             color: "amber",
-            iconClass: "text-amber-400/70"
+            iconClass: "text-amber-400/70",
         },
         {
             icon: Heart,
             title: $m2t.featurePersonalTitle,
             desc: $m2t.featurePersonalDesc,
-            items: [$m2t.personalItem1, $m2t.personalItem2, $m2t.personalItem3, $m2t.personalItem4],
+            items: [
+                $m2t.personalItem1,
+                $m2t.personalItem2,
+                $m2t.personalItem3,
+                $m2t.personalItem4,
+            ],
             color: "rose",
-            iconClass: "text-rose-400/70"
+            iconClass: "text-rose-400/70",
         },
         {
             icon: Shield,
             title: $m2t.featureProtectiveTitle,
             desc: $m2t.featureProtectiveDesc,
-            items: [$m2t.protectiveItem1, $m2t.protectiveItem2, $m2t.protectiveItem3, $m2t.protectiveItem4],
+            items: [
+                $m2t.protectiveItem1,
+                $m2t.protectiveItem2,
+                $m2t.protectiveItem3,
+                $m2t.protectiveItem4,
+            ],
             color: "teal",
-            iconClass: "text-teal-400/70"
+            iconClass: "text-teal-400/70",
         },
         {
             icon: Briefcase,
             title: $m2t.featurePreparedTitle,
             desc: $m2t.featurePreparedDesc,
-            items: [$m2t.preparedItem1, $m2t.preparedItem2, $m2t.preparedItem3, $m2t.preparedItem4],
+            items: [
+                $m2t.preparedItem1,
+                $m2t.preparedItem2,
+                $m2t.preparedItem3,
+                $m2t.preparedItem4,
+            ],
             color: "indigo",
-            iconClass: "text-indigo-400/70"
-        }
+            iconClass: "text-indigo-400/70",
+        },
     ]);
+    const grainBg = `background-image: url('data:image/svg+xml,%3Csvg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noise"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%" height="100%" filter="url(%23noise)"/%3E%3C/svg%3E');`;
 </script>
 
 <svelte:head>
@@ -165,7 +195,10 @@
 
 <svelte:window bind:scrollY bind:innerHeight bind:innerWidth />
 
-<div class="min-h-screen bg-[#0a0a0b] text-white overflow-x-hidden" dir={$isRTL ? "rtl" : "ltr"}>
+<div
+    class="min-h-screen bg-[#0a0a0b] text-white overflow-x-hidden"
+    dir={$isRTL ? "rtl" : "ltr"}
+>
     <!-- Cursor Glow Effect (Desktop only) -->
     {#if innerWidth > 768 && !prefersReducedMotion}
         <div
@@ -211,8 +244,8 @@
                 <div
                     class="absolute w-1 h-1 rounded-full bg-white/10 animate-float-particle"
                     style="
-                        left: {15 + (i * 10)}%;
-                        top: {25 + (i * 6) % 50}%;
+                        left: {15 + i * 10}%;
+                        top: {25 + ((i * 6) % 50)}%;
                         animation-delay: {i * 0.7}s;
                         animation-duration: {7 + (i % 3)}s;
                     "
@@ -220,34 +253,47 @@
             {/each}
         {/if}
 
-        <div
-            class="absolute inset-0 opacity-[0.03]"
-            style="background-image: url('data:image/svg+xml,%3Csvg viewBox=\"0 0 256 256\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cfilter id=\"noise\"%3E%3CfeTurbulence type=\"fractalNoise\" baseFrequency=\"0.9\" numOctaves=\"4\" stitchTiles=\"stitch\"/%3E%3C/filter%3E%3Crect width=\"100%25\" height=\"100%25\" filter=\"url(%23noise)\"/%3E%3C/svg%3E');"
-        ></div>
+        <div class="absolute inset-0 opacity-[0.03]" style={grainBg}></div>
     </div>
 
     <!-- Header -->
-    <header class="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
-        <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-            <a href="/marketing2" class="text-xl font-serif tracking-wide text-white/90 hover:text-white transition-all duration-300 hover:tracking-wider">
+    <header
+        class="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/5"
+    >
+        <div
+            class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between"
+        >
+            <a
+                href="/marketing2"
+                class="text-xl font-serif tracking-wide text-white/90 hover:text-white transition-all duration-300 hover:tracking-wider"
+            >
                 Continuum
             </a>
 
-            <nav class="hidden md:flex items-center gap-8 text-sm text-white/60">
+            <nav
+                class="hidden md:flex items-center gap-8 text-sm text-white/60"
+            >
                 <a href="/marketing2/how" class="nav-link">{$m2t.navHow}</a>
-                <a href="/marketing2/features" class="text-white">{$m2t.navFeatures}</a>
-                <a href="/marketing2#security" class="nav-link">{$m2t.navSecurity}</a>
+                <a href="/marketing2/features" class="text-white"
+                    >{$m2t.navFeatures}</a
+                >
+                <a href="/marketing2#security" class="nav-link"
+                    >{$m2t.navSecurity}</a
+                >
             </nav>
 
             <div class="flex items-center gap-4">
                 <button
-                    onclick={() => mobileMenuOpen = !mobileMenuOpen}
+                    onclick={() => (mobileMenuOpen = !mobileMenuOpen)}
                     class="md:hidden text-white/60 hover:text-white transition-colors p-2"
                     aria-label="Toggle menu"
                 >
                     <div class="relative w-6 h-6">
                         {#if mobileMenuOpen}
-                            <X size={24} class="absolute inset-0 animate-spin-in" />
+                            <X
+                                size={24}
+                                class="absolute inset-0 animate-spin-in"
+                            />
                         {:else}
                             <Menu size={24} class="absolute inset-0" />
                         {/if}
@@ -256,12 +302,24 @@
 
                 <div class="relative">
                     <button
-                        onclick={() => langMenuOpen = !langMenuOpen}
+                        onclick={() => (langMenuOpen = !langMenuOpen)}
                         class="flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm group"
                     >
-                        <Globe size={16} class="group-hover:animate-spin-slow" />
-                        <span class="hidden sm:inline">{availableLanguages.find(l => l.code === $m2Language)?.native}</span>
-                        <ChevronDown size={14} class="transition-transform duration-300" class:rotate-180={langMenuOpen} />
+                        <Globe
+                            size={16}
+                            class="group-hover:animate-spin-slow"
+                        />
+                        <span class="hidden sm:inline"
+                            >{availableLanguages.find(
+                                (l) => l.code === $m2Language,
+                            )?.native}</span
+                        >
+                        <ChevronDown
+                            size={14}
+                            class="transition-transform duration-300 {langMenuOpen
+                                ? 'rotate-180'
+                                : ''}"
+                        />
                     </button>
 
                     {#if langMenuOpen}
@@ -271,11 +329,16 @@
                         >
                             {#each availableLanguages as lang, i}
                                 <button
-                                    onclick={() => setLanguage(lang.code as Marketing2Language)}
-                                    class="w-full px-4 py-2 text-left text-sm hover:bg-white/5 transition-all duration-200"
-                                    class:text-amber-400={$m2Language === lang.code}
-                                    class:text-white/70={$m2Language !== lang.code}
-                                    style="animation: slideIn 0.2s ease {i * 0.05}s both"
+                                    onclick={() =>
+                                        setLanguage(
+                                            lang.code as Marketing2Language,
+                                        )}
+                                    class="w-full px-4 py-2 text-left text-sm hover:bg-white/5 transition-all duration-200 {$m2Language ===
+                                    lang.code
+                                        ? 'text-amber-400'
+                                        : 'text-white/70'}"
+                                    style="animation: slideIn 0.2s ease {i *
+                                        0.05}s both"
                                 >
                                     {lang.native}
                                 </button>
@@ -299,17 +362,13 @@
                 transition:slide={{ duration: 300 }}
             >
                 <nav class="flex flex-col px-6 py-4 space-y-2">
-                    {#each [
-                        { href: "/marketing2/how", label: $m2t.navHow, active: false },
-                        { href: "/marketing2/features", label: $m2t.navFeatures, active: true },
-                        { href: "/marketing2#security", label: $m2t.navSecurity, active: false }
-                    ] as item, i}
+                    {#each [{ href: "/marketing2/how", label: $m2t.navHow, active: false }, { href: "/marketing2/features", label: $m2t.navFeatures, active: true }, { href: "/marketing2#security", label: $m2t.navSecurity, active: false }] as item, i}
                         <a
                             href={item.href}
-                            class="transition-all duration-200 py-3 border-b border-white/5 last:border-0"
-                            class:text-white={item.active}
-                            class:text-white/60={!item.active}
-                            onclick={() => mobileMenuOpen = false}
+                            class="transition-all duration-200 py-3 border-b border-white/5 last:border-0 {item.active
+                                ? 'text-white'
+                                : 'text-white/60'}"
+                            onclick={() => (mobileMenuOpen = false)}
                             style="animation: slideIn 0.3s ease {i * 0.1}s both"
                         >
                             {item.label}
@@ -330,16 +389,27 @@
                     in:fade={{ duration: 300, delay: 100 }}
                 >
                     {#if $isRTL}
-                        <ArrowRight size={16} class="group-hover:translate-x-1 transition-transform" />
+                        <ArrowRight
+                            size={16}
+                            class="group-hover:translate-x-1 transition-transform"
+                        />
                     {:else}
-                        <ArrowLeft size={16} class="group-hover:-translate-x-1 transition-transform" />
+                        <ArrowLeft
+                            size={16}
+                            class="group-hover:-translate-x-1 transition-transform"
+                        />
                     {/if}
                     Continuum
                 </a>
 
                 <h1
                     class="text-4xl md:text-5xl font-serif text-white/90 mb-6"
-                    in:fly={{ y: 30, duration: 600, delay: 200, easing: backOut }}
+                    in:fly={{
+                        y: 30,
+                        duration: 600,
+                        delay: 200,
+                        easing: backOut,
+                    }}
                 >
                     {$m2t.featuresTitle}
                 </h1>
@@ -362,18 +432,32 @@
                             use:reveal={{ delay: i * 100 }}
                             use:tilt3D
                         >
-                            <div class="icon-container w-14 h-14 rounded-2xl bg-{card.color}-500/10 flex items-center justify-center mb-6">
-                                <svelte:component this={card.icon} size={28} class={card.iconClass} />
+                            <div
+                                class="icon-container w-14 h-14 rounded-2xl bg-{card.color}-500/10 flex items-center justify-center mb-6"
+                            >
+                                <svelte:component
+                                    this={card.icon}
+                                    size={28}
+                                    class={card.iconClass}
+                                />
                             </div>
-                            <h2 class="text-2xl font-serif text-white/90 mb-4">{card.title}</h2>
-                            <p class="text-white/50 leading-relaxed mb-6">{card.desc}</p>
+                            <h2 class="text-2xl font-serif text-white/90 mb-4">
+                                {card.title}
+                            </h2>
+                            <p class="text-white/50 leading-relaxed mb-6">
+                                {card.desc}
+                            </p>
                             <ul class="space-y-3 text-sm text-white/40">
                                 {#each card.items as item, j}
                                     <li
                                         class="flex items-center gap-3 list-item-reveal"
-                                        style="animation: listItemReveal 0.4s ease {(i * 0.1) + (j * 0.05)}s both"
+                                        style="animation: listItemReveal 0.4s ease {i *
+                                            0.1 +
+                                            j * 0.05}s both"
                                     >
-                                        <div class="w-1.5 h-1.5 rounded-full bg-{card.color}-500/50 animate-pulse-slow"></div>
+                                        <div
+                                            class="w-1.5 h-1.5 rounded-full bg-{card.color}-500/50 animate-pulse-slow"
+                                        ></div>
                                         {item}
                                     </li>
                                 {/each}
@@ -386,7 +470,10 @@
 
         <!-- And More -->
         <section class="py-20 px-6">
-            <div class="max-w-2xl mx-auto text-center reveal-section" use:reveal>
+            <div
+                class="max-w-2xl mx-auto text-center reveal-section"
+                use:reveal
+            >
                 <p class="text-lg text-white/40 leading-relaxed mb-8">
                     {$m2t.featuresMore}
                 </p>
@@ -404,7 +491,10 @@
                     class="inline-flex items-center gap-3 px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-full text-white/80 transition-all duration-300 group hover:shadow-[0_0_30px_rgba(251,191,36,0.2)]"
                 >
                     {$m2t.ctaPrimary}
-                    <ArrowRight size={18} class="group-hover:translate-x-1 transition-transform duration-300" />
+                    <ArrowRight
+                        size={18}
+                        class="group-hover:translate-x-1 transition-transform duration-300"
+                    />
                 </a>
             </div>
         </section>
@@ -414,9 +504,19 @@
     <footer class="py-12 px-6 border-t border-white/5">
         <div class="max-w-4xl mx-auto">
             <nav class="flex justify-center gap-8 mb-8 text-sm text-white/40">
-                <a href="/marketing2/how" class="hover:text-white/60 transition-colors duration-300">{$m2t.navHow}</a>
-                <a href="/marketing2/features" class="text-white/60">{$m2t.navFeatures}</a>
-                <a href="/marketing2#security" class="hover:text-white/60 transition-colors duration-300">{$m2t.navSecurity}</a>
+                <a
+                    href="/marketing2/how"
+                    class="hover:text-white/60 transition-colors duration-300"
+                    >{$m2t.navHow}</a
+                >
+                <a href="/marketing2/features" class="text-white/60"
+                    >{$m2t.navFeatures}</a
+                >
+                <a
+                    href="/marketing2#security"
+                    class="hover:text-white/60 transition-colors duration-300"
+                    >{$m2t.navSecurity}</a
+                >
             </nav>
             <div class="text-center space-y-4">
                 <p class="text-xs text-white/30">
@@ -434,7 +534,9 @@
     .reveal-section {
         opacity: 0;
         transform: translateY(30px);
-        transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        transition:
+            opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+            transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .reveal-section.revealed {
@@ -443,7 +545,10 @@
     }
 
     .card-3d {
-        transition: transform 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease;
+        transition:
+            transform 0.4s ease,
+            box-shadow 0.4s ease,
+            border-color 0.4s ease;
         transform-style: preserve-3d;
     }
 
@@ -453,13 +558,17 @@
     }
 
     .nav-link::after {
-        content: '';
+        content: "";
         position: absolute;
         bottom: 0;
         left: 0;
         width: 0;
         height: 1px;
-        background: linear-gradient(90deg, rgba(251, 191, 36, 0.5), rgba(20, 184, 166, 0.5));
+        background: linear-gradient(
+            90deg,
+            rgba(251, 191, 36, 0.5),
+            rgba(20, 184, 166, 0.5)
+        );
         transition: width 0.3s ease;
     }
 
@@ -472,7 +581,9 @@
     }
 
     .icon-container {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        transition:
+            transform 0.3s ease,
+            box-shadow 0.3s ease;
     }
 
     .icon-container:hover {
@@ -480,38 +591,78 @@
     }
 
     @keyframes float-slow {
-        0%, 100% { transform: translateY(0) rotate(0deg); }
-        50% { transform: translateY(-25px) rotate(2deg); }
+        0%,
+        100% {
+            transform: translateY(0) rotate(0deg);
+        }
+        50% {
+            transform: translateY(-25px) rotate(2deg);
+        }
     }
 
     @keyframes float-medium {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-18px); }
+        0%,
+        100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-18px);
+        }
     }
 
     @keyframes float-particle {
-        0%, 100% { transform: translateY(0) translateX(0); opacity: 0.1; }
-        25% { transform: translateY(-25px) translateX(8px); opacity: 0.25; }
-        50% { transform: translateY(-40px) translateX(-4px); opacity: 0.15; }
-        75% { transform: translateY(-25px) translateX(4px); opacity: 0.25; }
+        0%,
+        100% {
+            transform: translateY(0) translateX(0);
+            opacity: 0.1;
+        }
+        25% {
+            transform: translateY(-25px) translateX(8px);
+            opacity: 0.25;
+        }
+        50% {
+            transform: translateY(-40px) translateX(-4px);
+            opacity: 0.15;
+        }
+        75% {
+            transform: translateY(-25px) translateX(4px);
+            opacity: 0.25;
+        }
     }
 
-    .animate-float-slow { animation: float-slow 18s ease-in-out infinite; }
-    .animate-float-medium { animation: float-medium 14s ease-in-out infinite; }
-    .animate-float-particle { animation: float-particle 8s ease-in-out infinite; }
+    .animate-float-slow {
+        animation: float-slow 18s ease-in-out infinite;
+    }
+    .animate-float-medium {
+        animation: float-medium 14s ease-in-out infinite;
+    }
+    .animate-float-particle {
+        animation: float-particle 8s ease-in-out infinite;
+    }
 
     .animate-pulse-slow {
         animation: pulse-slow 3s ease-in-out infinite;
     }
 
     @keyframes pulse-slow {
-        0%, 100% { opacity: 0.5; }
-        50% { opacity: 1; }
+        0%,
+        100% {
+            opacity: 0.5;
+        }
+        50% {
+            opacity: 1;
+        }
     }
 
     @keyframes listItemReveal {
-        from { opacity: 0; transform: translateX(-10px); }
-        to { opacity: 1; transform: translateX(0); }
+        from {
+            opacity: 0;
+            transform: translateX(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
     }
 
     .animate-spin-in {
@@ -519,8 +670,14 @@
     }
 
     @keyframes spinIn {
-        from { transform: rotate(-90deg); opacity: 0; }
-        to { transform: rotate(0deg); opacity: 1; }
+        from {
+            transform: rotate(-90deg);
+            opacity: 0;
+        }
+        to {
+            transform: rotate(0deg);
+            opacity: 1;
+        }
     }
 
     .animate-spin-slow {
@@ -528,13 +685,23 @@
     }
 
     @keyframes spinSlow {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
     }
 
     @keyframes slideIn {
-        from { opacity: 0; transform: translateX(-10px); }
-        to { opacity: 1; transform: translateX(0); }
+        from {
+            opacity: 0;
+            transform: translateX(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
     }
 
     @media (prefers-reduced-motion: reduce) {

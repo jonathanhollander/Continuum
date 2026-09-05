@@ -327,7 +327,7 @@
 			Verifying your security credentials...
 		</p>
 	</div>
-{:else if isWizardRoute || isMarketingRoute || isAuthRoute}
+{:else if $page.url.pathname === "/login" || $page.url.pathname === "/signup" || $page.url.pathname.startsWith("/auth/") || $page.url.pathname.startsWith("/pulse/respond") || $page.url.pathname.startsWith("/pulse/verify") || $page.url.pathname.startsWith("/wizard") || $page.url.pathname.startsWith("/start") || $page.url.pathname.startsWith("/marketing") || $page.url.pathname === "/"}
 	<!-- Wizard/Marketing Mode: Full exclusion of standard layout -->
 	{@render children()}
 {:else}
@@ -475,16 +475,14 @@
 							>
 								<div
 									class="w-3 h-3 rounded-full shrink-0 border border-white/30"
-									style="background-color: {
-										{
-											teal: '#4A7C74',
-											indigo: '#6366f1',
-											emerald: '#10b981',
-											rose: '#f43f5e',
-											amber: '#f59e0b',
-											carbon: '#0f172a'
-										}[$accessibilityStore.color]
-									}"
+									style="background-color: {{
+										teal: '#4A7C74',
+										indigo: '#6366f1',
+										emerald: '#10b981',
+										rose: '#f43f5e',
+										amber: '#f59e0b',
+										carbon: '#0f172a',
+									}[$accessibilityStore.color]}"
 								></div>
 								<select
 									value={$accessibilityStore.color}

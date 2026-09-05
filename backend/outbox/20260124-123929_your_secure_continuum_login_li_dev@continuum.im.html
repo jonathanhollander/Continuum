@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Secure Continuum Login Link</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0fdfa;
+            padding: 20px;
+            margin: 0;
+            line-height: 1.6;
+            color: #334155;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            color: #14b8a6;
+            margin: 0;
+            font-family: Georgia, serif;
+            font-size: 28px;
+            font-weight: 400;
+        }
+        .header p {
+            color: #94a3b8;
+            margin: 8px 0 0 0;
+            font-size: 14px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .content h2 {
+            color: #0f172a;
+            margin: 0 0 20px 0;
+            font-size: 22px;
+            font-weight: 600;
+        }
+        .content p {
+            margin: 0 0 16px 0;
+            color: #475569;
+        }
+        .greeting {
+            font-size: 16px;
+            color: #1e293b;
+            margin-bottom: 20px;
+        }
+        .cta-button {
+            display: inline-block;
+            background: #0d9488;
+            color: #ffffff;
+            padding: 14px 28px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            margin: 24px 0;
+            text-align: center;
+            transition: background 0.2s;
+        }
+        .cta-button:hover {
+            background: #0f766e;
+        }
+        .cta-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .alert-box {
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+            padding: 16px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .alert-box.warning {
+            background: #fefce8;
+            border-left-color: #eab308;
+        }
+        .alert-box.info {
+            background: #eff6ff;
+            border-left-color: #3b82f6;
+        }
+        .footer {
+            background: #f8fafc;
+            padding: 24px 30px;
+            text-align: center;
+            font-size: 13px;
+            color: #64748b;
+            border-top: 1px solid #e2e8f0;
+        }
+        .footer p {
+            margin: 8px 0;
+        }
+        .footer a {
+            color: #0d9488;
+            text-decoration: none;
+        }
+        .divider {
+            height: 1px;
+            background: #e2e8f0;
+            margin: 24px 0;
+        }
+        @media only screen and (max-width: 600px) {
+            .content {
+                padding: 30px 20px;
+            }
+            .header {
+                padding: 24px 20px;
+            }
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>Continuum Pulse</h1>
+            <p>Digital Guardian System</p>
+        </div>
+
+        <div class="content">
+            
+<div class="greeting">Hello,</div>
+
+<h2>Your Secure Login Link</h2>
+
+<p>You requested a passwordless sign-in link for your Continuum account. Click the button below to securely access your digital estate:</p>
+
+<div class="cta-container">
+    <a href="http://localhost:5173/auth/verify?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwidHlwZSI6Im1hZ2ljX2xpbmsiLCJleHAiOjE3NjkyNzcyNjl9.itbVQ5nNrE4MXwYbw0gDwWE6SSKHV1R7hQvFvm4UuTg" class="cta-button">Sign In Securely</a>
+</div>
+
+<p style="font-size: 14px; color: #64748b;">
+    Or copy and paste this link into your browser:<br>
+    <span style="word-break: break-all; color: #0d9488;">http://localhost:5173/auth/verify?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwidHlwZSI6Im1hZ2ljX2xpbmsiLCJleHAiOjE3NjkyNzcyNjl9.itbVQ5nNrE4MXwYbw0gDwWE6SSKHV1R7hQvFvm4UuTg</span>
+</p>
+
+<div class="divider"></div>
+
+<div class="alert-box info">
+    <strong>Security Notice:</strong> This link expires in 15 minutes and can only be used once. If you did not request this link, you can safely ignore this email.
+</div>
+
+<p style="font-size: 13px; color: #64748b; margin-top: 24px;">
+    For enhanced security, we recommend setting up passkey authentication in your account settings after logging in.
+</p>
+
+        </div>
+
+        <div class="footer">
+            <p>This is an automated message from Continuum Pulse.</p>
+            
+            <p>
+                <a href="https://continuum.im">Learn more about Continuum</a>
+            </p>
+            <p style="margin-top: 16px; color: #94a3b8; font-size: 12px;">
+                Continuum respects your time and wellbeing. These notifications are sent only when configured by you or when your designated guardians need to be alerted.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

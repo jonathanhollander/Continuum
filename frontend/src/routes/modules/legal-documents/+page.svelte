@@ -26,7 +26,7 @@
     </LivingBlueprintHeader>
 
     <!-- Affirmation Message -->
-    <Affirmation module="legal" bind:show={showAffirmation} />
+    <Affirmation module="documents" bind:show={showAffirmation} />
 
     <!-- Legal Disclaimer -->
     <div class="mb-8">

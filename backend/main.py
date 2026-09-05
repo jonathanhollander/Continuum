@@ -114,6 +114,9 @@ app.include_router(auth_router.router)
 app.include_router(email.router)
 app.include_router(pulse.router)
 app.include_router(contacts.router)
+# Note: documents router must come BEFORE estate_data router
+# because estate_data has a generic /{data_type} route that would intercept /vault_documents
+app.include_router(documents.router)
 app.include_router(estate_data.router)
 app.include_router(insurance.router)
 app.include_router(medical.router)
@@ -122,7 +125,6 @@ app.include_router(memories.router)
 app.include_router(media.router)
 app.include_router(heirlooms.router)
 app.include_router(support.router)
-app.include_router(documents.router)
 
 # Initialize database on startup
 @app.on_event("startup")

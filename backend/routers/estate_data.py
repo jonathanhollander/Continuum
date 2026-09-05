@@ -252,6 +252,7 @@ def create_item(
         session.refresh(db_item)
 
         _log_estate_action(session, request, "create", user, data_type, db_item.id)
+        session.refresh(db_item)  # Re-load attributes after audit logging expired them
         return db_item
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
@@ -308,6 +309,7 @@ def update_item(
         session.refresh(db_item)
 
         _log_estate_action(session, request, "update", user, data_type, item_id)
+        session.refresh(db_item)  # Re-load attributes after audit logging expired them
         return db_item
     except HTTPException:
         raise
