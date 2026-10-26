@@ -132,13 +132,11 @@
 
     onMount(async () => {
         await heirloomSync.sync();
-        // Migration: Fix broken/legacy Unsplash URLs in existing data (one update per record)
+        // Migration: an Unsplash placeholder is cleared to no image (one update per record)
         for (const item of [...heirloomSync.items]) {
             if (item.image && item.image.includes("unsplash.com")) {
                 try {
-                    await heirloomSync.update(item.id, {
-                        image: getsuggestedImage(item.name || "", item.story || ""),
-                    });
+                    await heirloomSync.update(item.id, { image: "" });
                 } catch {
                     // The record stays as it was; the gentle message has already been shown.
                 }
@@ -146,96 +144,6 @@
         }
         isLoading = false;
     });
-
-    // Default placeholder images mapped to keywords
-    const HEIRLOOM_THEMES = [
-        {
-            keywords: [
-                "watch",
-                "clock",
-                "timepiece",
-                "rolex",
-                "omega",
-                "pocket watch",
-            ],
-            url: "/images/heirlooms/heirloom_watch_placeholder_1767552136426.png", // Vintage Watch
-        },
-        {
-            keywords: [
-                "book",
-                "bible",
-                "journal",
-                "diary",
-                "letter",
-                "paper",
-                "document",
-            ],
-            url: "/images/heirlooms/heirloom_books_placeholder_1767552150155.png", // Old Books
-        },
-        {
-            keywords: [
-                "ring",
-                "necklace",
-                "gold",
-                "silver",
-                "jewelry",
-                "locket",
-                "diamond",
-                "pendant",
-                "bracelet",
-            ],
-            url: "/images/heirlooms/heirloom_jewelry_placeholder_1767552162926.png", // Gold Locket
-        },
-        {
-            keywords: [
-                "camera",
-                "photo",
-                "leica",
-                "canon",
-                "nikon",
-                "lens",
-                "film",
-            ],
-            url: "/images/heirlooms/heirloom_camera_placeholder_1767552182401.png", // Vintage Camera
-        },
-        {
-            keywords: [
-                "vase",
-                "ceramic",
-                "bowl",
-                "plate",
-                "china",
-                "porcelain",
-                "dish",
-                "pottery",
-            ],
-            url: "/images/heirlooms/heirloom_vase_placeholder_retry_1767552227926.png", // Antique Vase
-        },
-        {
-            keywords: ["tool", "hammer", "wrench", "saw", "knife", "blade"],
-            url: "/images/heirlooms/heirloom_tools_placeholder_1767552195001.png", // Vintage Tools
-        },
-        {
-            keywords: ["music", "guitar", "violin", "piano", "instrument"],
-            url: "/images/heirlooms/heirloom_instrument_placeholder_1767552207664.png", // Instrument
-        },
-    ];
-
-    function getsuggestedImage(name: string, story: string) {
-        const searchText = (name + " " + story).toLowerCase();
-
-        // 1. Try to find a thematic match
-        const match = HEIRLOOM_THEMES.find((theme) =>
-            theme.keywords.some((k) => searchText.includes(k)),
-        );
-
-        if (match) return match.url;
-
-        // 2. Fallback to random if no keyword match
-        return HEIRLOOM_THEMES[
-            Math.floor(Math.random() * HEIRLOOM_THEMES.length)
-        ].url;
-    }
 
     let showAddForm = $state(false);
 
