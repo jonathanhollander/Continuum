@@ -23,7 +23,8 @@
 
     const gentleRetry = "Let's try that once more in a moment.";
 
-    // The shared contacts store (SyncManager), so tiers set elsewhere show here at once.
+    // The shared contacts store (SyncManager), so tiers set elsewhere show here at once. Its cached
+    // list shows straight away; the sync below refreshes it.
     const globalContacts = $derived(contactSync.items as any[]);
     let loaded = $state(false);
     let error = $state<string | null>(null);
@@ -108,7 +109,7 @@
                         >Go to Family & Contacts</a
                     >
                 </div>
-            {:else if loaded}
+            {:else if loaded || globalContacts.length > 0}
                 <div class="space-y-3 max-h-[300px] overflow-y-auto mb-6">
                     {#each globalContacts as contact (contact.id)}
                         {@const current = pulseTierNumber(
