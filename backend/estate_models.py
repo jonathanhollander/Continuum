@@ -294,6 +294,7 @@ class MedicalDirective(SQLModel, table=True):
     primary_contact: Optional[str] = None
     contact_phone: Optional[str] = None
     summary: Optional[str] = None
+    custom_attributes: Optional[str] = Field(default="{}")
 
 # --- PETS ---
 class Pet(SQLModel, table=True):

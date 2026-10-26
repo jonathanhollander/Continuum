@@ -68,7 +68,11 @@
 
     function handleAdd() {
         if (!newEvent.title || !newEvent.date) return;
-        calendarStore.addEvent(newEvent as Omit<AnniversaryEvent, "id">);
+        calendarStore.addEvent({
+            ...newEvent,
+            custom_attributes: JSON.stringify(customAttributes),
+        } as Omit<AnniversaryEvent, "id">);
+        customAttributes = {};
         newEvent = {
             title: "",
             date: "",

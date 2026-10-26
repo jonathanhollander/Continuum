@@ -48,7 +48,7 @@ class RefreshToken(SQLModel, table=True):
 class Estate(SQLModel, table=True):
     __tablename__ = "estates"
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id")
+    user_id: int = Field(foreign_key="users.id", index=True)
     
     # Transparent data (Accessibly to server/AI)
     transparent_data: str = Field(default="{}") 

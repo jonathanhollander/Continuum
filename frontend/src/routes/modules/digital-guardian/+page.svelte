@@ -31,11 +31,9 @@
     import { notifications } from "$lib/stores/notificationStore";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
-    import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
 
     let viewMode = $state<ViewMode>('card');
-    let customAttributes = $state<Record<string, any>>({});
 
     // Sync Integration
     import {

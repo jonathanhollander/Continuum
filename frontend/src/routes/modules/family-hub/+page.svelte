@@ -33,10 +33,8 @@
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
     import * as registryRaw from "$lib/data/registry.json";
-    import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
 
     let dataViewMode = $state<ViewMode>('card');
-    let customAttributes = $state<Record<string, any>>({});
 
     // Registry Data Handling
     const registryData = (registryRaw as any).default || registryRaw;
@@ -454,14 +452,6 @@
                             </label>
                         </div>
                     {/if}
-
-                    <!-- Custom Fields -->
-                    <div class="pt-4 border-t border-gray-100">
-                        <CustomFieldsManager
-                            entityType="family_memory"
-                            bind:data={customAttributes}
-                        />
-                    </div>
 
                     <button
                         onclick={saveMemory}
