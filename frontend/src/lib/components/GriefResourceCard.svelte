@@ -27,6 +27,24 @@
         delay = 0,
     }: Props = $props();
 
+    // Written-out classes (Tailwind only generates classes it can read in full), on the
+    // site tokens: one accent (primary) plus gold. This page is dark in both themes, so the
+    // accent text is the token lightened toward white to stay readable on the dark card.
+    const tones = {
+        primary: {
+            badge: "bg-primary/10 border-primary/20 text-[color-mix(in_srgb,var(--color-primary)_40%,white)]",
+            action: "text-[color-mix(in_srgb,var(--color-primary)_40%,white)]",
+            glow: "hover:shadow-primary/10",
+        },
+        gold: {
+            badge: "bg-gold/10 border-gold/20 text-(--color-gold)",
+            action: "text-(--color-gold)",
+            glow: "hover:shadow-gold/10",
+        },
+    } as const;
+    const toneByColor: Record<string, keyof typeof tones> = { amber: "gold" };
+    const tone = $derived(tones[toneByColor[color] ?? "primary"]);
+
     function getTypeLabel(t: string): string {
         switch (t) {
             case "article":
@@ -64,15 +82,15 @@
         target="_blank"
         rel="noopener noreferrer"
         in:fly={{ y: 20, delay, duration: 600 }}
-        class="group relative block p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 transition-all duration-300 hover:shadow-xl hover:shadow-{color}-500/10 cursor-pointer"
+        class="group relative block p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 transition-all duration-300 hover:shadow-xl {tone.glow} cursor-pointer"
     >
         <div class="flex items-start justify-between mb-4">
             <div
-                class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-{color}-500/10 text-{color}-400 border border-{color}-500/20"
+                class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border {tone.badge}"
             >
                 {category}
             </div>
-            <LucideExternalLink class="w-4 h-4 text-slate-500" />
+            <LucideExternalLink class="w-4 h-4 text-slate-400" />
         </div>
 
         <h3
@@ -85,14 +103,14 @@
         </p>
 
         <div class="flex items-center justify-between text-xs font-medium">
-            <div class="flex items-center gap-2 text-slate-500">
+            <div class="flex items-center gap-2 text-slate-400">
                 {#if Icon}
                     <Icon class="w-4 h-4" />
                 {/if}
                 <span>{getTypeLabel(type)}</span>
             </div>
             <div
-                class="text-{color}-400 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                class="{tone.action} flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
             >
                 {getActionLabel(type)}
                 <LucideExternalLink class="w-3 h-3" />
@@ -102,23 +120,23 @@
 {:else}
     <div
         in:fly={{ y: 20, delay, duration: 600 }}
-        class="group relative p-6 rounded-2xl bg-white/5 border border-white/10 transition-all duration-300 {type === 'guide' ? 'hover:border-white/20 hover:shadow-xl hover:shadow-' + color + '-500/10 cursor-pointer' : ''}"
+        class="group relative p-6 rounded-2xl bg-white/5 border border-white/10 transition-all duration-300 {type === 'guide' ? `hover:border-white/20 hover:shadow-xl ${tone.glow} cursor-pointer` : ''}"
     >
         <div class="flex items-start justify-between mb-4">
             <div
-                class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-{color}-500/10 text-{color}-400 border border-{color}-500/20"
+                class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border {tone.badge}"
             >
                 {category}
             </div>
             {#if type === "video" && duration}
                 <div
-                    class="flex items-center gap-1.5 text-[10px] text-slate-500 font-mono"
+                    class="flex items-center gap-1.5 text-[10px] text-slate-400 font-mono"
                 >
                     <LucidePlay class="w-3 h-3" />
                     {duration}
                 </div>
             {:else if type === "guide"}
-                <LucideBookOpen class="w-4 h-4 text-slate-500" />
+                <LucideBookOpen class="w-4 h-4 text-slate-400" />
             {/if}
         </div>
 
@@ -132,7 +150,7 @@
         </p>
 
         <div class="flex items-center justify-between text-xs font-medium">
-            <div class="flex items-center gap-2 text-slate-500">
+            <div class="flex items-center gap-2 text-slate-400">
                 {#if Icon}
                     <Icon class="w-4 h-4" />
                 {/if}
@@ -140,7 +158,7 @@
             </div>
             {#if type === "guide"}
                 <div
-                    class="text-{color}-400 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    class="{tone.action} flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
                 >
                     {getActionLabel(type)}
                     <LucideExternalLink class="w-3 h-3" />

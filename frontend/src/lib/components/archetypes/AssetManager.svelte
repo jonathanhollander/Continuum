@@ -113,7 +113,7 @@
     }
 
     let assets = $derived(assetSync.items);
-    let viewMode = $state<ViewMode>('card');
+    let viewMode = $derived<ViewMode>(userPreferencesStore.getViewMode('financial-accounts'));
 
     // A blank value stays blank (null), so the audit can ask for it; an entered 0 is a real value.
     let newAsset = $state<Partial<Omit<Asset, "value">> & { value?: number | null; id?: string; documents?: string }>({
@@ -572,7 +572,7 @@
             {/if}
         </div>
         <div class="flex gap-3 items-center">
-            <DataViewToggle module="financial-accounts" onchange={(mode) => viewMode = mode} />
+            <DataViewToggle module="financial-accounts" />
             {#if $userRole !== "Family" && headerAdd}
                 <button
                     onclick={() => (showAddForm = true)}

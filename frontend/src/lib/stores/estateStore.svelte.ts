@@ -2,6 +2,8 @@ import { registerProfileSlice } from "$lib/services/sync.svelte";
 
 export type EstateProfile = {
     ownerName: string;
+    // Shown to guardians on the portal (pulse_logic.owner_phone reads owner_phone)
+    ownerPhone: string;
     dateOfDeath: string;
     executorName: string;
     spouseName: string;
@@ -14,6 +16,7 @@ export type EstateProfile = {
 
 const DEFAULT_PROFILE: EstateProfile = {
     ownerName: '',
+    ownerPhone: '',
     dateOfDeath: '',
     executorName: '',
     spouseName: '',

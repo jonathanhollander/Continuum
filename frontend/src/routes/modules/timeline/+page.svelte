@@ -40,13 +40,11 @@
 
     let parsedCustomAttributes = $state<Record<string, any>>({});
     let isLoading = $state(true);
-    let viewMode = $state<ViewMode>('card');
+    let viewMode = $derived<ViewMode>(userPreferencesStore.getViewMode('timeline'));
 
     onMount(async () => {
         await timelineStore.sync?.();
         isLoading = false;
-        await userPreferencesStore.init();
-        viewMode = userPreferencesStore.getViewMode('timeline');
     });
 
     // --- State & Types ---
@@ -222,12 +220,12 @@
 
 <LivingBlueprintHeader
         title="The Life Timeline"
-        subtitle="Your story isn't just a list of assets. It's a series of moments."
+        subtitle="Your story is a series of moments."
         detailedDescription="Document the milestones, accomplishments, and meaningful moments that shaped your life. Create a visual narrative that helps your family understand who you were and what mattered to you."
-        whyMatters="Your life story deserves to be told. Without these memories preserved, the context of your journey may be lost. Your timeline becomes a gift of understanding for future generations."
+        whyMatters="Your life story deserves to be told. Your timeline becomes a gift of understanding for future generations."
     >
         <div class="flex items-center gap-3">
-            <DataViewToggle module="timeline" onchange={(mode) => viewMode = mode} />
+            <DataViewToggle module="timeline" />
             <button
                 class="px-4 py-2 rounded-lg text-sm font-bold bg-[#4A7C74] text-white shadow-md flex items-center gap-2 hover:bg-[#3b635d]"
                 onclick={() => (showAddModal = true)}

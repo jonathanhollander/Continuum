@@ -53,7 +53,7 @@
     import { getSmartSamples } from "$lib/data/smartSamples";
     import { contactSync } from "$lib/stores/familyStore.svelte";
 
-    let viewMode = $state<ViewMode>('card');
+    let viewMode = $derived<ViewMode>(userPreferencesStore.getViewMode('time-capsule'));
     // A gentle cue until the first server answer, unless this device already holds capsules.
     let firstSyncPending = $derived(timeCapsuleSync.lastSync === null && timeCapsuleSync.status !== "error");
     let isLoading = $derived(firstSyncPending && timeCapsuleSync.items.length === 0);
@@ -297,7 +297,7 @@
     whyMatters="The messages you write here will comfort your loved ones for years to come, in your own words. Imagine your daughter graduating, getting married, or having her first child—and finding your voice waiting for her at each milestone."
 >
     <div class="flex items-center gap-3">
-        <DataViewToggle module="time-capsule" onchange={(mode) => viewMode = mode} />
+        <DataViewToggle module="time-capsule" />
         <button
             onclick={openNew}
             class="px-8 py-4 bg-primary text-primary-foreground rounded-full font-bold shadow-xl shadow-primary/20 hover:opacity-90 hover:scale-105 transition-all flex items-center gap-3 shrink-0"

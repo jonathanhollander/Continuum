@@ -76,7 +76,7 @@
                 </div>
                 <button
                     type="button"
-                    class="p-2 -mr-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors flex-shrink-0"
+                    class="p-2 -mr-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors flex-shrink-0"
                     onclick={close}
                     aria-label="Close"
                 >

@@ -38,7 +38,7 @@
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
     import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
 
-    let viewMode = $state<ViewMode>('card');
+    let viewMode = $derived<ViewMode>(userPreferencesStore.getViewMode('digital-guardian'));
 
     // Sync Integration
     import {
@@ -1055,7 +1055,7 @@
                     <Plus class="w-4 h-4" />
                     Share an account
                 </button>
-                <DataViewToggle module="digital-guardian" onchange={(mode) => viewMode = mode} />
+                <DataViewToggle module="digital-guardian" />
             </div>
         </div>
 

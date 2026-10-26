@@ -99,6 +99,7 @@ def get_status(user: User = Depends(get_current_user), session: Session = Depend
             "by": (guardian.note or "").rpartition(" by ")[2] or "A guardian",
         } if guardian else None,
         "escalation_tier": escalation.tier_number if escalation else None,
+        "escalation_at": _utc_iso(escalation.triggered_at) if escalation else None,
         "alerts_paused_until": _utc_iso(paused_until) if paused_until and now < paused_until else None,
     }
 
@@ -178,10 +179,11 @@ def _check_settings_fields(data: dict) -> None:
 @limiter.limit("10/minute")
 def update_settings(request: Request, new_settings: PulseSettings, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     settings = session.get(PulseSettings, user.id)
+    was_enabled = bool(settings and settings.enabled)
     if not settings:
         settings = PulseSettings(user_id=user.id)
         session.add(settings)
-    
+
     settings_data = new_settings.dict(exclude_unset=True)
     settings_data.pop("user_id", None)  # the row always belongs to the signed-in person
     settings_data.pop("checkin_token", None)  # server-issued, kept once made
@@ -196,10 +198,16 @@ def update_settings(request: Request, new_settings: PulseSettings, user: User = 
         setattr(settings, key, value)
     if not settings.checkin_token:
         settings.checkin_token = secrets.token_urlsafe(16)
+    if settings.enabled and not was_enabled:
+        # Turning Pulse on starts the owner's clock now. With no check-in on record the outage
+        # would date from datetime.min and the first scheduler pass would alert Tier 1 at once.
+        session.add(PulseCheckin(user_id=user.id, method=PULSE_ENABLED_METHOD, note="Wellness check-ins began"))
 
     session.add(settings)
     session.commit()
     return {"status": "updated"}
+
+PULSE_ENABLED_METHOD = "pulse_enabled"  # an owner check-in (pulse_logic.owner_last_checkin counts it)
 
 @router.get("/history")
 def get_history(limit: int = 10, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
@@ -356,7 +364,9 @@ def guardian_respond(request: Request, token: str, action: str, session: Session
     if not contact: raise HTTPException(status_code=404, detail="This link has rested. The person who shared it can send a fresh one.")
     if contact.portal_token_expires and contact.portal_token_expires < utc_now():
         raise HTTPException(status_code=401, detail="This link has rested. The person who shared it can send a fresh one.")
-        
+    if action not in ("snooze", "acknowledge"):
+        raise HTTPException(status_code=400, detail="This link offers two choices: they're OK, or I've seen this.")
+
     if action == "snooze":
         # Pauses new alerts (pulse_logic.alerts_paused_until); the owner's own clock, escalation
         # history and other guardians' access stay as they were
@@ -364,8 +374,28 @@ def guardian_respond(request: Request, token: str, action: str, session: Session
         session.add(checkin_rec)
         session.commit()
         return {"status": "snoozed"}
-    
+
+    if action == "acknowledge":
+        # "I've seen this": a note to the owner on their Messages page. Never a check-in, so the
+        # owner's clock, alerts and every guardian's access stay as they were. One note per guardian
+        # per outage: a repeat since the owner's own last check-in adds nothing.
+        from backend.pulse_logic import owner_last_checkin
+        last = owner_last_checkin(session, contact.user_id)
+        repeat = select(PulseMessage.id).where(
+            PulseMessage.user_id == contact.user_id,
+            PulseMessage.contact_id == contact.id,
+            PulseMessage.direction == "contact_to_user",
+            PulseMessage.message == ACKNOWLEDGE_MESSAGE,
+        )
+        if last:
+            repeat = repeat.where(PulseMessage.sent_at > last.timestamp)
+        if session.exec(repeat).first() is None:
+            session.add(PulseMessage(user_id=contact.user_id, contact_id=contact.id,
+                                     direction="contact_to_user", message=ACKNOWLEDGE_MESSAGE))
+            session.commit()
     return {"status": "acknowledged"}
+
+ACKNOWLEDGE_MESSAGE = "I've seen this. I'm looking in on you."
 
 # --- Messaging ---
 
