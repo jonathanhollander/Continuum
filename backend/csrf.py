@@ -18,6 +18,8 @@ However, this protection adds defense-in-depth, especially for:
 import secrets
 from typing import Callable, Optional
 from fastapi import Request, Response, HTTPException
+from fastapi.responses import JSONResponse
+from backend.errors import ErrorResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from backend.config import settings
 from backend.utils.logger import get_logger
@@ -155,9 +157,14 @@ class CSRFMiddleware(BaseHTTPMiddleware):
             if not validate_csrf_token(request):
                 # In production, reject the request
                 if settings.is_production():
-                    raise HTTPException(
+                    return JSONResponse(
                         status_code=403,
-                        detail="CSRF token validation failed"
+                        content=ErrorResponse(
+                            message="CSRF token validation failed",
+                            user_message="We couldn't confirm this request came from your session. Please refresh the page and try again.",
+                            status_code=403,
+                            error_code="CSRF_FAILED"
+                        ).to_dict()
                     )
                 else:
                     # In development, log warning but allow (for easier testing)
