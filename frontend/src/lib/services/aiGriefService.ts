@@ -1,9 +1,7 @@
 import { get } from 'svelte/store';
 import { userRole } from '../stores/conciergeStore.svelte.ts';
 
-const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || '';
-const SITE_URL = 'https://continuum.estate';
-const SITE_NAME = 'Continuum Estate';
+import { callAiProxy } from './aiConciergeService';
 
 export interface GriefAIResponse {
     content: string;
@@ -25,18 +23,12 @@ async function chat(content: string, history: any[]): Promise<GriefAIResponse> {
         roleContext = '\n\n🌱 PERSONA: SUPPORTING A PLANNER/FAMILY\n- Focus on the courage of preparation.\n- Validate the emotional difficulty of facing mortality.\n- Emphasize legacy and love as the primary drivers.';
     }
 
+    // Callers add the new message to history before calling; don't send it twice.
+    const last = history[history.length - 1];
+    const prior = last && last.role === 'user' && last.content === content ? history.slice(0, -1) : history;
+
     try {
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-                "HTTP-Referer": `${SITE_URL}`,
-                "X-Title": `${SITE_NAME}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                "model": "google/gemini-2.0-flash-001",
-                "messages": [
+        const rawContent = await callAiProxy([
                     {
                         "role": "system",
                         "content": `🕊️ CONTINUUM GRIEF COMPANION - Specialized Bereavement Support
@@ -59,7 +51,7 @@ CRITICAL CONSTRAINTS:
 OUTPUT FORMAT: Return ONLY JSON.
 Example: { "message": "The silence they leave behind can be so loud... it's okay to just sit with that for a while.", "suggestedResources": ["Legacy Journal"], "suggestAction": "break" }`
                     },
-                    ...history.slice(-10).map(m => ({
+                    ...prior.slice(-10).map(m => ({
                         role: m.role,
                         content: m.content
                     })),
@@ -67,15 +59,11 @@ Example: { "message": "The silence they leave behind can be so loud... it's okay
                         role: "user",
                         content: content
                     }
-                ]
-            })
-        });
-
-        const data = await response.json();
-        const rawContent = data.choices[0].message.content;
+        ]);
 
         try {
-            const parsed = JSON.parse(rawContent);
+            const cleanContent = rawContent.replace(/^```json\s*/, '').replace(/^```\s*/, '').replace(/\s*```$/, '');
+            const parsed = JSON.parse(cleanContent);
             return {
                 content: parsed.message || rawContent,
                 suggestedResources: parsed.suggestedResources,
@@ -86,6 +74,9 @@ Example: { "message": "The silence they leave behind can be so loud... it's okay
         }
     } catch (error) {
         console.error('Grief AI Error:', error);
+        if (error instanceof Error && error.message.startsWith("AI help isn't available")) {
+            return { content: error.message };
+        }
         return { content: "I'm still here with you. My words aren't flowing as smoothly right now, but you're not alone. Take a gentle breath, and know that the resources in the sidebar are always available." };
     }
 }

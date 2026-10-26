@@ -2,9 +2,31 @@ import { get } from 'svelte/store';
 import { activeAccountId } from '../stores/keyringStore';
 import { userRole } from '../stores/conciergeStore.svelte.ts';
 
-const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || '';
-const SITE_URL = 'https://continuum.estate';
-const SITE_NAME = 'Continuum Estate';
+import { apiFetch } from '../api/client';
+
+const AI_UNAVAILABLE = "AI help isn't available right now. Everything else is still here for you, and you can come back to this whenever you're ready.";
+
+/**
+ * Sends a chat request to our own server (which holds the AI key).
+ * Returns the model's text, or throws an Error carrying a gentle message.
+ */
+export async function callAiProxy(messages: Array<{ role: string; content: string }>): Promise<string> {
+    const headers: Record<string, string> = {};
+    if (typeof document !== 'undefined') {
+        const m = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]+)/);
+        if (m) headers['X-CSRF-Token'] = decodeURIComponent(m[1]);
+    }
+    const response = await apiFetch('/api/ai/chat', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ model: 'google/gemini-2.0-flash-001', messages })
+    });
+    if (!response.ok) {
+        throw new Error(AI_UNAVAILABLE);
+    }
+    const data = await response.json();
+    return data.choices[0].message.content;
+}
 
 import { overwhelmState } from './overwhelmDetection';
 
@@ -84,19 +106,12 @@ async function chat(content: string, history: any[], contextName: string = 'Cont
 `;
     }
 
+    // Callers add the new message to history before calling; don't send it twice.
+    const last = history[history.length - 1];
+    const prior = last && last.role === 'user' && last.content === content ? history.slice(0, -1) : history;
+
     try {
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-                "HTTP-Referer": `${SITE_URL}`,
-                "X-Title": `${SITE_NAME}`,
-                // "Content-Type": "application/json" // OpenRouter sometimes dislikes this with body? No, standard is fine.
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                "model": "google/gemini-2.0-flash-001",
-                "messages": [
+        const rawContent = await callAiProxy([
                     {
                         "role": "system",
                         "content": `🕊️ CONTINUUM AI CONCIERGE - Death Planning Companion
@@ -149,20 +164,15 @@ OUTPUT FORMAT: Return ONLY JSON.
 Example: { "message": "I understand this is a difficult time. Here is a guide that might help.", "resources": [{ "title": "Understanding Grief", "description": "A compassionate guide to the grieving process.", "link": "https://continuum.estate/resources/grief", "type": "article" }], "intent": "provide_resource" }
 Example: { "message": "Sarah recorded as daughter—what a beautiful gift to have her support. When you're ready, could you share her mailing address so we can keep her in the loop?", "extractedData": { "family_member": { "name": "Sarah", "relation": "daughter" } }, "intent": "add_contact" }`
                     },
-                    ...history.slice(-10).map(m => ({
+                    ...prior.slice(-10).map(m => ({
                         role: m.role,
-                        content: m.content
+                        content: m.role === 'user' ? sanitizeInput(String(m.content)) : m.content
                     })),
                     {
                         role: "user",
                         content: sanitizedContent
                     }
-                ]
-            })
-        });
-
-        const data = await response.json();
-        const rawContent = data.choices[0].message.content;
+        ]);
 
         // Attempt to parse JSON if AI returned it
         try {
@@ -180,8 +190,10 @@ Example: { "message": "Sarah recorded as daughter—what a beautiful gift to hav
             return { content: rawContent };
         }
     } catch (error) {
-        console.error('OpenRouter Error:', error);
-        return { content: "I'm having a little trouble connecting to my brain right now. Please try again or check your settings." };
+        console.error('AI Error:', error);
+        return { content: error instanceof Error && error.message === AI_UNAVAILABLE
+            ? AI_UNAVAILABLE
+            : "I'm having a little trouble connecting right now. Please try again in a moment." };
     }
 }
 

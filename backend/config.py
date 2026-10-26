@@ -117,7 +117,8 @@ class Settings(BaseSettings):
 
     # External APIs
     GITHUB_TOKEN: Optional[str] = None
-    VITE_OPENROUTER_API_KEY: Optional[str] = None
+    OPENROUTER_API_KEY: Optional[str] = None
+    VITE_OPENROUTER_API_KEY: Optional[str] = None  # legacy name; used if OPENROUTER_API_KEY is unset
     TAVILY_API_KEY: Optional[str] = None
 
     # Railway Specific
