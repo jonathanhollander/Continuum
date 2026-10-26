@@ -9,7 +9,7 @@ export interface AcceptanceTask {
     role: 'owner' | 'executor' | 'family';
     check: string;
     status: 'Pending' | 'Complete';
-    estTime: number;
+    estTime: number; // saved with a task's first progress (est_time is required by the server); shown nowhere
     section: string;
     complexity: 'simple' | 'moderate' | 'complex';
     href?: string; // the page this task is done on (from DEFAULT_TASKS; never sent)
@@ -152,11 +152,4 @@ export const acceptanceProgress = derived(filteredTasks, ($filteredTasks) => {
     if ($filteredTasks.length === 0) return 0;
     const completed = $filteredTasks.filter(t => t.status === 'Complete').length;
     return Math.round((completed / $filteredTasks.length) * 100);
-});
-
-// Calculate total estimated time remaining
-export const timeRemaining = derived(filteredTasks, ($filteredTasks) => {
-    return $filteredTasks
-        .filter(t => t.status === 'Pending')
-        .reduce((acc, t) => acc + t.estTime, 0);
 });

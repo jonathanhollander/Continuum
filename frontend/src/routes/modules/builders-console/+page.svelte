@@ -213,8 +213,8 @@
             <input
                 type="text"
                 bind:value={searchQuery}
-                aria-label="Search checkpoints"
-                placeholder="Search checkpoints..."
+                aria-label="Search your checks"
+                placeholder="Search your checks…"
                 class="w-full pl-10 pr-4 py-2 bg-muted border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all font-medium"
             />
         </div>
