@@ -36,7 +36,7 @@
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
     import { focusTrap } from "$lib/actions/focusTrap";
 
-    let viewMode = $state<ViewMode>('card');
+    let viewMode = $derived<ViewMode>(userPreferencesStore.getViewMode('anniversary-manager'));
     let customAttributes = $state<Record<string, any>>({});
     let isLoading = $state(true);
 
@@ -248,7 +248,7 @@
                     Upcoming Moments
                 </h2>
                 <div class="flex items-center gap-3">
-                    <DataViewToggle module="anniversary-manager" onchange={(mode) => viewMode = mode} />
+                    <DataViewToggle module="anniversary-manager" />
                     <div
                         class="px-3 py-1 bg-slate-100 rounded-full text-xs font-bold text-slate-500 uppercase tracking-wider"
                     >
