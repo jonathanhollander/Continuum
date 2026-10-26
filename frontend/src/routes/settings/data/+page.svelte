@@ -54,6 +54,8 @@
         isAuditing = true;
         const tasks = Object.entries(syncRegistry).map(
             async ([key, manager]) => {
+                // Singleton managers (one record, e.g. estate profile, funeral_data) have no audit.
+                if (typeof (manager as any).audit !== "function") return;
                 try {
                     const result = await manager.audit();
                     auditResults[key] = result;
@@ -104,23 +106,31 @@
         purgingTest = false;
     }
 
+    // List managers hold `items`; singleton managers hold one `data` record (counted once when filled).
+    function rowsOf(manager: any): any[] {
+        if (Array.isArray(manager?.items)) return manager.items;
+        const d = manager?.data;
+        return d && typeof d === "object" && Object.keys(d).length > 0 ? [d] : [];
+    }
+
     // Helper: isTestRow
     function isTestRow(moduleKey: string, id: string | number) {
         return testRegistry[moduleKey]?.includes(String(id));
     }
 
     // Nav Grouping Logic
+    // Group keys must match navGroups (navigation.ts); unknown ones fall into "Other Modules".
     const syncGroupMap: Record<string, string> = {
-        assets: "groupAssets",
-        financial_accounts: "groupAssets",
-        subscriptions: "groupAssets",
+        financial_assets: "groupEssentials",
+        documents: "groupEssentials",
+        properties: "groupSecondary",
+        subscriptions: "groupSecondary",
         letters: "groupLegacy",
-        calendar_events: "groupLegacy",
-        documents: "groupLogistics",
+        calendar_events: "groupExtras",
     };
 
     function getGroupKey(syncKey: string) {
-        if (syncKey.startsWith("docs_")) return "groupLogistics";
+        if (syncKey.startsWith("docs_")) return "groupEssentials";
         return syncGroupMap[syncKey] || "Other";
     }
 
@@ -252,10 +262,7 @@
                     >
                         {#each groupModules as [key, manager]}
                             {@const audit = auditResults[key]}
-                            {@const isTest =
-                                testRegistry[
-                                    key === "properties" ? "assets" : key
-                                ]?.length > 0}
+                            {@const isTest = testRegistry[key]?.length > 0}
 
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -321,7 +328,7 @@
                                         <div
                                             class="text-2xl font-mono text-slate-700 font-bold"
                                         >
-                                            {manager.items.length}
+                                            {rowsOf(manager).length}
                                         </div>
                                     </div>
                                     <div class="p-4 text-center bg-slate-50/30">
@@ -375,7 +382,7 @@
                                 {key.replace("_", " ")}
                             </h3>
                             <p class="text-sm text-slate-500">
-                                {manager.items.length} items
+                                {rowsOf(manager).length} items
                             </p>
                         </div>
                     {/each}
@@ -422,7 +429,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
-                        {#each manager.items as item}
+                        {#each rowsOf(manager) as item}
                             {@const isTest = isTestRow(selectedModule, item.id)}
                             {@const inCloud = audit?.details?.remoteItems?.find(
                                 (r: any) => String(r.id) === String(item.id),
@@ -499,7 +506,7 @@
                                 </tr>
                             {/each}
                         {/if}
-                        {#if manager.items.length === 0 && (!audit?.details?.onlyRemote || audit.details.onlyRemote.length === 0)}
+                        {#if rowsOf(manager).length === 0 && (!audit?.details?.onlyRemote || audit.details.onlyRemote.length === 0)}
                             <tr
                                 ><td
                                     colspan="5"

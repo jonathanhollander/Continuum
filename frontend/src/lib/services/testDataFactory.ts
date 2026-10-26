@@ -1,9 +1,16 @@
 import { getStored, setStored } from "$lib/stores/persistence";
-import { type SyncManager, registerSync, getRegistry } from "$lib/services/sync.svelte";
-// The owning stores register 'subscriptions', 'calendar_events' and 'letters' with their mappers.
+import { getRegistry } from "$lib/services/sync.svelte";
+// Every key the factory writes is registered by its owning store, with that store's mapper.
+import "$lib/stores/propertyStore.svelte";
+import "$lib/stores/financialAssetsStore.svelte";
 import "$lib/stores/subscriptionStore.svelte";
 import "$lib/stores/calendarStore.svelte";
 import "$lib/stores/letterStore.svelte";
+import "$lib/stores/documentStore.svelte";
+
+// Fake-item kind -> the owning store's registry key. Test registries saved before this used the kind.
+const SYNC_KEY: Record<string, string> = { assets: "properties", financial_accounts: "financial_assets" };
+const syncKeyOf = (mod: string) => SYNC_KEY[mod] ?? mod;
 
 const TEST_REGISTRY_KEY = "continuum_test_registry";
 
@@ -17,13 +24,7 @@ class TestDataFactoryService {
     ensureInitialized() {
         if (this._initialized) return;
 
-        // Assets
-        registerSync("assets", "assets");
-        registerSync("financial_accounts", "financial_accounts");
-        // Subscriptions, calendar and letters are registered by their owning stores (imported above).
-        // Documents (Default Vault)
-        registerSync("documents", "documents");
-
+        // The owning stores (imported above) register every key at module load.
         this._initialized = true;
         console.log("[FactoryService] Initialized sync managers.");
     }
@@ -36,7 +37,7 @@ class TestDataFactoryService {
         const modules = ["assets", "financial_accounts", "subscriptions", "calendar_events", "letters", "documents"];
 
         for (const mod of modules) {
-            let syncKey = mod;
+            const syncKey = syncKeyOf(mod);
 
             const sync = getRegistry()[syncKey];
             console.log(`[FactoryService] Mod: ${mod}, Key: ${syncKey}, SyncFound: ${!!sync}`);
@@ -56,7 +57,7 @@ class TestDataFactoryService {
                         console.error(`[FactoryService] Failed to create for ${mod}`, e);
                     }
                 }
-                registry[mod] = [...(registry[mod] || []), ...newIds];
+                registry[syncKey] = [...(registry[syncKey] || []), ...newIds];
             }
         }
 
@@ -70,7 +71,7 @@ class TestDataFactoryService {
         let deletedCount = 0;
 
         for (const [mod, ids] of Object.entries(registry)) {
-            let syncKey = mod;
+            const syncKey = syncKeyOf(mod);
 
             const sync = getRegistry()[syncKey];
             if (sync) {
