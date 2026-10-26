@@ -102,6 +102,7 @@
 		].find(
 			(i) => i.href === path,
 		);
+		if ($page.error) return $dict.errorPage.crumb;
 		if (item) return $language === "en" ? item.label : $dict[item.key] || item.label;
 		const own = ($page.data as { title?: string } | undefined)?.title;
 		return own || $dict.activeModule;
