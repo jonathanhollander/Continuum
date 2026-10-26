@@ -163,6 +163,13 @@ class Document(SQLModel, table=True):
     status: Optional[str] = "verified" # Added for compatibility
     location: Optional[str] = None # Added for compatibility
     notes: Optional[str] = None
+    # Vault metadata (card C1). file_path holds the stored copy's download_url
+    # ("/api/media/12/download"); media_id is that MediaFile's id.
+    witnesses: Optional[str] = None
+    signed_date: Optional[str] = None  # YYYY-MM-DD as typed
+    next_review_date: Optional[str] = None  # YYYY-MM-DD as typed
+    media_id: Optional[int] = None
+    custom_attributes: Optional[str] = Field(default="{}")
 
     model_config = {
         "json_schema_extra": {

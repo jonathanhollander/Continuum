@@ -29,12 +29,12 @@
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { activityLog } from "$lib/stores/activityLog.svelte";
-    // import { getStored, setStored } from "$lib/stores/persistence";
     import type { ViewMode } from "$lib/stores/userPreferencesStore.svelte";
+    import { downloadMedia, mediaIdFromRef } from "$lib/services/mediaService";
+    import { notifications } from "$lib/stores/notificationStore";
 
-    let { module, viewMode: initialViewMode = 'card' }: { module: { id: string }, viewMode?: ViewMode } = $props();
+    let { module, viewMode: initialViewMode = 'card' }: { module: { id: string; name?: string }, viewMode?: ViewMode } = $props();
     let viewMode = $state<ViewMode>(initialViewMode);
-    let customAttributes = $state<Record<string, any>>({});
 
     type DocType =
         | "Will"
@@ -45,16 +45,51 @@
         | "ID"
         | "Other";
 
+    // UI shape. Other pages read name/type/location from the "docs_<id>" store, so those stay.
     interface Doc {
         id: string;
         name: string;
         type: DocType;
-        date: string;
-        location: string;
+        location: string; // where the original is kept
         witnesses?: string;
+        signedDate?: string;
         nextReviewDate?: string;
         status: "verified" | "pending" | "needs_review";
-        fileData?: string;
+        filePath?: string; // stored copy: "/api/media/12/download" (or an older data URL)
+        mediaId?: number | null;
+        customAttributes?: Record<string, any>;
+    }
+
+    /**
+     * Doc <-> Document row (backend/estate_models.py), used both ways by SyncManager.
+     * UI fields win over their column twins, so an edit to `name` beats a stale `title`.
+     */
+    function docMapper(d: any): any {
+        const name = d.name || d.title || "";
+        const type = d.type || d.category || "Other";
+        const location = d.location ?? d.locationPhysical ?? "";
+        const filePath = d.filePath || d.fileData || ""; // fileData: older device-only copies
+        let custom = d.customAttributes;
+        if (typeof custom === "string") {
+            try { custom = JSON.parse(custom); } catch { custom = {}; }
+        }
+        return {
+            id: d.id,
+            name,
+            title: name,
+            type,
+            category: type,
+            location,
+            locationPhysical: location,
+            witnesses: d.witnesses ?? "",
+            signedDate: d.signedDate ?? "",
+            nextReviewDate: d.nextReviewDate ?? "",
+            status: d.status || "verified",
+            filePath,
+            mediaId: d.mediaId ?? mediaIdFromRef(filePath),
+            isDigitized: !!filePath,
+            customAttributes: custom && typeof custom === "object" ? custom : {},
+        };
     }
 
     import {
@@ -62,18 +97,16 @@
         type SyncManager,
     } from "$lib/services/sync.svelte";
 
-    // ...
-
     let docSync = $state<SyncManager<Doc> | null>(null);
     let docs = $derived(docSync?.items || []);
 
     $effect(() => {
         if (module?.id) {
-            // Register sync for this specific vault
-            // Maps docs_{id} -> vault_documents endpoint
+            // docs_{id} -> /api/data/documents (all verbs go through routers/estate_data.py)
             docSync = registerSync<Doc>(
                 `docs_${module.id}`,
-                "vault_documents",
+                "documents",
+                docMapper,
             ).setAffirmationContext("documents");
         }
     });
@@ -83,38 +116,46 @@
 
     // Wizard State
     let wizardStep = $state(0);
-    let wizardSelection = $state<Partial<Doc>>({});
     let analyzingDoc = $state<Doc | null>(null);
 
-    let newDoc = $state<Partial<Doc> & { id?: string }>({
+    type DocDraft = Partial<Doc> & { id?: string; customAttributes: Record<string, any> };
+
+    const emptyDoc = (): DocDraft => ({
+        id: undefined,
         name: "",
         location: "",
         type: "Other",
         status: "verified",
-        fileData: "",
+        witnesses: "",
+        signedDate: "",
+        nextReviewDate: "",
+        filePath: "",
+        mediaId: null,
+        customAttributes: {},
     });
 
-    // Removal of old persistence
-    // import { getStored, setStored } from "$lib/stores/persistence";
-    // const storageKey ... removed
-    // onMount ... removed
-    // save() ... removed
+    let newDoc = $state<DocDraft>(emptyDoc());
 
     async function saveDoc() {
         if (!newDoc.name || !docSync) return;
 
+        const fields = {
+            name: newDoc.name,
+            type: (newDoc.type as DocType) || "Other",
+            location: newDoc.location || "",
+            witnesses: newDoc.witnesses || "",
+            signedDate: newDoc.signedDate || "",
+            nextReviewDate: newDoc.nextReviewDate || "",
+            filePath: newDoc.filePath || "",
+            mediaId: newDoc.filePath ? (newDoc.mediaId ?? null) : null,
+            customAttributes: { ...(newDoc.customAttributes || {}) },
+            status: newDoc.status || "verified",
+        };
+
         try {
         if (newDoc.id) {
             // Edit Mode
-            await docSync.update(newDoc.id, {
-                name: newDoc.name,
-                type: newDoc.type,
-                location: newDoc.location,
-                witnesses: newDoc.witnesses,
-                nextReviewDate: newDoc.nextReviewDate,
-                fileData: newDoc.fileData,
-                status: newDoc.status,
-            });
+            await docSync.update(newDoc.id, fields);
 
             // Log UPDATE
             activityLog.logEvent({
@@ -127,16 +168,7 @@
             });
         } else {
             // Create Mode
-            const created = await docSync.create({
-                name: newDoc.name,
-                type: (newDoc.type as DocType) || "Other",
-                date: new Date().toLocaleDateString(),
-                location: newDoc.location || "Physical Safe",
-                status: "verified",
-                witnesses: newDoc.witnesses || "",
-                nextReviewDate: newDoc.nextReviewDate || "",
-                fileData: newDoc.fileData || "",
-            }, false, false, saveDoc);
+            const created = await docSync.create(fields, false, false, saveDoc);
 
             // Log CREATE
             activityLog.logEvent({
@@ -156,27 +188,37 @@
     }
 
     function editDoc(doc: Doc) {
-        newDoc = { ...doc };
+        newDoc = { ...doc, customAttributes: { ...(doc.customAttributes || {}) } };
         // Skip wizard for edits, go straight to form
         showWizard = false;
         showUpload = true;
     }
 
     function resetForm() {
-        newDoc = {
-            id: undefined,
-            name: "",
-            location: $estateProfile.legalCityState || "Estate Digital Vault",
-            type: "Other",
-            status: "verified",
-            fileData: "",
-            witnesses: $estateProfile.executorName
-                ? `Verified by ${$estateProfile.executorName}`
-                : "",
-        };
+        newDoc = emptyDoc();
         showUpload = false;
         showWizard = false;
         wizardStep = 0;
+    }
+
+    async function saveCopy(doc: Doc) {
+        const id = doc.mediaId ?? mediaIdFromRef(doc.filePath);
+        try {
+            if (id !== null) {
+                await downloadMedia(id);
+            } else if (doc.filePath) {
+                const a = document.createElement("a");
+                a.href = doc.filePath;
+                a.download = `${doc.name}-DigitalCopy`;
+                a.click();
+            }
+        } catch (e: any) {
+            notifications.showError({
+                message: "Your copy is taking a moment to open. Try again when you're ready.",
+                code: "NETWORK_ERROR",
+                technicalDetails: e?.message || String(e),
+            } as any);
+        }
     }
 
     async function removeDoc(id: string) {
@@ -235,12 +277,6 @@
         else if (type === "Insurance")
             newDoc.name = `Life Insurance Policy - ${owner}`;
         else newDoc.name = name;
-
-        // Ensure location is set if it was empty
-        if (!newDoc.location) {
-            newDoc.location =
-                $estateProfile.legalCityState || "Estate Digital Vault";
-        }
 
         wizardStep = 2;
     }
@@ -508,46 +544,68 @@
                     <div class="mb-4">
                         <FileUploader
                             label="Digital Copy (Optional)"
-                            bind:imageUrl={newDoc.fileData}
+                            module="documents"
+                            mode="any"
+                            bind:imageUrl={newDoc.filePath}
+                            bind:mediaId={newDoc.mediaId}
                         />
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div class="space-y-1.5">
                             <label
+                                for="doc-location"
                                 class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
-                                >Physical Location</label
+                                >Where the Original Is Kept</label
                             >
                             <input
+                                id="doc-location"
                                 bind:value={newDoc.location}
                                 class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
-                                placeholder="e.g. Blue Fire Safe"
+                                placeholder="e.g. Blue fire safe in the study"
                             />
                         </div>
                         <div class="space-y-1.5">
                             <label
+                                for="doc-witnesses"
                                 class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Witnesses</label
                             >
                             <input
+                                id="doc-witnesses"
                                 bind:value={newDoc.witnesses}
                                 class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
                                 placeholder="Optional"
                             />
                         </div>
                         <div class="space-y-1.5">
+                            <label
+                                for="doc-signed"
+                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                                >Date Signed</label
+                            >
+                            <input
+                                id="doc-signed"
+                                type="date"
+                                bind:value={newDoc.signedDate}
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                            />
+                        </div>
+                        <div class="space-y-1.5">
                             <div class="flex justify-between">
                                 <label
+                                    for="doc-review"
                                     class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                     >Next Review</label
                                 >
                                 <span
                                     class="text-[10px] text-[#4A7C74] font-medium cursor-help"
-                                    title="We'll remind you to check if this is still current."
+                                    title="A gentle date to look this over again, so it keeps reflecting your current wishes."
                                     >Why?</span
                                 >
                             </div>
                             <input
+                                id="doc-review"
                                 type="date"
                                 bind:value={newDoc.nextReviewDate}
                                 class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
@@ -559,7 +617,7 @@
                     <div class="mb-4 pt-4 border-t border-slate-100">
                         <CustomFieldsManager
                             entityType="legal_document"
-                            bind:data={customAttributes}
+                            bind:data={newDoc.customAttributes}
                         />
                     </div>
 
@@ -619,10 +677,14 @@
                                     <Shield size={10} />
                                     {doc.type}
                                 </span>
-                                <span>Signed: {doc.date}</span>
-                                <span class="flex items-center gap-1"
-                                    ><Lock size={10} /> {doc.location}</span
-                                >
+                                {#if doc.signedDate}
+                                    <span>Signed: {doc.signedDate}</span>
+                                {/if}
+                                {#if doc.location}
+                                    <span class="flex items-center gap-1"
+                                        ><Lock size={10} /> {doc.location}</span
+                                    >
+                                {/if}
                                 {#if doc.nextReviewDate}
                                     <span
                                         class="flex items-center gap-1 {doc.status ===
@@ -633,7 +695,7 @@
                                         <Calendar size={10} /> Review: {doc.nextReviewDate}
                                     </span>
                                 {/if}
-                                {#if doc.fileData}
+                                {#if doc.filePath}
                                     <span
                                         class="flex items-center gap-1 text-emerald-600 font-bold"
                                     >
@@ -649,21 +711,31 @@
                                     <Users size={10} /> Witnessed by {doc.witnesses}
                                 </div>
                             {/if}
+                            {#if doc.customAttributes && Object.keys(doc.customAttributes).some((k) => doc.customAttributes?.[k] !== "" && doc.customAttributes?.[k] != null)}
+                                <div class="mt-2 flex flex-wrap gap-2 text-[11px] text-slate-600">
+                                    {#each Object.entries(doc.customAttributes) as [k, v] (k)}
+                                        {#if v !== "" && v != null}
+                                            <span class="bg-slate-100 px-2 py-0.5 rounded"><span class="font-semibold">{k}:</span> {v === true ? "Yes" : v === false ? "No" : v}</span>
+                                        {/if}
+                                    {/each}
+                                </div>
+                            {/if}
                         </div>
                     </div>
 
                     <div
                         class="flex items-center gap-2 md:opacity-0 group-hover:opacity-100 transition-opacity justify-end"
                     >
-                        {#if doc.fileData}
-                            <a
-                                href={doc.fileData}
-                                download="{doc.name}-DigitalCopy"
+                        {#if doc.filePath}
+                            <button
+                                type="button"
+                                onclick={() => saveCopy(doc)}
                                 class="p-2 hover:bg-secondary/10 text-muted-foreground hover:text-[#4A7C74] rounded-full transition-colors"
-                                title="Download Digital Copy"
+                                title="Save a copy of the digital file"
+                                aria-label="Save a copy of the digital file"
                             >
                                 <Download size={18} />
-                            </a>
+                            </button>
                         {/if}
                         <button
                             onclick={() => (analyzingDoc = doc)}
@@ -739,20 +811,21 @@
                                     {doc.status?.replace("_", " ")}
                                 </span>
                             </td>
-                            <td class="px-4 py-3 text-slate-600 text-sm">{doc.date}</td>
+                            <td class="px-4 py-3 text-slate-600 text-sm">{doc.signedDate || '-'}</td>
                             <td class="px-4 py-3 text-slate-600 text-sm">{doc.location}</td>
                             <td class="px-4 py-3 text-slate-500 text-sm">{doc.nextReviewDate || '-'}</td>
                             <td class="px-4 py-3 text-right">
                                 <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    {#if doc.fileData}
-                                        <a
-                                            href={doc.fileData}
-                                            download="{doc.name}-DigitalCopy"
+                                    {#if doc.filePath}
+                                        <button
+                                            type="button"
+                                            onclick={() => saveCopy(doc)}
                                             class="p-1 hover:bg-slate-100 text-slate-400 hover:text-[#4A7C74] rounded transition-colors"
-                                            title="Download"
+                                            title="Save a copy"
+                                            aria-label="Save a copy"
                                         >
                                             <Download size={14} />
-                                        </a>
+                                        </button>
                                     {/if}
                                     <button
                                         onclick={() => (analyzingDoc = doc)}
