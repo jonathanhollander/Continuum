@@ -725,9 +725,9 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | R0 — Local rehearsal | ☐ | | |
 | Release — deploy + full browser test | ☐ | | |
 | Wave U — Final UI/UX pass | ✅ | 2026-10-26 | U0, U1–U86 ☑; O1 and O2 on Wave U done; O2 fixes U81–U86, X212, X213 ☑ |
-| Wave G — Role-based page gap review | ✅ | 2026-10-26 | G0 review and G cards ☑; O1/O2 for G/T/V done; findings X258–X272 fixed and verified live; X273 running |
-| Wave T — Tone review of every page | ✅ | 2026-10-26 | T0 review and T cards ☑; owner rule "positive only truthful wording everywhere" (X250, X253, X256); O1/O2 for G/T/V done; findings X258–X272 fixed and verified live; X273 running |
-| Wave V — Colour review of every page | ✅ | 2026-10-26 | V0, V1-C, V1-P (incl. V1-P7 final sweep) ☑; O1/O2 for G/T/V done; findings X258–X272 fixed and verified live; X273 running |
+| Wave G — Role-based page gap review | ✅ | 2026-10-26 | G0 review and G cards ☑; O1/O2 for G/T/V done; findings X258–X274 fixed and verified live |
+| Wave T — Tone review of every page | ✅ | 2026-10-26 | T0 review and T cards ☑; owner rule "positive only truthful wording everywhere" (X250, X253, X256); O1/O2 for G/T/V done; findings X258–X274 fixed and verified live |
+| Wave V — Colour review of every page | ✅ | 2026-10-26 | V0, V1-C, V1-P (incl. V1-P7 final sweep) ☑; O1/O2 for G/T/V done; findings X258–X274 fixed and verified live |
 | Wave X — Out-of-build bugs | ▶ | | |
 
 ## Card status (marked by the orchestrator, decision 9)
@@ -1186,7 +1186,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X271 | ☑ | f810e21 | `shot_guardian.png` (2918×2154) replaced with a fresh shot of /modules/digital-guardian (teal, light): "locked out… forever", "Hope is not a strategy", "None Designated" gone; same frame on the home page |
 | X272 | ☑ | 1e1f78e | `shot_vault`, `shot_letters`, `shot_heirlooms` re-shot from the current teal pages ("so nothing gets lost", "0 Drafts Saved", "Concierge V4.0", retired purple UI gone); Digital Guardian copy positive and accurate ("Enter the 2FA Code", "when the time comes", executor asks LinkedIn); home shot URLs get `?v=2` because Cloudflare caches /Marketing for 4 h |
 | X273 | ☑ | 1c96631 + shared notice | Dead `heroBg` and 404 noise overlay removed (failed requests on / 1 → 0); home copy "secure, intelligent bridge", "tough days", "Heirlooms Registry" → true positive lines (six languages); Rest Mode label neutral until loaded; SyncManager first-load failure shows a notice (4 pages 0 → 1) — orchestrator review: shared across stores so an outage shows one (dashboard 30 failed reads → 1 notice, Try Again clears) |
-| X274 | ▶ | | |
+| X274 | ☑ | f545a37 | Singleton stores and the shared estate/profile record join X273's single load notice (funeral and dashboard with 5 GETs forced 500: 0 → 1 notice; Try Again clears); pulse settings keeps its own page notice only (`OWN_LOAD_NOTICE`); app name "Heirlooms & Treasures" in six languages. Accepted: Try Again closes at once and the notice returns only if a re-read fails again |
 | X269 | ☑ | 34f6a92 | Real bug: after a failed settings load one toggle overwrote saved 5/48 with defaults 2/24. Controls now wait for a successful load (0 POSTs while unloaded, server stays 5/48; Try Again restores); settings and tiers load separately, each failure one notice |
 | X267 | ☑ | 382c5f0 | 19 files: every "…is taking a moment. Try again shortly." (said after a final failure) → what is safe + what the person can do; SERVICE_UNAVAILABLE title "Ready when you are"; es/fr/de/ru/he negatives 40 → 11 (all Yes/No labels or false matches); binder and pulse contacts 500s show the new lines |
 | X260 | ☑ | 35c314a | Failed-save notice: title "Everything you've saved is safe" (true on every DATABASE_ERROR path); save body "Your draft is kept. We can save it again whenever you're ready."; remove body "It is still in your list…"; subscriptions and pets 500 → draft kept, nothing half-saved |
@@ -1200,5 +1200,5 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | O2 — per wave (A–E) | ☑ (A done: X1 pages render the gentle message, no layout break; findings → X15, X16, X17, E9, E10. B done: before 883e6b5 / after 995f2b1 at 1440×900, nav identical on 23 routes, console errors 16–43 per page → 0, property/anniversary/activity-log/advanced-registry spinners now render; findings → C1, C10, X54, X58, U0/T0/V0 seeds. E done (296da03 → 7ec56c3, 45 routes, 26 seeded records, 1440×900): 0 console errors, no overflow or broken images, unnamed buttons 1–8 → 0 per page, nothing left navigation (5 newly top-level; catalog 9 → 33), legacy first and finance second; failed save clear (draft kept, Try Again); findings → X144–X150, U0/T0 seeds) U done (e25188f → 5b40507, 64 routes × 1440 and 390, 26 seeded records): real console errors 0 → 0, overflow 0, broken images 0, unlabelled fields 45 → 9, unnamed controls 1 → 0 (desktop); every pixel change traced to a ticked U card; nav changes all intended (U36, U38, U44); regressions → U81, X212, X213, U82; polish → U83–U86, V0/T0 seeds) G/T/V done (5b40507 → d6cbb7c, 64 routes × 1440/390 × light/dark): contrast fails 1626 → 68 (desktop light), 1846 → 69 (dark), 1549/1692 → 76 (mobile); dark content areas dark everywhere except intended paper previews; unlabelled fields 9 → 0; overflow, broken images 0; navigation intact (13 links, 14 groups, catalog 33, legacy first, finance second); failed save keeps the draft with Try Again; findings → X259–X263) | |
 | O1 — release table | ☐ | | |
 | O2 — release screenshots | ☐ | | |
-| R0 | ☐ | | |
+| R0 | ▶ | | |
 | Release | ☐ | | |
