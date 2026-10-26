@@ -24,7 +24,6 @@
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import UniversalUploader from "$lib/components/ui/UniversalUploader.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte"; // NEW IMPORT
-    import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import { language } from "$lib/stores/localization";
     import {
         encouragementMode,

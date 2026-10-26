@@ -14,7 +14,6 @@
     } from "lucide-svelte";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import SubscriptionRow from "$lib/components/modules/subscriptions/SubscriptionRow.svelte";
-    import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import { onMount, tick } from "svelte";
@@ -395,7 +394,7 @@
     </div>
 {:else}
 <div
-    class="container mx-auto px-6 py-8 space-y-8 animate-in fade-in duration-500"
+    class="container mx-auto px-8 py-8 space-y-8 animate-in fade-in duration-500"
 >
 
     <!-- AI Concierge Drafting Assistant -->

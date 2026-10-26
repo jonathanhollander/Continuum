@@ -239,7 +239,7 @@
         <Loader2 class="w-8 h-8 animate-spin text-primary" />
     </div>
 {:else}
-<div class="container px-6 mx-auto py-8 animate-in fade-in duration-500">
+<div class="container px-8 mx-auto py-8 animate-in fade-in duration-500">
 
 
     <!-- AI Prompt Bar -->

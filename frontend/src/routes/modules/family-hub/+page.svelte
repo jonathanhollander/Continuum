@@ -457,7 +457,7 @@
     {/if}
 
     <!-- Family Network Visualizer -->
-    <section class="max-w-7xl mx-auto px-6 -mt-16 relative z-30 mb-20">
+    <section class="max-w-7xl mx-auto px-8 -mt-16 relative z-30 mb-20">
         <div
             class="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100"
         >
@@ -495,7 +495,7 @@
             </div>
         </div>
     {:else}
-        <div class="max-w-6xl mx-auto px-6 pb-20 relative z-30" in:fade>
+        <div class="max-w-6xl mx-auto px-8 pb-20 relative z-30" in:fade>
             <!-- BLUEPRINT HEADER -->
             <div class="mb-12">
                 <BlueprintCard

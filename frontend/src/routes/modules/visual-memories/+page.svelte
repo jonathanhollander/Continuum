@@ -11,7 +11,6 @@
         Save,
         Loader2,
     } from "lucide-svelte";
-    import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
