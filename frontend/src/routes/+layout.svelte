@@ -84,7 +84,7 @@
 	import Sidebar from "$lib/components/layout/Sidebar.svelte";
 	import FocusFooter from "$lib/components/layout/FocusFooter.svelte";
 	import MobileBottomNav from "$lib/components/layout/MobileBottomNav.svelte";
-	import { navGroups } from "$lib/config/navigation";
+	import { navGroups, pulseSubNav } from "$lib/config/navigation";
 	import { compassStore } from "$lib/stores/compassStore";
 	import NotificationContainer from "$lib/components/NotificationContainer.svelte";
 	import RoleSwitcher from "$lib/components/RoleSwitcher.svelte";
@@ -96,6 +96,19 @@
 	let { children } = $props();
 
 	let isSidebarOpen = $state(false);
+
+	// Breadcrumb: the page's name as the sidebar shows it (English names from
+	// navigation.ts, other languages from the dictionary), else the page's own
+	// `title` from its load, else the generic label.
+	let breadcrumbTitle = $derived.by(() => {
+		const path = $page.url.pathname;
+		const item = [...navGroups.flatMap((g) => g.items), ...pulseSubNav].find(
+			(i) => i.href === path,
+		);
+		if (item) return $language === "en" ? item.label : $dict[item.key] || item.label;
+		const own = ($page.data as { title?: string } | undefined)?.title;
+		return own || $dict.activeModule;
+	});
 	let isCompassOpen = $state(false);
 	let showSettings = $state(false);
 	let showCommandCenter = $state(false);
@@ -449,23 +462,12 @@
 									: "text-slate-400"}
 							/>
 							<span
+								data-testid="breadcrumb-title"
 								class="font-serif font-medium text-lg {isDashboardRoute
 									? 'text-white'
 									: 'text-slate-800'}"
 							>
-								{$page.url.pathname === "/dashboard"
-									? $dict.dashboard
-									: $page.url.pathname.includes("catalog")
-										? $dict.catalog
-										: $dict[
-												navGroups
-													.flatMap((g) => g.items)
-													.find(
-														(i) =>
-															i.href ===
-															$page.url.pathname,
-													)?.key || ""
-											] || $dict.activeModule}
+								{breadcrumbTitle}
 							</span>
 						</div>
 
