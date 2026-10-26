@@ -4,8 +4,6 @@
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
     import * as registryRaw from "$lib/data/registry.json";
     import ModuleContent from "$lib/components/ModuleContent.svelte";
-    import ContactDirectory from "$lib/components/archetypes/ContactDirectory.svelte";
-    import TaskDashboard from "$lib/components/archetypes/TaskDashboard.svelte";
 
     // Robustly extract the array
     const registryData = (registryRaw as any).default || registryRaw;
@@ -26,17 +24,9 @@
 
         <div class="container mx-auto px-6 py-12">
             <div class="max-w-4xl mx-auto space-y-12">
-                <!-- Smart Module Router -->
-                <!-- Asset ids (financial, property, subscription...) each have their own page under /modules. -->
-                {#if module.id.includes("contact") || module.id.includes("beneficiar")}
-                    <ContactDirectory {module} />
-                {:else if module.id.includes("task") || module.id.includes("checklist") || module.id.includes("guide")}
-                    <TaskDashboard {module} />
-                <!-- Vault ids (legal, letter, file, keepsake, document) go to /modules/legal-documents in +page.ts -->
-                {:else}
-                    <!-- Fallback to Generic Guide -->
-                    <ModuleContent {module} />
-                {/if}
+                <!-- Asset ids (financial, property, subscription...) and contacts each have their own page
+                     under /modules; vault ids go to /modules/legal-documents in +page.ts. -->
+                <ModuleContent {module} />
             </div>
         </div>
     {:else}

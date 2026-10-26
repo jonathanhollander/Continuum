@@ -37,11 +37,11 @@
     }
 </script>
 
-<div class="flex items-center gap-1 p-1 bg-slate-100 rounded-xl">
+<div class="flex items-center gap-1 p-1 bg-muted border border-border rounded-xl">
     <button
         onclick={() => setViewMode('card')}
         class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all
-               {viewMode === 'card' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}"
+               {viewMode === 'card' ? 'bg-card text-foreground shadow-sm ring-1 ring-border' : 'text-muted-foreground hover:text-foreground'}"
         title="Card view"
         aria-pressed={viewMode === 'card'}
     >
@@ -51,7 +51,7 @@
     <button
         onclick={() => setViewMode('table')}
         class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all
-               {viewMode === 'table' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}"
+               {viewMode === 'table' ? 'bg-card text-foreground shadow-sm ring-1 ring-border' : 'text-muted-foreground hover:text-foreground'}"
         title="Table view"
         aria-pressed={viewMode === 'table'}
     >

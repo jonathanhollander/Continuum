@@ -121,8 +121,8 @@
     <div
         class="relative border-2 border-dashed rounded-2xl p-8 text-center transition-all duration-300 group cursor-pointer
         {isDragging
-            ? 'border-blue-500 bg-blue-50'
-            : 'border-slate-200 hover:border-blue-400 hover:bg-slate-50'}"
+            ? 'border-primary bg-primary-soft'
+            : 'border-border hover:border-primary hover:bg-muted'}"
         ondragover={handleDragOver}
         ondragleave={handleDragLeave}
         ondrop={handleDrop}
@@ -147,23 +147,23 @@
 
         {#if isProcessing}
             <div class="flex flex-col items-center justify-center py-4">
-                <Loader2 size={32} class="animate-spin text-blue-500 mb-2" />
-                <p class="text-sm font-bold text-slate-500">
+                <Loader2 size={32} class="animate-spin text-primary mb-2" />
+                <p class="text-sm font-bold text-muted-foreground">
                     Preparing your photos...
                 </p>
             </div>
         {:else}
             <div class="flex flex-col items-center gap-3">
                 <div
-                    class="p-4 bg-white rounded-full shadow-sm text-blue-500 group-hover:scale-110 transition-transform"
+                    class="p-4 bg-card rounded-full shadow-sm text-primary group-hover:scale-110 transition-transform"
                 >
                     <Upload size={24} />
                 </div>
                 <div>
-                    <h4 class="font-bold text-slate-700">
+                    <h4 class="font-bold text-foreground">
                         Add a photo or document
                     </h4>
-                    <p class="text-xs text-slate-400 mt-1">
+                    <p class="text-xs text-muted-foreground mt-1">
                         Support for Images (JPG, PNG) and Video (MP4)
                     </p>
                 </div>

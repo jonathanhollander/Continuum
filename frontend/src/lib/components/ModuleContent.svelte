@@ -98,6 +98,7 @@
                 class="bg-card border border-border rounded-xl p-8 shadow-sm relative overflow-hidden group"
             >
                 <div
+                    aria-hidden="true"
                     class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"
                 >
                     <FileText size={120} />
@@ -126,10 +127,10 @@
                     </p>
                 {/if}
                 <div
-                    class="mt-6 flex items-center gap-4 text-sm text-muted-foreground/80"
+                    class="mt-6 flex items-center gap-4 text-sm text-muted-foreground"
                 >
                     <span
-                        class="flex items-center gap-1.5 bg-secondary/30 px-3 py-1 rounded-full"
+                        class="flex items-center gap-1.5 bg-muted border border-border px-3 py-1 rounded-full"
                     >
                         A short while, at your pace
                     </span>
@@ -200,7 +201,7 @@
             <section
                 class="bg-primary/5 border border-primary/10 rounded-xl p-6"
             >
-                <h3 class="font-bold text-sm text-primary mb-2">Need Help?</h3>
+                <h3 class="font-bold text-sm text-primary-hover mb-2">Need Help?</h3>
                 <p class="text-xs text-muted-foreground mb-4">
                     Whenever you'd like more guidance, your estate attorney is
                     a good place to start.
