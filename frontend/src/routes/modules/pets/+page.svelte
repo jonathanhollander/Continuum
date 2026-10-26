@@ -517,7 +517,6 @@
                     label="Care Records & Photos"
                     mode="any"
                     module="pets"
-                    hideBorder
                 />
             </div>
 
