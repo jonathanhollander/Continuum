@@ -149,7 +149,7 @@
             <div class="flex flex-col items-center justify-center py-4">
                 <Loader2 size={32} class="animate-spin text-blue-500 mb-2" />
                 <p class="text-sm font-bold text-slate-500">
-                    Processing media...
+                    Preparing your photos...
                 </p>
             </div>
         {:else}
@@ -161,7 +161,7 @@
                 </div>
                 <div>
                     <h4 class="font-bold text-slate-700">
-                        Click to Upload Evidence
+                        Add a photo or document
                     </h4>
                     <p class="text-xs text-slate-400 mt-1">
                         Support for Images (JPG, PNG) and Video (MP4)

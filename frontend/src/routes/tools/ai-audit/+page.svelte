@@ -130,11 +130,11 @@
             {/if}
         </div>
         <h1 class="font-serif font-bold text-4xl text-[#304743] mb-4">
-            AI Completeness Check
+            Plan Check-in
         </h1>
         <p class="text-lg text-muted-foreground max-w-xl mx-auto">
-            Our algorithmic audit scans your entire estate plan for holes,
-            missing documents, and overlooked assets.
+            A gentle check across what you've recorded, to see what is well
+            covered and where a little more could help.
         </p>
     </div>
 
@@ -165,7 +165,7 @@
                     <h2
                         class="font-bold text-xl text-emerald-300 uppercase tracking-widest mb-2"
                     >
-                        Audit Score
+                        How well covered
                     </h2>
                     <div class="text-6xl font-serif font-bold mb-4">
                         {score}/100
@@ -205,7 +205,7 @@
                 <h3
                     class="font-bold text-gray-400 text-sm uppercase tracking-wider mb-6 ml-2"
                 >
-                    Action Items
+                    Gentle next steps
                 </h3>
 
                 {#each findings as finding (finding.id)}

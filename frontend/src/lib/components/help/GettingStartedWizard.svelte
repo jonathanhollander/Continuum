@@ -79,7 +79,7 @@
                 How complex is your estate?
             </h2>
             <p class="text-gray-500 mb-8">
-                This helps us hide tools you don't need.
+                This helps us show the tools that fit you.
             </p>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <button
@@ -92,7 +92,7 @@
                     </div>
                     <h3 class="font-bold text-gray-800 mb-2">Simple</h3>
                     <p class="text-xs text-gray-500">
-                        Single home, simple accounts, no complex trusts.
+                        Single home, simple accounts, straightforward trusts.
                     </p>
                 </button>
                 <button
@@ -176,7 +176,7 @@
                 Where are your documents?
             </h2>
             <p class="text-gray-500 mb-8">
-                Just a quick check - do you know where these valid docs are?
+                Do you know where these documents are kept?
             </p>
             <div class="space-y-3 max-w-md mx-auto text-left">
                 {#each ["Last Will & Testament", "Power of Attorney", "Advance Healthcare Directive", "Life Insurance Policies"] as doc}

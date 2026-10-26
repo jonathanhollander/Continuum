@@ -313,13 +313,12 @@
                     <ShieldCheck size={32} />
                 </div>
                 <h1 class="font-bold text-3xl text-slate-900">
-                    Data Confidence
+                    Your records, kept safe
                 </h1>
             </div>
             <p class="text-slate-500 max-w-xl text-lg">
-                System-wide persistence verification. Monitor the
-                synchronization truth between your local device and the
-                Continuum Secure Cloud.
+                See what is saved on this device and in your Continuum
+                space.
             </p>
         </div>
 
@@ -333,7 +332,7 @@
                 <div class={isAuditing ? "animate-spin" : ""}>
                     <RefreshCw size={18} />
                 </div>
-                {isAuditing ? "Verifying..." : "Verify Truth"}
+                {isAuditing ? "Checking..." : "Take a look"}
             </button>
             {/if}
 
@@ -359,10 +358,10 @@
             </div>
             <div>
                 <h3 class="font-bold text-slate-900 text-lg">
-                    Validation Suite
+                    Sample data
                 </h3>
                 <p class="text-indigo-600/80 text-sm font-medium">
-                    Generate schematic-compliant data to prove persistence.
+                    Add sample entries to see how saving works.
                 </p>
             </div>
         </div>
@@ -378,8 +377,8 @@
                         size={16}
                     />{/if}
                 {showConfirmGenerate
-                    ? "Click AGAIN to Confirm"
-                    : "Generate Validation Data"}
+                    ? "Tap again if you'd like to continue"
+                    : "Add sample data"}
             </button>
             <button
                 onclick={purgeTestData}
@@ -390,7 +389,7 @@
                         class="animate-spin"
                         size={16}
                     />{/if}
-                Purge Validation Data
+                Remove sample data
             </button>
         </div>
     </div>
@@ -449,7 +448,7 @@
                                         {#if isTest}
                                             <span
                                                 class="px-1.5 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-black uppercase rounded tracking-wider"
-                                                >Test Active</span
+                                                >Sample data shown</span
                                             >
                                         {/if}
                                     </div>
@@ -654,7 +653,7 @@
                             {#each audit.details.onlyRemote as item}
                                 <tr class="bg-stripe-slate">
                                     <td class="p-4 text-slate-400 italic"
-                                        >Cloud Only</td
+                                        >Saved online</td
                                     >
                                     <td class="p-4 text-slate-400"
                                         >{rowType(item)}</td
@@ -662,7 +661,7 @@
                                     <td class="p-4 text-slate-400"
                                         >{rowName(item)}</td
                                     >
-                                    <td class="p-4 text-slate-400">Unknown</td>
+                                    <td class="p-4 text-slate-400">—</td>
                                     <td
                                         class="p-4 font-mono text-xs text-slate-400 text-right"
                                         >{item.id}</td

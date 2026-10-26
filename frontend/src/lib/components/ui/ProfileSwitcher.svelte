@@ -214,7 +214,7 @@
                                 onclick={() => (isCreating = false)}
                                 class="px-2 py-1 text-xs text-slate-400 hover:text-white"
                             >
-                                Cancel
+                                Maybe later
                             </button>
                         </div>
                     </div>

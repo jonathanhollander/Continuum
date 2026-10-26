@@ -20,15 +20,15 @@
             id: "1",
             text: "Contact a funeral home",
             description:
-                "They will help with the immediate care of your loved one and guide you through the first legal steps.",
+                "They will help with the early care of your loved one and guide you through the first legal steps.",
             priority: "immediate",
             done: false,
         },
         {
             id: "2",
-            text: "Notify immediate family and close friends",
+            text: "Let close family and friends know",
             description:
-                "You don't have to do this alone. Consider asking a trusted friend to help make these calls.",
+                "A trusted friend can help you make these calls.",
             priority: "immediate",
             done: false,
         },
@@ -44,7 +44,7 @@
             id: "4",
             text: "Arrange for pet and home care",
             description:
-                "Ensure any dependent animals are fed and the home is secure.",
+                "When you can, see that any animals are fed and the home is secure.",
             priority: "soon",
             done: false,
         },
@@ -73,7 +73,7 @@
 <div class="space-y-6">
     <!-- Gentle intro -->
     <p class="text-sm text-slate-400 italic leading-relaxed">
-        When you're ready, these small steps may help. There's no rush—move at your own pace.
+        When you're ready, these small steps may help. Move at your own pace.
     </p>
 
     <div class="flex items-center gap-4 mb-8">

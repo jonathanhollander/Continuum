@@ -162,7 +162,7 @@ class CSRFMiddleware(BaseHTTPMiddleware):
                         status_code=403,
                         content=ErrorResponse(
                             message="CSRF token validation failed",
-                            user_message="We couldn't confirm this request came from your session. Please refresh the page and try again.",
+                            user_message="Refreshing the page will bring things back; then try again whenever you're ready.",
                             status_code=403,
                             error_code="CSRF_FAILED"
                         ).to_dict()
