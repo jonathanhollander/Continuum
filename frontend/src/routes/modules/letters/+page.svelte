@@ -70,7 +70,8 @@
 
     let searchQuery = $state("");
     let isLoading = $state(true);
-    let viewMode = $state<ViewMode>('card');
+    // Cards or table for "Your letters"; DataViewToggle stores the choice per module.
+    let viewMode = $derived<ViewMode>(userPreferencesStore.getViewMode('letters'));
     let customAttributes = $state<Record<string, any>>({});
 
     onMount(async () => {
@@ -380,22 +381,14 @@
         Identity: ShieldCheck,
     };
 
-    let isRecording = $state(false);
-    let recordingTimer: any;
+    // A writing prompt: adds one reflection question to the draft to write beneath.
+    const WRITING_PROMPTS = Object.values(REFLECTION_POOLS.letters).flatMap((flow) =>
+        flow.steps.flatMap((step) => step.pool),
+    );
 
-    function simulateVoiceToText() {
-        isRecording = true;
-        const transcript = " ... [Voice Capture Enabled] ... ";
-        generatedLetter += "\n" + transcript;
-        setTimeout(() => {
-            stopRecording();
-            generatedLetter +=
-                "Added: 'Keep my childhood photo albums together for the grandchildren.'";
-        }, 3000);
-    }
-
-    function stopRecording() {
-        isRecording = false;
+    function addWritingPrompt() {
+        const prompt = WRITING_PROMPTS[Math.floor(Math.random() * WRITING_PROMPTS.length)];
+        generatedLetter = (generatedLetter ? generatedLetter.trimEnd() + "\n\n" : "") + prompt + "\n";
     }
 
     let filteredTemplates = $derived(
@@ -418,7 +411,9 @@
     whyMatters="The words you write today will comfort, guide, and inspire your loved ones when you're no longer here to say them yourself. These letters become your voice across time, offering presence at moments you can't physically attend."
 >
     <div class="flex items-center gap-4">
-        <DataViewToggle module="letters" onchange={(mode) => viewMode = mode} />
+        {#if savedLetters.length > 0}
+            <DataViewToggle module="letters" />
+        {/if}
         <div
             class="bg-[#FDFBF7] border border-stone-200 p-4 rounded-2xl flex items-center gap-6 shadow-sm"
         >
@@ -548,6 +543,58 @@
                 <h3 class="text-xl font-black text-slate-900 font-serif">
                     Your letters
                 </h3>
+                {#if viewMode === "table"}
+                    <div class="overflow-x-auto bg-white rounded-2xl border border-slate-100 shadow-sm">
+                        <table class="w-full text-left text-sm" data-testid="saved-letters-table">
+                            <thead class="text-[10px] font-black uppercase tracking-widest text-slate-500 border-b border-slate-100">
+                                <tr>
+                                    <th class="px-5 py-3">Letter</th>
+                                    <th class="px-5 py-3">For</th>
+                                    <th class="px-5 py-3">Chosen moment</th>
+                                    <th class="px-5 py-3">Status</th>
+                                    <th class="px-5 py-3"><span class="sr-only">Actions</span></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {#each savedLetters as letter (letter.id)}
+                                    <tr class="border-b border-slate-50 last:border-0" data-testid="saved-letter-row">
+                                        <td class="px-5 py-3 font-bold text-slate-900">{letter.title}</td>
+                                        <td class="px-5 py-3 text-slate-600">{letter.recipientName}</td>
+                                        <td class="px-5 py-3 text-slate-500">
+                                            {#if letter.triggerDate}
+                                                {new Date(letter.triggerDate + "T00:00:00").toLocaleDateString()}
+                                            {/if}
+                                            {#if letter.triggerMilestone}
+                                                {letter.triggerDate ? " · " : ""}{MILESTONE_LABELS[letter.triggerMilestone] ?? letter.triggerMilestone}
+                                            {/if}
+                                        </td>
+                                        <td class="px-5 py-3">
+                                            {#if letter.isLocked}
+                                                <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-stone-100 text-stone-600">On hold</span>
+                                            {:else}
+                                                <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-primary/10 text-primary">Ready to read</span>
+                                            {/if}
+                                        </td>
+                                        <td class="px-5 py-3 whitespace-nowrap text-right">
+                                            <button
+                                                onclick={() => viewLetter(letter)}
+                                                class="px-3 py-1.5 rounded-lg bg-[#4A7C74] text-white text-xs font-bold hover:opacity-90"
+                                            >
+                                                Continue writing
+                                            </button>
+                                            <button
+                                                onclick={() => deleteLetter(letter.id, letter.recipientName || letter.title)}
+                                                class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-900"
+                                            >
+                                                Remove this letter
+                                            </button>
+                                        </td>
+                                    </tr>
+                                {/each}
+                            </tbody>
+                        </table>
+                    </div>
+                {:else}
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {#each savedLetters as letter (letter.id)}
                         <div
@@ -604,6 +651,7 @@
                         </div>
                     {/each}
                 </div>
+                {/if}
             </div>
         {/if}
 
@@ -935,33 +983,13 @@
 
                 <div class="flex items-center gap-3">
                     <button
-                        onclick={isRecording
-                            ? stopRecording
-                            : simulateVoiceToText}
-                        class="flex items-center gap-3 px-6 py-3 rounded-2xl font-black text-sm transition-all
-                        {isRecording
-                            ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/20'
-                            : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}"
+                        onclick={addWritingPrompt}
+                        data-testid="writing-prompt"
+                        title="Adds a reflection question to your draft"
+                        class="flex items-center gap-3 px-6 py-3 rounded-2xl font-black text-sm transition-all bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
                     >
-                        {#if isRecording}
-                            <div class="flex gap-1">
-                                <span
-                                    class="w-1 h-3 bg-white/50 rounded-full animate-bounce"
-                                ></span>
-                                <span
-                                    class="w-1 h-5 bg-white rounded-full animate-bounce"
-                                    style="animation-delay: 0.1s"
-                                ></span>
-                                <span
-                                    class="w-1 h-3 bg-white/50 rounded-full animate-bounce"
-                                    style="animation-delay: 0.2s"
-                                ></span>
-                            </div>
-                            Recording...
-                        {:else}
-                            <Mic size={18} class="text-primary" />
-                            Voice Reflection
-                        {/if}
+                        <Sparkles size={18} class="text-primary" />
+                        A gentle prompt
                     </button>
                     <button
                         onclick={saveToVault}
@@ -1121,68 +1149,27 @@
                             (generatedLetter = content)}
                     />
 
-                    <!-- Status Cards Stacked -->
+                    <!-- Status card: what is true about where a letter is kept -->
                     <div class="space-y-4">
                         <div
-                            class="bg-blue-50 p-6 rounded-2xl border border-blue-100 flex gap-4"
-                        >
-                            <div
-                                class="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center shrink-0"
-                            >
-                                <Printer size={20} />
-                            </div>
-                            <div>
-                                <h4
-                                    class="font-black text-blue-900 text-xs uppercase tracking-widest mb-1"
-                                >
-                                    Print Ready
-                                </h4>
-                                <p
-                                    class="text-[11px] text-blue-800/70 font-medium leading-tight"
-                                >
-                                    Download as PDF for physical storage.
-                                </p>
-                            </div>
-                        </div>
-                        <div
-                            class="bg-amber-50 p-6 rounded-2xl border border-amber-100 flex gap-4"
-                        >
-                            <div
-                                class="w-10 h-10 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center shrink-0"
-                            >
-                                <ShieldCheck size={20} />
-                            </div>
-                            <div>
-                                <h4
-                                    class="font-black text-amber-900 text-xs uppercase tracking-widest mb-1"
-                                >
-                                    Encrypted
-                                </h4>
-                                <p
-                                    class="text-[11px] text-amber-800/70 font-medium leading-tight"
-                                >
-                                    Accessible only to you and designees.
-                                </p>
-                            </div>
-                        </div>
-                        <div
                             class="bg-emerald-50 p-6 rounded-2xl border border-emerald-100 flex gap-4"
+                            data-testid="letter-kept-note"
                         >
                             <div
                                 class="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center shrink-0"
                             >
-                                <Download size={20} />
+                                <Save size={20} />
                             </div>
                             <div>
                                 <h4
                                     class="font-black text-emerald-900 text-xs uppercase tracking-widest mb-1"
                                 >
-                                    Auto-Save
+                                    Kept in your account
                                 </h4>
                                 <p
                                     class="text-[11px] text-emerald-800/70 font-medium leading-tight"
                                 >
-                                    Saved locally during editing.
+                                    Each time you choose Save my letter, this letter is kept in your account, ready to open and continue on any device.
                                 </p>
                             </div>
                         </div>
