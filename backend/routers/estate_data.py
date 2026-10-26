@@ -143,6 +143,13 @@ SINGLETON_JSON_FIELDS = {"wishes", "budget", "transactions", "maintenance", "cla
 ASSET_CATEGORIES = {"properties", "digital_assets", "heirlooms"}
 
 
+def _encode_singleton_json(data: Dict[str, Any]) -> None:
+    """Singleton JSON text columns: clients may send objects/lists; store as JSON text (in place)."""
+    for k in SINGLETON_JSON_FIELDS & set(data):
+        if not isinstance(data[k], str):
+            data[k] = json.dumps(data[k])
+
+
 def _has(col):
     return func.coalesce(col, "") != ""
 
@@ -292,9 +299,7 @@ def create_item(
             validated_data["custom_attributes"] = json.dumps(validated_data["custom_attributes"])
 
         if data_type in SINGLETON_TYPES:
-            for k in SINGLETON_JSON_FIELDS & set(validated_data):
-                if not isinstance(validated_data[k], str):
-                    validated_data[k] = json.dumps(validated_data[k])  # clients may send objects/lists
+            _encode_singleton_json(validated_data)
             existing = session.exec(select(model).where(model.user_id == user.id).order_by(model.id)).first()
             if existing:  # upsert: update the user's one row instead of adding another
                 for k, v in validated_data.items():
@@ -359,6 +364,10 @@ def update_item(
         protected_found = PROTECTED_FIELDS & set(updates.keys())
         if protected_found:
             raise ValueError(f"Cannot update protected fields: {protected_found}")
+
+        if data_type in SINGLETON_TYPES:
+            updates = dict(updates)
+            _encode_singleton_json(updates)
 
         for key, value in updates.items():
             if key == "custom_attributes" and isinstance(value, dict):
