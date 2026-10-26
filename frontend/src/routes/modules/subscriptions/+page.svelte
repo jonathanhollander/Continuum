@@ -395,7 +395,7 @@
     </div>
 {:else}
 <div
-    class="container mx-auto px-6 py-8 space-y-8 animate-in fade-in duration-500"
+    class="container mx-auto px-8 py-8 space-y-8 animate-in fade-in duration-500"
 >
 
     <!-- AI Concierge Drafting Assistant -->
