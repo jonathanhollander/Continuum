@@ -103,7 +103,7 @@
                 <div class="p-6 space-y-5">
                     <p class="text-slate-700 text-left leading-relaxed">
                         <strong>Who should have access</strong> if something happens to you?
-                        Adding even one trusted person is the most impactful thing you can do today.
+                        A single trusted person is a lovely place to begin.
                     </p>
 
                     <!-- Benefits -->
@@ -129,7 +129,7 @@
                                 <Check class="w-4 h-4 text-green-600" />
                             </div>
                             <p class="text-sm text-slate-600">
-                                Your family will thank you for this step
+                                This is a gift to the people you love
                             </p>
                         </div>
                     </div>

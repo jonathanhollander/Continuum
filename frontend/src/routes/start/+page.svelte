@@ -14,6 +14,7 @@
     import { accessibilityStore } from "$lib/stores/accessibilityStore";
     import { preferenceStore } from "$lib/stores/preferenceStore";
     import { goto } from "$app/navigation";
+    import { auth } from "$lib/stores/auth";
 
     // Accessibility scale
     const fontSizeClass = $derived(
@@ -27,6 +28,8 @@
     );
 
     let ready = $state(false);
+    // Read before the layout's handoff pickup strips ?email from the URL
+    const handoffEmail = new URLSearchParams(window.location.search).get("email");
 
     onMount(() => {
         // Ensure concierge is closed on mount so user must choose
@@ -41,12 +44,26 @@
         }, delay);
     });
 
+    // A visitor without an account creates one first; the email from the
+    // marketing CTA (?email=) carries through to the signup form.
+    function sendToSignupIfNeeded(): boolean {
+        if ($auth.user || $auth.token) return false;
+        goto(
+            handoffEmail
+                ? `/signup?email=${encodeURIComponent(handoffEmail)}`
+                : "/signup",
+        );
+        return true;
+    }
+
     function startGuided() {
+        if (sendToSignupIfNeeded()) return;
         preferenceStore.setExpertMode(false);
         conciergeEngine.open();
     }
 
     function startExpert() {
+        if (sendToSignupIfNeeded()) return;
         preferenceStore.setExpertMode(true);
         preferenceStore.setOnboardingComplete(true);
         goto("/dashboard");
@@ -107,7 +124,7 @@
                 </div>
                 <span
                     class="text-xs font-bold uppercase tracking-[0.3em] text-indigo-400/60"
-                    >System Booting</span
+                    >Opening your space</span
                 >
             </div>
         {:else if !$conciergeEngine.isOpen}
@@ -163,14 +180,14 @@
                                 Expert Control
                             </h3>
                             <p class="text-sm text-slate-400 mt-2">
-                                Bypass the guide and go straight to the
-                                Dashboard. Best for returning experts.
+                                Go straight to your dashboard, if you know
+                                your way around.
                             </p>
                         </div>
                         <div
                             class="mt-auto flex items-center gap-2 text-slate-500 font-bold text-xs uppercase tracking-widest pt-4 group-hover:text-white transition-colors"
                         >
-                            <span>Skip to Dashboard</span>
+                            <span>Go to my dashboard</span>
                             <ArrowRight
                                 size={14}
                                 class="group-hover:translate-x-1 transition-transform"
@@ -193,8 +210,7 @@
                     <div>
                         <h3 class="text-white font-bold">Privacy Secured</h3>
                         <p class="text-sm text-slate-400">
-                            Your session is now active. I am ready to document
-                            your family and core estate details.
+                            I'm here whenever you'd like to begin.
                         </p>
                     </div>
                 </div>

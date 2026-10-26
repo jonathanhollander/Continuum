@@ -83,7 +83,7 @@
 
             notifications.showSuccess(
                 "Welcome back! Taking you to your vault...",
-                "Login Successful",
+                "Welcome back",
             );
 
             await auth.init();
@@ -100,12 +100,12 @@
 
             if (e.name === "NotAllowedError") {
                 notifications.showError({
-                    message: "Login was cancelled or timed out. Please try again.",
+                    message: "That sign-in paused. We can try again whenever you're ready.",
                     code: "AUTH_CANCELLED",
                 });
             } else if (e.name === "NotSupportedError") {
                 notifications.showError({
-                    message: "Your device does not support passkeys. Please use email link instead.",
+                    message: "An email link will open the door on this device.",
                     code: "PASSKEY_NOT_SUPPORTED",
                 });
                 showMagicLink = true;
@@ -120,7 +120,7 @@
     async function handleMagicLink() {
         if (!magicLinkEmail) {
             notifications.showError({
-                message: "We'll need your email address to continue.",
+                message: "Your email address will let us send your link.",
                 code: "VALIDATION_ERROR",
             });
             return;
@@ -297,7 +297,7 @@
                                 <p class="text-slate-300 text-sm">
                                     It's much safer than a password, and best of
                                     all: <strong class="text-white">
-                                        nothing to remember and nothing to type.
+                                        a way to sign in with what's already on your device.
                                     </strong>
                                 </p>
                             </div>
@@ -382,7 +382,7 @@
                                 </strong>
                             </p>
                             <p class="text-slate-400 text-base">
-                                Click the link in your email to continue. The link expires in 15 minutes.
+                                Your link is on its way. Open it from your email to continue; it stays open for 15 minutes.
                             </p>
                         </div>
 
@@ -399,7 +399,7 @@
             <!-- Sign Up Link -->
             <div class="text-center pt-6 border-t border-slate-800">
                 <p class="text-slate-400 text-lg">
-                    Don't have an account?
+                    New here?
                     <a
                         href={$page.url.searchParams.get("redirect")
                             ? `/signup?redirect=${encodeURIComponent($page.url.searchParams.get("redirect") ?? "")}`
