@@ -6,6 +6,7 @@
         Phone,
         Key,
         Wifi,
+        Plug,
         Droplets,
         Zap,
         Pencil,
@@ -33,6 +34,22 @@
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
+    function utilityIcon(t: string | null | undefined) {
+        switch ((t || "").trim().toLowerCase()) {
+            case "water": return Droplets;
+            case "electric":
+            case "electricity": return Zap;
+            case "gas": return Thermometer;
+            case "internet":
+            case "wifi":
+            case "wi-fi": return Wifi;
+            default: return Plug;
+        }
+    }
+    function utilityLabel(t: string | null | undefined) {
+        const v = (t || "").trim();
+        return v ? v.charAt(0).toUpperCase() + v.slice(1).toLowerCase() : "Utility";
+    }
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
 
     let viewMode = $state<ViewMode>('card');
@@ -266,7 +283,7 @@
                     onclick={() => (showVendorModal = false)}
                     class="px-4 py-2 font-bold text-slate-500 hover:text-slate-700 text-sm"
                 >
-                    Cancel
+                    Not right now
                 </button>
                 <button
                     onclick={saveVendor}
@@ -274,7 +291,7 @@
                     aria-busy={saving}
                     class="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-bold text-sm shadow-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
                 >
-                    <Save size={16} /> {saving ? "Saving..." : "Save Vendor"}
+                    <Save size={16} /> {saving ? "Saving..." : "Save my helper"}
                 </button>
             </div>
         </div>
@@ -346,7 +363,7 @@
                     onclick={() => (showCodeModal = false)}
                     class="px-4 py-2 font-bold text-slate-500 hover:text-slate-700 text-sm"
                 >
-                    Cancel
+                    Not right now
                 </button>
                 <button
                     onclick={saveCode}
@@ -354,7 +371,7 @@
                     aria-busy={saving}
                     class="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-bold text-sm shadow-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
                 >
-                    <Save size={16} /> {saving ? "Saving..." : "Save Code"}
+                    <Save size={16} /> {saving ? "Saving..." : "Save my access code"}
                 </button>
             </div>
         </div>
@@ -432,7 +449,7 @@
                     onclick={() => (showUtilityModal = false)}
                     class="px-4 py-2 font-bold text-slate-500 hover:text-slate-700 text-sm"
                 >
-                    Cancel
+                    Not right now
                 </button>
                 <button
                     onclick={saveUtility}
@@ -440,7 +457,7 @@
                     aria-busy={saving}
                     class="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-bold text-sm shadow-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
                 >
-                    <Save size={16} /> {saving ? "Saving..." : "Save Utility"}
+                    <Save size={16} /> {saving ? "Saving..." : "Save my utility details"}
                 </button>
             </div>
         </div>
@@ -449,6 +466,7 @@
 
 <div class="max-w-6xl mx-auto p-6 md:p-8 animate-in fade-in duration-500">
     <!-- Header -->
+    <div class="[&_.container]:px-0">
     <LivingBlueprintHeader
         title="The Home Operating Manual"
         subtitle="The instruction manual for your physical house"
@@ -456,6 +474,7 @@
         detailedDescription="Document your trusted vendors, access codes, and utility shutoff locations. Don't leave your family guessing how to turn off the water or who to call when something breaks."
         whyMatters="In a crisis, your family needs immediate access to critical home information. Without these details, simple tasks become overwhelming challenges during an already difficult time."
     />
+    </div>
 
     <!-- AI Concierge Drafting Assistant -->
     <AIPromptBar
@@ -801,7 +820,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 opacity-60">
                             {#each getSmartSamples($language).homeManual?.utilities || [] as sample}
                                 <GhostRow
-                                    name={`${sample.service_type} Shutoff`}
+                                    name={`${utilityLabel(sample.service_type)} Shutoff`}
                                     subtitle={sample.location}
                                     type="Utility"
                                     onClick={() => {
@@ -815,13 +834,8 @@
                                     }}
                                 >
                                     {#snippet icon()}
-                                        {#if sample.service_type === 'Water'}
-                                            <Droplets size={20} class="text-slate-400" />
-                                        {:else if sample.service_type === 'Gas'}
-                                            <Thermometer size={20} class="text-slate-400" />
-                                        {:else}
-                                            <Zap size={20} class="text-slate-400" />
-                                        {/if}
+                                        {@const SampleIcon = utilityIcon(sample.service_type)}
+                                        <SampleIcon size={20} class="text-slate-400" />
                                     {/snippet}
                                 </GhostRow>
                             {/each}
@@ -843,6 +857,7 @@
 
                         <div class="grid grid-cols-1 gap-4">
                             {#each utilitySync.items as item}
+                                {@const UtilIcon = utilityIcon(item.service_type)}
                                 <div
                                     class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-6 items-start relative group"
                                 >
@@ -865,15 +880,7 @@
                                     <div
                                         class="p-4 bg-primary/5 text-primary rounded-2xl shrink-0"
                                     >
-                                        {#if item.service_type === "Water"}
-                                            <Droplets size={32} />
-                                        {:else if item.service_type === "Electric"}
-                                            <Zap size={32} />
-                                        {:else if item.service_type === "Gas"}
-                                            <Thermometer size={32} />
-                                        {:else}
-                                            <Wifi size={32} />
-                                        {/if}
+                                        <UtilIcon size={32} />
                                     </div>
 
                                     <div class="flex-1 space-y-4">
@@ -881,7 +888,7 @@
                                             <h3
                                                 class="font-bold text-xl text-slate-800"
                                             >
-                                                {item.service_type} Shutoff
+                                                {utilityLabel(item.service_type)} Shutoff
                                             </h3>
                                             <p class="text-slate-500 text-sm">
                                                 Provider: {item.provider}
