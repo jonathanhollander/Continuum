@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { onMount } from "svelte";
     import { Globe } from "lucide-svelte";
     import { mLanguage, mt } from "$lib/stores/marketing";
     import { auth } from "$lib/stores/auth";
