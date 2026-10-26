@@ -429,9 +429,8 @@ class Client:
     def login(self):
         self.req("GET", "/api/csrf-token")  # sets the double-submit cookie
         tried = []
-        # Seeded dev user (backend/main.py:146-161), then the documented dev bypass
-        # (backend/routers/auth.py:231-244).
-        for user, pw in (("dev@continuum.im", "dev123"), ("jh@continuum.estate", "x")):
+        # Seeded dev user (backend/main.py).
+        for user, pw in (("dev@continuum.im", "dev123"),):
             st, resp = self.req("POST", "/api/auth/token", form={"username": user, "password": pw})
             if st == 200 and isinstance(resp, dict) and resp.get("access_token"):
                 self.token = resp["access_token"]
