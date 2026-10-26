@@ -148,7 +148,7 @@
         try {
             const blob = await buildDownloadCopy(snapshot, (m) => (downloadNote = m), filesReady ? files : undefined, fetchBlob);
             const safe = (s: string) => s.replace(/[^\w\- ]+/g, "").trim() || "Continuum";
-            saveBlob(blob, `${safe(ownerName)} - for ${safe(recipient.name)}.zip`);
+            saveBlob(blob, `${safe(packet.ownerName)} - for ${safe(recipient.name)}.zip`);
             downloadNote = "Your copy is saved. It opens in any browser, with every file beside it.";
         } catch {
             downloadNote = "The copy is taking a moment. You can try again shortly.";
