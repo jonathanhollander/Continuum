@@ -23,10 +23,12 @@
         addMemory as addVisualMemory,
         removeMemory as removeVisualMemory,
         toggleFavorite as toggleVisualFavorite,
+        addTagToMemories,
         syncAllMemories,
         type ExternalArchive,
     } from "$lib/stores/visualMemoryStore.svelte";
-    import { uploadMedia, updateMediaMetadata, isValidMediaType } from "$lib/services/mediaService";
+    import { uploadMedia, updateMediaMetadata, deleteMedia, isValidMediaType } from "$lib/services/mediaService";
+    import { get } from "svelte/store";
     import { notifications } from "$lib/stores/notificationStore";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
     import * as registryRaw from "$lib/data/registry.json";
@@ -139,19 +141,47 @@
             } as any);
             return;
         }
-        // addVisualMemory shows its own gentle message (with retry) when the record save pauses
-        const record = await addVisualMemory({
+        await saveRecord(media, {
             url: media.download_url,
             name: file.name.replace(/\.[^.]+$/, "").replace(/-|_/g, " "),
             type: file.type.startsWith("image/") ? "photo" : "video",
             tags: [],
             is_favorite: false,
             size: file.size,
-        }).catch(() => null);
-        if (record?.id != null) {
-            await updateMediaMetadata(media.id, undefined, String(record.id)).catch((e) =>
-                console.warn("[visual-memories] reference_id link paused", e),
-            );
+        });
+    }
+
+    // The record save shows its own gentle message with a retry. A retry reuses the
+    // uploaded file; closing that message without retrying removes the upload.
+    async function saveRecord(media: { id: number }, data: Parameters<typeof addVisualMemory>[0]) {
+        let retried = false;
+        const retry = () => {
+            retried = true;
+            return saveRecord(media, data);
+        };
+        try {
+            const record = await addVisualMemory(data, retry);
+            if (record?.id != null) {
+                await updateMediaMetadata(media.id, undefined, String(record.id)).catch((e) =>
+                    console.warn("[visual-memories] reference_id link paused", e),
+                );
+            }
+        } catch {
+            const noteId = get(notifications).filter((n) => n.type === "error").at(-1)?.id;
+            if (!noteId) return;
+            let unsub = () => {};
+            unsub = notifications.subscribe((list) => {
+                if (list.some((n) => n.id === noteId)) return;
+                unsub();
+                // A retry runs right after its message closes, so check once it has had the chance
+                queueMicrotask(() => {
+                    if (!retried) {
+                        deleteMedia(media.id).catch((e) =>
+                            console.warn("[visual-memories] upload removal paused", media.id, e),
+                        );
+                    }
+                });
+            });
         }
     }
 
@@ -189,22 +219,17 @@
     function handleBulkDeleteSubmit() {
         if (
             confirm(
-                `Remove ${selectedCount} memories? This action cannot be undone.`,
+                `Remove ${selectedCount} ${selectedCount === 1 ? "memory" : "memories"}?`,
             )
         ) {
-            // Bulk delete not explicitly implemented in SyncManager but we can map
             selectedIds.forEach((id) => removeVisualMemory(Number(id)));
             selectedIds = [];
             isSelectionMode = false;
         }
     }
 
-    function handleBulkTag(e: CustomEvent<string>) {
-        // Bulk tag not explicitly implemented in SyncManager but we can map
-        selectedIds.forEach((id) => {
-            // In a real app we'd have a bulk API, for now we do sequential updates if needed
-            // or just leave it for now if complex.
-        });
+    function handleBulkTag(tag: string) {
+        addTagToMemories(selectedIds.map(Number), tag);
         selectedIds = [];
         isSelectionMode = false;
     }
