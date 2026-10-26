@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlmodel import Session, select
 from backend.limiter import limiter
 from datetime import datetime, timedelta, timezone
+from backend.utils.clock import utc_now
 from backend.database import get_session, User
 from backend.auth import get_current_user
 import secrets
@@ -69,7 +70,7 @@ def get_status(user: User = Depends(get_current_user), session: Session = Depend
     # own last check-in + frequency_days; guardian check-ins are listed as such and never reset it.
     from backend.pulse_logic import (owner_last_checkin, guardian_checkin_since,
                                      current_escalation, alerts_paused_until)
-    now = datetime.utcnow()
+    now = utc_now()
     last_checkin = owner_last_checkin(session, user.id)
     since = last_checkin.timestamp if last_checkin else datetime.min
     guardian = guardian_checkin_since(session, user.id, since)
@@ -202,7 +203,7 @@ def get_portal_view(request: Request, token: str, session: Session = Depends(get
     contact = session.exec(statement).first()
     if not contact:
         raise HTTPException(status_code=404, detail="Invalid portal token")
-    if contact.portal_token_expires and contact.portal_token_expires < datetime.utcnow():
+    if contact.portal_token_expires and contact.portal_token_expires < utc_now():
         raise HTTPException(status_code=401, detail="Token expired")
 
     # 2. Get User Status
@@ -223,7 +224,7 @@ def get_portal_view(request: Request, token: str, session: Session = Depends(get
     pulse_settings = session.get(PulseSettings, user_id)
     frequency_days = pulse_settings.frequency_days if pulse_settings else PulseSettings().frequency_days
     user_status = "active" if (
-        last_checkin and datetime.utcnow() < last_checkin.timestamp + timedelta(days=frequency_days)
+        last_checkin and utc_now() < last_checkin.timestamp + timedelta(days=frequency_days)
     ) else "grace"
 
     return {
@@ -245,7 +246,7 @@ def get_portal_vault(request: Request, token: str, session: Session = Depends(ge
     contact = session.exec(select(PulseContact).where(PulseContact.portal_token == token)).first()
     if not contact:
         raise HTTPException(status_code=404, detail="Invalid portal token")
-    if contact.portal_token_expires and contact.portal_token_expires < datetime.utcnow():
+    if contact.portal_token_expires and contact.portal_token_expires < utc_now():
         raise HTTPException(status_code=401, detail="Token expired")
 
     # Same rule as the portal view: only once this outage's escalation (rows after the owner's
@@ -274,7 +275,7 @@ def get_portal_vault(request: Request, token: str, session: Session = Depends(ge
 def guardian_respond(request: Request, token: str, action: str, session: Session = Depends(get_session)):
     contact = session.exec(select(PulseContact).where(PulseContact.portal_token == token)).first()
     if not contact: raise HTTPException(status_code=404, detail="Invalid token")
-    if contact.portal_token_expires and contact.portal_token_expires < datetime.utcnow():
+    if contact.portal_token_expires and contact.portal_token_expires < utc_now():
         raise HTTPException(status_code=401, detail="Token expired")
         
     if action == "snooze":
@@ -365,7 +366,7 @@ def send_nudge(request: Request, token: str, session: Session = Depends(get_sess
     contact = session.exec(select(PulseContact).where(PulseContact.portal_token == token)).first()
     if not contact:
         raise HTTPException(status_code=404, detail="Invalid token")
-    if contact.portal_token_expires and contact.portal_token_expires < datetime.utcnow():
+    if contact.portal_token_expires and contact.portal_token_expires < utc_now():
         raise HTTPException(status_code=401, detail="Token expired")
 
     logger.info(
@@ -394,7 +395,7 @@ def confirm_contact(request: Request, token: str, session: Session = Depends(get
     contact = session.exec(select(PulseContact).where(PulseContact.portal_token == token)).first()
     if not contact:
         raise HTTPException(status_code=404, detail="Invalid token")
-    if contact.portal_token_expires and contact.portal_token_expires < datetime.utcnow():
+    if contact.portal_token_expires and contact.portal_token_expires < utc_now():
         raise HTTPException(status_code=401, detail="Token expired")
 
     # A guardian action, like a snooze: pauses new alerts, never the owner's own check-in
@@ -415,7 +416,7 @@ def start_safety_timer(minutes: int, purpose: str = "Walking home", user: User =
     existing = session.exec(select(PulseSafetyTimer).where(PulseSafetyTimer.user_id == user.id, PulseSafetyTimer.is_active == True)).all()
     for t in existing: t.is_active = False; session.add(t)
         
-    expires = datetime.utcnow() + timedelta(minutes=minutes)
+    expires = utc_now() + timedelta(minutes=minutes)
     timer = PulseSafetyTimer(user_id=user.id, expires_at=expires, purpose=purpose)
     session.add(timer)
     session.commit()

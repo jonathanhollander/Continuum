@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from backend.utils.clock import utc_now
 from typing import Optional, List
 from sqlalchemy import Column, JSON
 from sqlmodel import Field, SQLModel, create_engine, Session, select
@@ -13,7 +14,7 @@ class User(SQLModel, table=True):
     hashed_password: Optional[str] = Field(default=None)  # Password hash for email/password login
     public_key: Optional[str] = Field(default=None)  # WebAuthn Public Key (optional)
     sign_count: int = Field(default=0)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
     # User role for context-aware messaging (planning, executor, family, advisor)
     user_role: Optional[str] = Field(default="planning")  # planning | executor | family | advisor
     # Optional: User's emotional context (healthy, preparing, grieving)
@@ -38,7 +39,7 @@ class RefreshToken(SQLModel, table=True):
     user_id: int = Field(foreign_key="users.id", index=True)
     token_hash: str = Field(unique=True, index=True)  # SHA-256 hash of token
     expires_at: datetime
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
     revoked: bool = Field(default=False)
     # Optional: track device/session info
     device_info: Optional[str] = Field(default=None)
@@ -55,7 +56,7 @@ class Estate(SQLModel, table=True):
     # Secret Box (Encrypted on Client, Opaque to server)
     encrypted_vault: bytes = Field(default=b"") 
     
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=utc_now)
 
 from sqlalchemy import inspect, text
 from backend.estate_models import (

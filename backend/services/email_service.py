@@ -15,6 +15,7 @@ Features:
 import os
 import smtplib
 from datetime import datetime
+from backend.utils.clock import utc_now
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from pathlib import Path
@@ -173,7 +174,7 @@ class EmailService:
             if db_session and log_entry:
                 log_entry.status = result.get("status", "sent")
                 log_entry.provider_message_id = result.get("message_id")
-                log_entry.sent_at = datetime.utcnow()
+                log_entry.sent_at = utc_now()
                 db_session.add(log_entry)
                 db_session.commit()
 
@@ -273,13 +274,13 @@ class EmailService:
                     "provider": "smtp",
                     "recipient": to_email,
                     "subject": subject,
-                    "message_id": msg.get('Message-ID', 'smtp-' + datetime.utcnow().isoformat())
+                    "message_id": msg.get('Message-ID', 'smtp-' + utc_now().isoformat())
                 }}
             )
             return {
                 "status": "sent",
                 "provider": "smtp",
-                "message_id": msg.get('Message-ID', 'smtp-' + datetime.utcnow().isoformat())
+                "message_id": msg.get('Message-ID', 'smtp-' + utc_now().isoformat())
             }
         except Exception as e:
             logger.warning(

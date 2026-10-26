@@ -23,6 +23,7 @@ import json
 from pathlib import Path
 from logging.handlers import RotatingFileHandler
 from datetime import datetime
+from backend.utils.clock import utc_now
 from typing import Any, Dict, Optional
 
 # Will be set by setup_logging()
@@ -46,7 +47,7 @@ class JSONFormatter(logging.Formatter):
 
     def format(self, record):
         log_data = {
-            'timestamp': datetime.utcnow().isoformat(),
+            'timestamp': utc_now().isoformat(),
             'level': record.levelname,
             'logger': record.name,
             'message': record.getMessage(),

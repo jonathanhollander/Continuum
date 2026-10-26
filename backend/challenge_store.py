@@ -15,6 +15,7 @@ import json
 from abc import ABC, abstractmethod
 from typing import Any, Optional
 from datetime import datetime, timedelta
+from backend.utils.clock import utc_now
 from backend.config import settings
 from backend.utils.logger import get_logger
 
@@ -55,7 +56,7 @@ class InMemoryChallengeStore(ChallengeStoreInterface):
 
     def _cleanup_expired(self) -> None:
         """Remove expired challenges"""
-        now = datetime.utcnow()
+        now = utc_now()
         expired_keys = [k for k, v in self._expiry.items() if v < now]
         for key in expired_keys:
             self._store.pop(key, None)
@@ -65,13 +66,13 @@ class InMemoryChallengeStore(ChallengeStoreInterface):
         """Store a challenge with expiration"""
         self._cleanup_expired()
         self._store[key] = value
-        self._expiry[key] = datetime.utcnow() + timedelta(seconds=expire_seconds)
+        self._expiry[key] = utc_now() + timedelta(seconds=expire_seconds)
         logger.debug(f"Challenge stored: {key}")
 
     def get(self, key: str) -> Optional[Any]:
         """Get a challenge without removing it"""
         self._cleanup_expired()
-        if key in self._expiry and self._expiry[key] < datetime.utcnow():
+        if key in self._expiry and self._expiry[key] < utc_now():
             self.delete(key)
             return None
         return self._store.get(key)
@@ -135,7 +136,7 @@ class PostgresChallengeStore(ChallengeStoreInterface):
         with engine.connect() as conn:
             conn.execute(
                 text("DELETE FROM webauthn_challenges WHERE expires_at < :now"),
-                {"now": datetime.utcnow()}
+                {"now": utc_now()}
             )
             conn.commit()
 
@@ -144,7 +145,7 @@ class PostgresChallengeStore(ChallengeStoreInterface):
         from backend.database import engine
         from sqlmodel import text
 
-        expires_at = datetime.utcnow() + timedelta(seconds=expire_seconds)
+        expires_at = utc_now() + timedelta(seconds=expire_seconds)
         serialized = json.dumps(value)
 
         # Use upsert (INSERT ... ON CONFLICT)
@@ -177,7 +178,7 @@ class PostgresChallengeStore(ChallengeStoreInterface):
                     SELECT value FROM webauthn_challenges
                     WHERE key = :key AND expires_at > :now
                 """),
-                {"key": key, "now": datetime.utcnow()}
+                {"key": key, "now": utc_now()}
             ).fetchone()
 
             if result:
@@ -196,7 +197,7 @@ class PostgresChallengeStore(ChallengeStoreInterface):
                     SELECT value FROM webauthn_challenges
                     WHERE key = :key AND expires_at > :now
                 """),
-                {"key": key, "now": datetime.utcnow()}
+                {"key": key, "now": utc_now()}
             ).fetchone()
 
             # Delete the record

@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from backend.utils.clock import utc_now
 from typing import Optional, List, Any, Dict
 from sqlmodel import Field, SQLModel, JSON
 
@@ -9,7 +10,7 @@ class ActivityLogEntry(SQLModel, table=True):
 
     id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)  # server-generated UUID
     user_id: int = Field(foreign_key="users.id", index=True)
-    timestamp: datetime = Field(default_factory=datetime.utcnow, index=True)
+    timestamp: datetime = Field(default_factory=utc_now, index=True)
     module: str = Field(index=True)
     action: str = Field(index=True) # CREATE, UPDATE, DELETE, etc.
     entity_type: str = Field(index=True)
