@@ -53,6 +53,11 @@ from backend.pulse_models import (
 )
 from backend.models.email_log import EmailLog
 from backend.models.media import MediaFile
+from backend.models.automation_models import AutomationRule
+from backend.models.qr_models import QRAccessPack, QRAssetLabel
+from backend.models.acceptance_models import AcceptanceTask
+from backend.models.activity_models import ActivityLogEntry
+from backend.models.audit_log import AuditLog
 
 # Import SQLModel's metadata (all our models use SQLModel)
 from sqlmodel import SQLModel
