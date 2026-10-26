@@ -64,6 +64,9 @@ board, and it is the live checklist** (decision 9).
     - **Implement:** each proven finding becomes a U card, coded by its own subagent in its own worktree. The orchestrator approves it by diff review plus before/after screenshots at the same size, then merges it.
     - **Same rules:** desktop only, ponytail, no tests, no feature removal, no gates.
 
+14. **Production holds no live data** (owner, 2026-10-26: "you are approved to run anything against production. NO DATA IS LIVE AND NO DATA WILL BE LOST"). Production migrations, variables, backfills and redeploys run without asking; this lifts decision 4's "mixed records need an owner yes". Take a `pg_dump` first. Messaging real people and spending still need a yes.
+    - **Every push to `main` auto-deploys** (Railway is linked to the repo) and **deploys don't run migrations**: after merging a migration, run `alembic upgrade head` against production. 2026-10-26: production upgraded 817c6b026811 → e8b3d6a1c9f2 (backup `scratchpad/prod_backup_2026-10-26.dump`, 45 tables); `calendar_events.date` is now text, `assets.category` exists.
+
 ## Test register (decision 11)
 
 Every written test is listed here: approved before it is written, and completed after. There are no other tests.
