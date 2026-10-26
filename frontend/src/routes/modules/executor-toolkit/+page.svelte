@@ -146,7 +146,7 @@
 
     <!-- Navigation Tabs (Only show if no task selected) -->
     {#if !selectedTask}
-        <div class="flex flex-wrap justify-center gap-2 mb-8" in:fade>
+        <div class="flex flex-wrap gap-2 mb-8" in:fade>
             <button
                 onclick={() => (activeTab = "checklist")}
                 class="px-5 py-2 rounded-full font-bold text-sm transition-all {activeTab ===
@@ -256,7 +256,7 @@
             </div>
         {:else}
             <!-- Task List View -->
-            <div in:fade class="space-y-4 max-w-3xl mx-auto">
+            <div in:fade class="space-y-4 max-w-3xl">
                 {#each filteredTasks as task}
                     <div
                         role="button"
