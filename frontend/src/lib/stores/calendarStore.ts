@@ -1,6 +1,5 @@
 import { derived } from 'svelte/store';
 import { registerSync } from '../services/sync.svelte';
-import { getLegacy } from './persistence';
 
 export interface AnniversaryEvent {
     id: string | number;
@@ -52,25 +51,6 @@ const calendarMapper = (local: any): AnniversaryEvent => {
 };
 
 export const calendarSync = registerSync<AnniversaryEvent>('calendar_events', 'calendar_events', calendarMapper);
-
-// Migration Logic
-if (typeof window !== 'undefined') {
-    const legacy = getLegacy('continuum_calendar_events');
-    if (legacy && calendarSync.items.length === 0) {
-        try {
-            const parsed = JSON.parse(legacy);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-                console.log("Migrating calendar events...", parsed);
-                calendarSync.items = parsed.map(e => ({
-                    ...e,
-                    id: String(e.id)
-                }));
-            }
-        } catch (e) {
-            console.error("Calendar migration failed", e);
-        }
-    }
-}
 
 export const calendarStore = {
     subscribe: calendarSync.subscribe.bind(calendarSync),

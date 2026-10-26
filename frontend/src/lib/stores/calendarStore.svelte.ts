@@ -1,5 +1,9 @@
 import { derived } from 'svelte/store';
+import { get } from 'svelte/store';
 import { registerSync } from "$lib/services/sync.svelte";
+import { getLegacy } from "$lib/stores/persistence";
+import { activeAccountId } from "$lib/stores/keyringStore";
+import { auth } from "$lib/stores/auth";
 
 export interface AnniversaryEvent {
     id: string | number;
@@ -87,6 +91,45 @@ calendarSync.update = ((idOrData: any, partialData?: Partial<AnniversaryEvent>) 
         ? syncUpdate(pairAliases(idOrData.id, idOrData) as AnniversaryEvent)
         : syncUpdate(idOrData, pairAliases(idOrData, partialData || {}))) as typeof calendarSync.update;
 
+// --- One-time adoption of the pre-account device key ----------------------------------------
+// Events saved before accounts lived in the un-namespaced key 'continuum_calendar_events'. After a
+// successful sync for a signed-in account they are created in that account (skipping any already
+// there), then the key is removed. Never adopted while signed out ('anonymous').
+const LEGACY_KEY = 'continuum_calendar_events';
+const sameEvent = (a: any, b: any) =>
+    (a.title ?? '') === (b.title ?? '') && (a.date || '').replace(/-/g, '') === (b.date || '').replace(/-/g, '');
+
+let adopting: Promise<void> | null = null;
+function adoptLegacyEvents(): Promise<void> {
+    if (!adopting) adopting = runAdoption().finally(() => { adopting = null; });
+    return adopting;
+}
+
+async function runAdoption() {
+    const account = get(activeAccountId);
+    if (!account || !get(auth).token || calendarSync.status !== 'synced') return;
+    const raw = getLegacy(LEGACY_KEY);
+    if (raw === null) return;
+    let parsed: unknown;
+    try { parsed = JSON.parse(raw); } catch { return; }
+    const events = Array.isArray(parsed) ? parsed.filter(e => e && typeof e === 'object' && e.title) : [];
+    try {
+        for (const { id: _old, user_id: _u, ...event } of events) {
+            // Another account became active: the rest is not this run's.
+            if (get(activeAccountId) !== account || !get(auth).token) return;
+            if (calendarSync.items.some(i => sameEvent(i, event))) continue;
+            await calendarSync.create({ ...event, id: crypto.randomUUID() } as AnniversaryEvent, false, true);
+        }
+        if (get(activeAccountId) !== account) return;
+        localStorage.removeItem(LEGACY_KEY);
+    } catch (e) {
+        console.error('[calendar] Adopting earlier device events paused; it continues on the next visit', e);
+    }
+}
+
+const syncInit = calendarSync.init.bind(calendarSync);
+calendarSync.init = () => syncInit().then(adoptLegacyEvents);
+
 export const calendarStore = {
     get items() { return calendarSync.items; },
     get status() { return calendarSync.status; },
@@ -104,7 +147,7 @@ export const calendarStore = {
 
     removeEvent: (id: string | number) => calendarSync.delete(id),
 
-    sync: () => calendarSync.sync(),
+    sync: () => calendarSync.sync().then(adoptLegacyEvents),
 
     // Store Compatibility
     subscribe: calendarSync.subscribe.bind(calendarSync)
