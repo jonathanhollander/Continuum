@@ -1,7 +1,8 @@
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 import jwt
+import bcrypt
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -14,17 +15,6 @@ ALGORITHM = settings.JWT_ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
 REFRESH_TOKEN_EXPIRE_DAYS = settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS
 
-# Fix for passlib + bcrypt 4.0.0+ crashing on 72 byte limit check during initialization
-# This applies even if only using argon2 because passlib tries to load all handlers
-from passlib.handlers.bcrypt import _bcrypt
-if _bcrypt and hasattr(_bcrypt, "hashpw"):
-    import bcrypt
-    # Monkeypatch for passlib's BCrypt test that fails with bcrypt 4.0.0+
-    try:
-        from passlib.handlers.bcrypt import detect_wrap_bug
-    except ImportError:
-        pass
-
 pwd_context = CryptContext(schemes=["argon2", "bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/token", auto_error=False)
 
@@ -35,11 +25,21 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     # Pre-hash with SHA-256 to handle passwords longer than 72 bytes consistently
     # Argon2 handles long passwords, but SHA-256 ensures compatibility if we ever swap
     pre_hashed = hashlib.sha256(plain_password.encode()).hexdigest()
+    if hashed_password.startswith(("$2a$", "$2b$", "$2y$")):
+        # Legacy bcrypt hashes: passlib 1.7.4's bcrypt backend fails to load with
+        # bcrypt>=5 (its wrap-bug self-test raises ValueError on a >72-byte secret),
+        # so verify these directly. The 64-char hex pre-hash is under bcrypt's 72-byte limit.
+        return bcrypt.checkpw(pre_hashed.encode(), hashed_password.encode())
     return pwd_context.verify(pre_hashed, hashed_password)
 
 from backend.utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+def _utcnow_naive() -> datetime:
+    """Current UTC time without tzinfo, matching the naive-UTC DateTime columns (refresh_tokens.expires_at)."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 def get_password_hash(password: str) -> str:
     """Hash a password with SHA-256 pre-hashing for storing."""
@@ -49,10 +49,11 @@ def get_password_hash(password: str) -> str:
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
+    now = datetime.now(timezone.utc)
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = now + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = now + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -113,7 +114,7 @@ def create_refresh_token(user_id: int, session: Session, device_info: Optional[s
     token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
 
     # Calculate expiration
-    expires_at = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    expires_at = _utcnow_naive() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
 
     # Store in database
     refresh_token = RefreshToken(
@@ -144,7 +145,7 @@ def verify_refresh_token(raw_token: str, session: Session) -> Optional[User]:
         select(RefreshToken).where(
             RefreshToken.token_hash == token_hash,
             RefreshToken.revoked == False,
-            RefreshToken.expires_at > datetime.utcnow()
+            RefreshToken.expires_at > _utcnow_naive()
         )
     ).first()
 
@@ -221,7 +222,7 @@ def rotate_refresh_token(old_token: str, session: Session, device_info: Optional
         select(RefreshToken).where(
             RefreshToken.token_hash == token_hash,
             RefreshToken.revoked == False,
-            RefreshToken.expires_at > datetime.utcnow()
+            RefreshToken.expires_at > _utcnow_naive()
         )
     ).first()
 

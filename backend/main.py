@@ -160,8 +160,9 @@ def seed_dev_user():
                 logger.info("Dev user created: dev@continuum.im / dev123")
             else:
                 logger.info(f"Dev user already exists: id={existing.id}")
-    except Exception as e:
-        logger.error(f"Failed to seed dev user: {e}")
+    except Exception:
+        # Keep the server running, but log the full traceback so a seed failure is visible.
+        logger.exception("Failed to seed dev user")
 
 @app.on_event("shutdown")
 def on_shutdown():
@@ -502,5 +503,6 @@ if __name__ == "__main__":
         "backend.main:app",
         host=settings.HOST,
         port=settings.PORT,
-        reload=settings.is_development()
+        reload=settings.is_development(),
+        reload_dirs=[os.path.dirname(os.path.abspath(__file__))],  # backend/ only, not frontend/node_modules
     )
