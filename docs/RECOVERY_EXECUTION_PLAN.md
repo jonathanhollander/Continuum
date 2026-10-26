@@ -449,7 +449,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X80 | ☑ | 1a46aa6 | Insurance wizard opens on "Shall we walk through your insurance policies together…", No → `EXIT` 0 writes, quiet creates + one affirmation with retry of only waiting policies; ConciergeFlow's hidden `detail` and `complete` dispatch removed (all six callers use `oncomplete(answers)`). Also fixed: insurance wizard question sat off-screen (y=1201) because a lingering `animate-in` transform trapped the `fixed` overlay — `use:portal`. 1440×900: insurance 3 rows, 1 affirmation; five X60 wizards still pass; 0 errors |
 | X82 | ▶ | | |
 | X83 | ▶ | | |
-| X84 | ▶ | | |
+| X84 | ☑ | 4643e61 | `/pulse` "Last Verified" tile reads "Ready for your first check-in"; after settings + one check-in it shows the date ("Oct 26 2:49 AM"). 1440×900, 0 page errors |
 | X85 | ▶ | | |
 | X38 | ☑ | 6210bb6 | 1440×900: Mark Done + drill step 1 → reload keeps both, 0 error strips, 0 page errors, 0 requests to missing endpoints; values in account/profile-namespaced localStorage (same keys and shape). Generic `/api/data` needs a typed table and int ids, so device-only for now (→ X42) |
 | X42 | ☑ | 9a112ee | Migration a7c4e2f91b3d (up/down/up clean; production upgraded 2026-10-26, backup `scratchpad/prod_backup_pre_X42.dump`). 1440×900: X38 device value uploaded once; toggles POST with original step names; second context as the same user sees them, and its change shows back in the first; forced-500 keeps the toggle with the gentle line; a second account sees none; 0 page errors |
