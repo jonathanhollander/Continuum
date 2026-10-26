@@ -443,17 +443,22 @@ def save_estate_profile(profile: EstateProfilePayload, user: User = Depends(get_
 # We mount this at the root, but after all /api routes are defined
 # This handles CSS, JS, and image assets
 # Each mount is skipped when its directory is missing, so the API can run without a frontend build.
-if os.path.isdir("frontend/dist/_app"):
-    app.mount("/_app", StaticFiles(directory="frontend/dist/_app"), name="_app")
-if os.path.isdir("frontend/dist/images"):
-    app.mount("/images", StaticFiles(directory="frontend/dist/images"), name="images")
+# Resolved from this file, not the working directory, so the server finds the build from any cwd.
+from pathlib import Path
+DIST_DIR = Path(__file__).resolve().parent.parent / "frontend" / "dist"
+
+if (DIST_DIR / "_app").is_dir():
+    app.mount("/_app", StaticFiles(directory=DIST_DIR / "_app"), name="_app")
+if (DIST_DIR / "images").is_dir():
+    app.mount("/images", StaticFiles(directory=DIST_DIR / "images"), name="images")
 
 
 def _spa_index():
     # Without a frontend build there is no index.html; answer 404 instead of a 500 traceback.
-    if not os.path.isfile("frontend/dist/index.html"):
+    index_path = DIST_DIR / "index.html"
+    if not index_path.is_file():
         raise HTTPException(status_code=404, detail="Frontend build not found")
-    return FileResponse("frontend/dist/index.html")
+    return FileResponse(index_path)
 
 # Handle root specifically to avoid 404s
 @app.get("/")
@@ -472,7 +477,7 @@ async def serve_spa(full_path: str):
 
     # P1-High: Path traversal protection
     # Define the base directory for static files
-    base_dir = os.path.realpath("frontend/dist")
+    base_dir = os.path.realpath(DIST_DIR)
 
     # Check if the file exists in dist (e.g. /favicon.ico, /robots.txt)
     # Ensure full_path does not start with / to work with os.path.join correctly
@@ -484,11 +489,12 @@ async def serve_spa(full_path: str):
         return _spa_index()
 
     # Construct the file path
-    file_path = os.path.join("frontend", "dist", clean_path)
+    file_path = os.path.join(base_dir, clean_path)
 
     # Resolve to absolute path and verify it's within allowed directory
     resolved_path = os.path.realpath(file_path)
-    if not resolved_path.startswith(base_dir):
+    # Compare whole path components so a sibling like "dist-other" cannot pass a plain prefix test.
+    if os.path.commonpath([resolved_path, base_dir]) != base_dir:
         logger.warning(f"Blocked path traversal attempt: '{full_path}' resolved to '{resolved_path}'")
         raise HTTPException(status_code=403, detail="Access denied")
 
