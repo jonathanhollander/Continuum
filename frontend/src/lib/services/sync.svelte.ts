@@ -125,9 +125,30 @@ export class SyncManager<T extends { id: number | string }> {
     private uploading: Promise<unknown> = Promise.resolve();
     /** Account whose records are loaded; null after a logout clear. */
     loadedFor: string | null = null;
-    /** Latest update() per record id: a failed update reverts its fields only while it is still the newest. */
-    private updateSeq = new Map<string, number>();
+    /** Per record id with updates in flight: the row as the server last returned it (or as it was
+     *  before the first of them), each open update's fields by sequence, every field they touched,
+     *  and the last request, which the next update to that row waits for (the server applies them
+     *  in order). */
+    private rowWrites = new Map<string, { generation: number; base: any; open: Map<number, Partial<T>>; keys: Set<string>; last: Promise<unknown> }>();
     private updateCounter = 0;
+    /** Rows whose delete is in flight: an update to the row that settles meanwhile lands here, so a
+     *  failed delete restores the row as it now is. */
+    private removing = new Map<string, { generation: number; row: T }>();
+
+    /** Replace a row (in the list, or held by its in-flight delete); nothing after an account switch. */
+    private setRow(id: number | string, generation: number, next: (row: T) => T) {
+        if (generation !== this.generation) return;
+        const at = this.items.findIndex(i => String(i.id) === String(id));
+        if (at !== -1) {
+            this.items[at] = next(this.items[at]);
+            this.items = [...this.items];
+            setStored(this.key, this.items);
+            this.notify();
+            return;
+        }
+        const held = this.removing.get(String(id));
+        if (held && held.generation === generation) held.row = next(held.row);
+    }
 
     /** Account change: drop this manager's in-memory records. clear=true (logout) leaves storage alone;
      *  otherwise reload the records saved for the now-active account. */
@@ -374,15 +395,34 @@ export class SyncManager<T extends { id: number | string }> {
         const currentItem = this.items[index];
         const updatedItem = { ...currentItem, ...updates };
         const seq = ++this.updateCounter;
-        this.updateSeq.set(String(id), seq);
         const generation = this.generation;
+        const key = String(id);
+        let row = this.rowWrites.get(key);
+        if (!row || row.generation !== generation) {
+            row = { generation, base: { ...currentItem }, open: new Map(), keys: new Set(), last: Promise.resolve() };
+            this.rowWrites.set(key, row);
+        }
+        const entry = row;
+        entry.open.set(seq, updates);
+        for (const k of Object.keys(updates)) entry.keys.add(k);
+        const before = entry.last;
+        let settled!: () => void;
+        entry.last = new Promise<void>(r => { settled = r; });
         this.items[index] = updatedItem;
         this.items = [...this.items]; // trigger reactivity
         setStored(this.key, this.items);
         this.notify();
+        // This update's outcome is in: the row loses it from its open set (and its record when none is left).
+        const close = () => {
+            entry.open.delete(seq);
+            if (entry.open.size === 0 && this.rowWrites.get(key) === entry) this.rowWrites.delete(key);
+            settled();
+        };
 
         try {
             const token = get(auth).token;
+            // The previous update to this row reaches the server first, so the newest one is kept there.
+            await before;
             const payloadRaw = this.mapper ? this.mapper(updatedItem) : updatedItem;
             const payload = toWire(payloadRaw);
 
@@ -416,14 +456,16 @@ export class SyncManager<T extends { id: number | string }> {
             const remoteItemRaw = convertKeys(raw, toCamel);
             const remoteItem = this.mapper ? this.mapper(remoteItemRaw) : remoteItemRaw;
 
-            // Sync again with server data (by id: the list may have changed while this was in flight)
-            const at = this.items.findIndex(i => String(i.id) === String(id));
-            if (at !== -1 && generation === this.generation) {
-                this.items[at] = remoteItem;
-                this.items = [...this.items];
-                setStored(this.key, this.items);
-                this.notify();
-            }
+            // The server's row, with any newer update still in flight laid over it (those values
+            // stay on screen until their own answer comes back).
+            entry.base = remoteItem;
+            close();
+            if (entry.open.size === 0) entry.keys.clear();
+            this.setRow(id, generation, () => {
+                const next: any = { ...remoteItem };
+                for (const s of [...entry.open.keys()].sort((a, b) => a - b)) Object.assign(next, entry.open.get(s));
+                return next;
+            });
             this.status = "synced";
             this.lastSync = new Date();
 
@@ -435,19 +477,21 @@ export class SyncManager<T extends { id: number | string }> {
             return remoteItem;
         } catch (e: any) {
             console.error("Update failed, rolling back", e);
-            // Revert only this record's changed fields, and only while no newer update to it has
-            // started and the account is the same; every other change made meanwhile stays.
-            const at = this.items.findIndex(i => String(i.id) === String(id));
-            if (at !== -1 && generation === this.generation && this.updateSeq.get(String(id)) === seq) {
-                const reverted: any = { ...this.items[at] };
-                for (const k of Object.keys(updates)) {
-                    if (k in currentItem) reverted[k] = (currentItem as any)[k];
-                    else delete reverted[k];
-                }
-                this.items[at] = reverted;
-                this.items = [...this.items];
-                setStored(this.key, this.items);
-                this.notify();
+            // A newer update to this row is still open: it carries the whole row, so its answer
+            // decides. Otherwise every field these updates touched goes back to the server's
+            // latest row (an earlier update's answer, or the row before them); other fields stay.
+            close();
+            if (entry.open.size === 0) {
+                const keys = [...entry.keys];
+                entry.keys.clear();
+                this.setRow(id, generation, (r) => {
+                    const reverted: any = { ...r };
+                    for (const k of keys) {
+                        if (k in entry.base) reverted[k] = entry.base[k];
+                        else delete reverted[k];
+                    }
+                    return reverted;
+                });
             }
             this.status = "error";
             this.error = e?.message || "Failed to save";
@@ -468,6 +512,11 @@ export class SyncManager<T extends { id: number | string }> {
         const index = this.items.findIndex(i => String(i.id) === String(id));
         const removed = index === -1 ? null : this.items[index];
         const generation = this.generation;
+        const key = String(id);
+        // An update to this row that settles while the delete is in flight changes this copy.
+        const held = removed ? { generation, row: removed } : null;
+        if (held) this.removing.set(key, held);
+        const release = () => { if (this.removing.get(key) === held) this.removing.delete(key); };
         this.status = "syncing";
         this.error = null;
         this.items = this.items.filter(i => String(i.id) !== String(id));
@@ -492,6 +541,7 @@ export class SyncManager<T extends { id: number | string }> {
                 error.technicalDetails = `${errorDetail}\n\nEndpoint: DELETE ${this.apiBase}/${this.endpoint}/${id}`;
                 throw error;
             }
+            release();
             // Gone from the server: a later sync neither keeps its id as sent nor uploads it again.
             const sentIds = getStored<string[] | null>(this.sentKey, null);
             if (sentIds) setStored(this.sentKey, sentIds.filter(s => s !== String(id)));
@@ -504,12 +554,13 @@ export class SyncManager<T extends { id: number | string }> {
         } catch (e: any) {
             // Rollback
             console.error("Delete failed, rolling back", e);
-            // Put back only the removed record, at its place (the end if the list is now shorter);
-            // records added or changed meanwhile stay. Skipped after an account switch, or if a sync
-            // already brought it back.
-            if (removed && generation === this.generation && !this.items.some(i => String(i.id) === String(id))) {
+            // Put back only the removed record, at its place (the end if the list is now shorter),
+            // as any update that settled meanwhile left it; records added or changed meanwhile stay.
+            // Skipped after an account switch, or if a sync already brought it back.
+            release();
+            if (held && generation === this.generation && !this.items.some(i => String(i.id) === String(id))) {
                 const next = [...this.items];
-                next.splice(Math.min(index, next.length), 0, removed);
+                next.splice(Math.min(index, next.length), 0, held.row);
                 this.items = next;
                 setStored(this.key, this.items);
                 this.notify();
