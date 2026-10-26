@@ -25,11 +25,8 @@
     import SupportResources from '$lib/components/executor/SupportResources.svelte';
     import { getEncouragementMessage } from '$lib/utils/contextualMessages';
 
-    // Set executor mode if not already set
+    // Viewing this page leaves the saved role as it is; the Perspective switch in settings changes it
     onMount(() => {
-        if (!contextStore.isExecutor) {
-            contextStore.setRole('executor');
-        }
         estateAudit.runAudit();
     });
 
