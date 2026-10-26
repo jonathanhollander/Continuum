@@ -80,7 +80,7 @@ export async function fetchSnapshot(): Promise<Snapshot> {
     const res = await fetch(`${API_BASE_URL}/api/export/snapshot`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
     });
-    if (!res.ok) throw new Error('Your records are taking a moment to gather. You can try again shortly.');
+    if (!res.ok) throw new Error("Your records are safe in your account. You can gather them again whenever you're ready.");
     return res.json();
 }
 
@@ -615,7 +615,7 @@ export async function loadAttachmentFiles(
                 if (typeof v === 'string') out.set(a.key, dataUrlBlob(v));
             }
         } catch (e) {
-            console.warn('[export] Attachment is taking a moment to open', a.key, e);
+            console.warn('[export] Attachment open failed', a.key, e);
         }
         onProgress(`Gathering files (${++n} of ${attachments.length})...`);
     }));

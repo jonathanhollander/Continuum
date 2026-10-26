@@ -22,8 +22,8 @@
             <h1 class="font-serif text-4xl text-primary-deep">Your preview opens once you're signed in</h1>
             <a href={`/login?redirect=${encodeURIComponent($page.url.pathname)}`} class="inline-block px-5 py-3 rounded-xl bg-primary-deep text-white font-semibold">Sign in to continue</a>
         {:else}
-            <h1 class="font-serif text-4xl text-primary-deep">This is taking a moment</h1>
-            <p class="text-stone-600">Everything is kept safe. You can try again whenever you like.</p>
+            <h1 class="font-serif text-4xl text-primary-deep">Everything is kept safe</h1>
+            <p class="text-stone-600">You can open this page again whenever you like.</p>
             <button onclick={onretry} class="px-5 py-3 rounded-xl bg-primary-deep text-white font-semibold">Try again</button>
         {/if}
     </div>

@@ -48,7 +48,7 @@
                 .then((u) => (blobUrls = { ...blobUrls, [ref]: u }))
                 .catch((e) => {
                     requested.delete(ref);
-                    console.warn("[visual-memories] file is taking a moment to open", e);
+                    console.warn("[visual-memories] file open failed", e);
                 });
         }
     });

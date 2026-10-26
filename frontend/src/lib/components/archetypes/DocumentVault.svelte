@@ -180,7 +180,7 @@
             }
         } catch (e: any) {
             notifications.showError({
-                message: "Your copy is taking a moment to open. Try again when you're ready.",
+                message: "Your document is safe in your vault. You can open your copy again whenever you're ready.",
                 code: "NETWORK_ERROR",
                 technicalDetails: e?.message || String(e),
             } as any);

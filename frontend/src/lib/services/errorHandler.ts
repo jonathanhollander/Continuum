@@ -72,7 +72,7 @@ function getGenericErrorMessage(status: number): string {
         case 500:
             return `That paused on our side for a moment. We can try again whenever you're ready.`;
         case 503:
-            return `Connecting is taking a moment. We can try again shortly.`;
+            return `Everything you've saved is safe. We can try again whenever you're ready.`;
         default:
             return `That paused for a moment. We can try again together, or support is here to help.`;
     }
@@ -86,7 +86,7 @@ export function handleFetchError(error: unknown): ErrorDetails {
 
     if (error instanceof TypeError && error.message.includes('fetch')) {
         return {
-            message: `Connecting is taking a moment. Once your internet connection is back, we can try again.`,
+            message: `Everything you've saved is safe. Once your internet connection is back, we can try again.`,
             code: 'NETWORK_ERROR'
         };
     }
@@ -159,7 +159,7 @@ export function getErrorTitle(code?: string): string {
             return 'Connecting';
 
         case 'SERVICE_UNAVAILABLE':
-            return 'Taking a moment';
+            return 'Ready when you are';
 
         case 'FILE_TOO_LARGE':
             return 'A smaller copy will fit';

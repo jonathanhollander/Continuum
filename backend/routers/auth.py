@@ -218,7 +218,7 @@ def signup(request: Request, signup_data: SignupRequest, session: Session = Depe
         # Don't fail signup if email fails - add warning instead
         warnings.append(WarningMessage(
             code="EMAIL_FAILED",
-            message="Your account is ready, and signing in works now. Your welcome email is taking a moment. We're here if you'd like help.",
+            message="Your account is ready, and signing in works now. We're here if you'd like help.",
             severity="warning"
         ))
 

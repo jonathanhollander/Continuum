@@ -194,7 +194,7 @@ export async function fetchMediaBlob(ref: MediaRef): Promise<Blob> {
         } catch {
             body = null;
         }
-        throw new Error(messageFrom(body, 'This file is taking a moment to open. You can try again shortly.'));
+        throw new Error(messageFrom(body, "This file is safe in your account. You can open it again whenever you're ready."));
     }
     return response.blob();
 }
@@ -257,7 +257,7 @@ export async function listMedia(module?: string, referenceId?: string): Promise<
     const response = await fetch(`${API_BASE}/${params.toString() ? '?' + params : ''}`, {
         headers: authHeaders()
     });
-    if (!response.ok) throw new Error('Your files are taking a moment to gather. You can try again shortly.');
+    if (!response.ok) throw new Error("Your files are safe in your account. You can gather them again whenever you're ready.");
     return response.json();
 }
 

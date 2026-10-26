@@ -218,7 +218,7 @@
             saveBlob(blob, `${safe(packet.ownerName)} - for ${safe(recipient.name)}.zip`);
             downloadNote = "Your copy is saved. It opens in any browser, with every file beside it.";
         } catch {
-            downloadNote = "The copy is taking a moment. You can try again shortly.";
+            downloadNote = "Everything here stays open to read. You can save a copy again whenever you're ready.";
         } finally {
             busy = null;
         }

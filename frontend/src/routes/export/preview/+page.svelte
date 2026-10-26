@@ -45,7 +45,7 @@
             pdfUrl = URL.createObjectURL(blob);
         } catch (e) {
             console.error(e);
-            note = (e as Error)?.message || "Your packet is taking a moment to prepare. You can try again shortly.";
+            note = (e as Error)?.message || "Your records are safe in your account. You can prepare your packet again whenever you're ready.";
         } finally {
             loading = false;
         }
@@ -68,7 +68,7 @@
         try {
             saveBlob(await buildDownloadCopy(snapshot, (m) => (progress = m)), `Continuum_download_copy_${day()}.zip`);
         } catch (e) {
-            note = (e as Error)?.message || "The download copy is taking a moment. You can try again shortly.";
+            note = (e as Error)?.message || "Your packet is right here. You can save a download copy again whenever you're ready.";
         } finally {
             packing = false;
         }
