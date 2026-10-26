@@ -3,7 +3,6 @@
     import { onMount } from "svelte";
     import { API_BASE_URL } from "$lib/config";
     import {
-        AlertTriangle,
         Clock,
         CheckCircle2,
         Shield,
@@ -91,9 +90,9 @@
         <div class="max-w-md w-full space-y-6">
             <div class="text-center mb-8">
                 <div
-                    class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-background/50 border border-border backdrop-blur-md mb-4 text-warning"
+                    class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-background/50 border border-border backdrop-blur-md mb-4 text-primary"
                 >
-                    <AlertTriangle class="w-6 h-6" />
+                    <Shield class="w-6 h-6" />
                 </div>
                 <h1 class="text-xl font-serif text-foreground tracking-wide">
                     Checking in on {state.data?.user_name || "your loved one"}
@@ -112,7 +111,7 @@
                 <div
                     class="bg-background/60 border border-border rounded-2xl p-8 text-center backdrop-blur-md"
                 >
-                    <Shield class="w-12 h-12 text-warning mx-auto mb-4" />
+                    <Shield class="w-12 h-12 text-primary mx-auto mb-4" />
                     {#if !state.offline}
                         <h2 class="text-lg font-medium text-foreground mb-2">
                             This link has rested

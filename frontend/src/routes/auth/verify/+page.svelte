@@ -4,7 +4,7 @@
     import { page } from "$app/stores";
     import { API_BASE_URL } from "$lib/config";
     import { auth, storeTokens } from "$lib/stores/auth";
-    import { Shield, CheckCircle2, AlertCircle, Loader2 } from "lucide-svelte";
+    import { Shield, CheckCircle2, Loader2 } from "lucide-svelte";
     import { fade, fly } from "svelte/transition";
 
     let status: "verifying" | "success" | "error" = "verifying";
@@ -118,9 +118,9 @@
                     in:fly={{ y: 20, duration: 300 }}
                 >
                     <div
-                        class="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto border border-red-500/30"
+                        class="w-20 h-20 bg-teal-500/20 rounded-full flex items-center justify-center mx-auto border border-teal-500/30"
                     >
-                        <AlertCircle size={48} class="text-red-400" />
+                        <Shield size={48} class="text-teal-400" />
                     </div>
                     <div class="space-y-3">
                         <h3 class="text-white font-bold text-3xl">
