@@ -491,13 +491,7 @@
 						<!-- Header Actions -->
 						<div class="flex items-center gap-6">
 							<!-- Take a Break Button (on the dark header its icon goes light) -->
-							<span
-								class="contents {isDarkHeader
-									? '[&>button]:text-white/80 [&>button:hover]:text-white [&>button:hover]:bg-white/10'
-									: ''}"
-							>
-								<TakeBreakButton variant="icon-only" />
-							</span>
+							<TakeBreakButton variant="icon-only" dark={isDarkHeader} />
 
 							<!-- Context-Aware Role Switcher -->
 							<RoleSwitcher dark={isDarkHeader} />
