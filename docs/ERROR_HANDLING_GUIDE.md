@@ -1,5 +1,7 @@
 # Error Handling Guide
 
+**Last Updated:** 2026-10-26 07:15 EST
+
 Comprehensive guide to error handling in Continuum SaaS.
 
 ## Overview
@@ -215,38 +217,30 @@ Located in `/frontend/src/lib/services/errorHandler.ts`:
 #### Basic Usage
 
 ```typescript
-import { handleApiRequest, parseApiError } from '$lib/services/errorHandler';
-
-// Method 1: Using handleApiRequest
-const result = await handleApiRequest(async () => {
-	const res = await fetch('/api/contacts', {
-		headers: { Authorization: `Bearer ${token}` }
-	});
-	return res;
-});
-
-if (result.ok) {
-	const data = await result.response.json();
-	// Use data
-} else {
-	// Show error to user
-	console.error(result.error.message);
-	notifications.showError(result.error);
-}
-
-// Method 2: Using apiFetch (simpler)
-import { apiFetch } from '$lib/services/errorHandler';
+import { apiFetch } from '$lib/api/client';
+import { parseApiError, handleFetchError } from '$lib/services/errorHandler';
+import { notifications } from '$lib/stores/notificationStore';
 
 try {
-	const contacts = await apiFetch('/api/contacts', {
-		headers: { Authorization: `Bearer ${token}` }
-	});
+	// apiFetch adds the Authorization header and returns the raw Response.
+	// A 401 signs the user out and redirects to /login.
+	const res = await apiFetch('/api/contacts');
+
+	if (!res.ok) {
+		// Server errors: parseApiError returns ErrorDetails with a compassionate message
+		notifications.showError(await parseApiError(res));
+		return;
+	}
+
+	const contacts = await res.json();
 	// Use contacts
 } catch (error) {
-	// error is ErrorDetails
-	notifications.showError(error);
+	// Network failures and timeouts: handleFetchError returns ErrorDetails
+	notifications.showError(handleFetchError(error));
 }
 ```
+
+`$lib/api/client` also exports `apiGet`, `apiPost`, `apiPut` and `apiDelete`. These return parsed JSON and throw an `Error` (with `code` and `details` set) whose message is already the gentle server message, so `notifications.showError(error)` accepts it directly.
 
 #### Error Details Interface
 
@@ -256,6 +250,7 @@ interface ErrorDetails {
 	code?: string; // Error code (e.g., "NOT_FOUND", "AUTH_FAILED")
 	details?: Record<string, any>; // Additional context
 	timestamp?: string;
+	technicalDetails?: string; // Technical message for the collapsed "Show details" toggle
 }
 ```
 
@@ -357,33 +352,36 @@ Update sync operations to use error handling:
 
 ```typescript
 import { notifications } from '$lib/stores/notificationStore';
-import { handleApiRequest } from '$lib/services/errorHandler';
+import { apiFetch } from '$lib/api/client';
+import { parseApiError, handleFetchError } from '$lib/services/errorHandler';
 
 async sync() {
     this.status = "syncing";
     this.error = null;
 
-    const result = await handleApiRequest(async () => {
-        const token = get(auth).token;
-        if (!token) throw new Error("No auth token");
+    try {
+        // apiFetch adds the auth header and signs the user out on a 401
+        const res = await apiFetch(`${this.apiBase}/${this.endpoint}`);
 
-        return await fetch(`${BASE_URL}${this.apiBase}/${this.endpoint}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-    });
+        if (!res.ok) {
+            const err = await parseApiError(res);
+            this.status = "error";
+            this.error = err.message;
 
-    if (!result.ok) {
+            // Show error to user
+            notifications.showError(err, () => this.sync());
+            return;
+        }
+
+        const data = await res.json();
+        this.updateLocal(data);
+        this.status = "synced";
+    } catch (error) {
+        const err = handleFetchError(error);
         this.status = "error";
-        this.error = result.error.message;
-
-        // Show error to user
-        notifications.showError(result.error, () => this.sync());
-        return;
+        this.error = err.message;
+        notifications.showError(err, () => this.sync());
     }
-
-    const data = await result.response.json();
-    this.updateLocal(data);
-    this.status = "synced";
 }
 ```
 
@@ -391,7 +389,8 @@ async sync() {
 
 ```svelte
 <script lang="ts">
-	import { apiFetch } from '$lib/services/errorHandler';
+	import { apiFetch } from '$lib/api/client';
+	import { parseApiError, handleFetchError } from '$lib/services/errorHandler';
 	import { notifications } from '$lib/stores/notificationStore';
 
 	let saving = $state(false);
@@ -399,16 +398,20 @@ async sync() {
 	async function handleSubmit() {
 		saving = true;
 		try {
-			const result = await apiFetch('/api/contacts', {
+			const res = await apiFetch('/api/contacts', {
 				method: 'POST',
 				body: JSON.stringify(formData)
 			});
 
+			if (!res.ok) {
+				notifications.showError(await parseApiError(res));
+				return;
+			}
+
 			notifications.showSuccess('Contact saved successfully!');
 			goto('/contacts');
 		} catch (error) {
-			// Error automatically shown by notification system
-			notifications.showError(error);
+			notifications.showError(handleFetchError(error));
 		} finally {
 			saving = false;
 		}
@@ -488,10 +491,15 @@ fetch('/api/contacts')
 
 // ✅ Good
 try {
-	const contacts = await apiFetch('/api/contacts');
+	const res = await apiFetch('/api/contacts');
+	if (!res.ok) {
+		notifications.showError(await parseApiError(res), () => loadContacts());
+		return;
+	}
+	const contacts = await res.json();
 	// Use contacts
 } catch (error) {
-	notifications.showError(error, () => loadContacts());
+	notifications.showError(handleFetchError(error), () => loadContacts());
 }
 ```
 
@@ -630,14 +638,20 @@ async function loadContacts() {
 **After**:
 
 ```typescript
-import { apiFetch } from '$lib/services/errorHandler';
+import { apiFetch } from '$lib/api/client';
+import { parseApiError, handleFetchError } from '$lib/services/errorHandler';
 import { notifications } from '$lib/stores/notificationStore';
 
 async function loadContacts() {
 	try {
-		contacts = await apiFetch('/api/contacts');
+		const res = await apiFetch('/api/contacts');
+		if (!res.ok) {
+			notifications.showError(await parseApiError(res), () => loadContacts());
+			return;
+		}
+		contacts = await res.json();
 	} catch (error) {
-		notifications.showError(error, () => loadContacts());
+		notifications.showError(handleFetchError(error), () => loadContacts());
 	}
 }
 ```
