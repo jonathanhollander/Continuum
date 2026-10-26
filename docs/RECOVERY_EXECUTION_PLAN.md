@@ -835,7 +835,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | U59 | ▶ | | |
 | U60 | ▶ | | |
 | U61 | ▶ | | |
-| U62 | ☐ (queued: 20-agent limit) | | |
+| U62 | ▶ | | |
 | U42 | ☑ | e127714 | Settings left-aligned like the dashboard (heading x 456 → 312); 5 profile inputs labelled (5 → 0 unlabelled); date of death shown to Executor and Family only (Owner 1 → 0). X156 confirm intact. 0 page errors. Finding → U62 |
 | G0 | ☐ (after Wave U) | | |
 | T0 | ☐ (after Wave U, with G0) | | |
