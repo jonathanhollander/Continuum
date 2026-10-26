@@ -91,6 +91,11 @@ export function handleFetchError(error: unknown): ErrorDetails {
         };
     }
 
+    // A thrown Error that already carries a gentle server message keeps it.
+    if (error instanceof Error && !(error instanceof TypeError) && error.name !== 'AbortError' && error.message) {
+        return { message: error.message, code: 'UNKNOWN_ERROR' };
+    }
+
     return {
         message: `Something unexpected happened. Please try again.`,
         code: 'UNKNOWN_ERROR',
