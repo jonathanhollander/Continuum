@@ -37,6 +37,9 @@
         onchange?: (val: string) => void;
     }>();
 
+    const fieldId = $props.id();
+    let textareaEl = $state<HTMLTextAreaElement | null>(null);
+
     let isDrawerOpen = $state(false);
     let mode = $state<"polish" | "draft">("polish");
     let isProcessing = $state(false);
@@ -51,7 +54,7 @@
     const activeSuggestions = $derived(
         (suggestions && suggestions.length > 0
             ? suggestions
-            : CONTEXT_SUGGESTIONS[context] || []) as string[],
+            : CONTEXT_SUGGESTIONS[context as WriterContext] || []) as string[],
     );
 
     async function handleGenerate() {
@@ -81,10 +84,19 @@
         }
     }
 
+    // A starter becomes the opening words of the field; the cursor lands after it.
     function useStarter(starter: string) {
-        mode = "draft";
-        bullets[0] = starter;
-        isDrawerOpen = true;
+        const end = /[?]$/.test(starter) ? "\n" : /[\p{L}\p{N}]$/u.test(starter) ? ": " : " ";
+        value = starter + end;
+        oninput?.(value);
+        onchange?.(value);
+        const el = textareaEl;
+        if (el) {
+            requestAnimationFrame(() => {
+                el.focus();
+                el.setSelectionRange(el.value.length, el.value.length);
+            });
+        }
     }
 
     function closeDrawer() {
@@ -106,13 +118,16 @@
 <div class="space-y-2 h-full">
     {#if label}
         <label
-            class="text-xs font-bold uppercase tracking-widest text-slate-500 ml-1"
+            for={fieldId}
+            class="block text-xs font-bold uppercase tracking-widest text-slate-500 ml-1"
             >{label}</label
         >
     {/if}
 
     <div class="relative group h-full">
         <textarea
+            id={fieldId}
+            bind:this={textareaEl}
             bind:value
             {placeholder}
             oninput={handleInput}
@@ -123,29 +138,19 @@
             style="min-height: {minHeight}; height: {minimal ? '100%' : 'auto'}"
         ></textarea>
 
-        <!-- Empty State Suggestions -->
-        {#if !value && !isDrawerOpen}
-            <div
-                class="absolute top-12 left-4 right-12 z-0 opacity-50 pointer-events-none"
-            >
-                <div class="flex flex-wrap gap-2">
-                    {#each activeSuggestions as sug}
-                        <button
-                            class="pointer-events-auto text-[10px] font-bold uppercase tracking-wider bg-white border border-slate-200 px-2 py-1 rounded-md text-[#4A7C74] hover:bg-[#4A7C74] hover:text-white transition-colors flex items-center gap-1"
-                            onclick={() => useStarter(sug)}
-                        >
-                            <Lightbulb size={10} />
-                            {sug}
-                        </button>
-                    {/each}
-                </div>
+        <!-- Starters while empty: laid over the foot of a minimal (borderless) field, beneath a boxed one -->
+        {#if minimal && !value && !isDrawerOpen && activeSuggestions.length > 0}
+            <div class="absolute bottom-0 left-0 right-12 z-20">
+                {@render starters()}
             </div>
         {/if}
 
         <!-- Toggle Button -->
         <button
+            type="button"
+            aria-label="Writing help"
             onclick={() => (isDrawerOpen = !isDrawerOpen)}
-            class="absolute top-3 right-3 p-2 bg-white/80 backdrop-blur shadow-sm border border-slate-100 rounded-xl text-[#4A7C74] hover:scale-110 active:scale-95 transition-all opacity-0 group-hover:opacity-100 {isDrawerOpen
+            class="absolute top-3 right-3 z-20 p-2 bg-white/80 backdrop-blur shadow-sm border border-slate-100 rounded-xl text-[#4A7C74] hover:scale-110 active:scale-95 transition-all opacity-0 group-hover:opacity-100 {isDrawerOpen
                 ? '!opacity-100 bg-[#4A7C74] !text-white'
                 : ''}"
         >
@@ -175,18 +180,21 @@
 
                         <div class="flex items-center gap-2">
                             <button
+                                type="button"
                                 onclick={() => (suggestion = null)}
                                 class="flex-1 py-2 px-4 bg-white border border-slate-200 rounded-lg text-slate-500 font-bold text-xs hover:bg-slate-50 flex items-center justify-center gap-2"
                             >
                                 <X size={14} /> Discard
                             </button>
                             <button
+                                type="button"
                                 onclick={handleGenerate}
                                 class="flex-1 py-2 px-4 bg-white border border-slate-200 rounded-lg text-[#4A7C74] font-bold text-xs hover:bg-slate-50 flex items-center justify-center gap-2"
                             >
                                 <RefreshCw size={14} /> Try Again
                             </button>
                             <button
+                                type="button"
                                 onclick={acceptSuggestion}
                                 class="flex-1 py-2 px-4 bg-[#4A7C74] text-white rounded-lg font-bold text-xs hover:bg-[#3b635d] flex items-center justify-center gap-2 shadow-sm"
                             >
@@ -200,6 +208,7 @@
                         <!-- Tabs -->
                         <div class="flex border-b border-slate-100">
                             <button
+                                type="button"
                                 class="flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors {mode ===
                                 'polish'
                                     ? 'bg-[#FBF9EB] text-[#4A7C74]'
@@ -209,6 +218,7 @@
                                 Polish Tone
                             </button>
                             <button
+                                type="button"
                                 class="flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors {mode ===
                                 'draft'
                                     ? 'bg-[#FBF9EB] text-[#4A7C74]'
@@ -236,6 +246,7 @@
                                         class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#4A7C74]"
                                     />
                                     <button
+                                        type="button"
                                         onclick={handleGenerate}
                                         disabled={!value || isProcessing}
                                         class="w-full py-2 bg-white border border-slate-200 text-[#4A7C74] rounded-lg font-bold text-xs hover:bg-white/80 disabled:opacity-50 transition-all flex items-center justify-center gap-2 mt-4"
@@ -261,6 +272,7 @@
                                         />
                                     {/each}
                                     <button
+                                        type="button"
                                         onclick={handleGenerate}
                                         disabled={isProcessing}
                                         class="w-full py-2 bg-[#4A7C74] text-white rounded-lg font-bold text-xs hover:bg-[#3b635d] disabled:opacity-50 transition-all flex items-center justify-center gap-2 mt-2"
@@ -282,4 +294,23 @@
             </div>
         {/if}
     </div>
+
+    {#if !minimal && !value && !isDrawerOpen && activeSuggestions.length > 0}
+        {@render starters()}
+    {/if}
 </div>
+
+{#snippet starters()}
+    <div class="flex flex-wrap gap-2">
+        {#each activeSuggestions as sug}
+            <button
+                type="button"
+                class="text-xs font-semibold bg-white border border-slate-200 px-2.5 py-1 rounded-md text-[#3b635d] hover:bg-[#4A7C74] hover:text-white transition-colors flex items-center gap-1"
+                onclick={() => useStarter(sug)}
+            >
+                <Lightbulb size={12} aria-hidden="true" />
+                {sug}
+            </button>
+        {/each}
+    </div>
+{/snippet}

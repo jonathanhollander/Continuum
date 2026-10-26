@@ -723,14 +723,13 @@
                 </p>
             </div>
 
-            <!-- 140px keeps SmartTextarea's starter chips (absolutely placed behind the textarea) from showing below it. -->
             <div class="space-y-1">
                 <SmartTextarea
                     bind:value={newContact.notes}
                     context="contact"
                     placeholder="Private notes for the caller (e.g. 'Be gentle, they are fragile')"
                     label="Caller Notes"
-                    minHeight="140px"
+                    minHeight="100px"
                 />
             </div>
 
