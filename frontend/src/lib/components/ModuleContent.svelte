@@ -4,7 +4,6 @@
         CircleCheck,
         Circle,
         FileText,
-        ArrowRight,
         BookOpen,
         CircleAlert,
     } from "lucide-svelte";
@@ -164,69 +163,6 @@
 
         <!-- Sidebar / Resources -->
         <div class="space-y-6">
-            <section
-                class="bg-secondary/5 border border-border/50 rounded-xl p-6"
-            >
-                <h3
-                    class="font-bold text-sm uppercase tracking-wider text-muted-foreground mb-4"
-                >
-                    Quick Resources
-                </h3>
-                <ul class="space-y-3">
-                    <li>
-                        <!-- Placeholder links, kept as they are. -->
-                        <!-- svelte-ignore a11y_invalid_attribute -->
-                        <a
-                            href="#"
-                            class="flex items-center justify-between group p-2 hover:bg-background rounded transition-colors text-sm"
-                        >
-                            <span
-                                class="group-hover:text-primary transition-colors"
-                                >Download Template PDF</span
-                            >
-                            <ArrowRight
-                                size={14}
-                                class="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all text-primary"
-                            />
-                        </a>
-                    </li>
-                    <li>
-                        <!-- Placeholder links, kept as they are. -->
-                        <!-- svelte-ignore a11y_invalid_attribute -->
-                        <a
-                            href="#"
-                            class="flex items-center justify-between group p-2 hover:bg-background rounded transition-colors text-sm"
-                        >
-                            <span
-                                class="group-hover:text-primary transition-colors"
-                                >Digital Vault Instructions</span
-                            >
-                            <ArrowRight
-                                size={14}
-                                class="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all text-primary"
-                            />
-                        </a>
-                    </li>
-                    <li>
-                        <!-- Placeholder links, kept as they are. -->
-                        <!-- svelte-ignore a11y_invalid_attribute -->
-                        <a
-                            href="#"
-                            class="flex items-center justify-between group p-2 hover:bg-background rounded transition-colors text-sm"
-                        >
-                            <span
-                                class="group-hover:text-primary transition-colors"
-                                >Legal Review Checklist</span
-                            >
-                            <ArrowRight
-                                size={14}
-                                class="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all text-primary"
-                            />
-                        </a>
-                    </li>
-                </ul>
-            </section>
-
             <section
                 class="bg-primary/5 border border-primary/10 rounded-xl p-6"
             >
