@@ -12,7 +12,7 @@
 
     <!-- Horizon Glow -->
     <div
-        class="absolute bottom-0 left-0 right-0 h-[50vh] bg-gradient-to-t from-indigo-900/10 via-slate-900/0 to-transparent opacity-50"
+        class="absolute bottom-0 left-0 right-0 h-[50vh] bg-gradient-to-t from-primary/10 via-slate-900/0 to-transparent opacity-50"
     ></div>
 
     <!-- The Grid Floor -->
@@ -20,10 +20,10 @@
 
     <!-- Floating Aurora Elements -->
     <div
-        class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/10 rounded-full blur-[120px] animate-drift"
+        class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] animate-drift"
     ></div>
     <div
-        class="absolute bottom-[10%] right-[-5%] w-[30%] h-[30%] bg-emerald-500/5 rounded-full blur-[100px] animate-drift-delayed"
+        class="absolute bottom-[10%] right-[-5%] w-[30%] h-[30%] bg-success/5 rounded-full blur-[100px] animate-drift-delayed"
     ></div>
 </div>
 
@@ -31,12 +31,12 @@
     .perspective-grid {
         background-image: linear-gradient(
                 to right,
-                rgba(99, 102, 241, 0.1) 1px,
+                color-mix(in srgb, var(--color-primary) 10%, transparent) 1px,
                 transparent 1px
             ),
             linear-gradient(
                 to bottom,
-                rgba(99, 102, 241, 0.1) 1px,
+                color-mix(in srgb, var(--color-primary) 10%, transparent) 1px,
                 transparent 1px
             );
         background-size: 60px 60px;

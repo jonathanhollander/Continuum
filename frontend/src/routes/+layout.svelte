@@ -355,7 +355,7 @@
 	<div
 		dir={$language === "he" ? "rtl" : "ltr"}
 		class="min-h-screen flex flex-col font-sans {isDashboardRoute
-			? 'bg-[#0F1115] text-white'
+			? 'surface-dark bg-background text-foreground'
 			: 'bg-background text-foreground'}"
 	>
 		<a

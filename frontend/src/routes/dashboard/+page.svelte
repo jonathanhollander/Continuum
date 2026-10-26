@@ -410,7 +410,7 @@
     });
 </script>
 
-<div class="min-h-screen text-slate-200 font-sans selection:bg-primary/30">
+<div class="min-h-screen text-foreground font-sans selection:bg-primary/30">
     <HolographicGrid />
 
     <!-- Executor Welcome Modal -->
@@ -426,13 +426,13 @@
             <!-- Welcome Header -->
             <div class="mb-8" in:fade={{ duration: 600 }}>
                 <div
-                    class="font-mono text-sm text-slate-400 uppercase tracking-[0.2em] mb-2"
+                    class="font-mono text-sm text-muted-foreground uppercase tracking-[0.2em] mb-2"
                 >
                     {greeting}<span class="animate-pulse">_</span>
                 </div>
-                <h1 class="font-serif text-3xl font-bold tracking-tight text-white">{$dict.dashboard}</h1>
+                <h1 class="font-serif text-3xl font-bold tracking-tight text-foreground">{$dict.dashboard}</h1>
                 {#if totalValue > 0}
-                    <div class="text-sm text-emerald-400/80">
+                    <div class="text-sm text-success">
                         {fill($dict.dashNet, { amount: currency.format(totalValue) })}
                     </div>
                 {/if}
@@ -453,19 +453,19 @@
                         class="bg-white/5 border border-white/10 rounded-xl p-4 text-center hover:bg-white/10 hover:border-primary/30 hover:scale-[1.02] transition-all cursor-pointer block"
                     >
                         <div class="flex items-center justify-center mb-2">
-                            <Users size={20} class="text-indigo-300" />
+                            <Users size={20} class="text-primary" />
                         </div>
                         {#if contactsLoading}
                             <div class="flex h-8 items-center justify-center" role="status" data-testid="tile-loading">
-                                <Loader2 size={20} class="animate-spin text-indigo-300" />
+                                <Loader2 size={20} class="animate-spin text-primary" />
                                 <span class="sr-only">{$dict.dashGathering}</span>
                             </div>
                         {:else}
-                            <div class="text-2xl font-bold text-white">
+                            <div class="text-2xl font-bold text-foreground">
                                 {contactCount}
                             </div>
                         {/if}
-                        <div class="text-sm text-slate-400">
+                        <div class="text-sm text-muted-foreground">
                             {tileWord("contacts", contactCount)}
                         </div>
                         {#if !contactsLoading && !cardLoading("contacts")}
@@ -480,19 +480,19 @@
                         class="bg-white/5 border border-white/10 rounded-xl p-4 text-center hover:bg-white/10 hover:border-primary/30 hover:scale-[1.02] transition-all cursor-pointer block"
                     >
                         <div class="flex items-center justify-center mb-2">
-                            <Shield size={20} class="text-indigo-300" />
+                            <Shield size={20} class="text-primary" />
                         </div>
                         {#if policiesLoading}
                             <div class="flex h-8 items-center justify-center" role="status" data-testid="tile-loading">
-                                <Loader2 size={20} class="animate-spin text-indigo-300" />
+                                <Loader2 size={20} class="animate-spin text-primary" />
                                 <span class="sr-only">{$dict.dashGathering}</span>
                             </div>
                         {:else}
-                            <div class="text-2xl font-bold text-white">
+                            <div class="text-2xl font-bold text-foreground">
                                 {policyCount}
                             </div>
                         {/if}
-                        <div class="text-sm text-slate-400">
+                        <div class="text-sm text-muted-foreground">
                             {tileWord("policies", policyCount)}
                         </div>
                         {#if !policiesLoading && !cardLoading("insurance")}
@@ -508,19 +508,19 @@
                         class="bg-white/5 border border-white/10 rounded-xl p-4 text-center hover:bg-white/10 hover:border-primary/30 hover:scale-[1.02] transition-all cursor-pointer block"
                     >
                         <div class="flex items-center justify-center mb-2">
-                            <FileText size={20} class="text-indigo-300" />
+                            <FileText size={20} class="text-primary" />
                         </div>
                         {#if accountsLoading}
                             <div class="flex h-8 items-center justify-center" role="status" data-testid="tile-loading">
-                                <Loader2 size={20} class="animate-spin text-indigo-300" />
+                                <Loader2 size={20} class="animate-spin text-primary" />
                                 <span class="sr-only">{$dict.dashGathering}</span>
                             </div>
                         {:else}
-                            <div class="text-2xl font-bold text-white">
+                            <div class="text-2xl font-bold text-foreground">
                                 {accountCount}
                             </div>
                         {/if}
-                        <div class="text-sm text-slate-400">
+                        <div class="text-sm text-muted-foreground">
                             {tileWord("accounts", accountCount)}
                         </div>
                         {#if !accountsLoading && !cardLoading("financial")}
@@ -535,19 +535,19 @@
                         class="bg-white/5 border border-white/10 rounded-xl p-4 text-center hover:bg-white/10 hover:border-primary/30 hover:scale-[1.02] transition-all cursor-pointer block"
                     >
                         <div class="flex items-center justify-center mb-2">
-                            <Heart size={20} class="text-indigo-300" />
+                            <Heart size={20} class="text-primary" />
                         </div>
                         {#if medicalLoading}
                             <div class="flex h-8 items-center justify-center" role="status" data-testid="tile-loading">
-                                <Loader2 size={20} class="animate-spin text-indigo-300" />
+                                <Loader2 size={20} class="animate-spin text-primary" />
                                 <span class="sr-only">{$dict.dashGathering}</span>
                             </div>
                         {:else}
-                            <div class="text-2xl font-bold text-white">
+                            <div class="text-2xl font-bold text-foreground">
                                 {medicalCount}
                             </div>
                         {/if}
-                        <div class="text-sm text-slate-400">{$dict.dashMedical}</div>
+                        <div class="text-sm text-muted-foreground">{$dict.dashMedical}</div>
                         {#if !medicalLoading && !cardLoading("medical")}
                             <div class="mt-2 flex justify-center">
                                 <SyncBadge status={getModuleSyncStatus("medical")} size="md" showLabel={true} />
@@ -562,14 +562,14 @@
                 <div class="mb-8" in:fly={{ y: 20, duration: 600, delay: 400 }}>
                     <div class="relative w-full max-w-md mx-auto lg:mx-0 group">
                         <Search
-                            class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 size-4 transition-colors group-focus-within:text-indigo-300"
+                            class="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground size-4 transition-colors group-focus-within:text-primary"
                         />
                         <input
                             type="text"
                             aria-label={$dict.dashFindLabel}
                             bind:value={searchQuery}
                             placeholder={$dict.dashFindPlaceholder}
-                            class="w-full bg-slate-950/50 border border-white/10 rounded-xl pl-11 pr-4 py-3 text-white placeholder-slate-500 focus:border-primary/50 focus:outline-none transition-all backdrop-blur-sm"
+                            class="w-full bg-slate-950/50 border border-white/10 rounded-xl pl-11 pr-4 py-3 text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none transition-all backdrop-blur-sm"
                         />
                         <div
                             class="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary to-transparent opacity-0 group-focus-within:opacity-100 transition-opacity"
@@ -580,8 +580,8 @@
                 <!-- Status Key Cards (clickable to filter) -->
                 {#if !chipsAnswered}
                     <div class="mb-6 flex items-center gap-2" role="status" data-testid="chips-loading">
-                        <Loader2 size={14} class="animate-spin text-indigo-300" />
-                        <span class="text-xs text-slate-500">{$dict.dashGathering}</span>
+                        <Loader2 size={14} class="animate-spin text-primary" />
+                        <span class="text-xs text-muted-foreground">{$dict.dashGathering}</span>
                     </div>
                 {:else}
                 <div
@@ -590,54 +590,54 @@
                 >
                     <button
                         onclick={() => toggleStatusFilter("safe")}
-                        class="bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-1.5 flex items-center gap-2 cursor-pointer transition-all hover:bg-emerald-500/20 {filterByStatus ===
+                        class="bg-success/10 border border-success/20 rounded-lg px-3 py-1.5 flex items-center gap-2 cursor-pointer transition-all hover:bg-success/20 {filterByStatus ===
                         'safe'
-                            ? 'ring-2 ring-emerald-400 ring-offset-1 ring-offset-slate-900'
+                            ? 'ring-2 ring-success ring-offset-1 ring-offset-background'
                             : ''}"
                     >
                         <span
-                            class="w-2 h-2 rounded-full bg-emerald-400 shadow-sm"
-                            style="box-shadow: 0 0 4px rgb(52 211 153 / 0.4);"
+                            class="w-2 h-2 rounded-full bg-success shadow-sm"
+                            style="box-shadow: 0 0 4px color-mix(in srgb, var(--color-success) 40%, transparent);"
                         ></span>
-                        <span class="text-sm font-medium text-emerald-400"
+                        <span class="text-sm font-medium text-success"
                             >{statusSummary.safe}</span
                         >
-                        <span class="text-xs text-emerald-400/70"
+                        <span class="text-xs text-success"
                             >{statusName.safe}</span
                         >
                     </button>
                     {#if statusSummary.saving > 0}
                         <button
                             onclick={() => toggleStatusFilter("saving")}
-                            class="bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-1.5 flex items-center gap-2 cursor-pointer transition-all hover:bg-amber-500/20 {filterByStatus ===
+                            class="bg-info/10 border border-info/20 rounded-lg px-3 py-1.5 flex items-center gap-2 cursor-pointer transition-all hover:bg-info/20 {filterByStatus ===
                             'saving'
-                                ? 'ring-2 ring-amber-400 ring-offset-1 ring-offset-slate-900'
+                                ? 'ring-2 ring-info ring-offset-1 ring-offset-background'
                                 : ''}"
                         >
                             <span
-                                class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"
+                                class="w-2 h-2 rounded-full bg-info animate-pulse"
                             ></span>
-                            <span class="text-sm font-medium text-amber-400"
+                            <span class="text-sm font-medium text-info"
                                 >{statusSummary.saving}</span
                             >
-                            <span class="text-xs text-amber-400/70">{statusName.saving}</span
+                            <span class="text-xs text-info">{statusName.saving}</span
                             >
                         </button>
                     {/if}
                     {#if statusSummary.local > 0}
                         <button
                             onclick={() => toggleStatusFilter("local")}
-                            class="bg-sky-500/10 border border-sky-500/20 rounded-lg px-3 py-1.5 flex items-center gap-2 cursor-pointer transition-all hover:bg-sky-500/20 {filterByStatus ===
+                            class="bg-muted-foreground/10 border border-muted-foreground/20 rounded-lg px-3 py-1.5 flex items-center gap-2 cursor-pointer transition-all hover:bg-muted-foreground/20 {filterByStatus ===
                             'local'
-                                ? 'ring-2 ring-sky-400 ring-offset-1 ring-offset-slate-900'
+                                ? 'ring-2 ring-muted-foreground ring-offset-1 ring-offset-background'
                                 : ''}"
                         >
-                            <span class="w-2 h-2 rounded-full bg-sky-400"
+                            <span class="w-2 h-2 rounded-full bg-muted-foreground"
                             ></span>
-                            <span class="text-sm font-medium text-sky-400"
+                            <span class="text-sm font-medium text-muted-foreground"
                                 >{statusSummary.local}</span
                             >
-                            <span class="text-xs text-sky-400/70"
+                            <span class="text-xs text-muted-foreground"
                                 >{statusName.local}</span
                             >
                         </button>
@@ -646,38 +646,38 @@
                         <button
                             onclick={() =>
                                 toggleStatusFilter("attention-needed")}
-                            class="bg-orange-500/10 border border-orange-500/20 rounded-lg px-3 py-1.5 flex items-center gap-2 cursor-pointer transition-all hover:bg-orange-500/20 {filterByStatus ===
+                            class="bg-warning/10 border border-warning/20 rounded-lg px-3 py-1.5 flex items-center gap-2 cursor-pointer transition-all hover:bg-warning/20 {filterByStatus ===
                             'attention-needed'
-                                ? 'ring-2 ring-orange-400 ring-offset-1 ring-offset-slate-900'
+                                ? 'ring-2 ring-warning ring-offset-1 ring-offset-background'
                                 : ''}"
                         >
-                            <span class="w-2 h-2 rounded-full bg-orange-400"
+                            <span class="w-2 h-2 rounded-full bg-warning"
                             ></span>
-                            <span class="text-sm font-medium text-orange-400"
+                            <span class="text-sm font-medium text-warning"
                                 >{statusSummary.attention}</span
                             >
-                            <span class="text-xs text-orange-400/70"
+                            <span class="text-xs text-warning"
                                 >{statusName["attention-needed"]}</span
                             >
                         </button>
                     {/if}
                     <button
                         onclick={() => toggleStatusFilter("ready")}
-                        class="bg-slate-500/10 border border-slate-500/20 rounded-lg px-3 py-1.5 flex items-center gap-2 cursor-pointer transition-all hover:bg-slate-500/20 {filterByStatus ===
+                        class="bg-muted-foreground/10 border border-muted-foreground/20 rounded-lg px-3 py-1.5 flex items-center gap-2 cursor-pointer transition-all hover:bg-muted-foreground/20 {filterByStatus ===
                         'ready'
-                            ? 'ring-2 ring-slate-400 ring-offset-1 ring-offset-slate-900'
+                            ? 'ring-2 ring-muted-foreground ring-offset-1 ring-offset-background'
                             : ''}"
                     >
-                        <span class="w-2 h-2 rounded-full bg-slate-400"></span>
-                        <span class="text-sm font-medium text-slate-400"
+                        <span class="w-2 h-2 rounded-full bg-muted-foreground"></span>
+                        <span class="text-sm font-medium text-muted-foreground"
                             >{statusSummary.ready}</span
                         >
-                        <span class="text-xs text-slate-400/70">{statusName.ready}</span>
+                        <span class="text-xs text-muted-foreground">{statusName.ready}</span>
                     </button>
                     {#if filterByStatus}
                         <button
                             onclick={() => (filterByStatus = null)}
-                            class="ml-2 text-xs text-slate-500 hover:text-slate-300 underline"
+                            class="ml-2 text-xs text-muted-foreground hover:text-foreground underline"
                         >
                             {$dict.dashClearFilter}
                         </button>
@@ -688,7 +688,7 @@
                 <!-- Search Results -->
                 {#if searchResults !== null}
                     <div class="mb-8" in:fade={{ duration: 300 }}>
-                        <h2 class="text-lg text-slate-300 mb-5">
+                        <h2 class="text-lg text-foreground mb-5">
                             {searchResults.length === 0
                                 ? fill($dict.dashFindOther, { q: searchQuery })
                                 : fill(countWord($dict.dashResults, searchResults.length), { n: searchResults.length })}
@@ -715,34 +715,34 @@
                                         >
                                             <div
                                                 class="relative h-full rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] {status.inProgress
-                                                    ? 'bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 hover:border-emerald-500/40'
-                                                    : 'bg-white/5 border border-white/10 hover:border-indigo-500/40 hover:bg-white/10'}"
+                                                    ? 'bg-gradient-to-br from-success/10 to-success/5 border border-success/20 hover:border-success/40'
+                                                    : 'bg-white/5 border border-white/10 hover:border-primary/40 hover:bg-white/10'}"
                                             >
                                                 <div
                                                     class="p-5 h-full flex items-center gap-4"
                                                 >
                                                     <div
                                                         class="size-12 rounded-xl flex items-center justify-center flex-shrink-0 {status.inProgress
-                                                            ? 'bg-emerald-500/20'
-                                                            : 'bg-indigo-500/10'}"
+                                                            ? 'bg-success/20'
+                                                            : 'bg-primary/10'}"
                                                     >
                                                         <item.icon
                                                             size={24}
                                                             class={status.inProgress
-                                                                ? "text-emerald-400"
-                                                                : "text-indigo-400"}
+                                                                ? "text-success"
+                                                                : "text-primary"}
                                                         />
                                                     </div>
                                                     <div class="flex-1 min-w-0">
                                                         <h3
-                                                            class="font-semibold text-lg text-white break-words group-hover:text-indigo-300 transition-colors"
+                                                            class="font-semibold text-lg text-foreground break-words group-hover:text-primary transition-colors"
                                                         >
                                                             {navText(item.key, item.label)}
                                                         </h3>
-                                                        {#if item.isPreview}<span class="inline-block text-xs font-medium px-2 py-0.5 rounded-md bg-white/10 text-slate-300" data-testid="preview-tag">{$dict.earlyPreview}</span>{/if}
+                                                        {#if item.isPreview}<span class="inline-block text-xs font-medium px-2 py-0.5 rounded-md bg-white/10 text-foreground" data-testid="preview-tag">{$dict.earlyPreview}</span>{/if}
                                                         {#if status.count > 0}
                                                             <p
-                                                                class="text-sm text-emerald-400/80"
+                                                                class="text-sm text-success"
                                                             >
                                                                 {status.count}
                                                                 {status.label}
@@ -770,13 +770,13 @@
                 {:else if statusFilteredGroups !== null}
                     <!-- Status Filtered Results -->
                     <div class="mb-8" in:fade={{ duration: 300 }}>
-                        <h2 class="text-lg text-slate-300 mb-5">
+                        <h2 class="text-lg text-foreground mb-5">
                             {fill($dict.dashShowing, {
                                 status: statusName[filterByStatus ?? ""] ?? filterByStatus ?? "",
                             })}
                         </h2>
                         {#if statusFilteredGroups.length === 0}
-                            <p class="text-slate-400 text-center py-8">
+                            <p class="text-muted-foreground text-center py-8">
                                 {$dict.dashStatusEmpty}
                             </p>
                         {:else}
@@ -794,7 +794,7 @@
                                             class="px-6 py-4 border-b border-white/5"
                                         >
                                             <h2
-                                                class="text-lg font-semibold text-slate-200"
+                                                class="text-lg font-semibold text-foreground"
                                             >
                                                 {navText(group.groupKey, group.groupLabel)}
                                             </h2>
@@ -821,7 +821,7 @@
                                                     >
                                                         <div
                                                             class="relative h-full rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] {status.inProgress
-                                                                ? 'bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 hover:border-emerald-500/40'
+                                                                ? 'bg-gradient-to-br from-success/10 to-success/5 border border-success/20 hover:border-success/40'
                                                                 : 'bg-white/5 border border-white/10 hover:border-primary/40 hover:bg-white/10'}"
                                                         >
                                                             <div
@@ -829,35 +829,35 @@
                                                             >
                                                                 <div
                                                                     class="size-12 rounded-xl flex items-center justify-center flex-shrink-0 {status.inProgress
-                                                                        ? 'bg-emerald-500/20'
+                                                                        ? 'bg-success/20'
                                                                         : 'bg-primary/10'}"
                                                                 >
                                                                     <item.icon
                                                                         size={24}
                                                                         class={status.inProgress
-                                                                            ? "text-emerald-400"
-                                                                            : "text-indigo-300"}
+                                                                            ? "text-success"
+                                                                            : "text-primary"}
                                                                     />
                                                                 </div>
                                                                 <div
                                                                     class="flex-1 min-w-0"
                                                                 >
                                                                     <h3
-                                                                        class="font-semibold text-lg text-white group-hover:text-indigo-300 transition-colors break-words"
+                                                                        class="font-semibold text-lg text-foreground group-hover:text-primary transition-colors break-words"
                                                                     >
                                                                         {navText(item.key, item.label)}
                                                                     </h3>
-                                                                    {#if item.isPreview}<span class="inline-block text-xs font-medium px-2 py-0.5 rounded-md bg-white/10 text-slate-300" data-testid="preview-tag">{$dict.earlyPreview}</span>{/if}
+                                                                    {#if item.isPreview}<span class="inline-block text-xs font-medium px-2 py-0.5 rounded-md bg-white/10 text-foreground" data-testid="preview-tag">{$dict.earlyPreview}</span>{/if}
 {#if status.inProgress && status.count > 0}
                                                                         <p
-                                                                            class="text-sm text-emerald-400/80 mt-0.5"
+                                                                            class="text-sm text-success mt-0.5"
                                                                         >
                                                                             {status.count}
                                                                             {status.label}
                                                                         </p>
                                                                     {:else if status.inProgress}
                                                                         <p
-                                                                            class="text-sm text-emerald-400/80 mt-0.5"
+                                                                            class="text-sm text-success mt-0.5"
                                                                         >
                                                                             {$dict.dashStarted}
                                                                         </p>
@@ -907,17 +907,17 @@
                                         <div class="flex items-center gap-3">
                                             <Zap
                                                 size={20}
-                                                class="text-amber-400"
+                                                class="text-gold-text"
                                             />
                                             <h2
-                                                class="text-lg font-bold text-amber-400 uppercase tracking-wide"
+                                                class="text-lg font-bold text-gold-text uppercase tracking-wide"
                                             >
                                                 {navText(group.groupKey, group.groupLabel)}
                                             </h2>
                                         </div>
                                         {#if group.groupDescription}
                                             <p
-                                                class="text-base text-slate-400 mt-2 pl-8"
+                                                class="text-base text-muted-foreground mt-2 pl-8"
                                             >
                                                 {navDesc(group.groupKey, group.groupDescription)}
                                             </p>
@@ -934,13 +934,13 @@
                                         >
                                             <div>
                                                 <h2
-                                                    class="text-lg font-semibold text-slate-200"
+                                                    class="text-lg font-semibold text-foreground"
                                                 >
                                                     {navText(group.groupKey, group.groupLabel)}
                                                 </h2>
                                                 {#if group.groupDescription}
                                                     <p
-                                                        class="text-base text-slate-500 mt-1"
+                                                        class="text-base text-muted-foreground mt-1"
                                                     >
                                                         {navDesc(group.groupKey, group.groupDescription)}
                                                     </p>
@@ -949,12 +949,12 @@
                                             {#if isCollapsed}
                                                 <ChevronRight
                                                     size={20}
-                                                    class="text-slate-400"
+                                                    class="text-muted-foreground"
                                                 />
                                             {:else}
                                                 <ChevronDown
                                                     size={20}
-                                                    class="text-slate-400"
+                                                    class="text-muted-foreground"
                                                 />
                                             {/if}
                                         </div>
@@ -985,7 +985,7 @@
                                                 >
                                                     <div
                                                         class="relative h-full rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] {status.inProgress
-                                                            ? 'bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 hover:border-emerald-500/40'
+                                                            ? 'bg-gradient-to-br from-success/10 to-success/5 border border-success/20 hover:border-success/40'
                                                             : 'bg-white/5 border border-white/10 hover:border-primary/40 hover:bg-white/10'}"
                                                     >
                                                         <div
@@ -994,14 +994,14 @@
                                                             <!-- Icon -->
                                                             <div
                                                                 class="size-12 rounded-xl flex items-center justify-center flex-shrink-0 {status.inProgress
-                                                                    ? 'bg-emerald-500/20'
+                                                                    ? 'bg-success/20'
                                                                     : 'bg-primary/10'}"
                                                             >
                                                                 <item.icon
                                                                     size={24}
                                                                     class={status.inProgress
-                                                                        ? "text-emerald-400"
-                                                                        : "text-indigo-300"}
+                                                                        ? "text-success"
+                                                                        : "text-primary"}
                                                                 />
                                                             </div>
 
@@ -1010,21 +1010,21 @@
                                                                 class="flex-1 min-w-0"
                                                             >
                                                                 <h3
-                                                                    class="font-semibold text-lg text-white group-hover:text-indigo-300 transition-colors break-words"
+                                                                    class="font-semibold text-lg text-foreground group-hover:text-primary transition-colors break-words"
                                                                 >
                                                                     {navText(item.key, item.label)}
                                                                 </h3>
-                                                                {#if item.isPreview}<span class="inline-block text-xs font-medium px-2 py-0.5 rounded-md bg-white/10 text-slate-300" data-testid="preview-tag">{$dict.earlyPreview}</span>{/if}
+                                                                {#if item.isPreview}<span class="inline-block text-xs font-medium px-2 py-0.5 rounded-md bg-white/10 text-foreground" data-testid="preview-tag">{$dict.earlyPreview}</span>{/if}
 {#if status.inProgress && status.count > 0}
                                                                     <p
-                                                                        class="text-sm text-emerald-400/80 mt-0.5"
+                                                                        class="text-sm text-success mt-0.5"
                                                                     >
                                                                         {status.count}
                                                                         {status.label}
                                                                     </p>
                                                                 {:else if status.inProgress}
                                                                     <p
-                                                                        class="text-sm text-emerald-400/80 mt-0.5"
+                                                                        class="text-sm text-success mt-0.5"
                                                                     >
                                                                         {$dict.dashStarted}
                                                                     </p>
