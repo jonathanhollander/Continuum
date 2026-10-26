@@ -203,7 +203,7 @@
     {#if !draft}
         <div class={showMap ? "absolute bottom-6 right-6" : ""}>
             <button
-                class="flex items-center gap-2 px-6 py-3 bg-[#4A7C74] shadow-lg rounded-full font-bold text-white hover:bg-[#3a615b] transition-transform hover:scale-105 active:scale-95"
+                class="flex items-center gap-2 px-6 py-3 bg-primary shadow-lg rounded-full font-bold text-primary-foreground hover:bg-primary/90 transition-transform hover:scale-105 active:scale-95"
                 onclick={startAdd}
             >
                 <Plus size={20} />
@@ -279,32 +279,32 @@
 
                 <div class="flex flex-col gap-2">
                     <label
-                        class="flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-slate-50"
+                        class="flex items-center gap-3 px-4 py-3 rounded-xl border border-slate-200 bg-white cursor-pointer hover:bg-slate-50 transition-all"
                     >
                         <input
                             type="checkbox"
                             bind:checked={draft.isExecutor}
-                            class="text-[#4A7C74] focus:ring-[#4A7C74]"
+                            class="w-4 h-4 rounded accent-primary"
                         />
-                        <span class="text-sm font-medium">Designated Executor</span>
+                        <span class="text-sm font-medium text-slate-800">Designated Executor</span>
                         <Shield size={14} class="ml-auto text-slate-400" />
                     </label>
                     <label
-                        class="flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-slate-50"
+                        class="flex items-center gap-3 px-4 py-3 rounded-xl border border-slate-200 bg-white cursor-pointer hover:bg-slate-50 transition-all"
                     >
                         <input
                             type="checkbox"
                             bind:checked={draft.isBeneficiary}
-                            class="text-[#4A7C74] focus:ring-[#4A7C74]"
+                            class="w-4 h-4 rounded accent-primary"
                         />
-                        <span class="text-sm font-medium">Beneficiary</span>
+                        <span class="text-sm font-medium text-slate-800">Beneficiary</span>
                         <Crown size={14} class="ml-auto text-slate-400" />
                     </label>
                 </div>
 
-                <div class="pt-3 border-t">
+                <div class="pt-3 border-t border-slate-200">
                     <button
-                        class="w-full py-3 bg-[#4A7C74] text-white rounded-xl font-bold hover:shadow-lg transition-transform active:scale-95 disabled:opacity-50"
+                        class="w-full py-3 bg-primary text-primary-foreground rounded-xl font-bold hover:bg-primary/90 hover:shadow-lg transition-transform active:scale-95 disabled:opacity-50"
                         disabled={!String(draft.name ?? "").trim()}
                         onclick={save}
                     >

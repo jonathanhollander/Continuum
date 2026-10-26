@@ -58,8 +58,8 @@
     }
 
     // Export State
-    let selectedScope: ExportScope = "full";
-    let includeImages = true;
+    let selectedScope = $state<ExportScope>("full");
+    let includeImages = $state(true);
     let isSaving = $state(false);
 
     async function handleExport() {
@@ -131,12 +131,15 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <!-- Role Selection -->
             <div class="space-y-4">
-                <label
+                <span
+                    id="cs-perspective-label"
                     class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500"
                 >
                     {$dict.labelPerspective}
-                </label>
+                </span>
                 <div
+                    role="group"
+                    aria-labelledby="cs-perspective-label"
                     class="bg-slate-100 p-1 rounded-xl flex items-center gap-1"
                 >
                     {#each roles as role}
@@ -162,12 +165,17 @@
 
             <!-- Language Selection -->
             <div class="space-y-4">
-                <label
+                <span
+                    id="cs-language-label"
                     class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500"
                 >
                     {$dict.labelLanguages}
-                </label>
-                <div class="grid grid-cols-2 gap-2">
+                </span>
+                <div
+                    role="group"
+                    aria-labelledby="cs-language-label"
+                    class="grid grid-cols-2 gap-2"
+                >
                     {#each languages as lang}
                         <button
                             class="flex flex-col items-center justify-center p-3 rounded-xl border transition-all duration-200
@@ -462,6 +470,7 @@
             <!-- Theme Toggle -->
             <div class="bg-slate-50 p-1.5 rounded-xl flex items-center gap-1">
                 {#each [{ id: "light", icon: Sun, label: "Light" }, { id: "dark", icon: Moon, label: "Dark" }, { id: "system", icon: Monitor, label: "Auto" }] as theme}
+                    {@const ThemeIcon = theme.icon}
                     <button
                         class="flex-1 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-2
                         {$accessibilityStore.theme === theme.id
@@ -470,8 +479,7 @@
                         onclick={() =>
                             accessibilityStore.setTheme(theme.id as any)}
                     >
-                        <svelte:component
-                            this={theme.icon}
+                        <ThemeIcon
                             size={14}
                             class={$accessibilityStore.theme === theme.id
                                 ? "text-primary"
@@ -553,11 +561,16 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
                 <!-- Scope selection -->
                 <div class="space-y-3">
-                    <label
+                    <span
+                        id="cs-export-scope-label"
                         class="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1"
-                        >{$dict.labelExportScope}</label
+                        >{$dict.labelExportScope}</span
                     >
-                    <div class="space-y-2">
+                    <div
+                        role="group"
+                        aria-labelledby="cs-export-scope-label"
+                        class="space-y-2"
+                    >
                         {#each [{ id: "full", key: "scopeFull", color: "slate-900" }, { id: "insurance", key: "scopeInsurance", color: "emerald-600" }, { id: "medical", key: "scopeMedical", color: "rose-600" }] as scope}
                             <button
                                 class="w-full flex items-center justify-between p-3 rounded-xl border-2 transition-all
