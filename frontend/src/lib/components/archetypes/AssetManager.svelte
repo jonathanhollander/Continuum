@@ -184,6 +184,18 @@
         if (syncKey !== "financial_assets" || assetSync.lastSync === null) assetSync.sync();
     });
 
+    // Saved custom fields as an object; an unreadable value reads as none, so one row never stops the list.
+    function customAttrsOf(raw: unknown): Record<string, any> {
+        if (raw && typeof raw === "object" && !Array.isArray(raw)) return raw as Record<string, any>;
+        if (typeof raw === "string" && raw) {
+            try {
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) return parsed;
+            } catch {}
+        }
+        return {};
+    }
+
     function parseHistory(history: number[] | string | undefined): number[] {
         if (Array.isArray(history)) return history;
         if (typeof history === "string" && history) {
@@ -337,11 +349,7 @@
             customAttributes: asset.customAttributes || "{}",
             documents: asset.documents || "",
         };
-        try {
-            parsedCustomAttributes = JSON.parse(asset.customAttributes || "{}");
-        } catch (e) {
-            parsedCustomAttributes = {};
-        }
+        parsedCustomAttributes = customAttrsOf(asset.customAttributes);
         showAddForm = true;
     }
 
@@ -443,7 +451,11 @@
         }
     }
 
+    // One starter pack at a time: a second click while it is adding sends nothing.
+    let addingStarter = $state(false);
     async function addStarterPack() {
+        if (addingStarter) return;
+        addingStarter = true;
         const address =
             $estateProfile.legalAddress ||
             $estateProfile.legalCityState ||
@@ -456,10 +468,11 @@
             { name: "Primary Vehicle", type: "Vehicle", location: "" },
         ];
 
-        // Create all in parallel
-        await Promise.all(
-            starterItems.map((item) =>
-                assetSync.create({
+        try {
+            // One at a time, skipping any already saved, so Try Again adds only what is still to come.
+            for (const item of starterItems) {
+                if (assetSync.items.some((a) => a.name === item.name)) continue;
+                await assetSync.create({
                     name: item.name,
                     type: item.type as AssetType,
                     value: null, // blank until the person adds one, so the audit asks for it
@@ -472,9 +485,13 @@
                     loginUrl: "",
                     beneficiaryEmail: "",
                     closureNotes: "",
-                }),
-            ),
-        );
+                }, false, false, addStarterPack);
+            }
+        } catch {
+            // The manager already showed the one gentle message, with Try Again.
+        } finally {
+            addingStarter = false;
+        }
     }
 
     // Debts are owed: subtracted from the estate, never added.
@@ -1058,7 +1075,7 @@
                 <!-- Custom Fields Display -->
                 {#if asset.customAttributes && asset.customAttributes !== "{}"}
                     {@const customEntries = Object.entries(
-                        JSON.parse(asset.customAttributes),
+                        customAttrsOf(asset.customAttributes),
                     ).filter(([_, v]) => v !== undefined && v !== "")}
                     {#if customEntries.length > 0}
                         <div
@@ -1139,7 +1156,8 @@
                 {#if $userRole !== "Family"}
                     <button
                         onclick={addStarterPack}
-                        class="text-sm font-bold text-[#4A7C74] hover:bg-[#4A7C74]/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                        disabled={addingStarter}
+                        class="disabled:opacity-50 text-sm font-bold text-[#4A7C74] hover:bg-[#4A7C74]/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
                     >
                         <Sparkles size={14} /> Or use the Starter Pack
                     </button>
@@ -1148,7 +1166,7 @@
                         onclick={() => (showAddForm = true)}
                         class="text-sm font-bold text-stone-400 hover:text-[#4A7C74] px-4 py-2"
                     >
-                        Add Item Manually
+                        Or share your own
                     </button>
                 {/if}
             </div>
