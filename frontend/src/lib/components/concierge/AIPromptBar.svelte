@@ -16,7 +16,10 @@
         | "property"
         | "insurance"
         | "digital-guardian"
-        | "visual-memories" = "obituary";
+        | "visual-memories"
+        | "financial"
+        | "activity-log" = "obituary";
+    // A page's own chips replace the context defaults below.
     export let prompts: string[] = [];
     // Page-specific ideas; three are shown at a time and can be reshuffled.
     export let promptPool: string[] = [];
@@ -89,6 +92,16 @@
             "How should I document my memory locations?",
             "Draft notes about my photo collection...",
         ],
+        financial: [
+            "What should my family know about my accounts?",
+            "How do beneficiary designations work on bank accounts?",
+            "Help me write a note about where my accounts are held...",
+        ],
+        "activity-log": [
+            "How can a record of changes help my executor?",
+            "How often should I revisit my estate plan?",
+            "Which life events are a good time to update my plan?",
+        ],
     };
 
     function pickIdeas(pool: string[], current: string[] = []): string[] {
@@ -98,6 +111,10 @@
     }
 
     $: poolIdeas = pickIdeas(promptPool);
+    $: chips =
+        prompts.length > 0 || promptPool.length > 0
+            ? prompts
+            : quickPrompts[context] || [];
 
     async function runPrompt(text: string) {
         prompt = text;
@@ -212,7 +229,7 @@
     <!-- Quick Prompts -->
     {#if !result && !isGenerating}
         <div class="flex flex-wrap gap-2 mt-4" transition:slide>
-            {#each [...(quickPrompts[context] || []), ...prompts] as qp}
+            {#each chips as qp}
                 <button
                     class="px-3 py-1.5 bg-white text-xs font-medium text-primary-700 rounded-full border border-primary-100 hover:border-primary-300 hover:bg-primary-50 transition-colors"
                     on:click={() => runPrompt(qp)}
