@@ -42,8 +42,9 @@ next-env.d.ts
 
 /src/generated/prisma
 /frontend/dist/
-/dev.db
-/continuum_saas.db
+*.db
+*.sqlite
+*.db-journal
 *.log
 __pycache__/
 *.py[cod]
