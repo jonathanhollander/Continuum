@@ -43,7 +43,7 @@
 
         // Simple routing map
         if (q.includes("bank") || q.includes("account") || q.includes("money"))
-            target = "/financial-accounts";
+            target = "/modules/financial-accounts";
         else if (q.includes("insurance") || q.includes("policy"))
             target = "/modules/insurance";
         else if (

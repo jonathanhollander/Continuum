@@ -103,7 +103,11 @@
                         ? 'financial-accounts'
                         : id === 'legal'
                           ? 'legal-documents'
-                          : id}"
+                          : id === 'family'
+                            ? 'contacts'
+                            : id === 'digital'
+                              ? 'digital-guardian'
+                              : id}"
                     class="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-medium"
                 >
                     Go to Module <ArrowRight size={12} />
