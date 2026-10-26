@@ -199,7 +199,10 @@ if settings.is_production():
     @app.middleware("http")
     async def enforce_https(request: Request, call_next):
         """Redirect HTTP to HTTPS in production."""
-        if request.url.scheme != "https":
+        # Railway terminates TLS at its proxy, so the app sees plain http plus X-Forwarded-Proto.
+        # The health check hits the container directly over http and must not be redirected.
+        forwarded_proto = request.headers.get("x-forwarded-proto", request.url.scheme).split(",")[0].strip()
+        if forwarded_proto != "https" and request.url.path != "/api/health":
             url = request.url.replace(scheme="https")
             return RedirectResponse(url, status_code=301)
         return await call_next(request)

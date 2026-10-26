@@ -12,6 +12,8 @@ from typing import Optional, Dict, Any
 import traceback
 from datetime import datetime
 
+from backend.config import settings
+
 
 class ErrorResponse:
     """Standard error response format."""
@@ -33,15 +35,17 @@ class ErrorResponse:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dict for JSON response."""
-        return {
+        body = {
             "error": {
                 "message": self.user_message,  # User sees this
                 "code": self.error_code,
                 "details": self.details,
                 "timestamp": self.timestamp
-            },
-            "_technical": self.message  # Only in dev mode
+            }
         }
+        if settings.is_development():
+            body["_technical"] = self.message  # Only in dev mode
+        return body
 
 
 class ContinuumException(Exception):

@@ -6,11 +6,16 @@ import os
 import logging
 from typing import List, Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from urllib.parse import urlparse
 from pydantic import field_validator, ValidationError, model_validator
 
 # Use standard library logging to avoid circular imports
 # (This module is imported by backend.utils.logger)
 logger = logging.getLogger(__name__)
+
+
+# The real production domain (SPA + API are served from the same origin)
+PRODUCTION_DOMAIN = "continuum.estate"
 
 
 class Settings(BaseSettings):
@@ -160,6 +165,16 @@ class Settings(BaseSettings):
         Automatically configure RP_ID and ORIGIN based on Railway environment
         if not explicitly provided.
         """
+        if self.is_production():
+            # Real production domain. Explicit RP_ID / ORIGIN / FRONTEND_URL env vars win;
+            # these only replace the localhost development defaults.
+            if self.RP_ID == "localhost":
+                self.RP_ID = PRODUCTION_DOMAIN
+            if self.ORIGIN == "http://localhost:5173":
+                self.ORIGIN = f"https://{self.RP_ID}"
+            if self.FRONTEND_URL == "http://localhost:5173":
+                self.FRONTEND_URL = f"https://{self.RP_ID}"
+
         if self.RAILWAY_PUBLIC_DOMAIN:
             # If RP_ID is still default and we have a Railway domain, use it
             if self.RP_ID == "localhost":
@@ -170,7 +185,7 @@ class Settings(BaseSettings):
                 self.ORIGIN = f"https://{self.RAILWAY_PUBLIC_DOMAIN}"
                 
             # Also ensure Frontend URL matches
-            if self.FRONTEND_URL == "http://localhost:5173" and self.ENVIRONMENT == "production":
+            if self.FRONTEND_URL == "http://localhost:5173" and self.is_production():
                 self.FRONTEND_URL = f"https://{self.RAILWAY_PUBLIC_DOMAIN}"
                 
         return self
@@ -185,6 +200,8 @@ class Settings(BaseSettings):
         # In production, validate and restrict to allowed domains
         if self.is_production():
             allowed_domains = [
+                PRODUCTION_DOMAIN,
+                f"www.{PRODUCTION_DOMAIN}",
                 "continuum.im",
                 "app.continuum.im",
                 "continuum-saas.up.railway.app",  # Railway deployment
@@ -202,7 +219,8 @@ class Settings(BaseSettings):
                     continue
 
                 # Check if origin contains any allowed domain
-                if any(domain in origin for domain in allowed_domains):
+                # Exact host match (a substring check would accept evil-continuum.estate.example.com)
+                if urlparse(origin).hostname in allowed_domains:
                     validated_origins.append(origin)
                 else:
                     logger.warning(f"CORS origin '{origin}' not in production whitelist, skipping")
@@ -221,7 +239,11 @@ class Settings(BaseSettings):
         Get the appropriate frontend URL based on environment.
         In production, prefer RAILWAY_STATIC_URL or FRONTEND_URL_PRODUCTION.
         """
-        if self.ENVIRONMENT == "production":
+        if self.is_production():
+            # An explicitly configured, non-localhost FRONTEND_URL wins (it always has a scheme;
+            # RAILWAY_STATIC_URL is a bare hostname).
+            if "localhost" not in self.FRONTEND_URL.lower():
+                return self.FRONTEND_URL
             if self.RAILWAY_STATIC_URL:
                 return self.RAILWAY_STATIC_URL
             if self.FRONTEND_URL_PRODUCTION:
@@ -243,7 +265,7 @@ class Settings(BaseSettings):
         """
         errors = []
 
-        if self.ENVIRONMENT == "production":
+        if self.is_production():
             # Check critical secrets are not defaults
             if self.JWT_SECRET_KEY == "continuum-dev-secret-key-change-in-production":
                 errors.append("JWT_SECRET_KEY must be changed in production")
