@@ -46,22 +46,24 @@
         await loadData();
     });
 
+    // The tiers come from the server; the people are already cached in the contacts store, so
+    // they show as soon as the tiers answer and refresh when the contacts sync lands. With
+    // nothing cached yet, the list waits for that sync. sync() settles on its own status.
     async function loadData() {
         loading = true;
         error = null;
+        const contactsSynced = contactSync.sync();
         try {
-            const [tiersData] = await Promise.all([
-                apiGet("/api/pulse/tiers"),
-                contactSync.sync(),
-            ]);
-            tiers = tiersData;
-            if (contactSync.status === "error") error = gentleRetry;
+            tiers = await apiGet("/api/pulse/tiers");
+            if (contactSync.items.length === 0) await contactsSynced;
         } catch (e: any) {
             console.error(e);
             error = e?.message || gentleRetry;
         } finally {
             loading = false;
         }
+        await contactsSynced;
+        if (contactSync.status === "error") error = gentleRetry;
     }
 
     async function updateTier(tier: any) {
