@@ -1,13 +1,12 @@
 <script lang="ts">
     import { fade, slide } from "svelte/transition";
     import {
-        TriangleAlert,
         Compass,
         CreditCard,
         Stethoscope,
-        Ghost,
+        HeartHandshake,
         CircleCheck,
-        CircleX,
+        CirclePlus,
         ArrowRight,
     } from "lucide-svelte";
     import { documentStore } from "$lib/stores/documentStore.svelte";
@@ -42,7 +41,7 @@
         {
             id: "passing",
             title: "Unexpected Passing",
-            icon: Ghost,
+            icon: HeartHandshake,
             color: "text-muted-foreground",
             bg: "bg-muted",
             desc: "Your family steps in today to carry out your wishes.",
@@ -109,7 +108,7 @@
                 check: "Power of Attorney",
                 status: hasPOA,
                 msg: hasPOA
-                    ? "POA found."
+                    ? "Power of attorney saved in your Vault."
                     : "A power of attorney lets someone you trust pay your bills.",
             });
             overallStatus = hasHealth && hasPOA ? "pass" : "fail";
@@ -119,25 +118,28 @@
             const hasWill = docs.some((d) => d.type === "Will");
             const hasTrust = docs.some((d) => d.type === "Trust");
             const owned = assets.filter((a) => !isDebt(a));
-            const benCov =
-                owned.filter((a) => String(a.beneficiaries ?? "").trim()).length /
-                Math.max(1, owned.length);
+            const withBen = owned.filter((a) =>
+                String(a.beneficiaries ?? "").trim(),
+            ).length;
+            const benCov = withBen / Math.max(1, owned.length);
 
             checks.push({
                 check: "Will / Trust",
                 status: hasWill || hasTrust,
                 msg:
                     hasWill || hasTrust
-                        ? "Legal structure found."
+                        ? "Will or trust saved in your Vault."
                         : "A will or trust lets you decide where your estate goes.",
             });
             checks.push({
                 check: "Beneficiaries",
                 status: benCov > 0.8,
                 msg:
-                    benCov > 0
-                        ? `Beneficiaries named on ${Math.round(benCov * 100)}% of assets.`
-                        : "Naming a beneficiary on each asset lets it pass straight to the people you choose.",
+                    withBen === 0
+                        ? "Naming a beneficiary on each asset lets it pass straight to the people you choose."
+                        : withBen === owned.length
+                          ? `Beneficiaries named on ${withBen} of ${owned.length} assets.`
+                          : `Beneficiaries named on ${withBen} of ${owned.length} assets. Naming one on each of the rest lets it pass straight to the people you choose.`,
             });
             overallStatus =
                 (hasWill || hasTrust) && benCov > 0.8 ? "pass" : "fail";
@@ -267,10 +269,10 @@
                                 <h1
                                     class="font-serif font-bold text-3xl text-success"
                                 >
-                                    Plan Resilient
+                                    Ready for This Moment
                                 </h1>
                                 <p class="text-muted-foreground mt-2">
-                                    Your estate is prepared for this event.
+                                    Each record below is saved in your plan.
                                 </p>
                             {:else}
                                 <h1
@@ -279,7 +281,7 @@
                                     Room to Strengthen
                                 </h1>
                                 <p class="text-muted-foreground mt-2">
-                                    A few additions will prepare your estate for this event.
+                                    A few additions below will round out your plan for this moment.
                                 </p>
                             {/if}
                         </div>
@@ -299,7 +301,7 @@
                                                 size={20}
                                             />
                                         {:else}
-                                            <CircleX
+                                            <CirclePlus
                                                 class="text-warning"
                                                 size={20}
                                             />
