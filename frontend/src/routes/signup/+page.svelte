@@ -331,7 +331,7 @@
                             Your account is ready for a passkey
                         </h3>
                         <p class="text-foreground text-lg leading-relaxed max-w-md mx-auto">
-                            When you're ready, you can try again, or sign in with an email link instead.
+                            When you're ready, you can try again, or request an email link.
                         </p>
                     </div>
                     <div class="flex flex-col sm:flex-row gap-3 justify-center">
@@ -342,7 +342,7 @@
                         <button
                             on:click={goToEmailLink}
                             class="border border-border hover:border-primary text-foreground font-bold py-3 px-6 rounded-2xl transition-colors"
-                        >Use an email link instead</button>
+                        >Request an email link</button>
                     </div>
                 </div>
                 {:else}

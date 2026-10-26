@@ -20,7 +20,7 @@
     let showHelp = $state(false);
     let showMagicLink = $state(false);
     let magicLinkEmail = $state("");
-    let magicLinkSent = $state(false);
+    let magicLinkRequested = $state(false);
 
     // Same-site relative path only (as on /auth/verify); anything else is dropped
     function sameSitePath(value: string | null): string | null {
@@ -121,7 +121,7 @@
                 });
             } else if (e.name === "NotSupportedError") {
                 notifications.showError({
-                    message: "An email link will open the door on this device.",
+                    message: "You can request an email link from this device.",
                     code: "PASSKEY_NOT_SUPPORTED",
                 });
                 showMagicLink = true;
@@ -136,7 +136,7 @@
     async function handleMagicLink() {
         if (!magicLinkEmail) {
             notifications.showError({
-                message: "Your email address will let us send your link.",
+                message: "Enter your email address to request a sign-in link.",
                 code: "VALIDATION_ERROR",
             });
             return;
@@ -158,10 +158,10 @@
                 localStorage.setItem("continuum_last_email", email);
             }
 
-            magicLinkSent = true;
-            notifications.showSuccess(
-                "Check your email for the login link!",
-                "Magic Link Sent",
+            magicLinkRequested = true;
+            notifications.showInfo(
+                "You can check your email or sign in with an existing passkey.",
+                "Sign-in Request Received",
             );
         } catch (e: any) {
             if (!isCurrentSession(owner, true)) return;
@@ -187,7 +187,7 @@
     }
 
     function handleKeydown(event: KeyboardEvent) {
-        if (event.key === "Enter" && magicLinkEmail && !magicLinkSent) {
+        if (event.key === "Enter" && magicLinkEmail && !magicLinkRequested) {
             handleMagicLink();
         }
     }
@@ -295,7 +295,7 @@
             {:else}
                 <!-- Magic Link Form -->
                 <div class="space-y-6" in:fly={{ x: 20, duration: 300 }}>
-                    {#if !magicLinkSent}
+                    {#if !magicLinkRequested}
                         <div class="space-y-4">
                             <div>
                                 <label
@@ -325,7 +325,7 @@
                                 ></div>
                                 <Mail size={28} class="relative" />
                                 <span class="relative">
-                                    {isLoading ? "Sending..." : "Send Sign-in Link"}
+                                    {isLoading ? "Requesting..." : "Send Sign-in Link"}
                                 </span>
                             </button>
 
@@ -337,30 +337,37 @@
                             </button>
                         </div>
                     {:else}
-                        <!-- Magic Link Sent Confirmation -->
+                        <!-- Uniform request receipt; delivery and account existence stay private. -->
                         <div
                             class="bg-primary/10 border border-primary/30 rounded-2xl p-8 text-center"
                             in:fly={{ y: 20, duration: 300 }}
                         >
                             <Mail size={48} class="text-primary mx-auto mb-4" />
                             <h3 class="text-foreground font-bold text-2xl mb-3">
-                                Check Your Email
+                                Sign-in Request Received
                             </h3>
                             <p class="text-foreground text-lg leading-relaxed mb-6">
-                                We've sent a secure sign-in link to <strong class="text-foreground">
+                                You requested a sign-in link for <strong class="text-foreground">
                                     {magicLinkEmail}
                                 </strong>
                             </p>
                             <p class="text-muted-foreground text-base">
-                                Your link is on its way. Open it from your email to continue; it stays open for 15 minutes.
+                                If a link arrives, open it within 15 minutes. You can also use a passkey you've already set up.
                             </p>
                         </div>
 
                         <button
-                            onclick={() => (magicLinkSent = false)}
+                            onclick={() => (magicLinkRequested = false)}
                             class="w-full text-muted-foreground hover:text-foreground font-medium py-3 transition-colors text-base"
                         >
                             Use a different email
+                        </button>
+                        <button
+                            onclick={handlePasskeyLogin}
+                            disabled={isLoading}
+                            class="w-full bg-primary hover:bg-primary-hover text-primary-foreground font-bold py-4 px-6 rounded-2xl transition-colors disabled:opacity-50"
+                        >
+                            {isLoading ? "Connecting..." : "Login with Passkey"}
                         </button>
                     {/if}
                 </div>
