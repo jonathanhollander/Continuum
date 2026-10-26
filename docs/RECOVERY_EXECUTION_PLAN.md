@@ -1112,7 +1112,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X238 | ☑ | dab4d77 | /admin readiness reads each module's own store (fresh browser, server-only data: 0% → 60%, six modules counted); dead `partial` state removed; funeral counts real wishes, Digital Guardian counts done steps, blank text ignored |
 | X241 | ☑ | 15e8fc0 | memories `POST /family`, `/visual`, `/archives` validate the body first: missing field 500 → 422 with the site's gentle wording; client-sent `id`/`user_id` ignored |
 | X242 | ☑ | b9f5ba3 | Shared `backend/utils/table_body.py` (`validated_new`/`validated_changes`); contacts relationships, medical profile and directives, Pulse tier update: bad bodies 500 → 422; client ids ignored; Pulse tier partial update keeps saved values and returns the row (was `{}`) |
-| X246 | ▶ | | |
+| X246 | ☑ | b493252 | memories POSTs use the shared `validated_new`; the three PUTs `validated_changes` (bad PUT 500 → 422; partial PUTs keep unsent fields) |
 | V1-P1 | ☑ | 30713c8 | `.surface-dark` scope in app.css (dark surface, card, text, muted 8.21, primary-on-dark 7.74 on slate-900, status tokens ≥8.6) following the chosen accent and high contrast like `.concierge-shell`; `--color-primary-on-dark` family per accent; /admin uses it (teal 0 px; other accents now show their dark form) |
 | V1-P3 | ☑ | 6fb57fe | Login, signup, start, onboarding one teal brand (indigo/purple/rose gone); welcome on tokens and follows dark theme; 7 views × 2 themes: failing pairs 37 → 0 (e.g. "Takes about 2 minutes" 2.15 → 7.07, footer 1.87 → 7.00) |
 | V1-P3b | ▶ | | |
