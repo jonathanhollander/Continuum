@@ -213,8 +213,6 @@
             if (filteredItems[selectedIndex]) {
                 navigate(filteredItems[selectedIndex].href);
             }
-        } else if (e.key === "Escape") {
-            onclose();
         }
     }
 
