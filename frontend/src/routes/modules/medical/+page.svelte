@@ -102,7 +102,19 @@
         });
     }
 
+    // One save at a time: while it is open the button waits, so a second click sends nothing.
+    let saving = $state(false);
     async function saveDirective() {
+        if (saving) return;
+        saving = true;
+        try {
+            await saveDirectiveOnce();
+        } finally {
+            saving = false;
+        }
+    }
+
+    async function saveDirectiveOnce() {
         if (!newDirective.title) return;
 
         const { [DIRECTIVE_MEDIA_KEY]: _ignored, ...customValues } = parsedCustomAttributes;
@@ -691,9 +703,13 @@
             </button>
             <button
                 type="submit"
-                class="flex-1 py-3 px-6 bg-primary text-primary-foreground rounded-xl font-semibold shadow-lg shadow-primary/20 hover:opacity-90 transition-all"
+                disabled={saving}
+                aria-busy={saving}
+                class="flex-1 py-3 px-6 bg-primary text-primary-foreground rounded-xl font-semibold shadow-lg shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50"
             >
-                {newDirective.id
+                {saving
+                    ? "Saving..."
+                    : newDirective.id
                     ? "Save my updates"
                     : "Include this directive"}
             </button>

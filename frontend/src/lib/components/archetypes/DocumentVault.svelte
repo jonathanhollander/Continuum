@@ -147,7 +147,19 @@
 
     let newDoc = $state<DocDraft>(emptyDoc());
 
+    // One save at a time: while it is open the button waits, so a second click sends nothing.
+    let saving = $state(false);
     async function saveDoc() {
+        if (saving) return;
+        saving = true;
+        try {
+            await saveDocOnce();
+        } finally {
+            saving = false;
+        }
+    }
+
+    async function saveDocOnce() {
         if (!newDoc.name || !docSync) return;
 
         const fields = {
@@ -692,9 +704,11 @@
                         >
                         <button
                             onclick={saveDoc}
+                            disabled={saving}
+                            aria-busy={saving}
                             class="px-6 py-2.5 rounded-xl font-semibold bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50"
                         >
-                            {newDoc.id ? "Save my updates" : "Save my document"}
+                            {saving ? "Saving..." : newDoc.id ? "Save my updates" : "Save my document"}
                         </button>
                     </div>
                 </div>

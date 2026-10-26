@@ -104,7 +104,19 @@ With all my love,
         showValueForm = true;
     }
 
+    // One save at a time: while it is open the button waits, so a second click sends nothing.
+    let savingValue = $state(false);
     async function saveValue() {
+        if (savingValue) return;
+        savingValue = true;
+        try {
+            await saveValueOnce();
+        } finally {
+            savingValue = false;
+        }
+    }
+
+    async function saveValueOnce() {
         if (!valueTitle.trim()) return;
         const data = { title: valueTitle.trim(), content: valueDesc, tags: valueIcon };
         try {
@@ -236,10 +248,11 @@ With all my love,
                         <div class="flex justify-end">
                             <button
                                 onclick={saveValue}
-                                disabled={!valueTitle.trim()}
+                                disabled={!valueTitle.trim() || savingValue}
+                                aria-busy={savingValue}
                                 class="bg-[#4A7C74] hover:bg-[#3b635d] disabled:opacity-50 text-white px-5 py-2 rounded-full font-bold text-sm"
                             >
-                                Save this value
+                                {savingValue ? "Saving..." : "Save this value"}
                             </button>
                         </div>
                     </div>

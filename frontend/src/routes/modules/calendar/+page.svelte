@@ -99,7 +99,19 @@
     // onMount removed
     // saveEvents removed
 
+    // One save at a time: while it is open the button waits, so a second click sends nothing.
+    let saving = $state(false);
     async function handleSave() {
+        if (saving) return;
+        saving = true;
+        try {
+            await handleSaveOnce();
+        } finally {
+            saving = false;
+        }
+    }
+
+    async function handleSaveOnce() {
         if (!newEvent.title || !formDate) return;
 
         // Parse date for storage
@@ -676,9 +688,10 @@
                     >
                     <button
                         onclick={handleSave}
-                        disabled={!newEvent.title || !formDate}
+                        disabled={!newEvent.title || !formDate || saving}
+                        aria-busy={saving}
                         class="px-6 py-2 rounded-xl font-bold bg-[#304743] text-white hover:bg-[#20302d] transition-colors disabled:opacity-50"
-                        >Save Event</button
+                        >{saving ? "Saving..." : "Save Event"}</button
                     >
                 </div>
             </div>

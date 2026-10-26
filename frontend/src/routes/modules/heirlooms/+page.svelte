@@ -170,7 +170,19 @@
         showAddForm = true;
     }
 
+    // One save at a time: while it is open the button waits, so a second click sends nothing.
+    let saving = $state(false);
     async function saveHeirloom() {
+        if (saving) return;
+        saving = true;
+        try {
+            await saveHeirloomOnce();
+        } finally {
+            saving = false;
+        }
+    }
+
+    async function saveHeirloomOnce() {
         if (!newHeirloom.name) return;
 
         if (isEditing && editingId !== null) {
@@ -641,10 +653,13 @@
             >
             <button
                 onclick={saveHeirloom}
-                disabled={!newHeirloom.name}
+                disabled={!newHeirloom.name || saving}
+                aria-busy={saving}
                 class="px-6 py-2.5 rounded-xl font-semibold bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 transition-all shadow-lg shadow-primary/20"
             >
-                {isEditing
+                {saving
+                    ? "Saving..."
+                    : isEditing
                     ? "Save these details"
                     : "Record this treasure"}
             </button>

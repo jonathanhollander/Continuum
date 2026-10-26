@@ -200,7 +200,19 @@
         return ((last - first) / Math.abs(first)) * 100;
     }
 
+    // One save at a time: while it is open the button waits, so a second click sends nothing.
+    let saving = $state(false);
     async function saveAsset() {
+        if (saving) return;
+        saving = true;
+        try {
+            await saveAssetOnce();
+        } finally {
+            saving = false;
+        }
+    }
+
+    async function saveAssetOnce() {
         if (!newAsset.name) return;
 
         // Serialize Custom Attributes
@@ -872,10 +884,12 @@
                         </button>
                         <button
                             onclick={saveAsset}
-                            class="px-10 py-4 rounded-2xl bg-[#4A7C74] hover:bg-[#3b635d] text-white font-black shadow-xl shadow-[#4A7C74]/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-3"
+                            disabled={saving}
+                            aria-busy={saving}
+                            class="px-10 py-4 rounded-2xl bg-[#4A7C74] hover:bg-[#3b635d] text-white font-black shadow-xl shadow-[#4A7C74]/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-3 disabled:opacity-50"
                         >
                             <Sparkles size={18} />
-                            {newAsset.id ? "Update Asset" : "Add to Inventory"}
+                            {saving ? "Saving..." : newAsset.id ? "Update Asset" : "Add to Inventory"}
                         </button>
                     </div>
                 </div>

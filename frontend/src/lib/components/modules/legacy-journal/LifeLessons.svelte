@@ -37,7 +37,19 @@
         showAddModal = true;
     }
 
+    // One save at a time: while it is open the button waits, so a second click sends nothing.
+    let saving = $state(false);
     async function saveLesson() {
+        if (saving) return;
+        saving = true;
+        try {
+            await saveLessonOnce();
+        } finally {
+            saving = false;
+        }
+    }
+
+    async function saveLessonOnce() {
         if (!newLesson.title.trim()) return;
         const data = {
             title: newLesson.title.trim(),
@@ -164,8 +176,10 @@
                     </div>
                     <button
                         onclick={saveLesson}
-                        class="w-full py-3 bg-[#4A7C74] text-white rounded-xl font-bold mt-2"
-                        >Save Lesson</button
+                        disabled={saving}
+                        aria-busy={saving}
+                        class="w-full py-3 bg-[#4A7C74] text-white rounded-xl font-bold mt-2 disabled:opacity-50"
+                        >{saving ? "Saving..." : "Save Lesson"}</button
                     >
                 </div>
             </div>
