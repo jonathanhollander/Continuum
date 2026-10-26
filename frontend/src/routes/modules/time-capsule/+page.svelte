@@ -245,7 +245,8 @@
             isRecording = false;
         } catch (e: any) {
             // The recorder stays open with this recording, so Save Memory can try again (X223).
-            formNote = e?.message || "Your video is taking a moment to save. Record again when you're ready.";
+            console.error("Capsule video upload:", e);
+            formNote = "Your video is taking a moment to save. Your recording is right here, ready to save again whenever you like.";
         } finally {
             isUploading = false;
             event.detail.done?.();

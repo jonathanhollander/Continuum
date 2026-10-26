@@ -104,7 +104,7 @@
                         id: newId,
                         name: newExpense.name || "Expense",
                         cost: Number(newExpense.cost),
-                        estimated: industryAverage(newExpense.name) ?? 0,
+                        estimated: industryAverage(newExpense.name),
                         custom_attributes: customAttrsString,
                     },
                 ],

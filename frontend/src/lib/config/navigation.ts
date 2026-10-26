@@ -52,7 +52,6 @@ export type NavItem = {
     isExecutorEssential?: boolean;
     isQuickStart?: boolean;
     isCoreAction?: boolean;
-    behaviour?: "background-tab";
     isExternal?: boolean;
     tooltip?: string;
     // Shows an "Early preview" tag next to the item (card E2).

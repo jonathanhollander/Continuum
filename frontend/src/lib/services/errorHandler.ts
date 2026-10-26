@@ -174,7 +174,7 @@ export function getErrorTitle(code?: string): string {
             return 'Saving is taking a moment';
 
         default:
-            return 'Something unexpected happened';
+            return "We're here to help";
     }
 }
 
