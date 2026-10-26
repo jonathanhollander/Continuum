@@ -49,6 +49,8 @@ function initializeContext() {
         serverRole = toRole(authState.user.user_role);
         if (!roleSaving) contextState.role = serverRole;
         contextState.emotionalContext = authState.user.emotional_context as EmotionalContext;
+        // users.deceased_name, so contextual messages name the person after a reload too
+        contextState.deceasedName = authState.user.deceased_name || null;
     }
 }
 
@@ -62,6 +64,8 @@ if (typeof window !== 'undefined') {
             appliedUser = null;
             serverRole = 'planning';
             contextState.role = 'planning';
+            contextState.emotionalContext = null;
+            contextState.deceasedName = null;
         }
     });
 }

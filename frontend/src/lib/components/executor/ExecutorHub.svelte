@@ -8,12 +8,11 @@
     import { FileText, Users, DollarSign, Home, Heart, Clock, Stethoscope } from 'lucide-svelte';
     import { fade, fly } from 'svelte/transition';
     import { contextStore } from "$lib/stores/contextStore.svelte";
-    import { auth } from "$lib/stores/auth";
     import SupportResources from './SupportResources.svelte';
     import ExecutorProgressTracker, { TONES, stepsFor, type Tone } from './ExecutorProgressTracker.svelte';
 
     // The name given in the executor welcome is saved with the account, so it is here after a reload too.
-    let deceasedName = $derived(contextStore.deceasedName || ($auth.user as { deceased_name?: string } | null)?.deceased_name || '');
+    let deceasedName = $derived(contextStore.deceasedName || '');
 
     // Essential modules for executors (prioritized)
     const essentialModules = [

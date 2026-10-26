@@ -3,9 +3,9 @@ import { registerProfileSlice } from "$lib/services/sync.svelte";
 export type Scenario = 'General' | 'Sudden' | 'Planned';
 
 export const SCENARIO_DESCRIPTIONS = {
-    'General': 'Standard executor workflow. All tasks visible in chronological order.',
-    'Sudden': 'Emergency response mode. Prioritizes urgent tasks for unexpected passing.',
-    'Planned': 'Streamlined workflow for a planned transition with organized records.'
+    'General': 'Every step, in the order most families take them.',
+    'Sudden': 'The first days come first, with the most time-sensitive steps at the top.',
+    'Planned': 'The administrative and asset steps, for when much of the groundwork is already in place.'
 };
 
 interface ScenarioSettings {

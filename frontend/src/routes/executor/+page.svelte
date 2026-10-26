@@ -19,14 +19,13 @@
         Stethoscope
     } from 'lucide-svelte';
     import { contextStore } from "$lib/stores/contextStore.svelte";
-    import { auth } from "$lib/stores/auth";
     import ExecutorProgressTracker, { TONES, stepsFor, type Tone } from '$lib/components/executor/ExecutorProgressTracker.svelte';
     import SupportResources from '$lib/components/executor/SupportResources.svelte';
     import { getEncouragementMessage } from '$lib/utils/contextualMessages';
 
     // Viewing this page leaves the saved role as it is; the Perspective switch in settings changes it.
     // The name given in the executor welcome is saved with the account, so it is here after a reload too.
-    let deceasedName = $derived(contextStore.deceasedName || ($auth.user as { deceased_name?: string } | null)?.deceased_name || '');
+    let deceasedName = $derived(contextStore.deceasedName || '');
 
     // Essential areas with progress tracking
     const essentialAreas = [

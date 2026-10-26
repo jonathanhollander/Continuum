@@ -195,7 +195,7 @@ export const phase1Tasks = [
             { type: "bulleted_list_item", content: "Original will" },
             { type: "bulleted_list_item", content: "Valuables: Jewelry, coins" },
             { type: "bulleted_list_item", content: "Property deeds and titles" },
-            { type: "callout", content: "DOCUMENT EVERYTHING: Photograph all items in the box before removing anything. Create an inventory list immediately.", icon: "emoji:📸", color: "blue_background" }
+            { type: "callout", content: "KEEP A RECORD: Photographing each item in the box first, then listing what is there, makes the estate inventory easier later.", icon: "emoji:📸", color: "blue_background" }
         ]
     },
     {
