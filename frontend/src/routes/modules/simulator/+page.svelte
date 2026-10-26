@@ -89,12 +89,15 @@
         }
 
         if (id === "medical") {
-            // A directive from the Medical page, or a vault document named as one
-            const hasDirective = directives.length > 0;
+            // A care directive from the Medical page (a healthcare proxy counts toward
+            // Power of Attorney below), or a vault document named as one
+            const hasDirective = directives.some((d) =>
+                ["living_will", "dnr", "palliative_care", "other"].includes(d.type),
+            );
             const hasHealth =
                 hasDirective ||
                 docs.some((d) =>
-                    named(d, /health|living will|advance directive|medical directive/),
+                    named(d, /living will|advance directive|medical directive|health ?care directive|\bdnr\b/),
                 );
             // A healthcare proxy from the Medical page, or a vault document named as a POA
             const hasProxy = directives.some((d) => d.type === "healthcare_proxy");
@@ -117,7 +120,7 @@
                     ? hasProxy
                         ? "Healthcare proxy saved in Health & Medical."
                         : "Power of attorney saved in your Vault."
-                    : "A power of attorney lets someone you trust pay your bills.",
+                    : "A power of attorney or healthcare proxy lets someone you trust decide for you.",
             });
             overallStatus = hasHealth && hasPOA ? "pass" : "fail";
         }
