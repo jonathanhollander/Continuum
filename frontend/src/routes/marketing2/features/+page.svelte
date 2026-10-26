@@ -687,8 +687,11 @@
         }
     }
 
-    .animate-spin-slow {
-        animation: spinSlow 10s linear infinite;
+    /* Globe in the language button (lucide child, group-hover variant) */
+    @media (prefers-reduced-motion: no-preference) {
+        :global(.group:hover .group-hover\:animate-spin-slow) {
+            animation: spinSlow 10s linear infinite;
+        }
     }
 
     @keyframes spinSlow {
