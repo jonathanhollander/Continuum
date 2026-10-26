@@ -1,0 +1,27 @@
+{% extends "emails/base.html" %}
+
+{% block content %}
+<div class="greeting">Dear {{ recipient_name }},</div>
+
+{% if second %}
+<h2>Checking in with you again</h2>
+
+<p>We'd love to hear from you. One tap below lets the people you trust know you're well.</p>
+
+<div class="alert-box info">
+    If we hear from you before {{ circle_told_at }}, everything stays as it is. After that, your circle will be gently told.
+</div>
+{% else %}
+<h2>Time for your gentle check-in</h2>
+
+<p>It's time for your scheduled check-in. One tap below lets the people you trust know you're well.</p>
+{% endif %}
+
+<div class="cta-container">
+    <a href="{{ verify_url }}" class="cta-button">I'm here and well</a>
+</div>
+
+<p style="font-size: 14px; color: #64748b; margin-top: 24px;">
+    You can also check in from your Wellness Check-in page whenever you like.
+</p>
+{% endblock %}

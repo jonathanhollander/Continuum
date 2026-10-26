@@ -3,45 +3,40 @@
 {% block content %}
 <div class="greeting">Dear {{ recipient_name }},</div>
 
-<h2>URGENT: Tier 3 Medical/Legal Release</h2>
+<h2>{{ user_name }} may need you</h2>
 
 <div class="alert-box">
-    <strong>Tier 3 Alert:</strong> Critical information has been unlocked
+    The Guardian Portal now shows what {{ user_name }} chose to share with you.
 </div>
 
-<p>This is an urgent escalation for <strong>{{ user_name }}</strong>. We have been unable to confirm their wellbeing within the extended timeframe.</p>
+<p>{{ user_name }}'s check-ins have been quiet for longer than we hoped, and you are one of the people they trusted to look in on them.</p>
 
-<p><strong>CRITICAL INFORMATION NOW ACCESSIBLE:</strong></p>
-<ul style="color: #475569; margin: 16px 0; font-weight: 600;">
-    <li>Medical directives and healthcare proxy information</li>
-    <li>Emergency contact details</li>
-    <li>Property access codes and entry information</li>
-    <li>Legal documents requiring immediate attention</li>
+<p><strong>In the Guardian Portal you'll find:</strong></p>
+<ul style="color: #475569; margin: 16px 0;">
+    <li>When {{ user_name }} last checked in</li>
+    <li>The notes {{ user_name }} saved for their guardians, if they chose to release them</li>
+    <li>Any messages they've written to you</li>
 </ul>
 
 <div class="cta-container">
-    <a href="{{ portal_url }}" class="cta-button" style="background: #dc2626;">Access Critical Information</a>
+    <a href="{{ portal_url }}" class="cta-button" style="background: #dc2626;">Open what {{ user_name }} left for you</a>
 </div>
 
 <div class="divider"></div>
 
-<p><strong>Recommended Actions:</strong></p>
+<p><strong>When you're ready, here are some steps that may help:</strong></p>
 <ol style="color: #475569; margin: 16px 0;">
-    <li><strong>Review critical documents</strong> in the Guardian Portal immediately</li>
-    <li><strong>Attempt physical welfare check</strong> if possible and safe</li>
-    <li><strong>Contact local authorities</strong> for wellness check if needed</li>
-    <li><strong>Coordinate with other guardians</strong> listed in the system</li>
+    <li>Read the notes in the Guardian Portal</li>
+    <li>Look in on them in person, if that is possible and safe</li>
+    <li>Ask local services for a wellness check, if you feel it's needed</li>
+    <li>Talk with the others {{ user_name }} trusted</li>
 </ol>
 
-<div class="alert-box info">
-    <p style="margin: 0;"><strong>Important:</strong> This escalation level grants access to sensitive information to help you make informed decisions about {{ user_name }}'s welfare and care.</p>
-</div>
-
 <p style="font-size: 14px; color: #64748b; margin-top: 24px;">
-    <strong>{{ user_name }} designated you as a Tier 3 guardian</strong> because they trust you to make critical decisions if they become incapacitated. Please treat this information with the care and discretion they would expect.
+    This access is here to help you care for {{ user_name }}.
 </p>
 
 <p style="font-size: 13px; color: #94a3b8; margin-top: 16px;">
-    If this alert was triggered in error, you can reset the system through the Guardian Portal. If you have confirmed {{ user_name }}'s safety, please update immediately to prevent further escalation.
+    If you've heard from {{ user_name }}, let us know through the Guardian Portal and further alerts will pause for a while.
 </p>
 {% endblock %}
