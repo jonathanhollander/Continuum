@@ -116,17 +116,13 @@
         if (!generatedLetter) {
             notifications.showError({
                 message:
-                    "The letter content appears to be empty. Please go back and try again.",
+                    "Your letter is waiting for its first words. Go back whenever you're ready.",
                 code: "EMPTY_CONTENT",
             });
             return;
         }
 
-        const title = emotionalFlow
-            ? emotionalFlow === "spouse"
-                ? "Letter to Loved One"
-                : "Ethical Will"
-            : selectedTemplate?.title || "Draft Letter";
+        const title = letterTitle();
 
         const recipient = contacts.find((c) => String(c.id) === letterRecipientId);
         const details = {
@@ -164,6 +160,79 @@
         resetSelection();
         } catch {
             // The manager already showed the one gentle message; the draft stays on screen.
+        }
+    }
+
+    function letterTitle() {
+        // A reopened letter keeps its own title (its flow is only a placeholder; see viewLetter).
+        const reopened = editingId !== null
+            ? savedLetters.find((l) => String(l.id) === String(editingId))?.title
+            : undefined;
+        if (reopened) return reopened;
+        return emotionalFlow
+            ? emotionalFlow === "spouse"
+                ? "Letter to Loved One"
+                : "Ethical Will"
+            : selectedTemplate?.title || "Draft Letter";
+    }
+
+    const esc = (v: string) =>
+        v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+    // Print: the letter alone, in a hidden frame, through the browser's own print dialog.
+    function printLetter() {
+        if (!generatedLetter.trim()) return;
+        document.getElementById("letter-print-frame")?.remove();
+        const frame = document.createElement("iframe");
+        frame.id = "letter-print-frame";
+        frame.setAttribute("aria-hidden", "true");
+        frame.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden";
+        frame.srcdoc = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(letterTitle())}</title><style>
+            @page { margin: 1in; }
+            body { font-family: Georgia, "Times New Roman", serif; font-size: 12pt; line-height: 1.5; color: #1e293b; margin: 0; white-space: pre-wrap; }
+        </style></head><body>${esc(generatedLetter)}</body></html>`;
+        frame.onload = () => {
+            frame.contentWindow?.focus();
+            frame.contentWindow?.print();
+        };
+        document.body.appendChild(frame);
+    }
+
+    // Download PDF: the same letter as a PDF file, written with the jsPDF library the export packet uses.
+    let pdfBusy = $state(false);
+    async function downloadLetterPDF() {
+        if (pdfBusy || !generatedLetter.trim()) return;
+        pdfBusy = true;
+        try {
+            const [{ default: jsPDF }, { saveBlob }] = await Promise.all([
+                import("jspdf"),
+                import("$lib/services/exportService"),
+            ]);
+            const doc = new jsPDF({ unit: "pt", format: "letter" });
+            const W = doc.internal.pageSize.getWidth();
+            const H = doc.internal.pageSize.getHeight();
+            const M = 72;
+            const size = 11;
+            const lh = size * 1.45;
+            let y = M;
+            // jsPDF's built-in fonts cover Latin-1; common typography is mapped so words stay readable.
+            const latin1 = (t: string) =>
+                t.replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/[–—]/g, "-")
+                    .replace(/…/g, "...").replace(/[^\x00-\xFF\n]/g, "?");
+            doc.setFont("times", "normal");
+            doc.setFontSize(size);
+            for (const para of latin1(generatedLetter).split("\n")) {
+                const lines = para.trim() ? (doc.splitTextToSize(para, W - 2 * M) as string[]) : [""];
+                for (const line of lines) {
+                    if (y + lh > H - M) { doc.addPage(); y = M; }
+                    doc.text(line, M, y + size);
+                    y += lh;
+                }
+            }
+            const file = letterTitle().replace(/[\\/:*?"<>|]+/g, " ").trim() || "Letter";
+            saveBlob(doc.output("blob"), `${file}.pdf`);
+        } finally {
+            pdfBusy = false;
         }
     }
 
@@ -245,12 +314,14 @@
 
     // Emotional State
     let emotionalFlow = $state<"spouse" | "ethical_will" | null>(null);
-    let emotionalReflections = $state({
-        memory: "",
-        values: "",
-        hopes: "",
-    });
+    // One answer per interview step, in the order the steps are asked (see REFLECTION_POOLS.letters).
+    let reflections = $state(["", "", ""]);
     let currentPromptIndex = $state(0);
+    let currentSuggestions = $derived(
+        emotionalFlow
+            ? REFLECTION_POOLS.letters[emotionalFlow].steps[currentPromptIndex].suggestions
+            : [],
+    );
     let currentQuestion = $state("");
 
     function refreshQuestion() {
@@ -291,10 +362,11 @@
 
     function startEmotionalFlow(flow: "spouse" | "ethical_will") {
         clearLetterDetails();
+        selectedTemplate = null;
         emotionalFlow = flow;
         mode = "emotional_interview";
         currentPromptIndex = 0;
-        emotionalReflections = { memory: "", values: "", hopes: "" };
+        reflections = ["", "", ""];
         refreshQuestion();
     }
 
@@ -340,6 +412,8 @@
 
     function selectTransactional(template: LetterTemplate) {
         clearLetterDetails();
+        // A letter from the library is never an emotional letter, even after one was open.
+        emotionalFlow = null;
         selectedTemplate = template;
         const regex = /\[(.*?)\]/g;
         const matches = [...template.body.matchAll(regex)];
@@ -383,10 +457,16 @@
     }
 
     function generateEmotionalDraft() {
+        // Signed with the name from the Estate Profile when it is known.
+        const signature = $estateProfile.ownerName?.trim() || "[Your Name]";
         if (emotionalFlow === "spouse") {
-            generatedLetter = `My Dearest,\n\nI was sitting here thinking about us, and my mind drifted to that time: ${emotionalReflections.memory}. It still makes me smile.\n\nI want you to know how much I admire you. Specifically, ${emotionalReflections.values}. You have always been my rock.\n\nMy greatest wish for you is this: ${emotionalReflections.hopes}. Be happy, live fully, and know that you were loved beyond measure.\n\nForever yours,\n[Your Name]`;
+            // Steps: memory, what you admire, hopes.
+            const [memory, admire, hopes] = reflections;
+            generatedLetter = `My Dearest,\n\nI was sitting here thinking about us, and my mind drifted to that time: ${memory}. It still makes me smile.\n\nI want you to know how much I admire you. Specifically, ${admire}. You have always been my rock.\n\nMy greatest wish for you is this: ${hopes}. Be happy, live fully, and know that you were loved beyond measure.\n\nForever yours,\n${signature}`;
         } else {
-            generatedLetter = `To My Family,\n\nAs I look back on my life, I want to leave you with more than just things. I want to share who I was and what I believed in.\n\nMy life was guided by three core values: ${emotionalReflections.values}. I hope they serve you as well as they served me.\n\nI learned many lessons, but the most important was: ${emotionalReflections.memory}. Don't make the same mistake I did—or if you do, forgive yourself quickly.\n\nWhen times are tough, remember: ${emotionalReflections.hopes}.\n\nWith all my love,\n[Your Name]`;
+            // Steps: values, lessons, legacy.
+            const [values, lesson, legacy] = reflections;
+            generatedLetter = `To My Family,\n\nAs I look back on my life, I want to leave you with more than just things. I want to share who I was and what I believed in.\n\nMy life was guided by these values: ${values}. I hope they serve you as well as they served me.\n\nI learned many lessons, but the most important was: ${lesson}. Be as gentle with yourself as I would be with you.\n\nHere is what I hope you carry with you: ${legacy}.\n\nWith all my love,\n${signature}`;
         }
         mode = "review";
         // Put the keyboard straight into the new letter.
@@ -456,11 +536,43 @@
     );
 </script>
 
+{#snippet recipientPicker()}
+    <div class="space-y-2">
+        <label
+            for="letter-recipient"
+            class="block text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+            >Who this letter is for</label
+        >
+        <select
+            id="letter-recipient"
+            bind:value={letterRecipientId}
+            class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800 text-sm"
+        >
+            <option value="">Choose someone from your contacts</option>
+            {#each contacts as contact (contact.id)}
+                <option value={String(contact.id)}
+                    >{contact.name}{contact.relation
+                        ? ` (${contact.relation})`
+                        : ""}</option
+                >
+            {/each}
+        </select>
+        {#if contacts.length === 0}
+            <p class="text-[11px] text-slate-500 pl-1">
+                People you add in <a
+                    href="/modules/contacts"
+                    class="text-primary underline">Contacts</a
+                > appear here.
+            </p>
+        {/if}
+    </div>
+{/snippet}
+
 <LivingBlueprintHeader
     title="Legacy Correspondence"
     subtitle="Preserve your words for the people you love"
     detailedDescription="Write letters for the people you love—ethical wills sharing your values, heartfelt messages to loved ones, or formal notifications to institutions."
-    whyMatters="The words you write today will comfort, guide, and inspire your loved ones when you're no longer here to say them yourself. These letters become your voice across time, offering presence at moments you can't physically attend."
+    whyMatters="The words you write today will comfort, guide, and inspire your loved ones. These letters become your voice across time, present at the moments that matter."
 >
     <div class="flex items-center gap-4">
         {#if savedLetters.length > 0}
@@ -819,8 +931,8 @@
                         Customize {selectedTemplate.title}
                     </h2>
                     <p class="text-slate-500">
-                        Provide the specific details to populate your formal
-                        document.
+                        Share a few details and we'll fill in your formal
+                        letter.
                     </p>
                 </div>
 
@@ -837,7 +949,7 @@
                                 type="text"
                                 bind:value={templateVariables[variable]}
                                 class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
-                                placeholder="Enter {variable.toLowerCase()}..."
+                                placeholder="Share {variable.toLowerCase()}..."
                             />
                         </div>
                     {/each}
@@ -845,10 +957,7 @@
 
                 <div class="pt-8 flex items-center justify-center gap-6">
                     <button
-                        onclick={() => {
-                            generatedLetter = selectedTemplate?.body || "";
-                            mode = "transactional_preview";
-                        }}
+                        onclick={applyVariables}
                         class="text-sm font-black text-slate-400 hover:text-slate-900 uppercase tracking-widest transition-colors"
                     >
                         Continue with blank fields
@@ -924,12 +1033,17 @@
                     </div>
                 </div>
 
-                <div
-                    class="bg-white p-12 rounded-2xl border shadow-2xl shadow-slate-900/5 font-mono text-base leading-relaxed whitespace-pre-wrap text-slate-700 h-[600px] overflow-y-auto paper-texture ring-8 ring-slate-50/50"
-                >
-                    {generatedLetter ||
-                        "(Empty draft - please go back and fill in the form)"}
+                <div class="max-w-md">
+                    {@render recipientPicker()}
                 </div>
+
+                <textarea
+                    data-template-editor
+                    bind:value={generatedLetter}
+                    aria-label="Your letter"
+                    placeholder="Your draft will appear here once you've shared a few details."
+                    class="block w-full bg-white p-12 rounded-2xl border shadow-2xl shadow-slate-900/5 font-mono text-base leading-relaxed text-slate-700 h-[600px] resize-none paper-texture ring-8 ring-slate-50/50 focus:outline-none focus:border-primary"
+                ></textarea>
             </div>
 
             <!-- Guidance Sidebar -->
@@ -946,7 +1060,7 @@
                                 class="w-4 h-4 bg-primary/10 text-primary rounded-lg flex items-center justify-center"
                                 ><CircleCheck size={10} /></span
                             >
-                            Required Documents
+                            Documents that may help
                         </h4>
                         <ul class="space-y-4">
                             {#each selectedTemplate.requiredDocs as doc}
@@ -984,6 +1098,24 @@
                         </p>
                     </div>
                 {/if}
+
+                <div class="grid grid-cols-2 gap-3">
+                    <button
+                        onclick={printLetter}
+                        disabled={!generatedLetter.trim()}
+                        class="py-3 rounded-xl font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                    >
+                        <Printer size={16} /> Print
+                    </button>
+                    <button
+                        onclick={downloadLetterPDF}
+                        disabled={pdfBusy || !generatedLetter.trim()}
+                        aria-busy={pdfBusy}
+                        class="py-3 rounded-xl font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                    >
+                        <Download size={16} /> Download PDF
+                    </button>
+                </div>
 
                 <button
                     onclick={saveToVault}
@@ -1033,6 +1165,21 @@
                         A gentle prompt
                     </button>
                     <button
+                        onclick={printLetter}
+                        disabled={!generatedLetter.trim()}
+                        class="flex items-center gap-2 px-5 py-3 rounded-2xl font-black text-sm bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all disabled:opacity-50"
+                    >
+                        <Printer size={18} /> Print
+                    </button>
+                    <button
+                        onclick={downloadLetterPDF}
+                        disabled={pdfBusy || !generatedLetter.trim()}
+                        aria-busy={pdfBusy}
+                        class="flex items-center gap-2 px-5 py-3 rounded-2xl font-black text-sm bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all disabled:opacity-50"
+                    >
+                        <Download size={18} /> Download PDF
+                    </button>
+                    <button
                         onclick={saveToVault}
                         disabled={saving}
                         aria-busy={saving}
@@ -1052,35 +1199,7 @@
                         class="bg-indigo-50/50 border border-indigo-100 p-8 rounded-2xl space-y-6"
                     >
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="space-y-2">
-                                <label
-                                    for="letter-recipient"
-                                    class="block text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
-                                    >Who this letter is for</label
-                                >
-                                <select
-                                    id="letter-recipient"
-                                    bind:value={letterRecipientId}
-                                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800 text-sm"
-                                >
-                                    <option value="">Choose someone from your contacts</option>
-                                    {#each contacts as contact (contact.id)}
-                                        <option value={String(contact.id)}
-                                            >{contact.name}{contact.relation
-                                                ? ` (${contact.relation})`
-                                                : ""}</option
-                                        >
-                                    {/each}
-                                </select>
-                                {#if contacts.length === 0}
-                                    <p class="text-[11px] text-slate-500 pl-1">
-                                        People you add in <a
-                                            href="/modules/contacts"
-                                            class="text-primary underline">Contacts</a
-                                        > appear here.
-                                    </p>
-                                {/if}
-                            </div>
+                            {@render recipientPicker()}
                             <div class="space-y-2">
                                 <span
                                     class="block text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
@@ -1120,7 +1239,7 @@
                                 <label
                                     for="letter-release-date"
                                     class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
-                                    >Specific Release Date</label
+                                    >Chosen date</label
                                 >
                                 <input
                                     id="letter-release-date"
@@ -1133,7 +1252,7 @@
                                 <label
                                     for="letter-milestone"
                                     class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
-                                    >Or Lifecycle Milestone</label
+                                    >Or a milestone</label
                                 >
                                 <select
                                     id="letter-milestone"
@@ -1247,7 +1366,7 @@
                     onclick={resetSelection}
                     class="text-xs font-black uppercase tracking-widest text-slate-400 hover:text-primary transition-colors"
                 >
-                    Not right now
+                    Maybe later
                 </button>
             </div>
 
@@ -1280,52 +1399,14 @@
                         class="relative w-full h-80 bg-white border-2 border-slate-100 rounded-2xl shadow-2xl focus-within:border-[#4A7C74] transition-all overflow-hidden p-8"
                     >
                         <SmartTextarea
-                            bind:value={
-                                emotionalReflections[
-                                    currentPromptIndex === 0
-                                        ? "memory"
-                                        : currentPromptIndex === 1
-                                          ? "values"
-                                          : "hopes"
-                                ]
-                            }
+                            bind:value={reflections[currentPromptIndex]}
                             context="letter"
                             label={currentQuestion}
                             hideLabel
                             minimal={true}
                             minHeight="100%"
                             placeholder="Reflect here..."
-                            suggestions={emotionalFlow === "spouse"
-                                ? [
-                                      [
-                                          "Our first trip together",
-                                          "The day we met",
-                                          "A quiet moment shared",
-                                      ],
-                                      [
-                                          "Your kindness",
-                                          "Your strength",
-                                          "Your sense of humor",
-                                      ],
-                                      [
-                                          "Deep happiness",
-                                          "Finding peace",
-                                          "Adventure and love",
-                                      ],
-                                  ][currentPromptIndex]
-                                : [
-                                      [
-                                          "A childhood memory",
-                                          "A lesson learned the hard way",
-                                          "A moment of clarity",
-                                      ],
-                                      ["Integrity", "Compassion", "Curiosity"],
-                                      [
-                                          "To be happy",
-                                          "To find your passion",
-                                          "To be kind",
-                                      ],
-                                  ][currentPromptIndex]}
+                            suggestions={currentSuggestions}
                         />
                     </div>
                 {/key}
@@ -1334,13 +1415,7 @@
             <div class="flex items-center justify-center pt-8">
                 <button
                     onclick={nextEmotionalPrompt}
-                    disabled={!emotionalReflections[
-                        currentPromptIndex === 0
-                            ? "memory"
-                            : currentPromptIndex === 1
-                              ? "values"
-                              : "hopes"
-                    ]}
+                    disabled={!reflections[currentPromptIndex]}
                     class="group flex items-center gap-4 bg-[#4A7C74] text-white px-16 py-6 rounded-2xl font-black text-xl shadow-2xl shadow-[#4A7C74]/30 hover:scale-105 active:scale-95 transition-all disabled:opacity-20 disabled:grayscale"
                 >
                     {currentPromptIndex === 2

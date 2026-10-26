@@ -1,13 +1,11 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
     import {
         Sparkles,
         Wand2,
-        AlignLeft,
         RefreshCw,
         Feather,
     } from "lucide-svelte";
-    import { draftFromBullets, softenTone } from "$lib/services/writerService";
+    import { aiDraftLetter, aiSoftenLetter } from "$lib/services/writerService";
 
     let { currentContent = "", onupdate } = $props<{
         currentContent?: string;
@@ -23,33 +21,39 @@
     // Refine Mode
     let sentimentValue = $state(50); // 0 = Direct, 100 = Poetic/Soft
 
-    async function handleDraft() {
-        if (bullets.every((b) => !b)) return;
+    // The AI's version waits here until the person chooses it; the letter changes only then.
+    let suggestion = $state<string | null>(null);
+    let notice = $state("");
 
+    async function ask(run: () => Promise<string>) {
         isProcessing = true;
+        notice = "";
+        suggestion = null;
         try {
-            const result = await draftFromBullets(bullets);
-            if (onupdate) onupdate(result);
+            const result = await run();
+            if (result) suggestion = result;
+            else notice = "Your letter is just as you left it. The helper can try again in a moment.";
         } catch (e) {
             console.error(e);
+            notice = "Your letter is just as you left it. The helper can try again in a moment.";
         } finally {
             isProcessing = false;
         }
     }
 
-    async function handleRefine() {
-        if (!currentContent) return;
+    function handleDraft() {
+        if (bullets.every((b) => !b.trim())) return;
+        ask(() => aiDraftLetter(bullets));
+    }
 
-        isProcessing = true;
-        try {
-            // Mock logic: if high sentiment, soften tone
-            const result = await softenTone(currentContent);
-            if (onupdate) onupdate(result);
-        } catch (e) {
-            console.error(e);
-        } finally {
-            isProcessing = false;
-        }
+    function handleRefine() {
+        if (!currentContent.trim()) return;
+        ask(() => aiSoftenLetter(currentContent, sentimentValue));
+    }
+
+    function useSuggestion() {
+        if (suggestion && onupdate) onupdate(suggestion);
+        suggestion = null;
     }
 </script>
 
@@ -61,7 +65,7 @@
             <div class="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
                 <Sparkles size={18} />
             </div>
-            <h3 class="font-bold font-serif text-lg text-white">Empathy Engine</h3>
+            <h3 class="font-bold font-serif text-lg text-white">Gentle Helper</h3>
         </div>
         <div class="flex bg-black/20 rounded-lg p-1 text-xs font-bold">
             <button
@@ -156,8 +160,9 @@
                     <p
                         class="text-xs text-indigo-700 font-medium leading-relaxed"
                     >
-                        Adjusting the slider will rewrite your current draft to
-                        be more empathetic, focusing on emotional resonance.
+                        When you choose Polish & Soften, we'll offer a gentler
+                        version of your draft, and your words stay yours to keep
+                        or change.
                     </p>
                 </div>
 
@@ -173,6 +178,36 @@
                     {/if}
                 </button>
             </div>
+        {/if}
+
+        {#if suggestion}
+            <div class="mt-6 space-y-3" data-testid="assistant-suggestion">
+                <p class="text-xs font-bold uppercase tracking-widest text-slate-400">
+                    A version for you to consider
+                </p>
+                <div
+                    class="max-h-64 overflow-y-auto whitespace-pre-wrap bg-[#FDFBF7] border border-stone-200 rounded-xl p-4 text-sm text-stone-700 font-serif leading-relaxed"
+                >
+                    {suggestion}
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button
+                        onclick={useSuggestion}
+                        class="py-2.5 bg-[#4A7C74] text-white rounded-xl font-bold text-xs hover:bg-[#3b635d] transition-all"
+                    >
+                        Use this version
+                    </button>
+                    <button
+                        onclick={() => (suggestion = null)}
+                        class="py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold text-xs hover:bg-slate-50 transition-all"
+                    >
+                        Keep my words
+                    </button>
+                </div>
+            </div>
+        {/if}
+        {#if notice}
+            <p class="mt-4 text-xs text-slate-500" role="status">{notice}</p>
         {/if}
     </div>
 </div>
