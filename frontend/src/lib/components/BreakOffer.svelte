@@ -8,7 +8,6 @@
     import {
         Heart,
         Pause,
-        Minimize2,
         HelpCircle,
         ChevronRight,
     } from "lucide-svelte";
@@ -61,21 +60,9 @@
         startBreakTimer();
     }
 
-    function simplifyView() {
-        logger.info("User requested simplified view", { signals });
-        // In a real implementation, this would enable a "focus mode" that:
-        // - Hides optional fields
-        // - Shows only the most essential information
-        // - Provides step-by-step guidance
-
-        // For now, we'll just reset and log the intent
-        overwhelmDetector.reset();
-        // TODO: Emit event for parent components to enter simplified mode
-        window.dispatchEvent(new CustomEvent("continuum:simplify-view"));
-    }
-
     function getHelp() {
         logger.info("User requested help from overwhelm prompt", { signals });
+        showModal = false;
         overwhelmDetector.reset();
         // Open AI Concierge or help resources
         window.dispatchEvent(new CustomEvent("continuum:request-help"));
@@ -179,15 +166,6 @@
                 >
                     <Pause class="w-5 h-5" />
                     Take a mindful break
-                </button>
-
-                <!-- Simplify view -->
-                <button
-                    onclick={simplifyView}
-                    class="w-full py-3.5 px-4 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 rounded-2xl font-medium transition-colors flex items-center justify-center gap-2"
-                >
-                    <Minimize2 class="w-5 h-5" />
-                    Show me less at once
                 </button>
 
                 <!-- Get help -->

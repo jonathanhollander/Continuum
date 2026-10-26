@@ -19,6 +19,7 @@
         Download,
         Pencil,
         Sparkles,
+        BookOpenText,
         Loader2,
     } from "lucide-svelte";
     import JargonSlayer from "$lib/components/modules/legal-documents/JargonSlayer.svelte";
@@ -122,7 +123,7 @@
 
     // Wizard State
     let wizardStep = $state(0);
-    let analyzingDoc = $state<Doc | null>(null);
+    let showExampleWill = $state(false);
 
     type DocDraft = Partial<Doc> & { id?: string; customAttributes: Record<string, any> };
 
@@ -429,6 +430,14 @@
         </div>
         <div class="flex items-center gap-3">
             <DataViewToggle module="legal-documents" onchange={(mode) => viewMode = mode} />
+            <button
+                type="button"
+                onclick={() => (showExampleWill = true)}
+                data-testid="example-will"
+                class="px-4 py-2.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-all flex items-center gap-2"
+            >
+                <BookOpenText size={16} /> Example will, explained
+            </button>
             <button
                 onclick={() => {
                     showUpload = true;
@@ -776,13 +785,6 @@
                             </button>
                         {/if}
                         <button
-                            onclick={() => (analyzingDoc = doc)}
-                            class="p-2 hover:bg-indigo-50 text-muted-foreground hover:text-indigo-600 rounded-full transition-colors"
-                            title="Analyze with Jargon Slayer"
-                        >
-                            <Sparkles size={18} />
-                        </button>
-                        <button
                             onclick={() => editDoc(doc)}
                             class="p-2 hover:bg-secondary/10 text-muted-foreground hover:text-[#4A7C74] rounded-full transition-colors"
                             title="Edit Details"
@@ -871,13 +873,6 @@
                                         </button>
                                     {/if}
                                     <button
-                                        onclick={() => (analyzingDoc = doc)}
-                                        class="p-1 hover:bg-indigo-50 text-slate-400 hover:text-indigo-600 rounded transition-colors"
-                                        title="Analyze"
-                                    >
-                                        <Sparkles size={14} />
-                                    </button>
-                                    <button
                                         onclick={() => editDoc(doc)}
                                         class="p-1 hover:bg-slate-100 text-slate-400 hover:text-[#4A7C74] rounded transition-colors"
                                         title="Edit"
@@ -920,12 +915,8 @@
         </div>
     {/if}
 
-    <!-- Jargon Slayer Modal -->
-    {#if analyzingDoc}
-        <JargonSlayer
-            docName={analyzingDoc.name}
-            docType={analyzingDoc.type}
-            onclose={() => (analyzingDoc = null)}
-        />
+    <!-- An example will with legal terms explained -->
+    {#if showExampleWill}
+        <JargonSlayer onclose={() => (showExampleWill = false)} />
     {/if}
 </div>

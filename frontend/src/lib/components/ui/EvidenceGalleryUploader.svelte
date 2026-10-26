@@ -3,10 +3,8 @@
     import { Upload, Loader2, Video, Image as ImageIcon } from "lucide-svelte";
     import MediaGallery, { type GalleryItem } from "./MediaGallery.svelte";
     import type { EvidenceItem } from "$lib/stores/propertyStore.svelte";
-    import { analyzeAssetImage } from "$lib/services/visionService";
 
     export let evidence: EvidenceItem[] = [];
-    export let allowAnalysis = true;
 
     const dispatch = createEventDispatcher<{
         change: EvidenceItem[];
@@ -53,20 +51,10 @@
             if (!isVideo && !isImage) continue;
 
             const url = URL.createObjectURL(file);
-            let name = file.name;
+            const name = file.name;
 
             // Video Thumbnail Logic (Basic)
             let thumbnailUrl: string | undefined;
-
-            // AI Analysis (Images only)
-            if (allowAnalysis && isImage) {
-                try {
-                    const analysis = await analyzeAssetImage(file);
-                    if (analysis.name) name = analysis.name; // Use auto-generated name
-                } catch (err) {
-                    console.warn("Analysis skipped", err);
-                }
-            }
 
             newItems.push({
                 id: crypto.randomUUID(),

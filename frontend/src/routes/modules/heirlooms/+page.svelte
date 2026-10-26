@@ -18,7 +18,6 @@
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import HeirloomCard from "$lib/components/modules/heirlooms/HeirloomCard.svelte";
     import VisionUploader from "$lib/components/modules/heirlooms/VisionUploader.svelte";
-    import type { AnalyzedHeirloom } from "$lib/services/visionService";
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
     import { onMount } from "svelte";
@@ -148,17 +147,6 @@
         }
         isLoading = false;
     });
-
-    function handleAnalysis(event: CustomEvent<AnalyzedHeirloom>) {
-        const analysis = event.detail;
-        newHeirloom.name = analysis.name;
-        newHeirloom.story = analysis.description;
-        // In a real app, the image would be uploaded to storage.
-        // For this demo, if the analysis returns a mock, usage of a placeholder or the blob URL is fine.
-        if (!newHeirloom.image || newHeirloom.image.startsWith("blob:")) {
-            // Keep the blob if it exists.
-        }
-    }
 
     // Default placeholder images mapped to keywords
     const HEIRLOOM_THEMES = [
@@ -708,7 +696,6 @@
                 <VisionUploader
                     bind:imageUrl={newHeirloom.image}
                     bind:provenance={newHeirloom.ownershipDetails}
-                    on:analyze={handleAnalysis}
                 />
                 <!-- A photo read from a file is kept as a data URL; any typed address stays editable here. -->
                 {#if !newHeirloom.image?.startsWith("data:")}

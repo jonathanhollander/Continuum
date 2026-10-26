@@ -971,7 +971,7 @@
                 <p
                     class="text-slate-400 font-bold uppercase tracking-widest text-xs"
                 >
-                    AI is weaving your reflections into a narrative
+                    Placing your words into a letter template
                 </p>
             </div>
         </div>

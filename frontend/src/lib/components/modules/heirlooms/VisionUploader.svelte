@@ -1,30 +1,13 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
-    import {
-        ScanEye,
-        Upload,
-        Loader2,
-        Sparkles,
-        CircleCheck,
-    } from "lucide-svelte";
-    import {
-        analyzeHeirloomImage,
-        type AnalyzedHeirloom,
-    } from "$lib/services/visionService";
+    import { ImagePlus, Upload } from "lucide-svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
 
     export let imageUrl: string = "";
     // Bound by the page so the Provenance text is saved with the heirloom.
     export let provenance: string = "";
 
-    const dispatch = createEventDispatcher<{
-        analyze: AnalyzedHeirloom;
-    }>();
-
     let fileInput: HTMLInputElement;
     let isDragging = false;
-    let isAnalyzing = false;
-    let analysisComplete = false;
 
     function handleDragOver(e: DragEvent) {
         e.preventDefault();
@@ -49,24 +32,8 @@
         const reader = new FileReader();
         reader.onload = (e) => {
             imageUrl = e.target?.result as string;
-            startAnalysis(file);
         };
         reader.readAsDataURL(file);
-    }
-
-    async function startAnalysis(file: File) {
-        isAnalyzing = true;
-        analysisComplete = false;
-
-        try {
-            const result = await analyzeHeirloomImage(file);
-            dispatch("analyze", result);
-            analysisComplete = true;
-        } catch (error) {
-            console.error("Analysis failed", error);
-        } finally {
-            isAnalyzing = false;
-        }
     }
 
     function triggerUpload() {
@@ -103,92 +70,31 @@
                     class="w-full h-full object-cover"
                 />
 
-                <!-- Overlay for Analysis State -->
-                {#if isAnalyzing}
-                    <div
-                        class="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center text-white"
-                    >
-                        <div class="relative">
-                            <div
-                                class="absolute inset-0 bg-indigo-500 blur-xl opacity-50 animate-pulse"
-                            ></div>
-                            <Loader2
-                                size={48}
-                                class="animate-spin relative z-10 text-indigo-400"
-                            />
-                        </div>
-                        <p
-                            class="mt-4 font-mono text-sm uppercase tracking-widest text-indigo-300 animate-pulse"
-                        >
-                            Analyzing Artifact...
-                        </p>
-                    </div>
-                {/if}
-
-                {#if analysisComplete}
-                    <div
-                        class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-emerald-500/90 text-white px-4 py-2 rounded-full flex items-center gap-2 shadow-lg backdrop-blur-md animate-in slide-in-from-bottom-4 fade-in duration-500"
-                    >
-                        <ScanEye size={16} />
-                        <span class="text-xs font-bold uppercase tracking-wide"
-                            >Analysis Complete</span
-                        >
-                    </div>
-                {/if}
-
-                {#if !isAnalyzing}
-                    <button
-                        on:click={triggerUpload}
-                        class="absolute top-2 right-2 p-2 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors"
-                        title="Change Image"
-                    >
-                        <Upload size={14} />
-                    </button>
-                {/if}
+                <button
+                    type="button"
+                    on:click={triggerUpload}
+                    class="absolute top-2 right-2 p-2 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors"
+                    title="Change Image"
+                >
+                    <Upload size={14} />
+                </button>
             </div>
         {:else}
             <div class="py-8 cursor-pointer" on:click={triggerUpload}>
                 <div
                     class="w-16 h-16 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-sm border border-indigo-100"
                 >
-                    <ScanEye size={32} />
+                    <ImagePlus size={32} />
                 </div>
                 <h3 class="text-sm font-bold text-slate-700 mb-1">
-                    Visual Archivist
+                    Add a photo
                 </h3>
                 <p class="text-xs text-slate-400">
                     Drag photo here or click to upload
                 </p>
-                <div
-                    class="mt-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-[10px] font-bold uppercase tracking-wide text-indigo-500"
-                >
-                    <Sparkles size={10} />
-                    AI Powered
-                </div>
             </div>
         {/if}
     </div>
-
-    {#if analysisComplete}
-        <div
-            class="bg-indigo-50 rounded-xl p-4 border border-indigo-100 animate-in fade-in slide-in-from-top-2"
-        >
-            <div class="flex items-start gap-3">
-                <div class="p-2 bg-indigo-100 rounded-lg text-indigo-600">
-                    <Sparkles size={18} />
-                </div>
-                <div>
-                    <h4 class="text-sm font-bold text-indigo-900">
-                        Insight Generated
-                    </h4>
-                    <p class="text-xs text-indigo-700 mt-1">
-                        We've identified this item and drafted a description.
-                        Review the details below.
-                    </p>
-                </div>
-            </div>
-        </div>
-    {/if}
 
     <!-- Provenance / Story Field with SmartTextarea -->
     <div class="pt-4">
