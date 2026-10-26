@@ -367,9 +367,7 @@ async def health_check(session: Session = Depends(get_session)):
         if not settings.PULSE_SCHEDULER_ENABLED:
             health["scheduler"] = "disabled"  # deliberately off: healthy
         else:
-            health["scheduler"] = scheduler.running
-            if not scheduler.running:
-                health["status"] = "unhealthy"
+            health["scheduler"] = scheduler.running  # reported only; never fails the Railway healthcheck
     except Exception as e:
         logger.error(f"Health check failure: Scheduler status unknown: {e}")
         health["status"] = "unhealthy"
