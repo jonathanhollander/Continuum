@@ -1,11 +1,9 @@
 <script lang="ts">
-    import { page } from "$app/stores";
     import { onMount } from "svelte";
     import { fade, fly, scale } from "svelte/transition";
     import {
         Users,
         ArrowRight,
-        Heart,
         Shield,
         Check,
         Sparkles,
@@ -13,7 +11,6 @@
     import logo from "$lib/assets/logo.png";
     import { goto } from "$app/navigation";
     import { auth } from "$lib/stores/auth";
-    import { notifications } from "$lib/stores/notificationStore";
 
     let ready = $state(false);
     let showSuccess = $state(false);
