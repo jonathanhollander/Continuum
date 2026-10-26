@@ -1,3 +1,10 @@
+<script module lang="ts">
+    type ConfirmedChecks = { account: string; profile: string; id: string; recoveryIds: string[] };
+    // A save may finish after its page unmounts. A remounted page observes only the
+    // exact confirmed draft, without an old component writing into its newer UI.
+    const confirmedChecks = new Set<(confirmation: ConfirmedChecks) => void>();
+</script>
+
 <script lang="ts">
     import { focusTrap } from "$lib/actions/focusTrap";
     import { fade, slide } from "svelte/transition";
@@ -21,7 +28,12 @@
         Pencil,
         Plus,
     } from "lucide-svelte";
-    import { onMount } from "svelte";
+    import { onDestroy, untrack } from "svelte";
+    import { get } from "svelte/store";
+    import { auth } from "$lib/stores/auth";
+    import { activeAccountId } from "$lib/stores/keyringStore";
+    import { currentProfileId } from "$lib/stores/profileContext";
+    import { captureSession, isCurrentSession, type SessionOwnership } from "$lib/services/sessionOwnership";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { estateExecutorName } from "$lib/stores/analyticsStore";
     import { getStored, setStored } from "$lib/stores/persistence";
@@ -69,92 +81,172 @@
         const { id: _id, ...rest } = row;
         return rest;
     };
-    if (Object.keys(digitalGuardianSync.data ?? {}).length === 0) {
-        const legacyStatus = legacyMap(LEGACY_STATUS_KEY);
-        const legacyDrill = legacyMap(LEGACY_DRILL_KEY);
-        if (legacyStatus || legacyDrill) {
-            digitalGuardianSync.updateLocal({
-                ...(legacyStatus ? { setupStatus: legacyStatus } : {}),
-                ...(legacyDrill ? { fireDrill: legacyDrill } : {}),
-            });
+    function adoptLegacy() {
+        if (Object.keys(digitalGuardianSync.data ?? {}).length === 0) {
+            const legacyStatus = legacyMap(LEGACY_STATUS_KEY);
+            const legacyDrill = legacyMap(LEGACY_DRILL_KEY);
+            if (legacyStatus || legacyDrill) {
+                digitalGuardianSync.updateLocal({
+                    ...(legacyStatus ? { setupStatus: legacyStatus } : {}),
+                    ...(legacyDrill ? { fireDrill: legacyDrill } : {}),
+                });
+            }
         }
     }
 
-    // Toggles show at once and are saved together ~500 ms after the last one. Until a save that
-    // carries them succeeds they stay in `pending`, drawn over whatever the manager holds (its
-    // rollback, a sync, or its own Try Again), and the next save re-sends them.
     type Checks = { setupStatus?: GuardianChecks; fireDrill?: GuardianChecks };
-    // `pending` is also kept on this device (namespaced like the manager's own key), so unsaved
-    // toggles survive a reload; it is cleared once a save carrying them lands.
+    type Owner = { session: SessionOwnership; account: string; profile: string };
+    const captureOwner = (): Owner => ({ session: captureSession(), account: get(activeAccountId) || "anonymous", profile: get(currentProfileId) || "owner" });
+    const currentOwner = (owner: Owner) => isCurrentSession(owner.session)
+        && owner.account === get(activeAccountId) && owner.profile === (get(currentProfileId) || "owner");
     const PENDING_KEY = "digital_guardian_pending";
-    let pending = $state<Checks | null>(getStored<Checks | null>(PENDING_KEY, null));
+    const RECOVERY_IDS_KEY = "digital_guardian_pending_recovery_ids";
+    const PENDING_ID_KEY = "digital_guardian_pending_id";
+    let pageOwner: Owner | null = null;
+    let pending = $state<Checks | null>(null);
+    let recoveryIds: string[] = [];
+    let pendingId: string | null = null;
+    let recoveryNotice: string | null = null;
     let saveTimer: ReturnType<typeof setTimeout> | undefined;
     let saving = false;
-    let failed = false;
+    const samePage = (owner: Owner) => pageOwner === owner && currentOwner(owner);
+
+    function keepChecks(owner: Owner) {
+        try {
+            setStored(PENDING_KEY, pending ? $state.snapshot(pending) : null, owner.profile, owner.account);
+            setStored(RECOVERY_IDS_KEY, recoveryIds, owner.profile, owner.account);
+            setStored(PENDING_ID_KEY, pendingId, owner.profile, owner.account);
+        } catch (e) { console.warn("[guardian] Keeping the pending checks in memory", e); }
+    }
+
+    function releaseChecks(owner: Owner, ids = recoveryIds) {
+        if (currentOwner(owner)) ids.forEach(id => digitalGuardianSync.releaseRecovery(id, owner.session));
+    }
+
+    function offerChecks(owner: Owner) {
+        if (!samePage(owner) || !pending || recoveryNotice) return;
+        // The page owns the latest combined maps; older interrupted saves are superseded by them.
+        releaseChecks(owner);
+        recoveryNotice = notifications.showError({
+            message: "Your earlier changes are kept. Review your saved details, then choose Try Again to apply them.",
+            code: "DATABASE_ERROR",
+        }, async () => {
+            if (!samePage(owner)) return;
+            recoveryNotice = null;
+            await flushChecks(owner);
+        });
+    }
+
+    function suspendOwner() {
+        clearTimeout(saveTimer);
+        saveTimer = undefined;
+        if (pageOwner) keepChecks(pageOwner);
+        if (recoveryNotice) notifications.dismiss(recoveryNotice);
+        recoveryNotice = null;
+        pageOwner = null;
+        pending = null;
+        recoveryIds = [];
+        pendingId = null;
+        saving = false;
+        editingId = null;
+        draft = { ...EMPTY_DRAFT };
+        showWizard = false;
+        activeGuide = null;
+        savingEdit = false;
+        isLoading = true;
+    }
+
+    async function activateOwner(owner: Owner) {
+        if (!currentOwner(owner)) { if (pageOwner && !currentOwner(pageOwner)) suspendOwner(); return; }
+        if (pageOwner && pageOwner.session.generation === owner.session.generation
+            && pageOwner.account === owner.account && pageOwner.profile === owner.profile) return;
+        suspendOwner();
+        pageOwner = owner;
+        if (digitalGuardianSync.loadedFor !== owner.account) digitalGuardianSync.reset(false);
+        if (digitalAssetsSync.loadedFor !== owner.account) digitalAssetsSync.reset(false);
+        adoptLegacy();
+        pending = getStored<Checks | null>(PENDING_KEY, null, owner.profile);
+        recoveryIds = getStored<string[]>(RECOVERY_IDS_KEY, [], owner.profile);
+        pendingId = pending ? getStored<string | null>(PENDING_ID_KEY, null, owner.profile) || crypto.randomUUID() : null;
+        keepChecks(owner);
+        await Promise.all([digitalGuardianSync.sync(), digitalAssetsSync.sync()]);
+        if (!samePage(owner)) return;
+        isLoading = false;
+        offerChecks(owner);
+    }
+
     $effect(() => {
-        setStored(PENDING_KEY, pending ? $state.snapshot(pending) : null);
+        $auth.token; $auth.user?.id; $auth.loading; $activeAccountId; $currentProfileId;
+        untrack(() => { void activateOwner(captureOwner()); });
     });
-    // Toggles kept from before a reload: shown at once, sent once the server row has loaded.
-    // One-time start-up read of the device copy, on purpose.
-    // svelte-ignore state_referenced_locally
-    let restored = pending !== null;
-    // Restored before this sync ran: the sync's answer (or its upload of the device copy) is the
-    // server's, so it can show the toggles already saved. After it, the copy is only this page's.
-    const restoredBeforeSync = digitalGuardianSync.status !== "synced";
-    // True when the manager's server copy already holds every pending map.
-    const pendingSaved = () => {
-        const data: Checks = digitalGuardianSync.data ?? {};
-        return (Object.keys(pending ?? {}) as (keyof Checks)[]).every(
-            (k) => JSON.stringify(data[k]) === JSON.stringify(pending![k]),
-        );
-    };
-    // One-time start-up read of the device copy, on purpose.
-    // svelte-ignore state_referenced_locally
-    if (pending) digitalGuardianSync.updateLocal({ ...(digitalGuardianSync.data ?? {}), ...pending });
-    $effect(() => {
-        if (restored && digitalGuardianSync.status === "synced") {
-            restored = false;
-            // A new account's sync already uploaded the device copy, which carries them: one POST.
-            if (restoredBeforeSync && pendingSaved()) { pending = null; return; }
-            clearTimeout(saveTimer);
-            saveTimer = setTimeout(flushChecks, 500);
+
+    const observeConfirmedChecks = (confirmation: ConfirmedChecks) => {
+        const owner = pageOwner;
+        if (!owner || !samePage(owner) || owner.account !== confirmation.account || owner.profile !== confirmation.profile) return;
+        recoveryIds = recoveryIds.filter(id => !confirmation.recoveryIds.includes(id));
+        if (pendingId === confirmation.id) {
+            pending = null;
+            pendingId = null;
+            if (recoveryNotice) notifications.dismiss(recoveryNotice);
+            recoveryNotice = null;
         }
+    };
+    confirmedChecks.add(observeConfirmedChecks);
+
+    function retireConfirmedChecks(owner: Owner, id: string, ids: string[]) {
+        if (!currentOwner(owner)) return;
+        releaseChecks(owner, ids);
+        // A newer page may already have replaced the pending maps; compare identity,
+        // never content, before removing the captured namespace's confirmed draft.
+        if (getStored<string | null>(PENDING_ID_KEY, null, owner.profile, owner.account) === id) {
+            setStored(PENDING_KEY, null, owner.profile, owner.account);
+            setStored(PENDING_ID_KEY, null, owner.profile, owner.account);
+        }
+        const storedIds = getStored<string[]>(RECOVERY_IDS_KEY, [], owner.profile, owner.account);
+        setStored(RECOVERY_IDS_KEY, storedIds.filter(key => !ids.includes(key)), owner.profile, owner.account);
+        confirmedChecks.forEach(observe => observe({ account: owner.account, profile: owner.profile, id, recoveryIds: ids }));
+    }
+
+    onDestroy(() => {
+        // Ordinary navigation can finish its own checks; an account switch only retains them.
+        if (pageOwner && currentOwner(pageOwner) && pending && !saving) void flushChecks(pageOwner);
+        confirmedChecks.delete(observeConfirmedChecks);
+        suspendOwner();
     });
 
     function saveChecks(next: Checks) {
+        const owner = pageOwner;
+        if (!owner || !samePage(owner)) return;
         pending = { ...(pending ?? {}), ...next };
-        digitalGuardianSync.updateLocal({ ...(digitalGuardianSync.data ?? {}), ...pending });
+        pendingId = crypto.randomUUID();
+        keepChecks(owner);
         clearTimeout(saveTimer);
-        saveTimer = setTimeout(flushChecks, 500);
+        saveTimer = setTimeout(() => { void flushChecks(owner); }, 500);
     }
 
-    async function flushChecks() {
-        if (!pending) return;
-        if (saving) { saveTimer = setTimeout(flushChecks, 500); return; }
-        const sent = pending;
+    async function flushChecks(owner = pageOwner) {
+        if (!owner || !samePage(owner) || !pending) return;
+        if (saving) { saveTimer = setTimeout(() => { void flushChecks(owner); }, 500); return; }
+        const sentId = pendingId || crypto.randomUUID();
+        pendingId = sentId;
+        const sent = $state.snapshot(pending);
+        const key = crypto.randomUUID();
+        recoveryIds = [...recoveryIds, key];
+        const sentIds = [...recoveryIds];
+        keepChecks(owner);
         saving = true;
         try {
-            await digitalGuardianSync.update(sent);
-            failed = false;
-            if (pending === sent) pending = null;
+            await digitalGuardianSync.update(sent, false, key);
+            retireConfirmedChecks(owner, sentId, sentIds);
         } catch {
-            failed = true;
-            // the manager shows the one gentle retry line; `pending` keeps the toggles
+            if (!samePage(owner)) return;
+            // Keep one retry for the latest combined maps, rather than an older interrupted save.
+            releaseChecks(owner, [key]);
+            offerChecks(owner);
         } finally {
-            saving = false;
+            if (samePage(owner)) saving = false;
         }
-        if (pending) digitalGuardianSync.updateLocal({ ...(digitalGuardianSync.data ?? {}), ...pending });
     }
-
-    // The manager's Try Again re-sends the save that failed; once it lands, send anything newer.
-    $effect(() => {
-        if (digitalGuardianSync.status === "synced" && pending && failed && !saving) {
-            failed = false;
-            if (pendingSaved()) { pending = null; return; }
-            clearTimeout(saveTimer);
-            saveTimer = setTimeout(flushChecks, 500);
-        }
-    });
 
     // Default Status
     const DEFAULT_STATUS = {
@@ -204,11 +296,6 @@
     let showWizard = $state(false);
     let isLoading = $state(true);
 
-    onMount(async () => {
-        await digitalAssetsSync.init();
-        isLoading = false;
-    });
-
     const wizardSteps = [
         {
             id: "intro",
@@ -254,10 +341,12 @@
 
     // One wizard run is one save: the creates run quietly, then one affirmation when all land,
     // or one gentle message whose Try Again re-sends only the accounts still waiting.
-    async function saveWizardAssets(wanted: [string, string, string][]) {
+    async function saveWizardAssets(wanted: [string, string, string][], owner = pageOwner) {
+        if (!owner || !samePage(owner)) return;
         const results = await Promise.allSettled(
-            wanted.map(([platform, username, type]) => addAsset(platform, username, type, true)),
+            wanted.map(([platform, username, type]) => addAsset(platform, username, type, true, {}, owner)),
         );
+        if (!samePage(owner)) return;
         const waiting = wanted.filter((_, i) => results[i].status === "rejected");
         if (waiting.length === 0) {
             notifications.showAffirmation("general", "create");
@@ -271,7 +360,7 @@
                 code: "DATABASE_ERROR",
                 technicalDetails: reason.reason?.technicalDetails || reason.reason?.message || String(reason.reason),
             },
-            () => saveWizardAssets(waiting),
+            () => saveWizardAssets(waiting, owner),
         );
     }
 
@@ -284,7 +373,8 @@
     }
 
     type Wishes = Pick<DigitalAccount, "description" | "preference" | "instructions" | "priority">;
-    async function addAsset(platform: string, username: string, type: string, quiet = false, wishes: Wishes = {}) {
+    async function addAsset(platform: string, username: string, type: string, quiet = false, wishes: Wishes = {}, owner = pageOwner) {
+        if (!owner || !samePage(owner)) return;
         let newAsset;
         try {
         newAsset = await digitalAssetsSync.create({
@@ -294,12 +384,13 @@
             isClosed: false,
             ...wishes,
             description: wishes.description || `${type} Account`,
-        }, false, quiet, quiet ? undefined : () => addAsset(platform, username, type, false, wishes));
+        }, false, quiet, quiet ? undefined : () => addAsset(platform, username, type, false, wishes, owner));
         } catch (e) {
             if (quiet) throw e; // the wizard shows one message for the whole run
             return; // the manager already showed the one gentle message
         }
 
+        if (!samePage(owner)) return;
         activityLog.logEvent({
             module: "Digital Guardian",
             action: "CREATE",
@@ -346,12 +437,13 @@
     // One save at a time: while it is open the button waits, so a second click sends nothing.
     let savingEdit = $state(false);
     async function saveEdit() {
-        if (savingEdit) return;
+        const owner = pageOwner;
+        if (savingEdit || !owner || !samePage(owner)) return;
         savingEdit = true;
         try {
             await saveEditOnce();
         } finally {
-            savingEdit = false;
+            if (samePage(owner)) savingEdit = false;
         }
     }
 
@@ -375,7 +467,9 @@
     }
 
     async function deleteAsset(id: string) {
-        if (!(await askConfirm("Remove this account from your inventory?"))) return;
+        const owner = pageOwner;
+        if (!owner || !samePage(owner)) return;
+        if (!(await askConfirm("Remove this account from your inventory?")) || !samePage(owner)) return;
         try {
             await digitalAssetsSync.delete(id);
         } catch {
@@ -404,9 +498,16 @@
 </script>
 
 {#if isLoading}
-    <div class="flex items-center justify-center py-12">
-        <Loader2 class="w-8 h-8 animate-spin text-primary" />
-    </div>
+    {#if $auth.offline && !$auth.loading}
+        <div class="max-w-xl mx-auto p-8 text-center space-y-4">
+            <p>We couldn't confirm your signed-in account. Reconnect, then try again to load your saved details.</p>
+            <button class="px-5 py-2 rounded-xl bg-primary text-primary-foreground font-semibold" onclick={() => { void auth.init(); }}>Try again</button>
+        </div>
+    {:else}
+        <div class="flex items-center justify-center py-12">
+            <Loader2 class="w-8 h-8 animate-spin text-primary" />
+        </div>
+    {/if}
 {:else}
 <div class="max-w-5xl mx-auto p-8 animate-in fade-in duration-500">
     <!-- Header -->
