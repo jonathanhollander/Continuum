@@ -245,6 +245,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X8 | Naive `datetime.utcnow()` defaults (A5 finding) | 41 uses in 15 backend files; deprecated, and the same family as the SQLModel 0.0.48 crash | Those files — **dispatched after Wave C merges**, because B/C cards own `estate_models.py` and `routers/media.py` | One helper; same naive-UTC values stored, so no migration | `grep utcnow backend` finds only the helper; seed, login and one save per touched model still work |
 | X9 | Magic-link and token-subject hardening (X7 findings) | Magic-link tokens are reusable for 15 min; `/magic-link/request` logs an auth success when it only sent an email; `sub` is passed to `session.get` as a string (`backend/auth.py:75`, `:91`); the passkey-login token path (`routers/auth.py:~517`) is unreviewed | `backend/auth.py`; the magic-link request/verify and passkey-login-finish handlers in `backend/routers/auth.py` (not the bypass block) | One-time magic links (a `jti` recorded on first use, smallest storage that works, migration only if needed); log the request as a request; cast `sub` to int safely; review and fix the passkey token path | A magic link works once and is refused the second time; normal login, refresh and passkey paths unchanged |
 | X10 | Slow `/api/ai/chat` error path (O1, Wave A) | p50 152 ms, p95 473 ms (max 1000) on the no-key 503 path, while other POSTs are ~9 ms; cause unproven (limiter on an async handler, the 503 path, echo logging); a new `httpx.AsyncClient` per call | `backend/routers/ai_proxy.py` | Find the cause with one targeted timing (echo off); reuse one AsyncClient | p95 ≤ 300 ms on the 503 path |
+| X11 | SPA catch-all swallows non-API paths (X4 finding) | `serve_spa` uses `full_path.startswith("api")`, so `/apiary`, `/api-guide` get a JSON 404 instead of the app; a dead `startswith("/")` check after `lstrip` | The `serve_spa` lines in `backend/main.py` | `full_path == "api" or full_path.startswith("api/")`; drop the dead check | `/api-guide` gets the SPA; `/api/nope` still a JSON 404 |
 | X6 | Rotate the OpenRouter key (was F1) | The key is public in shipped JS | Owner step at openrouter.ai (Claude may not create or copy API keys) | Create a new key, put it in the Railway variable X1 reads, revoke the old one | Done after X1 is live; the old key returns 401 |
 
 ---
@@ -305,12 +306,13 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X1 | ☑ | 4575c17 | Build with fake `sk-or-` key: no `sk-or-`/`openrouter.ai` in dist; `/api/ai/chat` 401 without token, 503 gentle message with no key. Also fixed: duplicate user message, unsanitised history, CSRF header on the AI call |
 | X2 | ☑ | 91321f9 | `git ls-files` lists no .db; `*.db` ignored; local copies kept on disk. Old copy in `34780fe` (branch `origin/stash-backup/2026-01-26-34780fe`) holds 1 non-dev user row, empty password. Owner 2026-10-26: bundled to `docs/archive/stash-backup-2026-01-26-34780fe.bundle` (local only, git-ignored, verified), remote branch deleted |
 | X3 | ▶ | | |
-| X4 | ▶ | | |
+| X4 | ☑ | 9e539f4 | Started from `backend/` and from the root: `/`, `/_app/...`, `/modules/x` 200; traversal variants never leak; prefix check replaced by `commonpath` (sibling `dist-other` could pass before) |
+| X11 | ▶ | | |
 | X5 | ☐ | | |
 | X6 | ☐ (owner) | | |
 | X7 | ☑ | 8a5b462 | Fresh DB: login, /me, refresh 200; magic-link token on /me 401; "BYPASS_AUTH" stored value 401 (was 500); sub-less magic link 401 (was 500); valid magic link 200; jh@ bypass 200 |
 | X8 | ☐ (after Wave C) | | |
-| X9 | ▶ | | |
+| X9 | ☑ | b95307d | Magic link verifies once (200), second use 401 "already used"; request logged as `magic_link_requested`, not an auth success; `sub:"abc"` 401; login/me/refresh/jh@ 200. Passkey-finish fixes (keep specific 400/401, audit, missing-user 401) read, not run: needs a real WebAuthn assertion — check in the release browser test |
 | X10 | ☐ (after X3, X4 merge: shares nothing, but waits on O1 re-time) | | |
 | O1 — per wave (A–E) | ▶ (A done: login p95 133, /me 4.8, refresh 19.2, ai/chat 503 path 473 → X10) | | |
 | O2 — per wave (A–E) | ☐ | | |
