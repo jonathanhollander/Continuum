@@ -6,7 +6,7 @@
  */
 
 import { browser } from "$app/environment";
-import type { SyncStatus } from "$lib/services/sync.svelte";
+import { getRegistry, type SyncStatus } from "$lib/services/sync.svelte";
 import type { CompassionateSyncStatus } from "$lib/components/ui/SyncBadge.svelte";
 
 // Import sync managers from stores
@@ -16,6 +16,7 @@ import { profileSync, directiveSync } from "$lib/stores/medicalStore.svelte";
 import { petSync } from "$lib/stores/petStore.svelte";
 import { propertySync } from "$lib/stores/propertyStore.svelte";
 import { digitalAssetsSync } from "$lib/stores/digitalAssetsStore.svelte";
+import { financialAssetsSync } from "$lib/stores/financialAssetsStore.svelte";
 import { heirloomSync } from "$lib/stores/heirloomStore.svelte";
 import { documentStore } from "$lib/stores/documentStore.svelte";
 import { letterStore } from "$lib/stores/letterStore.svelte";
@@ -29,7 +30,7 @@ import { timelineSync } from "$lib/stores/timelineStore.svelte";
 import { homeAccessStore } from "$lib/stores/homeAccessStore.svelte";
 import { utilityStore } from "$lib/stores/utilityStore.svelte";
 import { vendorStore } from "$lib/stores/vendorStore.svelte";
-import { pulseStatus } from "$lib/stores/pulse.svelte";
+import { pulseStatus } from "$lib/stores/pulse.svelte"; // also registers pulse_settings
 
 /**
  * Maps SyncManager status to compassionate user-facing status.
@@ -63,186 +64,122 @@ function mapToCompassionateStatus(
 }
 
 /**
+ * Registry keys of the SyncManagers behind each module card: the stores that module's own page
+ * reads and saves through. A card's badge (and the dashboard's loading check) reads exactly these.
+ */
+export const moduleSyncKeys: Record<string, readonly string[]> = {
+    contacts: ["family_members"],
+    financial: ["financial_assets"],
+    insurance: ["insurance_policies"],
+    medical: ["medical_profile", "medical_directives"],
+    pets: ["pets"],
+    property: ["properties"],
+    guardian: ["digital_assets", "digital_guardian"], // digital_guardian: registered by its page
+    heirlooms: ["heirlooms"],
+    // The legal-documents page saves through DocumentVault's own manager (registered on its mount).
+    documents: ["documents", "docs_legal-vault"],
+    subscriptions: ["subscriptions"],
+    letters: ["letters"],
+    pulse: ["pulse_status", "pulse_settings"],
+    "home-manual": ["home_access", "utilities", "vendors"],
+    funeral: ["funeral_data"],
+    journal: ["journal_entries"],
+    calendar: ["calendar_events"],
+    "advanced-registry": ["advanced_assets"],
+    capsule: ["time_capsule"],
+    timeline: ["timeline_events"],
+};
+
+type WatchedManager = { status: SyncStatus; lastSync: Date | null };
+
+/** The registered managers behind a module card (a lazily registered one is skipped until it exists). */
+export function moduleManagers(moduleKey: string): WatchedManager[] {
+    const registry = getRegistry() as Record<string, WatchedManager | undefined>;
+    return (moduleSyncKeys[moduleKey] ?? [])
+        .map((k) => registry[k])
+        .filter((m): m is WatchedManager => !!m);
+}
+
+/** One status for a module's managers: any error, else any saving, else synced only when all are. */
+function combinedStatus(moduleKey: string): SyncStatus {
+    const statuses = moduleManagers(moduleKey).map((m) => m.status);
+    if (statuses.includes("error")) return "error";
+    if (statuses.includes("syncing")) return "syncing";
+    return statuses.length > 0 && statuses.every((s) => s === "synced") ? "synced" : "idle";
+}
+
+/**
  * Module to SyncManager mapping.
- * Maps navigation module keys to their corresponding sync managers.
+ * Status comes from moduleSyncKeys; each entry says whether the module holds meaningful data.
  */
 type ModuleSyncInfo = {
     getStatus: () => CompassionateSyncStatus;
 };
 
+const fromKeys = (moduleKey: string, hasData: () => boolean): ModuleSyncInfo => ({
+    getStatus: () => mapToCompassionateStatus(combinedStatus(moduleKey), hasData()),
+});
+
 const moduleMapping: Record<string, ModuleSyncInfo> = {
     // Core Essentials
-    contacts: {
-        getStatus: () => mapToCompassionateStatus(
-            contactSync.status,
-            contactSync.items.length > 0
-        )
-    },
-    financial: {
-        getStatus: () => mapToCompassionateStatus(
-            propertySync.status,
-            propertySync.items.length > 0
-        )
-    },
-    insurance: {
-        getStatus: () => mapToCompassionateStatus(
-            insuranceSync.status,
-            insuranceSync.items.length > 0
-        )
-    },
-    medical: {
-        getStatus: () => {
-            // Medical has both profile and directives - combine status
-            const profileStatus = profileSync.status;
-            const directiveStatus = directiveSync.status;
-
-            // If either has error, show attention-needed
-            if (profileStatus === "error" || directiveStatus === "error") {
-                return "attention-needed";
-            }
-
-            // If either is syncing, show saving
-            if (profileStatus === "syncing" || directiveStatus === "syncing") {
-                return "saving";
-            }
-
-            // Check if has meaningful data (not just empty defaults)
-            const hasDirectives = directiveSync.items.length > 0;
-            const profile = profileSync.data;
-            const hasProfileData = Boolean(profile && (
-                profile.organDonor === true ||
-                (profile.bloodType && profile.bloodType.trim() !== '') ||
-                (profile.allergies && profile.allergies.trim() !== '')
-            ));
-            const hasData = hasDirectives || hasProfileData;
-
-            return mapToCompassionateStatus(
-                profileStatus === "synced" && directiveStatus === "synced" ? "synced" : "idle",
-                hasData
-            );
-        }
-    },
-    pets: {
-        getStatus: () => mapToCompassionateStatus(
-            petSync.status,
-            petSync.items.length > 0
-        )
-    },
-    property: {
-        getStatus: () => mapToCompassionateStatus(
-            propertySync.status,
-            propertySync.items.length > 0
-        )
-    },
-    guardian: {
-        getStatus: () => mapToCompassionateStatus(
-            digitalAssetsSync.status,
-            digitalAssetsSync.items.length > 0
-        )
-    },
-    heirlooms: {
-        getStatus: () => mapToCompassionateStatus(
-            heirloomSync.status,
-            heirloomSync.items.length > 0
-        )
-    },
-    documents: {
-        getStatus: () => mapToCompassionateStatus(
-            documentStore.status,
-            documentStore.items.length > 0
-        )
-    },
-    subscriptions: {
-        getStatus: () => mapToCompassionateStatus(
-            subscriptionStore.status,
-            subscriptionStore.items.length > 0
-        )
-    },
-    letters: {
-        getStatus: () => mapToCompassionateStatus(
-            letterStore.status,
-            letterStore.items.length > 0
-        )
-    },
+    contacts: fromKeys("contacts", () => contactSync.items.length > 0),
+    financial: fromKeys("financial", () => financialAssetsSync.items.length > 0),
+    insurance: fromKeys("insurance", () => insuranceSync.items.length > 0),
+    medical: fromKeys("medical", () => {
+        // Meaningful data: any directive, or a profile beyond its empty defaults
+        const profile = profileSync.data;
+        const hasProfileData = Boolean(profile && (
+            profile.organDonor === true ||
+            (profile.bloodType && profile.bloodType.trim() !== '') ||
+            (profile.allergies && profile.allergies.trim() !== '')
+        ));
+        return directiveSync.items.length > 0 || hasProfileData;
+    }),
+    pets: fromKeys("pets", () => petSync.items.length > 0),
+    property: fromKeys("property", () => propertySync.items.length > 0),
+    guardian: fromKeys("guardian", () => digitalAssetsSync.items.length > 0),
+    heirlooms: fromKeys("heirlooms", () => heirloomSync.items.length > 0),
+    documents: fromKeys("documents", () => documentStore.items.length > 0),
+    subscriptions: fromKeys("subscriptions", () => subscriptionStore.items.length > 0),
+    letters: fromKeys("letters", () => letterStore.items.length > 0),
     pulse: {
         getStatus: () => {
-            // Pulse uses a different pattern - check loading state and data
-            if (pulseStatus.loading) return "saving";
+            // Pulse reads "saving" while any of its stores is in flight, else whether it is set up
+            if (combinedStatus("pulse") === "syncing") return "saving";
             const current = pulseStatus.current;
             const hasData = current && current.status !== 'not_configured';
             return hasData ? "safe" : "ready";
         }
     },
-    "home-manual": {
-        getStatus: () => {
-            // Home manual combines home access, utilities, and vendors
-            const hasHomeAccess = homeAccessStore.items.length > 0;
-            const hasUtilities = utilityStore.items.length > 0;
-            const hasVendors = vendorStore.items.length > 0;
-            const hasData = hasHomeAccess || hasUtilities || hasVendors;
-
-            // Check statuses
-            const statuses = [homeAccessStore.status, utilityStore.status, vendorStore.status];
-            if (statuses.includes('error')) return "attention-needed";
-            if (statuses.includes('syncing')) return "saving";
-
-            return mapToCompassionateStatus(
-                statuses.every(s => s === 'synced') ? 'synced' : 'idle',
-                hasData
-            );
-        }
-    },
-    funeral: {
-        getStatus: () => {
-            const data = funeralSync.data;
-            // Check if funeral data has any meaningful values
-            // FuneralData has wishes.disposition, wishes.venue, etc.
-            const hasData = data && data.wishes && (
-                data.wishes.disposition ||
-                data.wishes.venue ||
-                data.wishes.mood ||
-                data.budget.length > 0
-            );
-            return mapToCompassionateStatus(funeralSync.status, !!hasData);
-        }
-    },
-    journal: {
-        getStatus: () => mapToCompassionateStatus(
-            journalStore.status,
-            journalStore.items.length > 0
-        )
-    },
-    calendar: {
-        getStatus: () => mapToCompassionateStatus(
-            calendarSync.status,
-            calendarSync.items.length > 0
-        )
-    },
-    "advanced-registry": {
-        getStatus: () => {
-            const data = advancedAssetSync.data;
-            // Check if has any meaningful data
-            // AdvancedAssetState has transactions, maintenance, claims
-            const hasData = data && (
-                (data.transactions && data.transactions.length > 0) ||
-                (data.maintenance && data.maintenance.length > 0) ||
-                (data.claims && data.claims.length > 0)
-            );
-            return mapToCompassionateStatus(advancedAssetSync.status, !!hasData);
-        }
-    },
-    capsule: {
-        getStatus: () => mapToCompassionateStatus(
-            timeCapsuleSync.status,
-            timeCapsuleSync.items.length > 0
-        )
-    },
-    timeline: {
-        getStatus: () => mapToCompassionateStatus(
-            timelineSync.status,
-            timelineSync.items.length > 0
-        )
-    }
+    // Home manual combines home access, utilities, and vendors
+    "home-manual": fromKeys("home-manual", () =>
+        homeAccessStore.items.length > 0 ||
+        utilityStore.items.length > 0 ||
+        vendorStore.items.length > 0
+    ),
+    funeral: fromKeys("funeral", () => {
+        const data = funeralSync.data;
+        // FuneralData has wishes.disposition, wishes.venue, etc.
+        return !!(data && data.wishes && (
+            data.wishes.disposition ||
+            data.wishes.venue ||
+            data.wishes.mood ||
+            data.budget.length > 0
+        ));
+    }),
+    journal: fromKeys("journal", () => journalStore.items.length > 0),
+    calendar: fromKeys("calendar", () => calendarSync.items.length > 0),
+    "advanced-registry": fromKeys("advanced-registry", () => {
+        const data = advancedAssetSync.data;
+        // AdvancedAssetState has transactions, maintenance, claims
+        return !!(data && (
+            (data.transactions && data.transactions.length > 0) ||
+            (data.maintenance && data.maintenance.length > 0) ||
+            (data.claims && data.claims.length > 0)
+        ));
+    }),
+    capsule: fromKeys("capsule", () => timeCapsuleSync.items.length > 0),
+    timeline: fromKeys("timeline", () => timelineSync.items.length > 0),
 };
 
 /**
