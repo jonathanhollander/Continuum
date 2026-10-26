@@ -241,7 +241,7 @@
                                 href={finding.actionUrl}
                                 class="px-5 py-2 bg-muted text-foreground font-bold rounded-lg text-sm group-hover:bg-primary-deep group-hover:text-white transition-colors flex items-center gap-2"
                             >
-                                Fix Now <ArrowRight size={16} />
+                                Take a look <ArrowRight size={16} />
                             </a>
                         {/if}
                     </div>

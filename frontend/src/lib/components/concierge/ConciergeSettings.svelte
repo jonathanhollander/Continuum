@@ -168,7 +168,7 @@
                 <div
                     role="group"
                     aria-labelledby="cs-perspective-label"
-                    class="bg-muted p-1 rounded-xl flex items-center gap-1"
+                    class="bg-background border border-border p-1 rounded-xl flex items-center gap-1"
                 >
                     {#each roles as role}
                         <button
@@ -311,7 +311,7 @@
                 <div class="space-y-4">
                     <div class="grid grid-cols-2 gap-4">
                         {#if $userRole !== "Owner"}
-<div class="space-y-1.5">
+<div class="grid grid-cols-1 gap-1.5">
                             <label for="cs-death"
                                 class="text-[10px] font-bold text-muted-foreground uppercase"
                                 >{$dict.labelDeathDate}</label
@@ -324,7 +324,7 @@
                             />
                         </div>
 {/if}
-                        <div class="space-y-1.5">
+                        <div class="grid grid-cols-1 gap-1.5">
                             <label for="cs-ssn"
                                 class="text-[10px] font-bold text-muted-foreground uppercase"
                                 >{$dict.labelSSN}</label
@@ -418,9 +418,9 @@
                     </div>
                 </div>
                 <div
-                    class="w-10 h-5 bg-slate-200 rounded-full relative transition-colors {$accessibilityStore.highContrast
+                    class="w-10 h-5 rounded-full relative transition-colors {$accessibilityStore.highContrast
                         ? 'bg-primary'
-                        : ''}"
+                        : 'bg-border'}"
                 >
                     <div
                         class="absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform {$accessibilityStore.highContrast
@@ -449,10 +449,10 @@
                     </div>
                 </div>
                 <div
-                    class="w-10 h-5 bg-slate-200 rounded-full relative transition-colors {$encouragementMode !==
+                    class="w-10 h-5 rounded-full relative transition-colors {$encouragementMode !==
                     'Hidden'
                         ? 'bg-primary'
-                        : ''}"
+                        : 'bg-border'}"
                 >
                     <div
                         class="absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform {$encouragementMode ===
@@ -549,7 +549,7 @@
             </div>
 
             <!-- Theme Toggle -->
-            <div class="bg-muted p-1.5 rounded-xl flex items-center gap-1">
+            <div class="bg-background border border-border p-1.5 rounded-xl flex items-center gap-1">
                 {#each [{ id: "light", icon: Sun, label: "Light" }, { id: "dark", icon: Moon, label: "Dark" }, { id: "system", icon: Monitor, label: "Auto" }] as theme}
                     {@const ThemeIcon = theme.icon}
                     <button
@@ -693,7 +693,7 @@
                         <button
                             class="w-11 h-6 rounded-full transition-colors relative {includeImages
                                 ? 'bg-primary'
-                                : 'bg-slate-300'}"
+                                : 'bg-border'}"
                             onclick={() => (includeImages = !includeImages)}
                             role="switch"
                             aria-checked={includeImages}
