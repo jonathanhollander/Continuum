@@ -79,7 +79,6 @@
 	import Sidebar from "$lib/components/layout/Sidebar.svelte";
 	import MobileBottomNav from "$lib/components/layout/MobileBottomNav.svelte";
 	import { navGroups, pulseSubNav, catalogCategories } from "$lib/config/navigation";
-	import { compassStore } from "$lib/stores/compassStore";
 	import NotificationContainer from "$lib/components/NotificationContainer.svelte";
 	import RoleSwitcher from "$lib/components/RoleSwitcher.svelte";
 	import { contextStore } from "$lib/stores/contextStore.svelte";
@@ -110,11 +109,10 @@
 	let isCompassOpen = $state(false);
 	let showCommandCenter = $state(false);
 
-	// When route changes, compassStore updates its page context.
+	// When route changes, record the navigation.
 	let previousPath = $state<string>("");
 	$effect(() => {
 		if ($page.url.pathname) {
-			compassStore.updateContext($page.url.pathname);
 			overwhelmDetector.recordNavigation($page.url.pathname);
 			logger.debug("Navigation tracked", { path: $page.url.pathname });
 
