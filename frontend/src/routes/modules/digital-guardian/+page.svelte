@@ -20,7 +20,8 @@
     } from "lucide-svelte";
     import { onMount } from "svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
-    import { getStored, setStored } from "$lib/stores/persistence";
+    import { getStored } from "$lib/stores/persistence";
+    import { digitalGuardianSync, type GuardianChecks } from "$lib/stores/digitalGuardianStore.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
@@ -55,10 +56,36 @@
         linkedin: boolean;
         passwordManager: boolean;
     }
-    // Setup status and fire drill have no backend table: they are kept on this device only
-    // (localStorage, namespaced per account and profile) so a toggle never hits a missing endpoint.
-    const STATUS_KEY = "digital_guardian_status";
-    const DRILL_KEY = "digital_guardian_drill";
+    // Setup status and fire drill follow the account: one server row (/api/data/digital_guardian),
+    // shown from the device copy until the server answers. Device-only values saved under the
+    // earlier keys (X38) seed that copy once, and the manager uploads them if the server has none.
+    const LEGACY_STATUS_KEY = "digital_guardian_status";
+    const LEGACY_DRILL_KEY = "digital_guardian_drill";
+    const legacyMap = (key: string): GuardianChecks | undefined => {
+        const row = getStored<any[]>(key, []).find?.((i: any) => i?.id === "main");
+        if (!row) return undefined;
+        const { id: _id, ...rest } = row;
+        return rest;
+    };
+    if (Object.keys(digitalGuardianSync.data ?? {}).length === 0) {
+        const legacyStatus = legacyMap(LEGACY_STATUS_KEY);
+        const legacyDrill = legacyMap(LEGACY_DRILL_KEY);
+        if (legacyStatus || legacyDrill) {
+            digitalGuardianSync.updateLocal({
+                ...(legacyStatus ? { setupStatus: legacyStatus } : {}),
+                ...(legacyDrill ? { fireDrill: legacyDrill } : {}),
+            });
+        }
+    }
+
+    // A failed save keeps the toggle on screen (the manager shows the one gentle retry line).
+    async function saveChecks(next: { setupStatus?: GuardianChecks; fireDrill?: GuardianChecks }) {
+        try {
+            await digitalGuardianSync.update(next);
+        } catch {
+            digitalGuardianSync.updateLocal({ ...(digitalGuardianSync.data ?? {}), ...next });
+        }
+    }
 
     // Default Status
     const DEFAULT_STATUS = {
@@ -70,9 +97,10 @@
         passwordManager: false,
     };
 
-    let setupStatus = $state<GuardianStatus>({
+    let setupStatus = $derived<GuardianStatus>({
         ...DEFAULT_STATUS,
-        ...(getStored<GuardianStatus[]>(STATUS_KEY, []).find((i) => i.id === "main") ?? {}),
+        ...(digitalGuardianSync.data?.setupStatus ?? {}),
+        id: "main",
     });
 
     // --- FIRE DRILL SYNC ---
@@ -95,9 +123,10 @@
         will: false,
     };
 
-    let fireDrill = $state<FireDrill>({
+    let fireDrill = $derived<FireDrill>({
         ...DEFAULT_DRILL,
-        ...(getStored<FireDrill[]>(DRILL_KEY, []).find((i) => i.id === "main") ?? {}),
+        ...(digitalGuardianSync.data?.fireDrill ?? {}),
+        id: "main",
     });
 
     // --- ASSETS SYNC ---
@@ -163,8 +192,8 @@
         key: keyof Omit<GuardianStatus, "id">,
         value: boolean,
     ) {
-        setupStatus[key] = value;
-        setStored(STATUS_KEY, [$state.snapshot(setupStatus)]);
+        const { id: _id, ...current } = setupStatus;
+        saveChecks({ setupStatus: { ...current, [key]: value } });
     }
 
     async function addAsset(platform: string, username: string, type: string) {
@@ -218,8 +247,8 @@
     }
 
     function toggleDrill(step: keyof Omit<FireDrill, "id">) {
-        fireDrill[step] = !fireDrill[step];
-        setStored(DRILL_KEY, [$state.snapshot(fireDrill)]);
+        const { id: _id, ...current } = fireDrill;
+        saveChecks({ fireDrill: { ...current, [step]: !current[step] } });
     }
 </script>
 

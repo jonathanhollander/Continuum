@@ -394,6 +394,15 @@ class FuneralData(SQLModel, table=True):
     budget: str = Field(default="[]") # JSON of List[FuneralBudgetItem]
     custom_attributes: Optional[str] = Field(default="{}")
 
+# --- DIGITAL GUARDIAN ---
+class DigitalGuardianData(SQLModel, table=True):
+    """Digital-guardian setup checklist and fire drill: one row per user."""
+    __tablename__ = "digital_guardian_data"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="users.id", unique=True)
+    setup_status: str = Field(default="{}")  # JSON {step: bool}
+    fire_drill: str = Field(default="{}")  # JSON {step: bool}
+
 # --- ADVANCED ASSETS ---
 class AdvancedAssetData(SQLModel, table=True):
     """Model for complex asset details like maintenance logs and claims."""
