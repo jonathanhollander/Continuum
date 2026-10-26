@@ -340,7 +340,7 @@ export const navGroups: NavGroup[] = [
                 tooltip: "Step-by-step help for the person settling the estate"
             },
             {
-                label: "Complete Record",
+                label: "Your Full Record",
                 key: "advanced-registry",
                 href: "/modules/advanced-registry",
                 icon: Database,
@@ -510,7 +510,7 @@ export const catalogCategories: CatalogCategory[] = [
             { label: "Important Dates", key: "anniversary", href: "/modules/anniversary-manager", icon: Sparkles, allowedRoles: ["Owner", "Executor", "Family"] },
             { label: "Future Scenarios", key: "scenario", href: "/modules/scenario-mode", icon: Compass, allowedRoles: ["Owner"], isPreview: true },
             { label: "Event Calendar", key: "calendar", href: "/modules/calendar", icon: Calendar, allowedRoles: ["Owner", "Executor", "Family"] },
-            { label: "Complete Record", key: "advanced-registry", href: "/modules/advanced-registry", icon: Database, allowedRoles: ["Owner", "Executor"] },
+            { label: "Your Full Record", key: "advanced-registry", href: "/modules/advanced-registry", icon: Database, allowedRoles: ["Owner", "Executor"] },
             { label: "Treasure Hunt", key: "treasurehunt", href: "/modules/treasure-hunt", icon: MapPin, allowedRoles: ["Owner", "Executor", "Family"], isPreview: true },
             { label: "Builder Tools", key: "builders", href: "/modules/builders-console", icon: Hammer, allowedRoles: ["Owner"], isPreview: true },
         ]

@@ -347,7 +347,7 @@
                             id="cs-address"
                             type="text"
                             bind:value={draft.legalAddress}
-                            placeholder="Street, City, State, ZIP"
+                            placeholder={$dict.placeholderAddress}
                             class="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none shadow-sm"
                         />
                     </div>
