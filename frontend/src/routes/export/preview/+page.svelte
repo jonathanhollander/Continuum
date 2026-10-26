@@ -75,7 +75,7 @@
     }
 </script>
 
-<div class="flex flex-col h-screen bg-slate-50">
+<div class="flex flex-col h-[calc(100vh-5rem)] bg-slate-50">
     <header class="bg-white border-b px-6 py-4 flex items-center justify-between shadow-sm z-10">
         <div class="flex items-center gap-4">
             <button

@@ -2,7 +2,7 @@
     // The Red Binder: the readable packet, built from the one export snapshot
     // (GET /api/export/snapshot). Print saves it as a PDF; the download copy is a zip
     // with this same packet, the actual files and a manifest.
-    import { Printer, FileDown, Archive, Loader2 } from "lucide-svelte";
+    import { Printer, Archive, Loader2 } from "lucide-svelte";
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import { goto } from "$app/navigation";
     import { onMount, onDestroy } from "svelte";
@@ -10,7 +10,6 @@
         fetchSnapshot,
         buildPacket,
         packetHTML,
-        createPDFBlob,
         loadAttachmentFiles,
         buildDownloadCopy,
         saveBlob,
@@ -60,16 +59,6 @@
         window.print();
     }
 
-    async function downloadPDF() {
-        if (!packet) return;
-        busy = "pdf";
-        try {
-            saveBlob(await createPDFBlob("full", true, () => {}, snapshot ?? undefined), `Continuum_binder_${day()}.pdf`);
-        } finally {
-            busy = null;
-        }
-    }
-
     async function downloadCopy() {
         if (!snapshot) return;
         busy = "zip";
@@ -84,28 +73,20 @@
 </script>
 
 <div class="min-h-screen bg-stone-100 p-8 print:bg-white print:p-0">
-    <div class="max-w-4xl mx-auto mb-8 flex justify-between items-center gap-6 print:hidden">
-        <div>
+    <div class="max-w-4xl mx-auto mb-8 print:hidden">
+        <div class="mb-4">
             <h1 class="font-serif font-bold text-3xl text-[#304743]">The Red Binder</h1>
             <p class="text-stone-500">
                 Everything you have recorded, in one place to print or keep.
             </p>
         </div>
         {#if packet && packet.sections.length > 0}
-            <div class="flex items-center gap-3 shrink-0">
+            <div class="flex flex-wrap items-center gap-3">
                 <button
                     onclick={printBinder}
                     class="bg-[#304743] hover:bg-[#2A3F3B] text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg transition-all"
                 >
                     <Printer size={18} /> Print or save as PDF
-                </button>
-                <button
-                    onclick={downloadPDF}
-                    disabled={busy !== null}
-                    class="bg-white hover:bg-stone-50 text-[#304743] border border-stone-300 px-4 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all disabled:opacity-60"
-                >
-                    {#if busy === "pdf"}<Loader2 size={18} class="animate-spin" />{:else}<FileDown size={18} />{/if}
-                    PDF file
                 </button>
                 <button
                     onclick={downloadCopy}
@@ -136,7 +117,7 @@
             <!-- packetHTML escapes every recorded value -->
             {@html html}
         {:else if !note}
-            <div class="p-20 flex items-center justify-center min-h-[600px]">
+            <div class="binder-empty p-20 flex items-center justify-center min-h-[600px]">
                 <EmptyStateGuide type="binder" onAdd={() => goto("/")} />
             </div>
         {/if}
@@ -144,6 +125,13 @@
 </div>
 
 <style>
+    /* The empty state's call to action takes the binder's own primary colour. */
+    :global(.binder-empty button.bg-indigo-600) {
+        background-color: #304743;
+    }
+    :global(.binder-empty button.bg-indigo-600:hover) {
+        background-color: #2a3f3b;
+    }
     @media print {
         @page {
             margin: 12mm;
