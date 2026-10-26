@@ -1230,6 +1230,7 @@
                             type="text"
                             bind:value={signature}
                             placeholder={$mt.placeholderSign}
+                            aria-label={$mt.placeholderSign}
                             onkeydown={(e) =>
                                 e.key === "Enter" && handleNameSubmit()}
                             class="w-full bg-white/5 border-b border-white/20 p-6 text-3xl font-serif italic text-gold-text outline-none focus:border-gold transition-all text-center"
