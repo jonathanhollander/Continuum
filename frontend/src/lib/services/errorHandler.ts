@@ -104,39 +104,6 @@ export function handleFetchError(error: unknown): ErrorDetails {
 }
 
 /**
- * Handle API request with error handling.
- *
- * @example
- * const result = await handleApiRequest(async () => {
- *   const res = await fetch('/api/data', { headers: { 'Authorization': `Bearer ${token}` } });
- *   return res;
- * });
- *
- * if (result.ok) {
- *   const data = await result.response.json();
- *   // Use data
- * } else {
- *   // Show error to user: result.error.message
- * }
- */
-export async function handleApiRequest(
-    requestFn: () => Promise<Response>
-): Promise<{ ok: true; response: Response } | { ok: false; error: ErrorDetails }> {
-    try {
-        const response = await requestFn();
-
-        if (!response.ok) {
-            const error = await parseApiError(response);
-            return { ok: false, error };
-        }
-
-        return { ok: true, response };
-    } catch (error) {
-        return { ok: false, error: handleFetchError(error) };
-    }
-}
-
-/**
  * Map error codes to specific user actions/messages.
  */
 export function getErrorAction(code?: string): { action: string; canRetry: boolean } {
