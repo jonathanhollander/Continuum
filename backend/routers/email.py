@@ -310,8 +310,8 @@ async def postmark_bounce_webhook(
     - Spam complaints
     - Subscription changes
 
-    Security: This endpoint is public but verifies the payload contains
-    a valid MessageID that matches our records.
+    Security: When POSTMARK_WEBHOOK_SECRET is set, the request must carry it
+    (basic-auth password or ?token=). When unset, the endpoint is open.
 
     Configure in Postmark:
     1. Go to Servers > Your Server > Webhooks

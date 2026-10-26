@@ -258,33 +258,33 @@ def update_vault_item(item_id: int, updated: PulseVault, user: User = Depends(ge
     session.refresh(item)
     return item
 
-@router.post("/nudge")
-def send_nudge(contact_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
-    # In a real app, this would trigger an email/SMS to the user
-    # For now, we'll log it or perhaps create a system message
-    contact = session.get(PulseContact, contact_id)
-    if not contact or contact.user_id != user.id:
-        raise HTTPException(status_code=404, detail="Contact not found")
+@router.post("/nudge/{token}")
+@limiter.limit("10/minute")  # Public portal action, authorized by the portal token
+def send_nudge(request: Request, token: str, session: Session = Depends(get_session)):
+    contact = session.exec(select(PulseContact).where(PulseContact.portal_token == token)).first()
+    if not contact:
+        raise HTTPException(status_code=404, detail="Invalid token")
+    if contact.portal_token_expires and contact.portal_token_expires < datetime.utcnow():
+        raise HTTPException(status_code=401, detail="Token expired")
 
     logger.info(
         "Pulse nudge sent to user",
         extra={"context": {
             "from_contact": contact.name,
             "to_user_id": contact.user_id,
-            "contact_id": contact_id
+            "contact_id": contact.id
         }}
     )
 
-    # Optional: ensure we log a message
     msg = PulseMessage(
-        user_id=contact.user_id, 
-        contact_id=contact.id, 
-        direction="contact_to_user", 
+        user_id=contact.user_id,
+        contact_id=contact.id,
+        direction="contact_to_user",
         message="Thinking of you! Just sending a quick nudge."
     )
     session.add(msg)
     session.commit()
-    
+
     return {"status": "nudge_sent"}
 
 @router.post("/confirm/{token}")
