@@ -238,8 +238,8 @@ export class SyncManager<T extends { id: number | string }> {
                 setStored(this.key, this.items);
                 this.notify();
 
-                // Show affirmation if context is set
-                if (this.affirmationContext) {
+                // Affirm only a save the person made (quiet = background bookkeeping).
+                if (this.affirmationContext && !quiet) {
                     notifications.showAffirmation(this.affirmationContext);
                 }
             }
@@ -522,7 +522,7 @@ export class SingletonSyncManager<T extends object> {
 
             if (isRemoteEmpty && isLocalPopulated) {
                 console.log(`[Sync:${this.key}] Migrating local singleton to cloud...`);
-                await this.update(this.data!);
+                await this.update(this.data!, true); // background upload: no affirmation
             } else {
                 this.updateLocal(remoteData);
             }
@@ -536,7 +536,8 @@ export class SingletonSyncManager<T extends object> {
         }
     }
 
-    async update(newData: Partial<T>) {
+    // quiet: a background write (the sync-time local-to-cloud upload) — no affirmation.
+    async update(newData: Partial<T>, quiet = false) {
         const original = this.data;
         this.status = "syncing";
         this.error = null;
@@ -571,8 +572,8 @@ export class SingletonSyncManager<T extends object> {
             this.status = "synced";
             this.lastSync = new Date();
 
-            // Show affirmation if context is set
-            if (this.affirmationContext) {
+            // Affirm only a save the person made.
+            if (this.affirmationContext && !quiet) {
                 notifications.showAffirmation(this.affirmationContext);
             }
 
@@ -584,6 +585,7 @@ export class SingletonSyncManager<T extends object> {
             this.notify();
             this.status = "error";
             this.error = (e as any)?.message || "Failed to save";
+            if (quiet) throw e; // background upload: console only, like a quiet create
             notifications.showError({
                 message: 'We couldn\'t save that just yet. Your words are still here \u2014 try again when you\'re ready.',
                 code: 'DATABASE_ERROR',
