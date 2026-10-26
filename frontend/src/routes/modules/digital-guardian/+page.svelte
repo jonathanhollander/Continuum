@@ -30,13 +30,11 @@
     import { activityLog } from "$lib/stores/activityLog.svelte";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
-    import Affirmation from "$lib/components/Affirmation.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
 
     let viewMode = $state<ViewMode>('card');
     let customAttributes = $state<Record<string, any>>({});
-    let showAffirmation = $state(false);
 
     // Sync Integration
     import {
@@ -284,7 +282,6 @@
             entityName: platform,
             userContext: $estateProfile.ownerName || "User",
         });
-        showAffirmation = true;
     }
 
     async function deleteAsset(id: string) {
@@ -329,9 +326,6 @@
         detailedDescription="Your physical assets are protected by law. Your digital assets are protected by passwords. Set up legacy contacts, inactive account managers, and document your digital inventory so your family isn't locked out of your photos, emails, and accounts."
         whyMatters="Without these specific setups, your family may lose access to irreplaceable memories, important accounts, and digital assets. Taking action now ensures your digital life can be properly managed."
     />
-
-    <!-- Affirmation Message -->
-    <Affirmation module="general" bind:show={showAffirmation} />
 
     <!-- AI Prompt Bar -->
     <div class="max-w-3xl mx-auto mb-8">

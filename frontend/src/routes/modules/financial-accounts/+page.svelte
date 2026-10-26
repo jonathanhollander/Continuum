@@ -9,6 +9,7 @@
     import { financialAssetsSync } from "$lib/stores/financialAssetsStore.svelte";
     import { t } from "$lib/stores/localization";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
+    import { notifications } from "$lib/stores/notificationStore";
 
     let showWizard = $state(false);
     let reloadKey = $state(0);
@@ -62,36 +63,52 @@
             return;
         }
 
-        const promises = [];
+        const accounts = [];
 
         // Logic Mapping - now using SyncManager
         if (answers.check)
-            promises.push(
-                assetSync.create(createAsset("Checking Account", "Financial")),
-            );
+            accounts.push(createAsset("Checking Account", "Financial"));
         if (answers.savings)
-            promises.push(
-                assetSync.create(
-                    createAsset("High Yield Savings", "Financial"),
-                ),
-            );
+            accounts.push(createAsset("High Yield Savings", "Financial"));
         if (answers.retirement)
-            promises.push(
-                assetSync.create(createAsset("401(k) / IRA", "Financial")),
-            );
+            accounts.push(createAsset("401(k) / IRA", "Financial"));
         if (answers.crypto)
-            promises.push(
-                assetSync.create(
-                    createAsset("Hardware Wallet", "Financial", "Crypto"),
-                ),
+            accounts.push(
+                createAsset("Hardware Wallet", "Financial", "Crypto"),
             );
 
-        if (promises.length > 0) {
-            await Promise.all(promises);
+        if (accounts.length > 0) {
+            await saveAccounts(accounts);
             reloadKey++; // Force refresh
         }
 
         showWizard = false;
+    }
+
+    // One wizard answer set is one save: the creates run quietly (no per-account affirmation),
+    // then one affirmation if all landed, or the manager's one gentle message whose Try Again
+    // re-sends only the accounts that did not land.
+    async function saveAccounts(accounts: ReturnType<typeof createAsset>[]) {
+        const results = await Promise.allSettled(
+            accounts.map((a) => assetSync.create(a, false, true)),
+        );
+        const failed = accounts.filter((_, i) => results[i].status === "rejected");
+        if (failed.length === 0) {
+            notifications.showAffirmation("general");
+            return;
+        }
+        const reason = results.find((r) => r.status === "rejected") as PromiseRejectedResult;
+        notifications.showError(
+            {
+                message:
+                    "We couldn't save that just yet. Your words are still here \u2014 try again when you're ready.",
+                code: "DATABASE_ERROR",
+                technicalDetails: reason.reason?.technicalDetails || reason.reason?.message || String(reason.reason),
+            } as any,
+            () => {
+                saveAccounts(failed).then(() => reloadKey++);
+            },
+        );
     }
 
     function createAsset(name: string, type: string, note = "") {
