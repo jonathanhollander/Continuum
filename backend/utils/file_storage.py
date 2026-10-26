@@ -89,8 +89,8 @@ class S3Storage:
             's3',
             aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
             aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-            endpoint_url=settings.AWS_ENDPOINT_URL,
-            region_name=settings.AWS_REGION_NAME
+            endpoint_url=settings.AWS_ENDPOINT_URL or None,
+            region_name=settings.AWS_REGION_NAME or None
         )
 
     def save_file(
@@ -147,6 +147,14 @@ class HybridStorage:
                 self.s3 = S3Storage()
             except Exception as e:
                 logger.error(f"Failed to initialize S3 storage: {e}")
+
+        if self.s3:
+            logger.info(
+                f"File storage provider: s3 (bucket={self.s3.bucket_name}, "
+                f"endpoint={settings.AWS_ENDPOINT_URL or 'aws-default'})"
+            )
+        else:
+            logger.info(f"File storage provider: local (dir={self.local.base_dir})")
 
     def save_file(
         self,
