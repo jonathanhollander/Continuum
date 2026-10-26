@@ -48,6 +48,7 @@
     import { getSmartSamples } from "$lib/data/smartSamples";
     import { fly } from "svelte/transition"; // Ensure fly is imported
     import { onMount } from "svelte";
+    import { plural } from "$lib/utils/plural";
 
     let showAddModal = $state(false);
     let isLoading = $state(true);
@@ -527,7 +528,7 @@
         <div class="flex items-center gap-2">
             <span
                 class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-                >Inventory: {filteredItems.length} Assets</span
+                >Inventory: {plural(filteredItems.length, "Asset")}</span
             >
             <button
                 class="p-3 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-primary transition-colors shadow-sm"
