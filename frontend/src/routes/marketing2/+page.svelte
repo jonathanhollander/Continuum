@@ -23,11 +23,9 @@
         Lock,
     } from "lucide-svelte";
     import {
-        keyringEmails,
-        registerAccount,
+        knownAccountEmail,
         switchAccount,
     } from "$lib/stores/keyringStore";
-    import { get } from "svelte/store";
     import { auth } from "$lib/stores/auth";
     import { dictionary } from "$lib/stores/dictionary";
 
@@ -288,16 +286,14 @@
     }
 
     function handleEmailSubmit() {
+        email = email.trim();
         if (email.includes("@") && email.includes(".")) {
-            const existingEmails = get(keyringEmails);
-            if (existingEmails.includes(email)) {
-                switchAccount(email);
+            const known = knownAccountEmail(email);
+            if (known) {
+                switchAccount(known);
                 return;
             }
-            registerAccount(email);
-            import("$lib/stores/persistence").then((m) => {
-                m.setStored("owner", { name: name.trim(), id: "owner" });
-            });
+            // This page keeps only the greeting and email intent.
             signupStep = 2;
         }
     }
@@ -994,7 +990,7 @@
                             {name}.
                         </h2>
                         <p class="text-lg text-white/50 mb-8">
-                            {$m2t.signupNext}
+                            {$m2t.invitationDesc}
                         </p>
                         <a
                             href="/start?email={encodeURIComponent(email)}"
