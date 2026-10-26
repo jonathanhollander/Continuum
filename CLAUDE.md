@@ -58,7 +58,7 @@ Common fix: Add `import sqlmodel` to generated migration files.
 - Frontend: `errorHandler.ts` + `notificationStore.ts` for display
 
 ### Authentication
-- JWT tokens (7-day expiration) stored in localStorage
+- JWT access tokens (15-minute expiry, `JWT_ACCESS_TOKEN_EXPIRE_MINUTES`) plus 7-day refresh tokens, stored in localStorage
 - WebAuthn/Passkeys for biometric auth
 - Backend validates via `get_current_user()` dependency
 
@@ -167,4 +167,4 @@ Detailed guides exist for specific topics:
 
 ---
 
-_Last Updated: 2026-10-26 03:10 EST_
+_Last Updated: 2026-10-26 03:45 EST_

@@ -1,6 +1,6 @@
 # Continuum — Recovery Execution Plan (subagent-run)
 
-**Last Updated:** 2026-10-26 03:35 EST
+**Last Updated:** 2026-10-26 03:45 EST
 
 The how and the order for [PROJECT_RECOVERY_PLAN.md](PROJECT_RECOVERY_PLAN.md) (phases A–F).
 Issue IDs (CU-0xx) and their evidence are in
@@ -235,6 +235,8 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X3 | Production settings (was F3) + `_technical` leak (A4 finding 2) | Production reports `environment: development` with the default JWT secret; error responses include `_technical` | `backend/errors.py`; `backend/config.py` (production branch only); Railway variables at release (orchestrator) | Hide `_technical` outside development; list exactly what `ENVIRONMENT=production` changes (RP_ID, ORIGIN, FRONTEND_URL) and fix anything that would break login or passkeys; the orchestrator sets `ENVIRONMENT=production` and a new random `JWT_SECRET_KEY` during the release | Locally with `ENVIRONMENT=production` and the production URLs: login 200, no `_technical` in an error body; after release `/api/health` reports production |
 | X4 | Frontend paths depend on the working directory (A4 finding 1) | `frontend/dist` paths in `backend/main.py` are relative | The static-mount and SPA-fallback lines in `backend/main.py` | Resolve from `Path(__file__).resolve().parent.parent` | The server started from `backend/` still serves the SPA when dist exists |
 | X5 | Remove the `jh@continuum.estate` bypass (was F5) | Passwordless login to production for anyone | The bypass block in `backend/routers/auth.py`; `CLAUDE.md` dev-login line | Delete the bypass | Dispatched **after** the release browser test (which signs in with it); merged once the owner has signed in once with a real password or passkey, so he is never locked out; then a targeted deploy |
+| X7 | Auth error paths (A5 findings) | `get_current_user`/`optional_current_user` accept magic-link tokens as access tokens (`backend/auth.py:73-95`); an unrecognised stored hash makes login 500 not 401 (`auth.py:28`, `routers/auth.py:246`); magic-link verify 500s on a token with no `sub` (`routers/auth.py:625`) | `backend/auth.py`; the token and magic-link-verify handlers in `backend/routers/auth.py` (not the bypass block) | Reject tokens whose `type` isn't an access token; treat unknown hashes as a failed login; 401 for a token with no `sub` | Locally: a magic-link token is refused by a protected endpoint; a user with a non-hash stored value gets 401; a no-`sub` token gets 401; normal login and refresh still work |
+| X8 | Naive `datetime.utcnow()` defaults (A5 finding) | 41 uses in 15 backend files; deprecated, and the same family as the SQLModel 0.0.48 crash | Those files — **dispatched after Wave C merges**, because B/C cards own `estate_models.py` and `routers/media.py` | One helper; same naive-UTC values stored, so no migration | `grep utcnow backend` finds only the helper; seed, login and one save per touched model still work |
 | X6 | Rotate the OpenRouter key (was F1) | The key is public in shipped JS | Owner step at openrouter.ai (Claude may not create or copy API keys) | Create a new key, put it in the Railway variable X1 reads, revoke the old one | Done after X1 is live; the old key returns 401 |
 
 ---
@@ -262,7 +264,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | A4 | ☑ | 020f77c | No frontend/dist: `python -m backend.main` starts, dev seeds, login 200, SPA routes 404 not 500 |
 | A2 | ☑ | 8d54a13 | Diff = the Pre-deploy line plus the footer; `.github/` absent |
 | A3 | ▶ | | |
-| A5 | ▶ | | |
+| A5 | ☑ | 151c77b | Fresh DB: seed + login 200; token exp = configured 15 min; legacy `$2b$` hash verifies (was broken: passlib 1.7.4 + bcrypt 5 raise ValueError) |
 | B1 | ☐ | | |
 | B2 | ☐ | | |
 | B3 | ☐ | | |
@@ -293,6 +295,8 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X4 | ☐ | | |
 | X5 | ☐ | | |
 | X6 | ☐ (owner) | | |
+| X7 | ▶ | | |
+| X8 | ☐ (after Wave C) | | |
 | O1 — per wave (A–E) | ☐ | | |
 | O2 — per wave (A–E) | ☐ | | |
 | O1 — release table | ☐ | | |
