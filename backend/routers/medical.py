@@ -47,6 +47,7 @@ def update_medical_profile(request: Request, updated: MedicalProfile, user: User
         resource_type="medical_profile",
         resource_id=str(user.id)
     )
+    session.refresh(profile)  # the audit commit expires it; otherwise the response is {}
     return profile
 
 # --- Medical Directives ---
@@ -73,6 +74,7 @@ def create_medical_directive(request: Request, directive: MedicalDirective, user
         resource_type="medical_directive",
         resource_id=str(directive.id)
     )
+    session.refresh(directive)  # the audit commit expires it; otherwise the response is {}
     return directive
 
 @router.put("/directives/{directive_id}", response_model=MedicalDirective)
