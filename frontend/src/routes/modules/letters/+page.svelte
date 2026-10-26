@@ -1390,7 +1390,7 @@
                 {#key currentPromptIndex}
                     <div
                         data-reflection-box
-                        class="relative w-full h-80 bg-card border-2 border-border rounded-2xl shadow-2xl focus-within:border-primary transition-all overflow-hidden p-8"
+                        class="relative w-full min-h-80 bg-card border-2 border-border rounded-2xl shadow-2xl focus-within:border-primary transition-all p-8"
                     >
                         <SmartTextarea
                             bind:value={reflections[currentPromptIndex]}
@@ -1398,7 +1398,7 @@
                             label={currentQuestion}
                             hideLabel
                             minimal={true}
-                            minHeight="100%"
+                            minHeight="16rem"
                             placeholder="Reflect here..."
                             suggestions={currentSuggestions}
                         />

@@ -339,7 +339,7 @@
             <!-- Sample Assets That Can Get QR Labels -->
             <div class="mt-8">
                 <p class="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-4 text-center">Assets that could have QR labels</p>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 opacity-60">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {#each getSmartSamples($language).heirlooms || [] as sample}
                         <GhostRow
                             name={sample.name}
