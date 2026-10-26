@@ -189,7 +189,7 @@
             bind:value={prompt}
             aria-label="Ask the Concierge Drafting Assistant"
             placeholder="Ask me to draft, summarize, or explain..."
-            class="w-full p-4 pr-14 rounded-xl border transition-all shadow-sm border-primary/20 focus:outline-none focus:ring-2 focus:ring-primary"
+            class="w-full p-4 pr-14 rounded-xl border transition-all shadow-sm bg-card text-foreground placeholder:text-muted-foreground border-primary/20 focus:outline-none focus:ring-2 focus:ring-primary"
             on:keydown={(e) => e.key === "Enter" && runPrompt(prompt)}
         />
 
@@ -215,7 +215,7 @@
         <div class="flex flex-wrap gap-2 mt-4" transition:slide>
             {#each chips as qp}
                 <button
-                    class="px-3 py-1.5 bg-white text-xs font-medium text-primary-700 rounded-full border border-primary-100 hover:border-primary-300 hover:bg-primary-50 transition-colors"
+                    class="px-3 py-1.5 bg-card text-xs font-medium text-primary-hover rounded-full border border-primary/20 hover:border-primary/40 hover:bg-primary-soft transition-colors"
                     on:click={() => runPrompt(qp)}
                 >
                     {qp}
@@ -223,7 +223,7 @@
             {/each}
             {#each poolIdeas as idea}
                 <button
-                    class="px-3 py-1.5 bg-white text-xs font-medium text-primary-700 rounded-full border border-primary-100 hover:border-primary-300 hover:bg-primary-50 transition-colors"
+                    class="px-3 py-1.5 bg-card text-xs font-medium text-primary-hover rounded-full border border-primary/20 hover:border-primary/40 hover:bg-primary-soft transition-colors"
                     on:click={() => runPrompt(idea)}
                 >
                     {idea}
@@ -231,7 +231,7 @@
             {/each}
             {#if promptPool.length > 3}
                 <button
-                    class="px-3 py-1.5 text-xs text-primary-400 hover:text-primary-600 hover:underline"
+                    class="px-3 py-1.5 text-xs text-primary-hover hover:underline"
                     on:click={() => (poolIdeas = pickIdeas(promptPool, poolIdeas))}
                 >
                     Show other ideas
@@ -243,17 +243,17 @@
     <!-- Result Area -->
     {#if result}
         <div
-            class="mt-4 bg-white rounded-xl p-4 border border-primary-100 shadow-sm relative group"
+            class="mt-4 bg-card rounded-xl p-4 border border-primary/20 shadow-sm relative group"
             transition:slide
         >
             <div
-                class="text-sm text-gray-700 whitespace-pre-wrap {isNotice ? '' : 'font-mono'}"
+                class="text-sm text-foreground whitespace-pre-wrap {isNotice ? '' : 'font-mono'}"
             >
                 {result}
             </div>
             {#if !isNotice}
                 <button
-                    class="absolute top-2 right-2 p-2 bg-gray-100 text-gray-500 rounded-lg opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity hover:bg-primary-100 hover:text-primary-600"
+                    class="absolute top-2 right-2 p-2 bg-muted text-muted-foreground rounded-lg opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity hover:bg-primary-soft hover:text-primary-hover"
                     on:click={copyResult}
                     title="Copy to clipboard"
                     aria-label="Copy to clipboard"
@@ -261,7 +261,7 @@
                     <Copy size={16} />
                 </button>
                 {#if copyStatus}
-                    <p class="mt-2 text-xs text-gray-500" role="status">
+                    <p class="mt-2 text-xs text-muted-foreground" role="status">
                         {copyStatus === "copied"
                             ? "Copied."
                             : "Selecting the text will let you copy it yourself."}
@@ -269,7 +269,7 @@
                 {/if}
             {/if}
             <button
-                class="block w-full text-center text-xs text-primary-400 mt-4 hover:text-primary-600 hover:underline"
+                class="block w-full text-center text-xs text-primary-hover mt-4 hover:underline"
                 on:click={() => {
                     result = "";
                     copyStatus = "";
