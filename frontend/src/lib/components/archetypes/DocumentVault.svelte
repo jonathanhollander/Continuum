@@ -169,7 +169,7 @@
 
     async function saveDocOnce() {
         if (!docSync) return;
-        if (!newDoc.name.trim()) {
+        if (!(newDoc.name ?? "").trim()) {
             titleMissing = true;
             await tick();
             document.getElementById("doc-title")?.focus();
@@ -200,7 +200,7 @@
                 action: "UPDATE",
                 entityType: "Document",
                 entityId: String(newDoc.id),
-                entityName: newDoc.name,
+                entityName: newDoc.name ?? "",
                 userContext: $estateProfile.ownerName || "User",
             });
         } else {
