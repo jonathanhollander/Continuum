@@ -39,6 +39,7 @@
             ]);
 
             if (settingsData) settings = settingsData as typeof settings;
+            else notifications.showError("Your saved check-in choices are still on your account. Let's try loading them again.", () => loadData());
             tiers = tiersData;
         } catch (e) {
             console.error(e);

@@ -159,7 +159,7 @@
         prompts={[
             "Explain how QR access codes work for my estate...",
             "Draft instructions for my executor on using a printed QR access code...",
-            "Help me set up secure access for my family...",
+            "Help me set up QR access codes for my family...",
             "Where can I keep printed QR codes safe at home?"
         ]}
     />

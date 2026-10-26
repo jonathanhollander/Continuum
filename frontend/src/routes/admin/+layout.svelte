@@ -50,11 +50,6 @@
                 ></div>
                 Admin Suite
             </div>
-            <p
-                class="text-xs text-muted-foreground mt-2 uppercase tracking-wider font-mono"
-            >
-                System v4.0
-            </p>
         </div>
 
         <nav class="flex-1 p-4 space-y-1">

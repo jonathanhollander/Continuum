@@ -66,7 +66,7 @@
                 class="w-full font-mono text-sm text-foreground bg-background placeholder:text-muted-foreground px-4 py-3 rounded-lg border border-border focus:border-primary focus:ring-2 focus:ring-primary/30 focus:outline-none"
             />
             <p class="mt-2 text-xs text-muted-foreground">
-                Triggers when executor tasks are updated
+                Saved to your account with your other settings
             </p>
         </label>
 
@@ -82,7 +82,7 @@
                 class="w-full font-mono text-sm text-foreground bg-background placeholder:text-muted-foreground px-4 py-3 rounded-lg border border-border focus:border-primary focus:ring-2 focus:ring-primary/30 focus:outline-none"
             />
             <p class="mt-2 text-xs text-muted-foreground">
-                Global firehose for all estate changes
+                Saved to your account with your other settings
             </p>
         </label>
 

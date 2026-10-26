@@ -38,7 +38,7 @@ export const dictionary = {
         settings: "Settings",
         help: "Help & Resources",
         earlyPreview: "Early preview",
-        secureLegacy: "Secure Your Legacy",
+        secureLegacy: "Your Plan",
         placeholderAddress: "Street, City, State, ZIP",
         // Shell strings: sidebar, header, Command Center (X232)
         gsTitle: "Building Your Foundation",
@@ -487,7 +487,7 @@ export const dictionary = {
         pulseContacts: "Contactos de Confianza",
         pulseEscalation: "Plan de Escalamiento",
         pulseSettings: "Configuración de Pulse",
-        secureLegacy: "Protege tu legado",
+        secureLegacy: "Tu plan",
         placeholderAddress: "Calle, Ciudad, Estado, Código postal",
         // Shell strings: sidebar, header, Command Center (X232)
         gsTitle: "Construyendo tus bases",
@@ -899,7 +899,7 @@ export const dictionary = {
         pulseContacts: "Contacts de Confiance",
         pulseEscalation: "Plan d'Escalade",
         pulseSettings: "Configuration de Pulse",
-        secureLegacy: "Protégez votre héritage",
+        secureLegacy: "Votre plan",
         placeholderAddress: "Rue, Ville, État, Code postal",
         // Shell strings: sidebar, header, Command Center (X232)
         gsTitle: "Poser vos fondations",
@@ -1311,7 +1311,7 @@ export const dictionary = {
         pulseContacts: "Vertrauenspersonen",
         pulseEscalation: "Eskalationsplan",
         pulseSettings: "Pulse-Einstellungen",
-        secureLegacy: "Sichern Sie Ihr Vermächtnis",
+        secureLegacy: "Ihr Plan",
         placeholderAddress: "Straße, Stadt, Bundesland, PLZ",
         // Shell strings: sidebar, header, Command Center (X232)
         gsTitle: "Ihr Fundament",
@@ -1723,7 +1723,7 @@ export const dictionary = {
         pulseContacts: "Доверенные контакты",
         pulseEscalation: "План оповещения",
         pulseSettings: "Настройки Pulse",
-        secureLegacy: "Сохраните своё наследие",
+        secureLegacy: "Ваш план",
         placeholderAddress: "Улица, город, область, индекс",
         // Shell strings: sidebar, header, Command Center (X232)
         gsTitle: "Закладываем основу",
@@ -2118,7 +2118,7 @@ export const dictionary = {
         pulseContacts: "אנשי קשר מהימנים",
         pulseEscalation: "תוכנית הסלמה",
         pulseSettings: "הגדרות Pulse",
-        secureLegacy: "שמרו על המורשת שלכם",
+        secureLegacy: "התוכנית שלכם",
         placeholderAddress: "רחוב, עיר, מדינה, מיקוד",
         // Shell strings: sidebar, header, Command Center (X232)
         gsTitle: "בונים את הבסיס",

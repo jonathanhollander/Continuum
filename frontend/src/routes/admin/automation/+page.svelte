@@ -42,7 +42,7 @@
             </div>
 
             <div class="flex items-center gap-3">
-                <span class="w-2 h-2 rounded-full bg-success animate-pulse"
+                <span class="w-2 h-2 rounded-full bg-success"
                 ></span>
                 <span class="text-sm font-bold text-slate-300"
                     >Saved to your account</span
@@ -83,7 +83,7 @@
                         <Zap size={32} class="text-gold-text" />
                     </div>
                     <h3 class="font-bold text-xl text-white mb-2">Your Rules</h3>
-                    <div class="space-y-2 text-sm text-white/70 mb-6">
+                    <div class="space-y-2 text-sm text-white/70">
                         <p>
                             Saved rules: <span class="font-mono text-white"
                                 >{$automationRules.length}</span
@@ -95,11 +95,6 @@
                             >
                         </p>
                     </div>
-                    <button
-                        class="w-full py-2 bg-white text-primary-deep rounded-lg font-bold text-sm hover:bg-white/90 transition-colors"
-                    >
-                        View Logs
-                    </button>
                 </div>
 
                 <div

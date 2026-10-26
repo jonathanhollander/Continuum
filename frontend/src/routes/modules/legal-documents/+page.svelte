@@ -9,8 +9,8 @@
 <div class="max-w-6xl mx-auto p-8">
     <LivingBlueprintHeader
         title="Document Vault"
-        subtitle="The secure home for your legal life"
-        detailedDescription="A central, secure home for the documents that define your legal and personal wishes. From wills to trusts, ensure the blueprints of your legacy are accessible."
+        subtitle="One home for your legal documents"
+        detailedDescription="A central home for the documents that define your legal and personal wishes. From wills to trusts, the blueprints of your legacy are kept together here."
         whyMatters="Searching for a will or trust document can delay estate settlement by months. Centralizing them here provides your family with a clear roadmap when they need it most."
     />
 
