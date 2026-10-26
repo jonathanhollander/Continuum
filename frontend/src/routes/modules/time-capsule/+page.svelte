@@ -3,6 +3,9 @@
     import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { milestoneLabel } from "$lib/utils/milestones";
     import { activeAccountId } from "$lib/stores/keyringStore";
+    import { auth } from "$lib/stores/auth";
+    import { getStored, setStored, cacheStorageState, retryStored } from "$lib/stores/persistence";
+    import { captureSession, isCurrentSession, type SessionOwnership } from "$lib/services/sessionOwnership";
     import { get } from "svelte/store";
     import { readCustom } from "$lib/utils/customFields";
     import {
@@ -36,7 +39,7 @@
         Pencil,
     } from "lucide-svelte";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
-    import { onMount } from "svelte";
+    import { onMount, untrack } from "svelte";
     import { fade, slide, scale } from "svelte/transition";
     import { quintOut } from "svelte/easing";
     import VideoRecorder from "$lib/components/media/VideoRecorder.svelte";
@@ -64,41 +67,137 @@
     let capsuleRecipientId = $state("");
 
     onMount(() => {
-        restoreDraft();
         timeCapsuleStore.sync().catch(() => {});
         contactSync.init().catch(() => {});
     });
 
-    // A new capsule's draft, kept in this browser for the signed-in account until it is sealed.
-    const draftKey = () => `continuum_capsule_draft:${get(activeAccountId) || "anonymous"}`;
+    // Drafts belong to the authenticated account, including an in-page copy when its device
+    // write pauses. The owner namespace preserves the existing per-account draft behavior.
+    const DRAFT_KEY = "capsule_draft";
+    type CapsuleDraft = {
+        message: Partial<TimeCapsuleMessage>;
+        recipientId: string;
+        custom: Record<string, any>;
+    };
+    const openDrafts = new Map<string, CapsuleDraft>();
+    let draftAccount: string | null = null;
+    let draftOwner: SessionOwnership | null = null;
+    let draftNote = $state<string | null>(null);
+    let draftNeedsRead = $state(false);
+    let draftNeedsRetry = $state(false);
+    const memoryDraftNote = "Your draft is here in this open page. Keep this page open, then choose Try Again to save it on this device.";
+    const readDraftNote = "Your words here stay in this open page. Choose Try Again to read drafts from this device.";
+
+    const currentDraft = (): CapsuleDraft => ({
+        message: $state.snapshot(newMessage),
+        recipientId: capsuleRecipientId,
+        custom: $state.snapshot(parsedCustomAttributes),
+    });
+    const hasDraftWords = (draft: CapsuleDraft) => !!draft.recipientId || Object.keys(draft.custom).length > 0 ||
+        Object.entries(draft.message).some(([key, value]) => key === "triggerType" ? value !== "date" : value !== "" && value !== null && value !== undefined);
+    const ownsDraft = () => !!draftAccount && get(activeAccountId) === draftAccount && !!draftOwner && isCurrentSession(draftOwner);
+
+    $effect(() => {
+        const account = $activeAccountId;
+        const signedIn = $auth;
+        if (!account || !signedIn.isAuthenticated || signedIn.user?.email !== account) return;
+        const owner = captureSession();
+        if (!isCurrentSession(owner) || (account === draftAccount && draftOwner?.generation === owner.generation)) return;
+        untrack(() => {
+            if (draftAccount && !editingId) openDrafts.set(draftAccount, currentDraft());
+            draftAccount = account;
+            draftOwner = owner;
+            resetForm();
+            showAddModal = false;
+            draftNote = null;
+            draftNeedsRead = false;
+            draftNeedsRetry = false;
+            restoreDraft();
+        });
+    });
 
     function saveDraft() {
-        try {
-            localStorage.setItem(
-                draftKey(),
-                JSON.stringify({ message: newMessage, recipientId: capsuleRecipientId, custom: parsedCustomAttributes }),
-            );
-        } catch {
-            // Storage full or blocked: the draft stays in the open page.
+        if (!ownsDraft()) {
+            draftNote = "Your draft stays with the account where you started it.";
+            return;
         }
+        if (draftNeedsRead) {
+            retryDraft();
+            return;
+        }
+        const draft = currentDraft();
+        openDrafts.set(draftAccount!, draft);
+        setStored(DRAFT_KEY, draft, "owner", draftAccount!);
+        // setStored can succeed in memory only. Save Draft promises a copy on this device.
+        if (cacheStorageState(DRAFT_KEY, "owner", draftAccount!) !== "device") {
+            draftNeedsRetry = true;
+            draftNote = memoryDraftNote;
+            return;
+        }
+        draftNeedsRetry = false;
+        draftNote = null;
         showAddModal = false;
     }
 
     function clearDraft() {
+        if (!draftAccount) return;
+        openDrafts.delete(draftAccount);
+        // A stored null also prevents a legacy draft from reappearing after sealing.
+        setStored(DRAFT_KEY, null, "owner", draftAccount);
         try {
-            localStorage.removeItem(draftKey());
+            localStorage.removeItem(`continuum_capsule_draft:${draftAccount}`);
         } catch {}
     }
 
-    function restoreDraft() {
+    function restoreDraft(keepCurrent = false) {
+        if (!ownsDraft()) return;
+        const account = draftAccount!;
+        const current = keepCurrent ? currentDraft() : openDrafts.get(account);
         try {
-            const raw = localStorage.getItem(draftKey());
-            if (!raw) return;
-            const draft = JSON.parse(raw);
-            newMessage = { ...emptyMessage(), ...(draft.message ?? {}) };
-            capsuleRecipientId = draft.recipientId ?? "";
-            parsedCustomAttributes = draft.custom ?? {};
-        } catch {}
+            let draft = getStored<CapsuleDraft | null | undefined>(DRAFT_KEY, undefined, "owner", account);
+            const storage = cacheStorageState(DRAFT_KEY, "owner", account);
+            if (storage === "unavailable") throw new Error("Device draft read paused");
+            if (draft === undefined) {
+                const legacy = localStorage.getItem(`continuum_capsule_draft:${account}`);
+                draft = legacy ? JSON.parse(legacy) : null;
+            }
+            if (draft !== null && (!draft || typeof draft !== "object" || !draft.message || typeof draft.message !== "object")) {
+                throw new Error("Device draft needs another read");
+            }
+            const restored = current && hasDraftWords(current) ? current : draft;
+            if (restored) {
+                newMessage = { ...emptyMessage(), ...restored.message };
+                capsuleRecipientId = String(restored.recipientId ?? "");
+                parsedCustomAttributes = restored.custom ?? {};
+            }
+            draftNeedsRead = false;
+            draftNeedsRetry = storage !== "device";
+            draftNote = draftNeedsRetry ? memoryDraftNote : null;
+            if (draftNeedsRetry) showAddModal = true;
+        } catch {
+            // A refused read is not an empty draft, and never replaces words already entered.
+            if (current) {
+                newMessage = { ...emptyMessage(), ...current.message };
+                capsuleRecipientId = current.recipientId;
+                parsedCustomAttributes = current.custom;
+            }
+            draftNeedsRead = true;
+            draftNote = readDraftNote;
+            showAddModal = true;
+        }
+    }
+
+    function retryDraft() {
+        if (!ownsDraft()) {
+            draftNote = "Your draft stays with the account where you started it.";
+            return;
+        }
+        if (!draftNeedsRead) {
+            saveDraft();
+            return;
+        }
+        if (!retryStored(DRAFT_KEY, "owner", draftAccount!)) return;
+        restoreDraft(hasDraftWords(currentDraft()));
     }
 
     async function removeCapsule(msg: TimeCapsuleMessage) {
@@ -152,10 +251,16 @@
         editingId = null;
         isRecording = false;
         formNote = null;
+        draftNote = null;
+        draftNeedsRead = false;
+        draftNeedsRetry = false;
     }
 
     function openNew() {
-        if (editingId) resetForm(); // a draft of a new capsule stays; an edit does not carry over
+        if (editingId) {
+            resetForm(); // an edit does not carry over; the new capsule's own draft can return
+            restoreDraft();
+        }
         showAddModal = true;
     }
 
@@ -828,6 +933,9 @@
                 {#if formNote}
                     <p class="text-sm text-foreground bg-primary-soft rounded-xl px-4 py-3">{formNote}</p>
                 {/if}
+                {#if !editingId && draftNote}
+                    <p role="status" class="text-sm text-foreground bg-primary-soft rounded-xl px-4 py-3" data-testid="capsule-draft-note">{draftNote}</p>
+                {/if}
 
                 <div class="flex gap-4">
                     <button
@@ -841,10 +949,11 @@
                     </button>
                     {#if !editingId}
                     <button
-                        onclick={saveDraft}
-                        class="flex-1 py-4 px-6 border border-border rounded-2xl font-bold text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
+                        onclick={draftNeedsRead || draftNeedsRetry ? retryDraft : saveDraft}
+                        disabled={isUploading || isSaving}
+                        class="flex-1 py-4 px-6 border border-border rounded-2xl font-bold text-muted-foreground hover:bg-muted hover:text-foreground transition-all disabled:opacity-60"
                     >
-                        Save Draft
+                        {draftNeedsRead || draftNeedsRetry ? "Try Again" : "Save Draft"}
                     </button>
                     {/if}
                     <button
