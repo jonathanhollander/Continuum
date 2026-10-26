@@ -15,9 +15,9 @@
         class="flex items-center justify-between border-b border-slate-800 pb-8"
     >
         <div>
-            <h2 class="text-3xl font-bold text-white mb-2">
+            <h1 class="text-3xl font-bold text-white mb-2">
                 Data Health Center
-            </h2>
+            </h1>
             <p class="text-slate-400">
                 Deep diagnostics to detect data rot, missing metadata, and
                 security risks.

@@ -26,14 +26,14 @@
         class="w-64 border-r border-slate-800 bg-slate-900/50 backdrop-blur-xl flex flex-col fixed h-full z-50"
     >
         <div class="p-6 border-b border-slate-800">
-            <h1
+            <div
                 class="font-bold text-xl tracking-tight text-white flex items-center gap-2"
             >
                 <div
                     class="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
                 ></div>
                 Admin Suite
-            </h1>
+            </div>
             <p
                 class="text-xs text-slate-500 mt-2 uppercase tracking-wider font-mono"
             >

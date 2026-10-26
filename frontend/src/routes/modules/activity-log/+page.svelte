@@ -20,13 +20,10 @@
         Sparkles,
     } from "lucide-svelte";
     import { fade, slide } from "svelte/transition";
-    import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
-    import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
     import Affirmation from "$lib/components/Affirmation.svelte";
     import { pluralWord } from "$lib/utils/plural";
 
-    let viewMode = $state<ViewMode>('card');
     let showAffirmation = $state(false);
     let isLoading = $state(true);
 
@@ -196,7 +193,6 @@
         </div>
 
         <div class="flex items-center gap-3">
-            <DataViewToggle module="activity-log" onchange={(mode) => viewMode = mode} />
             {#if todayCount > 0}
                 <div
                     class="px-4 py-2 bg-indigo-50 text-indigo-700 rounded-xl font-bold text-sm"

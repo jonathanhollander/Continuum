@@ -159,7 +159,8 @@
 	let isFullScreenRoute = $derived(
 		isWizardRoute ||
 			$page.url.pathname === "/onboarding" ||
-			$page.url.pathname === "/welcome",
+			$page.url.pathname === "/welcome" ||
+			$page.url.pathname.startsWith("/admin"),
 	);
 	let isMarketingRoute = $derived(
 		$page.url.pathname.startsWith("/marketing") ||

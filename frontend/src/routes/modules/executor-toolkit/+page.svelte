@@ -93,7 +93,7 @@
 
 <div class="max-w-6xl mx-auto p-6 animate-in fade-in duration-500">
     <!-- Header -->
-    <div class="mb-10 text-center">
+    <div class="mb-10 text-left">
         <div
             class="inline-flex items-center justify-center p-4 bg-slate-100 text-slate-700 rounded-full mb-6"
         >
