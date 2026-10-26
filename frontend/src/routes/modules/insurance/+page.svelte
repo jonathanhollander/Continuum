@@ -42,7 +42,6 @@
     import Modal from "$lib/components/ui/Modal.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
-    import GuidanceBlock from "$lib/components/guidance/GuidanceBlock.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
     import UniversalUploader from "$lib/components/ui/UniversalUploader.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
@@ -872,7 +871,7 @@
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 text-right">
-                                    <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div class="flex items-center justify-end gap-2 transition-opacity">
                                         <button aria-label="Edit these details"
                                             onclick={() => editPolicy(policy)}
                                             class="p-1.5 text-slate-400 hover:text-primary transition-colors"

@@ -460,7 +460,7 @@
                                             </button>
                                             <button aria-label="Remove this item"
                                                 onclick={() => deleteAssetQR(label.assetId, label.assetName)}
-                                                class="p-1 text-slate-300 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100"
+                                                class="p-1 text-slate-300 hover:text-rose-500 transition-colors"
                                             >
                                                 <Trash2 size={16} />
                                             </button>

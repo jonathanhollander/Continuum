@@ -1,6 +1,7 @@
 <script lang="ts">
     import { readCustom } from "$lib/utils/customFields";
     import { fade, slide } from "svelte/transition";
+    import { focusTrap } from "$lib/actions/focusTrap";
     import { onMount } from "svelte";
     import {
         Calendar as CalendarIcon,
@@ -267,8 +268,8 @@
 <div class="max-w-4xl mx-auto p-8 animate-in fade-in duration-500">
     <!-- Header -->
     <LivingBlueprintHeader
-        title="Afterlife Calendar"
-        subtitle="Transform difficult dates into moments of connection"
+        title="Event Calendar"
+        subtitle="Afterlife Calendar"
         tier="legacy"
         detailedDescription="Ensure your birthday, holidays, and anniversaries are celebrated exactly how you want them to be. Create meaningful rituals and messages for the dates that matter most."
         whyMatters="Without your guidance, special dates become painful reminders instead of opportunities for connection. By documenting your wishes, you transform grief into intentional remembrance."
@@ -349,16 +350,18 @@
                                 />
                             </div>
                             <div
-                                class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                class="flex gap-1 transition-opacity"
                             >
                                 <button
                                     onclick={() => editEvent(evt)}
+                                    aria-label="Edit these details"
                                     class="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-blue-500"
                                 >
                                     <Pencil size={16} />
                                 </button>
                                 <button
                                     onclick={() => removeEvent(evt.id)}
+                                    aria-label="Remove this item"
                                     class="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-red-500"
                                 >
                                     <Trash2 size={16} />
@@ -465,15 +468,17 @@
                             <td class="px-4 py-3 text-slate-500 text-sm">{evt.isRecurring ? 'Yes' : 'No'}</td>
                             <td class="px-4 py-3 text-slate-500 text-sm max-w-[200px] truncate">{evt.wish || '-'}</td>
                             <td class="px-4 py-3 text-right">
-                                <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div class="flex items-center justify-end gap-1 transition-opacity">
                                     <button
                                         onclick={() => editEvent(evt)}
+                                        aria-label="Edit these details"
                                         class="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-blue-500"
                                     >
                                         <Pencil size={14} />
                                     </button>
                                     <button
                                         onclick={() => removeEvent(evt.id)}
+                                        aria-label="Remove this item"
                                         class="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-red-500"
                                     >
                                         <Trash2 size={14} />
@@ -502,6 +507,10 @@
     <!-- Modal -->
     {#if showAddForm}
         <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="calendar-dialog-title"
+            use:focusTrap={{ onEscape: resetForm }}
             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
             transition:fade
         >
@@ -512,11 +521,12 @@
                 <div
                     class="p-6 border-b border-gray-100 flex justify-between items-center bg-[#304743] text-white"
                 >
-                    <h3 class="font-serif font-bold text-2xl">
+                    <h3 id="calendar-dialog-title" class="font-serif font-bold text-2xl">
                         {editingId ? "Edit Event" : "Add Significant Date"}
                     </h3>
                     <button
                         onclick={resetForm}
+                        aria-label="Close"
                         class="text-white/70 hover:text-white"
                     >
                         <X size={24} />

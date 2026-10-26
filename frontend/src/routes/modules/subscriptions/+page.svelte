@@ -464,7 +464,7 @@
                                         {sub.paymentMethod || '-'}
                                     </td>
                                     <td class="px-4 py-3 text-right">
-                                        <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div class="flex items-center justify-end gap-2 transition-opacity">
                                             <button
                                                 onclick={() => openLetterModal(sub)}
                                                 class="p-1.5 text-slate-400 hover:text-primary transition-colors"

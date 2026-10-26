@@ -192,7 +192,16 @@
             {#each STEPS as step}
                 <div
                     class="relative z-10 flex flex-col items-center gap-2 cursor-pointer group"
+                    role="button"
+                    tabindex="0"
+                    aria-current={step.id === currentStep ? "step" : undefined}
                     on:click={() => (currentStep = step.id)}
+                    on:keydown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            currentStep = step.id;
+                        }
+                    }}
                 >
                     <div
                         class="w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300
@@ -513,6 +522,7 @@
                                         <span>{song}</span>
                                         <button
                                             class="text-red-400 hover:text-red-600"
+                                            aria-label="Remove this item"
                                             on:click={() => {
                                                 const newMusic =
                                                     wishes.music.filter(

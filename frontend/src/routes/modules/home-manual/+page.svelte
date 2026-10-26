@@ -618,14 +618,14 @@
                                                     <button
                                                         onclick={() => editVendor(vendor)}
                                                         aria-label="Update {vendor.name}"
-                                                        class="text-slate-300 hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity mr-2"
+                                                        class="text-slate-300 hover:text-primary transition-opacity mr-2"
                                                     >
                                                         <Pencil size={16} />
                                                     </button>
                                                     <button
                                                         onclick={() => deleteVendor(vendor.id)}
                                                         aria-label="Remove {vendor.name}"
-                                                        class="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        class="text-slate-300 hover:text-red-500 transition-opacity"
                                                     >
                                                         <Trash2 size={16} />
                                                     </button>

@@ -323,7 +323,7 @@
                                             removeTransaction(
                                                 tx.id,
                                             )}
-                                        class="p-2 text-slate-300 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100"
+                                        class="p-2 text-slate-300 hover:text-rose-500 transition-colors"
                                     >
                                         <Trash2 size={16} />
                                     </button>

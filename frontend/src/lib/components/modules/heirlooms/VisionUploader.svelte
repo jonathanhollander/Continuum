@@ -80,7 +80,19 @@
                 </button>
             </div>
         {:else}
-            <div class="py-8 cursor-pointer" on:click={triggerUpload}>
+            <div
+                class="py-8 cursor-pointer"
+                role="button"
+                tabindex="0"
+                aria-label="Add a photo"
+                on:click={triggerUpload}
+                on:keydown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        triggerUpload();
+                    }
+                }}
+            >
                 <div
                     class="w-16 h-16 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-sm border border-indigo-100"
                 >

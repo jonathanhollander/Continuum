@@ -31,6 +31,7 @@
     import { getSmartSamples } from "$lib/data/smartSamples";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
+    import { focusTrap } from "$lib/actions/focusTrap";
 
     let viewMode = $state<ViewMode>('card');
     let customAttributes = $state<Record<string, any>>({});
@@ -236,7 +237,8 @@
                                         <button
                                             onclick={() =>
                                                 calendarStore.removeEvent(event.id)}
-                                            class="opacity-0 group-hover:opacity-100 p-2 text-slate-300 hover:text-rose-500 transition-all"
+                                            aria-label="Remove this item"
+                                            class="p-2 text-slate-300 hover:text-rose-500 transition-all"
                                         >
                                             <Trash2 size={18} />
                                         </button>
@@ -316,7 +318,8 @@
                                     <td class="px-4 py-3 text-right">
                                         <button
                                             onclick={() => calendarStore.removeEvent(event.id)}
-                                            class="opacity-0 group-hover:opacity-100 p-1 text-slate-300 hover:text-rose-500 transition-all"
+                                            aria-label="Remove this item"
+                                            class="p-1 text-slate-300 hover:text-rose-500 transition-all"
                                         >
                                             <Trash2 size={16} />
                                         </button>
@@ -404,6 +407,10 @@
     <!-- Simple Add Modal -->
     {#if showAddModal}
         <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="remembrance-dialog-title"
+            use:focusTrap={{ onEscape: () => (showAddModal = false) }}
             class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm"
             transition:fade
         >
@@ -412,11 +419,12 @@
                 transition:scale={{ start: 0.95, easing: quintOut }}
             >
                 <div class="flex items-center justify-between">
-                    <h2 class="font-serif text-2xl font-bold text-slate-900">
+                    <h2 id="remembrance-dialog-title" class="font-serif text-2xl font-bold text-slate-900">
                         Add Remembrance
                     </h2>
                     <button
                         onclick={() => (showAddModal = false)}
+                        aria-label="Close"
                         class="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400"
                     >
                         <Plus class="rotate-45" />

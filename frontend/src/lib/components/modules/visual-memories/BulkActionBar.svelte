@@ -47,6 +47,7 @@
                     <input
                         type="text"
                         bind:value={newTag}
+                        aria-label="Tag"
                         placeholder="Enter tag..."
                         class="bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500 w-32 placeholder:text-slate-500"
                         onkeydown={(e) => e.key === "Enter" && handleAddTag()}
@@ -55,12 +56,14 @@
                     <button
                         class="p-1.5 hover:bg-slate-700 rounded-md text-slate-300 hover:text-white transition-colors"
                         onclick={handleAddTag}
+                        aria-label="Save"
                     >
                         <SquareCheck size={16} />
                     </button>
                     <button
                         class="p-1.5 hover:bg-slate-700 rounded-md text-slate-300 hover:text-white transition-colors"
                         onclick={() => (showTagInput = false)}
+                        aria-label="Close"
                     >
                         <X size={16} />
                     </button>

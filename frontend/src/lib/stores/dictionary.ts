@@ -23,7 +23,7 @@ export const dictionary = {
         pets: "Pet Care Plan",
         executor: "Executor Toolkit",
         qrcodes: "QR Access Center",
-        builder: "Builder's Console",
+        builder: "Builder Tools",
         anniversary: "Anniversary Manager",
         catalog: "Module Catalog",
         simulator: "Fire Drill",
