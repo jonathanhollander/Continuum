@@ -130,7 +130,7 @@
     />
 {:else}
 <div class="space-y-2">
-    <label for="{uid}-file" class="block text-xs font-bold uppercase text-gray-500 mb-1"
+    <label id="{uid}-label" for="{uid}-file" class="block text-xs font-bold uppercase text-gray-500 mb-1"
         >{label}</label
     >
 
@@ -175,6 +175,7 @@
             onkeydown={(e) => e.key === "Enter" && fileInput?.click()}
             role="button"
             tabindex="0"
+            aria-describedby="{uid}-label"
         >
             <input
                 id="{uid}-file"

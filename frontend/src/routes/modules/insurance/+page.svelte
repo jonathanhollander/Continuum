@@ -1146,6 +1146,7 @@
                                 {#each ["Active", "Pending", "Inactive"] as status}
                                     <button
                                         type="button"
+                                        aria-pressed={newPolicy.status === status}
                                         onclick={() =>
                                             (newPolicy.status = status as any)}
                                         class="flex-1 py-2.5 text-xs font-semibold rounded-lg transition-all {newPolicy.status ===
