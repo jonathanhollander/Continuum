@@ -48,6 +48,7 @@
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
     import { focusTrap } from "$lib/actions/focusTrap";
+    import { formatMoney } from "$lib/utils/money";
 
     // showAddForm is bindable so a page can place Add Asset in its own header (headerAdd=false).
     let {
@@ -497,12 +498,13 @@
     // Debts are owed: subtracted from the estate, never added.
     const totals = $derived(estateTotals(assets));
 
-    // Dollars and cents, with the sign before the symbol: -$1,250.50
-    const money = (n: number) =>
-        (Number(n) || 0).toLocaleString("en-US", { style: "currency", currency: "USD" });
+    // The same cents and sign rule as the packet. Debt is an amount owed, however it was typed.
+    const money = formatMoney;
+    const signedAmount = (a: any, value: number): number => isDebt(a) ? -Math.abs(value) : value;
     // A row's own value as shown: a blank value reads as an em dash, $0 reads as $0.00.
     const shownValue = (a: any): string =>
-        hasNumber(a.value) ? (isDebt(a) ? "-" : "") + money(Math.abs(Number(a.value))) : "\u2014";
+        hasNumber(a.value) ? money(signedAmount(a, Number(a.value))) : "\u2014";
+    const shownShare = (a: any): string => money(signedAmount(a, ownedValue(a)));
     // The owned share as a whole percent, when it is something other than sole ownership
     const partShare = (a: any): number | null => {
         const pct = ownershipOf(a.ownershipPercentage);
@@ -997,7 +999,7 @@
                             {/if}
                             {#if partShare(asset) !== null && hasNumber(asset.value)}
                                 <div class="text-[11px] text-muted-foreground font-medium" data-testid="owned-share">
-                                    Your {partShare(asset)}% share: {money(Math.abs(ownedValue(asset)))}
+                                    Your {partShare(asset)}% share: {shownShare(asset)}
                                 </div>
                             {/if}
                         {:else}
@@ -1210,7 +1212,7 @@
                             {#if $userRole !== "Family"}
                                 <span class="font-bold text-foreground">{shownValue(asset)}</span>
                                 {#if partShare(asset) !== null && hasNumber(asset.value)}
-                                    <div class="text-[11px] text-muted-foreground">Your {partShare(asset)}% share: {money(Math.abs(ownedValue(asset)))}</div>
+                                    <div class="text-[11px] text-muted-foreground">Your {partShare(asset)}% share: {shownShare(asset)}</div>
                                 {/if}
                             {:else}
                                 <span class="font-bold text-muted-foreground blur-sm select-none">$•••,•••</span>
