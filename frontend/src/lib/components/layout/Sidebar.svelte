@@ -316,6 +316,13 @@
                                     <span class="text-sm flex-1"
                                         >{navText(item.key, item.label)}</span
                                     >
+                                    {#if item.isPreview}
+                                        <span
+                                            class="-ml-1 shrink-0 whitespace-nowrap text-[10px] font-medium leading-none px-1 py-1 rounded bg-white/10 text-primary-foreground/70"
+                                            data-testid="preview-tag"
+                                            >Early preview</span
+                                        >
+                                    {/if}
                                     {#if item.isExternal}
                                         <ExternalLink
                                             size={12}

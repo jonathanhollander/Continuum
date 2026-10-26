@@ -4,6 +4,7 @@
     import MechanicalIcon from "$lib/components/MechanicalIcon.svelte";
     import * as registryRaw from "$lib/data/registry.json";
     import { Search, Grid, List as ListIcon } from "lucide-svelte";
+    import { navGroups, catalogCategories } from "$lib/config/navigation";
 
     // Robustly extract the array from the import, handling potential default export wrappers
     const registryData = (registryRaw as any).default || registryRaw;
@@ -12,6 +13,14 @@
     const registry = Array.isArray(registryData)
         ? registryData
         : Object.values(registryData).filter((x) => typeof x === "object");
+
+    // Modules marked isPreview in navigation.ts carry an "Early preview" tag (card E2).
+    const previewHrefs = new Set(
+        [...navGroups.flatMap((g) => g.items), ...catalogCategories.flatMap((c) => c.items)]
+            .filter((item) => item.isPreview)
+            .map((item) => item.href),
+    );
+    const isPreview = (module: any) => previewHrefs.has(`/modules/${module.id}`);
 
     let searchQuery = "";
     let viewMode: "grid" | "list" = "grid";
@@ -104,6 +113,12 @@
                             >
                                 {module.title}
                             </h3>
+                            {#if isPreview(module)}
+                                <span
+                                    class="inline-block mb-2 text-xs font-medium px-2 py-0.5 rounded-md bg-secondary/10 text-muted-foreground"
+                                    data-testid="preview-tag">Early preview</span
+                                >
+                            {/if}
                             <p
                                 class="text-sm text-muted-foreground line-clamp-2"
                             >
@@ -142,6 +157,12 @@
                             >
                                 {module.title}
                             </h3>
+                            {#if isPreview(module)}
+                                <span
+                                    class="inline-block mt-0.5 text-xs font-medium px-2 py-0.5 rounded-md bg-secondary/10 text-muted-foreground"
+                                    data-testid="preview-tag">Early preview</span
+                                >
+                            {/if}
                             <p class="text-xs text-muted-foreground truncate">
                                 {module.description}
                             </p>
