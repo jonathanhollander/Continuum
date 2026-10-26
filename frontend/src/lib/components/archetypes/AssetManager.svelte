@@ -35,7 +35,11 @@
     import { fly, scale, slide, fade } from "svelte/transition";
     // import { getStored, setStored } from "$lib/stores/persistence"; // REMOVED
     import { registerSync, type SyncManager } from "$lib/services/sync.svelte";
-    import { financialAssetsSync } from "$lib/stores/financialAssetsStore.svelte";
+    import {
+        financialAssetsSync,
+        estateTotals,
+        isDebt,
+    } from "$lib/stores/financialAssetsStore.svelte";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import { conciergeEngine } from "$lib/stores/conciergeEngine";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
@@ -61,7 +65,19 @@
         | "Business"
         | "Vehicle"
         | "Digital"
+        | "Debt"
         | "Other";
+
+    // The select's own options; a saved type outside this list (legacy rows) is added as its own option.
+    const TYPE_OPTIONS: { value: string; label: string }[] = [
+        { value: "Financial", label: "Financial" },
+        { value: "Property", label: "Property" },
+        { value: "Vehicle", label: "Vehicle" },
+        { value: "Business", label: "Business" },
+        { value: "Digital", label: "Digital" },
+        { value: "Debt", label: "Debt or loan (owed)" },
+        { value: "Other", label: "Other" },
+    ];
 
     interface Asset {
         id: string;
@@ -152,15 +168,32 @@
         assetSync.sync();
     });
 
-    function generateMockHistory(currentValue: number): number[] {
-        const history = [];
-        let val = currentValue * 0.8;
-        for (let i = 0; i < 5; i++) {
-            history.push(val);
-            val += (currentValue - val) * Math.random();
+    function parseHistory(history: number[] | string | undefined): number[] {
+        if (Array.isArray(history)) return history;
+        if (typeof history === "string" && history) {
+            try {
+                const parsed = JSON.parse(history);
+                if (Array.isArray(parsed)) return parsed;
+            } catch {}
         }
-        history.push(currentValue);
-        return history;
+        return [];
+    }
+
+    // Unset or blank ownership means sole ownership.
+    function ownershipOf(v: any): number {
+        if (v === null || v === undefined || v === "") return 100;
+        const n = Number(v);
+        return Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : 100;
+    }
+
+    // Real change only: first recorded value to the latest one; nothing until two values exist.
+    function changeOf(history: number[] | string | undefined): number | null {
+        const h = parseHistory(history);
+        if (h.length < 2) return null;
+        const first = Number(h[0]);
+        const last = Number(h[h.length - 1]);
+        if (!first || first === last) return null;
+        return ((last - first) / Math.abs(first)) * 100;
     }
 
     async function saveAsset() {
@@ -172,14 +205,20 @@
         try {
         if (newAsset.id) {
             // Edit Mode - update via SyncManager
+            const value = Number(newAsset.value) || 0;
+            // History records real saved values: append only when the value changed.
+            const previous = assets.find((a) => a.id === newAsset.id);
+            const history = [...parseHistory(newAsset.valueHistory)];
+            if (history.length === 0 && previous && Number(previous.value) !== value)
+                history.push(Number(previous.value) || 0);
+            if (history.length === 0 || history[history.length - 1] !== value)
+                history.push(value);
             const updates = {
                 ...newAsset,
-                value: Number(newAsset.value) || 0,
-                ownershipPercentage: Number(newAsset.ownershipPercentage),
+                value,
+                ownershipPercentage: ownershipOf(newAsset.ownershipPercentage),
                 customAttributes: customAttributesStr,
-                valueHistory: Array.isArray(newAsset.valueHistory)
-                    ? JSON.stringify(newAsset.valueHistory)
-                    : newAsset.valueHistory || "[]",
+                valueHistory: history,
             };
 
             await assetSync.update(newAsset.id, updates);
@@ -202,7 +241,7 @@
                 value: Number(newAsset.value) || 0,
                 location: newAsset.location || "",
                 accountNumber: newAsset.accountNumber || "",
-                ownershipPercentage: Number(newAsset.ownershipPercentage),
+                ownershipPercentage: ownershipOf(newAsset.ownershipPercentage),
                 beneficiaries: newAsset.beneficiaries || "",
                 notes: newAsset.notes || "",
                 loginUrl: newAsset.loginUrl || "",
@@ -212,7 +251,7 @@
                 closure_date: newAsset.closure_date || "",
                 closureNotes: newAsset.closureNotes || "",
                 documents: newAsset.documents || "",
-                valueHistory: JSON.stringify(generateMockHistory(Number(newAsset.value) || 0)),
+                valueHistory: [Number(newAsset.value) || 0], // the one real value so far
                 customAttributes: customAttributesStr,
             }, false, false, saveAsset);
 
@@ -281,6 +320,7 @@
             image: "",
             is_closed: false,
             closure_date: "",
+            closureNotes: "",
             customAttributes: "{}",
             documents: "",
         };
@@ -310,17 +350,7 @@
     }
 
     function getSparklinePoints(history: number[] | string | undefined): string {
-        // Parse JSON string if needed (backend stores as JSON string)
-        let parsedHistory: number[];
-        if (typeof history === 'string') {
-            try {
-                parsedHistory = JSON.parse(history);
-            } catch {
-                return "";
-            }
-        } else {
-            parsedHistory = history || [];
-        }
+        const parsedHistory = parseHistory(history);
 
         if (!parsedHistory || parsedHistory.length < 2) return "";
         const min = Math.min(...parsedHistory);
@@ -350,6 +380,8 @@
                 return Laptop;
             case "Financial":
                 return Wallet;
+            case "Debt":
+                return CreditCard;
             default:
                 return DollarSign;
         }
@@ -426,13 +458,8 @@
         );
     }
 
-    const totalValue = $derived(
-        assets.reduce(
-            (sum, asset) =>
-                sum + (asset.value || 0) * ((asset.ownershipPercentage || 100) / 100),
-            0,
-        ),
-    );
+    // Debts are owed: subtracted from the estate, never added.
+    const totals = $derived(estateTotals(assets));
 
     function exportToCSV() {
         const headers = [
@@ -481,15 +508,20 @@
             <h2
                 class="text-sm font-bold uppercase tracking-wider text-gray-500 mb-1"
             >
-                Total Estate Value
+                Net Estate Value
             </h2>
-            <div class="text-4xl font-serif font-bold text-[#304743]">
+            <div class="text-4xl font-serif font-bold text-[#304743]" data-testid="estate-net">
                 {#if $userRole !== "Family"}
-                    ${totalValue.toLocaleString()}
+                    {totals.net < 0 ? "-" : ""}${Math.abs(totals.net).toLocaleString()}
                 {:else}
                     $•••,•••,•••
                 {/if}
             </div>
+            {#if $userRole !== "Family" && totals.debts > 0}
+                <p class="text-xs text-gray-500 mt-1" data-testid="estate-breakdown">
+                    ${totals.assets.toLocaleString()} in assets, less ${totals.debts.toLocaleString()} owed
+                </p>
+            {/if}
         </div>
         <div class="flex gap-3 items-center">
             <DataViewToggle module="financial-accounts" onchange={(mode) => viewMode = mode} />
@@ -613,18 +645,12 @@
                                         bind:value={newAsset.type}
                                         class="w-full bg-slate-50 border-2 border-transparent focus:border-[#4A7C74] focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all appearance-none cursor-pointer"
                                     >
-                                        <option value="Financial"
-                                            >Financial</option
-                                        >
-                                        <option value="Property"
-                                            >Property</option
-                                        >
-                                        <option value="Vehicle">Vehicle</option>
-                                        <option value="Business"
-                                            >Business</option
-                                        >
-                                        <option value="Digital">Digital</option>
-                                        <option value="Other">Other</option>
+                                        {#each TYPE_OPTIONS as opt}
+                                            <option value={opt.value}>{opt.label}</option>
+                                        {/each}
+                                        {#if newAsset.type && !TYPE_OPTIONS.some((o) => o.value === newAsset.type)}
+                                            <option value={newAsset.type}>{newAsset.type}</option>
+                                        {/if}
                                     </select>
                                 </div>
                                 <div class="space-y-3">
@@ -674,6 +700,35 @@
                                         />
                                     </div>
                                 {/if}
+                                <div class="space-y-3">
+                                    <label
+                                        for="asset-account-number"
+                                        class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+                                        >Account Number</label
+                                    >
+                                    <input
+                                        id="asset-account-number"
+                                        type="text"
+                                        bind:value={newAsset.accountNumber}
+                                        placeholder="e.g. last four digits"
+                                        class="w-full bg-slate-50 border-2 border-transparent focus:border-[#4A7C74] focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all"
+                                    />
+                                </div>
+                                <div class="space-y-3">
+                                    <label
+                                        for="asset-ownership"
+                                        class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+                                        >Your Ownership (%)</label
+                                    >
+                                    <input
+                                        id="asset-ownership"
+                                        type="number"
+                                        min="0"
+                                        max="100"
+                                        bind:value={newAsset.ownershipPercentage}
+                                        class="w-full bg-slate-50 border-2 border-transparent focus:border-[#4A7C74] focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all"
+                                    />
+                                </div>
                             </div>
 
                             <div class="mt-8 pt-8 border-t border-slate-100">
@@ -759,6 +814,24 @@
                                 class="w-full bg-slate-50 border-2 border-transparent focus:border-[#4A7C74] focus:bg-white rounded-2xl p-6 text-sm font-medium outline-none transition-all min-h-[120px] resize-none leading-relaxed"
                             ></textarea>
                         </section>
+
+                        <!-- Group 4: Notes -->
+                        <section>
+                            <h3
+                                class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3"
+                            >
+                                <span
+                                    class="w-6 h-[2px] bg-slate-300 rounded-full"
+                                ></span>
+                                Notes
+                            </h3>
+                            <textarea
+                                id="asset-notes"
+                                bind:value={newAsset.notes}
+                                placeholder="Anything else your family may find helpful..."
+                                class="w-full bg-slate-50 border-2 border-transparent focus:border-[#4A7C74] focus:bg-white rounded-2xl p-6 text-sm font-medium outline-none transition-all min-h-[100px] resize-none leading-relaxed"
+                            ></textarea>
+                        </section>
                     </div>
 
                     <!-- Footer Actions -->
@@ -791,6 +864,8 @@
         <!-- ... (Each asset block remains same) ... -->
         {#each assets as asset (asset.id)}
             {@const Icon = getIcon(asset.type)}
+            {@const change = changeOf(asset.valueHistory)}
+            {@const sparkline = getSparklinePoints(asset.valueHistory)}
             <div
                 transition:scale={{ duration: 300 }}
                 class="group bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all border border-transparent hover:border-[#4A7C74]/20 relative overflow-hidden"
@@ -830,8 +905,11 @@
                     <div class="text-right">
                         {#if $userRole !== "Family"}
                             <div class="font-bold text-lg text-foreground">
-                                ${(asset.value || 0).toLocaleString()}
+                                {isDebt(asset) ? "-" : ""}${Math.abs(asset.value || 0).toLocaleString()}
                             </div>
+                            {#if isDebt(asset)}
+                                <div class="text-[11px] text-slate-500 font-medium">Owed</div>
+                            {/if}
                         {:else}
                             <div
                                 class="font-bold text-lg text-muted-foreground blur-sm select-none"
@@ -841,13 +919,17 @@
                             </div>
                         {/if}
 
-                        <!-- Trend indicator (mock) -->
-                        <div
-                            class="flex items-center justify-end gap-1 text-xs text-emerald-600 font-medium"
-                        >
-                            <TrendingUp size={12} />
-                            <span>+2.4%</span>
-                        </div>
+                        <!-- Change since the first recorded value (real history only) -->
+                        {#if change !== null && $userRole !== "Family"}
+                            <div
+                                data-testid="value-change"
+                                title="Change since the first recorded value"
+                                class="flex items-center justify-end gap-1 text-xs font-medium {change > 0 ? 'text-emerald-600' : 'text-slate-500'}"
+                            >
+                                <TrendingUp size={12} class={change > 0 ? "" : "rotate-180"} />
+                                <span>{change > 0 ? "+" : ""}{change.toFixed(1)}%</span>
+                            </div>
+                        {/if}
                     </div>
                 </div>
 
@@ -855,9 +937,11 @@
                     <h3 class="font-bold text-lg leading-tight">
                         {asset.name}
                     </h3>
-                    <p class="text-sm text-muted-foreground mt-1">
-                        {asset.location || "Location not specified"}
-                    </p>
+                    {#if asset.location}
+                        <p class="text-sm text-muted-foreground mt-1">
+                            {asset.location}
+                        </p>
+                    {/if}
                 </div>
 
                 <!-- Custom Fields Display -->
@@ -888,18 +972,18 @@
                     {/if}
                 {/if}
 
-                <!-- Mini Sparkline visualization -->
-                <div class="mt-4 h-8 w-full opacity-25">
-                    <svg
-                        viewBox="0 0 100 30"
-                        class="w-full h-full stroke-[#4A7C74] fill-none stroke-2"
-                        preserveAspectRatio="none"
-                    >
-                        <polyline
-                            points={getSparklinePoints(asset.valueHistory)}
-                        />
-                    </svg>
-                </div>
+                <!-- Mini Sparkline: drawn from real saved values only -->
+                {#if sparkline && $userRole !== "Family"}
+                    <div class="mt-4 h-8 w-full opacity-25" data-testid="value-sparkline">
+                        <svg
+                            viewBox="0 0 100 30"
+                            class="w-full h-full stroke-[#4A7C74] fill-none stroke-2"
+                            preserveAspectRatio="none"
+                        >
+                            <polyline points={sparkline} />
+                        </svg>
+                    </div>
+                {/if}
             </div>
         {/each}
 
@@ -992,7 +1076,7 @@
                         <td class="px-4 py-3 text-slate-600 text-sm">{asset.location || '-'}</td>
                         <td class="px-4 py-3 text-right">
                             {#if $userRole !== "Family"}
-                                <span class="font-bold text-slate-800">${(asset.value || 0).toLocaleString()}</span>
+                                <span class="font-bold text-slate-800">{isDebt(asset) ? "-" : ""}${Math.abs(asset.value || 0).toLocaleString()}</span>
                             {:else}
                                 <span class="font-bold text-muted-foreground blur-sm select-none">$•••,•••</span>
                             {/if}
@@ -1020,7 +1104,7 @@
                 {#if assets.length === 0}
                     <tr>
                         <td colspan="5" class="px-4 py-8 text-center text-slate-400">
-                            No assets yet. Click "Add Asset" to get started.
+                            Your accounts will appear here as you add them.
                         </td>
                     </tr>
                 {/if}
