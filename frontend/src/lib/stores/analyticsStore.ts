@@ -12,9 +12,9 @@ import { financialAssetsStore, estateTotals, isDebt } from './financialAssetsSto
 import { familyStore } from './familyStore.svelte';
 import { insuranceStore } from './insuranceStore.svelte';
 
-// Each pillar is the share of points its readiness-audit sections earned (the /admin/readiness numbers):
-// Legal = family + medical, Financial = financial + insurance, Legacy = legacy + digital.
-const PILLAR_SECTIONS = { legal: ['family', 'medical'], financial: ['financial', 'insurance'], legacy: ['legacy', 'digital'] } as const;
+// Financial and Legacy are the share of points their readiness-audit sections earned (the /admin/readiness numbers):
+// Financial = financial + insurance, Legacy = legacy + digital. Legal is the share of its own checkboxes.
+const PILLAR_SECTIONS = { financial: ['financial', 'insurance'], legacy: ['legacy', 'digital'] } as const;
 const pillarScore = (scores: Record<string, number> | undefined, ids: readonly string[]) => {
     const max = ids.reduce((n, id) => n + (AuditStore.maxScores[id] ?? 0), 0);
     const got = ids.reduce((n, id) => n + (Number(scores?.[id]) || 0), 0);
@@ -50,7 +50,9 @@ export const estateAnalytics = derived(
         const hasMedicalProxy = ($medical?.directives || []).some((d: any) => d.type === 'healthcare_proxy');
         const hasLivingWill = ($medical?.directives || []).some((d: any) => d.type === 'living_will');
 
-        const legalScore = pillarScore($audit?.moduleScores, PILLAR_SECTIONS.legal);
+        // The score and its checkboxes read the same facts, so a box and the score move together
+        const legalFacts = [hasExecutor, hasMedicalProxy, hasLivingWill];
+        const legalScore = Math.round((legalFacts.filter(Boolean).length / legalFacts.length) * 100);
 
         // --- 2. Financial Clarity ---
         // The financial page's net (open assets less open debts); estateProfile.totalValue is never set

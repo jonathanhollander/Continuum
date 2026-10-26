@@ -117,7 +117,7 @@
                     making.
                 </p>
                 <div class="space-y-3">
-                    {#each Object.entries(pillars.legal.metrics) as [key, active]}
+                    {#each Object.entries(pillars.legal.metrics).filter(([, v]) => typeof v === "boolean") as [key, active]}
                         <div class="flex items-center gap-3 text-sm">
                             {#if active}
                                 <CircleCheck
