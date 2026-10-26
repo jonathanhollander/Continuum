@@ -13,6 +13,26 @@ export interface MediaOwner {
     readonly session: SessionOwnership;
 }
 
+/** The identities returned for this original, including an interrupted recovery upload. */
+export interface PendingMediaUpload {
+    id: number;
+    filename: string;
+    mime_type: string;
+    file_size: number;
+    download_url: string;
+}
+export interface PendingMediaFile {
+    blob: Blob;
+    uploads: PendingMediaUpload[];
+}
+
+function pendingFile(value: unknown): PendingMediaFile | undefined {
+    if (value instanceof Blob) return { blob: value, uploads: [] };
+    if (!value || typeof value !== 'object' || !('blob' in value) || !(value.blob instanceof Blob)) return undefined;
+    const uploads = 'uploads' in value && Array.isArray(value.uploads) ? value.uploads : [];
+    return { blob: value.blob, uploads };
+}
+
 export const MEDIA_STORAGE_CHANGED = 'continuum:media-storage-changed';
 const activeUploads = new Set<string>();
 const accountNow = () => {
@@ -77,16 +97,22 @@ function getDB(): Promise<IDBDatabase> {
 }
 
 async function requestFor<T>(owner: MediaOwner, mode: IDBTransactionMode,
-    action: (store: IDBObjectStore) => IDBRequest<T>): Promise<T> {
+    action: (store: IDBObjectStore) => IDBRequest<T>,
+    afterRead?: (value: T, store: IDBObjectStore) => void): Promise<T> {
     requireMediaOwner(owner);
     const db = await getDB();
     requireMediaOwner(owner);
     return new Promise((resolve, reject) => {
         const transaction = db.transaction([STORE_NAME], mode);
-        const request = action(transaction.objectStore(STORE_NAME));
+        const store = transaction.objectStore(STORE_NAME);
+        const request = action(store);
         let result: T;
         request.onsuccess = () => {
-            try { requireMediaOwner(owner); result = request.result; }
+            try {
+                requireMediaOwner(owner);
+                result = request.result;
+                afterRead?.(result, store);
+            }
             catch (error) { transaction.abort(); reject(error); }
         };
         transaction.oncomplete = () => {
@@ -108,7 +134,7 @@ export const mediaStorage = {
     release: (id: string, owner: MediaOwner) => { activeUploads.delete(ownedKey(id, owner)); changed(owner); },
 
     save: async (id: string, blob: Blob, owner = requireMediaOwner()): Promise<void> => {
-        await requestFor(owner, 'readwrite', (store) => store.put(blob, ownedKey(id, owner)));
+        await requestFor(owner, 'readwrite', (store) => store.put({ blob, uploads: [] }, ownedKey(id, owner)));
         requireMediaOwner(owner);
     },
 
@@ -121,8 +147,26 @@ export const mediaStorage = {
             .map((key) => key.slice(prefix.length));
     },
 
-    get: (id: string, owner = requireMediaOwner()): Promise<Blob | undefined> =>
-        requestFor(owner, 'readonly', (store) => store.get(ownedKey(id, owner))),
+    getPending: async (id: string, owner = requireMediaOwner()): Promise<PendingMediaFile | undefined> => {
+        const value: unknown = await requestFor(owner, 'readonly', (store) => store.get(ownedKey(id, owner)));
+        requireMediaOwner(owner);
+        return pendingFile(value);
+    },
+
+    get: async (id: string, owner = requireMediaOwner()): Promise<Blob | undefined> =>
+        (await mediaStorage.getPending(id, owner))?.blob,
+
+    rememberUpload: async (id: string, upload: PendingMediaUpload, owner = requireMediaOwner()): Promise<void> => {
+        await requestFor(owner, 'readwrite', (store) => store.get(ownedKey(id, owner)), (value: unknown, store) => {
+            const file = pendingFile(value);
+            if (!file) throw new Error('The browser copy needs another look before its file details can be saved.');
+            store.put({ blob: file.blob, uploads: [...file.uploads.filter((u) => u.id !== upload.id), {
+                id: upload.id, filename: upload.filename, mime_type: upload.mime_type,
+                file_size: upload.file_size, download_url: upload.download_url,
+            }] }, ownedKey(id, owner));
+        });
+        requireMediaOwner(owner);
+    },
 
     delete: async (id: string, owner = requireMediaOwner()): Promise<void> => {
         await requestFor(owner, 'readwrite', (store) => store.delete(ownedKey(id, owner)));
