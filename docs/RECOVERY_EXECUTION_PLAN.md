@@ -1,6 +1,6 @@
 # Continuum — Recovery Execution Plan (subagent-run)
 
-**Last Updated:** 2026-10-26 15:39 EDT
+**Last Updated:** 2026-10-26 15:48 EDT
 
 The how and the order for [PROJECT_RECOVERY_PLAN.md](PROJECT_RECOVERY_PLAN.md) (phases A–F).
 Issue IDs (CU-0xx) and their evidence are in
@@ -833,7 +833,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X310 | ☐ | source review 8751f22 | [CONTRACTS F2](reviews/2026-10-26-plan-crosscheck/CONTRACTS.md); P1; implementation not started. |
 | X311 | ☐ | source review 8751f22 | [CONTRACTS F3](reviews/2026-10-26-plan-crosscheck/CONTRACTS.md); P2; implementation not started. |
 | X312 | ▶ | codex/X312 | Dispatched in .worktrees/X312; isolated proof, no push/deploy; orchestrator review pending. |
-| X313 | ▶ | codex/X313 | Dispatched in .worktrees/X313; isolated proof, no push/deploy; orchestrator review pending. |
+| X313 | ⏸ (owner classification policy) | codex/X313; safe partial draft retained | Original migration erased provenance for Financial+legacycredit/loan rows. Owner asked current-type+review versus legacy-label authority; no assumption, finalproof/commit pending. Other cards continue. |
 | X314 | ☐ | source review 8751f22 | [FINANCES F1](reviews/2026-10-26-plan-crosscheck/FINANCES.md); P1; implementation not started. |
 | X315 | ▶ | codex/X315 | Dispatched in .worktrees/X315; isolated proof, no push/deploy; orchestrator review pending. |
 | X316 | ☐ | source review 8751f22 | [LEGACY F4](reviews/2026-10-26-plan-crosscheck/LEGACY.md); P1; implementation not started. |
@@ -871,7 +871,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X348 | ☐ | source review 8751f22 | [PULSE F7](reviews/2026-10-26-plan-crosscheck/PULSE.md); P2; implementation not started. |
 | X349 | ☐ | source review 8751f22 | [PULSE F8](reviews/2026-10-26-plan-crosscheck/PULSE.md); P2; implementation not started. |
 | X350 | ☐ | source review 8751f22 | [PULSE additional owner-page error paths](reviews/2026-10-26-plan-crosscheck/PULSE.md); P2; implementation not started. |
-| X351 | ▶ | codex/X351 | Dispatched in .worktrees/X351; isolated proof, no push/deploy; orchestrator review pending. |
+| X351 | ☑ | 5865034 | Diff reviewed: missing-provider503 replaces invented practitioners;10 focused real-router/client-handler checks,zero external calls/DB/lifespan. Frontend unchanged; rendered release check pending. Merged; worktree removed; branch retained. |
 | X352 | ☐ | source review 8751f22 | [TOOLS F3](reviews/2026-10-26-plan-crosscheck/TOOLS.md); P2; implementation not started. |
 | X353 | ▶ | codex/X353 | Dispatched in .worktrees/X353; isolated proof, no push/deploy; orchestrator review pending. |
 | X354 | ☐ | source review 8751f22 | [TOOLS F5](reviews/2026-10-26-plan-crosscheck/TOOLS.md); P2; implementation not started. |
