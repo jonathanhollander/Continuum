@@ -1,6 +1,8 @@
 # Continuum — Project Recovery Plan
 
-**Last Updated:** 2026-10-25 23:55 EST
+**Last Updated:** 2026-10-26 00:22 EST
+
+**Execution:** task cards for each phase are in [RECOVERY_EXECUTION_PLAN.md](RECOVERY_EXECUTION_PLAN.md).
 
 **Scope:** Features and the user's experience come first. Security, admin, CI and
 infrastructure hardening are listed in Phase 6 and wait until the core features work.

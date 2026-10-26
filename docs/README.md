@@ -1,12 +1,13 @@
 # Continuum Documentation
 
-**Last Updated:** 2026-10-25 23:58 EST
+**Last Updated:** 2026-10-26 00:22 EST
 
 Continuum is end-of-life planning software: SvelteKit 5 frontend, FastAPI + SQLModel backend, deployed on Railway (https://continuum.estate). Project instructions for Claude Code live in `/CLAUDE.md`.
 
 ## Start here
 
-- [PROJECT_RECOVERY_PLAN.md](PROJECT_RECOVERY_PLAN.md) — the single current plan and feature status table
+- [PROJECT_RECOVERY_PLAN.md](PROJECT_RECOVERY_PLAN.md) — the single current plan (the why) and feature status table
+- [RECOVERY_EXECUTION_PLAN.md](RECOVERY_EXECUTION_PLAN.md) — task cards and waves for subagents (the how)
 
 ## Reference guides (current)
 
