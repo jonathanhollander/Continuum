@@ -440,13 +440,23 @@ def save_estate_profile(profile: EstateProfilePayload, user: User = Depends(get_
 # Mount the frontend/dist directory (ensure this exists after build)
 # We mount this at the root, but after all /api routes are defined
 # This handles CSS, JS, and image assets
-app.mount("/_app", StaticFiles(directory="frontend/dist/_app"), name="_app")
-app.mount("/images", StaticFiles(directory="frontend/dist/images"), name="images")
+# Each mount is skipped when its directory is missing, so the API can run without a frontend build.
+if os.path.isdir("frontend/dist/_app"):
+    app.mount("/_app", StaticFiles(directory="frontend/dist/_app"), name="_app")
+if os.path.isdir("frontend/dist/images"):
+    app.mount("/images", StaticFiles(directory="frontend/dist/images"), name="images")
+
+
+def _spa_index():
+    # Without a frontend build there is no index.html; answer 404 instead of a 500 traceback.
+    if not os.path.isfile("frontend/dist/index.html"):
+        raise HTTPException(status_code=404, detail="Frontend build not found")
+    return FileResponse("frontend/dist/index.html")
 
 # Handle root specifically to avoid 404s
 @app.get("/")
 async def serve_root():
-    return FileResponse("frontend/dist/index.html")
+    return _spa_index()
 
 # Catch-all route to serve index.html for client-side routing
 @app.get("/{full_path:path}")
@@ -469,7 +479,7 @@ async def serve_spa(full_path: str):
     # Block any path containing traversal sequences before joining
     if ".." in clean_path or clean_path.startswith("/"):
         logger.warning(f"Blocked potential path traversal attempt: '{full_path}'")
-        return FileResponse("frontend/dist/index.html")
+        return _spa_index()
 
     # Construct the file path
     file_path = os.path.join("frontend", "dist", clean_path)
@@ -485,11 +495,11 @@ async def serve_spa(full_path: str):
 
     # Otherwise, serve the index.html for the frontend to handle routing
     logger.debug(f"Falling back to index.html for path: '{full_path}'")
-    return FileResponse("frontend/dist/index.html")
+    return _spa_index()
 
 if __name__ == "__main__":
     uvicorn.run(
-        "main:app",
+        "backend.main:app",
         host=settings.HOST,
         port=settings.PORT,
         reload=settings.is_development()
