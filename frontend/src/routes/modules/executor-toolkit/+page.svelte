@@ -61,6 +61,8 @@
     }
 
     const GOV_PHASES = new Set(["Legal", "Government"]);
+    // Phases in lib/data/tasks: Immediate, Legal, Government, Financial, Administrative, Digital, Assets, Closing, Expert
+    const SUDDEN_PHASES = new Set(["Immediate", ...GOV_PHASES]);
 
     // Reactive filtering based on Scenario Mode
     let filteredTasks = $derived(
@@ -70,12 +72,8 @@
             )
             .filter((task) => {
                 if ($currentScenario === "Sudden") {
-                    // In Sudden Passing, only show immediate tasks (Phase 1/2) and anything urgent
-                    return (
-                        task.phase === "Immediate" ||
-                        task.phase === "Foundation" ||
-                        task.urgent
-                    );
+                    // Sudden passing: the first days and the legal/government steps, plus anything urgent
+                    return SUDDEN_PHASES.has(task.phase) || task.urgent;
                 }
                 if ($currentScenario === "Planned") {
                     // In Planned, show administrative and asset tasks
@@ -198,7 +196,10 @@
                     </a>
                 {/if}
 
-                <ExecutorTaskDetail blocks={selectedTask.blocks} />
+                <ExecutorTaskDetail
+                    blocks={selectedTask.blocks}
+                    stepId={selectedTask.id}
+                />
 
                 <div class="mt-10 pt-6 border-t">
                     <label

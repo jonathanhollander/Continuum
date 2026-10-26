@@ -1,6 +1,8 @@
 /**
  * Executor Toolkit progress (CU-015): which checklist steps are done, and a note per step.
  * Server-backed through /api/data/executor_steps (one row per step the person has touched).
+ * Each sub-step (a checkbox inside a step's detail) is its own row too, keyed
+ * `${stepId}:${n}` where n is the checkbox's position in that step, so the table needs no new column.
  */
 import { registerSync } from "$lib/services/sync.svelte";
 
@@ -74,6 +76,9 @@ function save(stepId: string, changes: Partial<Pick<ExecutorStepRecord, 'done' |
     });
 }
 
+/** Row key for the n-th checkbox inside a step's detail. */
+const subKey = (stepId: string, n: number) => `${stepId}:${n}`;
+
 export const executorSteps = {
     get items() { return stepSync.items; },
     get status() { return stepSync.status; },
@@ -82,4 +87,9 @@ export const executorSteps = {
     noteFor: (stepId: string) => latest(stepId)?.note ?? '',
     toggle: (stepId: string) => save(stepId, { done: !latest(stepId)?.done }),
     saveNote: (stepId: string, note: string) => save(stepId, { note }),
+    isSubDone: (stepId: string, n: number) => !!latest(subKey(stepId, n))?.done,
+    toggleSub: (stepId: string, n: number) => {
+        const key = subKey(stepId, n);
+        return save(key, { done: !latest(key)?.done });
+    },
 };

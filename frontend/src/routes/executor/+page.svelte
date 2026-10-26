@@ -16,10 +16,11 @@
         BookOpen,
         CheckCircle2,
         Clock,
-        Shield
+        Shield,
+        Stethoscope
     } from 'lucide-svelte';
     import { contextStore } from "$lib/stores/contextStore.svelte";
-    import { estateAudit } from "$lib/stores/auditStore.svelte";
+    import { estateAudit, AuditStore } from "$lib/stores/auditStore.svelte";
     import ExecutorProgressTracker from '$lib/components/executor/ExecutorProgressTracker.svelte';
     import SupportResources from '$lib/components/executor/SupportResources.svelte';
     import { getEncouragementMessage } from '$lib/utils/contextualMessages';
@@ -50,6 +51,7 @@
         },
         {
             id: 'contacts',
+            auditId: 'family',
             icon: Users,
             title: 'Notifications',
             description: 'People and organizations to notify',
@@ -64,6 +66,7 @@
         },
         {
             id: 'financial',
+            auditId: 'financial',
             icon: DollarSign,
             title: 'Financial Accounts',
             description: 'Bank accounts, investments, retirement funds',
@@ -89,8 +92,27 @@
                 'Inventory valuable items',
                 'Arrange for property maintenance'
             ]
+        },
+        {
+            id: 'medical',
+            auditId: 'medical',
+            icon: Stethoscope,
+            title: 'Medical Wishes',
+            description: 'Healthcare directives, donation wishes, care providers',
+            link: '/modules/medical',
+            color: 'cyan',
+            tasks: [
+                'Find the healthcare directive and living will',
+                'Check organ and tissue donation wishes',
+                'List doctors and care providers to inform',
+                'Gather medical records the estate may need'
+            ]
         }
     ];
+
+    // An area's progress as a share of the most its audit can award (areas without an audit have none).
+    const areaPct = (auditId?: string) =>
+        auditId ? Math.round(((estateAudit.moduleScores[auditId] || 0) / (AuditStore.maxScores[auditId] || 50)) * 100) : 0;
 
     // Resources and guides
     const resources = [
@@ -105,14 +127,14 @@
             title: 'Timeline & Deadlines',
             description: 'Important dates and filing requirements',
             icon: Clock,
-            link: '/modules/executor-toolkit#timeline',
+            link: '/modules/executor-toolkit',
             color: 'blue'
         },
         {
             title: 'Professional Help',
             description: 'When to consult attorneys and accountants',
             icon: Shield,
-            link: '/modules/contacts#professionals',
+            link: '/modules/contacts',
             color: 'cyan'
         }
     ];
@@ -122,10 +144,9 @@
 
     // Calculate completion for essential areas
     let essentialCompletion = $derived.by(() => {
-        const scores = estateAudit.moduleScores;
-        const essentialIds = essentialAreas.map(a => a.id);
-        const completed = essentialIds.filter(id => scores[id] > 50).length;
-        return Math.round((completed / essentialIds.length) * 100);
+        const scored = essentialAreas.filter(a => a.auditId);
+        const completed = scored.filter(a => areaPct(a.auditId) > 50).length;
+        return Math.round((completed / scored.length) * 100);
     });
 
     function toggleArea(id: string) {
@@ -179,7 +200,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {#each essentialAreas as area, i}
                     {@const Icon = area.icon}
-                    {@const score = estateAudit.moduleScores[area.id] || 0}
+                    {@const score = areaPct(area.auditId)}
                     {@const isExpanded = expandedArea === area.id}
 
                     <div
@@ -215,8 +236,6 @@
                                         </div>
                                         <span class="text-{area.color}-400 font-medium">{score}%</span>
                                     </div>
-                                {:else}
-                                    <span class="text-xs text-slate-500">Not yet started</span>
                                 {/if}
                             </div>
 
