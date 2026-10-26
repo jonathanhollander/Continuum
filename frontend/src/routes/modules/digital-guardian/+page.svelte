@@ -528,7 +528,7 @@
                                 class="font-bold {fireDrill.twoFactor
                                     ? 'text-primary-foreground'
                                     : 'text-foreground group-hover:text-primary'}"
-                                >Bypass 2FA</span
+                                >Enter the 2FA Code</span
                             >
                             {#if fireDrill.twoFactor}
                                 <CircleCheck size={16} />
@@ -663,7 +663,7 @@
                     </div>
                     <p class="text-sm text-muted-foreground">
                         Choose someone who can reach your Apple account data
-                        when you're gone.
+                        when the time comes.
                     </p>
                 </div>
             </button>
@@ -759,8 +759,8 @@
                     transition:slide
                 >
                     <p class="text-sm text-muted-foreground mb-4">
-                        Google can notify your chosen contact after a period of
-                        no sign-ins that you choose.
+                        Google can notify your chosen contact once your account
+                        has been inactive for a period you choose.
                     </p>
                     <ol
                         class="space-y-4 text-sm text-foreground list-decimal pl-4 mb-6"
@@ -936,7 +936,7 @@
                             Choose a friend to manage your account (they can pin
                             posts, change profile pic).
                         </li>
-                        <li>Or you can choose "Delete After Death".</li>
+                        <li>Or you can ask Facebook to remove the account instead.</li>
                     </ol>
                     <div
                         class="flex items-center gap-4 pt-4 border-t border-border"
@@ -982,8 +982,8 @@
                         {/if}
                     </div>
                     <p class="text-sm text-muted-foreground">
-                        Request to memorialize or close the account of a
-                        deceased member.
+                        Your executor can ask LinkedIn to memorialize or close
+                        your account.
                     </p>
                 </div>
             </button>
