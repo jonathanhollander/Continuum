@@ -309,7 +309,7 @@
             {/key}
 
             <!-- Controls -->
-            <button
+            <button aria-label="Previous"
                 class="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/40 text-white hover:bg-black/60 disabled:opacity-30 backdrop-blur transition-all z-20"
                 on:click={prevImage}
                 disabled={activeIndex === 0}
@@ -317,7 +317,7 @@
                 <ChevronLeft size={24} />
             </button>
 
-            <button
+            <button aria-label="Next"
                 class="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/40 text-white hover:bg-black/60 disabled:opacity-30 backdrop-blur transition-all z-20"
                 on:click={nextImage}
                 disabled={activeIndex === items.length - 1}
@@ -343,7 +343,7 @@
 
                     <div class="flex gap-2">
                         {#if allowDelete}
-                            <button
+                            <button aria-label="Remove this item"
                                 class="p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
                                 on:click={(e) =>
                                     handleDelete(items[activeIndex].id, e)}
@@ -352,7 +352,7 @@
                             </button>
                         {/if}
                         {#if allowFavorites}
-                            <button
+                            <button aria-label="Favorite" aria-pressed={!!items[activeIndex].isFavorite}
                                 class="p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
                                 on:click={() =>
                                     dispatch(
@@ -404,7 +404,7 @@
             </div>
 
             <!-- Close Carousel -->
-            <button
+            <button aria-label="Close"
                 class="absolute top-4 right-4 p-2 bg-black/20 hover:bg-black/40 rounded-full text-white backdrop-blur transition-colors z-30"
                 on:click={() => (viewMode = "grid")}
             >

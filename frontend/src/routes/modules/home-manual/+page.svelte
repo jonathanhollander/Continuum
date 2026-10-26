@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { focusTrap } from "$lib/actions/focusTrap";
     import { fade, slide } from "svelte/transition";
     import {
         Hammer,
@@ -170,7 +171,7 @@
 {:else}
 <!-- Vendor Modal -->
 {#if showVendorModal}
-    <div
+    <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => (showVendorModal = false) }}
         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
         transition:fade
     >
@@ -182,7 +183,7 @@
                 <h3 class="font-serif font-bold text-xl text-[#304743]">
                     {editingVendorId != null ? "Update" : "Add"} Trusted Vendor
                 </h3>
-                <button
+                <button aria-label="Close"
                     onclick={() => (showVendorModal = false)}
                     class="text-slate-400 hover:text-slate-600"
                 >
@@ -249,7 +250,7 @@
 
 <!-- Access Code Modal -->
 {#if showCodeModal}
-    <div
+    <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => (showCodeModal = false) }}
         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
         transition:fade
     >
@@ -261,7 +262,7 @@
                 <h3 class="font-serif font-bold text-xl text-[#304743]">
                     {editingCodeId != null ? "Update" : "Add"} Access Code
                 </h3>
-                <button
+                <button aria-label="Close"
                     onclick={() => (showCodeModal = false)}
                     class="text-slate-400 hover:text-slate-600"
                 >
@@ -328,7 +329,7 @@
 
 <!-- Utility Modal -->
 {#if showUtilityModal}
-    <div
+    <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => (showUtilityModal = false) }}
         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
         transition:fade
     >
@@ -340,7 +341,7 @@
                 <h3 class="font-serif font-bold text-xl text-[#304743]">
                     {editingUtilityId != null ? "Update" : "Add"} Utility Shutoff
                 </h3>
-                <button
+                <button aria-label="Close"
                     onclick={() => (showUtilityModal = false)}
                     class="text-slate-400 hover:text-slate-600"
                 >
@@ -350,10 +351,11 @@
 
             <div class="p-6 space-y-4">
                 <div class="space-y-2">
-                    <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">
+                    <label for="utility-type" class="text-xs font-bold uppercase text-slate-500 tracking-wider">
                         Utility Type
                     </label>
                     <select
+                        id="utility-type"
                         bind:value={utilityForm.service_type}
                         class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium"
                     >

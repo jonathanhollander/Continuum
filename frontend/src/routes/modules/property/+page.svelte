@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { focusTrap } from "$lib/actions/focusTrap";
     import { readCustom } from "$lib/utils/customFields";
     import {
         propertyStore,
@@ -432,7 +433,7 @@
 >
     <!-- Wizard Modal -->
     {#if showWizard}
-        <div
+        <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => (showWizard = false) }}
             class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
             transition:fade
         >
@@ -572,6 +573,7 @@
             >
             <button
                 class="p-3 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-primary transition-colors shadow-sm"
+                aria-label="Download"
             >
                 <Download size={18} />
             </button>
@@ -871,7 +873,7 @@
                                         >
                                             <Edit2 size={14} />
                                         </button>
-                                        <button
+                                        <button aria-label="Remove this item"
                                             onclick={() => deleteItem(item.id, item.name)}
                                             class="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
                                         >
@@ -891,7 +893,7 @@
 
 <!-- Add/Edit Asset Modal -->
 {#if showAddModal}
-    <div
+    <div use:focusTrap={{ onEscape: resetForm }}
         class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
         role="dialog"
         aria-modal="true"

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { focusTrap } from "$lib/actions/focusTrap";
     import { fly, fade, scale } from "svelte/transition";
     import { quintOut } from "svelte/easing";
     import { onboardingStore } from "$lib/stores/onboardingStore.svelte";
@@ -34,7 +35,7 @@
 </script>
 
 {#if isOpen}
-    <div
+    <div role="dialog" aria-modal="true" use:focusTrap
         class="fixed inset-0 z-[150] flex items-center justify-center p-4 sm:p-6"
         transition:fade={{ duration: 400 }}
     >

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { focusTrap } from "$lib/actions/focusTrap";
     import { readCustom } from "$lib/utils/customFields";
     import { fade, fly } from "svelte/transition";
     import {
@@ -260,7 +261,7 @@
 </script>
 
 {#if showWizard}
-    <div
+    <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => (showWizard = false) }}
         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
         transition:fade
     >
@@ -462,7 +463,7 @@
                                         >
                                             <Pencil size={14} />
                                         </button>
-                                        <button
+                                        <button aria-label="Remove this item"
                                             onclick={() => removeHeirloom(heirloom.id)}
                                             class="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
                                         >
@@ -480,7 +481,7 @@
 
     <!-- QR / Label Modal -->
     {#if showQrModal && qrTarget}
-        <div
+        <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => (showQrModal = false) }}
             class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm print:bg-white print:p-0"
         >
             <div

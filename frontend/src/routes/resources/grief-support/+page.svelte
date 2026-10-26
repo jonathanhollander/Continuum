@@ -440,7 +440,7 @@
                                         e.key === "Enter" && handleChat()}
                                     class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-rose-500/30 transition-all placeholder:text-slate-600 italic font-serif"
                                 />
-                                <button
+                                <button aria-label="Send"
                                     onclick={handleChat}
                                     disabled={!chatInput.trim() || isTyping}
                                     class="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-all disabled:opacity-30"
@@ -464,6 +464,7 @@
                         </div>
 
                         <select
+                            aria-label="Country"
                             bind:value={selectedCountry}
                             class="bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-xs text-slate-400 focus:outline-none focus:ring-1 focus:ring-rose-500/50"
                         >

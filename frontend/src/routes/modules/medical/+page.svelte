@@ -475,13 +475,13 @@
                         </div>
 
                         <div class="flex gap-1">
-                            <button
+                            <button aria-label="Edit these details"
                                 onclick={() => editDirective(dir)}
                                 class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                             >
                                 <Pencil size={18} />
                             </button>
-                            <button
+                            <button aria-label="Remove this item"
                                 onclick={() => removeDirective(dir.id)}
                                 class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                             >

@@ -387,7 +387,7 @@
                                             class="text-[10px] font-black uppercase tracking-tighter text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full"
                                             >{label.assetType}</span
                                         >
-                                        <button
+                                        <button aria-label="Remove this item"
                                             onclick={() =>
                                                 deleteAssetQR(
                                                     label.assetId,
@@ -458,7 +458,7 @@
                                             >
                                                 <Printer size={16} />
                                             </button>
-                                            <button
+                                            <button aria-label="Remove this item"
                                                 onclick={() => deleteAssetQR(label.assetId, label.assetName)}
                                                 class="p-1 text-slate-300 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100"
                                             >

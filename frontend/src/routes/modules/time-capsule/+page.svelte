@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { focusTrap } from "$lib/actions/focusTrap";
     import { readCustom } from "$lib/utils/customFields";
     import {
         timeCapsuleStore,
@@ -515,7 +516,7 @@
                                 >
                                     <Pencil size={16} />
                                 </button>
-                                <button
+                                <button aria-label="Remove this item"
                                     on:click={() => timeCapsuleStore.removeMessage(msg.id)}
                                     class="opacity-0 group-hover:opacity-100 p-1 text-slate-300 hover:text-rose-500 transition-all"
                                 >
@@ -536,7 +537,7 @@
 
     <!-- Modal for New Capsule -->
     {#if showAddModal}
-        <div
+        <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => (showAddModal = false) }}
             class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md"
             transition:fade
         >
@@ -772,7 +773,7 @@
 
     <!-- Capsule Reader -->
     {#if activeCapsule}
-        <div
+        <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: closeCapsule }}
             class="fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-xl flex items-center justify-center p-4"
             transition:fade
         >

@@ -396,7 +396,7 @@
 						: 'bg-background border-border'}"
 				>
 					<div class="flex items-center gap-3">
-						<button
+						<button aria-label="Menu"
 							class="p-2 -ml-2 rounded-lg {isDashboardRoute
 								? 'text-slate-300 hover:bg-white/10'
 								: 'text-slate-600 hover:bg-slate-100'}"
@@ -411,7 +411,7 @@
 						>
 					</div>
 
-					<a
+					<a aria-label="Settings"
 						href="/settings"
 						class="p-2 rounded-lg {isDashboardRoute
 							? 'text-slate-300 hover:bg-white/10'
@@ -482,6 +482,7 @@
 									}[$accessibilityStore.color]}"
 								></div>
 								<select
+									aria-label="Accent Color"
 									value={$accessibilityStore.color}
 									onchange={(e) =>
 										accessibilityStore.setColor(
@@ -513,6 +514,7 @@
 										: 'text-slate-400'} shrink-0"
 								/>
 								<select
+									aria-label={$dict.labelLanguages}
 									value={$language}
 									onchange={(e) =>
 										language.set(

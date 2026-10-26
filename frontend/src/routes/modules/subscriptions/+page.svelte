@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { focusTrap } from "$lib/actions/focusTrap";
     import { readCustom } from "$lib/utils/customFields";
     import {
         Receipt,
@@ -388,7 +389,7 @@
                         >{subscriptions.length}</span
                     >
                 </h2>
-                <button class="text-slate-400 hover:text-slate-600">
+                <button aria-label="Filter" class="text-slate-400 hover:text-slate-600">
                     <Filter class="w-4 h-4" />
                 </button>
             </div>
@@ -471,13 +472,13 @@
                                             >
                                                 <FileText size={14} />
                                             </button>
-                                            <button
+                                            <button aria-label="Edit these details"
                                                 onclick={() => editSubscription(sub)}
                                                 class="p-1.5 text-slate-400 hover:text-primary transition-colors"
                                             >
                                                 <Pencil size={14} />
                                             </button>
-                                            <button
+                                            <button aria-label="Remove this item"
                                                 onclick={() => removeSubscription(sub.id)}
                                                 class="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
                                             >
@@ -497,7 +498,7 @@
 
     <!-- Add Form Modal -->
     {#if showAddForm}
-        <div
+        <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: resetForm }}
             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
         >
             <div
@@ -651,7 +652,7 @@
 
     <!-- Cancellation Letter Modal -->
     {#if showLetterModal && selectedSubForLetter}
-        <div
+        <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: closeLetterModal }}
             class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md"
             transition:fade
         >
@@ -670,7 +671,7 @@
                             Cancellation Request
                         </h3>
                     </div>
-                    <button
+                    <button aria-label="Close"
                         onclick={closeLetterModal}
                         class="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-400"
                     >

@@ -151,6 +151,7 @@
                         >
                         <SmartTextarea
                             context="life_lesson"
+                            id="lesson-content"
                             bind:value={newLesson.content}
                             placeholder="What did you learn?"
                             minHeight="150px"

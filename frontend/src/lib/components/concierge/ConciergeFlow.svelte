@@ -162,7 +162,7 @@
 
     <!-- Navigation (Back) -->
     {#if currentStepIndex > 0}
-        <button
+        <button aria-label="Back"
             onclick={prevStep}
             class="absolute top-6 left-6 text-slate-400 hover:text-slate-600 transition-colors"
         >

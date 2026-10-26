@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { focusTrap } from "$lib/actions/focusTrap";
     import { onMount } from "svelte";
     import {
         Plus,
@@ -229,7 +230,7 @@
 
     <!-- Guided Wizard Overlay -->
     {#if showWizard}
-        <div
+        <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => (showWizard = false) }}
             class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
             transition:fade
         >
@@ -237,7 +238,7 @@
                 class="bg-background border border-border rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]"
             >
                 <div class="p-8 bg-[#FBF9EB]/50 relative">
-                    <button
+                    <button aria-label="Close"
                         onclick={() => (showWizard = false)}
                         class="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
                         ><X size={20} /></button
@@ -354,7 +355,7 @@
                         class="glass-card p-4 rounded-lg group hover:border-l-4 hover:border-l-[#4A7C74] transition-all cursor-grab active:cursor-grabbing relative"
                         animate:flip
                     >
-                        <button
+                        <button aria-label="Remove this item"
                             onclick={() => removeTask(task.id)}
                             class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
                             ><Trash2 size={14} /></button

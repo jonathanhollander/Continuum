@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { focusTrap } from "$lib/actions/focusTrap";
     import { readCustom } from "$lib/utils/customFields";
     import { fade, scale } from "svelte/transition";
     import {
@@ -534,7 +535,7 @@
 
         <!-- Expense Modal -->
         {#if showAddExpense}
-            <div
+            <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: resetExpenseForm }}
                 class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
                 transition:fade
             >
@@ -559,7 +560,7 @@
                                     : "By thinking through these costs now, you're protecting your family from difficult financial decisions during an already hard time."}
                             </p>
                         </div>
-                        <button
+                        <button aria-label="Close"
                             onclick={resetExpenseForm}
                             class="text-white/50 hover:text-white transition-colors mt-1"
                         >

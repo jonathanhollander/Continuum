@@ -21,6 +21,8 @@
         context = "letter",
         minHeight = "120px",
         label = "",
+        hideLabel = false,
+        id = undefined,
         suggestions = [],
         minimal = false,
         oninput,
@@ -31,13 +33,17 @@
         context?: WriterContext;
         minHeight?: string;
         label?: string;
+        hideLabel?: boolean;
+        id?: string;
         suggestions?: string[];
         minimal?: boolean;
         oninput?: (val: string) => void;
         onchange?: (val: string) => void;
     }>();
 
-    const fieldId = $props.id();
+    const ownId = $props.id();
+    // A caller-given id lets a label outside this component name the field.
+    const fieldId = $derived(id ?? ownId);
     let textareaEl = $state<HTMLTextAreaElement | null>(null);
 
     let isDrawerOpen = $state(false);
@@ -119,7 +125,9 @@
     {#if label}
         <label
             for={fieldId}
-            class="block text-xs font-bold uppercase tracking-widest text-slate-500 ml-1"
+            class={hideLabel
+                ? "sr-only"
+                : "block text-xs font-bold uppercase tracking-widest text-slate-500 ml-1"}
             >{label}</label
         >
     {/if}

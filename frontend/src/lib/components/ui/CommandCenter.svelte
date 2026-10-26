@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { focusTrap } from "$lib/actions/focusTrap";
     import { onMount, createEventDispatcher } from "svelte";
     import {
         Search,
@@ -219,7 +220,7 @@
     }
 </script>
 
-<div
+<div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => dispatch("close") }}
     class="fixed inset-0 z-[200] flex items-start justify-center pt-24 px-4 bg-slate-900/40 backdrop-blur-sm"
     on:click|self={() => dispatch("close")}
     transition:fade={{ duration: 200 }}

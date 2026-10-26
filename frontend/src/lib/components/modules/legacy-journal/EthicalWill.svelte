@@ -338,6 +338,8 @@ With all my love,
                     >
                         <SmartTextarea
                             context="ethical_will"
+                            label="Values Letter"
+                            hideLabel
                             bind:value={letterText}
                             placeholder="To the people I love..."
                             minHeight="500px"

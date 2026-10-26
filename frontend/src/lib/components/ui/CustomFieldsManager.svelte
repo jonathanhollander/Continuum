@@ -71,6 +71,7 @@
                 {#if def.field_type === "date"}
                     <input
                         type="date"
+                        aria-label={def.name}
                         bind:value={data[def.name]}
                         class="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:bg-white rounded-xl p-2.5 text-sm font-medium outline-none transition-all"
                     />
@@ -154,6 +155,7 @@
                     autofocus
                 />
                 <select
+                    aria-label="Field Type"
                     bind:value={newFieldType}
                     class="w-full px-3 py-2 rounded-lg border border-indigo-200 text-sm focus:border-indigo-500 outline-none bg-white"
                 >
@@ -196,7 +198,7 @@
                                         >({def.field_type})</span
                                     ></span
                                 >
-                                <button
+                                <button aria-label={`Remove ${def.name}`}
                                     onclick={() =>
                                         removeDefinition(def.id!, def.name)}
                                     class="text-red-400 hover:text-red-600"

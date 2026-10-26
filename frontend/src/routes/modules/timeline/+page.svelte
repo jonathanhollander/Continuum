@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { focusTrap } from "$lib/actions/focusTrap";
     import { readCustom } from "$lib/utils/customFields";
     import { fade, fly, slide, scale } from "svelte/transition";
     import {
@@ -226,7 +227,7 @@
 
     <!-- Add Modal -->
     {#if showAddModal}
-        <div
+        <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: resetForm }}
             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
             transition:fade
         >
@@ -238,7 +239,7 @@
                     class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50"
                 >
                     <h3 class="font-bold text-[#304743]">New Life Event</h3>
-                    <button onclick={resetForm}
+                    <button aria-label="Close" onclick={resetForm}
                         ><X
                             size={20}
                             class="text-gray-400 hover:text-gray-600"
@@ -720,6 +721,7 @@
                         min="10"
                         max="100"
                         bind:value={pixelsPerYear}
+                        aria-label="Zoom Level"
                         class="w-32 accent-[#4A7C74] cursor-pointer"
                     />
                     <span class="text-xs text-gray-400 font-mono w-8"

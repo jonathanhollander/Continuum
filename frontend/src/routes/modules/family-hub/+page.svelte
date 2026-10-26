@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { focusTrap } from "$lib/actions/focusTrap";
     import {
         Heart,
         Image,
@@ -318,7 +319,7 @@
 
     <!-- Add Memory Modal -->
     {#if showAddModal}
-        <div
+        <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: resetForm }}
             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
             transition:fade
         >
@@ -332,7 +333,7 @@
                     <h3 class="font-serif font-bold text-xl text-[#304743]">
                         Preserve a Memory
                     </h3>
-                    <button
+                    <button aria-label="Close"
                         onclick={resetForm}
                         class="p-2 hover:bg-gray-200 rounded-full transition-colors"
                     >
@@ -757,13 +758,13 @@
                                                     <td class="px-4 py-3 text-slate-500 text-sm">{memory.author || '-'}</td>
                                                     <td class="px-4 py-3 text-right">
                                                         <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            <button
+                                                            <button aria-label="Edit these details"
                                                                 onclick={() => editMemory(memory)}
                                                                 class="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-blue-500"
                                                             >
                                                                 <Pencil size={14} />
                                                             </button>
-                                                            <button
+                                                            <button aria-label="Remove this item"
                                                                 onclick={() => deleteMemory(memory.id)}
                                                                 class="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-red-500"
                                                             >
@@ -894,7 +895,7 @@
 
     <!-- Slideshow Overlay -->
     {#if showSlideshow && photoMemories.length > 0}
-        <div
+        <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: closeSlideshow }}
             transition:fade
             class="fixed inset-0 z-[100] bg-black flex items-center justify-center p-0"
         >
@@ -942,7 +943,7 @@
                 class="absolute inset-0 z-20 flex flex-col justify-between p-8 pointer-events-none"
             >
                 <div class="flex justify-end pointer-events-auto">
-                    <button
+                    <button aria-label="Close"
                         onclick={closeSlideshow}
                         class="p-4 bg-black/20 hover:bg-white/20 rounded-full text-white backdrop-blur-md transition-all"
                     >
@@ -953,14 +954,14 @@
                 <div
                     class="flex items-center justify-center gap-8 pointer-events-auto pb-8"
                 >
-                    <button
+                    <button aria-label="Previous"
                         onclick={prevSlide}
                         class="p-4 hover:bg-white/10 rounded-full text-white/50 hover:text-white transition-all"
                     >
                         <ChevronLeft size={32} />
                     </button>
 
-                    <button
+                    <button aria-label={isPlaying ? "Pause" : "Play"}
                         onclick={togglePlay}
                         class="p-6 bg-white/10 hover:bg-white/20 rounded-full text-white backdrop-blur-md transition-all scale-100 hover:scale-110"
                     >
@@ -971,7 +972,7 @@
                         {/if}
                     </button>
 
-                    <button
+                    <button aria-label="Next"
                         onclick={nextSlide}
                         class="p-4 hover:bg-white/10 rounded-full text-white/50 hover:text-white transition-all"
                     >

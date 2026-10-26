@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { focusTrap } from "$lib/actions/focusTrap";
     import {
         PlayCircle,
         FileText,
@@ -147,7 +148,7 @@
 
     <!-- Video Script Modal -->
     {#if activeVideo}
-        <div
+        <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => (activeVideo = null) }}
             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
             transition:fade
         >
@@ -183,7 +184,7 @@
                                 {activeVideo.description}
                             </p>
                         </div>
-                        <button
+                        <button aria-label="Close"
                             on:click={() => (activeVideo = null)}
                             class="p-2 hover:bg-gray-100 rounded-full transition-colors"
                         >

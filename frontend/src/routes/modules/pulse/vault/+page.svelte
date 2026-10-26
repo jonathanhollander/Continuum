@@ -117,6 +117,7 @@
             <a
                 href="/modules/pulse"
                 class="p-2 hover:bg-slate-800 rounded-full transition-colors"
+                aria-label="Back to Wellness Check-in"
             >
                 <ArrowLeft class="w-5 h-5 text-slate-400" />
             </a>
@@ -182,16 +183,18 @@
 
         <div class="grid md:grid-cols-2 gap-4">
             <div class="space-y-2">
-                <label class="text-xs text-slate-500 ml-1">Name</label>
+                <label for="vault-item-name" class="text-xs text-slate-500 ml-1">Name</label>
                 <input
+                    id="vault-item-name"
                     bind:value={newItem.name}
                     placeholder="e.g. Back Gate Code"
                     class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:border-indigo-500/50 outline-none"
                 />
             </div>
             <div class="space-y-2">
-                <label class="text-xs text-slate-500 ml-1">Unlock At</label>
+                <label for="vault-item-unlock" class="text-xs text-slate-500 ml-1">Unlock At</label>
                 <select
+                    id="vault-item-unlock"
                     bind:value={newItem.unlock_condition}
                     class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:border-indigo-500/50 outline-none"
                 >
@@ -207,8 +210,9 @@
         </div>
 
         <div class="space-y-2">
-            <label class="text-xs text-slate-500 ml-1">What they should know</label>
+            <label for="vault-item-content" class="text-xs text-slate-500 ml-1">What they should know</label>
             <textarea
+                id="vault-item-content"
                 bind:value={newItem.content}
                 placeholder="The instructions to reveal..."
                 rows="3"
