@@ -1,80 +1,91 @@
 <script lang="ts">
     import { fade, scale } from "svelte/transition";
-    import { Tag, Plus, Filter, Search, X } from "lucide-svelte";
+    import { Plus, Search, X } from "lucide-svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
-    import { registerSync } from "$lib/services/sync.svelte";
+    import { journalStore, type JournalEntry } from "$lib/stores/journalStore.svelte";
     import { activityLog } from "$lib/stores/activityLog.svelte";
 
-    // --- Types ---
-    interface Lesson {
-        id: string; // Changed from number to string for consistency
-        title: string;
-        category: string;
-        preview: string;
-        tags: string[];
-    }
-
-    const lessonSync = registerSync<Lesson>(
-        "life_lessons",
-        "life_lessons",
-    ).setAffirmationContext("general");
-
-    let tags = ["All", "Career", "Love", "Money", "Parenting", "Resilience"];
+    // Each lesson is a JournalEntry: type "life_lesson", title, content = the lesson,
+    // tags = its category.
+    const categories = ["Life", "Career", "Love", "Money", "Parenting", "Resilience"];
+    let tags = ["All", ...categories];
     let activeTag = $state("All");
+    let searchQuery = $state("");
     let showAddModal = $state(false);
+    let editingId = $state<number | undefined>(undefined);
 
-    let newLesson = $state<Partial<Lesson>>({
-        title: "",
-        category: "Life",
-        preview: "",
-        tags: ["Life"],
-    });
+    const blankLesson = () => ({ title: "", category: "Life", content: "" });
+    let newLesson = $state(blankLesson());
 
-    let lessons = $derived(lessonSync.items);
+    let lessons = $derived(journalStore.items.filter((e) => e.type === "life_lesson"));
 
-    async function addLesson() {
-        if (!newLesson.title) return;
-
-        await lessonSync.create({
-            title: newLesson.title,
-            category: newLesson.category || "Life",
-            preview: newLesson.preview || "",
-            tags: ["Life"],
-            id: newLesson.id, // create will gen ID if missing
-        });
-
-        showAddModal = false;
-        newLesson = {
-            title: "",
-            category: "Life",
-            preview: "",
-            tags: ["Life"],
-        };
-
-        activityLog.logEvent({
-            module: "Life Lessons",
-            action: "CREATE",
-            entityType: "Lesson",
-            entityId: "new",
-            entityName: newLesson.title,
-            userContext: "User",
-        });
+    function openNew() {
+        editingId = undefined;
+        newLesson = blankLesson();
+        showAddModal = true;
     }
 
-    function removeLesson(id: string) {
-        // Updated type
+    function openEdit(lesson: JournalEntry) {
+        editingId = lesson.id;
+        newLesson = {
+            title: lesson.title ?? "",
+            category: lesson.tags || "Life",
+            content: lesson.content ?? "",
+        };
+        showAddModal = true;
+    }
+
+    async function saveLesson() {
+        if (!newLesson.title.trim()) return;
+        const data = {
+            title: newLesson.title.trim(),
+            tags: newLesson.category || "Life",
+            content: newLesson.content || "",
+        };
+        try {
+            let entityId: number | undefined = editingId;
+            if (editingId !== undefined) {
+                await journalStore.update(editingId, data);
+            } else {
+                const created = (await journalStore.create({ type: "life_lesson", ...data })) as
+                    | JournalEntry
+                    | undefined;
+                entityId = created?.id;
+            }
+            activityLog.logEvent({
+                module: "Life Lessons",
+                action: editingId !== undefined ? "UPDATE" : "CREATE",
+                entityType: "Lesson",
+                entityId: String(entityId ?? ""),
+                entityName: data.title,
+                userContext: "User",
+            });
+            showAddModal = false;
+            editingId = undefined;
+            newLesson = blankLesson();
+        } catch {
+            // SyncManager showed a gentle message; the form keeps the person's words.
+        }
+    }
+
+    function removeLesson(id?: number) {
+        if (id === undefined) return;
         if (!confirm("Remove this lesson? You can add it back later.")) return;
-        lessonSync.delete(id);
+        journalStore.delete(id);
     }
 
     // Filter Logic
     let filteredLessons = $derived(
-        activeTag === "All"
-            ? lessons
-            : lessons.filter(
-                  (l) => l.tags.includes(activeTag) || l.category === activeTag,
-              ),
+        lessons.filter((l) => {
+            if (activeTag !== "All" && (l.tags || "Life") !== activeTag) return false;
+            const q = searchQuery.trim().toLowerCase();
+            if (!q) return true;
+            return (
+                (l.title ?? "").toLowerCase().includes(q) ||
+                (l.content ?? "").toLowerCase().includes(q)
+            );
+        }),
     );
 </script>
 
@@ -93,7 +104,7 @@
                     class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50"
                 >
                     <h3 class="font-serif font-bold text-xl text-[#304743]">
-                        Share Wisdom
+                        {editingId !== undefined ? "Refine this lesson" : "Share Wisdom"}
                     </h3>
                     <button onclick={() => (showAddModal = false)}
                         ><X
@@ -127,11 +138,9 @@
                             bind:value={newLesson.category}
                             class="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4A7C74] outline-none bg-white"
                         >
-                            <option>Life</option>
-                            <option>Career</option>
-                            <option>Love</option>
-                            <option>Money</option>
-                            <option>Parenting</option>
+                            {#each categories as c}
+                                <option>{c}</option>
+                            {/each}
                         </select>
                     </div>
                     <div class="space-y-2">
@@ -142,13 +151,13 @@
                         >
                         <SmartTextarea
                             context="life_lesson"
-                            bind:value={newLesson.preview}
+                            bind:value={newLesson.content}
                             placeholder="What did you learn?"
                             minHeight="150px"
                         />
                     </div>
                     <button
-                        onclick={addLesson}
+                        onclick={saveLesson}
                         class="w-full py-3 bg-[#4A7C74] text-white rounded-xl font-bold mt-2"
                         >Save Lesson</button
                     >
@@ -183,12 +192,14 @@
                 />
                 <input
                     type="text"
+                    bind:value={searchQuery}
                     placeholder="Search wisdom..."
                     class="w-full pl-10 pr-4 py-2 rounded-xl border border-stone-200 focus:border-[#4A7C74] focus:ring-0 text-sm bg-white"
                 />
             </div>
             <button
-                onclick={() => (showAddModal = true)}
+                onclick={openNew}
+                aria-label="Add a lesson"
                 class="p-2 bg-[#4A7C74] text-white rounded-xl shadow-lg hover:bg-[#3b635d] transition-colors"
             >
                 <Plus size={20} />
@@ -203,19 +214,19 @@
         >
             <div class="text-center mb-6">
                 <h3 class="font-serif font-bold text-xl text-stone-600">
-                    Your Wisdom Library is Empty
+                    Your Wisdom Library
                 </h3>
                 <p class="text-sm text-stone-400">
                     Capture the lessons that defined your journey.
                 </p>
             </div>
 
-            <GhostRow type="Lesson" onClick={() => (showAddModal = true)} />
-            <GhostRow type="Lesson" onClick={() => (showAddModal = true)} />
+            <GhostRow type="Lesson" onClick={openNew} />
+            <GhostRow type="Lesson" onClick={openNew} />
 
             <div class="flex justify-center mt-6">
                 <button
-                    onclick={() => (showAddModal = true)}
+                    onclick={openNew}
                     class="px-6 py-2 bg-[#4A7C74] text-white rounded-full font-bold shadow-lg hover:bg-[#3b635d] transition-all"
                 >
                     + Write First Lesson
@@ -227,6 +238,11 @@
             {#each filteredLessons as lesson (lesson.id)}
                 <div
                     in:scale={{ duration: 300, start: 0.95 }}
+                    onclick={() => openEdit(lesson)}
+                    onkeydown={(e) => e.key === "Enter" && openEdit(lesson)}
+                    role="button"
+                    tabindex="0"
+                    data-testid="life-lesson"
                     class="group bg-white rounded-2xl p-6 border border-stone-200 shadow-sm hover:shadow-md hover:border-[#4A7C74]/50 transition-all cursor-pointer h-full flex flex-col relative"
                 >
                     <button
@@ -243,7 +259,7 @@
                         <span
                             class="inline-block px-2.5 py-1 rounded-md bg-stone-100 text-xs font-bold text-stone-500 tracking-wide uppercase"
                         >
-                            {lesson.category}
+                            {lesson.tags || "Life"}
                         </span>
                     </div>
 
@@ -256,7 +272,7 @@
                     <p
                         class="text-muted-foreground text-sm leading-relaxed mb-6 flex-grow"
                     >
-                        {lesson.preview}
+                        {lesson.content}
                     </p>
 
                     <div
@@ -273,7 +289,7 @@
                         </div>
                         <span
                             class="text-xs font-bold text-[#4A7C74] group-hover:underline"
-                            >Read Lesson →</span
+                            >Open lesson →</span
                         >
                     </div>
                 </div>
@@ -281,7 +297,7 @@
 
             <!-- Add New Card -->
             <button
-                onclick={() => (showAddModal = true)}
+                onclick={openNew}
                 class="border-2 border-dashed border-stone-200 rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-stone-50 hover:border-[#4A7C74] hover:text-[#4A7C74] transition-all min-h-[250px] group w-full"
             >
                 <div
