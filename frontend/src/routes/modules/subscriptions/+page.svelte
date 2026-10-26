@@ -28,7 +28,8 @@
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
-    import { toCents, fromCents, formatMoney } from "$lib/utils/money";
+    import { formatMoney } from "$lib/utils/money";
+    import { subscriptionAmounts } from "$lib/utils/subscriptionAmounts";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
@@ -321,20 +322,9 @@
     }
 
     // Derived stats
-    // Totals summed in whole cents; a yearly cost's month is its twelfth, rounded once.
-    let totalMonthly = $derived(
-        fromCents(activeSubscriptions.reduce(
-            (sum, s) => sum + (s.cycle === "Yearly" ? Math.round(toCents(s.cost) / 12) : toCents(s.cost)),
-            0,
-        )),
-    );
-
-    let totalYearly = $derived(
-        fromCents(activeSubscriptions.reduce(
-            (sum, s) => sum + (s.cycle === "Yearly" ? toCents(s.cost) : toCents(s.cost) * 12),
-            0,
-        )),
-    );
+    let totals = $derived(subscriptionAmounts(activeSubscriptions));
+    let totalMonthly = $derived(totals.monthly);
+    let totalYearly = $derived(totals.yearly);
 </script>
 
 <LivingBlueprintHeader

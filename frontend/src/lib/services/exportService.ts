@@ -16,12 +16,13 @@ import { get } from 'svelte/store';
 import { API_BASE_URL } from '$lib/config';
 import { auth } from '$lib/stores/auth';
 import { estateTotals, isDebt } from '$lib/stores/financialAssetsStore.svelte';
-import { formatMoney, toCents, fromCents } from '$lib/utils/money';
+import { formatMoney } from '$lib/utils/money';
 import { fetchMediaBlob } from '$lib/services/mediaService';
 import { dateWords } from '$lib/utils/dateWords';
 import { captureSession, assertCurrentSession, isCurrentSession, SessionChangedError, type SessionOwnership } from '$lib/services/sessionOwnership';
 import { executorTasks } from '$lib/data/executorTasks';
 import { subscriptionCycle } from '$lib/utils/subscriptionCadence';
+import { subscriptionAmounts } from '$lib/utils/subscriptionAmounts';
 
 export type ExportScope = 'full' | 'insurance' | 'medical';
 
@@ -290,12 +291,10 @@ const assetCategoryTotals = (rows: any[]): PacketField[] => [
 const subscriptionClosed = (r: any) => r.auto_renew === false || r.autoRenew === false;
 const subscriptionTotals = (rows: any[]): PacketField[] => {
     const open = rows.filter((r) => !subscriptionClosed(r));
-    const yearly = (r: any) => subscriptionCycle(r.cycle, r.frequency) === 'Yearly';
-    const month = open.reduce((s, r) => s + (yearly(r) ? Math.round(toCents(r.cost) / 12) : toCents(r.cost)), 0);
-    const year = open.reduce((s, r) => s + (yearly(r) ? toCents(r.cost) : toCents(r.cost) * 12), 0);
+    const totals = subscriptionAmounts(open);
     return [
-        { label: 'Monthly total', value: money(fromCents(month)) },
-        { label: 'Yearly total', value: money(fromCents(year)) }
+        { label: 'Monthly total', value: money(totals.monthly) },
+        { label: 'Yearly total', value: money(totals.yearly) }
     ];
 };
 
