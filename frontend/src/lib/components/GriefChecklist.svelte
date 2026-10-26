@@ -82,7 +82,7 @@
             class="px-4 py-2 rounded-xl text-sm font-medium transition-all {activePriority ===
             'immediate'
                 ? 'bg-rose-500/20 text-rose-200 border border-rose-500/30'
-                : 'bg-white/5 text-slate-500 hover:text-slate-300'}"
+                : 'bg-white/5 text-muted-foreground hover:text-slate-300'}"
         >
             Right now
         </button>
@@ -91,7 +91,7 @@
             class="px-4 py-2 rounded-xl text-sm font-medium transition-all {activePriority ===
             'soon'
                 ? 'bg-indigo-500/20 text-indigo-200 border border-indigo-500/30'
-                : 'bg-white/5 text-slate-500 hover:text-slate-300'}"
+                : 'bg-white/5 text-muted-foreground hover:text-slate-300'}"
         >
             In the Coming Days
         </button>
@@ -115,7 +115,7 @@
                                 class="w-6 h-6 text-emerald-400"
                             />
                         {:else}
-                            <LucideCircle class="w-6 h-6 text-slate-600" />
+                            <LucideCircle class="w-6 h-6 text-muted-foreground" />
                         {/if}
                     </button>
 
