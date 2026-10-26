@@ -490,7 +490,7 @@
 							<TakeBreakButton variant="icon-only" />
 
 							<!-- Context-Aware Role Switcher -->
-							<RoleSwitcher />
+							<RoleSwitcher dark={isDarkHeader} />
 
 							<!-- Color Picker (Top Menu) -->
 							<div
