@@ -373,7 +373,7 @@
 		<a
 			href="#main-content"
 			class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-white focus:text-slate-900 focus:shadow-lg focus:ring-2 focus:ring-primary"
-			>Skip to main content</a
+			>{$dict.skipToContent}</a
 		>
 		<GlobalSimBanner />
 		<div class="flex flex-1">
@@ -385,7 +385,7 @@
 						: 'bg-background/80'}"
 					transition:fade={{ duration: 200 }}
 					onclick={toggleSidebar}
-					aria-label="Close sidebar"
+					aria-label={$dict.closeSidebar}
 					onkeydown={(e) => e.key === "Escape" && toggleSidebar()}
 				></button>
 			{/if}
@@ -425,7 +425,7 @@
 						: 'bg-background border-border'}"
 				>
 					<div class="flex items-center gap-3">
-						<button aria-label="Menu"
+						<button aria-label={$dict.menu}
 							class="p-2 -ml-2 rounded-lg {isDarkHeader
 								? 'text-slate-300 hover:bg-white/10'
 								: 'text-muted-foreground hover:bg-muted'}"
@@ -440,7 +440,7 @@
 						>
 					</div>
 
-					<a aria-label="Settings"
+					<a aria-label={$dict.settings}
 						href="/settings"
 						class="p-2 rounded-lg {isDarkHeader
 							? 'text-slate-300 hover:bg-white/10'
@@ -503,7 +503,7 @@
 									class="w-3 h-3 rounded-full shrink-0 border border-white/30 bg-primary"
 								></div>
 								<select
-									aria-label="Accent Color"
+									aria-label={$dict.accentColor}
 									value={$accessibilityStore.color}
 									onchange={(e) =>
 										accessibilityStore.setColor(
@@ -513,12 +513,12 @@
 										? 'text-slate-300 hover:text-white'
 										: 'text-muted-foreground hover:text-foreground'}"
 								>
-									<option value="teal">🟢 Teal</option>
-									<option value="indigo">🔵 Indigo</option>
-									<option value="emerald">💚 Emerald</option>
-									<option value="rose">🩷 Rose</option>
-									<option value="amber">🟠 Amber</option>
-									<option value="carbon">⚫ Carbon</option>
+									<option value="teal">🟢 {$dict.colors.teal}</option>
+									<option value="indigo">🔵 {$dict.colors.indigo}</option>
+									<option value="emerald">💚 {$dict.colors.emerald}</option>
+									<option value="rose">🩷 {$dict.colors.rose}</option>
+									<option value="amber">🟠 {$dict.colors.amber}</option>
+									<option value="carbon">⚫ {$dict.colors.carbon}</option>
 								</select>
 							</div>
 
@@ -560,17 +560,17 @@
 								class="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors border {isDarkHeader
 									? 'bg-white/10 text-white hover:bg-white/20 border-white/30'
 									: 'bg-primary-soft text-primary-hover hover:bg-primary/15 border-primary/20'}"
-								title="Open AI Concierge"
+								title={$dict.openConcierge}
 							>
 								<Sparkles size={18} />
 								<span class="text-sm font-bold hidden sm:inline"
-									>AI Concierge</span
+									>{$dict.aiConcierge}</span
 								>
 							</button>
 
 							<img
 								src={logo}
-								alt="Continuum Logo"
+								alt={$dict.logoAlt}
 								class="h-8 w-auto"
 							/>
 						</div>

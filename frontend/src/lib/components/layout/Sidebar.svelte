@@ -65,6 +65,12 @@
     // other languages read the dictionary by key.
     const navText = (key: string, label: string) =>
         $language === "en" ? label : $dict[key] || label;
+    // Group subtitles and link tooltips: English from navigation.ts, others from
+    // the dictionary's navDesc / navTip by key (X232).
+    const navDesc = (key: string, text?: string) =>
+        !text || $language === "en" ? (text ?? "") : ($dict.navDesc as Record<string, string>)[key] || text;
+    const navTip = (key: string, text?: string) =>
+        !text || $language === "en" ? (text ?? "") : ($dict.navTip as Record<string, string>)[key] || text;
 
     // "For My Son (preview)": the owner's preview of their recipient's start page
     // (card D2). Looked up once per sign-in, and again on leaving Family & Contacts
@@ -242,7 +248,7 @@
                 >
                     <img
                         src={logo}
-                        alt="Continuum Logo"
+                        alt={$dict.logoAlt}
                         class="w-full h-full object-cover"
                     />
                 </div>
@@ -256,13 +262,13 @@
             <button
                 onclick={logout}
                 class="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-all group"
-                title="Sign out"
+                title={$dict.signOut}
             >
                 <LogOut size={18} />
             </button>
         </div>
         <p class="text-xs text-white/70 pl-14">
-            Estate Planning Concierge
+            {$dict.tagline}
         </p>
     </div>
 
@@ -289,7 +295,7 @@
                             <p
                                 class="text-[10px] text-white/70 mt-0.5 pl-5"
                             >
-                                {group.groupDescription}
+                                {navDesc(group.groupKey, group.groupDescription)}
                             </p>
                         {/if}
                     </div>
@@ -323,7 +329,7 @@
                             <p
                                 class="text-[10px] text-white/70 mt-1 line-clamp-1 italic"
                             >
-                                {group.groupDescription}
+                                {navDesc(group.groupKey, group.groupDescription)}
                             </p>
                         {/if}
                     </button>
@@ -345,7 +351,7 @@
                                 (item.href === "/modules/pulse" &&
                                     isInPulseSection &&
                                     item.key === "pulse")}
-                            <Tooltip content={item.tooltip ?? ""} position="right">
+                            <Tooltip content={navTip(item.key, item.tooltip)} position="right">
                                 <a
                                     href={item.href}
                                     class="flex items-center gap-3 px-3 py-2.5 mx-1 rounded-xl transition-all duration-200 group relative overflow-hidden
