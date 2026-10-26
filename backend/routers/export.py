@@ -19,6 +19,7 @@ from datetime import datetime, timezone
 from typing import Any, Callable, Dict, List, Optional
 
 from fastapi import APIRouter, Depends
+from fastapi.responses import JSONResponse
 from sqlmodel import Session, select
 
 from backend.auth import get_current_user
@@ -274,4 +275,4 @@ def build_snapshot(session: Session, user_id: int,
 
 @router.get("/snapshot", summary="The recorded handover, for the packet and the download copy")
 def get_snapshot(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
-    return build_snapshot(session, user.id)
+    return JSONResponse(content=build_snapshot(session, user.id))
