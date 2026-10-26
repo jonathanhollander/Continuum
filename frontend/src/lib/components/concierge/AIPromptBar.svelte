@@ -18,7 +18,12 @@
         | "digital-guardian"
         | "visual-memories"
         | "financial"
-        | "activity-log" = "obituary";
+        | "activity-log"
+        | "subscriptions"
+        | "advanced-registry"
+        | "qr-codes"
+        | "home-manual"
+        | "calendar" = "obituary";
     // A page's own chips replace the context defaults below.
     export let prompts: string[] = [];
     // Page-specific ideas; three are shown at a time and can be reshuffled.
@@ -101,6 +106,31 @@
             "How can a record of changes help my executor?",
             "How often should I revisit my estate plan?",
             "Which life events are a good time to update my plan?",
+        ],
+        subscriptions: [
+            "How can my executor cancel my subscriptions?",
+            "What should I record about each subscription?",
+            "How do automatic renewals work after someone passes away?",
+        ],
+        "advanced-registry": [
+            "What details belong in a record of a home or car purchase?",
+            "Help me plan a yearly home maintenance schedule...",
+            "How does an executor follow up on an open insurance claim?",
+        ],
+        "qr-codes": [
+            "Explain how QR access codes work for my estate...",
+            "Help me set up secure access for my family...",
+            "Where can I keep printed QR codes safe at home?",
+        ],
+        "home-manual": [
+            "Help me document my home's maintenance schedule...",
+            "Write instructions for shutting off my home's water, gas and power...",
+            "Which home details help my family most?",
+        ],
+        calendar: [
+            "Suggest meaningful ways my family could mark my birthday",
+            "What are some unique ways to be remembered on holidays?",
+            "Help me write a message for a future anniversary...",
         ],
     };
 

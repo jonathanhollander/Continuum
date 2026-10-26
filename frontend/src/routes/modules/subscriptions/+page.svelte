@@ -280,12 +280,12 @@
 
     <!-- AI Concierge Drafting Assistant -->
     <AIPromptBar
-        context="executor"
+        context="subscriptions"
         prompts={[
-            "Help me write cancellation instructions for this service...",
-            "Draft a message to close my account...",
-            "List the steps my executor should take to cancel subscriptions...",
-            "Explain how to handle automatic renewals..."
+            "Help me write instructions for cancelling my streaming and software subscriptions...",
+            "Draft a letter my executor can send to close a subscription account...",
+            "List the steps my executor can follow to cancel subscriptions...",
+            "How do automatic renewals work after someone passes away?"
         ]}
     />
 

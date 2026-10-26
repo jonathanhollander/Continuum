@@ -422,12 +422,12 @@
 
     <!-- AI Concierge Drafting Assistant -->
     <AIPromptBar
-        context="executor"
+        context="home-manual"
         prompts={[
             "Help me document my home's maintenance schedule...",
-            "Write instructions for the utility shutoffs...",
-            "Draft a guide to the security system...",
-            "Explain how to contact my trusted vendors..."
+            "Write instructions for shutting off my home's water, gas and power...",
+            "Draft a guide to my home security system...",
+            "What should my family know about the vendors who care for my home?"
         ]}
     />
 

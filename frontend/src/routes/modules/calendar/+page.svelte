@@ -493,6 +493,7 @@
     <!-- AI Bar -->
     <div class="mt-12">
         <AIPromptBar
+            context="calendar"
             prompts={[
                 "Suggest 3 meaningful things my family could do on my birthday",
                 "Draft a funny anniversary email to my spouse",

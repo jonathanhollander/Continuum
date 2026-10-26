@@ -203,11 +203,11 @@
 
     <!-- AI Concierge Drafting Assistant -->
     <AIPromptBar
-        context="executor"
+        context="advanced-registry"
         prompts={[
-            "Help me document this asset transaction...",
-            "Draft maintenance notes for this property...",
-            "Explain how to handle this insurance claim...",
+            "What details belong in a record of a home or car purchase?",
+            "Help me plan a yearly home maintenance schedule...",
+            "How does an executor follow up on an open insurance claim?",
             "Write instructions for managing my digital accounts..."
         ]}
     />
