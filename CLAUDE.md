@@ -125,7 +125,7 @@ Production (Railway): Uses PostgreSQL with SSL, different RP_ID/ORIGIN for domai
 
 - **Platform**: Railway with PostgreSQL
 - **Production URL**: https://continuum.estate
-- **Pre-deploy**: Wait for GitHub Actions (lint, build, type-check) to pass
+- **Pre-deploy**: Run `npm run check` and `npm run build` (in `frontend/`) by hand.
 - **Commands**: `railway up --verbose`, `railway logs`
 
 ---
@@ -167,4 +167,4 @@ Detailed guides exist for specific topics:
 
 ---
 
-_Last Updated: 2026-10-25 23:58 EST_
+_Last Updated: 2026-10-26 02:45 EST_
