@@ -1,6 +1,6 @@
 # Orchestrator Handoff — RECOVERY_EXECUTION_PLAN
 
-**Last Updated:** 2026-10-26 13:20 EST
+**Last Updated:** 2026-10-26 14:25 EST
 
 This document is for an agent taking over as orchestrator of `docs/RECOVERY_EXECUTION_PLAN.md` (the plan, the only task board). Read this file, then the plan's "Owner decisions", "Orchestration loop", "Section status" and "Card status" sections. Source code and git win over anything written here.
 
@@ -87,6 +87,7 @@ sed -E -e "s#'http://(localhost|127\.0\.0\.1):'( \+ PORT)?#'https://continuum.es
   Run from `frontend/` (`node $S/pw/<id>live.mjs`).
 - Production runs `ENVIRONMENT=production`: **CSRF enforced**. Raw node `fetch` writes get 403; do writes through the browser page (hooks.client adds `X-CSRF-Token`).
 - Sign in on production as `jh@continuum.estate` / `x` (bypass, until X5). `dev@continuum.im` does not exist on production.
+- Uploads live on the Railway volume `continuum-volume` at `/data` (`UPLOAD_DIR=/data/uploads`, `S3_ENABLED=false`, X292). Live upload proof: `$S/pw/x292vol.mjs up|check`.
 - Cloudflare caches `/Marketing/*` for 4 h — version image URLs (`?v=N`) when replacing images.
 - If a proof switches the live account's language, reset to English (`$S/pw/resetlang.mjs`).
 - `pg_dump` before any production data change: use `/opt/homebrew/opt/postgresql@18/bin/pg_dump` (server is Postgres 17). Last backup: `$S/backups/continuum-prod-pre-release-v18.dump`.
