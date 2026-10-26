@@ -7,6 +7,8 @@ export type Heirloom = {
     story: string;
     image: string;
     value?: string;
+    // Provenance (where it came from, who held it): saved to the Asset model's ownershipDetails column.
+    ownershipDetails?: string;
     custom_attributes?: string; // JSON string of custom field values
 };
 
