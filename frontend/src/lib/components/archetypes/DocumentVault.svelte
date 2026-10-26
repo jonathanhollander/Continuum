@@ -283,6 +283,7 @@
         >
             <div
                 class="absolute -right-4 -top-4 opacity-10 rotate-12 transition-transform group-hover:scale-110 text-primary"
+                aria-hidden="true"
             >
                 <Shield size={120} />
             </div>
