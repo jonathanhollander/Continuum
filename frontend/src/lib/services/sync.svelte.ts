@@ -81,6 +81,30 @@ function writeFetch(url: string, init: RequestInit): Promise<Response> {
     return fetch(url, { ...init, keepalive: true }).finally(() => { keepaliveBytes -= size; });
 }
 
+/** One notice for every list whose first read failed (an outage fails them all at once): Try Again
+ *  re-reads each of them; it closes when the last one answers. Key → that store's re-read. */
+const loadRetries = new Map<string, () => void>();
+let loadNoticeId: string | null = null;
+function loadFailed(key: string, retry: () => void, technicalDetails?: string) {
+    loadRetries.set(key, retry);
+    if (loadNoticeId) return;
+    loadNoticeId = notifications.showError({
+        message: 'Your saved records are still on your account. Let\'s try loading them again.',
+        code: 'SERVICE_UNAVAILABLE',
+        technicalDetails
+    }, () => {
+        loadNoticeId = null;
+        const all = [...loadRetries.values()];
+        loadRetries.clear();
+        all.forEach((r) => r());
+    });
+}
+function loadAnswered(key: string) {
+    if (!loadRetries.delete(key) || loadRetries.size || !loadNoticeId) return;
+    notifications.dismiss(loadNoticeId);
+    loadNoticeId = null;
+}
+
 export class SyncManager<T extends { id: number | string }> {
     #items = $state<T[]>([]);
     /** The records; a page, derived value or effect reading them marks this store as one the page shows (syncAll). */
@@ -153,9 +177,6 @@ export class SyncManager<T extends { id: number | string }> {
     private uploading: Promise<unknown> = Promise.resolve();
     /** Account whose records are loaded; null after a logout clear. */
     loadedFor: string | null = null;
-    /** The notice for a list read that failed before any read this session answered: one per
-     *  store, cleared by Try Again, by a later read that answers, and by an account change. */
-    private loadNotice: string | null = null;
     /** Per record id with updates in flight: the row as the server last returned it (or as it was
      *  before the first of them), each open update's fields by sequence, every field they touched,
      *  and the last request, which the next update to that row waits for (the server applies them
@@ -189,8 +210,7 @@ export class SyncManager<T extends { id: number | string }> {
     reset(clear = false) {
         this.inflight = null; // a sync still running belongs to the previous account
         this.generation++;
-        if (this.loadNotice) notifications.dismiss(this.loadNotice);
-        this.loadNotice = null;
+        loadAnswered(this.key);
         this.loadedFor = clear ? null : storageAccount();
         this.items = clear ? [] : getStored<T[]>(this.key, []);
         this.status = "idle";
@@ -242,7 +262,7 @@ export class SyncManager<T extends { id: number | string }> {
             // The account changed while this was in flight: these records belong to someone else.
             if (get(auth).token !== token) return;
             answered = true;
-            if (this.loadNotice) { notifications.dismiss(this.loadNotice); this.loadNotice = null; }
+            loadAnswered(this.key);
             const remoteItems = rawItems.map(item => {
                 const camelItem = convertKeys(item, toCamel);
                 return this.mapper ? this.mapper(camelItem) : camelItem as unknown as T;
@@ -295,14 +315,10 @@ export class SyncManager<T extends { id: number | string }> {
             console.error(`[Sync:${this.key}] Error:`, e);
             this.status = "error";
             this.error = errMessage(e) ?? null;
-            // The first read of the list did not answer: the device copy stays on screen, and one
-            // gentle notice offers to load it again (repeat failures add none).
-            if (!answered && !this.#lastSync && !this.loadNotice && current()) {
-                this.loadNotice = notifications.showError({
-                    message: 'Your saved records are still on your account. Let\'s try loading them again.',
-                    code: 'SERVICE_UNAVAILABLE',
-                    technicalDetails: errTechnical(e)
-                }, () => { this.loadNotice = null; this.sync().catch(() => {}); });
+            // The first read of the list did not answer: the device copy stays on screen, and the
+            // shared notice offers to load it again (repeat failures and other lists add none).
+            if (!answered && !this.#lastSync && current()) {
+                loadFailed(this.key, () => { this.sync().catch(() => {}); }, errTechnical(e) ?? undefined);
             }
         }
     }
