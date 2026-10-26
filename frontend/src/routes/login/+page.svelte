@@ -202,6 +202,17 @@
         }
     }
 
+    // Leaving the email form drops ?method=email (kept by signup's email-link choice) so a reload
+    // stays on the passkey view; other params such as ?redirect are kept.
+    function backToPasskey() {
+        showMagicLink = false;
+        const url = new URL($page.url);
+        if (url.searchParams.has("method")) {
+            url.searchParams.delete("method");
+            goto(url.pathname + url.search, { replaceState: true, keepFocus: true, noScroll: true });
+        }
+    }
+
     function handleKeydown(event: KeyboardEvent) {
         if (event.key === "Enter" && magicLinkEmail && !magicLinkSent) {
             handleMagicLink();
@@ -346,7 +357,7 @@
                             </button>
 
                             <button
-                                onclick={() => (showMagicLink = false)}
+                                onclick={backToPasskey}
                                 class="w-full text-slate-400 hover:text-white font-medium py-3 transition-colors text-base"
                             >
                                 Back to Passkey Login
