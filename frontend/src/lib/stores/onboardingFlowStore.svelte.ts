@@ -117,10 +117,12 @@ function getAuthToken(): string | null {
     return authState.token;
 }
 
-// Persist to backend
-async function persistToBackend(): Promise<boolean> {
+// Persist to backend; the role is saved once, with the finished flow.
+// Resolves to the server's reply, or null when nothing was saved.
+async function persistToBackend(): Promise<{ user_role?: string | null } | null> {
     const token = getAuthToken();
-    if (!token) return false;
+    if (!token) return null;
+    const finished = data.currentStep === 'complete';
 
     try {
         const response = await fetch(`${API_BASE_URL}/api/auth/onboarding`, {
@@ -130,11 +132,11 @@ async function persistToBackend(): Promise<boolean> {
                 'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
-                user_role: data.role,
+                user_role: finished ? data.role : undefined,
                 emotional_context: data.emotionalContext,
                 deceased_name: data.deceasedName,
                 onboarding_step: data.currentStep,
-                onboarding_completed: data.currentStep === 'complete',
+                onboarding_completed: finished,
                 language: data.language,
                 font_size: data.fontSize
             })
@@ -142,13 +144,13 @@ async function persistToBackend(): Promise<boolean> {
 
         if (!response.ok) {
             console.warn('Failed to persist onboarding to backend:', response.status);
-            return false;
+            return null;
         }
 
-        return true;
+        return await response.json();
     } catch (e) {
         console.warn('Error persisting onboarding to backend:', e);
-        return false;
+        return null;
     }
 }
 
@@ -278,7 +280,7 @@ export const onboardingFlowStore = {
         saveToStorage();
 
         // Final persist to backend
-        await persistToBackend();
+        return await persistToBackend();
     },
 
     reset() {

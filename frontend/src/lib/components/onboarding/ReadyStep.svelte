@@ -47,7 +47,6 @@
         isCompleting = true;
 
         // Update context store with collected data
-        contextStore.setRole(onboardingFlowStore.data.role);
         contextStore.setEmotionalContext(
             onboardingFlowStore.data.emotionalContext,
         );
@@ -58,8 +57,9 @@
         // Mark onboarding complete in preference store
         preferenceStore.setOnboardingComplete(true);
 
-        // Mark complete in flow store (persists to backend)
-        await onboardingFlowStore.complete();
+        // Mark complete in flow store (persists to backend, role included)
+        const saved = await onboardingFlowStore.complete();
+        if (saved) contextStore.applyServerRole(saved.user_role);
     }
 
     function goBack() {

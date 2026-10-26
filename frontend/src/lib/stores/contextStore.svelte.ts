@@ -12,7 +12,7 @@ import { get } from 'svelte/store';
 import { apiFetch } from '$lib/api/client';
 import { logger } from '$lib/utils/logger';
 
-type UserRole = 'planning' | 'executor' | 'family' | 'advisor';
+export type UserRole = 'planning' | 'executor' | 'family' | 'advisor';
 type EmotionalContext = 'healthy' | 'terminal' | 'grieving' | null;
 
 interface ContextState {
@@ -28,6 +28,13 @@ let contextState = $state<ContextState>({
     deceasedName: null
 });
 
+const ROLES: readonly UserRole[] = ['planning', 'executor', 'family', 'advisor'];
+
+// users.user_role as a known role; older rows hold 'owner' (or nothing), which is planning
+function toRole(value: unknown): UserRole {
+    return ROLES.includes(value as UserRole) ? (value as UserRole) : 'planning';
+}
+
 // The role the server holds for the signed-in account (users.user_role)
 let serverRole: UserRole = 'planning';
 // Bumped on every setRole; a save's reply only applies while it is still the latest choice
@@ -39,7 +46,7 @@ let appliedUser: unknown = null;
 function initializeContext() {
     const authState = get(auth);
     if (authState.user) {
-        serverRole = (authState.user.user_role as UserRole) || 'planning';
+        serverRole = toRole(authState.user.user_role);
         if (!roleSaving) contextState.role = serverRole;
         contextState.emotionalContext = authState.user.emotional_context as EmotionalContext;
     }
@@ -75,7 +82,7 @@ async function saveRole(role: UserRole, seq: number) {
         });
         if (!res.ok) throw new Error(`status ${res.status}`);
         const user = await res.json();
-        serverRole = (user.user_role as UserRole) || 'planning';
+        serverRole = toRole(user.user_role);
     } catch (e) {
         logger.error('[contextStore] Role save failed', e);
     }
@@ -114,10 +121,19 @@ export const contextStore = {
     },
 
     setRole(role: UserRole) {
+        role = toRole(role);
         if (role === contextState.role) return;
         contextState.role = role;
         roleSaving = true;
         void saveRole(role, ++roleSeq);
+    },
+
+    // A role the server has already saved elsewhere (onboarding); shown without another save
+    applyServerRole(role: unknown) {
+        serverRole = toRole(role);
+        roleSeq++;
+        roleSaving = false;
+        contextState.role = serverRole;
     },
 
     setEmotionalContext(context: EmotionalContext) {

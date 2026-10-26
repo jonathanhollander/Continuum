@@ -1,7 +1,7 @@
 <script lang="ts">
     import { fade, fly } from "svelte/transition";
     import { LucideHeart, LucideArrowRight } from "lucide-svelte";
-    import { userRole } from "$lib/stores/conciergeStore.svelte";
+    import { contextStore } from "$lib/stores/contextStore.svelte";
 
     interface Props {
         message?: string;
@@ -13,7 +13,7 @@
         compact = false,
     }: Props = $props();
 
-    const isExecutor = $derived($userRole === "executor");
+    const isExecutor = $derived(contextStore.isExecutor);
 
     // Adjust message for executors
     const bannerMessage = $derived(

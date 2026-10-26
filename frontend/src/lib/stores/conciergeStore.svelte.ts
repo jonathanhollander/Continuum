@@ -1,5 +1,6 @@
 import { registerProfileSlice } from "$lib/services/sync.svelte";
-import { derived } from 'svelte/store';
+import { derived, toStore } from 'svelte/store';
+import { contextStore, type UserRole as AccountRole } from './contextStore.svelte';
 import { dictionary } from './dictionary';
 import { logger } from '../utils/logger';
 
@@ -9,19 +10,17 @@ export type Language = 'en' | 'es' | 'fr' | 'de' | 'ru' | 'he';
 
 interface ConciergeSettings {
     encouragementMode: EncouragementMode;
-    userRole: UserRole;
     language: Language;
 }
 
 const manager = registerProfileSlice<ConciergeSettings>('concierge_settings', (data: any) => ({
     encouragementMode: data.encouragementMode || data.encouragement || 'Full',
-    userRole: data.userRole || 'Owner',
     language: data.language || 'en'
 }));
 
 export const conciergeStore = {
     subscribe: manager.subscribe.bind(manager),
-    get settings() { return manager.data || { encouragementMode: 'Full', userRole: 'Owner', language: 'en' }; },
+    get settings() { return manager.data || { encouragementMode: 'Full', language: 'en' }; },
     update: (updates: Partial<ConciergeSettings>) => manager.update(updates),
     sync: () => manager.sync()
 };
@@ -36,9 +35,24 @@ export const encouragementMode = {
     }
 };
 
+// The account role (users.user_role, kept by contextStore) in the nav's terms;
+// an advisor sees the planning nav
+const NAV_ROLE: Record<AccountRole, UserRole> = {
+    planning: 'Owner',
+    executor: 'Executor',
+    family: 'Family',
+    advisor: 'Owner'
+};
+const ACCOUNT_ROLE: Record<UserRole, AccountRole> = {
+    Owner: 'planning',
+    Executor: 'executor',
+    Family: 'family'
+};
+const navRole = toStore(() => NAV_ROLE[contextStore.role]);
+
 export const userRole = {
-    subscribe: (fn: (value: UserRole) => void) => manager.subscribe(val => fn(val?.userRole || 'Owner')),
-    set: (val: UserRole) => manager.update({ userRole: val })
+    subscribe: navRole.subscribe,
+    set: (val: UserRole) => contextStore.setRole(ACCOUNT_ROLE[val] ?? 'planning')
 };
 
 export const language = {
