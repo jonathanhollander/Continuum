@@ -341,5 +341,4 @@
     .file-actions button, .file-actions a { color: var(--color-primary); text-decoration: underline; font-size: .875rem; }
     .file-actions button { border: 0; padding: 0; background: none; cursor: pointer; }
     .reload-actions { margin-top: 1rem; }
-    @media (max-width: 600px) { .migration-notice { right: 1rem; bottom: 1rem; } }
 </style>
