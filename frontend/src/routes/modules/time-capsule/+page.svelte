@@ -78,6 +78,13 @@
     let isSaving = $state(false);
     /** The capsule being edited; null while writing a new one. */
     let editingId = $state<string | null>(null);
+    /** The milestone capsule asking "release?" in its card; null when none is asking. */
+    let releasingId = $state<string | null>(null);
+
+    async function confirmRelease(id: string) {
+        releasingId = null;
+        await timeCapsuleStore.releaseMessage(id).catch(() => {});
+    }
 
     const emptyMessage = (): Partial<TimeCapsuleMessage> => ({
         title: "",
@@ -241,7 +248,7 @@
         <DataViewToggle module="time-capsule" onchange={(mode) => viewMode = mode} />
         <button
             on:click={openNew}
-            class="px-8 py-4 bg-indigo-600 text-white rounded-full font-bold shadow-xl shadow-indigo-200 hover:bg-indigo-700 hover:scale-105 transition-all flex items-center gap-3 shrink-0"
+            class="px-8 py-4 bg-primary text-primary-foreground rounded-full font-bold shadow-xl shadow-primary/20 hover:opacity-90 hover:scale-105 transition-all flex items-center gap-3 shrink-0"
         >
             <Plus size={24} />
             Seal New Message
@@ -333,6 +340,25 @@
                     {/if}
                 </div>
 
+                {#if releasingId === String(msg.id)}
+                <div class="p-4 bg-emerald-50 rounded-xl border border-emerald-100 space-y-3" role="group" aria-label="Release this capsule" transition:slide>
+                    <p class="text-sm text-emerald-800">Release this capsule to {msg.recipient}? It moves to Available Now.</p>
+                    <div class="flex gap-2">
+                        <button
+                            on:click={() => (releasingId = null)}
+                            class="flex-1 py-2 text-sm font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all"
+                        >
+                            Keep it locked
+                        </button>
+                        <button
+                            on:click={() => confirmRelease(String(msg.id))}
+                            class="flex-1 py-2 text-sm font-bold text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 transition-all"
+                        >
+                            Release now
+                        </button>
+                    </div>
+                </div>
+                {:else}
                 <div class="flex gap-2">
                     <button
                         on:click={() => openCapsule(msg)}
@@ -342,13 +368,14 @@
                     </button>
                     {#if msg.triggerType === "milestone"}
                         <button
-                            on:click={() => timeCapsuleStore.releaseMessage(String(msg.id))}
+                            on:click={() => (releasingId = String(msg.id))}
                             class="flex-1 py-2 text-sm font-bold text-emerald-700 bg-white border border-emerald-100 rounded-xl hover:bg-emerald-50 transition-all"
                         >
-                            Milestone reached
+                            Release this capsule
                         </button>
                     {/if}
                 </div>
+                {/if}
 
                 <div
                     class="pt-4 border-t border-slate-200 flex items-center justify-between"
@@ -469,13 +496,6 @@
                     </div>
                 </div>
             </div>
-            <button
-                on:click={openNew}
-                class="px-8 py-3.5 bg-indigo-600 text-white rounded-full font-bold shadow-lg hover:shadow-indigo-200 transition-all flex items-center mx-auto gap-2"
-            >
-                <Plus size={20} />
-                Begin a Legacy
-            </button>
         {/if}
     </div>
     {:else}
@@ -539,10 +559,11 @@
     {#if showAddModal}
         <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => (showAddModal = false) }}
             class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md"
+            aria-labelledby="capsule-form-title"
             transition:fade
         >
             <div
-                class="bg-white w-full max-w-2xl rounded-[3rem] p-10 shadow-2xl space-y-8"
+                class="bg-white w-full max-w-2xl rounded-[3rem] p-10 shadow-2xl space-y-8 max-h-[90vh] overflow-y-auto"
                 transition:scale={{ start: 0.95, easing: quintOut }}
             >
                 <div class="flex items-start justify-between">
@@ -551,9 +572,10 @@
                             <div
                                 class="p-3 bg-indigo-50 text-indigo-600 rounded-2xl"
                             >
-                                <Plus size={24} />
+                                {#if editingId}<Pencil size={24} />{:else}<Plus size={24} />{/if}
                             </div>
                             <h2
+                                id="capsule-form-title"
                                 class="font-serif text-3xl font-bold text-slate-900 tracking-tight"
                             >
                                 {editingId ? "Revisit This Capsule" : "Speak Across Time"}
@@ -575,10 +597,12 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-1">
                         <label
+                            for="capsule-title"
                             class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] pl-1"
                             >Message Title</label
                         >
                         <input
+                            id="capsule-title"
                             bind:value={newMessage.title}
                             placeholder="e.g., Graduation Heart-to-Heart"
                             class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium"
@@ -586,10 +610,12 @@
                     </div>
                     <div class="space-y-1">
                         <label
+                            for="capsule-recipient"
                             class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] pl-1"
                             >Who is this for?</label
                         >
                         <input
+                            id="capsule-recipient"
                             bind:value={newMessage.recipient}
                             placeholder="e.g., Emily (Daughter)"
                             class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium"
@@ -618,13 +644,15 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-1">
-                        <label
+                        <p
+                            id="capsule-release-type"
                             class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] pl-1"
-                            >Release Type</label
+                            >Release Type</p
                         >
-                        <div class="flex gap-2">
+                        <div class="flex gap-2" role="group" aria-labelledby="capsule-release-type">
                             <button
                                 on:click={() => setTrigger("date")}
+                                aria-pressed={newMessage.triggerType === "date"}
                                 class="flex-1 py-3 px-4 rounded-xl border-2 transition-all font-bold text-sm {newMessage.triggerType ===
                                 'date'
                                     ? 'bg-indigo-50 border-indigo-600 text-indigo-700'
@@ -635,6 +663,7 @@
                             </button>
                             <button
                                 on:click={() => setTrigger("milestone")}
+                                aria-pressed={newMessage.triggerType === "milestone"}
                                 class="flex-1 py-3 px-4 rounded-xl border-2 transition-all font-bold text-sm {newMessage.triggerType ===
                                 'milestone'
                                     ? 'bg-indigo-50 border-indigo-600 text-indigo-700'
@@ -647,17 +676,20 @@
                     </div>
                     <div class="space-y-1">
                         <label
+                            for="capsule-release-condition"
                             class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] pl-1"
                             >Release Condition</label
                         >
                         {#if newMessage.triggerType === "date"}
                             <input
+                                id="capsule-release-condition"
                                 type="date"
                                 bind:value={newMessage.triggerValue}
                                 class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium"
                             />
                         {:else}
                             <select
+                                id="capsule-release-condition"
                                 bind:value={newMessage.triggerValue}
                                 class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium appearance-none"
                             >
@@ -673,6 +705,7 @@
 
                 <div class="space-y-4">
                     <label
+                        for="capsule-content"
                         class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] pl-1"
                         >Legacy Content</label
                     >
@@ -724,6 +757,7 @@
                             </button>
                         {/if}
                         <textarea
+                            id="capsule-content"
                             bind:value={newMessage.contentPreview}
                             placeholder="Your written words, in your own voice..."
                             class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl min-h-32 focus:ring-2 focus:ring-indigo-500 outline-none font-medium resize-none {isRecording ? 'md:col-span-2' : ''}"
@@ -762,7 +796,7 @@
                     <button
                         on:click={handleAdd}
                         disabled={isUploading || isSaving}
-                        class="flex-2 py-4 px-10 bg-indigo-900 text-white rounded-2xl font-bold shadow-xl shadow-indigo-100 hover:bg-indigo-950 transition-all disabled:opacity-60"
+                        class="flex-2 py-4 px-10 bg-primary text-primary-foreground rounded-2xl font-bold shadow-xl shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-60"
                     >
                         {editingId ? "Save Changes" : "Seal Capsule"}
                     </button>
