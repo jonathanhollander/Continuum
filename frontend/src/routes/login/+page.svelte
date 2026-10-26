@@ -39,7 +39,9 @@
 
     // Redirect if already logged in
     onMount(() => {
-        if ($auth.user) {
+        const handoffEmail = $page.url.searchParams.get("email")?.trim() || "";
+        const signedInEmail = $auth.user?.email?.trim().toLowerCase();
+        if (signedInEmail && (!handoffEmail || signedInEmail === handoffEmail.toLowerCase())) {
             goto(redirectUrl);
         }
 
@@ -57,7 +59,6 @@
         }
 
         // Arriving from /start with the marketing email this browser knows: fill it in
-        const handoffEmail = $page.url.searchParams.get("email");
         if (handoffEmail) {
             magicLinkEmail = handoffEmail;
             showMagicLink = true;
