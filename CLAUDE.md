@@ -17,9 +17,9 @@
 cd frontend && npm install && npm run dev    # http://localhost:5173
 
 # Backend (terminal 2)
-cd backend && pip install -r requirements.txt
-alembic upgrade head
-python main.py                                # http://localhost:8000
+pip install -r backend/requirements.txt       # Python 3.11, exact pins
+(cd backend && alembic upgrade head)
+python -m backend.main                        # from repo root; http://localhost:8000
 
 # Dev user auto-seeded: dev@continuum.im / dev123
 ```
@@ -167,4 +167,4 @@ Detailed guides exist for specific topics:
 
 ---
 
-_Last Updated: 2026-10-26 02:45 EST_
+_Last Updated: 2026-10-26 03:10 EST_

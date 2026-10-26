@@ -248,7 +248,7 @@ Listed so nothing is lost:
 |---|---|---|---|
 | A0 | ☑ | 0444175 | `git check-ignore -v .worktrees/x` → `.gitignore:58` |
 | A1 | ☑ | 8dd0a90 | 65 pins identical to prod freeze; fresh 3.11 venv: pip check clean, alembic head, dev seed, POST /api/auth/token 200 |
-| A4 | ▶ | | |
+| A4 | ☑ | 020f77c | No frontend/dist: `python -m backend.main` starts, dev seeds, login 200, SPA routes 404 not 500 |
 | A2 | ☑ | 8d54a13 | Diff = the Pre-deploy line plus the footer; `.github/` absent |
 | A3 | ▶ | | |
 | B1 | ☐ | | |

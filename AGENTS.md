@@ -1,5 +1,7 @@
 # Continuum — instructions for coding agents
 
+**Last Updated:** 2026-10-26 03:10 EST
+
 ## Purpose and current priority
 
 Continuum is Jonathan's personal legacy and financial handover for his son in the event of Jonathan's death. Optimize for these two people before treating this as a general estate-planning SaaS product.
@@ -86,9 +88,9 @@ npm run dev
 
 Do not run `npm ci` over someone else's active dependency changes merely to perform a review. Inspect the worktree first. There are no frontend `test`, `test:watch`, or `test:e2e` scripts in the reviewed package; `docs/TESTING.md` describes tools that are not configured.
 
-Backend dependencies are listed in `backend/requirements.txt`; isolate them in a virtual environment. Run backend commands from the repository root. `uvicorn backend.main:app` imports static assets from `frontend/dist/_app`, so build the frontend first or provide a test fixture for that directory. Keep model imports aligned with `backend/alembic/env.py` for migrations.
+Backend dependencies are listed in `backend/requirements.txt`; isolate them in a virtual environment. Run backend commands from the repository root. `python -m backend.main` (or `uvicorn backend.main:app`) starts without a frontend build since card A4; the SPA routes return 404 until `frontend/dist` exists. Keep model imports aligned with `backend/alembic/env.py` for migrations.
 
-The unbounded backend requirements are not reproducible: the initial review's fresh SQLModel 0.0.48 / SQLAlchemy 2.1.6 environment failed to seed a user because of naive datetime defaults. API probes used an explicitly documented temporary SQLModel 0.0.31 / SQLAlchemy 2.0.55 compatibility environment. That is review evidence, not an approved production dependency change.
+Backend requirements are pinned to production's freeze since card A1. Before that, the unbounded requirements were not reproducible: the initial review's fresh SQLModel 0.0.48 / SQLAlchemy 2.1.6 environment failed to seed a user because of naive datetime defaults. API probes used an explicitly documented temporary SQLModel 0.0.31 / SQLAlchemy 2.0.55 compatibility environment. That is review evidence, not an approved production dependency change.
 
 Use a disposable database, uploads directory, local outbox, synthetic names, and reserved example addresses for tests and screenshots. Do not read, seed, migrate, or alter the owner's existing databases to test features. Do not send email or messages. The Pulse scheduler currently ignores `PULSE_SCHEDULER_ENABLED`; avoid application lifespan startup in API probes or explicitly replace the scheduler in an isolated test harness.
 
