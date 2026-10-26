@@ -740,7 +740,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X193 | ☑ | 514a6d2 | Magic link carries a checked same-site `redirect` (backend `_safe_redirect`, verify page, login sends it; Create one keeps it). /modules/pets link → lands there; `https://…` and `//…` dropped → /dashboard. No real email (outbox). 0 errors. Finding → X5 |
 | X194 | ▶ | | |
 | X196 | ▶ | | |
-| X197 | ☐ (queued: after U72, U77 — same pages) | | |
+| X197 | ☐ (queued: after U72 — same pages) | | |
 | X198 | ▶ | | |
 | X138 | ☑ | c5a7077 | Toolbar Download (insurance, property) saves the stored files of every record shown (follows search; disabled when none; cached files reused); subscriptions Filter chips by the difficulty words already shown (Easy/Medium/Hard), clear on reclick or close; `aiGriefService` uses `contextStore.isExecutor` (store holds `executor` after X118 — the old check never matched). Downloads byte-identical, executor/planner personas checked with the AI call intercepted; 0 errors |
 | X114 | ☑ | fdd80b5 | `routers/pets.py`, `heirlooms.py`, `insurance.py` removed (no caller: the app uses `/api/data/pets`, `/heirlooms` → Asset, `/insurance_policies`; `heirlooms.py` wrote the unused `Heirloom` table). TestClient: before `200 {}`; after 405/404, the `/api/data/*` paths create and list; server starts clean |
@@ -914,7 +914,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | U73 | ☑ | f96bf85 | Tooltip drops `scrollX/Y` from its fixed position (scrolled 506 px: bubble 506 px below link → level with it; unscrolled unchanged). 0 errors. Finding → U75 |
 | U74 | ☑ | 24ea5ca | Command Center data rows show description and type (policy row "Policy #Z-1", POLICY tag); file on runes; keyboard selection unchanged. 0 errors. Finding → U78 |
 | U75 | ▶ | | |
-| U77 | ▶ | | |
+| U77 | ☑ | d267b6d | FileUploader error `role="alert"`; subscriptions Difficulty buttons (filter and modal) `type="button"`. Attributes only; svelte-check 0 errors on the files; build passes. No browser run (attribute-only; diff reviewed) |
 | U78 | ▶ | | |
 | U42 | ☑ | e127714 | Settings left-aligned like the dashboard (heading x 456 → 312); 5 profile inputs labelled (5 → 0 unlabelled); date of death shown to Executor and Family only (Owner 1 → 0). X156 confirm intact. 0 page errors. Finding → U62 |
 | G0 | ☐ (after Wave U) | | |
