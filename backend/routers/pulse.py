@@ -177,7 +177,7 @@ def _check_settings_fields(data: dict) -> None:
 
 
 @router.post("/settings", summary="Update Pulse settings", description="Saves the user's Pulse configuration, creating the row on first save. The check-in token is issued by the server on first save and kept.")
-@limiter.limit("10/minute")
+@limiter.limit("600/minute")  # authenticated owner route, same level as /api/data/*
 def update_settings(request: Request, new_settings: PulseSettings, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     settings = session.get(PulseSettings, user.id)
     was_enabled = bool(settings and settings.enabled)
@@ -433,7 +433,7 @@ def _vault_out(item: PulseVault) -> dict:
     }
 
 @router.get("/vault")
-@limiter.limit("10/minute")
+@limiter.limit("600/minute")  # authenticated owner route, same level as /api/data/*
 def get_vault(request: Request, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     items = session.exec(select(PulseVault).where(PulseVault.user_id == user.id)).all()
     return [_vault_out(i) for i in items]

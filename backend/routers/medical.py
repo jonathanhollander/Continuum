@@ -38,7 +38,7 @@ def get_medical_profile(user: User = Depends(get_current_user), session: Session
 
 @router.post("/profile", response_model=MedicalProfile)
 @router.put("/profile", response_model=MedicalProfile)
-@limiter.limit("10/minute")
+@limiter.limit("600/minute")  # authenticated owner route, same level as /api/data/*
 def update_medical_profile(request: Request, updated: MedicalProfile, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     profile = session.get(MedicalProfile, user.id)
     if not profile:
