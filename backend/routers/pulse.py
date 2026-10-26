@@ -173,8 +173,6 @@ def get_portal_view(request: Request, token: str, session: Session = Depends(get
     show_sensitive = bool(last_escalation and tier and last_escalation.tier_number >= tier.tier_number)
 
     return {
-        "user_id": user_id,
-        "contact_id": contact.id,
         "contact_name": contact.name,
         "contact_tier": tier.tier_number if tier else None,
         "user_name": user.email.split('@')[0].capitalize() if user else "Estate Owner",
@@ -186,6 +184,27 @@ def get_portal_view(request: Request, token: str, session: Session = Depends(get
              "safe_pass": show_sensitive
         }
     }
+
+@router.get("/portal/{token}/vault")
+@limiter.limit("10/minute")  # Public portal read, authorized by the portal token
+def get_portal_vault(request: Request, token: str, session: Session = Depends(get_session)):
+    contact = session.exec(select(PulseContact).where(PulseContact.portal_token == token)).first()
+    if not contact:
+        raise HTTPException(status_code=404, detail="Invalid portal token")
+    if contact.portal_token_expires and contact.portal_token_expires < datetime.utcnow():
+        raise HTTPException(status_code=401, detail="Token expired")
+
+    # Same rule as the portal view: only once escalation has reached this guardian's tier
+    last_escalation = session.exec(select(PulseEscalationLog).where(PulseEscalationLog.user_id == contact.user_id).order_by(PulseEscalationLog.id.desc())).first()
+    tier = session.get(PulseEscalationTier, contact.tier_id) if contact.tier_id else None
+    if not (last_escalation and tier and last_escalation.tier_number >= tier.tier_number):
+        return []
+
+    items = session.exec(select(PulseVault).where(PulseVault.user_id == contact.user_id)).all()
+    return [
+        {"name": i.name, "content": (i.encrypted_content or b"").decode("utf-8", errors="replace")}
+        for i in items
+    ]
 
 @router.post("/respond/{token}")
 @limiter.limit("10/minute")  # P1-High: Rate limit public portal actions
