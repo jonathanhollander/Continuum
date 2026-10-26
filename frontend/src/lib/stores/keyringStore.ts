@@ -1,3 +1,4 @@
+import { browserStorage } from "$lib/services/browserStorage";
 import { writable, get } from 'svelte/store';
 
 // Account choices remembered in this browser. Marketing intent stays outside this list.
@@ -5,8 +6,8 @@ const STORAGE_KEY = 'continuum_keyring_emails';
 const ACTIVE_ACC_KEY = 'continuum_active_account';
 
 function getStored(key: string, def: any) {
-    if (typeof localStorage === 'undefined') return def;
-    const stored = localStorage.getItem(key);
+    if (typeof window === 'undefined') return def;
+    const stored = browserStorage.getItem(key);
     if (!stored) return def;
     try {
         return JSON.parse(stored);
@@ -21,16 +22,20 @@ export const keyringEmails = writable<string[]>(getStored(STORAGE_KEY, []));
 // Currently active account (email)
 export const activeAccountId = writable<string | null>(getStored(ACTIVE_ACC_KEY, null));
 
-if (typeof localStorage !== 'undefined') {
+if (typeof window !== 'undefined') {
+    let firstEmails = true;
     keyringEmails.subscribe(emails => {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(emails));
+        if (firstEmails) { firstEmails = false; return; }
+        browserStorage.setItem(STORAGE_KEY, JSON.stringify(emails));
     });
 
+    let firstAccount = true;
     activeAccountId.subscribe(id => {
+        if (firstAccount) { firstAccount = false; return; }
         if (id) {
-            localStorage.setItem(ACTIVE_ACC_KEY, id);
+            browserStorage.setItem(ACTIVE_ACC_KEY, id);
         } else {
-            localStorage.removeItem(ACTIVE_ACC_KEY);
+            browserStorage.removeItem(ACTIVE_ACC_KEY);
         }
     });
 }
@@ -74,8 +79,8 @@ export function logout() {
     // auth.logout(); // Handled by UI to avoid circular dependency
     activeAccountId.set(null);
     if (typeof window !== 'undefined') {
-        localStorage.removeItem('continuum_auth_token');
-        localStorage.removeItem('continuum_refresh_token');
+        browserStorage.removeItem('continuum_auth_token');
+        browserStorage.removeItem('continuum_refresh_token');
         window.location.href = '/login';
     }
 }

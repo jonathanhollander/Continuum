@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { browserStorage } from "$lib/services/browserStorage";
     import { onMount, untrack } from "svelte";
     import ExecutorHub from "$lib/components/executor/ExecutorHub.svelte";
     import ExecutorWelcome from "$lib/components/executor/ExecutorWelcome.svelte";
@@ -395,7 +396,7 @@
     $effect(() => {
         if (estateAudit.percentage === 0 && browser && !loading && auditSources.confirmed) {
             const skipped =
-                localStorage.getItem("continuum_setup_skipped") === "true";
+                browserStorage.getItem("continuum_setup_skipped") === "true";
             if (
                 !skipped &&
                 !hasAutoRedirected &&

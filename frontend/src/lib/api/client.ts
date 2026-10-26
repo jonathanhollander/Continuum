@@ -1,3 +1,4 @@
+import { browserStorage } from "$lib/services/browserStorage";
 /**
  * Authenticated API Client
  *
@@ -20,7 +21,7 @@ function getAuthHeaders(): HeadersInit {
     };
 
     if (browser) {
-        const token = localStorage.getItem('continuum_auth_token');
+        const token = browserStorage.getItem('continuum_auth_token');
         if (token) {
             headers['Authorization'] = `Bearer ${token}`;
         }

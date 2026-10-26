@@ -1,3 +1,4 @@
+import { browserStorage } from "$lib/services/browserStorage";
 import { writable } from 'svelte/store';
 import { activeAccountId } from './keyringStore';
 
@@ -18,9 +19,14 @@ function createPreferenceStore() {
     let currentKey = 'continuum_prefs_global';
 
     activeAccountId.subscribe(id => {
+        if (!id) {
+            currentKey = 'continuum_prefs_global';
+            set(DEFAULT_PREFS);
+            return;
+        }
         if (id) {
             currentKey = `continuum_prefs_${id}`;
-            const stored = localStorage.getItem(currentKey);
+            const stored = browserStorage.getItem(currentKey);
             if (stored) {
                 try {
                     set(JSON.parse(stored));
@@ -37,16 +43,16 @@ function createPreferenceStore() {
         subscribe,
         setExpertMode: (val: boolean) => update(s => {
             const newState = { ...s, expertMode: val };
-            localStorage.setItem(currentKey, JSON.stringify(newState));
+            browserStorage.setItem(currentKey, JSON.stringify(newState));
             return newState;
         }),
         setOnboardingComplete: (val: boolean) => update(s => {
             const newState = { ...s, onboardingComplete: val };
-            localStorage.setItem(currentKey, JSON.stringify(newState));
+            browserStorage.setItem(currentKey, JSON.stringify(newState));
             return newState;
         }),
         reset: () => {
-            localStorage.removeItem(currentKey);
+            browserStorage.removeItem(currentKey);
             set(DEFAULT_PREFS);
         }
     };

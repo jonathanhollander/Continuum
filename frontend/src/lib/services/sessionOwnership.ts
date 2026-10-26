@@ -1,3 +1,4 @@
+import { browserStorage } from "./browserStorage";
 /** Ownership of asynchronous work. Independent of auth/stores to avoid import cycles. */
 export interface SessionOwnership {
     readonly generation: number;
@@ -6,10 +7,7 @@ export interface SessionOwnership {
 }
 
 const TOKEN_KEY = 'continuum_auth_token';
-const readToken = () => {
-    try { return typeof localStorage === 'undefined' ? null : localStorage.getItem(TOKEN_KEY); }
-    catch { return null; }
-};
+const readToken = () => browserStorage.getItem(TOKEN_KEY);
 
 let generation = 0;
 let currentToken = readToken();
