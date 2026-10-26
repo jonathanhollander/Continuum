@@ -77,9 +77,11 @@ const mapper = (data: any): AcceptanceTask => ({
 const taskManager = registerSync<AcceptanceTask>('acceptance_tasks', 'acceptance_tasks', mapper, '/api/data');
 
 // Complexity is now part of the global estate profile or a separate singleton
-const complexityManager = registerSingletonSync<{ level: EstateComplexity }>('estate_complexity', 'estate/profile', (data: any) => ({
-    level: data.complexity || 'moderate'
-}), '/api');
+const complexityManager = registerSingletonSync<{ level: EstateComplexity; complexity?: EstateComplexity }>('estate_complexity', 'estate/profile', (data: any) => {
+    // The profile key is "complexity"; "level" is the local name. Carry both so a save round-trips.
+    const level = data.complexity || data.level || 'moderate';
+    return { level, complexity: level };
+}, '/api');
 
 export const acceptanceTasks = {
     subscribe: taskManager.subscribe.bind(taskManager),
@@ -93,7 +95,7 @@ export const acceptanceTasks = {
 export const estateComplexity = {
     subscribe: complexityManager.subscribe.bind(complexityManager),
     get level() { return complexityManager.data?.level || 'moderate'; },
-    set: (level: EstateComplexity) => complexityManager.update({ level })
+    set: (level: EstateComplexity) => complexityManager.update({ level, complexity: level })
 };
 
 export const acceptanceStore = {

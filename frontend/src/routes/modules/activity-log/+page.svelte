@@ -68,6 +68,7 @@
     };
 
     onMount(async () => {
+        await activityLog.sync();
         entries = activityLog.getAll();
         filteredEntries = entries;
         todayCount = activityLog.getTodayCount();

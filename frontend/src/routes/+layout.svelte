@@ -133,7 +133,7 @@
 
 	import { registerAccount } from "$lib/stores/keyringStore";
 	import { auth } from "$lib/stores/auth";
-	import { syncAll } from "$lib/services/sync.svelte";
+	import { syncAll, clearAll } from "$lib/services/sync.svelte";
 
 	// Derived: Is this the Wizard or Marketing Landing?
 	let isWizardRoute = $derived(
@@ -162,6 +162,11 @@
 	// Sync Data when Auth is ready
 	let lastSyncedToken = $state<string | null>(null);
 	$effect(() => {
+		// Signed out: forget in-memory records so the next account never sees them.
+		if (!$auth.token && !$auth.loading && lastSyncedToken) {
+			lastSyncedToken = null;
+			clearAll();
+		}
 		if ($auth.token && !$auth.loading && $auth.token !== lastSyncedToken) {
 			console.log("[Layout] Auth detected, starting global sync...");
 			lastSyncedToken = $auth.token;

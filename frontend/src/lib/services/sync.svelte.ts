@@ -95,7 +95,29 @@ export class SyncManager<T extends { id: number | string }> {
         await this.sync();
     }
 
-    async sync() {
+    private inflight: Promise<void> | null = null;
+
+    /** Account change: drop this manager's in-memory records. clear=true (logout) leaves storage alone;
+     *  otherwise reload the records saved for the now-active account. */
+    reset(clear = false) {
+        this.inflight = null;
+        this.items = clear ? [] : getStored<T[]>(this.key, []);
+        this.status = "idle";
+        this.error = null;
+        this.lastSync = null;
+        this.notify();
+    }
+
+    // One fetch at a time per store: a second caller waits on the first instead of racing it
+    // (two racing syncs of an empty server would both migrate the local copy up).
+    sync(): Promise<void> {
+        if (this.inflight) return this.inflight;
+        const p: Promise<void> = this.runSync().finally(() => { if (this.inflight === p) this.inflight = null; });
+        this.inflight = p;
+        return p;
+    }
+
+    private async runSync() {
         this.status = "syncing";
         this.error = null;
 
@@ -118,6 +140,8 @@ export class SyncManager<T extends { id: number | string }> {
             if (!res.ok) throw new Error("Failed to fetch remote data");
 
             const rawItems: any[] = await res.json();
+            // The account changed while this was in flight: these records belong to someone else.
+            if (get(auth).token !== token) return;
             const remoteItems = rawItems.map(item => {
                 const camelItem = convertKeys(item, toCamel);
                 return this.mapper ? this.mapper(camelItem) : camelItem;
@@ -135,6 +159,7 @@ export class SyncManager<T extends { id: number | string }> {
                 });
                 if (res2.ok) {
                     const raw2 = await res2.json();
+                    if (get(auth).token !== token) return;
                     const wrapped2 = raw2.map((i: any) => {
                         const camel = convertKeys(i, toCamel);
                         return this.mapper ? this.mapper(camel) : camel;
@@ -449,12 +474,36 @@ export class SingletonSyncManager<T extends object> {
         return this;
     }
 
-    async sync() {
+    private inflight: Promise<void> | null = null;
+
+    /** Account change: see SyncManager.reset. */
+    reset(clear = false) {
+        this.inflight = null;
+        const raw = clear ? ({} as T) : getStored<T>(this.key, {} as T);
+        this.data = this.mapper ? this.mapper(raw) : raw;
+        this.status = "idle";
+        this.error = null;
+        this.lastSync = null;
+        this.notify();
+    }
+
+    async init() {
+        await this.sync();
+    }
+
+    sync(): Promise<void> {
+        if (this.inflight) return this.inflight;
+        const p: Promise<void> = this.runSync().finally(() => { if (this.inflight === p) this.inflight = null; });
+        this.inflight = p;
+        return p;
+    }
+
+    private async runSync() {
         this.status = "syncing";
         this.error = null;
         try {
             const token = get(auth).token;
-            if (!token) return;
+            if (!token) { this.status = "idle"; return; }
 
             const res = await fetch(`${BASE_URL}${this.apiBase}/${this.endpoint}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
@@ -462,6 +511,7 @@ export class SingletonSyncManager<T extends object> {
             if (!res.ok) throw new Error("Failed to fetch remote data");
 
             const raw = await res.json();
+            if (get(auth).token !== token) return; // account changed mid-flight
             const remoteDataRaw = convertKeys(raw, toCamel);
             const remoteData = this.mapper ? this.mapper(remoteDataRaw) : remoteDataRaw;
 
@@ -570,6 +620,10 @@ class RegistryContainer {
 let _container: RegistryContainer | undefined;
 let _plainRegistry: Record<string, SyncManager<any>> = {};
 
+// True once a signed-in session has started syncing. Stores registered after that point
+// (lazily loaded modules) fetch themselves as soon as they are created.
+let _sessionActive = false;
+
 export function getRegistry() {
     if (browser) {
         if (!_container) {
@@ -581,24 +635,41 @@ export function getRegistry() {
     return _plainRegistry;
 }
 
-export function registerSync<T extends { id: number | string }>(key: string, endpoint: string, mapper?: any, apiBase?: string) {
-    const reg = getRegistry();
-    if (!reg[key]) {
-        reg[key] = new SyncManager<T>(key, endpoint, mapper, apiBase);
+function registerManager<M extends { sync(): Promise<void> }>(key: string, endpoint: string, apiBase: string | undefined, make: () => M): M {
+    const reg = getRegistry() as Record<string, any>;
+    const existing = reg[key];
+    if (existing) {
+        // One owner per key: a second registration must describe the same endpoint.
+        if (existing.endpoint !== endpoint || (apiBase !== undefined && existing.apiBase !== apiBase)) {
+            console.warn(`[Sync] "${key}" is already registered for ${existing.apiBase}/${existing.endpoint}; ignoring ${apiBase ?? ''}/${endpoint}`);
+        }
+        return existing as M;
     }
-    return reg[key] as SyncManager<T>;
+    const manager = make();
+    reg[key] = manager;
+    if (browser && _sessionActive) manager.sync().catch(() => {});
+    return manager;
+}
+
+export function registerSync<T extends { id: number | string }>(key: string, endpoint: string, mapper?: any, apiBase?: string) {
+    return registerManager(key, endpoint, apiBase, () => new SyncManager<T>(key, endpoint, mapper, apiBase));
 }
 
 export function registerSingletonSync<T extends object>(key: string, endpoint: string, mapper?: any, apiBase?: string) {
-    const reg = getRegistry();
-    if (!reg[key]) {
-        reg[key] = new SingletonSyncManager<T>(key, endpoint, mapper, apiBase) as any;
-    }
-    return reg[key] as unknown as SingletonSyncManager<T>;
+    return registerManager(key, endpoint, apiBase, () => new SingletonSyncManager<T>(key, endpoint, mapper, apiBase)) as unknown as SingletonSyncManager<T>;
 }
 
+/** Signed-in session start (or account switch): reload every store from the active account's
+ *  saved records, then fetch from the server. Stores registered later fetch on registration. */
 export async function syncAll() {
-    const reg = getRegistry();
-    const promises = Object.values(reg).map(manager => manager.sync());
-    return Promise.allSettled(promises);
+    _sessionActive = true;
+    const managers = Object.values(getRegistry()) as any[];
+    managers.forEach(m => m.reset(false));
+    return Promise.allSettled(managers.map(m => m.sync()));
+}
+
+/** Logout: forget every in-memory record so the next account never sees them. */
+export function clearAll() {
+    _sessionActive = false;
+    (Object.values(getRegistry()) as any[]).forEach(m => m.reset(true));
 }

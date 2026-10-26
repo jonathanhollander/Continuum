@@ -67,6 +67,45 @@ export const activityLog = {
         });
     },
 
+    /** All entries, newest first. */
+    getAll(): ActivityLogEntry[] {
+        return [...manager.items].sort((a, b) => String(b.timestamp).localeCompare(String(a.timestamp)));
+    },
+
+    /** Search entries by entity name or change details */
+    search(query: string): ActivityLogEntry[] {
+        const q = query.toLowerCase();
+        return activityLog.getAll().filter((entry) =>
+            String(entry.entityName ?? '').toLowerCase().includes(q) ||
+            (entry.changes ?? []).some((c) =>
+                String(c.field).toLowerCase().includes(q) ||
+                String(c.oldValue).toLowerCase().includes(q) ||
+                String(c.newValue).toLowerCase().includes(q)
+            )
+        );
+    },
+
+    getTodayCount(): number {
+        const start = new Date();
+        start.setHours(0, 0, 0, 0);
+        return manager.items.filter((e) => new Date(e.timestamp) >= start).length;
+    },
+
+    exportAsJSON(): string {
+        return JSON.stringify(activityLog.getAll(), null, 2);
+    },
+
+    exportAsCSV(): string {
+        const entries = activityLog.getAll();
+        if (entries.length === 0) return '';
+        const headers = ['Timestamp', 'Module', 'Action', 'Entity Type', 'Entity Name', 'User', 'Changes'];
+        const rows = entries.map((e) => [
+            e.timestamp, e.module, e.action, e.entityType, e.entityName, e.userContext,
+            e.changes ? e.changes.map((c) => `${c.field}: ${c.oldValue} -> ${c.newValue}`).join('; ') : '',
+        ]);
+        return [headers.join(','), ...rows.map((r) => r.map((c) => `"${String(c ?? '').replace(/"/g, '""')}"`).join(','))].join('\n');
+    },
+
     /**
      * Get entries filtered by module
      */

@@ -9,12 +9,14 @@
 
     let { module = 'general', show = $bindable(false) }: Props = $props();
 
-    let currentAffirmation = $state<Affirmation>(affirmations[module][0]);
+    // A page may name a module with no affirmations of its own (property, financial, journal): use the general ones.
+    const listFor = () => affirmations[module] ?? affirmations.general;
+    let currentAffirmation = $state<Affirmation>(listFor()[0]);
 
     // Pick a random affirmation when component shows
     $effect(() => {
         if (show) {
-            const moduleAffirmations = affirmations[module];
+            const moduleAffirmations = listFor();
             const randomIndex = Math.floor(Math.random() * moduleAffirmations.length);
             currentAffirmation = moduleAffirmations[randomIndex];
 
