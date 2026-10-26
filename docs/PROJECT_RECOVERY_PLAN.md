@@ -1,6 +1,6 @@
 # Continuum — Project Recovery Plan
 
-**Last Updated:** 2026-10-26 01:10 EST
+**Last Updated:** 2026-10-26 01:25 EST
 
 **Revised 2026-10-26** after the features/usability review (`docs/reviews/2026-10-25-features-usability/REVIEW.md`): the order is now built around the handover, not the existing navigation.
 
@@ -182,7 +182,7 @@ Phase 3.
 - Early-preview labels on the extras.
 - Duplicate cleanup.
 - The remaining type errors.
-- Phone and keyboard usability (CU-025).
+- Desktop keyboard usability (the desktop part of CU-025). **This build is desktop-only (owner decision 2026-10-26); phone, tablet and other devices come in a later build.**
 
 **Phase F — Security, admin and operations. Out of scope for this upgrade (owner decision: features and functionality only).** Listed so nothing is lost:
 - **Rotate the exposed OpenRouter key now.** It's an owner step in the dashboard and takes
@@ -195,7 +195,7 @@ Phase 3.
 **Not a phase:** Pulse, QR, scenarios, analytics and builder tools stay reachable, with
 early-preview labels. They no longer decide when the project counts as "usable".
 
-**Execution (owner decision 2026-10-26):** subagents code every phase, A through E, each in its own worktree, which is removed after merge. The orchestrator reviews by diff only. Then one deploy of everything, then a full browser test of everything, including the completion test. Defects loop back through the same steps. The coding session's goal is "A–E complete". Older rules are guidance and may be bypassed when that is better for the software (see the execution plan, owner decisions).
+**Execution (owner decision 2026-10-26):** subagents code every phase, A through E, each in its own worktree, which is removed after merge. The orchestrator reviews by diff only. Then one deploy of everything, then a full browser test of everything, including the completion test. Defects loop back through the same steps. Two read-only oversight agents report on every wave: O1 for DB and API speed, O2 for the desktop UI. They never block. The coding session's goal is "A–E complete". Older rules are guidance and may be bypassed when that is better for the software (see the execution plan, owner decisions).
 
 Durations are not estimated until Phase B has scoped the shared defects.
 

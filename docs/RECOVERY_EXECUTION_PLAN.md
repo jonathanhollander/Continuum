@@ -1,6 +1,6 @@
 # Continuum — Recovery Execution Plan (subagent-run)
 
-**Last Updated:** 2026-10-26 01:10 EST
+**Last Updated:** 2026-10-26 01:25 EST
 
 The how and the order for [PROJECT_RECOVERY_PLAN.md](PROJECT_RECOVERY_PLAN.md) (phases A–F).
 Issue IDs (CU-0xx) and their evidence are in
@@ -16,6 +16,8 @@ Issue IDs (CU-0xx) and their evidence are in
 4. **Rules are guidance.** Every older rule (archived plans, agent specs, the UI standards doc, `AGENTS.md`, `CLAUDE.md` conventions, and the rules below) may be bypassed when that is better for the software. Say so in the commit message. Merged branches may be deleted. Still kept: no force-push to main, no destructive operations on production data (the existing mixed records need an owner yes), no messages to real people, no spending, and the `jh@continuum.estate` bypass stays.
 5. **Goal:** at the start of coding, set a session goal of "Waves A–E complete", and do not stop or switch focus until Wave E is done.
 6. **Worktrees:** every coding agent works in its own worktree, so agents don't clash. After a card merges, remove its worktree and delete its merged branch.
+7. **Desktop UI only for this build.** Design and test for desktop browsers (1280px wide and up; test at 1440×900). Phone, tablet and every other device are done in a later build. Don't add or change mobile layouts now, and don't count mobile defects as failures.
+8. **Two oversight agents watch every wave:** O1 checks that DB and API calls are fast, and O2 keeps an eye on the UI. They review and report; they never block (see "Oversight agents").
 
 ## Rules (ponytail; guidance, see decision 4)
 
@@ -44,11 +46,30 @@ Issue IDs (CU-0xx) and their evidence are in
 3. Each agent runs its own local proof scenario against synthetic data, and reports the files it changed.
 4. **Review by diff only:** read each worktree's `git diff` against its card. Check the scope, the owned files, the acceptance conditions it claims, and that no feature was removed. Do not re-run the agent's work. Merge if it's good. If not, send it back with the specific diff lines.
 5. Commit each merged card with its card ID, push, then **clean up**: `git worktree remove` that worktree and delete its merged branch. Run `git worktree prune` at the end of each wave.
+6. **Oversight:** at the end of each wave, dispatch O1 and O2 in parallel on that wave's merged diff (read-only, in the main tree). Their proven findings become cards in the next wave. Nothing waits on them.
 
 **Release pass (once, after Wave E):**
-6. Run `npm run check` and `npm run build` once, then deploy everything with `railway up`, and poll `/api/health` until the new version is live.
-7. **Full browser test:** the whole completion test (owner and recipient contexts), then every module on load, save, edit, reload and second-context retrieval, the binder and the PDF. Record the results in the completion-test table and the card status table.
-8. Each proven defect becomes a card. Run it through the same loop (worktree → code → diff review → merge and clean up → deploy → browser test) until everything is green.
+7. Run `npm run check` and `npm run build` once, then deploy everything with `railway up`, and poll `/api/health` until the new version is live.
+8. **Full browser test, desktop (1440×900):** the whole completion test (owner and recipient contexts), then every module on load, save, edit, reload and second-context retrieval, the binder and the PDF. At the same time, O1 produces the full timing table and O2 screenshots every page. Record the results in the completion-test table and the card status table.
+9. Each proven defect becomes a card. Run it through the same loop (worktree → code → diff review → merge and clean up → deploy → browser test) until everything is green.
+
+### Oversight agents (owner decision 8)
+
+Both are read-only and report-only. They never gate a merge, deploy or commit. A finding becomes a card only when it is measured or seen, not guessed. Ponytail: one report per wave, listing only what is new or changed. No re-reporting of known items.
+
+**O1 — Speed of DB and API calls** (`performance-monitoring` agent)
+- **Each wave:** read the wave's merged diff. Flag any new query in a loop (N+1), any query that doesn't filter on an indexed column (`user_id` and the primary key), any list endpoint that returns everything without a limit, any page that fires requests one after another when they could run in parallel, and any sync that re-fetches on every keystroke.
+- **Measure:** on a local server with a synthetic estate of about 200 records per type, call each endpoint the wave touched 20 times. Report p50 and p95, and the number of SQL queries per request (SQLAlchemy echo).
+- **Budgets (local, synthetic data):** reads ≤ 150 ms p95, writes ≤ 300 ms p95, queries per request constant regardless of record count, the module page shows its data ≤ 1 s after navigation. These are targets to report against, not gates.
+- **Release pass:** the same table for every endpoint the frontend calls, plus the 5 slowest on production (read-only GETs with the dev login).
+- **Report:** endpoint | p50 | p95 | queries | over budget? | cause (file:line) | smallest fix.
+
+**O2 — The UI** (`ui-debugger` agent)
+- **Each wave:** for each page the wave touched, take a desktop screenshot at 1440×900 before (main as it was before the wave) and after (merged). Compare at the same size. Report what changed in pixels: layout shifts, overlap, clipping, cut-off text, broken or missing controls, spacing or typography that doesn't match the neighbouring modules, console errors, and labels that read badly against `docs/TONE_GUIDE.md`.
+- **Also:** the legacy and finance entry points stay easy to find, no feature has disappeared from navigation, and empty, loading and failed-save states are visible and clear.
+- **Desktop only.** Ignore phone and tablet widths entirely in this build.
+- **Release pass:** a screenshot of every page in the route inventory at 1440×900, and a pass/fail note for each.
+- **Report:** page | before/after screenshot paths | what changed | regression? | smallest fix.
 
 ### Agent brief template
 
@@ -60,6 +81,7 @@ Smallest change: <what>.
 Acceptance (prove all in one scenario): <conditions>.
 Ponytail: smallest change, one proof scenario, stop. No gates/hooks/CI. No feature removal.
 Synthetic data only. If it's bigger than this card, stop and report.
+Desktop UI only (1280px+); do not add or change phone/tablet layouts. Keep DB/API calls fast: no queries in loops, filter on indexed columns, no unbounded lists.
 Report: files changed, proof output, done or stopped (why).
 ```
 
@@ -111,7 +133,7 @@ E1 navigation, legacy and finance first (CU-018) · E2 forms (CU-019) · E3 simu
 labels (CU-020) · E4 early-preview labels on Pulse, QR, scenarios, analytics and builder
 (nav flag) · E5 park unused stores **outside `src/`** (`frontend/_archive/`) after
 confirming they have 0 importers · E6 remaining type errors in the touched files · E7
-phone and keyboard pass (CU-025) · E8 branch triage (delete merged branches under the
+desktop keyboard and screen-reader basics: focus, dialogs, named controls (CU-025, desktop part only; phone deferred) · E8 branch triage (delete merged branches under the
 standing git rule; list the rest).
 
 ## Wave F — Security and admin: OUT OF SCOPE for this upgrade (owner decision 2)
@@ -131,5 +153,7 @@ Listed so nothing is lost: F1 rotate the OpenRouter key (an owner step, recommen
 | C1–C6 | ☐ | |
 | D1–D4 | ☐ | |
 | E1–E8 | ☐ | |
+| O1 speed reports (per wave + release) | ☐ | |
+| O2 UI reports (per wave + release) | ☐ | |
 | Release: deploy + full browser test | ☐ | |
 | F1–F5 | out of scope | |
