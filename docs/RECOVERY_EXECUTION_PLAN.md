@@ -471,7 +471,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X62 | ▶ | | |
 | X63 | ☑ | ee52d97 | 1440×900: notice reads "Keep your photos and recordings safe" / "Keep them with my account"; nothing moved → "Try again"; partial → "1 now kept with your account. 1 more is safe in this browser…" / "Try the rest again"; finish → success, IndexedDB empty, mapping has both ids; pets uploader 0 errors (dropped the unused `hideBorder`); 0 page errors |
 | X57 | ☑ | 648b88c | Production: before, every audit row was a Railway proxy (100.64.0.2/4/6). After deploy (a1333af): health 200, HTTP → 301 HTTPS, a forged `X-Forwarded-For: 6.6.6.6` is ignored, rows now record 152.233.23.194 — not this machine's address (23.118.243.177 / IPv6), so likely a Railway edge hop → X64 |
-| X64 | ▶ | | |
+| X64 | ☑ | 1c09422 | Limiter and audit use `X-Real-IP` on Railway (documented as the client IP; overwritten at the edge), else the socket address. Live after deploy e0aa978: health 200; probe rows record 23.118.243.177 (this machine), and a probe with forged `X-Forwarded-For: 6.6.6.6` and `X-Real-IP: 7.7.7.7` also records 23.118.243.177 |
 | X58 | ☐ (after X49, X54: same pages) | | |
 | X54 | ☐ (after X49: same property page) | | |
 | X26 | ☑ | 2b6286b | Disabled → "Pulse Scheduler not started"; enabled at 1 min with one synthetic expired timer → one tier-1 escalation (local outbox file, no network send), next tick nothing; 1 escalation-log row, timer inactive |
