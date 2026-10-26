@@ -1,3 +1,5 @@
+import { parseApiError } from './errorHandler';
+
 export interface SearchResult {
     title: string;
     url: string;
@@ -14,7 +16,7 @@ export const supportService = {
     async discoverLocalSupport(location: string, category: string = "grief counseling"): Promise<SearchResponse> {
         const response = await fetch(`/api/support/discovery?location=${encodeURIComponent(location)}&category=${encodeURIComponent(category)}`);
         if (!response.ok) {
-            throw new Error('Discovery service failed');
+            throw new Error((await parseApiError(response)).message);
         }
         return response.json();
     }
