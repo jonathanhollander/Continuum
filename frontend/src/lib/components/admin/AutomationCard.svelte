@@ -3,7 +3,7 @@
     import { Bell, SquareCheck, TriangleAlert, Activity } from "lucide-svelte";
 
     export let rule: AutomationRule;
-    export let onToggle: (id: string) => void;
+    export let onToggle: (id: string | number) => void;
 
     function getIcon(type: string) {
         switch (type) {

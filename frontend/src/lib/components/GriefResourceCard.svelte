@@ -25,7 +25,7 @@
         icon: Icon,
         color,
         delay = 0,
-    } = $props<Props>();
+    }: Props = $props();
 
     function getTypeLabel(t: string): string {
         switch (t) {

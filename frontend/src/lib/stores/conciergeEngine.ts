@@ -227,7 +227,7 @@ function createConciergeEngine() {
                 const newState = {
                     ...s,
                     isPoppedOut: true,
-                    popOutMode: hasPiP ? 'pip' : 'floating',
+                    popOutMode: hasPiP ? ('pip' as const) : ('floating' as const),
                     isOpen: true
                 };
                 broadcastState(newState);
@@ -265,7 +265,7 @@ function createConciergeEngine() {
         setContext: (route: string) => {
             const allItems = navGroups.flatMap(g => g.items);
             const item = allItems.find(i => i.href === route);
-            const contextName = item ? item.label : (route === '/' ? 'Marketing' : (route.startsWith('/modules') ? route.split('/').pop()?.replace('-', ' ') : 'Continuum'));
+            const contextName = item ? item.label : (route === '/' ? 'Marketing' : (route.startsWith('/modules') ? (route.split('/').pop() ?? '').replace('-', ' ') : 'Continuum'));
 
             const state = get({ subscribe });
             const oldContext = state.currentContextName;

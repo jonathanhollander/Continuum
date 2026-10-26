@@ -34,7 +34,7 @@
     } = $props<{
         isOpen?: boolean;
         isPoppedOut?: boolean;
-        onClose: () => void;
+        onClose?: () => void;
     }>();
 
     // State for Floating Mode (Dragging & Resizing)

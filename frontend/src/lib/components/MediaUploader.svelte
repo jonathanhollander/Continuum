@@ -104,7 +104,7 @@
             progress = null;
         } catch (e: any) {
             error = e.message || 'Upload failed';
-            dispatch('error', { message: error });
+            dispatch('error', { message: error ?? 'Upload failed' });
         } finally {
             uploading = false;
         }

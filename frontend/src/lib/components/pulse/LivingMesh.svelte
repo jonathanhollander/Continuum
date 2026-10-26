@@ -2,9 +2,9 @@
     import { onMount } from "svelte";
 
     // Props using Svelte 5 $props() rune is simpler if we define it as:
-    let { status = "active" } = $props<{
+    let { status = "active" }: {
         status?: "active" | "grace" | "alert" | "disabled";
-    }>();
+    } = $props();
 
     let canvas: HTMLCanvasElement;
     let ctx: CanvasRenderingContext2D | null;

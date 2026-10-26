@@ -9,7 +9,7 @@
     }>();
 
     let activeText = $derived.by(() => {
-        const mode = toneStore.mode;
+        const mode = toneStore.data.mode;
         switch (mode) {
             case "grief":
                 return grief || planning;

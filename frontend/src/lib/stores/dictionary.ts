@@ -172,6 +172,7 @@ export const dictionary = {
             digital_pw: "Do you use a Password Manager?"
         },
         marketing: {
+            wizBtnBack: "Back",
             heroTitle: "The most important box",
             heroSubtitle: "you will ever pack.",
             heroDesc: "Your parents had a shoebox under the bed. You have a digital universe. Continuum creates a secure, intelligent bridge between your life and the people who need to understand it.",
@@ -367,6 +368,7 @@ export const dictionary = {
             digital_pw: "¿Usa un Gestor de Contraseñas?"
         },
         marketing: {
+            wizBtnBack: "Atrás",
             heroTitle: "La caja más importante",
             heroSubtitle: "que jamás empacarás.",
             heroDesc: "Tus padres tenían una caja de zapatos debajo de la cama. Tú tienes un universo digital. Continuum crea un puente seguro e inteligente entre tu vida y las personas que necesitan entenderla.",
@@ -562,6 +564,7 @@ export const dictionary = {
             digital_pw: "Utilisez-vous un gestionnaire de mots de passe ?"
         },
         marketing: {
+            wizBtnBack: "Retour",
             heroTitle: "La boîte la plus importante",
             heroSubtitle: "que vous n'emballerez jamais.",
             heroDesc: "Vos parents avaient une boîte à chaussures sous le lit. Vous avez un univers numérique. Continuum crée un pont sécurisé et intelligent entre votre vie et les personnes qui doivent la comprendre.",
@@ -757,6 +760,7 @@ export const dictionary = {
             digital_pw: "Verwenden Sie einen Passwort-Manager?"
         },
         marketing: {
+            wizBtnBack: "Zurück",
             heroTitle: "Der wichtigste Karton",
             heroSubtitle: "den Sie jemals packen werden.",
             heroDesc: "Ihre Eltern hatten einen Schuhkarton unter dem Bett. Sie haben ein digitales Universum. Continuum schafft eine sichere, intelligente Brücke zwischen Ihrem Leben und den Menschen, die es verstehen müssen.",
@@ -927,6 +931,7 @@ export const dictionary = {
         wizConfiguring: "Создание вашего исполнительного модуля...",
         wizConfiguringDesc: "Настройка специфических модулей на основе вашего профиля.",
         marketing: {
+            wizBtnBack: "Назад",
             heroTitle: "Самая важная коробка",
             heroSubtitle: "которую вы когда-либо упакуете.",
             heroDesc: "У ваших родителей была коробка из-под обуви под кроватью. У вас — цифровая вселенная. Continuum создает надежный интеллектуальный мост между вашей жизнью и людьми, которым важно ее понять.",
@@ -1097,6 +1102,7 @@ export const dictionary = {
         wizConfiguring: "בונה את הנהלת העיזבון שלכם...",
         wizConfiguringDesc: "מגדיר מודולים ספציפיים על סמך הפרופיל שלכם.",
         marketing: {
+            wizBtnBack: "חזרה",
             heroTitle: "הקופסה החשובה ביותר",
             heroSubtitle: "שתארזו אי פעם.",
             heroDesc: "להורים שלכם הייתה קופסת נעליים מתחת למיטה. לכם יש יקום דיגילי. Continuum יוצר גשר מאובטח וחכם בין החיים שלכם לבין האנשים שצריכים להבין אותם.",
