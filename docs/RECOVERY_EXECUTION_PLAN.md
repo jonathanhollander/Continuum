@@ -333,7 +333,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | B5 | ☑ | e7e2ce5 | 1440×900, fresh DB: A adds a property and a financial account through the forms → shown after add, direct visit and reload; logout → B (client-side, no reload) sees none of A's; a fresh context as A fetches both; 0 page errors. One owner per key (`financial_assets`, `advanced_assets`, activity log); stores reload per account; late stores fetch on register; property page syncs; heirloom update works; profile store sends only its own keys. svelte-check 266. Smoke 13 PASS / 4 FAIL (C1, C3, C5, C8 rows) |
 | B5.1 | ☐ (after B4.2: visualMemoryStore) | | |
 | B4.2 | ▶ | | |
-| X30 | ▶ | | |
+| X30 | ☑ | 10d72b3 | 1440×900: magic link from outbox → /dashboard → /onboarding signed in, no reload; `/api/**` blocked + reload → stays, tokens kept; bad access+refresh tokens → /login. Verify uses `storeTokens` + `auth.init`; `offline` flag keeps the session while the server is unreachable. Findings (minor, left): verify does not guard a missing `access_token`; `refreshSession` treats 400/422 as definite logout |
 | C6 | ☐ | | |
 | C2 | ☐ | | |
 | C1 | ☐ | | |
