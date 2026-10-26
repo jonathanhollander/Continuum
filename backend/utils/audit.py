@@ -68,9 +68,10 @@ def log_auth_success(
     request: Request,
     user_id: int,
     user_email: str,
-    auth_method: str
+    auth_method: str,
+    commit: bool = True
 ) -> None:
-    """Log successful authentication."""
+    """Log successful authentication. commit=False: the caller's next commit writes it."""
     log_audit(
         session=session,
         request=request,
@@ -78,7 +79,8 @@ def log_auth_success(
         user_id=user_id,
         user_email=user_email,
         resource_type="authentication",
-        success=True
+        success=True,
+        commit=commit
     )
 
 
