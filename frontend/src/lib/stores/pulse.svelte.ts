@@ -1,5 +1,5 @@
 import { registerSingletonSync } from "$lib/services/sync.svelte";
-import { apiGet, apiPost } from '$lib/api/client';
+import { apiPost } from '$lib/api/client';
 
 // SyncManager stores keys camelCased (convertKeys in sync.svelte.ts): /api/pulse/status's
 // next_nudge arrives here as nextNudge. Times are UTC ISO with "Z".
@@ -31,11 +31,6 @@ export const pulseStatus = {
     get current() { return statusSync.data; },
     get loading() { return statusSync.status === 'syncing'; },
     sync: () => statusSync.sync()
-};
-
-export const pulseSettings = {
-    get data() { return settingsSync.data; },
-    sync: () => settingsSync.sync()
 };
 
 export const pulseStore = {

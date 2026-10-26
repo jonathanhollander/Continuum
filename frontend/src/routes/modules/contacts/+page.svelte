@@ -30,7 +30,6 @@
     const registryData = (registryRaw as any).default || registryRaw;
     const registry = Array.isArray(registryData) ? registryData : [];
     const module = registry.find((m) => m.id === "contacts");
-    import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
     import { conciergeEngine } from "$lib/stores/conciergeEngine";
