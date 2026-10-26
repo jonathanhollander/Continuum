@@ -18,7 +18,7 @@ from backend.pulse_scheduler import start_scheduler, stop_scheduler
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import select
 from datetime import timedelta
-from backend.routers import pulse, contacts, estate_data, insurance, medical, pets, memories, auth as auth_router, media, email, heirlooms, support, ai_proxy
+from backend.routers import pulse, contacts, estate_data, insurance, medical, pets, memories, auth as auth_router, media, email, heirlooms, support, ai_proxy, export
 
 from backend.errors import ContinuumException, handle_exception
 from slowapi import _rate_limit_exceeded_handler
@@ -178,6 +178,7 @@ app.include_router(media.router)
 app.include_router(heirlooms.router)
 app.include_router(support.router)
 app.include_router(ai_proxy.router)
+app.include_router(export.router)
 
 def seed_dev_user():
     """Seed a default dev user for development/testing."""
