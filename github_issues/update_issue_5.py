@@ -90,9 +90,9 @@ python backend/test_email.py test@example.com
 ### Documentation - ✅ Complete
 
 Three comprehensive documentation files:
-- ✅ `EMAIL_INTEGRATION_GUIDE.md` - Setup instructions for Postmark, SMTP, and development
-- ✅ `EMAIL_ARCHITECTURE.md` - System architecture and design
-- ✅ `EMAIL_INTEGRATION_SUMMARY.md` - Implementation summary
+- ✅ `docs/EMAIL_INTEGRATION_GUIDE.md` - Setup instructions for Postmark, SMTP, and development
+- ✅ `docs/EMAIL_ARCHITECTURE.md` - System architecture and design
+- ✅ `docs/archive/EMAIL_INTEGRATION_SUMMARY.md` - Implementation summary
 
 ### Features Implemented - ✅ Complete
 

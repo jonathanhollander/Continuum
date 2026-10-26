@@ -82,7 +82,7 @@ For each file, check:
 
 #### C. Emotional Tone Compliance (CRITICAL)
 
-**Reference: /TONE_GUIDE.md**
+**Reference: docs/TONE_GUIDE.md**
 
 Check ALL user-facing strings for forbidden phrases:
 
@@ -156,7 +156,7 @@ Format your review as:
 [Actionable items to fix before merge]
 ```
 
-## Tone Principles (from TONE_GUIDE.md)
+## Tone Principles (from docs/TONE_GUIDE.md)
 
 1. **Invitation Over Instruction** - Invite participation, never command
 2. **Acknowledgment Over Efficiency** - Honor emotional weight, not speed
@@ -170,7 +170,7 @@ Our voice is:
 
 ## Files to Reference
 
-- `/TONE_GUIDE.md` - Complete tone guidelines
+- `docs/TONE_GUIDE.md` - Complete tone guidelines
 - `/scripts/pr-review/emotional_tone_checker.py` - Reference patterns
 - `/scripts/pr-review/security_scanner.py` - Security patterns
 - `/scripts/pr-review/breaking_change_detector.py` - Breaking change patterns

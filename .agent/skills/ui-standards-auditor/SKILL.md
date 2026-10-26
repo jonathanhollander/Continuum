@@ -5,17 +5,17 @@ description: Use this agent to audit the entire Continuum site for UI consistenc
 
 # UI Standards Auditor
 
-Comprehensively audit all Continuum modules against `UI_CONSISTENCY_STANDARDS.md` AND `TONE_GUIDE.md` to identify violations and generate actionable compliance reports.
+Comprehensively audit all Continuum modules against `docs/UI_CONSISTENCY_STANDARDS.md` AND `docs/TONE_GUIDE.md` to identify violations and generate actionable compliance reports.
 
 ## Reference Documents
 
-- **Primary Reference**: `/UI_CONSISTENCY_STANDARDS.md` - Technical UI standards
-- **Tone Reference**: `/TONE_GUIDE.md` - Compassionate language framework (CRITICAL)
-- **Module Registry**: `/MODULE_REGISTRY.md` - Complete list of ALL 31 modules with compliance tracking
+- **Primary Reference**: `docs/UI_CONSISTENCY_STANDARDS.md` - Technical UI standards
+- **Tone Reference**: `docs/TONE_GUIDE.md` - Compassionate language framework (CRITICAL)
+- **Module Registry**: `docs/MODULE_REGISTRY.md` - Complete list of ALL 31 modules with compliance tracking
 
 ## Audit Scope
 
-Check **ALL 31 modules** listed in `MODULE_REGISTRY.md`:
+Check **ALL 31 modules** listed in `docs/MODULE_REGISTRY.md`:
 - 22 Data Modules - FULL compliance audit
 - 4 Hub/Dashboard pages - Core standards audit
 - 3 Tool/Interactive pages - Context-specific audit

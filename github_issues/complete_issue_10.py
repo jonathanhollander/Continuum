@@ -57,11 +57,11 @@ Implemented comprehensive security hardening for Continuum SaaS, including rate 
 - **Files**: `backend/config.py`, `backend/main.py`
 
 ### 7. Security Documentation
-- ✅ Created comprehensive `SECURITY_AUDIT.md`
+- ✅ Created comprehensive `docs/archive/SECURITY_AUDIT.md`
 - ✅ Documented all vulnerabilities and fixes
 - ✅ Identified remaining validation issues for future work
 - ✅ Added security monitoring recommendations
-- **Files**: `SECURITY_AUDIT.md`
+- **Files**: `docs/archive/SECURITY_AUDIT.md`
 
 ## Files Modified/Created
 
@@ -69,7 +69,7 @@ Implemented comprehensive security hardening for Continuum SaaS, including rate 
 1. `backend/limiter.py` - Rate limiter configuration
 2. `backend/models/audit_log.py` - Audit logging model
 3. `backend/utils/audit.py` - Audit logging utilities
-4. `SECURITY_AUDIT.md` - Comprehensive security documentation
+4. `docs/archive/SECURITY_AUDIT.md` - Comprehensive security documentation
 
 ### Modified
 1. `backend/requirements.txt` - Added slowapi, secure packages
@@ -77,7 +77,7 @@ Implemented comprehensive security hardening for Continuum SaaS, including rate 
 3. `backend/routers/auth.py` - Audit logging integration
 4. `backend/config.py` - Production CORS validation
 
-## Remaining Work (Documented in SECURITY_AUDIT.md)
+## Remaining Work (Documented in docs/archive/SECURITY_AUDIT.md)
 
 ### P1-High Priority
 1. **Input Validation**: Add Pydantic models to replace raw `dict` types in:
@@ -112,12 +112,12 @@ Before deploying:
 - [ ] Set `ENVIRONMENT=production`
 - [ ] Configure production `CORS_ORIGINS`
 - [ ] Set up Redis for WebAuthn challenges (optional improvement)
-- [ ] Review `SECURITY_AUDIT.md` for additional hardening
+- [ ] Review `docs/archive/SECURITY_AUDIT.md` for additional hardening
 
 ## Documentation
 
 All security implementation details, remaining vulnerabilities, and recommendations are documented in:
-- `SECURITY_AUDIT.md` - Comprehensive security audit report
+- `docs/archive/SECURITY_AUDIT.md` - Comprehensive security audit report
 - `CLAUDE.md` - Development guidelines (already includes security notes)
 
 ---

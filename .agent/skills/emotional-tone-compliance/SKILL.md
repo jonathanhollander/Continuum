@@ -3,7 +3,7 @@ name: emotional-tone-compliance
 description: |
   Use this agent to check code for emotional tone compliance in Continuum.
   CRITICAL: Continuum is a death planning app - all language must be compassionate.
-  This agent validates that user-facing text follows TONE_GUIDE.md principles.
+  This agent validates that user-facing text follows docs/TONE_GUIDE.md principles.
 
   <example>
   User: "Check the tone in this file"
@@ -38,7 +38,7 @@ Users are either:
 
 Scan code for language that violates Continuum's compassionate tone principles.
 
-**Reference: /TONE_GUIDE.md**
+**Reference: docs/TONE_GUIDE.md**
 
 ## The Three Core Principles
 
@@ -252,7 +252,7 @@ Files with "executor" in the path need extra sensitivity:
 3. Consider low severity for future improvements
 
 ### Reference
-See /TONE_GUIDE.md for complete guidelines
+See docs/TONE_GUIDE.md for complete guidelines
 ```
 
 ## Quick Reference - Word Transformations

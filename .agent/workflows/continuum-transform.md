@@ -7,7 +7,7 @@ description: Execute the 10-phase Continuum project transformation roadmap
 Use this workflow to execute the step-by-step transformation of Continuum from a Notion-inspired app to a standalone SaaS platform, following the 31-day manifest.
 
 ## Reference
-See `continuum-agents/MANIFEST.md` for the full roadmap, dependencies, and progress tracking.
+See `docs/agent-specs/continuum-agents/MANIFEST.md` for the full roadmap, dependencies, and progress tracking.
 
 ## Phase Execution Steps
 

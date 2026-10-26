@@ -40,7 +40,7 @@ Alembic has been successfully configured for database migration management.
 - ✅ Added `alembic>=1.13.0` to requirements.txt
 - ✅ Alembic 1.18.1 installed and working
 
-**Documentation** (`/backend/MIGRATIONS.md`):
+**Documentation** (`docs/MIGRATIONS.md`):
 - ✅ Common migration commands reference
 - ✅ Development workflow guide
 - ✅ Production deployment instructions
@@ -91,7 +91,7 @@ cd backend && alembic history
 - `/backend/alembic/env.py` - Migration environment configuration
 - `/backend/alembic/versions/539c7f1c89af_initial_schema_with_all_tables.py` - Initial schema migration
 - `/backend/alembic.ini` - Alembic configuration file
-- `/backend/MIGRATIONS.md` - Comprehensive migration documentation
+- `docs/MIGRATIONS.md` - Comprehensive migration documentation
 
 ### Verified Working
 

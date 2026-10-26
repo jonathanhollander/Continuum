@@ -156,13 +156,15 @@ Production (Railway): Uses PostgreSQL with SSL, different RP_ID/ORIGIN for domai
 
 ## Documentation
 
+All project docs live in `docs/` (index: `docs/README.md`). Current plan: `docs/PROJECT_RECOVERY_PLAN.md`.
+
 Detailed guides exist for specific topics:
-- `MIGRATIONS.md` - Alembic database migrations
-- `ERROR_HANDLING_GUIDE.md` - Error system details
-- `CONFIGURATION.md` - Environment configuration
-- `MEDIA_UPLOAD_GUIDE.md` - File upload system
-- `EMAIL_ARCHITECTURE.md` - Email service
+- `docs/MIGRATIONS.md` - Alembic database migrations
+- `docs/ERROR_HANDLING_GUIDE.md` - Error system details
+- `docs/CONFIGURATION.md` - Environment configuration
+- `docs/MEDIA_UPLOAD_GUIDE.md` - File upload system
+- `docs/EMAIL_ARCHITECTURE.md` - Email service
 
 ---
 
-_Last Updated: January 24, 2026_
+_Last Updated: 2026-10-25 23:58 EST_

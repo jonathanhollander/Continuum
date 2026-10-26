@@ -37,7 +37,7 @@ issues = [
 - [ ] After login, redirect back to original destination
 - [ ] No hardcoded USER_ID anywhere
 
-**Details:** See github_issues/PHASE_1_P0_CRITICAL.md""",
+**Details:** See docs/archive/github_issues/PHASE_1_P0_CRITICAL.md""",
         "labels": ["P0-critical", "authentication"]
     },
     {
@@ -68,7 +68,7 @@ issues = [
 - [ ] Data persists to database
 - [ ] Data accessible across devices
 
-**Details:** See github_issues/PHASE_1_P0_CRITICAL.md""",
+**Details:** See docs/archive/github_issues/PHASE_1_P0_CRITICAL.md""",
         "labels": ["P0-critical", "data-persistence", "backend"]
     },
     {
@@ -94,7 +94,7 @@ issues = [
 - [ ] Media accessible via URL
 - [ ] IndexedDB migration complete
 
-**Details:** See github_issues/PHASE_1_P0_CRITICAL.md""",
+**Details:** See docs/archive/github_issues/PHASE_1_P0_CRITICAL.md""",
         "labels": ["P0-critical", "media", "backend", "frontend"]
     },
     {
@@ -121,7 +121,7 @@ issues = [
 - [ ] Delivery tracking works
 - [ ] Bounce handling configured
 
-**Details:** See github_issues/PHASE_1_P0_CRITICAL.md""",
+**Details:** See docs/archive/github_issues/PHASE_1_P0_CRITICAL.md""",
         "labels": ["P0-critical", "email"]
     },
     {
@@ -148,7 +148,7 @@ issues = [
 - [ ] No efficiency/task-focused language
 - [ ] Tested with real scenarios
 
-**Details:** See github_issues/PHASE_1_P0_CRITICAL.md""",
+**Details:** See docs/archive/github_issues/PHASE_1_P0_CRITICAL.md""",
         "labels": ["P0-critical", "emotional-tone", "frontend"]
     }
 ]

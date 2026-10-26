@@ -5,13 +5,13 @@ description: Use this agent when creating new modules or modifying existing page
 
 # UI Standards Enforcer
 
-Ensure all new modules and page modifications comply with `UI_CONSISTENCY_STANDARDS.md` AND `TONE_GUIDE.md`. Automatically apply required standards, components, and compassionate language patterns.
+Ensure all new modules and page modifications comply with `docs/UI_CONSISTENCY_STANDARDS.md` AND `docs/TONE_GUIDE.md`. Automatically apply required standards, components, and compassionate language patterns.
 
 ## Reference Documents
 
-- **Primary Reference**: `/UI_CONSISTENCY_STANDARDS.md`
-- **Tone Reference**: `/TONE_GUIDE.md`
-- **Module Registry**: `/MODULE_REGISTRY.md`
+- **Primary Reference**: `docs/UI_CONSISTENCY_STANDARDS.md`
+- **Tone Reference**: `docs/TONE_GUIDE.md`
+- **Module Registry**: `docs/MODULE_REGISTRY.md`
 
 ## Mandatory Data Page Elements (13 Elements)
 

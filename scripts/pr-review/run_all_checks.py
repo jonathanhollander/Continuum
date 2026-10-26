@@ -391,7 +391,7 @@ class PRReviewer:
         # Footer
         comment.append("---\n")
         comment.append("*Automated review by Continuum PR Reviewer*\n")
-        comment.append("*Reference: [TONE_GUIDE.md](/TONE_GUIDE.md) for language guidelines*")
+        comment.append("*Reference: [docs/TONE_GUIDE.md](docs/TONE_GUIDE.md) for language guidelines*")
 
         return "\n".join(comment)
 

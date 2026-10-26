@@ -20,7 +20,7 @@ All implementation details, specifications, and context for this issue are in th
 
 - **Phase details:** `github_issues/PHASE_X_*.md` (contains full specifications)
 - **Agent specs:** `.claude/agents/<agent-name>.md` (implementation guidance)
-- **Comprehensive tasks:** `COMPREHENSIVE_TASK_LIST.md` (complete context)
+- **Comprehensive tasks:** `docs/archive/COMPREHENSIVE_TASK_LIST.md` (complete context)
 - **Codebase:** Review existing code in `/backend` and `/frontend` folders
 
 **Do NOT implement without reading the local documentation first.**

@@ -5,13 +5,13 @@ Emotional Tone Checker for Continuum
 CRITICAL: This is unique to Continuum and enforces compassionate language
 appropriate for a death planning application.
 
-Verifies that all user-facing text maintains the tone defined in TONE_GUIDE.md:
+Verifies that all user-facing text maintains the tone defined in docs/TONE_GUIDE.md:
 - Patient, never urgent
 - Inviting, never demanding
 - Supportive, never clinical
 - Present, never dismissive
 
-References: /TONE_GUIDE.md for full guidelines
+References: docs/TONE_GUIDE.md for full guidelines
 """
 
 import re
@@ -40,7 +40,7 @@ class EmotionalToneChecker:
     """
     Check for cold, clinical, or inappropriate language in death planning app.
 
-    Based on TONE_GUIDE.md principles:
+    Based on docs/TONE_GUIDE.md principles:
     1. Invitation Over Instruction
     2. Acknowledgment Over Efficiency
     3. Presence Over Positivity
@@ -540,7 +540,7 @@ class EmotionalToneChecker:
                 report.append("")
 
         report.append("=" * 70)
-        report.append("Reference: /TONE_GUIDE.md for full compassionate language guidelines")
+        report.append("Reference: docs/TONE_GUIDE.md for full compassionate language guidelines")
         report.append("=" * 70)
 
         return "\n".join(report)

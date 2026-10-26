@@ -117,7 +117,7 @@ echo "📚 DOCUMENTATION (Should be in main after merge)"
 echo "══════════════════════════════════════════════════════════════"
 echo ""
 
-DOCS=("AUTHENTICATION_IMPLEMENTATION.md" "EMAIL_INTEGRATION_GUIDE.md" "DATA_PERSISTENCE_STATUS.md" "COMPREHENSIVE_TASK_LIST.md" "AGENT_SUGGESTIONS.md" "CODEBASE_REVIEW_REPORT.md" "QUICK_START_FIX_GUIDE.md")
+DOCS=("docs/AUTHENTICATION_IMPLEMENTATION.md" "docs/EMAIL_INTEGRATION_GUIDE.md" "docs/archive/DATA_PERSISTENCE_STATUS.md" "docs/archive/COMPREHENSIVE_TASK_LIST.md" "docs/archive/AGENT_SUGGESTIONS.md" "docs/archive/CODEBASE_REVIEW_REPORT.md" "docs/archive/QUICK_START_FIX_GUIDE.md")
 
 for doc in "${DOCS[@]}"; do
     if [ -f "$doc" ]; then
@@ -162,8 +162,8 @@ echo "📋 REMAINING WORK SUMMARY"
 echo "══════════════════════════════════════════════════════════════"
 echo ""
 
-if [ -f "COMPREHENSIVE_TASK_LIST.md" ]; then
-    echo "See COMPREHENSIVE_TASK_LIST.md for complete breakdown:"
+if [ -f "docs/archive/COMPREHENSIVE_TASK_LIST.md" ]; then
+    echo "See docs/archive/COMPREHENSIVE_TASK_LIST.md for complete breakdown:"
     echo ""
     echo "  🔥 Phase 1 - Critical Infrastructure (P0): ~44 hours"
     echo "     • Authentication guards on protected routes"
@@ -194,7 +194,7 @@ if [ -f "COMPREHENSIVE_TASK_LIST.md" ]; then
     echo ""
     echo "  📊 TOTAL REMAINING: ~284 hours (6-7 weeks)"
 else
-    echo "  ⚠️  COMPREHENSIVE_TASK_LIST.md not found"
+    echo "  ⚠️  docs/archive/COMPREHENSIVE_TASK_LIST.md not found"
     echo "  This should be created after feature/phase-3-persistence merge"
 fi
 

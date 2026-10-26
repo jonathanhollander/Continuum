@@ -63,7 +63,7 @@ cd frontend && npm run dev
 
 ## Contributing
 
-See [CONTRIBUTING.md](docs/CONTRIBUTING.md)
+See [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)
 ```
 
 ## Success Criteria

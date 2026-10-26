@@ -303,7 +303,7 @@ class MigrationValidator:
                 report.append("")
 
         report.append("=" * 70)
-        report.append("Reference: /MIGRATIONS.md for migration guidelines")
+        report.append("Reference: docs/MIGRATIONS.md for migration guidelines")
         report.append("=" * 70)
         return "\n".join(report)
 

@@ -31,7 +31,7 @@ Use this workflow to perform automated validation on pull requests, covering emo
    ```
 
 4. **Verify Emotional Tone**
-   Ensure all user-facing text follows the principles in `TONE_GUIDE.md`:
+   Ensure all user-facing text follows the principles in `docs/TONE_GUIDE.md`:
    - Patient, never urgent
    - Inviting, never demanding
    - Supportive, never clinical

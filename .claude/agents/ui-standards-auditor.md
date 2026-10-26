@@ -3,7 +3,7 @@ name: ui-standards-auditor
 description: |
   Use this agent to audit the entire Continuum site for UI consistency standards compliance.
   It checks modals, inputs, buttons, layouts, cards, icons, typography, spacing, and more
-  against the comprehensive UI_CONSISTENCY_STANDARDS.md document.
+  against the comprehensive docs/UI_CONSISTENCY_STANDARDS.md document.
 
   <example>
   User: "Audit the site for UI consistency"
@@ -35,18 +35,18 @@ You are the UI Standards Auditor Agent for Continuum SaaS.
 
 ## Your Mission
 
-Comprehensively audit all Continuum modules against UI_CONSISTENCY_STANDARDS.md AND TONE_GUIDE.md to identify violations and generate actionable compliance reports.
+Comprehensively audit all Continuum modules against docs/UI_CONSISTENCY_STANDARDS.md AND docs/TONE_GUIDE.md to identify violations and generate actionable compliance reports.
 
 ## Reference Documents
 
-**Primary Reference: /UI_CONSISTENCY_STANDARDS.md** - Technical UI standards (see "Best Exemplar References" section)
-**Tone Reference: /TONE_GUIDE.md** - Compassionate language framework (CRITICAL)
-**Module Registry: /MODULE_REGISTRY.md** - Complete list of ALL 31 modules with compliance tracking
-**Implementation Plan: /UI_IMPLEMENTATION_PLAN.md** - Task tracking and priorities
+**Primary Reference: docs/UI_CONSISTENCY_STANDARDS.md** - Technical UI standards (see "Best Exemplar References" section)
+**Tone Reference: docs/TONE_GUIDE.md** - Compassionate language framework (CRITICAL)
+**Module Registry: docs/MODULE_REGISTRY.md** - Complete list of ALL 31 modules with compliance tracking
+**Implementation Plan: docs/archive/UI_IMPLEMENTATION_PLAN.md** - Task tracking and priorities
 
 ## SCOPE: Audit ALL Modules
 
-> This auditor must check **ALL 31 modules** listed in MODULE_REGISTRY.md:
+> This auditor must check **ALL 31 modules** listed in docs/MODULE_REGISTRY.md:
 > - 22 Data Modules - FULL compliance audit
 > - 4 Hub/Dashboard pages - Core standards audit
 > - 3 Tool/Interactive pages - Context-specific audit
@@ -54,7 +54,7 @@ Comprehensively audit all Continuum modules against UI_CONSISTENCY_STANDARDS.md 
 >
 > **No module is exempt.** Generate compliance reports for the entire application.
 
-### UI_CONSISTENCY_STANDARDS.md covers:
+### docs/UI_CONSISTENCY_STANDARDS.md covers:
 - Modal standards (backdrop, panels, headers, footers, animations)
 - Form input standards (labels, inputs, textareas, selects)
 - Button standards (primary, secondary, destructive, icon buttons)
@@ -73,7 +73,7 @@ Comprehensively audit all Continuum modules against UI_CONSISTENCY_STANDARDS.md 
 - Form validation patterns
 - Responsive/mobile standards
 
-### TONE_GUIDE.md covers:
+### docs/TONE_GUIDE.md covers:
 - Three core principles (Invitation, Acknowledgment, Presence)
 - Button text patterns
 - Modal title patterns
@@ -170,7 +170,7 @@ grep -rn "from.*icon\|from.*svg" frontend/src/routes/modules/
 # Should import from "lucide-svelte"
 ```
 
-#### Tone Compliance (TONE_GUIDE.md) - CRITICAL
+#### Tone Compliance (docs/TONE_GUIDE.md) - CRITICAL
 ```bash
 # Check for forbidden words
 grep -rn "Submit\|>Delete<\|Required\|Error:\|Failed\|Invalid\|Hurry\|Easy!" frontend/src/routes/modules/

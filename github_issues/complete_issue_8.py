@@ -81,7 +81,7 @@ Implemented comprehensive error handling across the entire stack with compassion
 - ✅ Auto-dismiss with manual override
 - ✅ Responsive mobile design
 
-**Documentation** (`/ERROR_HANDLING_GUIDE.md`):
+**Documentation** (`docs/ERROR_HANDLING_GUIDE.md`):
 - ✅ Complete usage guide for backend and frontend
 - ✅ Error codes reference
 - ✅ Best practices and examples
@@ -156,7 +156,7 @@ async function saveContact() {
 - `/frontend/src/lib/components/NotificationContainer.svelte` (NEW) - Container
 
 **Documentation**:
-- `/ERROR_HANDLING_GUIDE.md` (NEW) - Comprehensive 600+ line guide
+- `docs/ERROR_HANDLING_GUIDE.md` (NEW) - Comprehensive 600+ line guide
 
 ### Key Features
 

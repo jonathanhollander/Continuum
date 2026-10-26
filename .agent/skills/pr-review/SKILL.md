@@ -54,7 +54,7 @@ After running the checks:
 2. **Medium severity issues** - Should be fixed
 3. **Low severity issues** - Consider fixing
 
-For emotional tone violations, suggest compassionate alternatives following TONE_GUIDE.md principles:
+For emotional tone violations, suggest compassionate alternatives following docs/TONE_GUIDE.md principles:
 - Patient, never urgent
 - Inviting, never demanding
 - Supportive, never clinical
