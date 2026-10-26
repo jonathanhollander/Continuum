@@ -38,9 +38,14 @@
 
             status = "success";
 
-            // Redirect to dashboard after 2 seconds
+            // Same-site relative destination only; anything else goes to the dashboard
+            const dest = $page.url.searchParams.get("redirect") || "";
+            const target =
+                dest.startsWith("/") && !dest.startsWith("//") && !dest.includes("\\") && !dest.includes("://")
+                    ? dest
+                    : "/dashboard";
             setTimeout(() => {
-                goto("/dashboard");
+                goto(target);
             }, 2000);
         } catch (e: any) {
             console.error("Magic link verification failed:", e);
