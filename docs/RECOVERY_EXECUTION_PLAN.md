@@ -410,7 +410,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | Wave B — Shared contracts | ✅ | 2026-10-26 | B0–B5.1 ☑; O1 every touched endpoint in target; O2: 23 routes, navigation unchanged, console errors 16–43/page → 0, four endless spinners fixed, failed saves keep the draft; findings → C1, C10, X54, X58, U0, T0, V0 seeds |
 | Wave C — Scenario records | ✅ | | C1–C10, C7.1–C7.4 ☑; O2 done (28 routes, console/network errors 27 → 0, navigation unchanged, `/settings/data` crash gone; findings → X82–X85, D4, T0/G0/U0/V0 seeds); O1 done (no endpoint over target, query counts flat 20 → 200 records, no keystroke syncs; findings → X88, X89; unbounded list endpoints and the 14–17 GET `syncAll` fan-out per cold load noted for R0 — response times fine today) |
 | Wave D — Handover | ▶ | | D1–D4 ☑; O1/O2 for Wave D dispatched |
-| Wave E — Polish | ☐ | | |
+| Wave E — Polish | ▶ | | E1 dispatched |
 | O1 / O2 oversight (all waves) | ☐ | | |
 | R0 — Local rehearsal | ☐ | | |
 | Release — deploy + full browser test | ☐ | | |
@@ -499,7 +499,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X91 | ☑ | a788172 | Visual-memory photos and videos upload through the media API (`visual_memories`), the record keeps the download URL in `url`, the media row's `reference_id` set to the record; `MemoryGallery` shows stored files via authorised object URLs, renders videos as `<video>`, old `data:` records unchanged. Also fixed: every visual-memory save returned 500 (outgoing mapper turned `tags` into an array), favourite toggle and selection ring compared string to number ids. 1440×900: 2 media rows, sync bodies 107 B, photo and 3 s video show after reload, old `data:` record renders, snapshot lists both as attachments; 0 errors |
 | X98 | ☑ | a2a8854 | `removeMemory` deletes the record, then (only if it is gone) its media; failed record save keeps the upload while the message is open — Try Again links it, closing removes it; `addTagToMemories` (case-insensitive, no duplicates). Also fixed: bulk tag handler took an event and had an empty body; `updateMemory`/`toggleFavorite` string-vs-number ids; "cannot be undone" dropped. 1440×900: remove → media 404; forced 500 then close → 0 orphans, then Try Again → linked; bulk "Summer" no duplicate after reload; `x91` passes; 0 errors |
 | X92 | ☑ | 2817241 | Binder adds `body.binder-print` on mount and removes it on destroy; its print rules match only under that class. 1440×900 print emulation: binder 30 pages before and after; dashboard reached client-side from the binder now prints like a fresh load (`main` overflow auto, 2 pages; was visible, 1 page); 0 errors. The app-wide print block already hides `nav`/`aside` on every page |
-| E1 | ☐ | | |
+| E1 | ▶ | | |
 | E2 | ☐ | | |
 | E3 | ☐ | | |
 | E4 | ☐ | | |
