@@ -307,14 +307,14 @@
                     <History class="w-8 h-8 text-muted-foreground" />
                 </div>
                 <h3 class="font-bold text-lg text-foreground mb-2">
-                    No Activity Found
+                    Your activity appears here
                 </h3>
                 <p class="text-muted-foreground">
                     {searchQuery ||
                     selectedModule !== "all" ||
                     selectedAction !== "all"
                         ? "Try adjusting your filters"
-                        : "Start making changes to see your activity log"}
+                        : "Each change you save will appear here."}
                 </p>
             </div>
         {:else}

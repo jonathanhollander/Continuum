@@ -69,7 +69,7 @@
                 When organizing your estate, it's worth checking if you or deceased family members
                 have unclaimed assets. These forgotten funds can be significant and are rightfully
                 yours to claim. It's also a thoughtful step to include in your legacy planning,
-                ensuring nothing is left behind for your loved ones to discover later.
+                helping everything that is rightfully theirs reach your loved ones.
             </p>
         </div>
 
@@ -112,7 +112,7 @@
                 </li>
                 <li class="flex items-start gap-2">
                     <span class="text-amber-400 mt-1">4.</span>
-                    <span>Never pay a fee to search or claim - legitimate services are always free</span>
+                    <span>Searching and claiming are always free through legitimate services</span>
                 </li>
             </ul>
         </div>

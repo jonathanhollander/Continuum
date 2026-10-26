@@ -16,7 +16,7 @@
         { id: 1, label: "Typography Hierarchy (Serif Headers / Sans Body)" },
         { id: 2, label: "Color System Consistency (#4A7C74 Primary)" },
         { id: 3, label: "Interactive States (Hover/Focus)" },
-        { id: 4, label: "Mobile Responsiveness (No overflow)" },
+        { id: 4, label: "Mobile Responsiveness (Content fits the screen)" },
         { id: 5, label: "Loading States (Skeletons/Spinners)" },
         { id: 6, label: "Error Handling (Graceful degradation)" },
     ];
