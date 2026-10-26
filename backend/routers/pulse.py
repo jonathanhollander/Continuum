@@ -416,11 +416,20 @@ def start_safety_timer(minutes: int, purpose: str = "Walking home", user: User =
     timer = PulseSafetyTimer(user_id=user.id, expires_at=expires, purpose=purpose)
     session.add(timer)
     session.commit()
-    return timer
+    session.refresh(timer)  # after commit the row is expired and would serialize as {}
+    return _safety_timer_out(timer)
+
+def _safety_timer_out(timer: PulseSafetyTimer):
+    # Times go out as UTC with "Z" so the countdown reads them correctly in any time zone
+    data = timer.model_dump()
+    data["started_at"] = _utc_iso(timer.started_at)
+    data["expires_at"] = _utc_iso(timer.expires_at)
+    return data
 
 @router.get("/safety/status")
 def get_safety_status(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
-    return session.exec(select(PulseSafetyTimer).where(PulseSafetyTimer.user_id == user.id, PulseSafetyTimer.is_active == True)).first()
+    timer = session.exec(select(PulseSafetyTimer).where(PulseSafetyTimer.user_id == user.id, PulseSafetyTimer.is_active == True)).first()
+    return _safety_timer_out(timer) if timer else None
 
 @router.post("/safety/cancel")
 def cancel_safety_timer(user: User = Depends(get_current_user), session: Session = Depends(get_session)):

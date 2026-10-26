@@ -2,6 +2,7 @@
     import { pulse } from "$lib/stores/pulse.svelte";
     import { apiGet, apiPost } from "$lib/api/client";
     import { onMount } from "svelte";
+    import { slide } from "svelte/transition";
     import {
         Activity,
         Shield,
@@ -27,11 +28,16 @@
         purpose: "Walking home",
     });
 
-    onMount(async () => {
+    onMount(() => {
         pulse.init();
         fetchSafetyStatus();
         const interval = setInterval(fetchSafetyStatus, 10000);
-        return () => clearInterval(interval);
+        // Ticks the countdown each second between status refreshes
+        const tick = setInterval(() => (now = Date.now()), 1000);
+        return () => {
+            clearInterval(interval);
+            clearInterval(tick);
+        };
     });
 
     async function fetchSafetyStatus() {
@@ -84,8 +90,10 @@
         }
     }
 
+    let now = $state(Date.now());
+
     function getTimeRemaining(expiry: string) {
-        const diff = new Date(expiry).getTime() - new Date().getTime();
+        const diff = new Date(expiry).getTime() - now;
         if (diff <= 0) return "EXPIRED";
         const mins = Math.floor(diff / 60000);
         const secs = Math.floor((diff % 60000) / 1000);
