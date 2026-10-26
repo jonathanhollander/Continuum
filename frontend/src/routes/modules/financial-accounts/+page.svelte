@@ -1,7 +1,6 @@
 <script lang="ts">
     import AssetManager from "$lib/components/archetypes/AssetManager.svelte";
-    import { Sparkles, Loader2, Plus } from "lucide-svelte";
-    import { onMount } from "svelte";
+    import { Sparkles, Plus } from "lucide-svelte";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
     import LegalDisclaimer from "$lib/components/common/LegalDisclaimer.svelte";
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
@@ -13,15 +12,9 @@
 
     let showWizard = $state(false);
     let reloadKey = $state(0);
-    let isLoading = $state(true);
 
     // The financial_assets store owns this registry key (and its mapper).
     const assetSync: any = financialAssetsSync;
-
-    onMount(async () => {
-        await assetSync.init();
-        isLoading = false;
-    });
 
     const wizardSteps = [
         {
@@ -124,11 +117,6 @@
     }
 </script>
 
-{#if isLoading}
-    <div class="flex items-center justify-center py-12">
-        <Loader2 class="w-8 h-8 animate-spin text-primary" />
-    </div>
-{:else}
 <Modal bind:open={showWizard} title={$t("wizard.start")} maxWidth="max-w-2xl">
     <ConciergeFlow
         steps={wizardSteps}
@@ -164,4 +152,3 @@
         <AssetManager module={{ id: "assets-main" }} />
     {/key}
 </div>
-{/if}
