@@ -259,11 +259,11 @@ def update_vault_item(item_id: int, updated: PulseVault, user: User = Depends(ge
     return item
 
 @router.post("/nudge")
-def send_nudge(contact_id: int, session: Session = Depends(get_session)):
+def send_nudge(contact_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     # In a real app, this would trigger an email/SMS to the user
     # For now, we'll log it or perhaps create a system message
     contact = session.get(PulseContact, contact_id)
-    if not contact:
+    if not contact or contact.user_id != user.id:
         raise HTTPException(status_code=404, detail="Contact not found")
 
     logger.info(

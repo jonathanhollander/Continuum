@@ -3,6 +3,8 @@ Email status and management endpoints.
 Allows users to check email delivery status for debugging and support.
 Includes Postmark webhook for bounce/complaint handling.
 """
+import base64
+import hmac
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Request, Header
 from sqlmodel import Session, select
 from typing import List, Optional
@@ -268,10 +270,34 @@ class WebhookResponse(BaseModel):
     updated_count: int = 0
 
 
+_webhook_warned = False
+
+
+def _check_postmark_webhook_secret(request: Request, token: Optional[str]) -> None:
+    """Require POSTMARK_WEBHOOK_SECRET (basic-auth password or ?token=) when configured."""
+    global _webhook_warned
+    secret = settings.POSTMARK_WEBHOOK_SECRET
+    if not secret:
+        if not _webhook_warned:
+            logger.warning("POSTMARK_WEBHOOK_SECRET is not set; Postmark webhook is accepting unauthenticated requests")
+            _webhook_warned = True
+        return
+    supplied = token or ""
+    auth = request.headers.get("authorization", "")
+    if auth.lower().startswith("basic "):
+        try:
+            supplied = base64.b64decode(auth[6:]).decode("utf-8").partition(":")[2]
+        except Exception:
+            supplied = ""
+    if not hmac.compare_digest(supplied.encode(), secret.encode()):
+        raise HTTPException(status_code=401, detail="Unauthorized", headers={"WWW-Authenticate": "Basic"})
+
+
 @router.post("/webhook/postmark", response_model=WebhookResponse, include_in_schema=False)
 async def postmark_bounce_webhook(
     payload: PostmarkBouncePayload,
     request: Request,
+    token: Optional[str] = Query(None),
     session: Session = Depends(get_session)
 ):
     """
@@ -293,6 +319,8 @@ async def postmark_bounce_webhook(
     3. Set URL to: https://your-domain.com/api/emails/webhook/postmark
     4. Select event types: Bounce, SpamComplaint
     """
+    _check_postmark_webhook_secret(request, token)
+
     record_type = payload.RecordType
     message_id = payload.MessageID
     recipient_email = payload.Email
