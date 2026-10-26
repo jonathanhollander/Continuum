@@ -165,12 +165,15 @@ def get_portal_view(request: Request, token: str, session: Session = Depends(get
     user_checkin_stmt = select(PulseCheckin).where(PulseCheckin.user_id == user_id).order_by(PulseCheckin.timestamp.desc())
     last_checkin = session.exec(user_checkin_stmt).first()
     
-    # Check active escalation for sensitive data
-    # Tier-0 rows are safety-timer alerts, not welfare tiers; they must not mask the tier already reached
+    # Check active escalation for sensitive data: only this outage counts (rows after the last
+    # check-in, as pulse_logic.process_user_pulse does), so a check-in closes access again.
+    # Tier-0 rows are safety-timer alerts, not welfare tiers; they must not mask the tier already reached.
     from backend.pulse_logic import SAFETY_TIMER_LOG_TIER
     escalation_stmt = select(PulseEscalationLog).where(
-        PulseEscalationLog.user_id == user_id, PulseEscalationLog.tier_number != SAFETY_TIMER_LOG_TIER
-    ).order_by(PulseEscalationLog.id.desc())
+        PulseEscalationLog.user_id == user_id,
+        PulseEscalationLog.tier_number != SAFETY_TIMER_LOG_TIER,
+        PulseEscalationLog.triggered_at > (last_checkin.timestamp if last_checkin else datetime.min),
+    ).order_by(PulseEscalationLog.tier_number.desc())
     last_escalation = session.exec(escalation_stmt).first()
     
     tier = session.get(PulseEscalationTier, contact.tier_id) if contact.tier_id else None
@@ -198,20 +201,32 @@ def get_portal_vault(request: Request, token: str, session: Session = Depends(ge
     if contact.portal_token_expires and contact.portal_token_expires < datetime.utcnow():
         raise HTTPException(status_code=401, detail="Token expired")
 
-    # Same rule as the portal view: only once escalation has reached this guardian's tier
-    # Tier-0 rows are safety-timer alerts, not welfare tiers; they must not mask the tier already reached
+    # Same rule as the portal view: only once this outage's escalation (rows after the owner's
+    # last check-in) has reached this guardian's tier. Tier-0 safety-timer rows don't count.
     from backend.pulse_logic import SAFETY_TIMER_LOG_TIER
+    last_checkin = session.exec(select(PulseCheckin).where(
+        PulseCheckin.user_id == contact.user_id
+    ).order_by(PulseCheckin.timestamp.desc())).first()
     last_escalation = session.exec(select(PulseEscalationLog).where(
-        PulseEscalationLog.user_id == contact.user_id, PulseEscalationLog.tier_number != SAFETY_TIMER_LOG_TIER
-    ).order_by(PulseEscalationLog.id.desc())).first()
+        PulseEscalationLog.user_id == contact.user_id,
+        PulseEscalationLog.tier_number != SAFETY_TIMER_LOG_TIER,
+        PulseEscalationLog.triggered_at > (last_checkin.timestamp if last_checkin else datetime.min),
+    ).order_by(PulseEscalationLog.tier_number.desc())).first()
     tier = session.get(PulseEscalationTier, contact.tier_id) if contact.tier_id else None
     if not (last_escalation and tier and last_escalation.tier_number >= tier.tier_number):
         return []
+    reached = last_escalation.tier_number
+
+    def unlock_tier(condition: str):
+        # The vault page stores "tier_<N>_escalation"; anything unreadable stays locked
+        parts = (condition or "").split("_")
+        return int(parts[1]) if len(parts) >= 2 and parts[0] == "tier" and parts[1].isdigit() else None
 
     items = session.exec(select(PulseVault).where(PulseVault.user_id == contact.user_id)).all()
     return [
         {"name": i.name, "content": (i.encrypted_content or b"").decode("utf-8", errors="replace")}
         for i in items
+        if (t := unlock_tier(i.unlock_condition)) is not None and t <= reached
     ]
 
 @router.post("/respond/{token}")

@@ -236,10 +236,10 @@
                 </h3>
                 <div class="mt-2 text-slate-900">
                     <a
-                        href="/pulse/vault"
+                        href="/modules/pulse/vault"
                         class="link link-hover text-indigo-600 font-medium flex items-center gap-1 group"
                     >
-                        Manage Secure Items
+                        Manage vault items
                         <ArrowRight
                             class="w-4 h-4 transition-transform group-hover:translate-x-1"
                         />

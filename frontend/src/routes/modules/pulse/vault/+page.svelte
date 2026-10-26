@@ -22,6 +22,23 @@
     let loading = $state(true);
     let saving = $state(false);
     let showSecrets = $state<Record<number, boolean>>({});
+    let loadError = $state("");
+    let formError = $state("");
+    let listError = $state("");
+
+    const tierLabels: Record<string, string> = {
+        tier_1_escalation: "Tier 1 (Immediate Partners)",
+        tier_2_escalation: "Tier 2 (Family)",
+        tier_3_escalation: "Tier 3 (Local/Emergency)",
+    };
+    function tierLabel(condition: string): string {
+        return tierLabels[condition] ?? condition.replaceAll("_", " ");
+    }
+
+    function cancelEdit() {
+        formError = "";
+        newItem = { name: "", content: "", unlock_condition: "tier_3_escalation" };
+    }
 
     let newItem = $state<{ id?: number; name: string; content: string; unlock_condition: string }>({
         name: "",
@@ -34,8 +51,12 @@
     });
 
     async function loadVault() {
+        loadError = "";
         try {
             items = await apiGet('/api/pulse/vault');
+        } catch (e) {
+            console.error("Vault load failed", e);
+            loadError = "Let's try opening your vault again in a moment — your items are safe.";
         } finally {
             loading = false;
         }
@@ -44,6 +65,7 @@
     async function addItem() {
         if (!newItem.name || !newItem.content) return;
         saving = true;
+        formError = "";
         try {
             let saved;
             if (newItem.id) {
@@ -64,6 +86,10 @@
                 content: "",
                 unlock_condition: "tier_3_escalation",
             };
+        } catch (e) {
+            // Keep the draft in the form so nothing typed is lost
+            console.error("Vault save failed", e);
+            formError = "Let's try that again in a moment — your words are still here.";
         } finally {
             saving = false;
         }
@@ -72,8 +98,15 @@
     async function deleteItem(id: number) {
         if (!confirm("Remove these instructions from the vault? This action is permanent."))
             return;
-        await apiDelete(`/api/pulse/vault/${id}`);
-        items = items.filter((i) => i.id !== id);
+        listError = "";
+        try {
+            await apiDelete(`/api/pulse/vault/${id}`);
+            items = items.filter((i) => i.id !== id);
+            if (newItem.id === id) cancelEdit();
+        } catch (e) {
+            console.error("Vault delete failed", e);
+            listError = "Let's try removing that again in a moment — it's still safely in your vault.";
+        }
     }
 </script>
 
@@ -95,7 +128,7 @@
         <div
             class="bg-indigo-500/10 border border-indigo-500/30 px-3 py-1 rounded-full text-[10px] text-indigo-400 font-bold uppercase tracking-widest"
         >
-            Level 4 AES Encrypted
+            Private to you
         </div>
     </div>
 
@@ -117,9 +150,10 @@
                     Store sensitive instructions like <span
                         class="text-indigo-300">gate codes</span
                     >, <span class="text-indigo-300">home keys</span>, and
-                    <span class="text-indigo-300">pet care steps</span>. These
-                    are hidden from your Guardians until an escalation reaches
-                    their assigned Tier.
+                    <span class="text-indigo-300">pet care steps</span>. They
+                    stay private, and are shared only with the guardians you
+                    choose, when the time comes: once an escalation reaches the
+                    tier you set for each item.
                 </p>
             </div>
         </div>
@@ -134,13 +168,21 @@
             <h3
                 class="text-sm font-bold text-slate-300 uppercase tracking-widest"
             >
-                Add Secure Protocol
+                {newItem.id ? `Editing “${items.find((i) => i.id === newItem.id)?.name ?? newItem.name}”` : "Add an item"}
             </h3>
+            {#if newItem.id}
+                <button
+                    onclick={cancelEdit}
+                    class="ml-auto text-xs text-slate-400 hover:text-slate-200 underline"
+                >
+                    Stop editing
+                </button>
+            {/if}
         </div>
 
         <div class="grid md:grid-cols-2 gap-4">
             <div class="space-y-2">
-                <label class="text-xs text-slate-500 ml-1">Protocol Name</label>
+                <label class="text-xs text-slate-500 ml-1">Name</label>
                 <input
                     bind:value={newItem.name}
                     placeholder="e.g. Back Gate Code"
@@ -165,7 +207,7 @@
         </div>
 
         <div class="space-y-2">
-            <label class="text-xs text-slate-500 ml-1">Sensitive Content</label>
+            <label class="text-xs text-slate-500 ml-1">What they should know</label>
             <textarea
                 bind:value={newItem.content}
                 placeholder="The instructions to reveal..."
@@ -179,8 +221,14 @@
             disabled={saving || !newItem.name || !newItem.content}
             class="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2"
         >
-            <Save class="w-4 h-4" /> Save to Vault
+            <Save class="w-4 h-4" /> {newItem.id ? "Save my changes" : "Save to Vault"}
         </button>
+
+        {#if formError}
+            <p role="alert" class="text-sm text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-3">
+                {formError}
+            </p>
+        {/if}
     </div>
 
     <!-- Vault Items -->
@@ -188,8 +236,20 @@
         <h3
             class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1"
         >
-            Stored Heartbeat Assets ({items.length})
+            Your vault items ({items.length})
         </h3>
+
+        {#if loadError}
+            <div role="alert" class="text-sm text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-3 flex items-center justify-between gap-4">
+                <span>{loadError}</span>
+                <button onclick={() => { loading = true; loadVault(); }} class="underline shrink-0">Try again</button>
+            </div>
+        {/if}
+        {#if listError}
+            <p role="alert" class="text-sm text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-3">
+                {listError}
+            </p>
+        {/if}
 
         {#each items as item (item.id)}
             <div
@@ -225,7 +285,7 @@
                             <div
                                 class="text-[10px] text-indigo-400/70 font-bold uppercase tracking-widest"
                             >
-                                {item.unlock_condition.replace("_", " ")}
+                                Shared at {tierLabel(item.unlock_condition)}
                             </div>
                         </div>
                     </div>
@@ -239,9 +299,11 @@
                                     content: item.content,
                                     unlock_condition: item.unlock_condition,
                                 };
+                                formError = "";
                                 window.scrollTo({ top: 0, behavior: "smooth" });
                             }}
-                            class="p-2 text-slate-500 hover:text-indigo-400 opacity-0 group-hover:opacity-100 transition-all"
+                            title="Edit"
+                            class="p-2 text-slate-500 hover:text-indigo-400 transition-colors"
                         >
                             <span class="sr-only">Edit</span>
                             <svg
@@ -261,6 +323,7 @@
                         <button
                             onclick={() =>
                                 (showSecrets[item.id] = !showSecrets[item.id])}
+                            title={showSecrets[item.id] ? "Hide" : "Show"}
                             class="p-2 text-slate-500 hover:text-white transition-colors"
                         >
                             {#if showSecrets[item.id]}
@@ -271,8 +334,10 @@
                         </button>
                         <button
                             onclick={() => deleteItem(item.id)}
-                            class="p-2 text-slate-500 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-all"
+                            title="Remove this item"
+                            class="p-2 text-slate-500 hover:text-rose-400 transition-colors"
                         >
+                            <span class="sr-only">Remove this item</span>
                             <Trash2 class="w-4 h-4" />
                         </button>
                     </div>
@@ -295,7 +360,7 @@
             </div>
         {/each}
 
-        {#if items.length === 0 && !loading}
+        {#if items.length === 0 && !loading && !loadError}
             <div
                 class="text-center py-16 px-8 bg-slate-900/30 border border-dashed border-slate-700 rounded-2xl max-w-2xl mx-auto"
                 in:fade
@@ -310,13 +375,13 @@
 
                 <div class="mb-6 bg-slate-800/50 rounded-xl p-5 border border-slate-700 text-left">
                     <p class="text-slate-300 leading-relaxed">
-                        <strong class="text-indigo-300">Some information shouldn't be seen until it's truly needed.</strong>
+                        <strong class="text-indigo-300">Some information is best kept for when it's truly needed.</strong>
                         Gate codes, safe combinations, pet feeding instructions, or where you keep the spare key—these are things your trusted contacts
                         only need access to in an emergency.
                     </p>
                     <p class="text-slate-400 mt-3 leading-relaxed">
-                        The Pulse Vault keeps these secrets encrypted and hidden until an escalation reaches the tier you specify.
-                        It's peace of mind that your sensitive information is protected, yet accessible when it matters most.
+                        The Pulse Vault keeps these private, and shares them only with the guardians you choose, when the time comes:
+                        once an escalation reaches the tier you set. It's peace of mind that the people you trust will have what they need.
                     </p>
                 </div>
 
