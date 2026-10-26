@@ -130,7 +130,7 @@
                                         {#if item.isPreview}
                                             <span
                                                 class="inline-block mb-2 text-xs font-medium px-2 py-0.5 rounded-md bg-secondary/10 text-muted-foreground"
-                                                data-testid="preview-tag">Early preview</span
+                                                data-testid="preview-tag">{$dict.earlyPreview}</span
                                             >
                                         {/if}
                                         {#if item.tooltip}
@@ -165,7 +165,7 @@
                                         {#if item.isPreview}
                                             <span
                                                 class="inline-block mt-0.5 text-xs font-medium px-2 py-0.5 rounded-md bg-secondary/10 text-muted-foreground"
-                                                data-testid="preview-tag">Early preview</span
+                                                data-testid="preview-tag">{$dict.earlyPreview}</span
                                             >
                                         {/if}
                                         {#if item.tooltip}

@@ -164,7 +164,7 @@ export const calendarStore = {
     subscribe: calendarSync.subscribe.bind(calendarSync)
 };
 
-// Derived store for upcoming events (next 30 days)
+// Derived store: every event with its next date, soonest first.
 // The manager's subscribe hands out the items array itself.
 export const upcomingEvents = derived(calendarSync, (items: AnniversaryEvent[]) => {
     const now = new Date();
@@ -178,9 +178,12 @@ export const upcomingEvents = derived(calendarSync, (items: AnniversaryEvent[]) 
         const month = Number(digits.slice(-4, -2));
         const day = Number(digits.slice(-2));
 
-        const eventDate = new Date(currentYear, month - 1, day);
+        // A one-time date with a year keeps that year (X227); a yearly date, or one saved
+        // without a year, falls in this year and rolls to next year once it has passed.
+        const savedYear = digits.length >= 8 ? Number(digits.slice(0, -4)) : NaN;
+        const year = !event.recurring && Number.isFinite(savedYear) ? savedYear : currentYear;
+        const eventDate = new Date(year, month - 1, day);
 
-        // If date has passed this year, check next year
         if (eventDate < now && event.recurring) {
             eventDate.setFullYear(currentYear + 1);
         }

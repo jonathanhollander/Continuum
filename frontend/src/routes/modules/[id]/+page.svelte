@@ -41,12 +41,11 @@
         </div>
     {:else}
         <div class="container mx-auto px-6 py-20 text-center">
-            <h1 class="text-4xl font-serif text-destructive mb-4">
-                Module Not Found
+            <h1 class="text-4xl font-serif text-foreground mb-4">
+                That page may have moved
             </h1>
             <p class="text-muted-foreground">
-                The requested module ID "{moduleId}" does not exist in the
-                registry.
+                Every module lives in the catalog, ready whenever you are.
             </p>
             <a
                 href="/catalog"
