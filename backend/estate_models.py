@@ -1,4 +1,5 @@
 from typing import Optional
+from sqlalchemy import Index
 from sqlmodel import Field, SQLModel
 from datetime import datetime
 
@@ -19,6 +20,7 @@ class UserCustomFieldDefinition(SQLModel, table=True):
 class Asset(SQLModel, table=True):
     """Generic model for physical, digital, or financial assets."""
     __tablename__ = "assets"
+    __table_args__ = (Index("ix_assets_user_category", "user_id", "category"),)
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="users.id", index=True)
     name: str = Field(index=True)
@@ -38,6 +40,9 @@ class Asset(SQLModel, table=True):
     evidence: Optional[str] = None  # JSON text: property evidence list (UI keeps an array)
 
     beneficiary_id: Optional[int] = None
+    # CU-004: which list owns this row: properties / digital_assets / heirlooms / assets.
+    # NULL on rows created before this column (see estate_data._category_clause).
+    category: Optional[str] = None
     
     model_config = {
         "json_schema_extra": {
