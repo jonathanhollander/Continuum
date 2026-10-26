@@ -2,6 +2,7 @@ import { getStored, setStored } from "$lib/stores/persistence";
 import { API_BASE_URL } from "$lib/config";
 
 import { auth } from "../stores/auth.ts";
+import { activeAccountId } from "$lib/stores/keyringStore";
 import { get } from "svelte/store";
 import { notifications } from "$lib/stores/notificationStore";
 
@@ -52,6 +53,9 @@ const toWire = (obj: any): any => {
 // Use centralized config for API base URL (fixes dev mode sync issue)
 const BASE_URL = API_BASE_URL;
 
+// The account whose saved records a store currently holds (the getStored namespace).
+const storageAccount = () => get(activeAccountId) || 'anonymous';
+
 export type SyncStatus = "idle" | "syncing" | "error" | "synced";
 
 export class SyncManager<T extends { id: number | string }> {
@@ -75,6 +79,7 @@ export class SyncManager<T extends { id: number | string }> {
 
         // 1. Instant Load
         this.items = getStored<T[]>(key, []);
+        this.loadedFor = storageAccount();
     }
 
     /**
@@ -101,11 +106,14 @@ export class SyncManager<T extends { id: number | string }> {
     }
 
     private inflight: Promise<void> | null = null;
+    /** Account whose records are loaded; null after a logout clear. */
+    loadedFor: string | null = null;
 
     /** Account change: drop this manager's in-memory records. clear=true (logout) leaves storage alone;
      *  otherwise reload the records saved for the now-active account. */
     reset(clear = false) {
-        this.inflight = null;
+        this.inflight = null; // a sync still running belongs to the previous account
+        this.loadedFor = clear ? null : storageAccount();
         this.items = clear ? [] : getStored<T[]>(this.key, []);
         this.status = "idle";
         this.error = null;
@@ -468,6 +476,7 @@ export class SingletonSyncManager<T extends object> {
         // Load Initial & Map legacy local data if needed
         const raw = getStored<T>(key, {} as T);
         this.data = mapper ? mapper(raw) : raw;
+        this.loadedFor = storageAccount();
     }
 
     /**
@@ -480,10 +489,13 @@ export class SingletonSyncManager<T extends object> {
     }
 
     private inflight: Promise<void> | null = null;
+    /** See SyncManager.loadedFor. */
+    loadedFor: string | null = null;
 
     /** Account change: see SyncManager.reset. */
     reset(clear = false) {
         this.inflight = null;
+        this.loadedFor = clear ? null : storageAccount();
         const raw = clear ? ({} as T) : getStored<T>(this.key, {} as T);
         this.data = this.mapper ? this.mapper(raw) : raw;
         this.status = "idle";
@@ -667,12 +679,15 @@ export function registerSingletonSync<T extends object>(key: string, endpoint: s
     return registerManager(key, endpoint, apiBase, () => new SingletonSyncManager<T>(key, endpoint, mapper, apiBase)) as unknown as SingletonSyncManager<T>;
 }
 
-/** Signed-in session start (or account switch): reload every store from the active account's
- *  saved records, then fetch from the server. Stores registered later fetch on registration. */
+/** Signed-in session start (or account switch): a store holding another account's records (or
+ *  none, after logout) reloads from the active account's; then every store fetches from the server.
+ *  A store already on this account keeps its records and any sync it is running: sync() joins that
+ *  run, so a page's onMount sync and this call migrate local records up once, not twice. */
 export async function syncAll() {
     _sessionActive = true;
+    const account = storageAccount();
     const managers = Object.values(getRegistry()) as any[];
-    managers.forEach(m => m.reset(false));
+    managers.forEach(m => { if (m.loadedFor !== account) m.reset(false); });
     return Promise.allSettled(managers.map(m => m.sync()));
 }
 
