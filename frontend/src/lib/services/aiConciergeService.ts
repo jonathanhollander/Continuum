@@ -4,11 +4,14 @@ import { userRole } from '../stores/conciergeStore.svelte.ts';
 
 import { apiFetch } from '../api/client';
 import { parseApiError } from './errorHandler';
+import { sanitizeInput } from '../utils/sanitize';
 
 export const AI_UNAVAILABLE = "AI help is resting right now. Everything else is here for you, and you can come back whenever you're ready.";
 
 /**
  * Sends a chat request to our own server (which holds the AI key).
+ * Every user message passes through the privacy filter first, so SSNs, account
+ * numbers, emails and phone numbers stay in the browser.
  * Returns the model's text, or throws an Error carrying a gentle message.
  */
 export async function callAiProxy(messages: Array<{ role: string; content: string }>): Promise<string> {
@@ -20,7 +23,10 @@ export async function callAiProxy(messages: Array<{ role: string; content: strin
     const response = await apiFetch('/api/ai/chat', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ model: 'google/gemini-2.0-flash-001', messages })
+        body: JSON.stringify({
+            model: 'google/gemini-2.0-flash-001',
+            messages: messages.map((m) => (m.role === 'user' ? { ...m, content: sanitizeInput(m.content) } : m))
+        })
     });
     if (!response.ok) {
         const serverError = new Error((await parseApiError(response)).message);
@@ -53,37 +59,7 @@ export interface AIContext {
     emotionalState?: 'calm' | 'overwhelmed' | 'uncertain';
 }
 
-/**
- * Privacy Filter: Redacts sensitive patterns before sending to LLM.
- * This ensures bank accounts, SSNs, etc., never leave the browser.
- */
-function sanitizeInput(content: string): string {
-    let sanitized = content;
-
-    // 1. Mask SSNs (xxx-xx-xxxx)
-    sanitized = sanitized.replace(/\b\d{3}-\d{2}-\d{4}\b/g, '[REDACTED_SSN]');
-
-    // 2. Mask Bank Account Numbers (8-17 digits)
-    // We target numbers that are 8-17 digits long and not likely dates
-    sanitized = sanitized.replace(/\b\d{8,17}\b/g, (match) => {
-        // Exclude common year patterns or short IDs
-        const year = parseInt(match);
-        if (year > 1900 && year < 2100 && match.length === 4) return match;
-        return '[REDACTED_ACCOUNT]';
-    });
-
-    // 3. Mask Emails (common pattern)
-    sanitized = sanitized.replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, '[REDACTED_EMAIL]');
-
-    // 4. Mask Phone Numbers (various formats)
-    sanitized = sanitized.replace(/(\+\d{1,2}\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/g, '[REDACTED_PHONE]');
-
-    return sanitized;
-}
-
 async function chat(content: string, history: any[], contextName: string = 'Continuum Dashboard', context?: AIContext): Promise<AIResponse> {
-    const sanitizedContent = sanitizeInput(content);
-
     // Detect role if not explicitly provided
     const userRole = context?.userRole || detectUserRole();
 
@@ -171,11 +147,11 @@ Example: { "message": "Sarah recorded as daughter—what a beautiful gift to hav
                     },
                     ...prior.slice(-10).map(m => ({
                         role: m.role,
-                        content: m.role === 'user' ? sanitizeInput(String(m.content)) : m.content
+                        content: String(m.content)
                     })),
                     {
                         role: "user",
-                        content: sanitizedContent
+                        content
                     }
         ]);
 
@@ -200,7 +176,7 @@ Example: { "message": "Sarah recorded as daughter—what a beautiful gift to hav
             failed: true,
             content: error instanceof Error && ((error as any).gentle || error.message === AI_UNAVAILABLE)
                 ? error.message
-                : "I'm having a little trouble connecting right now. Please try again in a moment."
+                : AI_UNAVAILABLE
         };
     }
 }
