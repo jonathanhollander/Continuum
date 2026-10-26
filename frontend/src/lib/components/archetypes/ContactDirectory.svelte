@@ -163,16 +163,16 @@
         switch (role) {
             case "Spouse":
             case "Child":
-                return "bg-rose-100 text-rose-600 border-rose-200";
+                return "bg-primary-soft text-primary-hover border-primary/20";
             case "Attorney":
-                return "bg-slate-100 text-slate-700 border-slate-200";
+                return "bg-muted text-foreground border-border";
             case "Medical":
-                return "bg-blue-100 text-blue-600 border-blue-200";
+                return "bg-info/10 text-info border-info/20";
             case "Advisor":
             case "Accountant":
-                return "bg-emerald-100 text-emerald-700 border-emerald-200";
+                return "bg-success/10 text-success border-success/20";
             default:
-                return "bg-gray-100 text-gray-600 border-gray-200";
+                return "bg-muted text-muted-foreground border-border";
         }
     }
 
@@ -210,7 +210,7 @@
     >
         <div>
             <div class="flex items-center gap-2 mb-2">
-                <div class="bg-indigo-100 text-indigo-700 p-2 rounded-full">
+                <div class="bg-primary-soft text-primary-hover p-2 rounded-full">
                     <Users size={20} />
                 </div>
                 <h3 class="text-3xl font-serif font-bold text-primary">
@@ -225,7 +225,7 @@
         </div>
         <button
             onclick={() => (showAddForm = true)}
-            class="bg-indigo-600 text-white hover:bg-indigo-700 px-5 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
+            class="bg-primary text-primary-foreground hover:bg-primary-hover px-5 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
         >
             <Plus size={18} /> Add Trusted Person
         </button>
@@ -234,10 +234,10 @@
     {#if showAddForm}
         <div
             transition:slide
-            class="glass-panel p-8 rounded-xl relative overflow-hidden border-indigo-100"
+            class="bg-card/70 backdrop-blur-md border border-border shadow-sm p-8 rounded-xl relative overflow-hidden border-primary/20"
         >
             <h4
-                class="font-serif font-bold text-xl text-indigo-900 mb-6 flex items-center gap-2"
+                class="font-serif font-bold text-xl text-foreground mb-6 flex items-center gap-2"
             >
                 <Sparkles size={18} /> Add to Your Circle
             </h4>
@@ -251,7 +251,7 @@
                     >
                     <input id="contact-name"
                         bind:value={newContact.name}
-                        class="w-full p-3 rounded-lg border border-border bg-white/50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+                        class="w-full p-3 rounded-lg border border-border bg-card/50 focus:bg-card focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                         placeholder="e.g. John Doe"
                     />
                 </div>
@@ -262,7 +262,7 @@
                     >
                     <select id="contact-role"
                         bind:value={newContact.role}
-                        class="w-full p-3 rounded-lg border border-border bg-white/50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+                        class="w-full p-3 rounded-lg border border-border bg-card/50 focus:bg-card focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     >
                         <option value="Spouse">Spouse / Partner</option>
                         <option value="Child">Child / Dependent</option>
@@ -287,7 +287,7 @@
                     >
                     <input id="contact-email"
                         bind:value={newContact.email}
-                        class="w-full p-3 rounded-lg border border-border bg-white/50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+                        class="w-full p-3 rounded-lg border border-border bg-card/50 focus:bg-card focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     />
                 </div>
                 <div class="space-y-2">
@@ -297,7 +297,7 @@
                     >
                     <input id="contact-phone"
                         bind:value={newContact.phone}
-                        class="w-full p-3 rounded-lg border border-border bg-white/50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+                        class="w-full p-3 rounded-lg border border-border bg-card/50 focus:bg-card focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     />
                 </div>
 
@@ -309,29 +309,29 @@
                     >
                     <input id="contact-organization"
                         bind:value={newContact.organization}
-                        class="w-full p-3 rounded-lg border border-border bg-white/50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+                        class="w-full p-3 rounded-lg border border-border bg-card/50 focus:bg-card focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                         placeholder="e.g. Smith & Assoc."
                     />
                 </div>
 
                 <!-- ICE Checkbox -->
                 <div
-                    class="col-span-full flex items-center gap-2 pt-2 bg-red-50 p-3 rounded-lg border border-red-100"
+                    class="col-span-full flex items-center gap-2 pt-2 bg-primary-soft p-3 rounded-lg border border-primary/20"
                 >
                     <input
                         type="checkbox"
                         id="ice"
                         bind:checked={newContact.isEmergencyContact}
-                        class="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                        class="w-4 h-4 rounded border-border text-primary focus:ring-primary"
                     />
                     <div>
                         <label
                             for="ice"
-                            class="text-sm font-bold text-red-700 flex items-center gap-1"
+                            class="text-sm font-bold text-primary-hover flex items-center gap-1"
                         >
                             <Siren size={14} /> Emergency Contact (ICE)
                         </label>
-                        <p class="text-xs text-red-600/70">
+                        <p class="text-xs text-muted-foreground">
                             Check this if this person should be called first in
                             a crisis.
                         </p>
@@ -342,12 +342,12 @@
             <div class="flex justify-end gap-3 mt-8">
                 <button
                     onclick={() => (showAddForm = false)}
-                    class="px-5 py-2.5 text-sm font-medium hover:bg-black/5 rounded-lg transition-colors"
+                    class="px-5 py-2.5 text-sm font-medium hover:bg-muted rounded-lg transition-colors"
                     >Not right now</button
                 >
                 <button
                     onclick={addContact}
-                    class="px-6 py-2.5 bg-indigo-600 text-white font-bold rounded-lg shadow hover:shadow-lg transition-all"
+                    class="px-6 py-2.5 bg-primary text-primary-foreground font-bold rounded-lg shadow hover:shadow-lg transition-all"
                     >Welcome to Circle</button
                 >
             </div>
@@ -357,26 +357,26 @@
     <!-- Emergency Contacts Banner -->
     {#if emergencyContacts.length > 0}
         <div
-            class="bg-red-500/5 border border-red-500/20 p-4 rounded-xl flex flex-wrap gap-4 items-center"
+            class="bg-primary-soft border border-primary/20 p-4 rounded-xl flex flex-wrap gap-4 items-center"
         >
-            <div class="bg-red-500/10 p-2 rounded-full text-red-600">
+            <div class="bg-primary/10 p-2 rounded-full text-primary-hover">
                 <Siren size={20} />
             </div>
             <div class="flex-1">
                 <h4
-                    class="font-bold text-red-800 text-sm uppercase tracking-wide"
+                    class="font-bold text-primary-hover text-sm uppercase tracking-wide"
                 >
                     In Case of Emergency
                 </h4>
                 <div class="flex gap-4 mt-1">
                     {#each emergencyContacts as ice}
                         <div
-                            class="flex items-center gap-2 text-sm font-medium text-red-900/80"
+                            class="flex items-center gap-2 text-sm font-medium text-foreground"
                         >
                             <span>{ice.name}</span>
                             <a
                                 href="tel:{ice.phone}"
-                                class="bg-white/50 hover:bg-white px-2 py-0.5 rounded-full text-xs flex items-center gap-1 transition-colors border border-red-200 text-red-700"
+                                class="bg-card/50 hover:bg-card px-2 py-0.5 rounded-full text-xs flex items-center gap-1 transition-colors border border-primary/20 text-primary-hover"
                             >
                                 <Phone size={10} />
                                 {ice.phone}
@@ -399,7 +399,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <!-- Anchor Stub -->
                 <div
-                    class="glass-card p-6 rounded-xl flex items-center gap-4 opacity-75 grayscale hover:grayscale-0 transition-all border-dashed border-2"
+                    class="bg-card/60 backdrop-blur-sm border border-border shadow-sm hover:shadow-md transition-all duration-300 p-6 rounded-xl flex items-center gap-4 opacity-75 grayscale hover:grayscale-0 transition-all border-dashed border-2"
                 >
                     <div
                         class="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-serif font-bold text-xl shadow-lg"
@@ -417,7 +417,7 @@
                 {#each family as member (member.id)}
                     {@const Icon = getRoleIcon(member.role)}
                     <div
-                        class="glass-card p-6 rounded-xl flex items-center gap-4 relative group hover:border-rose-200 transition-colors shadow-sm"
+                        class="bg-card/60 backdrop-blur-sm border border-border shadow-sm hover:shadow-md transition-all duration-300 p-6 rounded-xl flex items-center gap-4 relative group hover:border-primary/30 transition-colors shadow-sm"
                         transition:scale
                     >
                         <div
@@ -425,7 +425,7 @@
                         >
                             <button aria-label="Remove this item"
                                 onclick={() => removeContact(member.id)}
-                                class="text-muted-foreground hover:text-rose-500"
+                                class="text-muted-foreground hover:text-danger"
                                 ><Trash2 size={16} /></button
                             >
                         </div>
@@ -442,7 +442,7 @@
                             </div>
                             {#if member.isEmergencyContact}
                                 <div
-                                    class="absolute -bottom-1 -right-1 bg-red-500 text-white rounded-full p-1 border border-white shadow-sm"
+                                    class="absolute -bottom-1 -right-1 bg-primary text-primary-foreground rounded-full p-1 border border-card shadow-sm"
                                     title="Emergency Contact"
                                 >
                                     <Siren size={10} />
@@ -469,8 +469,8 @@
                                 onclick={() => designateExecutor(member.name)}
                                 class="mt-3 w-full py-1.5 text-[10px] font-bold uppercase tracking-widest border rounded transition-all flex items-center justify-center gap-1.5
                                 {$estateProfile.executorName === member.name
-                                    ? 'bg-[#4A7C74] text-white border-[#4A7C74]'
-                                    : 'bg-white text-slate-400 border-slate-200 hover:border-[#4A7C74] hover:text-[#4A7C74]'}"
+                                    ? 'bg-primary text-primary-foreground border-primary'
+                                    : 'bg-card text-muted-foreground border-border hover:border-primary hover:text-primary'}"
                             >
                                 <ShieldCheck size={12} />
                                 {$estateProfile.executorName === member.name
@@ -489,7 +489,7 @@
         <h4
             class="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-6 flex items-center gap-2"
         >
-            <Briefcase size={16} class="text-indigo-600" /> Trusted Counsel
+            <Briefcase size={16} class="text-primary" /> Trusted Counsel
         </h4>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {#each professionals as pro (pro.id)}
@@ -517,7 +517,7 @@
                             </div>
                             {#if pro.isEmergencyContact}
                                 <div
-                                    class="absolute -bottom-1 -right-1 bg-red-500 text-white rounded-full p-1 border border-white"
+                                    class="absolute -bottom-1 -right-1 bg-primary text-primary-foreground rounded-full p-1 border border-card"
                                     title="Emergency Contact"
                                 >
                                     <Siren size={10} />

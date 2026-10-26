@@ -441,13 +441,13 @@
         switch (type) {
             // Warmer, more comforting gradients for "Legacy" feel
             case "Property":
-                return "from-amber-600/10 to-stone-200/20";
+                return "from-secondary/10 to-primary/5";
             case "Business":
-                return "from-slate-600/10 to-gray-200/20";
+                return "from-secondary/10 to-border/20";
             case "Financial":
-                return "from-emerald-600/10 to-teal-200/20";
+                return "from-primary/10 to-primary/5";
             default:
-                return "from-gray-500/10 to-slate-200/20";
+                return "from-muted-foreground/10 to-border/20";
         }
     }
 
@@ -550,15 +550,15 @@
 <div class="space-y-8 animate-in fade-in duration-500">
     <!-- Total Wealth Header -->
     <div
-        class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-gray-200 pb-6"
+        class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border pb-6"
     >
         <div>
             <h2
-                class="text-sm font-bold uppercase tracking-wider text-gray-500 mb-1"
+                class="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-1"
             >
                 Net Estate Value
             </h2>
-            <div class="text-4xl font-serif font-bold text-[#304743]" data-testid="estate-net">
+            <div class="text-4xl font-serif font-bold text-foreground" data-testid="estate-net">
                 {#if $userRole !== "Family"}
                     {money(totals.net)}
                 {:else}
@@ -566,7 +566,7 @@
                 {/if}
             </div>
             {#if $userRole !== "Family" && totals.debts > 0}
-                <p class="text-xs text-gray-500 mt-1" data-testid="estate-breakdown">
+                <p class="text-xs text-muted-foreground mt-1" data-testid="estate-breakdown">
                     {money(totals.assets)} in assets, less {money(totals.debts)} owed
                 </p>
             {/if}
@@ -585,7 +585,7 @@
                 <!-- The file holds every value and account number, which Family view masks. -->
                 <button
                     onclick={exportToCSV}
-                    class="px-4 py-2 rounded-lg bg-gray-100 text-gray-600 text-sm font-bold hover:bg-gray-200 transition-colors flex items-center gap-2"
+                    class="px-4 py-2 rounded-lg bg-muted text-muted-foreground text-sm font-bold hover:bg-border transition-colors flex items-center gap-2"
                 >
                     <TrendingUp size={16} /> Save a copy as a spreadsheet
                 </button>
@@ -596,14 +596,14 @@
     {#if $userRole === "Executor"}
         <div
             in:slide
-            class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r shadow-sm flex items-start gap-3"
+            class="bg-info/10 border-l-4 border-info p-4 rounded-r shadow-sm flex items-start gap-3"
         >
-            <Info class="text-blue-600 shrink-0 mt-0.5" size={20} />
+            <Info class="text-info shrink-0 mt-0.5" size={20} />
             <div>
-                <h4 class="font-bold text-blue-900 text-sm">
+                <h4 class="font-bold text-foreground text-sm">
                     Executor View Active
                 </h4>
-                <p class="text-blue-700 text-xs mt-1">
+                <p class="text-muted-foreground text-xs mt-1">
                     You can view and update everything here, whenever the time is right.
                 </p>
             </div>
@@ -631,29 +631,29 @@
                 ></div>
 
                 <div
-                    class="bg-white rounded-[3rem] shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col relative"
+                    class="bg-card rounded-[3rem] shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col relative"
                     in:scale={{ start: 0.95, duration: 300 }}
                 >
                     <!-- Modal Header -->
                     <div class="p-10 pb-0 flex items-center justify-between">
                         <div>
                             <nav
-                                class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#4A7C74] mb-3"
+                                class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-3"
                             >
                                 <Wallet size={12} />
                                 <span>Asset Inventory</span>
                             </nav>
                             <h2
                                 id="asset-form-title"
-                                class="text-4xl font-black text-slate-900 tracking-tighter"
+                                class="text-4xl font-black text-foreground tracking-tighter"
                             >
                                 {newAsset.id ? "Update" : "Add"}
-                                <span class="text-[#4A7C74]">Asset</span>
+                                <span class="text-primary">Asset</span>
                             </h2>
                         </div>
                         <button aria-label="Close"
                             onclick={resetForm}
-                            class="w-14 h-14 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:rotate-90 transition-all duration-500"
+                            class="w-14 h-14 rounded-full bg-background flex items-center justify-center text-muted-foreground hover:text-foreground hover:rotate-90 transition-all duration-500"
                         >
                             <X size={24} strokeWidth={3} />
                         </button>
@@ -663,10 +663,10 @@
                         <!-- Group 1: Identity -->
                         <section>
                             <h3
-                                class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3"
+                                class="text-xs font-black text-muted-foreground uppercase tracking-[0.2em] mb-6 flex items-center gap-3"
                             >
                                 <span
-                                    class="w-6 h-[2px] bg-[#4A7C74] rounded-full"
+                                    class="w-6 h-[2px] bg-primary rounded-full"
                                 ></span>
                                 Asset Details
                             </h3>
@@ -675,7 +675,7 @@
                             >
                                 <div class="space-y-3">
                                     <label for="asset-asset-name"
-                                        class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+                                        class="text-[11px] font-black text-foreground uppercase tracking-wider pl-1"
                                         >Asset Name</label
                                     >
                                     <input
@@ -683,7 +683,7 @@
                                         type="text"
                                         bind:value={newAsset.name}
                                         placeholder="e.g. Chase Checking, Tesla Model Y"
-                                        class="w-full bg-slate-50 border-2 border-transparent focus:border-[#4A7C74] focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all {$conciergeEngine
+                                        class="w-full bg-background border-2 border-transparent focus:border-primary focus:bg-card rounded-2xl p-4 text-sm font-bold outline-none transition-all {$conciergeEngine
                                             .lastExtractedData?.name
                                             ? 'amber-glow border-amber-500/50'
                                             : ''}"
@@ -691,13 +691,13 @@
                                 </div>
                                 <div class="space-y-3">
                                     <label for="asset-asset-type"
-                                        class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+                                        class="text-[11px] font-black text-foreground uppercase tracking-wider pl-1"
                                         >Asset Type</label
                                     >
                                     <select
                                         id="asset-asset-type"
                                         bind:value={newAsset.type}
-                                        class="w-full bg-slate-50 border-2 border-transparent focus:border-[#4A7C74] focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all appearance-none cursor-pointer"
+                                        class="w-full bg-background border-2 border-transparent focus:border-primary focus:bg-card rounded-2xl p-4 text-sm font-bold outline-none transition-all appearance-none cursor-pointer"
                                     >
                                         {#each TYPE_OPTIONS as opt}
                                             <option value={opt.value}>{opt.label}</option>
@@ -709,19 +709,19 @@
                                 </div>
                                 <div class="space-y-3">
                                     <label for="asset-est-value"
-                                        class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-mono"
+                                        class="text-[11px] font-black text-foreground uppercase tracking-wider pl-1 font-mono"
                                         >Est. Value ($)</label
                                     >
                                     <div class="relative">
                                         <DollarSign
                                             size={16}
-                                            class="absolute left-4 top-4.5 text-[#4A7C74]"
+                                            class="absolute left-4 top-4.5 text-primary"
                                         />
                                         <input
                                             id="asset-est-value"
                                             type="number"
                                             bind:value={newAsset.value}
-                                            class="w-full bg-white border-2 border-transparent focus:border-[#4A7C74] rounded-2xl p-4 pl-10 text-sm font-black outline-none transition-all shadow-sm"
+                                            class="w-full bg-card border-2 border-transparent focus:border-primary rounded-2xl p-4 pl-10 text-sm font-black outline-none transition-all shadow-sm"
                                         />
                                     </div>
                                 </div>
@@ -732,20 +732,20 @@
                             >
                                 <div class="space-y-3">
                                     <label for="asset-location-institution"
-                                        class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+                                        class="text-[11px] font-black text-foreground uppercase tracking-wider pl-1"
                                         >Location / Institution</label
                                     >
                                     <input
                                         id="asset-location-institution"
                                         bind:value={newAsset.location}
                                         placeholder="e.g. 123 Main St, Wallet"
-                                        class="w-full bg-slate-50 border-2 border-transparent focus:border-[#4A7C74] focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all"
+                                        class="w-full bg-background border-2 border-transparent focus:border-primary focus:bg-card rounded-2xl p-4 text-sm font-bold outline-none transition-all"
                                     />
                                 </div>
                                 {#if newAsset.type === "Financial" || newAsset.type === "Digital"}
                                     <div class="space-y-3">
                                         <label for="asset-login-url"
-                                            class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+                                            class="text-[11px] font-black text-foreground uppercase tracking-wider pl-1"
                                             >Login URL</label
                                         >
                                         <input
@@ -753,14 +753,14 @@
                                             type="text"
                                             bind:value={newAsset.loginUrl}
                                             placeholder="https://..."
-                                            class="w-full bg-slate-50 border-2 border-transparent focus:border-[#4A7C74] focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all"
+                                            class="w-full bg-background border-2 border-transparent focus:border-primary focus:bg-card rounded-2xl p-4 text-sm font-bold outline-none transition-all"
                                         />
                                     </div>
                                 {/if}
                                 <div class="space-y-3">
                                     <label
                                         for="asset-account-number"
-                                        class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+                                        class="text-[11px] font-black text-foreground uppercase tracking-wider pl-1"
                                         >Account Number</label
                                     >
                                     <input
@@ -768,13 +768,13 @@
                                         type="text"
                                         bind:value={newAsset.accountNumber}
                                         placeholder="e.g. last four digits"
-                                        class="w-full bg-slate-50 border-2 border-transparent focus:border-[#4A7C74] focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all"
+                                        class="w-full bg-background border-2 border-transparent focus:border-primary focus:bg-card rounded-2xl p-4 text-sm font-bold outline-none transition-all"
                                     />
                                 </div>
                                 <div class="space-y-3">
                                     <label
                                         for="asset-ownership"
-                                        class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+                                        class="text-[11px] font-black text-foreground uppercase tracking-wider pl-1"
                                         >Your Ownership (%)</label
                                     >
                                     <input
@@ -783,12 +783,12 @@
                                         min="0"
                                         max="100"
                                         bind:value={newAsset.ownershipPercentage}
-                                        class="w-full bg-slate-50 border-2 border-transparent focus:border-[#4A7C74] focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all"
+                                        class="w-full bg-background border-2 border-transparent focus:border-primary focus:bg-card rounded-2xl p-4 text-sm font-bold outline-none transition-all"
                                     />
                                 </div>
                             </div>
 
-                            <div class="mt-8 pt-8 border-t border-slate-100">
+                            <div class="mt-8 pt-8 border-t border-border">
                                 <CustomFieldsManager
                                     entityType="asset"
                                     bind:data={parsedCustomAttributes}
@@ -798,20 +798,20 @@
 
                         <!-- Group 2: Documentation -->
                         <section
-                            class="bg-[#4A7C74]/5 rounded-[2.5rem] p-8 border border-[#4A7C74]/10"
+                            class="bg-primary/5 rounded-[2.5rem] p-8 border border-primary/10"
                         >
                             <h3
-                                class="text-xs font-black text-[#4A7C74] uppercase tracking-[0.2em] mb-6 flex items-center gap-3"
+                                class="text-xs font-black text-primary-hover uppercase tracking-[0.2em] mb-6 flex items-center gap-3"
                             >
                                 <span
-                                    class="w-6 h-[2px] bg-[#4A7C74] rounded-full"
+                                    class="w-6 h-[2px] bg-primary rounded-full"
                                 ></span>
                                 Supporting documents
                             </h3>
 
                             <div class="space-y-6">
                                 <div
-                                    class="bg-white/50 rounded-2xl p-6 border border-[#4A7C74]/10"
+                                    class="bg-card/50 rounded-2xl p-6 border border-primary/10"
                                 >
                                     <UniversalUploader
                                         label="Upload Statement or Document"
@@ -827,7 +827,7 @@
                                 >
                                     <div class="space-y-3">
                                         <label for="asset-beneficiary-name"
-                                            class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+                                            class="text-[11px] font-black text-foreground uppercase tracking-wider pl-1"
                                             >Beneficiary Name</label
                                         >
                                         <input
@@ -835,12 +835,12 @@
                                             type="text"
                                             bind:value={newAsset.beneficiaries}
                                             placeholder="Who inherits this?"
-                                            class="w-full bg-white border-2 border-transparent focus:border-[#4A7C74] rounded-2xl p-4 text-sm font-bold outline-none transition-all shadow-sm"
+                                            class="w-full bg-card border-2 border-transparent focus:border-primary rounded-2xl p-4 text-sm font-bold outline-none transition-all shadow-sm"
                                         />
                                     </div>
                                     <div class="space-y-3">
                                         <label for="asset-beneficiary-email"
-                                            class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+                                            class="text-[11px] font-black text-foreground uppercase tracking-wider pl-1"
                                             >Beneficiary Email</label
                                         >
                                         <input
@@ -850,7 +850,7 @@
                                                 newAsset.beneficiaryEmail
                                             }
                                             placeholder="Contact for beneficiary..."
-                                            class="w-full bg-white border-2 border-transparent focus:border-[#4A7C74] rounded-2xl p-4 text-sm font-bold outline-none transition-all shadow-sm"
+                                            class="w-full bg-card border-2 border-transparent focus:border-primary rounded-2xl p-4 text-sm font-bold outline-none transition-all shadow-sm"
                                         />
                                     </div>
                                 </div>
@@ -860,7 +860,7 @@
                         <!-- Group 3: Notes -->
                         <section>
                             <h3
-                                class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3"
+                                class="text-xs font-black text-muted-foreground uppercase tracking-[0.2em] mb-6 flex items-center gap-3"
                             >
                                 <span
                                     class="w-6 h-[2px] bg-slate-300 rounded-full"
@@ -870,26 +870,26 @@
                             <textarea
                                 bind:value={newAsset.closureNotes}
                                 placeholder="Instructions for the Executor on how to find/close/transfer this..."
-                                class="w-full bg-slate-50 border-2 border-transparent focus:border-[#4A7C74] focus:bg-white rounded-2xl p-6 text-sm font-medium outline-none transition-all min-h-[120px] resize-none leading-relaxed"
+                                class="w-full bg-background border-2 border-transparent focus:border-primary focus:bg-card rounded-2xl p-6 text-sm font-medium outline-none transition-all min-h-[120px] resize-none leading-relaxed"
                             ></textarea>
                             <!-- A closed account stays on record and leaves the estate total. -->
                             <div class="mt-6 flex flex-wrap items-center gap-6">
-                                <label class="flex items-center gap-3 text-sm font-bold text-slate-700 cursor-pointer">
+                                <label class="flex items-center gap-3 text-sm font-bold text-foreground cursor-pointer">
                                     <input
                                         type="checkbox"
                                         data-testid="asset-closed"
                                         bind:checked={newAsset.is_closed}
-                                        class="w-5 h-5 accent-[#4A7C74]"
+                                        class="w-5 h-5 accent-primary"
                                     />
                                     This account has been closed
                                 </label>
                                 {#if newAsset.is_closed}
-                                    <label class="flex items-center gap-3 text-sm font-bold text-slate-700">
+                                    <label class="flex items-center gap-3 text-sm font-bold text-foreground">
                                         Date closed
                                         <input
                                             type="date"
                                             bind:value={newAsset.closure_date}
-                                            class="bg-slate-50 border-2 border-transparent focus:border-[#4A7C74] focus:bg-white rounded-xl px-3 py-2 text-sm font-medium outline-none"
+                                            class="bg-background border-2 border-transparent focus:border-primary focus:bg-card rounded-xl px-3 py-2 text-sm font-medium outline-none"
                                         />
                                     </label>
                                 {/if}
@@ -899,7 +899,7 @@
                         <!-- Group 4: Notes -->
                         <section>
                             <h3
-                                class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3"
+                                class="text-xs font-black text-muted-foreground uppercase tracking-[0.2em] mb-6 flex items-center gap-3"
                             >
                                 <span
                                     class="w-6 h-[2px] bg-slate-300 rounded-full"
@@ -910,18 +910,18 @@
                                 id="asset-notes"
                                 bind:value={newAsset.notes}
                                 placeholder="Anything else your family may find helpful..."
-                                class="w-full bg-slate-50 border-2 border-transparent focus:border-[#4A7C74] focus:bg-white rounded-2xl p-6 text-sm font-medium outline-none transition-all min-h-[100px] resize-none leading-relaxed"
+                                class="w-full bg-background border-2 border-transparent focus:border-primary focus:bg-card rounded-2xl p-6 text-sm font-medium outline-none transition-all min-h-[100px] resize-none leading-relaxed"
                             ></textarea>
                         </section>
                     </div>
 
                     <!-- Footer Actions -->
                     <div
-                        class="p-8 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-4"
+                        class="p-8 border-t border-border bg-background/50 flex justify-end gap-4"
                     >
                         <button
                             onclick={resetForm}
-                            class="px-8 py-4 rounded-2xl font-bold text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-all"
+                            class="px-8 py-4 rounded-2xl font-bold text-muted-foreground hover:bg-muted hover:text-muted-foreground transition-all"
                         >
                             Maybe later
                         </button>
@@ -929,7 +929,7 @@
                             onclick={saveAsset}
                             disabled={saving}
                             aria-busy={saving}
-                            class="px-10 py-4 rounded-2xl bg-[#4A7C74] hover:bg-[#3b635d] text-white font-black shadow-xl shadow-[#4A7C74]/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-3 disabled:opacity-50"
+                            class="px-10 py-4 rounded-2xl bg-primary hover:bg-primary-hover text-primary-foreground font-black shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-3 disabled:opacity-50"
                         >
                             <Sparkles size={18} />
                             {saving ? "Saving..." : newAsset.id ? "Save my changes" : "Save this asset"}
@@ -951,7 +951,7 @@
             {@const sparkline = getSparklinePoints(asset.valueHistory)}
             <div
                 transition:scale={{ duration: 300 }}
-                class="group bg-white rounded-xl p-6 pb-14 shadow-sm hover:shadow-md transition-all border border-transparent hover:border-[#4A7C74]/20 relative overflow-hidden"
+                class="group bg-card rounded-xl p-6 pb-14 shadow-sm hover:shadow-md transition-all border border-transparent hover:border-primary/20 relative overflow-hidden"
             >
                 {#if $userRole !== "Family"}
                 <div
@@ -959,14 +959,14 @@
                 >
                     <button
                         onclick={() => editAsset(asset)}
-                        class="p-2 bg-white/80 rounded-full text-blue-400 hover:text-blue-600 hover:bg-blue-50"
+                        class="p-2 bg-card/80 rounded-full text-muted-foreground hover:text-primary hover:bg-primary-soft"
                         title="Edit these details"
                     >
                         <Pencil size={16} />
                     </button>
                     <button
                         onclick={() => removeAsset(asset.id)}
-                        class="p-2 bg-white/80 rounded-full text-red-400 hover:text-red-600 hover:bg-red-50"
+                        class="p-2 bg-card/80 rounded-full text-muted-foreground hover:text-danger hover:bg-danger-soft"
                         title="Remove this item"
                     >
                         <Trash2 size={16} />
@@ -983,7 +983,7 @@
 
                 <div class="flex justify-between items-start relative z-10">
                     <div
-                        class="p-3 rounded-xl bg-secondary/30 text-[#4A7C74] group-hover:scale-110 transition-transform duration-300"
+                        class="p-3 rounded-xl bg-secondary/30 text-primary group-hover:scale-110 transition-transform duration-300"
                     >
                         <Icon size={24} />
                     </div>
@@ -993,10 +993,10 @@
                                 {shownValue(asset)}
                             </div>
                             {#if isDebt(asset)}
-                                <div class="text-[11px] text-slate-500 font-medium">Owed</div>
+                                <div class="text-[11px] text-muted-foreground font-medium">Owed</div>
                             {/if}
                             {#if partShare(asset) !== null && hasNumber(asset.value)}
-                                <div class="text-[11px] text-slate-500 font-medium" data-testid="owned-share">
+                                <div class="text-[11px] text-muted-foreground font-medium" data-testid="owned-share">
                                     Your {partShare(asset)}% share: {money(Math.abs(ownedValue(asset)))}
                                 </div>
                             {/if}
@@ -1014,7 +1014,7 @@
                             <div
                                 data-testid="value-change"
                                 title="Change since the first recorded value"
-                                class="flex items-center justify-end gap-1 text-xs font-medium {change > 0 ? 'text-emerald-600' : 'text-slate-500'}"
+                                class="flex items-center justify-end gap-1 text-xs font-medium {change > 0 ? 'text-success' : 'text-muted-foreground'}"
                             >
                                 <TrendingUp size={12} class={change > 0 ? "" : "rotate-180"} />
                                 <span>{change > 0 ? "+" : ""}{change.toFixed(1)}%</span>
@@ -1030,7 +1030,7 @@
                     {#if asset.is_closed}
                         <span
                             data-testid="closed-badge"
-                            class="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[11px] font-bold"
+                            class="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-[11px] font-bold"
                         >
                             <Archive size={12} /> Closed{asset.closure_date ? ` ${asset.closure_date}` : ""}
                         </span>
@@ -1044,29 +1044,29 @@
 
                 <!-- Saved details, shown when they exist -->
                 {#if asset.beneficiaries || asset.closureNotes || ($userRole !== "Family" && (asset.accountNumber || asset.loginUrl))}
-                    <dl class="mt-4 pt-4 border-t border-slate-50 space-y-2 relative z-10 text-[11px]" data-testid="asset-details">
+                    <dl class="mt-4 pt-4 border-t border-border/50 space-y-2 relative z-10 text-[11px]" data-testid="asset-details">
                         {#if asset.beneficiaries}
                             <div class="flex justify-between gap-3">
-                                <dt class="text-slate-400 font-black uppercase tracking-widest shrink-0">Beneficiary</dt>
-                                <dd class="text-slate-600 font-bold text-right break-words">{asset.beneficiaries}</dd>
+                                <dt class="text-muted-foreground font-black uppercase tracking-widest shrink-0">Beneficiary</dt>
+                                <dd class="text-muted-foreground font-bold text-right break-words">{asset.beneficiaries}</dd>
                             </div>
                         {/if}
                         {#if $userRole !== "Family" && asset.accountNumber}
                             <div class="flex justify-between gap-3">
-                                <dt class="text-slate-400 font-black uppercase tracking-widest shrink-0">Account Number</dt>
-                                <dd class="text-slate-600 font-bold text-right break-all">{asset.accountNumber}</dd>
+                                <dt class="text-muted-foreground font-black uppercase tracking-widest shrink-0">Account Number</dt>
+                                <dd class="text-muted-foreground font-bold text-right break-all">{asset.accountNumber}</dd>
                             </div>
                         {/if}
                         {#if $userRole !== "Family" && asset.loginUrl}
                             <div class="flex justify-between gap-3">
-                                <dt class="text-slate-400 font-black uppercase tracking-widest shrink-0">Login URL</dt>
-                                <dd class="text-slate-600 font-bold text-right break-all">{asset.loginUrl}</dd>
+                                <dt class="text-muted-foreground font-black uppercase tracking-widest shrink-0">Login URL</dt>
+                                <dd class="text-muted-foreground font-bold text-right break-all">{asset.loginUrl}</dd>
                             </div>
                         {/if}
                         {#if asset.closureNotes}
                             <div>
-                                <dt class="text-slate-400 font-black uppercase tracking-widest">Transfer Instructions</dt>
-                                <dd class="text-slate-600 font-medium mt-1 whitespace-pre-line">{asset.closureNotes}</dd>
+                                <dt class="text-muted-foreground font-black uppercase tracking-widest">Transfer Instructions</dt>
+                                <dd class="text-muted-foreground font-medium mt-1 whitespace-pre-line">{asset.closureNotes}</dd>
                             </div>
                         {/if}
                     </dl>
@@ -1079,15 +1079,15 @@
                     ).filter(([_, v]) => v !== undefined && v !== "")}
                     {#if customEntries.length > 0}
                         <div
-                            class="mt-4 pt-4 border-t border-slate-50 space-y-2 relative z-10"
+                            class="mt-4 pt-4 border-t border-border/50 space-y-2 relative z-10"
                         >
                             {#each customEntries as [key, value]}
                                 <div class="flex justify-between text-[11px]">
                                     <span
-                                        class="text-slate-400 font-black uppercase tracking-widest"
+                                        class="text-muted-foreground font-black uppercase tracking-widest"
                                         >{key}</span
                                     >
-                                    <span class="text-slate-600 font-bold"
+                                    <span class="text-muted-foreground font-bold"
                                         >{value === true
                                             ? "Yes"
                                             : value === false
@@ -1105,7 +1105,7 @@
                     <div class="mt-4 h-8 w-full opacity-25" data-testid="value-sparkline">
                         <svg
                             viewBox="0 0 100 30"
-                            class="w-full h-full stroke-[#4A7C74] fill-none stroke-2"
+                            class="w-full h-full stroke-primary fill-none stroke-2"
                             preserveAspectRatio="none"
                         >
                             <polyline points={sparkline} />
@@ -1119,7 +1119,7 @@
         <!-- Smart Default Empty State -->
         {#if assets.length === 0}
             <div
-                class="col-span-full border border-amber-200 bg-amber-50/50 rounded-xl p-4 mb-4 flex items-center gap-3 text-amber-800"
+                class="col-span-full border border-border bg-primary-soft rounded-xl p-4 mb-4 flex items-center gap-3 text-primary-hover"
             >
                 <Sparkles size={20} />
                 <p class="text-sm font-medium">
@@ -1147,7 +1147,7 @@
                 >
                     {#snippet icon()}
                         {@const Icon = getIcon(sample.type as AssetType)}
-                        <Icon size={20} class="text-slate-400" />
+                        <Icon size={20} class="text-muted-foreground" />
                     {/snippet}
                 </GhostRow>
             {/each}
@@ -1157,14 +1157,14 @@
                     <button
                         onclick={addStarterPack}
                         disabled={addingStarter}
-                        class="disabled:opacity-50 text-sm font-bold text-[#4A7C74] hover:bg-[#4A7C74]/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                        class="disabled:opacity-50 text-sm font-bold text-primary hover:bg-primary/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
                     >
                         <Sparkles size={14} /> Or use the Starter Pack
                     </button>
                     <!-- Fallback manual trigger -->
                     <button
                         onclick={() => (showAddForm = true)}
-                        class="text-sm font-bold text-stone-400 hover:text-[#4A7C74] px-4 py-2"
+                        class="text-sm font-bold text-muted-foreground hover:text-primary px-4 py-2"
                     >
                         Or share your own
                     </button>
@@ -1174,43 +1174,43 @@
     </div>
     {:else}
     <!-- Table View -->
-    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+    <div class="bg-card rounded-xl border border-border overflow-hidden">
         <table class="w-full">
-            <thead class="bg-slate-50 border-b border-slate-200">
+            <thead class="bg-background border-b border-border">
                 <tr>
-                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Asset</th>
-                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Type</th>
-                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Location</th>
-                    <th class="text-right px-4 py-3 text-xs font-bold uppercase text-slate-500">Value</th>
-                    <th class="text-right px-4 py-3 text-xs font-bold uppercase text-slate-500">Actions</th>
+                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Asset</th>
+                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Type</th>
+                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Location</th>
+                    <th class="text-right px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Value</th>
+                    <th class="text-right px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Actions</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100">
+            <tbody class="divide-y divide-border">
                 {#each assets as asset (asset.id)}
                     {@const Icon = getIcon(asset.type)}
-                    <tr class="hover:bg-slate-50 transition-colors group">
+                    <tr class="hover:bg-background transition-colors group">
                         <td class="px-4 py-3">
                             <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 shrink-0 rounded-lg bg-secondary/30 flex items-center justify-center text-[#4A7C74]">
+                                <div class="w-8 h-8 shrink-0 rounded-lg bg-secondary/30 flex items-center justify-center text-primary">
                                     <Icon size={16} />
                                 </div>
-                                <span class="font-medium text-slate-800">{asset.name}</span>
+                                <span class="font-medium text-foreground">{asset.name}</span>
                                 {#if asset.is_closed}
-                                    <span data-testid="closed-badge" class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[11px] font-bold">Closed</span>
+                                    <span data-testid="closed-badge" class="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-[11px] font-bold">Closed</span>
                                 {/if}
                             </div>
                         </td>
                         <td class="px-4 py-3">
-                            <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-medium">
+                            <span class="px-2 py-1 bg-muted text-muted-foreground rounded text-xs font-medium">
                                 {asset.type}
                             </span>
                         </td>
-                        <td class="px-4 py-3 text-slate-600 text-sm">{asset.location || '-'}</td>
+                        <td class="px-4 py-3 text-muted-foreground text-sm">{asset.location || '-'}</td>
                         <td class="px-4 py-3 text-right">
                             {#if $userRole !== "Family"}
-                                <span class="font-bold text-slate-800">{shownValue(asset)}</span>
+                                <span class="font-bold text-foreground">{shownValue(asset)}</span>
                                 {#if partShare(asset) !== null && hasNumber(asset.value)}
-                                    <div class="text-[11px] text-slate-500">Your {partShare(asset)}% share: {money(Math.abs(ownedValue(asset)))}</div>
+                                    <div class="text-[11px] text-muted-foreground">Your {partShare(asset)}% share: {money(Math.abs(ownedValue(asset)))}</div>
                                 {/if}
                             {:else}
                                 <span class="font-bold text-muted-foreground blur-sm select-none">$•••,•••</span>
@@ -1221,14 +1221,14 @@
                             <div class="flex items-center justify-end gap-1">
                                 <button
                                     onclick={() => editAsset(asset)}
-                                    class="p-1 hover:bg-slate-100 text-slate-400 hover:text-[#4A7C74] rounded transition-colors"
+                                    class="p-1 hover:bg-muted text-muted-foreground hover:text-primary rounded transition-colors"
                                     title="Edit these details"
                                 >
                                     <Pencil size={14} />
                                 </button>
                                 <button
                                     onclick={() => removeAsset(asset.id)}
-                                    class="p-1 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded transition-colors"
+                                    class="p-1 hover:bg-danger-soft text-muted-foreground hover:text-danger rounded transition-colors"
                                     title="Remove this item"
                                 >
                                     <Trash2 size={14} />
@@ -1240,7 +1240,7 @@
                 {/each}
                 {#if assets.length === 0}
                     <tr>
-                        <td colspan="5" class="px-4 py-8 text-center text-slate-400">
+                        <td colspan="5" class="px-4 py-8 text-center text-muted-foreground">
                             Your accounts will appear here as you add them.
                         </td>
                     </tr>

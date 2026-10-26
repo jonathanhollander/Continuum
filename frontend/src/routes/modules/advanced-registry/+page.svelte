@@ -223,14 +223,14 @@
         <div class="flex items-center gap-4">
             <div class="relative w-full md:w-64">
                 <Search
-                    class="absolute left-3.5 top-2.5 text-slate-400"
+                    class="absolute left-3.5 top-2.5 text-muted-foreground"
                     size={18}
                 />
                 <input
                     bind:value={searchQuery}
                     aria-label="Search registry"
                     placeholder="Search registry..."
-                    class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm"
+                    class="w-full pl-10 pr-4 py-2 bg-card border border-border rounded-xl outline-none focus:ring-2 focus:ring-primary/20 transition-all text-sm"
                 />
             </div>
             <button
@@ -246,7 +246,7 @@
                                 : "maintenance";
                     showAddModal = true;
                 }}
-                class="px-5 py-2.5 bg-slate-900 text-white rounded-xl font-bold flex items-center gap-2 hover:bg-indigo-600 transition-all shadow-lg active:scale-95"
+                class="px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-bold flex items-center gap-2 hover:bg-primary-hover transition-all shadow-lg active:scale-95"
             >
                 <Plus size={18} />
                 Add Record
@@ -268,15 +268,15 @@
 
     <!-- Tabs -->
     <div
-        class="flex items-center gap-1 bg-slate-100 p-1.5 rounded-2xl w-fit border border-slate-200 shadow-inner"
+        class="flex items-center gap-1 bg-muted p-1.5 rounded-2xl w-fit border border-border shadow-inner"
     >
         {#each tabs as tab}
             <button
                 onclick={() => (activeTab = tab.id as any)}
                 class="flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all {activeTab ===
                 tab.id
-                    ? 'bg-white text-slate-900 shadow-md'
-                    : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'}"
+                    ? 'bg-card text-foreground shadow-md'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-card/50'}"
             >
                 <tab.icon size={16} />
                 {tab.label}
@@ -286,53 +286,53 @@
 
     <!-- Content Sections -->
     <div
-        class="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden min-h-[600px] flex flex-col"
+        class="bg-card rounded-[2.5rem] border border-border shadow-sm overflow-hidden min-h-[600px] flex flex-col"
     >
         {#if activeTab === "transactions"}
             <div class="overflow-x-auto" in:fade>
                 <table class="w-full text-left border-collapse">
-                    <thead class="bg-slate-50 border-b border-slate-100">
+                    <thead class="bg-background border-b border-border">
                         <tr>
                             <th
-                                class="px-8 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest"
+                                class="px-8 py-5 text-[10px] font-black uppercase text-muted-foreground tracking-widest"
                                 >Date</th
                             >
                             <th
-                                class="px-8 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest"
+                                class="px-8 py-5 text-[10px] font-black uppercase text-muted-foreground tracking-widest"
                                 >Description</th
                             >
                             <th
-                                class="px-8 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center"
+                                class="px-8 py-5 text-[10px] font-black uppercase text-muted-foreground tracking-widest text-center"
                                 >Type</th
                             >
                             <th
-                                class="px-8 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest text-right"
+                                class="px-8 py-5 text-[10px] font-black uppercase text-muted-foreground tracking-widest text-right"
                                 >Amount</th
                             >
                             <th
-                                class="px-8 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest text-right"
+                                class="px-8 py-5 text-[10px] font-black uppercase text-muted-foreground tracking-widest text-right"
                                 >Actions</th
                             >
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-50">
+                    <tbody class="divide-y divide-border/50">
                         {#each filteredTransactions as tx (tx.id)}
                             <tr
-                                class="hover:bg-slate-50/50 transition-colors group"
+                                class="hover:bg-background/50 transition-colors group"
                             >
                                 <td
-                                    class="px-8 py-5 text-sm font-bold text-slate-600 font-mono italic"
+                                    class="px-8 py-5 text-sm font-bold text-muted-foreground font-mono italic"
                                     >{tx.date}</td
                                 >
                                 <td class="px-8 py-5">
                                     <p
-                                        class="text-sm font-black text-slate-900"
+                                        class="text-sm font-black text-foreground"
                                     >
                                         {tx.description}
                                     </p>
                                     {#if assetName(tx.assetId)}
                                         <p
-                                            class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter"
+                                            class="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter"
                                         >
                                             {assetName(tx.assetId)}
                                         </p>
@@ -342,14 +342,14 @@
                                     <span
                                         class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border {tx.type ===
                                         'purchase'
-                                            ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                                            : 'bg-amber-50 text-amber-600 border-amber-100'}"
+                                            ? 'bg-success/10 text-success border-success/20'
+                                            : 'bg-warning-soft text-warning border-warning/30'}"
                                     >
                                         {tx.type}
                                     </span>
                                 </td>
                                 <td
-                                    class="px-8 py-5 text-right font-black text-slate-900 font-mono"
+                                    class="px-8 py-5 text-right font-black text-foreground font-mono"
                                 >
                                     {tx.type === "sale"
                                         ? "+"
@@ -359,7 +359,7 @@
                                     <button aria-label="Remove this item"
                                         onclick={() =>
                                             removeFrom("transactions", tx.id)}
-                                        class="p-2 text-slate-300 hover:text-rose-500 transition-colors"
+                                        class="p-2 text-muted-foreground hover:text-danger transition-colors"
                                     >
                                         <Trash2 size={16} />
                                     </button>
@@ -374,14 +374,14 @@
                         whyMatters="<strong>Asset transactions tell the story of your financial life—purchases, sales, transfers, and valuations.</strong> This record helps your family understand where each asset came from and who it is meant for."
                         encouragement="Start with your most significant assets. You can add more details as you remember them."
                         icon={Repeat}
-                        iconClass="text-indigo-500"
+                        iconClass="text-primary"
                         ctaLabel="Record first transaction"
                         onAction={() => { addType = 'transaction'; showAddModal = true; }}
                     />
                     <!-- Sample Data GhostRows -->
                     <div class="px-8 pb-8">
-                        <p class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-4 text-center">Example entries to inspire you</p>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 opacity-60">
+                        <p class="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-4 text-center">Example entries to inspire you</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <GhostRow
                                 name="Home Purchase - 123 Oak Street"
                                 subtitle="Real Estate Transaction"
@@ -427,39 +427,39 @@
                 >
                     {#each filteredMaintenance as log (log.id)}
                         <div
-                            class="bg-slate-50 rounded-2xl p-6 border border-slate-100 space-y-4 hover:shadow-md transition-all"
+                            class="bg-background rounded-2xl p-6 border border-border space-y-4 hover:shadow-md transition-all"
                         >
                             <div class="flex items-center justify-between">
                                 <div
-                                    class="p-3 bg-white rounded-2xl text-indigo-600 shadow-sm"
+                                    class="p-3 bg-card rounded-2xl text-primary shadow-sm"
                                 >
                                     <Wrench size={20} />
                                 </div>
                                 <div class="flex items-center gap-1">
                                     <span
-                                        class="px-3 py-1 bg-white text-[10px] font-black uppercase text-slate-400 rounded-full border border-slate-100"
+                                        class="px-3 py-1 bg-card text-[10px] font-black uppercase text-muted-foreground rounded-full border border-border"
                                         >{log.date}</span
                                     >
                                     <button aria-label="Remove this item"
                                         onclick={() => removeFrom("maintenance", log.id)}
-                                        class="p-2 text-slate-300 hover:text-rose-500 transition-colors"
+                                        class="p-2 text-muted-foreground hover:text-danger transition-colors"
                                     >
                                         <Trash2 size={16} />
                                     </button>
                                 </div>
                             </div>
-                            <h3 class="font-bold text-slate-900">{log.item}</h3>
+                            <h3 class="font-bold text-foreground">{log.item}</h3>
                             <div
-                                class="flex items-center justify-between text-xs text-slate-500 font-medium"
+                                class="flex items-center justify-between text-xs text-muted-foreground font-medium"
                             >
                                 <span>{#if log.provider}Provider: {log.provider}{/if}</span>
-                                <span class="text-slate-900 font-black"
+                                <span class="text-foreground font-black"
                                     >${log.cost}</span
                                 >
                             </div>
                             {#if log.nextDueDate}
                                 <div
-                                    class="pt-3 border-t border-slate-100 flex items-center gap-2 text-[10px] font-black uppercase text-amber-600"
+                                    class="pt-3 border-t border-border flex items-center gap-2 text-[10px] font-black uppercase text-warning"
                                 >
                                     <Clock size={12} />
                                     Next Due: {log.nextDueDate}
@@ -474,14 +474,14 @@
                         whyMatters="<strong>Maintenance records are invaluable for whoever inherits your property.</strong> Knowing when the roof was last inspected, who services the HVAC, or when the septic was pumped helps them care for what you built and keeps warranties in view."
                         encouragement="Start with your most recent service call or inspection. The history will build over time."
                         icon={Wrench}
-                        iconClass="text-amber-500"
+                        iconClass="text-primary"
                         ctaLabel="Log first maintenance"
                         onAction={() => { addType = 'maintenance'; showAddModal = true; }}
                     />
                     <!-- Sample Data GhostRows -->
                     <div class="mt-8">
-                        <p class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-4 text-center">Example entries to inspire you</p>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 opacity-60">
+                        <p class="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-4 text-center">Example entries to inspire you</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <GhostRow
                                 name="HVAC Annual Service"
                                 subtitle="Heating & Cooling"
@@ -525,27 +525,27 @@
                 <div class="space-y-4">
                     {#each filteredClaims as claim (claim.id)}
                         <div
-                            class="flex items-center justify-between p-6 bg-white border border-slate-100 rounded-2xl hover:border-indigo-200 transition-all group"
+                            class="flex items-center justify-between p-6 bg-card border border-border rounded-2xl hover:border-primary/30 transition-all group"
                         >
                             <div class="flex items-center gap-6">
                                 <div
-                                    class="w-14 h-14 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-all"
+                                    class="w-14 h-14 bg-background text-muted-foreground rounded-2xl flex items-center justify-center group-hover:bg-primary-soft group-hover:text-primary-hover transition-all"
                                 >
                                     <FileCheck size={28} />
                                 </div>
                                 <div>
                                     <h3
-                                        class="font-bold text-lg text-slate-900 uppercase"
+                                        class="font-bold text-lg text-foreground uppercase"
                                     >
                                         Claim #{claim.claimNumber}
                                     </h3>
                                     <p
-                                        class="text-sm text-slate-500 font-medium"
+                                        class="text-sm text-muted-foreground font-medium"
                                     >
                                         {claim.note}
                                     </p>
                                     {#if policyName(claim.policyId)}
-                                        <p class="text-xs text-slate-400 font-bold mt-1">
+                                        <p class="text-xs text-muted-foreground font-bold mt-1">
                                             {policyName(claim.policyId)}
                                         </p>
                                     {/if}
@@ -554,7 +554,7 @@
                             <div class="flex items-center gap-10">
                                 <div class="text-right">
                                     <p
-                                        class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1"
+                                        class="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1"
                                     >
                                         Status
                                     </p>
@@ -564,8 +564,8 @@
                                         onchange={(e) => setClaimStatus(claim.id, e.currentTarget.value as InsuranceClaim["status"])}
                                         class="px-3 py-1 rounded-full text-[10px] font-black uppercase cursor-pointer {claim.status ===
                                         'paid'
-                                            ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                                            : 'bg-amber-50 text-amber-600 border border-amber-100'}"
+                                            ? 'bg-success/10 text-success border border-success/20'
+                                            : 'bg-warning-soft text-warning border border-warning/30'}"
                                     >
                                         <option value="pending">Pending</option>
                                         <option value="approved">Approved</option>
@@ -575,12 +575,12 @@
                                 </div>
                                 <div class="text-right">
                                     <p
-                                        class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1"
+                                        class="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1"
                                     >
                                         Claimed
                                     </p>
                                     <p
-                                        class="font-black text-slate-900 font-mono"
+                                        class="font-black text-foreground font-mono"
                                     >
                                         ${(claim.amountClaimed ?? 0).toLocaleString()}
                                     </p>
@@ -588,7 +588,7 @@
                                 <button aria-label="Remove this item"
                                     onclick={() =>
                                         removeFrom("claims", claim.id)}
-                                    class="p-2 text-slate-200 hover:text-rose-500 transition-colors"
+                                    class="p-2 text-muted-foreground hover:text-danger transition-colors"
                                 >
                                     <Trash2 size={20} />
                                 </button>
@@ -601,14 +601,14 @@
                             whyMatters="<strong>Open claims can take a while.</strong> Noting them here gives your family what they need to follow through."
                             encouragement="If you have any pending claims, add them here. Even resolved claims create a helpful history."
                             icon={FileCheck}
-                            iconClass="text-emerald-500"
+                            iconClass="text-primary"
                             ctaLabel="Track first claim"
                             onAction={() => { addType = 'claim'; showAddModal = true; }}
                         />
                         <!-- Sample Data GhostRows -->
                         <div class="mt-8">
-                            <p class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-4 text-center">Example entries to inspire you</p>
-                            <div class="space-y-4 opacity-60">
+                            <p class="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-4 text-center">Example entries to inspire you</p>
+                            <div class="space-y-4">
                                 <GhostRow
                                     name="Storm Damage - Roof Repair"
                                     subtitle="Home Insurance Claim"
@@ -640,7 +640,7 @@
             <!-- Digital Kill Switch center view -->
             <div class="p-10 space-y-10" in:fade>
                 <div
-                    class="bg-rose-50 border border-rose-100 p-8 rounded-[2rem] flex items-center gap-8 relative overflow-hidden"
+                    class="bg-background border border-border p-8 rounded-[2rem] flex items-center gap-8 relative overflow-hidden"
                 >
                     <div
                         class="absolute -right-10 -bottom-10 opacity-5 rotate-12 pointer-events-none"
@@ -648,16 +648,16 @@
                         <ShieldAlert size={200} />
                     </div>
                     <div
-                        class="w-20 h-20 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center shrink-0 shadow-inner"
+                        class="w-20 h-20 bg-primary-soft text-primary-hover rounded-2xl flex items-center justify-center shrink-0 shadow-inner"
                     >
                         <Flower2 size={40} />
                     </div>
                     <div class="space-y-2 relative z-10">
-                        <h2 class="text-2xl font-black text-rose-900">
+                        <h2 class="text-2xl font-black text-foreground">
                             How to care for your online presence
                         </h2>
                         <p
-                            class="text-rose-800/70 max-w-2xl font-medium leading-relaxed"
+                            class="text-muted-foreground max-w-2xl font-medium leading-relaxed"
                         >
                             Define how your online presence should be managed,
                             with clear wishes for your executor about
@@ -672,7 +672,7 @@
                         whyMatters="<strong>Each account can carry its own wish.</strong> Clear wishes for your executor about memorializing or removing each account make the path simple for your family."
                         encouragement="Start with your most important account. You can add more details as you remember them."
                         icon={Monitor}
-                        iconClass="text-indigo-500"
+                        iconClass="text-primary"
                         ctaLabel="Share an account"
                         onAction={() => { addType = 'account'; showAddModal = true; }}
                     />
@@ -680,24 +680,24 @@
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {#each filteredAccounts as acc (acc.id)}
                         <div
-                            class="bg-white border-2 border-slate-50 rounded-[2.5rem] p-8 space-y-6 hover:border-indigo-100 transition-all shadow-sm"
+                            class="bg-card border-2 border-border/50 rounded-[2.5rem] p-8 space-y-6 hover:border-primary/20 transition-all shadow-sm"
                         >
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-4">
                                     <div
-                                        class="p-3 bg-slate-900 text-white rounded-2xl"
+                                        class="p-3 bg-primary-deep text-white rounded-2xl"
                                     >
                                         <Monitor size={20} />
                                     </div>
                                     <div>
                                         <h3
-                                            class="font-black text-slate-900 text-xl tracking-tight uppercase"
+                                            class="font-black text-foreground text-xl tracking-tight uppercase"
                                         >
                                             {acc.platform ?? acc.name ?? ""}
                                         </h3>
                                         {#if acc.username}
                                             <p
-                                                class="text-[10px] font-black text-slate-400 tracking-[0.2em]"
+                                                class="text-[10px] font-black text-muted-foreground tracking-[0.2em]"
                                             >
                                                 {acc.username}
                                             </p>
@@ -709,8 +709,8 @@
                                         <span
                                             class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider {acc.priority ===
                                             'high'
-                                                ? 'bg-rose-100 text-rose-700'
-                                                : 'bg-slate-100 text-slate-500'}"
+                                                ? 'bg-warning-soft text-warning'
+                                                : 'bg-muted text-muted-foreground'}"
                                         >
                                             {acc.priority} Priority
                                         </span>
@@ -724,8 +724,8 @@
                                     >
                                         <div
                                             class="w-10 h-5 rounded-full relative transition-all {acc.isClosed
-                                                ? 'bg-rose-500'
-                                                : 'bg-slate-200'}"
+                                                ? 'bg-primary'
+                                                : 'bg-border'}"
                                         >
                                             <div
                                                 class="absolute top-1 w-3 h-3 bg-white rounded-full transition-all {acc.isClosed
@@ -734,7 +734,7 @@
                                             ></div>
                                         </div>
                                         <span
-                                            class="text-[10px] font-black uppercase text-slate-400 group-hover:text-slate-900 transition-colors"
+                                            class="text-[10px] font-black uppercase text-muted-foreground group-hover:text-foreground transition-colors"
                                             >Closed</span
                                         >
                                     </button>
@@ -743,44 +743,44 @@
 
                             {#if acc.instructions || hasWish(acc) || (acc.isClosed && acc.closureDate)}
                             <div
-                                class="p-5 bg-slate-50 rounded-2xl border border-slate-100 space-y-2"
+                                class="p-5 bg-background rounded-2xl border border-border space-y-2"
                             >
                                 {#if acc.instructions}
                                     <h4
-                                        class="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2"
+                                        class="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2"
                                     >
                                         <ArrowUpRight
                                             size={12}
-                                            class="text-indigo-600"
+                                            class="text-primary"
                                         />
                                         Final Instruction
                                     </h4>
                                     <p
-                                        class="text-sm font-bold text-slate-700 italic"
+                                        class="text-sm font-bold text-foreground italic"
                                     >
                                         "{acc.instructions}"
                                     </p>
                                 {/if}
                                 <div
-                                    class="flex items-center justify-between {acc.instructions ? 'pt-3 border-t border-slate-200 mt-2' : ''}"
+                                    class="flex items-center justify-between {acc.instructions ? 'pt-3 border-t border-border mt-2' : ''}"
                                 >
                                     <div class="flex items-center gap-2">
                                         {#if hasWish(acc)}
                                             <span
                                                 class="w-2 h-2 rounded-full {acc.preference ===
                                                 'delete'
-                                                    ? 'bg-rose-500'
-                                                    : 'bg-indigo-500'}"
+                                                    ? 'bg-muted-foreground'
+                                                    : 'bg-primary'}"
                                             ></span>
                                             <span
-                                                class="text-[10px] font-black uppercase text-slate-600 tracking-wider"
+                                                class="text-[10px] font-black uppercase text-muted-foreground tracking-wider"
                                                 >Protocol: {acc.preference}</span
                                             >
                                         {/if}
                                     </div>
                                     {#if acc.isClosed && acc.closureDate}
                                         <span
-                                            class="text-[9px] font-bold text-rose-400 italic"
+                                            class="text-[10px] font-bold text-muted-foreground italic"
                                             >Deactivated on {new Date(
                                                 acc.closureDate,
                                             ).toLocaleDateString()}</span
@@ -804,20 +804,20 @@
         transition:fade
     >
         <div
-            class="bg-white w-full max-w-lg rounded-[3rem] shadow-2xl overflow-hidden border border-white/20"
+            class="bg-card w-full max-w-lg rounded-[3rem] shadow-2xl overflow-hidden border border-white/20"
             transition:scale={{ start: 0.95, duration: 300 }}
         >
             <div
-                class="px-10 py-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50"
+                class="px-10 py-8 border-b border-border flex items-center justify-between bg-background/50"
             >
                 <h3
-                    class="text-xl font-black text-slate-900 uppercase tracking-tight"
+                    class="text-xl font-black text-foreground uppercase tracking-tight"
                 >
                     Add {addType}
                 </h3>
                 <button aria-label="Close"
                     onclick={() => (showAddModal = false)}
-                    class="text-slate-400 hover:text-slate-900 transition-colors"
+                    class="text-muted-foreground hover:text-foreground transition-colors"
                 >
                     <X size={24} />
                 </button>
@@ -830,13 +830,13 @@
                             <div class="space-y-2">
                                 <label
                                     for="asset-id"
-                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+                                    class="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1"
                                     >Asset</label
                                 >
                                 <select
                                     id="asset-id"
                                     bind:value={newTx.assetId}
-                                    class="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold"
+                                    class="w-full px-5 py-3 bg-background border border-border rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 text-sm font-bold"
                                 >
                                     <option value={undefined}></option>
                                     {#each assetOptions as o (o.value)}
@@ -847,27 +847,27 @@
                             <div class="space-y-2">
                                 <label
                                     for="tx-date"
-                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+                                    class="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1"
                                     >Date</label
                                 >
                                 <input
                                     id="tx-date"
                                     type="date"
                                     bind:value={newTx.date}
-                                    class="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold"
+                                    class="w-full px-5 py-3 bg-background border border-border rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 text-sm font-bold"
                                 />
                             </div>
                         </div>
                         <div class="space-y-2">
                             <label
                                 for="tx-description"
-                                class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+                                class="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1"
                                 >Description</label
                             >
                             <input
                                 id="tx-description"
                                 bind:value={newTx.description}
-                                class="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold"
+                                class="w-full px-5 py-3 bg-background border border-border rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 text-sm font-bold"
                                 placeholder="Quarterly Valuation"
                             />
                         </div>
@@ -875,13 +875,13 @@
                             <div class="space-y-2">
                                 <label
                                     for="tx-type"
-                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+                                    class="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1"
                                     >Type</label
                                 >
                                 <select
                                     id="tx-type"
                                     bind:value={newTx.type}
-                                    class="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold appearance-none"
+                                    class="w-full px-5 py-3 bg-background border border-border rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 text-sm font-bold appearance-none"
                                 >
                                     <option value="purchase">Purchase</option>
                                     <option value="sale">Sale</option>
@@ -893,18 +893,18 @@
                             <div class="space-y-2">
                                 <label
                                     for="tx-amount"
-                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+                                    class="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1"
                                     >Amount ($)</label
                                 >
                                 <input
                                     id="tx-amount"
                                     type="number"
                                     bind:value={newTx.amount}
-                                    class="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold font-mono"
+                                    class="w-full px-5 py-3 bg-background border border-border rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 text-sm font-bold font-mono"
                                 />
                             </div>
                         </div>
-                        <div class="pt-4 mt-4 border-t border-slate-100">
+                        <div class="pt-4 mt-4 border-t border-border">
                             <CustomFieldsManager
                                 entityType="transaction"
                                 bind:data={parsedCustomAttributes}
@@ -916,13 +916,13 @@
                         <div class="space-y-2">
                             <label
                                 for="maint-item"
-                                class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+                                class="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1"
                                 >Item / Task</label
                             >
                             <input
                                 id="maint-item"
                                 bind:value={newMaint.item}
-                                class="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold"
+                                class="w-full px-5 py-3 bg-background border border-border rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 text-sm font-bold"
                                 placeholder="Roof Inspection"
                             />
                         </div>
@@ -930,27 +930,27 @@
                             <div class="space-y-2">
                                 <label
                                     for="maint-cost"
-                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+                                    class="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1"
                                     >Cost ($)</label
                                 >
                                 <input
                                     id="maint-cost"
                                     type="number"
                                     bind:value={newMaint.cost}
-                                    class="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold font-mono"
+                                    class="w-full px-5 py-3 bg-background border border-border rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 text-sm font-bold font-mono"
                                 />
                             </div>
                             <div class="space-y-2">
                                 <label
                                     for="maint-date"
-                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+                                    class="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1"
                                     >Date</label
                                 >
                                 <input
                                     id="maint-date"
                                     type="date"
                                     bind:value={newMaint.date}
-                                    class="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold"
+                                    class="w-full px-5 py-3 bg-background border border-border rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 text-sm font-bold"
                                 />
                             </div>
                         </div>
@@ -958,30 +958,30 @@
                             <div class="space-y-2">
                                 <label
                                     for="maint-provider"
-                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+                                    class="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1"
                                     >Provider</label
                                 >
                                 <input
                                     id="maint-provider"
                                     bind:value={newMaint.provider}
-                                    class="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold"
+                                    class="w-full px-5 py-3 bg-background border border-border rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 text-sm font-bold"
                                 />
                             </div>
                             <div class="space-y-2">
                                 <label
                                     for="maint-next"
-                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+                                    class="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1"
                                     >Next Due</label
                                 >
                                 <input
                                     id="maint-next"
                                     type="date"
                                     bind:value={newMaint.nextDueDate}
-                                    class="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold"
+                                    class="w-full px-5 py-3 bg-background border border-border rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 text-sm font-bold"
                                 />
                             </div>
                         </div>
-                        <div class="pt-4 mt-4 border-t border-slate-100">
+                        <div class="pt-4 mt-4 border-t border-border">
                             <CustomFieldsManager
                                 entityType="maintenance"
                                 bind:data={parsedCustomAttributes}
@@ -993,13 +993,13 @@
                         <div class="space-y-2">
                             <label
                                 for="claim-number"
-                                class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+                                class="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1"
                                 >Claim Number</label
                             >
                             <input
                                 id="claim-number"
                                 bind:value={newClaim.claimNumber}
-                                class="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold"
+                                class="w-full px-5 py-3 bg-background border border-border rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 text-sm font-bold"
                                 placeholder="CL-882299"
                             />
                         </div>
@@ -1007,26 +1007,26 @@
                             <div class="space-y-2">
                                 <label
                                     for="claim-amount"
-                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+                                    class="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1"
                                     >Amount ($)</label
                                 >
                                 <input
                                     id="claim-amount"
                                     type="number"
                                     bind:value={newClaim.amountClaimed}
-                                    class="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold font-mono"
+                                    class="w-full px-5 py-3 bg-background border border-border rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 text-sm font-bold font-mono"
                                 />
                             </div>
                             <div class="space-y-2">
                                 <label
                                     for="claim-policy"
-                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+                                    class="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1"
                                     >Policy</label
                                 >
                                 <select
                                     id="claim-policy"
                                     bind:value={newClaim.policyId}
-                                    class="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold"
+                                    class="w-full px-5 py-3 bg-background border border-border rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 text-sm font-bold"
                                 >
                                     <option value={undefined}></option>
                                     {#each insuranceSync.items as pol (pol.id)}
@@ -1038,17 +1038,17 @@
                         <div class="space-y-2">
                             <label
                                 for="claim-note"
-                                class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+                                class="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1"
                                 >Note / Details</label
                             >
                             <textarea
                                 id="claim-note"
                                 bind:value={newClaim.note}
-                                class="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold"
+                                class="w-full px-5 py-3 bg-background border border-border rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 text-sm font-bold"
                                 rows="3"
                             ></textarea>
                         </div>
-                        <div class="pt-4 mt-4 border-t border-slate-100">
+                        <div class="pt-4 mt-4 border-t border-border">
                             <CustomFieldsManager
                                 entityType="claim"
                                 bind:data={parsedCustomAttributes}
@@ -1061,26 +1061,26 @@
                             <div class="space-y-2">
                                 <label
                                     for="platform-input"
-                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+                                    class="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1"
                                     >Platform</label
                                 >
                                 <input
                                     id="platform-input"
                                     bind:value={newAccount.platform}
-                                    class="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold"
+                                    class="w-full px-5 py-3 bg-background border border-border rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 text-sm font-bold"
                                     placeholder="E.g. Netflix"
                                 />
                             </div>
                             <div class="space-y-2">
                                 <label
                                     for="username-input"
-                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+                                    class="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1"
                                     >Username / ID</label
                                 >
                                 <input
                                     id="username-input"
                                     bind:value={newAccount.username}
-                                    class="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold"
+                                    class="w-full px-5 py-3 bg-background border border-border rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 text-sm font-bold"
                                     placeholder="user@gmail.com"
                                 />
                             </div>
@@ -1089,13 +1089,13 @@
                             <div class="space-y-2">
                                 <label
                                     for="preference-select"
-                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+                                    class="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1"
                                     >Preference</label
                                 >
                                 <select
                                     id="preference-select"
                                     bind:value={newAccount.preference}
-                                    class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#304743] outline-none transition-all"
+                                    class="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                 >
                                     <option value="memorialize"
                                         >Memorialize</option
@@ -1111,13 +1111,13 @@
                             <div class="space-y-2">
                                 <label
                                     for="priority-select"
-                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+                                    class="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1"
                                     >Priority</label
                                 >
                                 <select
                                     id="priority-select"
                                     bind:value={newAccount.priority}
-                                    class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#304743] outline-none transition-all"
+                                    class="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                 >
                                     <option value="low">Low</option>
                                     <option value="medium">Medium</option>
@@ -1128,14 +1128,14 @@
                         <div class="space-y-2">
                             <label
                                 for="final-instructions"
-                                class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+                                class="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1"
                                 >Final Instructions</label
                             >
                             <textarea
                                 id="final-instructions"
                                 bind:value={newAccount.instructions}
                                 placeholder="Any specific details about handling this item..."
-                                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#304743] outline-none transition-all h-24 resize-none"
+                                class="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none transition-all h-24 resize-none"
                             ></textarea>
                         </div>
                     </div>
@@ -1144,13 +1144,13 @@
                 <div class="pt-6 flex items-center gap-4">
                     <button
                         onclick={handleAdd}
-                        class="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black shadow-xl shadow-slate-900/20 hover:scale-[1.02] active:scale-[0.98] transition-all text-sm"
+                        class="flex-1 py-4 bg-primary text-primary-foreground rounded-2xl font-black shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all text-sm"
                     >
                         Save my thoughts
                     </button>
                     <button
                         onclick={() => (showAddModal = false)}
-                        class="px-8 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black hover:bg-slate-200 transition-all text-sm"
+                        class="px-8 py-4 bg-muted text-muted-foreground rounded-2xl font-black hover:bg-border transition-all text-sm"
                     >
                         Maybe later
                     </button>
@@ -1162,15 +1162,15 @@
 
 <style>
     :global(.paper-texture) {
-        background-color: #fff;
+        background-color: var(--color-card);
         background-image: linear-gradient(
                 90deg,
                 transparent 79px,
-                #abced4 79px,
-                #abced4 81px,
+                color-mix(in srgb, var(--color-info) 35%, transparent) 79px,
+                color-mix(in srgb, var(--color-info) 35%, transparent) 81px,
                 transparent 81px
             ),
-            linear-gradient(#eee 0.1em, transparent 0.1em);
+            linear-gradient(var(--color-border) 0.1em, transparent 0.1em);
         background-size: 100% 1.2em;
     }
 </style>

@@ -176,13 +176,13 @@
     function getPriorityColor(p: string) {
         switch (p) {
             case "high":
-                return "text-amber-700 bg-amber-100 border-amber-200";
+                return "text-warning bg-warning-soft border-warning/30";
             case "medium":
-                return "text-[#4A7C74] bg-[#4A7C74]/10 border-[#4A7C74]/20";
+                return "text-primary-hover bg-primary/10 border-primary/20";
             case "low":
-                return "text-slate-600 bg-slate-100 border-slate-200";
+                return "text-muted-foreground bg-muted border-border";
             default:
-                return "text-gray-600";
+                return "text-muted-foreground";
         }
     }
 
@@ -200,7 +200,7 @@
     >
         <div>
             <div class="flex items-center gap-2 mb-2">
-                <div class="bg-[#4A7C74]/10 text-[#4A7C74] p-2 rounded-full">
+                <div class="bg-primary/10 text-primary-hover p-2 rounded-full">
                     <Map size={24} />
                 </div>
                 <h3 class="text-3xl font-serif font-bold text-primary">
@@ -216,14 +216,14 @@
         <div class="flex gap-3">
             <button
                 onclick={() => (showWizard = true)}
-                class="bg-secondary/10 hover:bg-secondary/20 text-[#4A7C74] px-4 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-all"
+                class="bg-secondary/10 hover:bg-secondary/20 text-primary px-4 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-all"
             >
                 <Compass size={18} /> where do I start?
             </button>
 
             <button
                 onclick={() => (showAddForm = !showAddForm)}
-                class="bg-[#4A7C74] hover:bg-[#3b635d] text-white px-5 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
+                class="bg-primary hover:bg-primary-hover text-primary-foreground px-5 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
             >
                 <Plus size={18} /> Add Step
             </button>
@@ -233,20 +233,20 @@
     <!-- Guided Wizard Overlay -->
     {#if showWizard}
         <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => (showWizard = false) }}
-            class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
             transition:fade
         >
             <div
                 class="bg-background border border-border rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]"
             >
-                <div class="p-8 bg-[#FBF9EB]/50 relative">
+                <div class="p-8 bg-muted/50 relative">
                     <button aria-label="Close"
                         onclick={() => (showWizard = false)}
                         class="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
                         ><X size={20} /></button
                     >
                     <h3
-                        class="font-serif font-bold text-2xl text-[#304743] mb-2"
+                        class="font-serif font-bold text-2xl text-foreground mb-2"
                     >
                         Choose your Path
                     </h3>
@@ -259,17 +259,17 @@
                         {#each blueprints as bp}
                             <button
                                 onclick={() => loadBlueprint(bp)}
-                                class="text-left p-6 bg-white border border-border hover:border-[#4A7C74] rounded-xl transition-all hover:shadow-lg group relative overflow-hidden"
+                                class="text-left p-6 bg-card border border-border hover:border-primary rounded-xl transition-all hover:shadow-lg group relative overflow-hidden"
                             >
                                 <div
-                                    class="bg-[#4A7C74]/5 p-3 rounded-full w-fit mb-4 text-[#4A7C74]"
+                                    class="bg-primary/5 p-3 rounded-full w-fit mb-4 text-primary-hover"
                                 >
                                     <bp.icon
                                         size={24}
                                     />
                                 </div>
                                 <h4
-                                    class="font-bold text-lg text-[#304743] mb-1 group-hover:underline"
+                                    class="font-bold text-lg text-foreground mb-1 group-hover:underline"
                                 >
                                     {bp.name}
                                 </h4>
@@ -279,7 +279,7 @@
                                     {bp.description}
                                 </p>
                                 <div
-                                    class="absolute bottom-0 left-0 w-full h-1 bg-[#4A7C74] transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"
+                                    class="absolute bottom-0 left-0 w-full h-1 bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"
                                 ></div>
                             </button>
                         {/each}
@@ -295,7 +295,7 @@
             class="bg-secondary/5 rounded-full h-2 w-full overflow-hidden flex items-center"
         >
             <div
-                class="bg-[#4A7C74] h-full transition-all duration-1000"
+                class="bg-primary h-full transition-all duration-1000"
                 style="width: {progress}%"
             ></div>
         </div>
@@ -312,9 +312,9 @@
     {#if showAddForm}
         <div
             transition:slide
-            class="glass-panel p-4 rounded-xl flex gap-3 items-center border-[#4A7C74]/20"
+            class="bg-card/70 backdrop-blur-md border border-border shadow-sm p-4 rounded-xl flex gap-3 items-center border-primary/20"
         >
-            <div class="bg-[#4A7C74]/10 p-2 rounded-full text-[#4A7C74]">
+            <div class="bg-primary/10 p-2 rounded-full text-primary-hover">
                 <Footprints size={20} />
             </div>
             <input
@@ -325,7 +325,7 @@
             />
             <button
                 onclick={() => addTask()}
-                class="font-bold text-[#4A7C74] hover:text-[#3b635d]"
+                class="font-bold text-primary hover:text-primary-hover"
                 >Add</button
             >
         </div>
@@ -335,7 +335,7 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 h-[600px]">
         <!-- To Do -->
         <div
-            class="flex flex-col h-full bg-secondary/5 rounded-xl border border-white/20"
+            class="flex flex-col h-full bg-secondary/5 rounded-xl border border-border"
         >
             <div
                 class="p-4 border-b border-border/40 flex justify-between items-center sticky top-0 bg-secondary/5 backdrop-blur-md rounded-t-xl z-10"
@@ -345,7 +345,7 @@
                 >
                     <Circle size={16} /> To Do
                     <span
-                        class="bg-black/5 px-2 py-0.5 rounded-full text-[10px]"
+                        class="bg-muted px-2 py-0.5 rounded-full text-[10px]"
                         >{todos.length}</span
                     >
                 </h4>
@@ -353,7 +353,7 @@
             <div class="p-4 space-y-3 overflow-y-auto flex-1">
                 {#each todos as task (task.id)}
                     <div
-                        class="glass-card p-4 rounded-lg group hover:border-l-4 hover:border-l-[#4A7C74] transition-all cursor-grab active:cursor-grabbing relative"
+                        class="bg-card/60 backdrop-blur-sm border border-border shadow-sm hover:shadow-md transition-all duration-300 p-4 rounded-lg group hover:border-l-4 hover:border-l-primary transition-all cursor-grab active:cursor-grabbing relative"
                         animate:flip
                     >
                         <button aria-label="Remove this item"
@@ -370,7 +370,7 @@
                             >
                             {#if task.assignee}
                                 <span
-                                    class="text-[10px] uppercase font-bold px-2 py-0.5 rounded border bg-gray-100 text-gray-600 border-gray-200 flex items-center gap-1"
+                                    class="text-[10px] uppercase font-bold px-2 py-0.5 rounded border bg-muted text-muted-foreground border-border flex items-center gap-1"
                                 >
                                     <ListTodo size={10} />
                                     {task.assignee}
@@ -392,7 +392,7 @@
                             </div>
                             <button
                                 onclick={() => moveTask(task, "doing")}
-                                class="text-xs font-bold text-[#4A7C74] hover:underline flex items-center gap-1"
+                                class="text-xs font-bold text-primary hover:underline flex items-center gap-1"
                             >
                                 Start Step <ArrowRight size={12} />
                             </button>
@@ -400,7 +400,7 @@
                     </div>
                 {/each}
                 {#if todos.length === 0}
-                    <div class="text-center py-10 opacity-50 text-sm italic">
+                    <div class="text-center py-10 text-muted-foreground text-sm italic">
                         You're all caught up. Breathe easy.
                     </div>
                 {/if}
@@ -409,17 +409,17 @@
 
         <!-- In Progress -->
         <div
-            class="flex flex-col h-full bg-[#4A7C74]/5 rounded-xl border border-[#4A7C74]/10"
+            class="flex flex-col h-full bg-primary/5 rounded-xl border border-primary/10"
         >
             <div
-                class="p-4 border-b border-border/40 flex justify-between items-center sticky top-0 bg-[#4A7C74]/5 backdrop-blur-md rounded-t-xl z-10"
+                class="p-4 border-b border-border/40 flex justify-between items-center sticky top-0 bg-primary/5 backdrop-blur-md rounded-t-xl z-10"
             >
                 <h4
-                    class="font-bold text-sm uppercase tracking-widest text-[#4A7C74] flex items-center gap-2"
+                    class="font-bold text-sm uppercase tracking-widest text-primary flex items-center gap-2"
                 >
                     <Footprints size={16} /> In Progress
                     <span
-                        class="bg-[#4A7C74]/20 px-2 py-0.5 rounded-full text-[10px]"
+                        class="bg-primary/20 px-2 py-0.5 rounded-full text-[10px]"
                         >{doing.length}</span
                     >
                 </h4>
@@ -427,7 +427,7 @@
             <div class="p-4 space-y-3 overflow-y-auto flex-1">
                 {#each doing as task (task.id)}
                     <div
-                        class="glass-card p-4 rounded-lg border-l-4 border-l-[#4A7C74] cursor-grab active:cursor-grabbing relative shadow-md"
+                        class="bg-card/60 backdrop-blur-sm border border-border shadow-sm hover:shadow-md transition-all duration-300 p-4 rounded-lg border-l-4 border-l-primary cursor-grab active:cursor-grabbing relative shadow-md"
                     >
                         <h5 class="font-bold text-foreground leading-snug mb-3">
                             {task.title}
@@ -437,12 +437,12 @@
                             class="flex items-center justify-between mt-2 pt-2 border-t border-dashed border-border/50"
                         >
                             <span
-                                class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-white text-muted-foreground shadow-sm"
+                                class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-card text-muted-foreground shadow-sm"
                                 >{task.priority}</span
                             >
                             <button
                                 onclick={() => moveTask(task, "done")}
-                                class="text-xs font-bold text-emerald-600 hover:underline flex items-center gap-1"
+                                class="text-xs font-bold text-success hover:underline flex items-center gap-1"
                             >
                                 Mark Complete <CircleCheck size={12} />
                             </button>
@@ -454,17 +454,17 @@
 
         <!-- Done -->
         <div
-            class="flex flex-col h-full bg-emerald-500/5 rounded-xl border border-emerald-500/10"
+            class="flex flex-col h-full bg-success/5 rounded-xl border border-success/10"
         >
             <div
-                class="p-4 border-b border-border/40 flex justify-between items-center sticky top-0 bg-emerald-500/5 backdrop-blur-md rounded-t-xl z-10"
+                class="p-4 border-b border-border/40 flex justify-between items-center sticky top-0 bg-success/5 backdrop-blur-md rounded-t-xl z-10"
             >
                 <h4
-                    class="font-bold text-sm uppercase tracking-widest text-emerald-800 flex items-center gap-2"
+                    class="font-bold text-sm uppercase tracking-widest text-success flex items-center gap-2"
                 >
                     <Flag size={16} /> ACCOMPLISHED
                     <span
-                        class="bg-emerald-200 px-2 py-0.5 rounded-full text-[10px]"
+                        class="bg-success/15 px-2 py-0.5 rounded-full text-[10px]"
                         >{done.length}</span
                     >
                 </h4>
@@ -472,7 +472,7 @@
             <div class="p-4 space-y-3 overflow-y-auto flex-1">
                 {#each done as task (task.id)}
                     <div
-                        class="bg-white/40 p-4 rounded-lg opacity-60 hover:opacity-100 transition-opacity"
+                        class="bg-card/40 p-4 rounded-lg opacity-60 hover:opacity-100 transition-opacity"
                     >
                         <h5
                             class="font-medium text-foreground line-through decoration-muted-foreground leading-snug"

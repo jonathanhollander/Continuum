@@ -489,11 +489,11 @@
     };
 
     const typeColors = {
-        "Real Estate": "text-primary bg-primary/10 border-primary/20",
-        Vehicle: "text-primary bg-primary/10 border-primary/20",
-        "Personal Property": "text-slate-600 bg-slate-50 border-slate-100",
-        Valuable: "text-primary bg-primary/10 border-primary/20",
-        Other: "text-purple-600 bg-purple-50 border-purple-100",
+        "Real Estate": "text-primary-hover bg-primary/10 border-primary/20",
+        Vehicle: "text-primary-hover bg-primary/10 border-primary/20",
+        "Personal Property": "text-muted-foreground bg-background border-border",
+        Valuable: "text-primary-hover bg-primary/10 border-primary/20",
+        Other: "text-muted-foreground bg-muted border-border",
     };
 
     function generateQR(item: PropertyItem) {
@@ -563,7 +563,7 @@
         >
             <div class="w-full max-w-2xl relative" in:fly={{ y: 20 }}>
                 <button
-                    class="absolute -top-12 right-0 text-white/50 hover:text-white"
+                    class="absolute -top-12 right-0 text-white hover:text-white/80"
                     onclick={() => (showWizard = false)}>Go back</button
                 >
                 <ConciergeFlow
@@ -578,7 +578,7 @@
     <!-- Filter Controls -->
     <div class="flex flex-wrap items-center gap-3">
         <div
-            class="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm"
+            class="flex bg-card p-1 rounded-2xl border border-border shadow-sm"
         >
             {#each types as type}
                 <button
@@ -586,7 +586,7 @@
                     class="px-4 py-2 rounded-xl text-xs font-bold tracking-wider transition-all {filterType ===
                     type
                         ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
-                        : 'text-slate-500 hover:text-primary hover:bg-slate-50'}"
+                        : 'text-muted-foreground hover:text-primary hover:bg-background'}"
                 >
                     {type}
                 </button>
@@ -596,25 +596,25 @@
 
     <!-- Search & Filters -->
     <div
-        class="flex flex-col md:flex-row gap-4 items-center justify-between bg-white/50 backdrop-blur-sm p-4 rounded-2xl border border-slate-200 shadow-sm"
+        class="flex flex-col md:flex-row gap-4 items-center justify-between bg-card/50 backdrop-blur-sm p-4 rounded-2xl border border-border shadow-sm"
     >
         <div class="relative w-full md:w-96">
-            <Search class="absolute left-4 top-3.5 text-slate-400" size={18} />
+            <Search class="absolute left-4 top-3.5 text-muted-foreground" size={18} />
             <input
                 type="text"
                 bind:value={searchQuery}
                 aria-label="Search by asset name or location"
                 placeholder="Search by asset name or location..."
-                class="w-full px-4 py-3 pl-12 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                class="w-full px-4 py-3 pl-12 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
             />
         </div>
         <div class="flex items-center gap-2">
             <span
-                class="text-xs font-bold text-slate-400 uppercase tracking-widest"
+                class="text-xs font-bold text-muted-foreground uppercase tracking-widest"
                 >Inventory: {plural(filteredItems.length, "Asset")}</span
             >
             <button
-                class="p-3 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-primary transition-colors shadow-sm disabled:opacity-40 disabled:hover:text-slate-500"
+                class="p-3 bg-card border border-border rounded-xl text-muted-foreground hover:text-primary transition-colors shadow-sm disabled:opacity-40 disabled:hover:text-muted-foreground"
                 aria-label="Download"
                 disabled={shownEvidence.length === 0 || downloadingEvidence}
                 onclick={downloadShownEvidence}
@@ -633,7 +633,7 @@
             <div
                 id="property-item-{item.id}"
                 data-focused={focusId === String(item.id)}
-                class="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 overflow-hidden group flex flex-col relative {focusId === String(item.id) ? 'ring-2 ring-primary' : ''}"
+                class="bg-card rounded-2xl border border-border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 overflow-hidden group flex flex-col relative {focusId === String(item.id) ? 'ring-2 ring-primary' : ''}"
                 use:coverInView={item.thumbnail}
                 transition:scale={{
                     duration: 400,
@@ -646,7 +646,7 @@
                 {#if item.thumbnail && coverUrls[item.thumbnail]}
                     <div class="absolute inset-0 h-48 z-0">
                         <div
-                            class="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent z-10"
+                            class="absolute inset-0 bg-gradient-to-t from-card via-card/80 to-transparent z-10"
                         ></div>
                         <img
                             src={coverUrls[item.thumbnail]}
@@ -661,39 +661,39 @@
                         <div class="flex items-center gap-4">
                             <div
                                 class="w-14 h-14 rounded-2xl shadow-inner flex items-center justify-center transition-all duration-500 {item.thumbnail
-                                    ? 'bg-white/80 backdrop-blur'
+                                    ? 'bg-card/80 backdrop-blur'
                                     : typeColors[item.type]}"
                             >
                                 <Icon
                                     size={28}
                                     strokeWidth={2.5}
                                     class={item.thumbnail
-                                        ? "text-slate-900"
+                                        ? "text-foreground"
                                         : ""}
                                 />
                             </div>
                             <div>
                                 <h3
-                                    class="text-xl font-black text-slate-900 leading-tight group-hover:text-primary transition-colors"
+                                    class="text-xl font-black text-foreground leading-tight group-hover:text-primary transition-colors"
                                 >
                                     {item.name}
                                 </h3>
                                 {#if item.location}
                                 <div
-                                    class="flex items-center gap-1.5 text-slate-400 font-bold text-xs uppercase tracking-tighter"
+                                    class="flex items-center gap-1.5 text-muted-foreground font-bold text-xs uppercase tracking-tighter"
                                 >
-                                    <MapPin size={12} class="text-primary/60" />
+                                    <MapPin size={12} class="text-primary" />
                                     {item.location}
                                 </div>
                                 {/if}
                             </div>
                         </div>
                         <div
-                            class="flex items-center gap-1 bg-white/50 backdrop-blur rounded-2xl p-1"
+                            class="flex items-center gap-1 bg-card/50 backdrop-blur rounded-2xl p-1"
                         >
                             <button
                                 onclick={() => generateQR(item)}
-                                class="p-3 bg-slate-50 hover:bg-amber-50 text-slate-400 hover:text-amber-600 rounded-2xl transition-all"
+                                class="p-3 bg-background hover:bg-primary-soft text-muted-foreground hover:text-primary rounded-2xl transition-all"
                                 title="Generate QR Label"
                             >
                                 <QrCode size={18} />
@@ -701,14 +701,14 @@
                             <button
                                 onclick={() => editItem(item)}
                                 aria-label="Edit these details"
-                                class="p-3 bg-slate-50 hover:bg-primary/10 text-slate-400 hover:text-primary rounded-2xl transition-all"
+                                class="p-3 bg-background hover:bg-primary/10 text-muted-foreground hover:text-primary rounded-2xl transition-all"
                             >
                                 <Edit2 size={18} />
                             </button>
                             <button
                                 onclick={() => (removingId = String(item.id))}
                                 aria-label="Remove this item"
-                                class="p-3 bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-2xl transition-all"
+                                class="p-3 bg-background hover:bg-danger-soft text-muted-foreground hover:text-danger rounded-2xl transition-all"
                             >
                                 <Trash2 size={18} />
                             </button>
@@ -716,20 +716,20 @@
                     </div>
 
                     {#if removingId === String(item.id)}
-                        <div class="p-4 mb-8 bg-rose-50 rounded-2xl border border-rose-100 space-y-3" role="group" aria-label="Remove {item.name}" transition:slide>
-                            <p class="text-sm text-rose-800">Remove "{item.name}" from your property list? You can add it back anytime.</p>
+                        <div class="p-4 mb-8 bg-muted rounded-2xl border border-border space-y-3" role="group" aria-label="Remove {item.name}" transition:slide>
+                            <p class="text-sm text-foreground">Remove "{item.name}" from your property list? You can add it back anytime.</p>
                             <div class="flex gap-2">
                                 <button
                                     type="button"
                                     onclick={() => (removingId = null)}
-                                    class="flex-1 py-2 text-sm font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all"
+                                    class="flex-1 py-2 text-sm font-bold text-muted-foreground bg-card border border-border rounded-xl hover:bg-background transition-all"
                                 >
                                     Maybe later
                                 </button>
                                 <button
                                     type="button"
                                     onclick={() => deleteItem(item.id, item.name)}
-                                    class="flex-1 py-2 text-sm font-bold text-white bg-rose-600 rounded-xl hover:bg-rose-700 transition-all"
+                                    class="flex-1 py-2 text-sm font-bold text-card bg-danger rounded-xl hover:opacity-90 transition-all"
                                 >
                                     Remove this item
                                 </button>
@@ -741,15 +741,15 @@
                     <div class="grid grid-cols-2 gap-4 mb-8">
                         {#if hasValue(item.valuation)}
                         <div
-                            class="bg-slate-50 rounded-2xl p-4 border border-slate-100/50"
+                            class="bg-background rounded-2xl p-4 border border-border/50"
                         >
                             <p
-                                class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1"
+                                class="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1"
                             >
                                 Est. Value
                             </p>
                             <p
-                                class="text-lg font-black text-slate-900 tracking-tight"
+                                class="text-lg font-black text-foreground tracking-tight"
                             >
                                 ${Number(item.valuation).toLocaleString()}
                             </p>
@@ -757,15 +757,15 @@
                         {/if}
                         {#if statusLabel(item.status)}
                         <div
-                            class="bg-slate-50 rounded-2xl p-4 border border-slate-100/50"
+                            class="bg-background rounded-2xl p-4 border border-border/50"
                         >
                             <p
-                                class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1"
+                                class="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1"
                             >
                                 Current Status
                             </p>
                             <p
-                                class="text-sm font-black text-slate-700 tracking-tight"
+                                class="text-sm font-black text-foreground tracking-tight"
                             >
                                 {statusLabel(item.status)}
                             </p>
@@ -778,18 +778,18 @@
                         {#if item.ownershipDetails}
                         <div class="flex items-start gap-4">
                             <div
-                                class="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 shrink-0"
+                                class="w-8 h-8 rounded-xl bg-background flex items-center justify-center text-muted-foreground shrink-0"
                             >
                                 <FileText size={14} />
                             </div>
                             <div>
                                 <p
-                                    class="text-[10px] font-bold text-slate-400 uppercase tracking-widest"
+                                    class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest"
                                 >
                                     Ownership Details
                                 </p>
                                 <p
-                                    class="text-sm font-bold text-slate-700 leading-snug"
+                                    class="text-sm font-bold text-foreground leading-snug"
                                 >
                                     {item.ownershipDetails}
                                 </p>
@@ -799,18 +799,18 @@
                         {#if item.notes}
                             <div class="flex items-start gap-4">
                                 <div
-                                    class="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 shrink-0"
+                                    class="w-8 h-8 rounded-xl bg-background flex items-center justify-center text-muted-foreground shrink-0"
                                 >
                                     <Info size={14} />
                                 </div>
                                 <div>
                                     <p
-                                        class="text-[10px] font-bold text-slate-400 uppercase tracking-widest"
+                                        class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest"
                                     >
                                         Key Notes
                                     </p>
                                     <p
-                                        class="text-sm font-medium text-slate-500 line-clamp-2 leading-relaxed"
+                                        class="text-sm font-medium text-muted-foreground line-clamp-2 leading-relaxed"
                                     >
                                         {item.notes}
                                     </p>
@@ -826,11 +826,11 @@
                             type="button"
                             onclick={() => openOwnershipDocument(item)}
                             aria-busy={openingDocument === String(item.id)}
-                            class="w-full text-left bg-slate-100 rounded-2xl p-6 text-slate-900 flex items-center justify-between group/doc hover:bg-slate-200 transition-colors duration-300"
+                            class="w-full text-left bg-muted rounded-2xl p-6 text-foreground flex items-center justify-between group/doc hover:bg-border transition-colors duration-300"
                         >
                             <span>
                                 <span
-                                    class="block text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1"
+                                    class="block text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1"
                                 >
                                     Important Documents
                                 </span>
@@ -839,7 +839,7 @@
                                 </span>
                             </span>
                             <span
-                                class="w-10 h-10 rounded-full bg-slate-900/10 flex items-center justify-center group-hover/doc:translate-x-1 transition-transform"
+                                class="w-10 h-10 rounded-full bg-foreground/10 flex items-center justify-center group-hover/doc:translate-x-1 transition-transform"
                             >
                                 <Download size={20} />
                             </span>
@@ -849,11 +849,11 @@
                         <button
                             type="button"
                             onclick={() => editItem(item)}
-                            class="w-full text-left bg-slate-100 rounded-2xl p-6 text-slate-900 flex items-center justify-between group/footer hover:bg-slate-200 transition-colors duration-300"
+                            class="w-full text-left bg-muted rounded-2xl p-6 text-foreground flex items-center justify-between group/footer hover:bg-border transition-colors duration-300"
                         >
                             <span>
                                 <span
-                                    class="block text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1"
+                                    class="block text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1"
                                 >
                                     Asset Verification
                                 </span>
@@ -862,7 +862,7 @@
                                 </span>
                             </span>
                             <span
-                                class="w-10 h-10 rounded-full bg-slate-900/10 flex items-center justify-center group-hover/footer:translate-x-1 transition-transform"
+                                class="w-10 h-10 rounded-full bg-foreground/10 flex items-center justify-center group-hover/footer:translate-x-1 transition-transform"
                             >
                                 <ArrowRight size={20} />
                             </span>
@@ -902,7 +902,7 @@
                             }}
                         >
                             {#snippet icon()}
-                                <Building size={20} class="text-slate-400" />
+                                <Building size={20} class="text-muted-foreground" />
                             {/snippet}
                         </GhostRow>
                     {/each}
@@ -950,50 +950,50 @@
                     }}
                 >
                     {#snippet icon()}
-                        <Building size={20} class="text-slate-400" />
+                        <Building size={20} class="text-muted-foreground" />
                     {/snippet}
                 </GhostRow>
             {/each}
         {:else}
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
                 <table class="w-full">
-                    <thead class="bg-slate-50 border-b border-slate-200">
+                    <thead class="bg-background border-b border-border">
                         <tr>
-                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Asset</th>
-                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Type</th>
-                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Location</th>
-                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Value</th>
-                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Status</th>
-                            <th class="px-4 py-3 text-right text-xs font-bold uppercase text-slate-500">Actions</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Asset</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Type</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Location</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Value</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Status</th>
+                            <th class="px-4 py-3 text-right text-xs font-bold uppercase text-muted-foreground">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100">
+                    <tbody class="divide-y divide-border">
                         {#each filteredItems as item (item.id)}
                             {@const Icon = typeIcons[item.type] || LayoutGrid}
                             <tr
                                 id="property-item-{item.id}"
                                 data-focused={focusId === String(item.id)}
-                                class="hover:bg-slate-50 transition-colors group {focusId === String(item.id) ? 'ring-2 ring-primary ring-inset' : ''}"
+                                class="hover:bg-background transition-colors group {focusId === String(item.id) ? 'ring-2 ring-primary ring-inset' : ''}"
                             >
                                 <td class="px-4 py-3">
                                     <div class="flex items-center gap-3">
                                         <div class="w-8 h-8 rounded-lg flex items-center justify-center {typeColors[item.type]}">
                                             <Icon size={16} />
                                         </div>
-                                        <span class="font-medium text-slate-800">{item.name}</span>
+                                        <span class="font-medium text-foreground">{item.name}</span>
                                     </div>
                                 </td>
-                                <td class="px-4 py-3 text-sm text-slate-600">{item.type}</td>
-                                <td class="px-4 py-3 text-sm text-slate-600">{item.location || ''}</td>
-                                <td class="px-4 py-3 text-sm text-slate-600 font-medium">{hasValue(item.valuation) ? `$${Number(item.valuation).toLocaleString()}` : ""}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{item.type}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{item.location || ''}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground font-medium">{hasValue(item.valuation) ? `$${Number(item.valuation).toLocaleString()}` : ""}</td>
                                 <td class="px-4 py-3">
-                                    <span class="text-xs font-medium text-slate-600">{statusLabel(item.status)}</span>
+                                    <span class="text-xs font-medium text-muted-foreground">{statusLabel(item.status)}</span>
                                 </td>
                                 <td class="px-4 py-3 text-right">
                                     <div class="flex items-center justify-end gap-2">
                                         <button
                                             onclick={() => generateQR(item)}
-                                            class="p-1.5 text-slate-400 hover:text-amber-600 transition-colors"
+                                            class="p-1.5 text-muted-foreground hover:text-primary transition-colors"
                                             title="Generate QR Label"
                                         >
                                             <QrCode size={14} />
@@ -1001,13 +1001,13 @@
                                         <button
                                             onclick={() => editItem(item)}
                                             aria-label="Edit these details"
-                                            class="p-1.5 text-slate-400 hover:text-primary transition-colors"
+                                            class="p-1.5 text-muted-foreground hover:text-primary transition-colors"
                                         >
                                             <Edit2 size={14} />
                                         </button>
                                         <button aria-label="Remove this item"
                                             onclick={() => (removingId = String(item.id))}
-                                            class="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
+                                            class="p-1.5 text-muted-foreground hover:text-danger transition-colors"
                                         >
                                             <Trash2 size={14} />
                                         </button>
@@ -1015,22 +1015,22 @@
                                 </td>
                             </tr>
                             {#if removingId === String(item.id)}
-                                <tr class="bg-rose-50">
+                                <tr class="bg-muted">
                                     <td colspan="6" class="px-4 py-3">
                                         <div class="flex items-center justify-between gap-4" role="group" aria-label="Remove {item.name}">
-                                            <p class="text-sm text-rose-800">Remove "{item.name}" from your property list? You can add it back anytime.</p>
+                                            <p class="text-sm text-foreground">Remove "{item.name}" from your property list? You can add it back anytime.</p>
                                             <div class="flex gap-2 shrink-0">
                                                 <button
                                                     type="button"
                                                     onclick={() => (removingId = null)}
-                                                    class="px-4 py-2 text-sm font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all"
+                                                    class="px-4 py-2 text-sm font-bold text-muted-foreground bg-card border border-border rounded-xl hover:bg-background transition-all"
                                                 >
                                                     Maybe later
                                                 </button>
                                                 <button
                                                     type="button"
                                                     onclick={() => deleteItem(item.id, item.name)}
-                                                    class="px-4 py-2 text-sm font-bold text-white bg-rose-600 rounded-xl hover:bg-rose-700 transition-all"
+                                                    class="px-4 py-2 text-sm font-bold text-card bg-danger rounded-xl hover:opacity-90 transition-all"
                                                 >
                                                     Remove this item
                                                 </button>
@@ -1049,76 +1049,76 @@
     <!-- Asset Stats Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div
-            class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
+            class="bg-card p-6 rounded-2xl border border-border shadow-sm hover:shadow-md transition-shadow group"
         >
             <div class="flex items-start justify-between mb-4">
                 <div
-                    class="p-3 bg-primary/10 rounded-2xl text-primary group-hover:scale-110 transition-transform"
+                    class="p-3 bg-primary/10 rounded-2xl text-primary-hover group-hover:scale-110 transition-transform"
                 >
                     <DollarSign size={24} />
                 </div>
                 <div
-                    class="text-[10px] bg-primary/20 text-primary px-2 py-1 rounded-lg font-bold"
+                    class="text-[10px] bg-primary/20 text-primary-hover px-2 py-1 rounded-lg font-bold"
                 >
                     TOTAL
                 </div>
             </div>
             <p
-                class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1"
+                class="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1"
             >
                 Total Asset Value
             </p>
-            <p class="text-3xl font-black text-slate-900 tracking-tight">
+            <p class="text-3xl font-black text-foreground tracking-tight">
                 ${totalValuation.toLocaleString()}
             </p>
         </div>
 
         <div
-            class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
+            class="bg-card p-6 rounded-2xl border border-border shadow-sm hover:shadow-md transition-shadow group"
         >
             <div class="flex items-start justify-between mb-4">
                 <div
-                    class="p-3 bg-primary/10 rounded-2xl text-primary group-hover:scale-110 transition-transform"
+                    class="p-3 bg-primary/10 rounded-2xl text-primary-hover group-hover:scale-110 transition-transform"
                 >
                     <Building size={24} />
                 </div>
                 <div
-                    class="text-[10px] bg-primary/20 text-primary px-2 py-1 rounded-lg font-bold"
+                    class="text-[10px] bg-primary/20 text-primary-hover px-2 py-1 rounded-lg font-bold"
                 >
                     COUNT
                 </div>
             </div>
             <p
-                class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1"
+                class="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1"
             >
                 Real Estate Items
             </p>
-            <p class="text-3xl font-black text-slate-900 tracking-tight">
+            <p class="text-3xl font-black text-foreground tracking-tight">
                 {typeCounts["Real Estate"] || 0}
             </p>
         </div>
 
         <div
-            class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
+            class="bg-card p-6 rounded-2xl border border-border shadow-sm hover:shadow-md transition-shadow group"
         >
             <div class="flex items-start justify-between mb-4">
                 <div
-                    class="p-3 bg-amber-50 rounded-2xl text-amber-600 group-hover:scale-110 transition-transform"
+                    class="p-3 bg-gold/10 rounded-2xl text-gold-text group-hover:scale-110 transition-transform"
                 >
                     <Gem size={24} />
                 </div>
                 <div
-                    class="text-[10px] bg-amber-100 text-amber-700 px-2 py-1 rounded-lg font-bold"
+                    class="text-[10px] bg-gold/10 text-gold-text px-2 py-1 rounded-lg font-bold"
                 >
                     HIGH-VALUE
                 </div>
             </div>
             <p
-                class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1"
+                class="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1"
             >
                 Valuables Recorded
             </p>
-            <p class="text-3xl font-black text-slate-900 tracking-tight">
+            <p class="text-3xl font-black text-foreground tracking-tight">
                 {typeCounts["Valuable"] || 0}
             </p>
         </div>
@@ -1151,22 +1151,22 @@
 
         <!-- Panel -->
         <div
-            class="relative bg-white rounded-2xl shadow-2xl ring-1 ring-slate-900/5 w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+            class="relative bg-card rounded-2xl shadow-2xl ring-1 ring-slate-900/5 w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
             transition:scale={{ duration: 250, start: 0.95, easing: cubicOut }}
         >
             <!-- Header -->
-            <div class="flex items-start justify-between px-6 py-4 border-b border-slate-100 bg-white sticky top-0 z-10">
+            <div class="flex items-start justify-between px-6 py-4 border-b border-border bg-card sticky top-0 z-10">
                 <div class="flex-1 pr-4">
-                    <h2 class="font-serif font-bold text-xl text-slate-800">
+                    <h2 class="font-serif font-bold text-xl text-foreground">
                         {isEditing ? "Update" : "Record"} Asset Detail
                     </h2>
-                    <p class="text-slate-500 text-sm mt-2 leading-relaxed">
+                    <p class="text-muted-foreground text-sm mt-2 leading-relaxed">
                         Document your property details to help your family understand what you own and where to find important documents.
                     </p>
                 </div>
                 <button
                     onclick={resetForm}
-                    class="p-2 -mr-2 -mt-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors flex-shrink-0"
+                    class="p-2 -mr-2 -mt-1 text-muted-foreground hover:text-muted-foreground hover:bg-muted rounded-full transition-colors flex-shrink-0"
                     aria-label="Close"
                 >
                     <X class="w-5 h-5" />
@@ -1178,7 +1178,7 @@
                 <!-- Group 1: General Info -->
                 <section class="space-y-4">
                     <h3
-                        class="text-xs font-bold uppercase text-slate-500 tracking-wide"
+                        class="text-xs font-bold uppercase text-muted-foreground tracking-wide"
                     >
                         Asset Description
                     </h3>
@@ -1187,24 +1187,24 @@
                     >
                         <div class="space-y-1.5">
                             <label for="property-name"
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Asset Name</label
                             >
                             <input id="property-name"
                                 type="text"
                                 bind:value={newItem.name}
                                 placeholder="e.g. Primary Residence"
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                             />
                         </div>
                         <div class="space-y-1.5">
                             <label for="property-type"
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Asset Type</label
                             >
                             <select id="property-type"
                                 bind:value={newItem.type}
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800 appearance-none cursor-pointer"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground appearance-none cursor-pointer"
                             >
                                 {#each types.filter((t) => t !== "All") as type}
                                     <option value={type}>{type}</option>
@@ -1213,14 +1213,14 @@
                         </div>
                         <div class="space-y-1.5">
                             <label for="property-location"
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Primary Location</label
                             >
                             <input id="property-location"
                                 type="text"
                                 bind:value={newItem.location}
                                 placeholder="City, State / Full Address"
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                             />
                         </div>
                     </div>
@@ -1231,14 +1231,14 @@
                     class="bg-primary/5 rounded-2xl p-6 border border-primary/10 space-y-4"
                 >
                     <h3
-                        class="text-xs font-bold uppercase text-primary tracking-wide"
+                        class="text-xs font-bold uppercase text-primary-hover tracking-wide"
                     >
                         Ownership & Value
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div class="space-y-1.5">
                             <label for="property-valuation"
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Current Valuation ($)</label
                             >
                             <div class="relative">
@@ -1249,19 +1249,19 @@
                                 <input id="property-valuation"
                                     type="number"
                                     bind:value={newItem.valuation}
-                                    class="w-full px-4 py-3 pl-10 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                    class="w-full px-4 py-3 pl-10 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                                 />
                             </div>
                         </div>
                         <div class="space-y-1.5">
                             <span id="property-status-label"
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Current Status</span
                             >
                             <div
                                 role="group"
                                 aria-labelledby="property-status-label"
-                                class="flex bg-white rounded-xl p-1 border border-slate-200"
+                                class="flex bg-card rounded-xl p-1 border border-border"
                             >
                                 {#each ["Owned", "Mortgaged", "Leased"] as status}
                                     <button
@@ -1271,8 +1271,8 @@
                                             (newItem.status = status as any)}
                                         class="flex-1 py-2.5 text-xs font-semibold rounded-lg transition-all {newItem.status ===
                                         status
-                                            ? 'bg-primary text-white shadow-lg'
-                                            : 'text-slate-500 hover:bg-slate-50'}"
+                                            ? 'bg-primary text-primary-foreground shadow-lg'
+                                            : 'text-muted-foreground hover:bg-background'}"
                                     >
                                         {status}
                                     </button>
@@ -1281,13 +1281,13 @@
                         </div>
                         <div class="space-y-1.5">
                             <label for="property-purchase-date"
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Purchase/Acquisition Date</label
                             >
                             <input id="property-purchase-date"
                                 type="date"
                                 bind:value={newItem.purchaseDate}
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800 cursor-pointer"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground cursor-pointer"
                             />
                         </div>
                     </div>
@@ -1296,26 +1296,26 @@
                 <!-- Group 3: Legacy Details -->
                 <section class="space-y-4">
                     <h3
-                        class="text-xs font-bold uppercase text-slate-500 tracking-wide"
+                        class="text-xs font-bold uppercase text-muted-foreground tracking-wide"
                     >
                         Ownership & Documents
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="space-y-1.5">
                             <label for="property-ownership-details"
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Title / Ownership Group</label
                             >
                             <input id="property-ownership-details"
                                 type="text"
                                 bind:value={newItem.ownershipDetails}
                                 placeholder="e.g. Individual Title, Joint with Spouse"
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                             />
                         </div>
                         <div class="space-y-1.5">
                             <p
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Important Documents</p
                             >
                             <UniversalUploader
@@ -1327,14 +1327,14 @@
                         </div>
                         <div class="space-y-1.5 md:col-span-2">
                             <label for="property-notes"
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Inventory Notes</label
                             >
                             <textarea id="property-notes"
                                 bind:value={newItem.notes}
                                 rows="4"
                                 placeholder="Additional details, disposal instructions, or historical significance..."
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800 resize-none"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground resize-none"
                             ></textarea>
                         </div>
                     </div>
@@ -1343,7 +1343,7 @@
                 <!-- Group 4: Visual Evidence -->
                 <section class="space-y-4">
                     <h3
-                        class="text-xs font-bold uppercase text-slate-500 tracking-wide"
+                        class="text-xs font-bold uppercase text-muted-foreground tracking-wide"
                     >
                         Insurance Evidence
                     </h3>
@@ -1356,7 +1356,7 @@
                 </section>
 
                 <!-- Custom Fields -->
-                <section class="pt-4 mt-4 border-t border-slate-100">
+                <section class="pt-4 mt-4 border-t border-border">
                     <CustomFieldsManager
                         entityType="property"
                         bind:data={parsedCustomAttributes}
@@ -1366,11 +1366,11 @@
 
             <!-- Footer -->
             <div
-                class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3"
+                class="px-6 py-4 bg-background border-t border-border flex justify-end gap-3"
             >
                 <button
                     onclick={resetForm}
-                    class="px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-200 transition-colors"
+                    class="px-6 py-2.5 rounded-xl font-semibold text-muted-foreground hover:bg-border transition-colors"
                 >
                     Maybe later
                 </button>

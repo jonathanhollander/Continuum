@@ -176,7 +176,7 @@
     {#if isLoading}
         <div class="flex flex-col items-center justify-center gap-3 py-16" role="status" data-testid="accounts-loading">
             <Loader2 class="w-8 h-8 animate-spin text-primary" />
-            <p class="text-sm text-slate-500">Gathering your records...</p>
+            <p class="text-sm text-muted-foreground">Gathering your records...</p>
         </div>
     {:else}
         {#key reloadKey}

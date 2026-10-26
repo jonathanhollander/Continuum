@@ -83,10 +83,10 @@
     let editingUtilityId = $state<number | null>(null);
 
     // The shared modal's field, label and footer styles (UI standards 1.7, 2.1).
-    const labelClass = "block text-xs font-bold uppercase text-slate-500 tracking-wide px-1 mb-1.5";
-    const inputClass = "w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800";
-    const footerClass = "-mx-6 -mb-6 px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 mt-6";
-    const cancelClass = "px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-200 transition-colors whitespace-nowrap";
+    const labelClass = "block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1 mb-1.5";
+    const inputClass = "w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground";
+    const footerClass = "-mx-6 -mb-6 px-6 py-4 bg-background border-t border-border flex justify-end gap-3 mt-6";
+    const cancelClass = "px-6 py-2.5 rounded-xl font-semibold text-muted-foreground hover:bg-border transition-colors whitespace-nowrap";
     const saveClass = "px-6 py-2.5 rounded-xl font-semibold bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap";
 
     // Form States
@@ -459,14 +459,14 @@
     />
 
     <!-- Navigation Tabs -->
-    <div class="flex items-center justify-between mb-8 border-b border-slate-200 pb-1">
+    <div class="flex items-center justify-between mb-8 border-b border-border pb-1">
         <div class="flex gap-2">
             <button
                 onclick={() => (activeTab = "vendors")}
                 class="px-5 py-2.5 font-bold text-sm rounded-t-xl transition-all border-b-2
                 {activeTab === 'vendors'
-                    ? 'border-primary text-primary bg-primary/10'
-                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'}"
+                    ? 'border-primary text-primary-hover bg-primary/10'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-background'}"
             >
                 Trusted Vendors
             </button>
@@ -474,8 +474,8 @@
                 onclick={() => (activeTab = "access")}
                 class="px-5 py-2.5 font-bold text-sm rounded-t-xl transition-all border-b-2
                 {activeTab === 'access'
-                    ? 'border-primary text-primary bg-primary/10'
-                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'}"
+                    ? 'border-primary text-primary-hover bg-primary/10'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-background'}"
             >
                 Access Codes
             </button>
@@ -483,8 +483,8 @@
                 onclick={() => (activeTab = "utilities")}
                 class="px-5 py-2.5 font-bold text-sm rounded-t-xl transition-all border-b-2
                 {activeTab === 'utilities'
-                    ? 'border-primary text-primary bg-primary/10'
-                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'}"
+                    ? 'border-primary text-primary-hover bg-primary/10'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-background'}"
             >
                 Utilities & Shutoffs
             </button>
@@ -509,8 +509,8 @@
 
                     <!-- Sample Data GhostRows -->
                     <div class="mt-8">
-                        <p class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-4 text-center">Example entries to inspire you</p>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 opacity-60">
+                        <p class="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-4 text-center">Example entries to inspire you</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {#each getSmartSamples($language).homeManual?.vendors || [] as sample}
                                 <GhostRow
                                     name={sample.name}
@@ -530,7 +530,7 @@
                                     }}
                                 >
                                     {#snippet icon()}
-                                        <Phone size={20} class="text-slate-400" />
+                                        <Phone size={20} class="text-muted-foreground" />
                                     {/snippet}
                                 </GhostRow>
                             {/each}
@@ -539,7 +539,7 @@
                 {:else}
                     <div class="space-y-6">
                         <div class="flex justify-between items-center">
-                            <h2 class="font-bold text-slate-700 text-lg">
+                            <h2 class="font-bold text-foreground text-lg">
                                 Who to turn to
                             </h2>
                             <button
@@ -556,20 +556,20 @@
                             >
                                 {#each vendorSync.items as vendor}
                                     <div
-                                        class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:border-orange-200 transition-all group"
+                                        class="bg-card p-5 rounded-xl border border-border shadow-sm hover:border-primary/30 transition-all group"
                                     >
                                         <div
                                             class="flex justify-between items-start mb-3"
                                         >
                                             <span
-                                                class="px-2 py-1 bg-primary/10 text-primary text-[10px] font-bold uppercase rounded-md tracking-wider"
+                                                class="px-2 py-1 bg-primary/10 text-primary-hover text-[10px] font-bold uppercase rounded-md tracking-wider"
                                                 >{vendor.category}</span
                                             >
                                             <div class="flex items-center gap-2">
                                                 <button
                                                     onclick={() => editVendor(vendor)}
                                                     aria-label="Update {vendor.name}"
-                                                    class="text-slate-300 hover:text-primary"
+                                                    class="text-muted-foreground hover:text-primary"
                                                 >
                                                     <Pencil size={14} />
                                                 </button>
@@ -577,14 +577,14 @@
                                                     onclick={() =>
                                                         deleteVendor(vendor.id)}
                                                     aria-label="Remove {vendor.name}"
-                                                    class="text-slate-300 hover:text-red-500"
+                                                    class="text-muted-foreground hover:text-danger"
                                                 >
                                                     <Trash2 size={14} />
                                                 </button>
                                             </div>
                                         </div>
                                         <h3
-                                            class="font-bold text-slate-800 text-lg"
+                                            class="font-bold text-foreground text-lg"
                                         >
                                             {vendor.name}
                                         </h3>
@@ -592,7 +592,7 @@
 
                                         {#if vendor.phone}
                                             <div
-                                                class="flex items-center gap-2 text-slate-600 font-mono bg-slate-50 p-2 rounded-lg mb-3"
+                                                class="flex items-center gap-2 text-muted-foreground font-mono bg-background p-2 rounded-lg mb-3"
                                             >
                                                 <Phone size={14} />
                                                 {vendor.phone}
@@ -600,14 +600,14 @@
                                         {/if}
 
                                         {#if vendor.email}
-                                            <a href="mailto:{vendor.email}" class="flex items-center gap-2 text-sm text-slate-600 hover:text-primary break-all mb-2">
+                                            <a href="mailto:{vendor.email}" class="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary break-all mb-2">
                                                 <Mail size={14} class="shrink-0" />
                                                 {vendor.email}
                                             </a>
                                         {/if}
 
                                         {#if vendor.website}
-                                            <a href={siteHref(vendor.website)} target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 text-sm text-slate-600 hover:text-primary break-all mb-3">
+                                            <a href={siteHref(vendor.website)} target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary break-all mb-3">
                                                 <Globe size={14} class="shrink-0" />
                                                 {vendor.website}
                                             </a>
@@ -615,7 +615,7 @@
 
                                         {#if vendor.notes}
                                             <p
-                                                class="text-xs text-slate-400 italic"
+                                                class="text-xs text-muted-foreground italic"
                                             >
                                                 "{vendor.notes}"
                                             </p>
@@ -626,7 +626,7 @@
                                 <!-- Empty State Add -->
                                 <button
                                     onclick={openVendorModal}
-                                    class="border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-slate-400 hover:border-slate-300 hover:bg-slate-50 transition-all min-h-[200px]"
+                                    class="border-2 border-dashed border-border rounded-xl p-6 flex flex-col items-center justify-center text-muted-foreground hover:border-slate-300 hover:bg-background transition-all min-h-[200px]"
                                 >
                                     <Plus size={24} class="mb-2" />
                                     <span class="font-bold text-sm"
@@ -636,40 +636,40 @@
                             </div>
                         {:else}
                             <!-- Table View -->
-                            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                            <div class="bg-card rounded-xl border border-border overflow-hidden">
                                 <table class="w-full">
-                                    <thead class="bg-slate-50 border-b border-slate-200">
+                                    <thead class="bg-background border-b border-border">
                                         <tr>
-                                            <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Name</th>
-                                            <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Category</th>
-                                            <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Phone</th>
-                                            <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Notes</th>
-                                            <th class="text-right px-4 py-3 text-xs font-bold uppercase text-slate-500">Actions</th>
+                                            <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Name</th>
+                                            <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Category</th>
+                                            <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Phone</th>
+                                            <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Notes</th>
+                                            <th class="text-right px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="divide-y divide-slate-100">
+                                    <tbody class="divide-y divide-border">
                                         {#each vendorSync.items as vendor}
-                                            <tr class="hover:bg-slate-50 transition-colors group">
-                                                <td class="px-4 py-3 font-medium text-slate-800">{vendor.name}</td>
+                                            <tr class="hover:bg-background transition-colors group">
+                                                <td class="px-4 py-3 font-medium text-foreground">{vendor.name}</td>
                                                 <td class="px-4 py-3">
-                                                    <span class="px-2 py-1 bg-primary/10 text-primary rounded text-xs font-medium">
+                                                    <span class="px-2 py-1 bg-primary/10 text-primary-hover rounded text-xs font-medium">
                                                         {vendor.category}
                                                     </span>
                                                 </td>
-                                                <td class="px-4 py-3 text-slate-600 font-mono">{vendor.phone || '-'}</td>
-                                                <td class="px-4 py-3 text-slate-500 text-sm max-w-[150px] truncate">{vendor.notes || '-'}</td>
+                                                <td class="px-4 py-3 text-muted-foreground font-mono">{vendor.phone || '-'}</td>
+                                                <td class="px-4 py-3 text-muted-foreground text-sm max-w-[150px] truncate">{vendor.notes || '-'}</td>
                                                 <td class="px-4 py-3 text-right">
                                                     <button
                                                         onclick={() => editVendor(vendor)}
                                                         aria-label="Update {vendor.name}"
-                                                        class="text-slate-300 hover:text-primary transition-opacity mr-2"
+                                                        class="text-muted-foreground hover:text-primary transition-opacity mr-2"
                                                     >
                                                         <Pencil size={16} />
                                                     </button>
                                                     <button
                                                         onclick={() => deleteVendor(vendor.id)}
                                                         aria-label="Remove {vendor.name}"
-                                                        class="text-slate-300 hover:text-red-500 transition-opacity"
+                                                        class="text-muted-foreground hover:text-danger transition-opacity"
                                                     >
                                                         <Trash2 size={16} />
                                                     </button>
@@ -698,8 +698,8 @@
 
                     <!-- Sample Data GhostRows -->
                     <div class="mt-8">
-                        <p class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-4 text-center">Example entries to inspire you</p>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 opacity-60">
+                        <p class="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-4 text-center">Example entries to inspire you</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {#each getSmartSamples($language).homeManual?.accessCodes || [] as sample}
                                 <GhostRow
                                     name={sample.location}
@@ -716,7 +716,7 @@
                                     }}
                                 >
                                     {#snippet icon()}
-                                        <Key size={20} class="text-slate-400" />
+                                        <Key size={20} class="text-muted-foreground" />
                                     {/snippet}
                                 </GhostRow>
                             {/each}
@@ -725,7 +725,7 @@
                 {:else}
                     <div class="space-y-6">
                         <div class="flex justify-between items-center">
-                            <h2 class="font-bold text-slate-700 text-lg">
+                            <h2 class="font-bold text-foreground text-lg">
                                 Codes & Keys
                             </h2>
                             <button
@@ -739,23 +739,23 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {#each accessSync.items as item}
                                 <div
-                                    class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between"
+                                    class="bg-card p-5 rounded-xl border border-border shadow-sm flex items-center justify-between"
                                 >
                                     <div class="flex items-center gap-4">
                                         <div
-                                            class="p-3 bg-indigo-50 text-indigo-600 rounded-lg"
+                                            class="p-3 bg-primary-soft text-primary-hover rounded-lg"
                                         >
                                             <Key size={20} />
                                         </div>
                                         <div>
                                             <h3
-                                                class="font-bold text-slate-700"
+                                                class="font-bold text-foreground"
                                             >
                                                 {item.location}
                                             </h3>
                                             {#if item.code_encrypted}
                                                 <div
-                                                    class="font-mono text-xl tracking-widest text-slate-900 bg-slate-100 px-2 py-0.5 rounded inline-block mt-1"
+                                                    class="font-mono text-xl tracking-widest text-foreground bg-muted px-2 py-0.5 rounded inline-block mt-1"
                                                 >
                                                     {item.code_encrypted}
                                                 </div>
@@ -764,7 +764,7 @@
                                     </div>
                                     {#if item.instructions}
                                         <div
-                                            class="text-xs text-slate-400 max-w-[150px] text-right"
+                                            class="text-xs text-muted-foreground max-w-[150px] text-right"
                                         >
                                             {item.instructions}
                                         </div>
@@ -773,14 +773,14 @@
                                         <button
                                             onclick={() => editCode(item)}
                                             aria-label="Update {item.location}"
-                                            class="text-slate-300 hover:text-primary p-2"
+                                            class="text-muted-foreground hover:text-primary p-2"
                                         >
                                             <Pencil size={14} />
                                         </button>
                                         <button
                                             onclick={() => deleteCode(item.id)}
                                             aria-label="Remove {item.location}"
-                                            class="text-slate-300 hover:text-red-500 p-2"
+                                            class="text-muted-foreground hover:text-danger p-2"
                                         >
                                             <Trash2 size={14} />
                                         </button>
@@ -806,8 +806,8 @@
 
                     <!-- Sample Data GhostRows -->
                     <div class="mt-8">
-                        <p class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-4 text-center">Example entries to inspire you</p>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 opacity-60">
+                        <p class="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-4 text-center">Example entries to inspire you</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {#each getSmartSamples($language).homeManual?.utilities || [] as sample}
                                 <GhostRow
                                     name={`${utilityLabel(sample.service_type)} Shutoff`}
@@ -825,7 +825,7 @@
                                 >
                                     {#snippet icon()}
                                         {@const SampleIcon = utilityIcon(sample.service_type)}
-                                        <SampleIcon size={20} class="text-slate-400" />
+                                        <SampleIcon size={20} class="text-muted-foreground" />
                                     {/snippet}
                                 </GhostRow>
                             {/each}
@@ -834,7 +834,7 @@
                 {:else}
                     <div class="space-y-6">
                         <div class="flex justify-between items-center">
-                            <h2 class="font-bold text-slate-700 text-lg">
+                            <h2 class="font-bold text-foreground text-lg">
                                 Important Shutoffs
                             </h2>
                             <button
@@ -849,26 +849,26 @@
                             {#each utilitySync.items as item}
                                 {@const UtilIcon = utilityIcon(item.service_type)}
                                 <div
-                                    class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-6 items-start relative group"
+                                    class="bg-card p-6 rounded-xl border border-border shadow-sm flex flex-col md:flex-row gap-6 items-start relative group"
                                 >
                                     <div class="absolute top-4 right-4 flex items-center gap-2">
                                         <button
                                             onclick={() => editUtility(item)}
                                             aria-label="Update {item.service_type} shutoff"
-                                            class="text-slate-300 hover:text-primary"
+                                            class="text-muted-foreground hover:text-primary"
                                         >
                                             <Pencil size={14} />
                                         </button>
                                         <button
                                             onclick={() => deleteUtility(item.id)}
                                             aria-label="Remove {item.service_type} shutoff"
-                                            class="text-slate-300 hover:text-red-500"
+                                            class="text-muted-foreground hover:text-danger"
                                         >
                                             <Trash2 size={14} />
                                         </button>
                                     </div>
                                     <div
-                                        class="p-4 bg-primary/5 text-primary rounded-2xl shrink-0"
+                                        class="p-4 bg-primary/5 text-primary-hover rounded-2xl shrink-0"
                                     >
                                         <UtilIcon size={32} />
                                     </div>
@@ -876,25 +876,25 @@
                                     <div class="flex-1 space-y-4">
                                         <div>
                                             <h3
-                                                class="font-bold text-xl text-slate-800"
+                                                class="font-bold text-xl text-foreground"
                                             >
                                                 {utilityLabel(item.service_type)} Shutoff
                                             </h3>
                                             {#if item.provider}
-                                                <p class="text-slate-500 text-sm">
+                                                <p class="text-muted-foreground text-sm">
                                                     Provider: {item.provider}
                                                 </p>
                                             {/if}
                                         </div>
 
                                         {#if item.location}
-                                            <div class="bg-slate-50 p-4 rounded-lg">
+                                            <div class="bg-background p-4 rounded-lg">
                                                 <div
-                                                    class="text-xs font-bold uppercase text-slate-400 mb-1 flex items-center gap-1"
+                                                    class="text-xs font-bold uppercase text-muted-foreground mb-1 flex items-center gap-1"
                                                 >
                                                     <MapPin size={10} /> Location
                                                 </div>
-                                                <div class="font-medium text-slate-700">
+                                                <div class="font-medium text-foreground">
                                                     {item.location}
                                                 </div>
                                             </div>
