@@ -91,7 +91,7 @@
     );
 </script>
 
-<div class="max-w-6xl mx-auto p-6 animate-in fade-in duration-500">
+<div class="max-w-6xl mx-auto px-8 py-6 animate-in fade-in duration-500">
     <!-- Header -->
     <div class="mb-10 text-left">
         <div
@@ -256,7 +256,7 @@
             </div>
         {:else}
             <!-- Task List View -->
-            <div in:fade class="space-y-4 max-w-3xl">
+            <div in:fade class="space-y-4">
                 {#each filteredTasks as task}
                     <div
                         role="button"
