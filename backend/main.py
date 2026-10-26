@@ -96,13 +96,31 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
 app.add_middleware(RequestIdMiddleware)
 
 # Security Headers Configuration
+def _inline_script_sources():
+    # SvelteKit's adapter-static writes one inline bootstrap <script> into dist/index.html and its
+    # content (so its hash) changes every build. Hash whatever inline scripts the build on disk has,
+    # so script-src can drop 'unsafe-inline'. With no build there is nothing to hash; keep 'unsafe-inline'.
+    import base64, hashlib, re
+    from pathlib import Path
+    index_html = Path(__file__).resolve().parent.parent / "frontend" / "dist" / "index.html"
+    if not index_html.is_file():
+        return ["'unsafe-inline'"]
+    html = index_html.read_text(encoding="utf-8")
+    bodies = re.findall(r"<script\b(?![^>]*\bsrc\s*=)[^>]*>(.*?)</script>", html, re.DOTALL | re.IGNORECASE)
+    return [
+        "'sha256-" + base64.b64encode(hashlib.sha256(b.encode("utf-8")).digest()).decode() + "'"
+        for b in bodies
+    ]
+
 csp = (
     ContentSecurityPolicy()
     .default_src("'self'")
-    .script_src("'self'", "'unsafe-inline'")
+    .script_src("'self'", *_inline_script_sources())
     .style_src("'self'", "'unsafe-inline'", "https://fonts.googleapis.com")
     .font_src("'self'", "https://fonts.gstatic.com")
     .img_src("'self'", "data:", "https:")
+    # The export preview shows the generated PDF in an iframe from a blob: URL.
+    .frame_src("'self'", "blob:")
     .connect_src("'self'", settings.API_URL or "*")
     .base_uri("'self'")
     .frame_ancestors("'none'")
@@ -426,12 +444,13 @@ def _spa_index():
     return FileResponse(index_path)
 
 # Handle root specifically to avoid 404s
-@app.get("/")
+# GET and HEAD both, so `curl -I` and uptime probes get 200 instead of 405.
+@app.api_route("/", methods=["GET", "HEAD"])
 async def serve_root():
     return _spa_index()
 
 # Catch-all route to serve index.html for client-side routing
-@app.get("/{full_path:path}")
+@app.api_route("/{full_path:path}", methods=["GET", "HEAD"])
 async def serve_spa(full_path: str):
     logger.debug(f"Catch-all route hit for path: '{full_path}'")
 
