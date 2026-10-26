@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onMount, tick } from "svelte";
     import {
         CloudUpload,
         FileText,
@@ -146,6 +146,14 @@
     });
 
     let newDoc = $state<DocDraft>(emptyDoc());
+    let titleMissing = $state(false);
+
+    // When the form opens (or the assistant step hands over to it), the cursor waits in the title field.
+    $effect(() => {
+        if (showUpload && !(showWizard && wizardStep === 1)) {
+            tick().then(() => document.getElementById("doc-title")?.focus());
+        }
+    });
 
     // One save at a time: while it is open the button waits, so a second click sends nothing.
     let saving = $state(false);
@@ -160,7 +168,13 @@
     }
 
     async function saveDocOnce() {
-        if (!newDoc.name || !docSync) return;
+        if (!docSync) return;
+        if (!newDoc.name.trim()) {
+            titleMissing = true;
+            await tick();
+            document.getElementById("doc-title")?.focus();
+            return;
+        }
 
         const fields = {
             name: newDoc.name,
@@ -219,6 +233,7 @@
 
     function resetForm() {
         newDoc = emptyDoc();
+        titleMissing = false;
         showUpload = false;
         showWizard = false;
         wizardStep = 0;
@@ -395,7 +410,11 @@
                 <div
                     class="hidden md:flex bg-white p-4 rounded-full shadow-md text-[#4A7C74]"
                 >
-                    <HelpCircle size={32} />
+                    {#if !isLoading && docs.length > 0 && needsReview === 0}
+                        <CircleCheck size={32} />
+                    {:else}
+                        <HelpCircle size={32} />
+                    {/if}
                 </div>
                 <div>
                     <h4 class="font-serif font-bold text-xl text-[#304743]">
@@ -589,10 +608,19 @@
                                 >Document Title</label
                             >
                             <input
+                                id="doc-title"
                                 bind:value={newDoc.name}
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                oninput={() => (titleMissing = false)}
+                                aria-invalid={titleMissing}
+                                aria-describedby={titleMissing ? "doc-title-hint" : undefined}
+                                class="w-full px-4 py-3 rounded-xl border {titleMissing ? 'border-amber-400 ring-2 ring-amber-200' : 'border-slate-200'} bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
                                 placeholder="e.g. Last Will"
                             />
+                            {#if titleMissing}
+                                <p id="doc-title-hint" class="text-xs text-amber-700 px-1">
+                                    Give this document a title and it is ready to save.
+                                </p>
+                            {/if}
                         </div>
                         <div class="space-y-1.5">
                             <label
