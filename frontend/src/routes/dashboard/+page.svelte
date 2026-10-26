@@ -6,13 +6,15 @@
     import SyncBadge from "$lib/components/ui/SyncBadge.svelte";
     import { auth } from "$lib/stores/auth";
     import { estateAudit } from "$lib/stores/auditStore.svelte";
-    import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { familyStore } from "$lib/stores/familyStore.svelte";
     import { digitalAssetsStore } from "$lib/stores/digitalAssetsStore.svelte";
     import { insuranceStore } from "$lib/stores/insuranceStore.svelte";
     import { medicalStore } from "$lib/stores/medicalStore.svelte";
     import { propertyStore } from "$lib/stores/propertyStore.svelte";
-    import { financialAssetsStore } from "$lib/stores/financialAssetsStore.svelte";
+    import {
+        financialAssetsStore,
+        estateTotals,
+    } from "$lib/stores/financialAssetsStore.svelte";
     import { preferenceStore } from "$lib/stores/preferenceStore";
     import {
         getModuleSyncStatus,
@@ -68,7 +70,8 @@
     );
 
     // Dynamic Metrics
-    let totalValue = $derived(estateProfile.current.totalValue || 0);
+    // The same net the financial page shows: open assets less open debts
+    let totalValue = $derived(estateTotals(financialAssetsStore.items).net);
     let networkSize = $derived(familyStore.members.length);
     let coverageCount = $derived(
         digitalAssetsStore.items.filter(
