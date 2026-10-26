@@ -173,10 +173,16 @@
         if (selectedCountry) refreshHotlines();
     });
 
+    // JSON imports type `type` as string; the file only holds these four kinds.
+    type GriefResource = (typeof griefResources)[number] & {
+        type: "article" | "video" | "external" | "guide";
+    };
+    const resources = griefResources as GriefResource[];
+
     const filteredResources = $derived(
         selectedCategory === "All"
-            ? griefResources
-            : griefResources.filter((r) => r.category === selectedCategory),
+            ? resources
+            : resources.filter((r) => r.category === selectedCategory),
     );
 </script>
 

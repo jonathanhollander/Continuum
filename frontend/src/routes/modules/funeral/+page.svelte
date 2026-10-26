@@ -58,13 +58,13 @@
         isLoading = false;
     });
 
-    let wishes = $derived($funeralStore.wishes);
-    let budgetItems = $derived($funeralStore.budget);
+    let wishes = $derived($funeralStore!.wishes);
+    let budgetItems = $derived($funeralStore!.budget);
 
     // Quick Edit Helpers for Wishes
     function editWish(field: keyof FuneralWishes, label: string) {
         if (field === "music" || field === "colors") return;
-        const current = $funeralStore.wishes[field];
+        const current = $funeralStore!.wishes[field];
         const val = prompt(`Update ${label}:`, String(current));
         if (val !== null) {
             funeralStore.update((data) => ({
@@ -188,10 +188,10 @@
 
     // Reactive Updates
     let totalBudget = $derived(
-        $funeralStore.budget.reduce((acc, item) => acc + item.cost, 0),
+        $funeralStore!.budget.reduce((acc, item) => acc + item.cost, 0),
     );
     let totalEstimated = $derived(
-        $funeralStore.budget.reduce(
+        $funeralStore!.budget.reduce(
             (acc, item) => acc + (item.estimated || item.cost),
             0,
         ),
@@ -389,13 +389,13 @@
                                         showAddExpense = true;
                                     }}
                                 >
-                                    <svelte:fragment slot="icon">
+                                    {#snippet icon()}
                                         {#if sample.type === 'music'}
                                             <Music size={20} class="text-slate-400" />
                                         {:else}
                                             <Flower size={20} class="text-slate-400" />
                                         {/if}
-                                    </svelte:fragment>
+                                    {/snippet}
                                 </GhostRow>
                             {/each}
                         </div>

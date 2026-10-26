@@ -5,7 +5,7 @@ import { familyStore } from "$lib/stores/familyStore.svelte";
 import { insuranceStore } from "$lib/stores/insuranceStore.svelte";
 import { heirloomStore } from "$lib/stores/heirloomStore.svelte";
 import { digitalAssetsStore } from "$lib/stores/digitalAssetsStore.svelte";
-import { medicalStore } from "$lib/stores/medicalStore.svelte";
+import { medicalStore, type MedicalProfile } from "$lib/stores/medicalStore.svelte";
 import { activityLog } from '$lib/stores/activityLog.svelte';
 
 // Persistent Key
@@ -100,10 +100,12 @@ function createOnboardingStore() {
             });
             // Set profile data if available in sample (it is)
             if (samples.medical.length > 0) {
+                // The sample directives also carry the profile fields.
+                const first = samples.medical[0] as (typeof samples.medical)[number] & Partial<MedicalProfile>;
                 medicalStore.updateProfile({
-                    organDonor: samples.medical[0].organDonor,
-                    bloodType: samples.medical[0].bloodType,
-                    allergies: samples.medical[0].allergies
+                    organDonor: first.organDonor,
+                    bloodType: first.bloodType,
+                    allergies: first.allergies
                 });
             }
 

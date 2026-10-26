@@ -1,6 +1,8 @@
 <script lang="ts">
     import {
         advancedAssetStore,
+        advancedAssetSync,
+        DEFAULT_ADVANCED_STATE,
         type AssetTransaction,
         type MaintenanceLog,
         type InsuranceClaim,
@@ -50,7 +52,6 @@
 
     onMount(async () => {
         await advancedAssetStore.sync?.();
-        await digitalAssetsStore.sync?.();
         isLoading = false;
     });
 
@@ -117,6 +118,22 @@
         showAddModal = false;
     }
 
+    // The store has no remove calls: save the record without the item, the same
+    // singleton update the adds use. A failed save shows its own message and rolls back.
+    function removeTransaction(id: string) {
+        const current = advancedAssetSync.data || DEFAULT_ADVANCED_STATE;
+        advancedAssetSync
+            .update({ ...current, transactions: current.transactions.filter((t) => t.id !== id) })
+            .catch(() => {});
+    }
+
+    function removeClaim(id: string) {
+        const current = advancedAssetSync.data || DEFAULT_ADVANCED_STATE;
+        advancedAssetSync
+            .update({ ...current, claims: current.claims.filter((c) => c.id !== id) })
+            .catch(() => {});
+    }
+
     const tabs = [
         { id: "transactions", label: "Transactions", icon: Repeat },
         { id: "maintenance", label: "Maintenance", icon: Wrench },
@@ -125,17 +142,17 @@
     ];
 
     let filteredTransactions = $derived(
-        $advancedAssetStore.transactions.filter((t) =>
+        $advancedAssetStore!.transactions.filter((t) =>
             t.description.toLowerCase().includes(searchQuery.toLowerCase()),
         ),
     );
     let filteredMaintenance = $derived(
-        $advancedAssetStore.maintenance.filter((m) =>
+        $advancedAssetStore!.maintenance.filter((m) =>
             m.item.toLowerCase().includes(searchQuery.toLowerCase()),
         ),
     );
     let filteredClaims = $derived(
-        $advancedAssetStore.claims.filter(
+        $advancedAssetStore!.claims.filter(
             (c) =>
                 c.claimNumber
                     ?.toLowerCase()
@@ -302,7 +319,7 @@
                                 <td class="px-8 py-5 text-right">
                                     <button
                                         onclick={() =>
-                                            advancedAssetStore.removeTransaction(
+                                            removeTransaction(
                                                 tx.id,
                                             )}
                                         class="p-2 text-slate-300 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100"
@@ -514,7 +531,7 @@
                                 </div>
                                 <button
                                     onclick={() =>
-                                        advancedAssetStore.removeClaim(
+                                        removeClaim(
                                             claim.id,
                                         )}
                                     class="p-2 text-slate-200 hover:text-rose-500 transition-colors"

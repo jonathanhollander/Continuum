@@ -221,9 +221,8 @@
                 phone: newContact.phone || "",
                 email: newContact.email || "",
                 notes: newContact.notes || "",
-                tier: newContact.tier || undefined,
-                // The store maps `tier ?? callTier` to call_tier, so clearing needs callTier too.
-                callTier: newContact.tier || null,
+                // An explicit tier wins in contactMapper; "" clears it (call_tier null).
+                tier: newContact.tier || "",
                 custom_attributes: JSON.stringify(parsedCustomAttributes),
             } as Partial<FamilyMember>);
         } catch {

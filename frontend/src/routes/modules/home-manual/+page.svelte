@@ -499,9 +499,9 @@
                                         showVendorModal = true;
                                     }}
                                 >
-                                    <svelte:fragment slot="icon">
+                                    {#snippet icon()}
                                         <Phone size={20} class="text-slate-400" />
-                                    </svelte:fragment>
+                                    {/snippet}
                                 </GhostRow>
                             {/each}
                         </div>
@@ -669,9 +669,9 @@
                                         showCodeModal = true;
                                     }}
                                 >
-                                    <svelte:fragment slot="icon">
+                                    {#snippet icon()}
                                         <Key size={20} class="text-slate-400" />
-                                    </svelte:fragment>
+                                    {/snippet}
                                 </GhostRow>
                             {/each}
                         </div>
@@ -777,7 +777,7 @@
                                         showUtilityModal = true;
                                     }}
                                 >
-                                    <svelte:fragment slot="icon">
+                                    {#snippet icon()}
                                         {#if sample.service_type === 'Water'}
                                             <Droplets size={20} class="text-slate-400" />
                                         {:else if sample.service_type === 'Gas'}
@@ -785,7 +785,7 @@
                                         {:else}
                                             <Zap size={20} class="text-slate-400" />
                                         {/if}
-                                    </svelte:fragment>
+                                    {/snippet}
                                 </GhostRow>
                             {/each}
                         </div>

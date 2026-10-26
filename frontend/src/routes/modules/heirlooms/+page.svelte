@@ -458,9 +458,9 @@
                         showAddForm = true;
                     }}
                 >
-                    <svelte:fragment slot="icon">
+                    {#snippet icon()}
                         <Gift size={20} class="text-slate-400" />
-                    </svelte:fragment>
+                    {/snippet}
                 </GhostRow>
             {/each}
         </div>

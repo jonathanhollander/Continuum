@@ -118,7 +118,7 @@
 	let isFocusMode = $derived(
 		$genesisStore.activeBlock &&
 			!$genesisStore.isGodMode &&
-			$page.url.pathname !== "/wizard",
+			($page.url.pathname as string) !== "/wizard",
 	);
 
 	// Sync Compass Content to Architect
@@ -588,15 +588,14 @@
 
 <!-- Settings Modal -->
 <Modal
-	open={showSettings}
+	bind:open={showSettings}
 	title="Concierge Settings"
-	onClose={() => (showSettings = false)}
 >
 	<ConciergeSettings />
 </Modal>
 
 {#if showCommandCenter}
-	<CommandCenter onClose={() => (showCommandCenter = false)} />
+	<CommandCenter on:close={() => (showCommandCenter = false)} />
 {/if}
 
 <ConciergePanel

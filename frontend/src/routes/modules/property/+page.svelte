@@ -738,9 +738,9 @@
                                 showAddModal = true;
                             }}
                         >
-                            <svelte:fragment slot="icon">
+                            {#snippet icon()}
                                 <Building size={20} class="text-slate-400" />
-                            </svelte:fragment>
+                            {/snippet}
                         </GhostRow>
                     {/each}
 
@@ -776,9 +776,9 @@
                         showAddModal = true;
                     }}
                 >
-                    <svelte:fragment slot="icon">
+                    {#snippet icon()}
                         <Building size={20} class="text-slate-400" />
-                    </svelte:fragment>
+                    {/snippet}
                 </GhostRow>
             {/each}
         {:else}
@@ -1062,7 +1062,7 @@
 
                     <EvidenceGalleryUploader
                         bind:evidence={newItem.evidence}
-                        onsetCover={(e: any) => (newItem.thumbnail = e.detail)}
+                        on:setCover={(e) => (newItem.thumbnail = e.detail)}
                     />
                 </section>
 
