@@ -55,11 +55,11 @@ export const marketing2Dictionary = {
 
         // Section 5.5: Security
         securityTitle: "Your life, protected.",
-        securityDesc: "Everything you store in Continuum is encrypted. Your data stays yours—we can't read it, sell it, or share it.",
-        securityEncryption: "End-to-end encryption",
-        securityEncryptionDesc: "Your information is encrypted before it leaves your device.",
-        securityPrivacy: "No data selling",
-        securityPrivacyDesc: "We make money from subscriptions, not your personal information.",
+        securityDesc: "Everything you store in Continuum stays private to your account.",
+        securityEncryption: "A secure connection",
+        securityEncryptionDesc: "Your information travels between your device and Continuum over a secure connection.",
+        securityPrivacy: "Kept for your family",
+        securityPrivacyDesc: "What you store here is there to help you and the people you choose.",
         securityControl: "You control access",
         securityControlDesc: "Choose exactly who sees what, and when.",
 
@@ -130,14 +130,14 @@ export const marketing2Dictionary = {
         protectiveItem4: "Safety timer for peace of mind",
         preparedItem1: "Executor toolkit & checklists",
         preparedItem2: "The Red Binder (printable backup)",
-        preparedItem3: "QR code access for guardians",
+        preparedItem3: "QR labels that link to your records",
         preparedItem4: "Practice run simulator",
         featuresMore: "There's more here than you'll ever need. That's the point. Whatever your situation—complicated family, multiple properties, beloved pets, specific wishes—Continuum has a place for it.",
         featuresMoreSub: "You'll find it when you need it. The guide will take you there.",
 
         // SEO
         metaTitle: "Continuum — Organize your life for the people you love",
-        metaDescription: "A calm place to document everything your family will need. Encrypted, private, and ready when the time comes.",
+        metaDescription: "A calm place to document everything your family will need. Private to your account, and ready when the time comes.",
         metaTitleFeatures: "What's Inside — Continuum",
         metaDescFeatures: "Explore the tools inside Continuum: practical documents, personal letters, protective systems, and executor preparation.",
         metaTitleHow: "How It Works — Continuum",
@@ -191,11 +191,11 @@ export const marketing2Dictionary = {
 
         // Section 5.5: Security
         securityTitle: "Tu vida, protegida.",
-        securityDesc: "Todo lo que almacenas en Continuum está cifrado. Tus datos son tuyos—no podemos leerlos, venderlos ni compartirlos.",
-        securityEncryption: "Cifrado de extremo a extremo",
-        securityEncryptionDesc: "Tu información se cifra antes de salir de tu dispositivo.",
-        securityPrivacy: "No vendemos datos",
-        securityPrivacyDesc: "Ganamos dinero con suscripciones, no con tu información personal.",
+        securityDesc: "Todo lo que guardas en Continuum se mantiene privado en tu cuenta.",
+        securityEncryption: "Una conexión segura",
+        securityEncryptionDesc: "Tu información viaja entre tu dispositivo y Continuum por una conexión segura.",
+        securityPrivacy: "Guardado para tu familia",
+        securityPrivacyDesc: "Lo que guardas aquí está para ayudarte a ti y a las personas que elijas.",
         securityControl: "Tú controlas el acceso",
         securityControlDesc: "Elige exactamente quién ve qué, y cuándo.",
 
@@ -266,14 +266,14 @@ export const marketing2Dictionary = {
         protectiveItem4: "Temporizador de seguridad para tranquilidad",
         preparedItem1: "Kit de herramientas y listas para el albacea",
         preparedItem2: "La Carpeta Roja (respaldo imprimible)",
-        preparedItem3: "Acceso por código QR para guardianes",
+        preparedItem3: "Etiquetas QR que enlazan con tus registros",
         preparedItem4: "Simulador de prueba",
         featuresMore: "Hay más aquí de lo que jamás necesitarás. Ese es el punto. Sea cual sea tu situación—familia complicada, múltiples propiedades, mascotas queridas, deseos específicos—Continuum tiene un lugar para ello.",
         featuresMoreSub: "Lo encontrarás cuando lo necesites. La guía te llevará allí.",
 
         // SEO
         metaTitle: "Continuum — Organiza tu vida para las personas que amas",
-        metaDescription: "Un lugar tranquilo para documentar todo lo que tu familia necesitará. Cifrado, privado y listo cuando llegue el momento.",
+        metaDescription: "Un lugar tranquilo para documentar todo lo que tu familia necesitará. Privado en tu cuenta y listo cuando llegue el momento.",
         metaTitleFeatures: "Lo que hay dentro — Continuum",
         metaDescFeatures: "Explora las herramientas dentro de Continuum: documentos prácticos, cartas personales, sistemas de protección y preparación para el albacea.",
         metaTitleHow: "Cómo funciona — Continuum",
@@ -327,11 +327,11 @@ export const marketing2Dictionary = {
 
         // Section 5.5: Security
         securityTitle: "Votre vie, protégée.",
-        securityDesc: "Tout ce que vous stockez dans Continuum est chiffré. Vos données restent les vôtres—nous ne pouvons ni les lire, ni les vendre, ni les partager.",
-        securityEncryption: "Chiffrement de bout en bout",
-        securityEncryptionDesc: "Vos informations sont chiffrées avant de quitter votre appareil.",
-        securityPrivacy: "Pas de vente de données",
-        securityPrivacyDesc: "Nous gagnons de l'argent avec les abonnements, pas avec vos informations personnelles.",
+        securityDesc: "Tout ce que vous conservez dans Continuum reste privé, dans votre compte.",
+        securityEncryption: "Une connexion sécurisée",
+        securityEncryptionDesc: "Vos informations circulent entre votre appareil et Continuum par une connexion sécurisée.",
+        securityPrivacy: "Gardé pour votre famille",
+        securityPrivacyDesc: "Ce que vous conservez ici sert à vous aider, vous et les personnes que vous choisissez.",
         securityControl: "Vous contrôlez l'accès",
         securityControlDesc: "Choisissez exactement qui voit quoi, et quand.",
 
@@ -402,14 +402,14 @@ export const marketing2Dictionary = {
         protectiveItem4: "Minuterie de sécurité pour la tranquillité d'esprit",
         preparedItem1: "Boîte à outils et listes pour l'exécuteur",
         preparedItem2: "Le Classeur Rouge (sauvegarde imprimable)",
-        preparedItem3: "Accès par code QR pour les tuteurs",
+        preparedItem3: "Étiquettes QR reliées à vos fiches",
         preparedItem4: "Simulateur de test",
         featuresMore: "Il y a plus ici que vous n'en aurez jamais besoin. C'est le but. Quelle que soit votre situation—famille compliquée, propriétés multiples, animaux de compagnie adorés, souhaits spécifiques—Continuum a une place pour cela.",
         featuresMoreSub: "Vous le trouverez quand vous en aurez besoin. Le guide vous y mènera.",
 
         // SEO
         metaTitle: "Continuum — Organisez votre vie pour ceux que vous aimez",
-        metaDescription: "Un espace serein pour documenter tout ce dont votre famille aura besoin. Chiffré, privé et prêt le moment venu.",
+        metaDescription: "Un espace serein pour documenter tout ce dont votre famille aura besoin. Privé dans votre compte et prêt le moment venu.",
         metaTitleFeatures: "Ce qu'il y a à l'intérieur — Continuum",
         metaDescFeatures: "Découvrez les outils de Continuum : documents pratiques, lettres personnelles, systèmes de protection et préparation pour l'exécuteur.",
         metaTitleHow: "Comment ça marche — Continuum",
@@ -463,11 +463,11 @@ export const marketing2Dictionary = {
 
         // Section 5.5: Security
         securityTitle: "Ihr Leben, geschützt.",
-        securityDesc: "Alles, was Sie in Continuum speichern, ist verschlüsselt. Ihre Daten gehören Ihnen—wir können sie nicht lesen, verkaufen oder teilen.",
-        securityEncryption: "Ende-zu-Ende-Verschlüsselung",
-        securityEncryptionDesc: "Ihre Informationen werden verschlüsselt, bevor sie Ihr Gerät verlassen.",
-        securityPrivacy: "Kein Datenverkauf",
-        securityPrivacyDesc: "Wir verdienen Geld mit Abonnements, nicht mit Ihren persönlichen Daten.",
+        securityDesc: "Alles, was Sie in Continuum speichern, bleibt privat in Ihrem Konto.",
+        securityEncryption: "Eine sichere Verbindung",
+        securityEncryptionDesc: "Ihre Informationen gelangen über eine sichere Verbindung von Ihrem Gerät zu Continuum.",
+        securityPrivacy: "Für Ihre Familie bewahrt",
+        securityPrivacyDesc: "Was Sie hier speichern, ist dazu da, Ihnen und den Menschen Ihrer Wahl zu helfen.",
         securityControl: "Sie kontrollieren den Zugang",
         securityControlDesc: "Wählen Sie genau aus, wer was sieht und wann.",
 
@@ -538,14 +538,14 @@ export const marketing2Dictionary = {
         protectiveItem4: "Sicherheitstimer für Seelenruhe",
         preparedItem1: "Werkzeugkasten und Checklisten für den Testamentsvollstrecker",
         preparedItem2: "Der Rote Ordner (druckbare Sicherung)",
-        preparedItem3: "QR-Code-Zugang für Vertrauenspersonen",
+        preparedItem3: "QR-Etiketten mit Link zu Ihren Einträgen",
         preparedItem4: "Probelauf-Simulator",
         featuresMore: "Es gibt hier mehr, als Sie jemals brauchen werden. Das ist der Punkt. Was auch immer Ihre Situation ist—komplizierte Familie, mehrere Immobilien, geliebte Haustiere, spezielle Wünsche—Continuum hat einen Platz dafür.",
         featuresMoreSub: "Sie werden es finden, wenn Sie es brauchen. Der Leitfaden bringt Sie dorthin.",
 
         // SEO
         metaTitle: "Continuum — Organisieren Sie Ihr Leben für die Menschen, die Sie lieben",
-        metaDescription: "Ein ruhiger Ort, um alles zu dokumentieren, was Ihre Familie brauchen wird. Verschlüsselt, privat und bereit, wenn die Zeit kommt.",
+        metaDescription: "Ein ruhiger Ort, um alles zu dokumentieren, was Ihre Familie brauchen wird. Privat in Ihrem Konto und bereit, wenn die Zeit kommt.",
         metaTitleFeatures: "Was drin ist — Continuum",
         metaDescFeatures: "Entdecken Sie die Werkzeuge in Continuum: praktische Dokumente, persönliche Briefe, Schutzsysteme und Vorbereitung für den Testamentsvollstrecker.",
         metaTitleHow: "So funktioniert es — Continuum",
@@ -599,11 +599,11 @@ export const marketing2Dictionary = {
 
         // Section 5.5: Security
         securityTitle: "Ваша жизнь под защитой.",
-        securityDesc: "Всё, что вы храните в Continuum, зашифровано. Ваши данные остаются вашими—мы не можем их читать, продавать или передавать.",
-        securityEncryption: "Сквозное шифрование",
-        securityEncryptionDesc: "Ваша информация шифруется до того, как покинет ваше устройство.",
-        securityPrivacy: "Никакой продажи данных",
-        securityPrivacyDesc: "Мы зарабатываем на подписках, а не на вашей личной информации.",
+        securityDesc: "Всё, что вы храните в Continuum, остаётся конфиденциальным в вашей учётной записи.",
+        securityEncryption: "Защищённое соединение",
+        securityEncryptionDesc: "Ваша информация передаётся между вашим устройством и Continuum по защищённому соединению.",
+        securityPrivacy: "Хранится для вашей семьи",
+        securityPrivacyDesc: "Всё, что вы здесь храните, служит вам и людям, которых вы выбрали.",
         securityControl: "Вы контролируете доступ",
         securityControlDesc: "Выбирайте, кто именно что видит и когда.",
 
@@ -674,14 +674,14 @@ export const marketing2Dictionary = {
         protectiveItem4: "Таймер безопасности для спокойствия",
         preparedItem1: "Набор инструментов и чек-листы для душеприказчика",
         preparedItem2: "Красная Папка (печатная резервная копия)",
-        preparedItem3: "QR-код доступа для опекунов",
+        preparedItem3: "QR-метки со ссылками на ваши записи",
         preparedItem4: "Симулятор пробного запуска",
         featuresMore: "Здесь больше, чем вам когда-либо понадобится. В этом и смысл. Какова бы ни была ваша ситуация—сложная семья, несколько объектов недвижимости, любимые питомцы, особые пожелания—в Continuum есть место для всего.",
         featuresMoreSub: "Вы найдёте это, когда понадобится. Гид приведёт вас туда.",
 
         // SEO
         metaTitle: "Continuum — Организуйте свою жизнь для тех, кого вы любите",
-        metaDescription: "Спокойное место для документирования всего, что понадобится вашей семье. Зашифровано, конфиденциально и готово, когда придёт время.",
+        metaDescription: "Спокойное место для документирования всего, что понадобится вашей семье. Конфиденциально в вашей учётной записи и готово, когда придёт время.",
         metaTitleFeatures: "Что внутри — Continuum",
         metaDescFeatures: "Исследуйте инструменты Continuum: практичные документы, личные письма, защитные системы и подготовка для душеприказчика.",
         metaTitleHow: "Как это работает — Continuum",
@@ -735,11 +735,11 @@ export const marketing2Dictionary = {
 
         // Section 5.5: Security
         securityTitle: "החיים שלכם, מוגנים.",
-        securityDesc: "כל מה שאתם שומרים ב-Continuum מוצפן. המידע שלכם נשאר שלכם—אנחנו לא יכולים לקרוא אותו, למכור אותו או לשתף אותו.",
-        securityEncryption: "הצפנה מקצה לקצה",
-        securityEncryptionDesc: "המידע שלכם מוצפן לפני שהוא עוזב את המכשיר שלכם.",
-        securityPrivacy: "ללא מכירת נתונים",
-        securityPrivacyDesc: "אנחנו מרוויחים כסף מהנויים, לא מהמידע האישי שלכם.",
+        securityDesc: "כל מה שאתם שומרים ב-Continuum נשאר פרטי בחשבון שלכם.",
+        securityEncryption: "חיבור מאובטח",
+        securityEncryptionDesc: "המידע שלכם עובר בין המכשיר שלכם ל-Continuum בחיבור מאובטח.",
+        securityPrivacy: "שמור עבור המשפחה שלכם",
+        securityPrivacyDesc: "מה שאתם שומרים כאן נועד לעזור לכם ולאנשים שתבחרו.",
         securityControl: "אתם שולטים בגישה",
         securityControlDesc: "בחרו בדיוק מי רואה מה, ומתי.",
 
@@ -810,14 +810,14 @@ export const marketing2Dictionary = {
         protectiveItem4: "טיימר בטיחות לשקט נפשי",
         preparedItem1: "ערכת כלים ורשימות למנהל העיזבון",
         preparedItem2: "הקלסר האדום (גיבוי להדפסה)",
-        preparedItem3: "גישה בקוד QR לאפוטרופוסים",
+        preparedItem3: "תוויות QR שמקשרות לרשומות שלכם",
         preparedItem4: "סימולטור ניסיון",
         featuresMore: "יש כאן יותר ממה שתצטרכו אי פעם. זו הנקודה. לא משנה מה המצב שלכם—משפחה מסובכת, נכסים מרובים, חיות מחמד אהובות, משאלות ספציפיות—ל-Continuum יש מקום לזה.",
         featuresMoreSub: "תמצאו את זה כשתצטרכו. המדריך ייקח אתכם לשם.",
 
         // SEO
         metaTitle: "Continuum — ארגנו את החיים שלכם עבור האנשים שאתם אוהבים",
-        metaDescription: "מקום שקט לתעד את כל מה שהמשפחה שלכם תצטרך. מוצפן, פרטי ומוכן כשיגיע הזמן.",
+        metaDescription: "מקום שקט לתעד את כל מה שהמשפחה שלכם תצטרך. פרטי בחשבון שלכם ומוכן כשיגיע הזמן.",
         metaTitleFeatures: "מה בפנים — Continuum",
         metaDescFeatures: "גלו את הכלים בתוך Continuum: מסמכים פרקטיים, מכתבים אישיים, מערכות הגנה והכנה למנהל העיזבון.",
         metaTitleHow: "איך זה עובד — Continuum",

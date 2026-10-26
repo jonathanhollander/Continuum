@@ -5,19 +5,12 @@
      * Provides grief support and encouragement for executors
      */
 
-    import { Heart, ExternalLink, Phone, Book } from 'lucide-svelte';
+    import { Heart, ExternalLink, Book } from 'lucide-svelte';
     import { fade } from 'svelte/transition';
 
     let isExpanded = $state(false);
 
     const resources = [
-        {
-            title: 'Grief Support Hotline',
-            description: '24/7 support from trained counselors',
-            icon: Phone,
-            link: 'https://www.griefhelpline.org',
-            external: true
-        },
         {
             title: 'Executor Guidance Library',
             description: 'Step-by-step guides for estate administration',

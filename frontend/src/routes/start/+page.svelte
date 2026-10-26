@@ -113,7 +113,7 @@
                 class="{fontSizeClass} text-muted-foreground max-w-lg mx-auto leading-relaxed"
             >
                 Welcome to Continuum. I am your AI Concierge, here to guide you
-                through protecting your family's future with total privacy.
+                through caring for your family's future.
             </p>
         </div>
 
@@ -220,7 +220,7 @@
                         <ShieldCheck size={32} />
                     </div>
                     <div>
-                        <h3 class="text-foreground font-bold">Privacy Secured</h3>
+                        <h3 class="text-foreground font-bold">Your Concierge is ready</h3>
                         <p class="text-sm text-muted-foreground">
                             I'm here whenever you'd like to begin.
                         </p>

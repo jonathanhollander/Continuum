@@ -5,7 +5,7 @@
     export let variant: "inline" | "banner" = "inline";
     export let title = "Legal Disclaimer";
     export let message =
-        "Continuum provides this information for educational and organizational purposes only. We are not a law firm, and this is not legal advice. Laws vary by jurisdiction. Please consult with a qualified attorney to ensure your documents are legally binding and appropriate for your specific situation.";
+        "Continuum shares this information to help you learn and organize. For legal guidance specific to your situation, a qualified attorney can help, since laws vary by jurisdiction.";
 </script>
 
 {#if variant === "banner"}

@@ -1,10 +1,9 @@
 <script lang="ts">
-    import { Shield, BookOpen, Users, HelpCircle } from "lucide-svelte";
+    import { Shield, BookOpen, HelpCircle } from "lucide-svelte";
     import FAQSection from "$lib/components/help/FAQSection.svelte";
-    import ProfessionalDirectory from "$lib/components/help/ProfessionalDirectory.svelte";
     import GettingStartedWizard from "$lib/components/help/GettingStartedWizard.svelte";
 
-    let activeTab: "guide" | "resources" | "faq" = $state("guide");
+    let activeTab: "guide" | "faq" = $state("guide");
 </script>
 
 <div class="min-h-screen bg-background pb-20">
@@ -55,22 +54,6 @@
 
             <button
                 class="flex items-center gap-3 px-6 py-4 rounded-xl border transition-all whitespace-nowrap
-        {activeTab === 'resources'
-                    ? 'bg-card border-transparent text-primary-deep dark:text-primary-hover shadow-lg'
-                    : 'bg-primary-deep/80 border-white/20 text-white hover:bg-primary-deep'}"
-                onclick={() => (activeTab = "resources")}
-            >
-                <Users
-                    size={20}
-                    class={activeTab === "resources"
-                        ? "text-gold-text"
-                        : "text-white/70"}
-                />
-                <span class="font-bold">Pro Directory</span>
-            </button>
-
-            <button
-                class="flex items-center gap-3 px-6 py-4 rounded-xl border transition-all whitespace-nowrap
         {activeTab === 'faq'
                     ? 'bg-card border-transparent text-primary-deep dark:text-primary-hover shadow-lg'
                     : 'bg-primary-deep/80 border-white/20 text-white hover:bg-primary-deep'}"
@@ -91,23 +74,6 @@
             {#if activeTab === "guide"}
                 <div class="max-w-4xl mx-auto">
                     <GettingStartedWizard />
-                </div>
-            {:else if activeTab === "resources"}
-                <div class="max-w-6xl mx-auto">
-                    <div
-                        class="bg-card rounded-2xl p-8 shadow-sm border border-border"
-                    >
-                        <div class="mb-8 border-b border-border pb-8">
-                            <h2 class="font-serif text-3xl text-primary-deep dark:text-primary-hover mb-4">
-                                Professional Directory
-                            </h2>
-                            <p class="text-muted-foreground">
-                                Professionals who specialize in estate
-                                planning.
-                            </p>
-                        </div>
-                        <ProfessionalDirectory />
-                    </div>
                 </div>
             {:else if activeTab === "faq"}
                 <div class="max-w-4xl mx-auto">
