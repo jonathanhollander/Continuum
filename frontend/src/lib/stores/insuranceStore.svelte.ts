@@ -23,6 +23,16 @@ export interface InsurancePolicy {
 // The server keeps expiration_date as a datetime ("2027-03-10T00:00:00"); the form's date input reads "2027-03-10".
 const toDateInput = (v: unknown) => (typeof v === 'string' ? v.slice(0, 10) : '');
 
+// Rows saved through the API can arrive lowercase ("monthly", "life", "active"); the page's totals,
+// filters and counts compare the page spelling, so read each value as the page's option when it matches.
+const pageSpelling = <T extends string>(v: unknown, options: readonly T[], aliases: Record<string, T> = {}) => {
+    const key = String(v ?? '').trim().toLowerCase();
+    return options.find(o => o.toLowerCase() === key) ?? aliases[key] ?? v;
+};
+const FREQUENCIES = ['Monthly', 'Quarterly', 'Annually'] as const;
+const TYPES = ['Life', 'Health', 'Auto', 'Home', 'Disability', 'Other'] as const;
+const STATUSES = ['Active', 'Inactive', 'Pending'] as const;
+
 const insuranceMapper = (item: any) => {
     if (!item) return item;
     // One spelling per field (camel; the wire snake-cases it), newest value kept
@@ -35,16 +45,17 @@ const insuranceMapper = (item: any) => {
     return {
         ...out,
         policyName: out.policyName ?? '',
-        insuranceType: out.insuranceType ?? 'Other',
+        insuranceType: pageSpelling(out.insuranceType ?? 'Other', TYPES),
         policyNumber: out.policyNumber ?? '',
         premiumAmount: out.premiumAmount ?? 0,
-        premiumFrequency: out.premiumFrequency ?? 'Monthly',
+        premiumFrequency: pageSpelling(out.premiumFrequency ?? 'Monthly', FREQUENCIES, { annual: 'Annually', yearly: 'Annually' }),
         agentName: out.agentName ?? '',
         agentContact: out.agentContact ?? '',
         claimsProcedure: out.claimsProcedure ?? '',
         policyDocuments: out.policyDocuments ?? '',
         // An empty date goes over the wire as null (the column is a nullable datetime).
-        expirationDate: toDateInput(out.expirationDate) || null
+        expirationDate: toDateInput(out.expirationDate) || null,
+        ...(out.status != null && { status: pageSpelling(out.status, STATUSES) }),
     };
 };
 
