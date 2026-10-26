@@ -4,7 +4,6 @@
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
     import * as registryRaw from "$lib/data/registry.json";
     import ModuleContent from "$lib/components/ModuleContent.svelte";
-    import AssetManager from "$lib/components/archetypes/AssetManager.svelte";
     import ContactDirectory from "$lib/components/archetypes/ContactDirectory.svelte";
     import TaskDashboard from "$lib/components/archetypes/TaskDashboard.svelte";
 
@@ -28,9 +27,8 @@
         <div class="container mx-auto px-6 py-12">
             <div class="max-w-4xl mx-auto space-y-12">
                 <!-- Smart Module Router -->
-                {#if module.id.includes("financial") || module.id.includes("property") || module.id.includes("insurance") || module.id.includes("subscription") || module.id.includes("asset") || module.id.includes("vehicle") || module.id.includes("estate")}
-                    <AssetManager {module} />
-                {:else if module.id.includes("contact") || module.id.includes("beneficiar")}
+                <!-- Asset ids (financial, property, subscription...) each have their own page under /modules. -->
+                {#if module.id.includes("contact") || module.id.includes("beneficiar")}
                     <ContactDirectory {module} />
                 {:else if module.id.includes("task") || module.id.includes("checklist") || module.id.includes("guide")}
                     <TaskDashboard {module} />
