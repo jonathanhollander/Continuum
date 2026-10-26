@@ -22,8 +22,10 @@ const mapper = (data: any): Subscription => ({
     paymentMethod: data.paymentMethod ?? data.payment_method,
 });
 
-const manager = registerSync<Subscription>('subscriptions', 'subscriptions', mapper, '/api/data')
+// The one owner of 'subscriptions' (the subscriptions page uses it too).
+export const subscriptionsSync = registerSync<Subscription>('subscriptions', 'subscriptions', mapper, '/api/data')
     .setAffirmationContext('subscriptions');
+const manager = subscriptionsSync;
 
 export const subscriptionStore = {
     subscribe: manager.subscribe.bind(manager),

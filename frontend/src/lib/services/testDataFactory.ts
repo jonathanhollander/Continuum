@@ -1,5 +1,9 @@
 import { getStored, setStored } from "$lib/stores/persistence";
 import { type SyncManager, registerSync, getRegistry } from "$lib/services/sync.svelte";
+// The owning stores register 'subscriptions', 'calendar_events' and 'letters' with their mappers.
+import "$lib/stores/subscriptionStore.svelte";
+import "$lib/stores/calendarStore.svelte";
+import "$lib/stores/letterStore.svelte";
 
 const TEST_REGISTRY_KEY = "continuum_test_registry";
 
@@ -16,12 +20,7 @@ class TestDataFactoryService {
         // Assets
         registerSync("assets", "assets");
         registerSync("financial_accounts", "financial_accounts");
-        // Subscriptions
-        registerSync("subscriptions", "subscriptions");
-        // Calendar
-        registerSync("calendar_events", "calendar_events");
-        // Letters
-        registerSync("letters", "letters");
+        // Subscriptions, calendar and letters are registered by their owning stores (imported above).
         // Documents (Default Vault)
         registerSync("documents", "documents");
 

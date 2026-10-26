@@ -64,13 +64,11 @@
     };
 
     import GriefSupportBanner from "$lib/components/GriefSupportBanner.svelte";
-    import { registerSync } from "$lib/services/sync.svelte";
+    import type { SyncManager } from "$lib/services/sync.svelte";
+    import { lettersSync } from "$lib/stores/letterStore.svelte";
 
-    // Sync Manager for Letters
-    const letterSync = registerSync<SavedLetter>(
-        "saved_letters",
-        "future_letters",
-    ).setAffirmationContext("letters");
+    // One owner for the letters table: the store's 'letters' manager.
+    const letterSync = lettersSync as unknown as SyncManager<SavedLetter>;
     let savedLetters = $derived(letterSync.items);
 
     let searchQuery = $state("");

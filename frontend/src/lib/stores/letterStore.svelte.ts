@@ -9,6 +9,12 @@ export interface Letter {
     release_condition: string;
     status: string;
     custom_attributes?: string; // JSON string of custom field values
+    // Written by the letters page (camelCase columns on the server)
+    date?: string;
+    type?: string;
+    triggerDate?: string;
+    triggerMilestone?: string;
+    isLocked?: boolean;
 }
 
 const mapper = (data: any): Letter => ({
@@ -18,8 +24,10 @@ const mapper = (data: any): Letter => ({
     release_condition: data.release_condition ?? data.releaseCondition ?? 'death',
 });
 
-const manager = registerSync<Letter>('letters', 'letters', mapper, '/api/data')
+// The one owner of 'letters' (the letters page uses it too).
+export const lettersSync = registerSync<Letter>('letters', 'letters', mapper, '/api/data')
     .setAffirmationContext('letters');
+const manager = lettersSync;
 
 export const letterStore = {
     subscribe: manager.subscribe.bind(manager),

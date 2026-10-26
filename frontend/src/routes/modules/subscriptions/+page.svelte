@@ -20,7 +20,8 @@
     import { activityLog } from "$lib/stores/activityLog.svelte";
     import { fade, scale } from "svelte/transition";
     import { FileText, Download, Printer } from "lucide-svelte";
-    import { registerSync } from "$lib/services/sync.svelte";
+    import type { SyncManager } from "$lib/services/sync.svelte";
+    import { subscriptionsSync } from "$lib/stores/subscriptionStore.svelte";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
@@ -44,11 +45,8 @@
 
     let parsedCustomAttributes = $state<Record<string, any>>({});
 
-    // Register Sync Manager
-    const subscriptionSync = registerSync<Subscription>(
-        "subscriptions",
-        "subscriptions",
-    ).setAffirmationContext("subscriptions");
+    // One owner for 'subscriptions': the store (its mapper normalizes id, auto_renew, paymentMethod).
+    const subscriptionSync = subscriptionsSync as unknown as SyncManager<Subscription>;
     let subscriptions = $derived(subscriptionSync.items);
     let isLoading = $state(true);
     let viewMode = $state<ViewMode>('card');
@@ -56,34 +54,6 @@
     onMount(async () => {
         await subscriptionSync.init();
         isLoading = false;
-    });
-
-    // Migration Logic (One-time check)
-    $effect(() => {
-        if (
-            subscriptionSync.status === "synced" &&
-            subscriptionSync.items.length === 0
-        ) {
-            const legacy = localStorage.getItem("subscriptions");
-            if (legacy) {
-                try {
-                    const parsed = JSON.parse(legacy);
-                    if (Array.isArray(parsed) && parsed.length > 0) {
-                        console.log("Migrating subscriptions...", parsed);
-                        // SyncManager doesn't have batch create exposed widely yet,
-                        // but we can just use the manual migration method or loop.
-                        // For now, let's just let it load from backend.
-                        // Implied: SyncManager handles migration via `migrateUp` if we initialized it with data,
-                        // but here we are lazy loading.
-                        // If we want to force migration:
-                        // subscriptionSync.items = parsed; // This keeps it local until next sync? No, items is readonly-ish derived usually?
-                        // Actually SyncManager.items is a $state, so we can set it? No, derived above.
-                        // Inspecting SyncManager: `items = $state<T[]>([])`.
-                        // So if we don't use derived, we can set it.
-                    }
-                } catch {}
-            }
-        }
     });
 
     let showAddForm = $state(false);

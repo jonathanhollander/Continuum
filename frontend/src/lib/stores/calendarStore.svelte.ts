@@ -4,35 +4,58 @@ import { registerSync } from "$lib/services/sync.svelte";
 export interface AnniversaryEvent {
     id: string | number;
     title: string;
-    date: string; // ISO date or "MM-DD" for recurring
-    type: 'birthday' | 'anniversary' | 'passing' | 'ritual';
+    date: string; // "MM-DD"/"YYYY-MM-DD" (anniversary manager) or "MMDD"/"YYYYMMDD" (calendar page)
+    type: 'birthday' | 'anniversary' | 'passing' | 'ritual'; // the calendar page also writes 'holiday' | 'other'
     description?: string;
     ritualInstructions?: string;
     recurring: boolean;
     tags?: string[];
     custom_attributes?: string; // JSON string of custom field values
+    // Calendar page names for the same columns: isRecurring = recurring, wish = description,
+    // emailTemplate = ritual_instructions holding a JSON {recipient, subject, body}.
+    isRecurring?: boolean;
+    wish?: string;
+    emailTemplate?: { recipient: string; subject: string; body: string };
 }
 
+function parseTemplate(s: any) {
+    if (typeof s !== 'string' || !s.trim().startsWith('{')) return undefined;
+    try {
+        const t = JSON.parse(s);
+        return t && typeof t === 'object' && !Array.isArray(t) ? t : undefined;
+    } catch { return undefined; }
+}
+
+// The one mapper for 'calendar_events' (calendar page and anniversary manager). Runs on records
+// coming from the server and on records going to it; every field but tags is safe to apply twice.
 const calendarMapper = (item: any) => {
     if (!item) return item;
+    const out: any = { ...item };
 
-    const isRemote = typeof item.tags === 'string';
+    const recurring = 'isRecurring' in item ? item.isRecurring : item.recurring;
+    out.isRecurring = !!recurring;
+    out.recurring = !!recurring;
 
-    if (isRemote) {
-        return {
-            ...item,
-            // Remote -> Local
-            ritualInstructions: item.ritual_instructions ?? item.ritualInstructions ?? '',
-            tags: item.tags ? item.tags.split(',').filter(Boolean) : [],
-        };
-    } else {
-        return {
-            ...item,
-            // Local -> Remote
-            ritual_instructions: item.ritualInstructions ?? item.ritual_instructions,
-            tags: Array.isArray(item.tags) ? item.tags.join(',') : (item.tags || '')
-        };
-    }
+    const wish = 'wish' in item ? item.wish : item.description;
+    out.wish = wish ?? '';
+    out.description = wish ?? '';
+
+    // ritual_instructions holds either the anniversary manager's free text or the calendar page's
+    // email template as JSON. An explicit emailTemplate (even undefined: cleared) wins over the stored JSON.
+    const stored = item.ritualInstructions ?? item.ritual_instructions ?? '';
+    const tpl = 'emailTemplate' in item ? item.emailTemplate : parseTemplate(stored);
+    out.emailTemplate = tpl && typeof tpl === 'object' ? tpl : undefined;
+    out.ritualInstructions = out.emailTemplate
+        ? JSON.stringify(out.emailTemplate)
+        : (parseTemplate(stored) ? '' : stored);
+    delete out.ritual_instructions;
+
+    // tags: a comma-separated string on the server, an array in the UI, so this one field flips with
+    // direction: a string (or null) is a server record coming in, an array is a UI record going out.
+    if (Array.isArray(item.tags)) out.tags = item.tags.join(',');
+    else if (typeof item.tags === 'string') out.tags = item.tags.split(',').filter(Boolean);
+    else if (item.tags === null) out.tags = [];
+    return out;
 };
 
 export const calendarSync = registerSync<AnniversaryEvent>('calendar_events', 'calendar_events', calendarMapper).setAffirmationContext('general');
@@ -61,15 +84,15 @@ export const calendarStore = {
 };
 
 // Derived store for upcoming events (next 30 days)
-export const upcomingEvents = derived(calendarSync, ($sync) => {
-    const items = $sync.items;
+// The manager's subscribe hands out the items array itself.
+export const upcomingEvents = derived(calendarSync, (items: AnniversaryEvent[]) => {
     const now = new Date();
     const currentYear = now.getFullYear();
 
     return items.map(event => {
         // Accepts "MM-DD", "YYYY-MM-DD" and the calendar page's "MMDD" / "YYYYMMDD".
         const digits = (event.date || '').replace(/-/g, '');
-        if (digits.length < 4) return { ...event, nextDate: new Date(8640000000000000) };
+        if (digits.length < 4) return { ...event, ritualInstructions: event.emailTemplate ? '' : event.ritualInstructions, nextDate: new Date(8640000000000000) };
 
         const month = Number(digits.slice(-4, -2));
         const day = Number(digits.slice(-2));
@@ -81,6 +104,8 @@ export const upcomingEvents = derived(calendarSync, ($sync) => {
             eventDate.setFullYear(currentYear + 1);
         }
 
-        return { ...event, nextDate: eventDate };
+        // A calendar-page record keeps its email template (JSON) in ritualInstructions; it is not a ritual.
+        const ritualInstructions = event.emailTemplate ? '' : event.ritualInstructions;
+        return { ...event, ritualInstructions, nextDate: eventDate };
     }).sort((a, b) => a.nextDate.getTime() - b.nextDate.getTime());
 });

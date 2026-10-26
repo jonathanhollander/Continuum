@@ -1,5 +1,4 @@
 import { registerSync } from "$lib/services/sync.svelte";
-import { getLegacy } from './persistence';
 
 export type ClosurePreference = 'memorialize' | 'delete' | 'transfer' | 'none';
 
@@ -14,41 +13,6 @@ export interface DigitalAccount {
     closureDate?: string;
     description?: string; // From page usage
     type?: string;        // From page usage
-}
-
-// Migration Logic: Check both legacy keys
-function migrateDigitalAssets(): DigitalAccount[] {
-    if (typeof localStorage === 'undefined') return [];
-
-    let combined: DigitalAccount[] = [];
-
-    // 1. Page Key
-    const pageData = getLegacy('digital_assets');
-    if (pageData) {
-        try {
-            const parsed = JSON.parse(pageData);
-            if (Array.isArray(parsed)) combined = [...combined, ...parsed];
-        } catch { }
-    }
-
-    // 2. Store Key
-    const storeData = getLegacy('continuum_digital_accounts');
-    if (storeData) {
-        try {
-            const parsed = JSON.parse(storeData);
-            if (Array.isArray(parsed)) combined = [...combined, ...parsed];
-        } catch { }
-    }
-
-    // Deduplicate by ID if possible, otherwise just return.
-    // Since IDs might be numbers (Date.now) or strings (UUID), strict dedupe is hard.
-    // We'll trust the user to clean up dupes for now or rely on SyncManager handling unique IDs if created properly.
-
-    // Normalize IDs to strings
-    return combined.map(a => ({
-        ...a,
-        id: String(a.id)
-    }));
 }
 
 const digitalAssetMapper = (item: any) => {
@@ -68,17 +32,8 @@ const digitalAssetMapper = (item: any) => {
 
 export const digitalAssetsSync = registerSync<DigitalAccount>('digital_assets', 'digital_assets', digitalAssetMapper).setAffirmationContext('general');
 
-// Lazy Migration
-if (typeof window !== 'undefined') {
-    if (digitalAssetsSync.items.length === 0) {
-        const legacy = migrateDigitalAssets();
-        if (legacy.length > 0) {
-            console.log("Migrating digital assets...", legacy);
-            digitalAssetsSync.items = legacy;
-            // SyncManager will auto-migrate these to cloud on next syncAll()
-        }
-    }
-}
+// Un-namespaced legacy keys ('digital_assets', 'continuum_digital_accounts') carry no account,
+// so they are never adopted into whichever account happens to be signed in.
 
 // Wrapper for compatibility
 export const digitalAssetsStore = {
