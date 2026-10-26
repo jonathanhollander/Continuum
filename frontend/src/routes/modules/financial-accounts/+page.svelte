@@ -140,7 +140,7 @@
 
 <LivingBlueprintHeader
         title={$t("assets")}
-        subtitle="Manage bank accounts, investments, and liabilities"
+        subtitle="Bank accounts, investments and debts, gathered in one place."
         detailedDescription="Gathering your financial accounts in one place gives your family a clear path to the resources meant for them, and a steady footing during a time of uncertainty."
         whyMatters="Documenting your accounts now helps your resources reach the people you love, with ease."
     >

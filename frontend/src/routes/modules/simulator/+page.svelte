@@ -96,7 +96,10 @@
                 docs.some((d) =>
                     named(d, /health|living will|advance directive|medical directive/),
                 );
-            const hasPOA = docs.some((d) => named(d, /power of attorney|\bpoa\b/));
+            // A healthcare proxy from the Medical page, or a vault document named as a POA
+            const hasProxy = directives.some((d) => d.type === "healthcare_proxy");
+            const hasPOA =
+                hasProxy || docs.some((d) => named(d, /power of attorney|\bpoa\b/));
 
             checks.push({
                 check: "Medical Directive",
@@ -111,7 +114,9 @@
                 check: "Power of Attorney",
                 status: hasPOA,
                 msg: hasPOA
-                    ? "Power of attorney saved in your Vault."
+                    ? hasProxy
+                        ? "Healthcare proxy saved in Health & Medical."
+                        : "Power of attorney saved in your Vault."
                     : "A power of attorney lets someone you trust pay your bills.",
             });
             overallStatus = hasHealth && hasPOA ? "pass" : "fail";
