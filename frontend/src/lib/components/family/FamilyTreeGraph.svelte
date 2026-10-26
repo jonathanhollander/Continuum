@@ -11,13 +11,18 @@
         y: number;
     }
 
-    let width = $state(800);
-    const HEIGHT = 600;
-    // Width of the edit panel; the map uses the space beside it while it is open
-    const PANEL_WIDTH = 320;
-
     // The member being edited or added (a copy, so closing the panel leaves the map as it was)
     let draft = $state<any>(null);
+
+    let width = $state(800);
+    // A small family gets a shorter map so everyone fits the first screen;
+    // larger families and the open edit panel keep the full height
+    const SMALL_FAMILY = 6;
+    let height = $derived(
+        draft || (familyStore.members || []).length > SMALL_FAMILY ? 600 : 400,
+    );
+    // Width of the edit panel; the map uses the space beside it while it is open
+    const PANEL_WIDTH = 320;
 
     // Members placed on an ellipse (two rings past 12), so circles and names keep apart
     let nodes = $derived.by((): PlacedNode[] => {
@@ -25,10 +30,10 @@
         const n = members.length;
         const mapWidth = draft ? Math.max(0, width - PANEL_WIDTH) : width;
         const cx = mapWidth / 2;
-        const cy = HEIGHT / 2;
+        const cy = height / 2;
         if (n === 1) return [{ ...members[0], x: cx, y: cy }];
         const rx = Math.max(0, mapWidth / 2 - 130);
-        const ry = HEIGHT / 2 - 80;
+        const ry = height / 2 - 80;
         const outer = n > 12 ? Math.ceil(n * 0.6) : n;
         return members.map((m, i) => {
             const onOuter = i < outer;
@@ -122,8 +127,9 @@
 
 <div
     class="relative w-full bg-slate-50 rounded-2xl overflow-hidden shadow-inner border border-slate-200 select-none {showMap
-        ? 'h-[600px]'
+        ? ''
         : 'py-10 flex justify-center'}"
+    style:height={showMap ? `${height}px` : undefined}
     bind:clientWidth={width}
 >
     {#if showMap}
