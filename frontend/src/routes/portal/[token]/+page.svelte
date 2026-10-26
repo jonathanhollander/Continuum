@@ -3,6 +3,7 @@
   import { onMount } from "svelte";
   import { fade } from "svelte/transition";
   import { API_BASE_URL } from "$lib/config";
+  import LivingMesh from "$lib/components/pulse/LivingMesh.svelte";
 
   let token = $page.params.token;
   let loading = $state(true);
@@ -88,32 +89,35 @@
 </script>
 
 <div
-  class="min-h-screen bg-slate-900 text-slate-200 flex flex-col items-center justify-center p-4"
+  class="surface-dark isolate bg-background min-h-screen relative overflow-hidden text-foreground flex flex-col items-center justify-center p-4"
 >
+  <LivingMesh
+    status={error ? "disabled" : data?.user_status === "grace" ? "grace" : "active"}
+  />
   {#if loading}
-    <div class="animate-pulse text-teal-500">
+    <div class="animate-pulse text-primary">
       Connecting to Secure Portal...
     </div>
   {:else if error}
     <div
-      class="bg-red-900/20 p-8 rounded-2xl border border-red-800 text-center max-w-md"
+      class="bg-background/60 p-8 rounded-2xl border border-border text-center max-w-md backdrop-blur-md"
     >
-      <h1 class="text-2xl font-serif text-red-400 mb-2">This link has rested for now</h1>
-      <p class="text-slate-400">{error}</p>
+      <h1 class="text-2xl font-serif text-foreground mb-2">This link has rested for now</h1>
+      <p class="text-muted-foreground">{error}</p>
     </div>
   {:else}
     <div
-      class="max-w-md w-full bg-slate-800 rounded-2xl overflow-hidden shadow-2xl border border-slate-700"
+      class="max-w-md w-full bg-card rounded-2xl overflow-hidden shadow-2xl border border-border"
       in:fade
     >
       <!-- Header -->
-      <div class="bg-slate-900 p-6 text-center border-b border-slate-700">
-        <h1 class="text-xl font-medium text-white">
+      <div class="bg-background p-6 text-center border-b border-border">
+        <h1 class="text-xl font-medium text-foreground">
           {data.user_status === "active"
             ? `${data.user_name} checked in recently`
             : `We're waiting to hear from ${data.user_name}`}
         </h1>
-        <p class="text-sm text-slate-400 mt-1">
+        <p class="text-sm text-muted-foreground mt-1">
           {data.user_status === "active"
             ? "All is well for now."
             : "A gentle note from you may help."}
@@ -123,15 +127,15 @@
       <!-- Main Status -->
       <div class="p-8 flex flex-col items-center text-center space-y-6">
         <div
-          class="w-32 h-32 rounded-full bg-emerald-500/10 flex items-center justify-center relative"
+          class="w-32 h-32 rounded-full bg-primary/10 flex items-center justify-center relative"
         >
           <div
-            class="absolute inset-0 rounded-full border border-emerald-500/30 animate-ping opacity-20"
+            class="absolute inset-0 rounded-full border border-primary/30 animate-ping opacity-20"
           ></div>
           <!-- Heartbeat Icon -->
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            class="w-12 h-12 text-emerald-400"
+            class="w-12 h-12 text-primary"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -143,8 +147,8 @@
 
         {#if data.last_checkin}
           <div>
-            <p class="text-slate-400 text-sm mb-1">LAST CONFIRMED CHECK-IN</p>
-            <p class="text-2xl font-mono text-white">
+            <p class="text-muted-foreground text-sm mb-1">LAST CONFIRMED CHECK-IN</p>
+            <p class="text-2xl font-mono text-foreground">
               {parseUtc(data.last_checkin).toLocaleString()}
             </p>
           </div>
@@ -152,7 +156,7 @@
 
         <div class="w-full bg-slate-700/50 p-4 rounded-xl text-left">
           <p
-            class="text-xs text-slate-400 uppercase tracking-widest mb-2 font-bold"
+            class="text-xs text-muted-foreground uppercase tracking-widest mb-2 font-bold"
           >
             Guardian Access{data.contact_tier
               ? ` (Tier ${data.contact_tier})`
@@ -160,25 +164,25 @@
           </p>
           <ul class="space-y-2 text-sm text-slate-300">
             <li class="flex items-center gap-2">
-              <span class="text-emerald-400">✓</span> View Status
+              <span class="text-primary">✓</span> View Status
             </li>
             <li class="flex items-center gap-2">
-              <span class="text-emerald-400">✓</span> Send "Thinking of You" Nudge
+              <span class="text-primary">✓</span> Send "Thinking of You" Nudge
             </li>
             <li class="flex items-center gap-2">
-              <span class="text-emerald-400">✓</span> Read notes from {data.user_name}
+              <span class="text-primary">✓</span> Read notes from {data.user_name}
             </li>
           </ul>
         </div>
 
         <!-- What you can do (the Tier 2 email's steps), plus the owner's phone when the profile has one -->
         <div class="w-full bg-slate-700/50 p-4 rounded-xl text-left">
-          <p class="text-xs text-slate-400 uppercase tracking-widest mb-2 font-bold">
+          <p class="text-xs text-muted-foreground uppercase tracking-widest mb-2 font-bold">
             What you can do
           </p>
           <ul class="space-y-2 text-sm text-slate-300 list-disc pl-5">
             <li>
-              Reach {data.user_name} by phone, text or email{#if data.user_phone}: <a href="tel:{data.user_phone}" class="text-teal-400 hover:underline whitespace-nowrap">{data.user_phone}</a>{/if}
+              Reach {data.user_name} by phone, text or email{#if data.user_phone}: <a href="tel:{data.user_phone}" class="text-primary hover:underline whitespace-nowrap">{data.user_phone}</a>{/if}
             </li>
             <li>Ask mutual friends or family, if that feels right</li>
             <li>Let us know below once you've spoken with them, which pauses further alerts for a while</li>
@@ -187,14 +191,14 @@
 
         <!-- Notes from the owner's Pulse vault (opened by the API when the time comes) -->
         <div class="w-full bg-slate-700/50 p-4 rounded-xl text-left">
-          <p class="text-xs text-slate-400 uppercase tracking-widest mb-2 font-bold">
+          <p class="text-xs text-muted-foreground uppercase tracking-widest mb-2 font-bold">
             Notes {data.user_name} shared with you
           </p>
           {#if vaultItems.length > 0}
             <ul class="space-y-3">
               {#each vaultItems as item}
                 <li>
-                  <p class="text-sm font-bold text-slate-200">{item.name}</p>
+                  <p class="text-sm font-bold text-foreground">{item.name}</p>
                   <p class="text-sm text-slate-300 whitespace-pre-wrap">{item.content}</p>
                 </li>
               {/each}
@@ -209,14 +213,14 @@
         <!-- The owner's own messages to this guardian (Pulse Messages) -->
         {#if data.notes?.length > 0}
           <div class="w-full bg-slate-700/50 p-4 rounded-xl text-left">
-            <p class="text-xs text-slate-400 uppercase tracking-widest mb-2 font-bold">
+            <p class="text-xs text-muted-foreground uppercase tracking-widest mb-2 font-bold">
               Messages from {data.user_name}
             </p>
             <ul class="space-y-3">
               {#each data.notes as note}
                 <li>
-                  <p class="text-sm text-slate-200 whitespace-pre-wrap">{note.message}</p>
-                  <p class="text-xs text-slate-500 mt-1">
+                  <p class="text-sm text-foreground whitespace-pre-wrap">{note.message}</p>
+                  <p class="text-xs text-muted-foreground mt-1">
                     {parseUtc(note.sent_at).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}
                   </p>
                 </li>
@@ -227,32 +231,32 @@
       </div>
 
       <!-- Actions -->
-      <div class="p-4 bg-slate-900/50 flex gap-4">
+      <div class="p-4 bg-background/50 flex gap-4">
         <button
           onclick={sendNudge}
           disabled={actionLoading}
-          class="flex-1 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-white py-3 rounded-xl font-medium transition-colors border border-slate-700"
+          class="flex-1 bg-card hover:bg-slate-700 disabled:hover:bg-card text-foreground disabled:text-muted-foreground py-3 rounded-xl font-medium transition-colors border border-border"
         >
           {actionLoading ? "Sending..." : "Send Nudge"}
         </button>
         <button
           onclick={confirmContact}
           disabled={actionLoading}
-          class="flex-1 bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white py-3 rounded-xl font-medium transition-colors"
+          class="flex-1 bg-primary hover:bg-primary-hover text-primary-foreground disabled:bg-muted disabled:text-muted-foreground py-3 rounded-xl font-medium transition-colors border border-transparent disabled:border-border"
         >
           {actionLoading ? "Verifying..." : "I've Spoken to Them"}
         </button>
       </div>
 
-      <div class="px-4 pb-4 bg-slate-900/50 text-center">
-        <a href="/pulse/respond/{token}" class="text-sm text-teal-400 hover:underline">
+      <div class="px-4 pb-4 bg-background/50 text-center">
+        <a href="/pulse/respond/{token}" class="text-sm text-primary hover:underline">
           Let them know I've seen this
         </a>
       </div>
 
       {#if actionMessage}
         <div
-          class="p-4 text-center text-sm font-bold text-teal-400 bg-teal-900/20 border-t border-teal-500/20"
+          class="p-4 text-center text-sm font-bold text-primary bg-primary-soft border-t border-primary/20"
           in:fade
         >
           {actionMessage}
