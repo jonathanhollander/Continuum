@@ -1,6 +1,6 @@
 # Orchestrator Handoff — RECOVERY_EXECUTION_PLAN
 
-**Last Updated:** 2026-10-26 14:50 EST
+**Last Updated:** 2026-10-26 15:05 EST
 
 This document is for an agent taking over as orchestrator of `docs/RECOVERY_EXECUTION_PLAN.md` (the plan, the only task board). Read this file, then the plan's "Owner decisions", "Orchestration loop", "Section status" and "Card status" sections. Source code and git win over anything written here.
 
@@ -17,19 +17,19 @@ This document is for an agent taking over as orchestrator of `docs/RECOVERY_EXEC
 | Card | State | What finishes it |
 |---|---|---|
 | **X302** | ☑ verified live: passkey sign-in start 500 → 200; owner then signed in with a passkey (audit `auth_passkey` continuum@sincuerda.com 18:36 UTC). | — |
-| **X5** | ☑ merged `0e5e34c` after the owner's passkey sign-in. Bypass removed (backend login, login-page magic-link branch, `backend/verify_auth.py`, CLAUDE.md line). Deploy of `0e5e34c` was in progress at handoff. | Confirm live: wait for `SUCCESS 0e5e34c` (§5), then `curl -s -X POST https://continuum.estate/api/auth/token -H 'Content-Type: application/x-www-form-urlencoded' -d 'username=jh%40continuum.estate&password=x' -o /dev/null -w "%{http_code}"` → 401. Record the result in the X5 row. |
-| **X301** | ▶ agent dispatched (worktree `.worktrees/X301`, branch `card/X301`, port 35777): remove the smoke test's jh@ fallback (`scripts/smoke_test.py:434`), `git rm --cached backend/logs/continuum.log.1`, `backend/logs/` in .gitignore. | When `git log main..card/X301` shows a commit: review the diff, merge, remove worktree/branch, tick, push. If no commit and the previous session is gone, re-dispatch into the same worktree. |
+| **X5** | ☑ merged `0e5e34c` after the owner's passkey sign-in; verified live on deploy `74f6b15`: jh@continuum.estate + password `x` → 401; /api/health environment production. | — |
+| **X301** | ☑ merged: smoke test uses dev@continuum.im only (17 PASS locally); `backend/logs/` untracked and ignored. | — |
 | **X6** | Owner | Owner rotates the OpenRouter key. Report only. |
 | **X141** | Owner | Owner runs `railway config apply` (plan row has the CLI workaround). Branch `card/X141` 1955d51 not merged. |
 | **X154** | Owner decision | Recommend yes (plan row). |
 
 **Live sign-in for proofs is gone** (X5). The `$S/pw/*live.mjs` scripts and `rllib.mjs` sign in as jh@ with password `x` and now get 401. Live verification needs a test account the owner provides; do not create credentials yourself. Read-only checks (`curl` on public endpoints, `railway logs`, DB `SELECT`s via the Postgres service's `DATABASE_PUBLIC_URL`) still work.
 
-**When X301 is ☑:** mark Wave X ✅ (owner items reported, not waited on), verify against `git log` and live `/api/health` (`environment: production`), and send the owner the final report with the open owner items (§8).
+**Next (when the owner restarts work):** every engineering X card is ☑; only owner items X6, X141, X154 remain. Mark Wave X ✅ (owner items reported, not waited on), verify against `git log` and live `/api/health` (`environment: production`), and send the owner the final report with the open owner items (§8).
 
 ## 2. Agents in flight
 
-- X301 (see above). Nothing else.
+None.
 
 ## 3. Production facts learned this session
 
