@@ -218,7 +218,7 @@
 
                     {#if state.actionError}
                         <p
-                            class="text-sm text-warning text-center leading-relaxed"
+                            class="text-sm text-muted-foreground text-center leading-relaxed"
                             role="status"
                         >
                             {state.actionError}
