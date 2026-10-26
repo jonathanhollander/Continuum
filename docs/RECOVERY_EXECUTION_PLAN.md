@@ -656,7 +656,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X160 | ▶ | | |
 | X161 | ▶ | | |
 | X162 | ☐ (queued: 20-agent limit) | | |
-| X163 | ☐ (queued: 20-agent limit) | | |
+| X163 | ▶ | | |
 | X164 | ☐ (queued: 20-agent limit) | | |
 | X165 | ☐ (queued: 20-agent limit) | | |
 | X138 | ☑ | c5a7077 | Toolbar Download (insurance, property) saves the stored files of every record shown (follows search; disabled when none; cached files reused); subscriptions Filter chips by the difficulty words already shown (Easy/Medium/Hard), clear on reclick or close; `aiGriefService` uses `contextStore.isExecutor` (store holds `executor` after X118 — the old check never matched). Downloads byte-identical, executor/planner personas checked with the AI call intercepted; 0 errors |
