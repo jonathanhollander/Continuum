@@ -1,6 +1,6 @@
 <script lang="ts">
     import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
-    import { onMount } from "svelte";
+    import { onMount, untrack } from "svelte";
     import { customFieldStore } from "$lib/stores/customFieldStore.svelte";
     import { Plus, Trash2, Settings, X, Save } from "lucide-svelte";
     import { slide, fade } from "svelte/transition";
@@ -19,35 +19,88 @@
     let isManaging = $state(false);
     let newFieldName = $state("");
     let newFieldType = $state<FieldType>("text");
+    let savingField = $state(false);
+    let saveError = $state(false);
     let definitions = $derived(customFieldStore.getDefinitions(entityType));
-    // Unique per instance, so each field's visible label can name its input.
+    let loadState = $derived(customFieldStore.getLoadState(entityType));
     const uid = $props.id();
+    const drafts = new Map<string, { name: string; type: FieldType; open: boolean; error: boolean }>();
+    let draftScope: string | null = null;
+    let identity: string | null = null;
+    let operation = 0;
+    let editor = 0;
 
-    onMount(() => {
-        customFieldStore.loadDefinitions(entityType);
-        // Ensure data is initialized
-        if (!data) data = {};
+    onMount(() => { if (!data) data = {}; });
+
+    // A mounted manager follows identified sessions too; onMount alone misses an account switch.
+    $effect(() => {
+        const nextIdentity = customFieldStore.ownerKey;
+        const account = customFieldStore.accountId;
+        const entity = entityType;
+        const scope = account == null ? null : JSON.stringify([account, entity]);
+        untrack(() => {
+            if (identity !== nextIdentity || scope !== draftScope) {
+                operation++;
+                editor++;
+                savingField = false;
+                if (scope !== draftScope) {
+                    if (draftScope) drafts.set(draftScope, { name: newFieldName, type: newFieldType, open: isManaging, error: saveError });
+                    const draft = scope ? drafts.get(scope) : undefined;
+                    newFieldName = draft?.name || "";
+                    newFieldType = draft?.type || "text";
+                    isManaging = draft?.open || false;
+                    saveError = draft?.error || false;
+                    draftScope = scope;
+                }
+                identity = nextIdentity;
+            }
+            if (nextIdentity) void customFieldStore.loadDefinitions(entity);
+        });
     });
 
+    function setManaging(open: boolean) {
+        editor++;
+        isManaging = open;
+    }
+
     async function addField() {
-        if (!newFieldName) return;
-        await customFieldStore.createDefinition({
-            entity_type: entityType,
-            name: newFieldName,
-            field_type: newFieldType,
-            order: definitions.length,
-        });
-        newFieldName = "";
-        isManaging = false;
+        if (savingField || !newFieldName || !customFieldStore.ownerKey) return;
+        const owner = customFieldStore.ownerKey;
+        const request = ++operation;
+        const opened = editor;
+        const name = newFieldName;
+        const type = newFieldType;
+        savingField = true;
+        saveError = false;
+        try {
+            await customFieldStore.createDefinition({ entity_type: entityType, name, field_type: type, order: definitions.length });
+            if (owner !== customFieldStore.ownerKey || request !== operation) return;
+            if (opened === editor && name === newFieldName && type === newFieldType) {
+                newFieldName = "";
+                setManaging(false);
+            }
+        } catch {
+            if (owner === customFieldStore.ownerKey && request === operation) saveError = true;
+        } finally {
+            if (owner === customFieldStore.ownerKey && request === operation) savingField = false;
+        }
     }
 
     async function removeDefinition(id: number, name: string) {
-        if (
-            await askConfirm(
-                `Remove the field "${name}"? Anything you saved in it stays safe.`,
-            )
-        ) {
-            await customFieldStore.deleteDefinition(id);
+        if (savingField || !customFieldStore.ownerKey) return;
+        const owner = customFieldStore.ownerKey;
+        const request = ++operation;
+        savingField = true;
+        saveError = false;
+        try {
+            if (await askConfirm(`Remove the field "${name}"? Anything you saved in it stays safe.`)) {
+                if (owner !== customFieldStore.ownerKey || request !== operation) return;
+                await customFieldStore.deleteDefinition(id);
+            }
+        } catch {
+            if (owner === customFieldStore.ownerKey && request === operation) saveError = true;
+        } finally {
+            if (owner === customFieldStore.ownerKey && request === operation) savingField = false;
         }
     }
 
@@ -61,6 +114,17 @@
 </script>
 
 <div class="space-y-4">
+    {#if loadState.loading}
+        <p role="status" class="text-xs text-muted-foreground">Loading...</p>
+    {:else if loadState.error}
+        <div role="status" class="space-y-2 text-xs text-muted-foreground">
+            <p>Your saved records are still on your account. Let's try loading them again.</p>
+            <button type="button" onclick={() => customFieldStore.loadDefinitions(entityType)} class="font-bold text-primary-hover">Try Again</button>
+        </div>
+    {/if}
+    {#if saveError}
+        <p role="status" class="text-xs text-muted-foreground">Your draft is kept. We can save it again whenever you're ready.</p>
+    {/if}
     <!-- Custom Field Inputs (appear first, integrated into form) -->
     <div class="grid grid-cols-1 gap-4">
         {#each definitions as def (def.id)}
@@ -130,12 +194,13 @@
     <!-- Add Field Section (appears after custom field inputs) -->
     {#if !readOnly}
         <div class="pt-2">
-            {#if definitions.length === 0 && !isManaging}
+            {#if definitions.length === 0 && !isManaging && loadState.loaded}
                 <p class="text-xs text-muted-foreground italic mb-3">Add custom fields to track additional information.</p>
             {/if}
 
             <button
-                onclick={() => (isManaging = !isManaging)}
+                onclick={() => setManaging(!isManaging)}
+                disabled={!customFieldStore.ownerKey}
                 class="text-xs text-primary-hover font-bold hover:text-foreground flex items-center gap-1 bg-primary-soft px-3 py-1.5 rounded-lg transition-colors"
             >
                 {#if isManaging}
@@ -176,14 +241,15 @@
                 </select>
                 <div class="flex justify-end gap-2">
                     <button
-                        onclick={() => (isManaging = false)}
+                        onclick={() => setManaging(false)}
                         class="px-3 py-1.5 text-xs font-bold text-muted-foreground hover:text-foreground"
                     >
                         Maybe later
                     </button>
                     <button
                         onclick={addField}
-                        disabled={!newFieldName}
+                        disabled={!newFieldName || savingField || !customFieldStore.ownerKey}
+                        aria-busy={savingField}
                         class="px-4 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-bold hover:bg-primary-hover disabled:opacity-50 shadow-sm"
                     >
                         Create Field
@@ -211,6 +277,7 @@
                                     ></span
                                 >
                                 <button aria-label={`Remove ${def.name}`}
+                                    disabled={savingField}
                                     onclick={() =>
                                         removeDefinition(def.id!, def.name)}
                                     class="text-muted-foreground hover:text-foreground"
