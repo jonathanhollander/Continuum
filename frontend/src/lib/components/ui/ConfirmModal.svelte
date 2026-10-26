@@ -43,20 +43,22 @@
     }
 </script>
 
+<!-- The Modal panel stays light in both themes, so "Maybe later" uses the same slate as the
+     Modal's own header; the confirm button follows primary (or danger for a remove). -->
 <Modal bind:open title={question} onClose={() => answer(false)}>
     <div class="flex justify-end gap-3">
         <button
             type="button"
             onclick={() => answer(false)}
-            class="px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-black/5 rounded-lg transition-colors"
+            class="px-5 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
             >Maybe later</button
         >
         <button
             type="button"
             onclick={() => answer(true)}
-            class="px-5 py-2.5 text-sm font-bold text-white rounded-lg shadow transition-colors {label
-                ? 'bg-primary hover:opacity-90'
-                : 'bg-red-600 hover:bg-red-700'}"
+            class="px-5 py-2.5 text-sm font-bold rounded-lg shadow transition-colors {label
+                ? 'bg-primary hover:bg-primary-hover text-primary-foreground'
+                : 'bg-danger hover:opacity-90 text-white dark:text-background'}"
             >{label ?? "Remove this item"}</button
         >
     </div>
