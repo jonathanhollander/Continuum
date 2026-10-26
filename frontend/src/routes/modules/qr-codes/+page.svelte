@@ -156,12 +156,12 @@
 
     <!-- AI Concierge Drafting Assistant -->
     <AIPromptBar
-        context="executor"
+        context="qr-codes"
         prompts={[
             "Explain how QR access codes work for my estate...",
-            "Draft instructions for my executor on using these keys...",
+            "Draft instructions for my executor on using a printed QR access code...",
             "Help me set up secure access for my family...",
-            "Summarize what information each access pack contains..."
+            "Where can I keep printed QR codes safe at home?"
         ]}
     />
 
