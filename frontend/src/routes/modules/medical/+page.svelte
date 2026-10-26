@@ -24,7 +24,6 @@
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
-    import Affirmation from "$lib/components/Affirmation.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { activityLog } from "$lib/stores/activityLog.svelte";
@@ -38,7 +37,6 @@
     let showAddForm = $state(false);
     let parsedCustomAttributes = $state<Record<string, any>>({});
     let editMode = $state(false);
-    let showAffirmation = $state(false);
     let isLoading = $state(true);
     let viewMode = $state<ViewMode>('card');
     let newDirective: Partial<MedicalDirective> = $state({
@@ -77,7 +75,6 @@
             return; // the manager already showed the one gentle message
         }
         showProfileEdit = false;
-        showAffirmation = true;
         activityLog.logEvent({
             module: "Health & Medical",
             action: "UPDATE",
@@ -122,7 +119,6 @@
             });
         }
 
-        showAffirmation = true;
         resetForm();
         } catch {
             // The manager already showed the one gentle message; the form stays open with the draft.
@@ -203,8 +199,6 @@
         <GriefSupportBanner compact={true} />
     </div>
 
-    <!-- Affirmation Message -->
-    <Affirmation module="medical" bind:show={showAffirmation} />
 
     <!-- AI Prompt Bar -->
     <div class="max-w-3xl mb-8">

@@ -39,7 +39,6 @@
     import BulkActionBar from "$lib/components/modules/visual-memories/BulkActionBar.svelte";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
-    import Affirmation from "$lib/components/Affirmation.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
 
     let activeTab = $state<"gallery" | "archives">("gallery");
@@ -69,7 +68,6 @@
     let hasArchives = $derived(externalArchives.items.length > 0);
     let selectedCount = $derived(selectedIds.length);
     let isLoading = $state(true);
-    let showAffirmation = $state(false);
 
     onMount(async () => {
         await syncAllMemories();
@@ -110,7 +108,6 @@
             });
         }
         showArchiveModal = false;
-        showAffirmation = true;
     }
 
     function handleDeleteArchive(id: number) {
@@ -303,8 +300,6 @@
 {/if}
 
 <div class="max-w-7xl mx-auto p-8 animate-in fade-in duration-500">
-    <!-- Affirmation Message -->
-    <Affirmation module="general" bind:show={showAffirmation} />
 
     <!-- AI Prompt Bar -->
     <div class="max-w-3xl mx-auto mb-8">

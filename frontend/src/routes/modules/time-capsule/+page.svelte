@@ -42,10 +42,8 @@
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
-    import Affirmation from "$lib/components/Affirmation.svelte";
 
     let viewMode = $state<ViewMode>('card');
-    let showAffirmation = $state(false);
     let isLoading = $state(true);
 
     onMount(async () => {
@@ -139,7 +137,6 @@
                 await timeCapsuleStore.updateMessage(editingId, fields);
             } else {
                 await timeCapsuleStore.addMessage(fields);
-                showAffirmation = true;
             }
             resetForm();
             showAddModal = false;
@@ -224,8 +221,6 @@
 <div
     class="max-w-6xl mx-auto p-6 md:p-8 space-y-10 animate-in fade-in duration-700"
 >
-    <!-- Affirmation Message -->
-    <Affirmation module="timeCapsule" bind:show={showAffirmation} />
 
     <!-- AI Concierge Drafting Assistant -->
     <AIPromptBar

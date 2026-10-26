@@ -32,13 +32,11 @@
     } from "$lib/stores/timelineStore.svelte";
     import { familyStore } from "$lib/stores/familyStore.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
-    import Affirmation from "$lib/components/Affirmation.svelte";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
 
     let parsedCustomAttributes = $state<Record<string, any>>({});
-    let showAffirmation = $state(false);
     let isLoading = $state(true);
     let viewMode = $state<ViewMode>('card');
 
@@ -89,7 +87,6 @@
             timelineStore.addEvent(eventData);
         }
 
-        showAffirmation = true;
         resetForm();
     }
 
@@ -230,8 +227,6 @@
         </div>
     </LivingBlueprintHeader>
 
-    <!-- Affirmation Message -->
-    <Affirmation module="timeline" bind:show={showAffirmation} />
 
     <!-- Add Modal -->
     {#if showAddModal}

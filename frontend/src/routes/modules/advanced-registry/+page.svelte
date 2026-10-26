@@ -40,14 +40,12 @@
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
-    import Affirmation from "$lib/components/Affirmation.svelte";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import { language } from "$lib/stores/localization";
 
     let viewMode = $state<ViewMode>('card');
-    let showAffirmation = $state(false);
     let isLoading = $state(true);
 
     onMount(async () => {
@@ -117,7 +115,6 @@
 
         parsedCustomAttributes = {};
         showAddModal = false;
-        showAffirmation = true;
     }
 
     const tabs = [
@@ -184,10 +181,15 @@
             <DataViewToggle module="advanced-registry" onchange={(mode) => viewMode = mode} />
             <button
                 onclick={() => {
+                    // Tab ids are plural; the form types are singular.
                     addType =
                         activeTab === "killswitch"
                             ? "account"
-                            : (activeTab as any);
+                            : activeTab === "transactions"
+                              ? "transaction"
+                              : activeTab === "claims"
+                                ? "claim"
+                                : "maintenance";
                     showAddModal = true;
                 }}
                 class="px-5 py-2.5 bg-slate-900 text-white rounded-xl font-bold flex items-center gap-2 hover:bg-indigo-600 transition-all shadow-lg active:scale-95"
@@ -198,8 +200,6 @@
         </div>
     </LivingBlueprintHeader>
 
-    <!-- Affirmation Message -->
-    <Affirmation module="general" bind:show={showAffirmation} />
 
     <!-- AI Concierge Drafting Assistant -->
     <AIPromptBar

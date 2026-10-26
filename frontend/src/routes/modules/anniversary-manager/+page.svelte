@@ -29,13 +29,11 @@
     import EmptyState from "$lib/components/EmptyState.svelte";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
-    import Affirmation from "$lib/components/Affirmation.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
 
     let viewMode = $state<ViewMode>('card');
     let customAttributes = $state<Record<string, any>>({});
-    let showAffirmation = $state(false);
     let isLoading = $state(true);
 
     onMount(async () => {
@@ -81,7 +79,6 @@
             tags: [],
         };
         showAddModal = false;
-        showAffirmation = true;
     }
 
     function formatDate(dateStr: string) {
@@ -120,8 +117,6 @@
         </button>
     </LivingBlueprintHeader>
 
-    <!-- Affirmation Message -->
-    <Affirmation module="general" bind:show={showAffirmation} />
 
     <!-- AI Concierge Drafting Assistant -->
     <AIPromptBar

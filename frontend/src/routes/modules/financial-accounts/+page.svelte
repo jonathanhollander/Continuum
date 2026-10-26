@@ -9,12 +9,10 @@
     import { financialAssetsSync } from "$lib/stores/financialAssetsStore.svelte";
     import { t } from "$lib/stores/localization";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
-    import Affirmation from "$lib/components/Affirmation.svelte";
 
     let showWizard = $state(false);
     let reloadKey = $state(0);
     let isLoading = $state(true);
-    let showAffirmation = $state(false);
 
     // The financial_assets store owns this registry key (and its mapper).
     const assetSync: any = financialAssetsSync;
@@ -53,13 +51,12 @@
             id: "crypto",
             question: "wizard.financial_crypto",
             type: "boolean" as const,
-            logic: { next: "crypto" },
+            // Last step: no logic, so the flow completes (next: "crypto" looped on itself).
         },
     ];
 
-    async function handleWizardComplete(event: CustomEvent) {
-        const answers = event.detail;
-
+    // ConciergeFlow calls oncomplete with the answers (it dispatches no "complete" event).
+    async function handleWizardComplete(answers: Record<string, any>) {
         if (answers.intro === false) {
             showWizard = false;
             return;
@@ -92,7 +89,6 @@
         if (promises.length > 0) {
             await Promise.all(promises);
             reloadKey++; // Force refresh
-            showAffirmation = true;
         }
 
         showWizard = false;
@@ -119,7 +115,7 @@
 <Modal bind:open={showWizard} title={$t("wizard.start")} maxWidth="max-w-2xl">
     <ConciergeFlow
         steps={wizardSteps}
-        on:complete={handleWizardComplete}
+        oncomplete={handleWizardComplete}
     />
 </Modal>
 
@@ -140,8 +136,6 @@
         </button>
     </LivingBlueprintHeader>
 
-    <!-- Affirmation Message -->
-    <Affirmation module="financial" bind:show={showAffirmation} />
 
     <!-- AI Prompt Bar -->
     <div class="max-w-3xl mx-auto mb-8">
