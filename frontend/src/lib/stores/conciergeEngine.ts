@@ -375,60 +375,14 @@ function createConciergeEngine() {
                 const response = await aiConciergeService.chat(content, state.messages, state.currentContextName);
                 if (accountId !== owner || conversationEpoch !== epoch || !isCurrentSession(session)) return null;
 
-                // Parse response if it's JSON
-                let displayContent = response.content;
-                let extractedDataFromResponse: any | null = response.extractedData || null;
-                let resources: any[] = []; // Declare output variable here
-
-                if (response.content.includes('{') && (response.content.includes('message') || response.content.includes('extractedData'))) {
-                    try {
-                        // Strip markdown code blocks if present
-                        const cleanJson = response.content.replace(/```json|```/g, '').trim();
-                        const parsed = JSON.parse(cleanJson);
-                        displayContent = parsed.message || displayContent;
-
-                        if (parsed.extractedData) {
-                            extractedDataFromResponse = parsed.extractedData;
-                        }
-
-                        if (parsed.resources) {
-                            resources = parsed.resources;
-                        }
-
-                        // Contextual Navigation & Actions
-                        if (browser && parsed.intent) {
-                            if (parsed.intent === 'suggest_break') {
-                                console.log(`[Concierge] Triggering break suggestion based on intent`);
-                                overwhelmDetector.triggerOverwhelm(['AI_SUGGESTION'], 'The AI guide suggested a pause.');
-                            } else {
-                                const intentMap: Record<string, string> = {
-                                    'add_contact': '/modules/contacts',
-                                    'add_property': '/modules/property',
-                                    'add_financial': '/modules/financial-accounts',
-                                    'add_insurance': '/modules/insurance',
-                                    'add_healthcare': '/modules/medical',
-                                    'add_digital': '/modules/digital-guardian'
-                                };
-
-                                const targetRoute = intentMap[parsed.intent];
-                                if (targetRoute && window.location.pathname !== targetRoute) {
-                                    console.log(`[Concierge] Navigating to ${targetRoute} based on intent: ${parsed.intent}`);
-                                    goto(targetRoute);
-                                }
-                            }
-                        }
-                    } catch (e) {
-                        console.error("Failed to parse AI JSON response:", e);
-                    }
-                } else if (response.resources) {
-                    // Handle case where resources come directly from response object not in JSON content string
-                    resources = response.resources;
-                }
+                // chat() has already parsed the envelope. Display text is never parsed as another action.
+                const resources = response.resources || [];
+                const extractedDataFromResponse = response.extractedData || null;
 
                 const assistantMsg: Message = {
                     id: Math.random().toString(36).substring(7),
                     role: 'assistant',
-                    content: displayContent,
+                    content: response.content,
                     timestamp: new Date().getTime(),
                     resources: resources.length > 0 ? resources : undefined
                 };
@@ -442,6 +396,24 @@ function createConciergeEngine() {
                     };
                     return newState;
                 });
+
+                // Only the normalized action is consumed, once, after the ownership check above.
+                if (browser && !response.failed && response.intent) {
+                    if (response.intent === 'suggest_break') {
+                        overwhelmDetector.triggerOverwhelm(['AI_SUGGESTION'], 'The AI guide suggested a pause.');
+                    } else {
+                        const intentMap: Partial<Record<NonNullable<typeof response.intent>, string>> = {
+                            add_contact: '/modules/contacts',
+                            add_property: '/modules/property',
+                            add_financial: '/modules/financial-accounts',
+                            add_insurance: '/modules/insurance',
+                            add_healthcare: '/modules/medical',
+                            add_digital: '/modules/digital-guardian'
+                        };
+                        const targetRoute = intentMap[response.intent];
+                        if (targetRoute && window.location.pathname !== targetRoute) goto(targetRoute);
+                    }
+                }
 
                 return response;
             } catch (error) {

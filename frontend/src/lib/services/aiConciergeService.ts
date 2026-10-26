@@ -61,12 +61,17 @@ export async function callAiProxy(
 
 import { overwhelmState } from './overwhelmDetection';
 
+const AI_INTENTS = ['add_contact', 'add_property', 'add_financial', 'add_insurance',
+    'add_healthcare', 'add_digital', 'suggest_break', 'provide_resource'] as const;
+export type AIIntent = typeof AI_INTENTS[number];
+
+/** Normalized once by chat(): content is display text; actions live only in intent. */
 export interface AIResponse {
     content: string;
     /** True when the AI couldn't be reached; `content` then holds a gentle notice, not a reply. */
     failed?: boolean;
     extractedData?: any;
-    intent?: string;
+    intent?: AIIntent;
     resources?: Array<{
         title: string;
         description: string;
@@ -182,11 +187,12 @@ Example: { "message": "Sarah recorded as daughter—what a beautiful gift to hav
             // Clean markdown fences if present
             const cleanContent = rawContent.replace(/^```json\s*/, '').replace(/^```\s*/, '').replace(/\s*```$/, '');
             const parsed = JSON.parse(cleanContent);
+            if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return { content: rawContent };
             return {
-                content: parsed.message || rawContent,
+                content: typeof parsed.message === 'string' ? parsed.message : rawContent,
                 extractedData: parsed.extractedData,
-                intent: parsed.intent,
-                resources: parsed.resources
+                intent: AI_INTENTS.includes(parsed.intent) ? parsed.intent : undefined,
+                resources: Array.isArray(parsed.resources) ? parsed.resources : undefined
             };
         } catch {
             // Fallback for non-JSON responses
