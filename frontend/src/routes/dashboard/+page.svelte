@@ -709,8 +709,7 @@
                                                             ? 'bg-emerald-500/20'
                                                             : 'bg-indigo-500/10'}"
                                                     >
-                                                        <svelte:component
-                                                            this={item.icon}
+                                                        <item.icon
                                                             size={24}
                                                             class={status.inProgress
                                                                 ? "text-emerald-400"
@@ -822,8 +821,7 @@
                                                                         ? 'bg-emerald-500/20'
                                                                         : 'bg-primary/10'}"
                                                                 >
-                                                                    <svelte:component
-                                                                        this={item.icon}
+                                                                    <item.icon
                                                                         size={24}
                                                                         class={status.inProgress
                                                                             ? "text-emerald-400"
@@ -993,8 +991,7 @@
                                                                     ? 'bg-emerald-500/20'
                                                                     : 'bg-primary/10'}"
                                                             >
-                                                                <svelte:component
-                                                                    this={item.icon}
+                                                                <item.icon
                                                                     size={24}
                                                                     class={status.inProgress
                                                                         ? "text-emerald-400"

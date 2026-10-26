@@ -705,9 +705,9 @@
                     </div>
 
                     {#each hoveredWeek.events as event}
+                        {@const Icon = getIcon(event.type)}
                         <div class="flex items-start gap-2 mb-2 last:mb-0">
-                            <svelte:component
-                                this={getIcon(event.type)}
+                            <Icon
                                 size={16}
                                 class="text-amber-500 shrink-0 mt-1"
                             />
@@ -832,6 +832,7 @@
                 >
                     <!-- events logic -->
                     {#each lifeEvents as event, i (event.id)}
+                        {@const Icon = getIcon(event.type)}
                         <div
                             class="absolute top-1/2 -translate-y-1/2 flex flex-col items-center group cursor-pointer w-12 -ml-6 z-10 hover:z-50 transition-all duration-200"
                             style="left: {getPosition(event.year)}px"
@@ -867,8 +868,7 @@
                                         ? 'bg-gray-100 text-gray-400 border-dashed border-gray-300'
                                         : `${dotClass(event.type)} text-white`}"
                                 >
-                                    <svelte:component
-                                        this={getIcon(event.type)}
+                                    <Icon
                                         size={18}
                                     />
                                 </div>

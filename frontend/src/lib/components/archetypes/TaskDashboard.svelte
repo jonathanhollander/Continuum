@@ -262,8 +262,7 @@
                                 <div
                                     class="bg-[#4A7C74]/5 p-3 rounded-full w-fit mb-4 text-[#4A7C74]"
                                 >
-                                    <svelte:component
-                                        this={bp.icon}
+                                    <bp.icon
                                         size={24}
                                     />
                                 </div>

@@ -604,6 +604,7 @@
     <!-- Property Cards Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-8">
         {#each filteredItems as item (item.id)}
+            {@const Icon = typeIcons[item.type] || LayoutGrid}
             <div
                 class="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 overflow-hidden group flex flex-col relative"
                 use:coverInView={item.thumbnail}
@@ -636,8 +637,7 @@
                                     ? 'bg-white/80 backdrop-blur'
                                     : typeColors[item.type]}"
                             >
-                                <svelte:component
-                                    this={typeIcons[item.type] || LayoutGrid}
+                                <Icon
                                     size={28}
                                     strokeWidth={2.5}
                                     class={item.thumbnail

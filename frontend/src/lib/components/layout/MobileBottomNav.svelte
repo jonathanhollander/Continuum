@@ -43,8 +43,7 @@
                     <div class="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-primary rounded-b-full"></div>
                 {/if}
 
-                <svelte:component
-                    this={item.icon}
+                <item.icon
                     class="w-6 h-6 mb-0.5 transition-transform {active ? 'scale-110' : ''}"
                 />
                 <span class="text-[10px] font-medium {active ? 'font-semibold' : ''}">

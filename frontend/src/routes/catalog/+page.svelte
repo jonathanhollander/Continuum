@@ -121,7 +121,7 @@
                                         <div
                                             class="size-10 mb-4 rounded bg-primary/5 flex items-center justify-center text-primary"
                                         >
-                                            <svelte:component this={item.icon} size={20} />
+                                            <item.icon size={20} />
                                         </div>
                                         <h3
                                             class="text-lg font-serif mb-2 group-hover:text-primary transition-colors"
@@ -155,7 +155,7 @@
                                     <div
                                         class="size-8 rounded bg-primary/5 flex items-center justify-center text-primary"
                                     >
-                                        <svelte:component this={item.icon} size={16} />
+                                        <item.icon size={16} />
                                     </div>
                                     <div class="flex-1 min-w-0">
                                         <h3

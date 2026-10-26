@@ -247,7 +247,7 @@
     <div class="flex items-center gap-3">
         <DataViewToggle module="time-capsule" onchange={(mode) => viewMode = mode} />
         <button
-            on:click={openNew}
+            onclick={openNew}
             class="px-8 py-4 bg-primary text-primary-foreground rounded-full font-bold shadow-xl shadow-primary/20 hover:opacity-90 hover:scale-105 transition-all flex items-center gap-3 shrink-0"
         >
             <Plus size={24} />
@@ -294,14 +294,14 @@
                     </div>
                     <div class="flex items-center gap-1">
                         <button
-                            on:click={() => openEdit(msg)}
+                            onclick={() => openEdit(msg)}
                             aria-label="Edit this capsule"
                             class="p-2 text-slate-300 hover:text-indigo-600 transition-colors"
                         >
                             <Pencil size={16} />
                         </button>
                         <button
-                            on:click={() => timeCapsuleStore.removeMessage(msg.id)}
+                            onclick={() => timeCapsuleStore.removeMessage(msg.id)}
                             aria-label="Remove this capsule"
                             class="p-2 text-slate-300 hover:text-rose-500 transition-colors"
                         >
@@ -345,13 +345,13 @@
                     <p class="text-sm text-emerald-800">Release this capsule to {msg.recipient}? It moves to Available Now.</p>
                     <div class="flex gap-2">
                         <button
-                            on:click={() => (releasingId = null)}
+                            onclick={() => (releasingId = null)}
                             class="flex-1 py-2 text-sm font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all"
                         >
                             Keep it locked
                         </button>
                         <button
-                            on:click={() => confirmRelease(String(msg.id))}
+                            onclick={() => confirmRelease(String(msg.id))}
                             class="flex-1 py-2 text-sm font-bold text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 transition-all"
                         >
                             Release now
@@ -361,14 +361,14 @@
                 {:else}
                 <div class="flex gap-2">
                     <button
-                        on:click={() => openCapsule(msg)}
+                        onclick={() => openCapsule(msg)}
                         class="flex-1 py-2 text-sm font-bold text-indigo-700 bg-white border border-indigo-100 rounded-xl hover:bg-indigo-50 transition-all"
                     >
                         {msg.videoUrl || msg.mediaId ? "Watch" : "Read"}
                     </button>
                     {#if msg.triggerType === "milestone"}
                         <button
-                            on:click={() => (releasingId = String(msg.id))}
+                            onclick={() => (releasingId = String(msg.id))}
                             class="flex-1 py-2 text-sm font-bold text-emerald-700 bg-white border border-emerald-100 rounded-xl hover:bg-emerald-50 transition-all"
                         >
                             Release this capsule
@@ -417,7 +417,7 @@
                         <Unlock size={20} />
                     </div>
                     <button
-                        on:click={() => openEdit(msg)}
+                        onclick={() => openEdit(msg)}
                         aria-label="Edit this capsule"
                         class="p-2 text-slate-300 hover:text-emerald-700 transition-colors"
                     >
@@ -446,7 +446,7 @@
                 </div>
 
                 <button
-                    on:click={() => openCapsule(msg)}
+                    onclick={() => openCapsule(msg)}
                     class="w-full py-3 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 transition-all flex items-center justify-center gap-2"
                 >
                     <Video size={18} />
@@ -530,14 +530,14 @@
                             <td class="px-4 py-3 text-slate-500 text-sm max-w-[200px] truncate">{msg.contentPreview || '-'}</td>
                             <td class="px-4 py-3 text-right whitespace-nowrap">
                                 <button
-                                    on:click={() => openEdit(msg)}
+                                    onclick={() => openEdit(msg)}
                                     aria-label="Edit this capsule"
                                     class="p-1 text-slate-300 hover:text-indigo-600 transition-all"
                                 >
                                     <Pencil size={16} />
                                 </button>
                                 <button aria-label="Remove this item"
-                                    on:click={() => timeCapsuleStore.removeMessage(msg.id)}
+                                    onclick={() => timeCapsuleStore.removeMessage(msg.id)}
                                     class="p-1 text-slate-300 hover:text-rose-500 transition-all"
                                 >
                                     <Trash2 size={16} />
@@ -586,7 +586,7 @@
                         </p>
                     </div>
                     <button
-                        on:click={() => (showAddModal = false)}
+                        onclick={() => (showAddModal = false)}
                         aria-label="Close"
                         class="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400"
                     >
@@ -624,7 +624,7 @@
                         <select
                             id="capsule-recipient-contact"
                             value={capsuleRecipientId}
-                            on:change={(e) => chooseRecipient(e.currentTarget.value)}
+                            onchange={(e) => chooseRecipient(e.currentTarget.value)}
                             class="w-full mt-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm text-slate-700"
                         >
                             <option value="">Choose them from your contacts</option>
@@ -651,7 +651,7 @@
                         >
                         <div class="flex gap-2" role="group" aria-labelledby="capsule-release-type">
                             <button
-                                on:click={() => setTrigger("date")}
+                                onclick={() => setTrigger("date")}
                                 aria-pressed={newMessage.triggerType === "date"}
                                 class="flex-1 py-3 px-4 rounded-xl border-2 transition-all font-bold text-sm {newMessage.triggerType ===
                                 'date'
@@ -662,7 +662,7 @@
                                 Date
                             </button>
                             <button
-                                on:click={() => setTrigger("milestone")}
+                                onclick={() => setTrigger("milestone")}
                                 aria-pressed={newMessage.triggerType === "milestone"}
                                 class="flex-1 py-3 px-4 rounded-xl border-2 transition-all font-bold text-sm {newMessage.triggerType ===
                                 'milestone'
@@ -733,7 +733,7 @@
                                     >
                                 </div>
                                 <button
-                                    on:click={() => {
+                                    onclick={() => {
                                         isRecording = true;
                                         formNote = null;
                                     }}
@@ -744,7 +744,7 @@
                             </div>
                         {:else}
                             <button
-                                on:click={() => {
+                                onclick={() => {
                                     isRecording = true;
                                     formNote = null;
                                 }}
@@ -779,7 +779,7 @@
 
                 <div class="flex gap-4">
                     <button
-                        on:click={() => {
+                        onclick={() => {
                             resetForm();
                             showAddModal = false;
                         }}
@@ -788,13 +788,13 @@
                         Cancel
                     </button>
                     <button
-                        on:click={() => (showAddModal = false)}
+                        onclick={() => (showAddModal = false)}
                         class="flex-1 py-4 px-6 border border-slate-200 rounded-2xl font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-all"
                     >
                         Save Draft
                     </button>
                     <button
-                        on:click={handleAdd}
+                        onclick={handleAdd}
                         disabled={isUploading || isSaving}
                         class="flex-2 py-4 px-10 bg-primary text-primary-foreground rounded-2xl font-bold shadow-xl shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-60"
                     >
@@ -813,7 +813,7 @@
         >
             <div class="relative w-full max-w-3xl bg-white rounded-[2rem] shadow-2xl p-8 space-y-5 max-h-[90vh] overflow-y-auto">
                 <button
-                    on:click={closeCapsule}
+                    onclick={closeCapsule}
                     aria-label="Close"
                     class="absolute top-5 right-5 p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-all"
                 >

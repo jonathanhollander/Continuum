@@ -591,12 +591,8 @@
                                     }}
                                 >
                                     {#snippet icon()}
-                                        <svelte:component
-                                            this={sample.type === "Recipe"
-                                                ? Scroll
-                                                : sample.type === "Quote"
-                                                  ? Plus
-                                                  : Image}
+                                        {@const Icon = sample.type === "Recipe" ? Scroll : sample.type === "Quote" ? Plus : Image}
+                                        <Icon
                                             size={20}
                                             class="text-slate-400"
                                         />

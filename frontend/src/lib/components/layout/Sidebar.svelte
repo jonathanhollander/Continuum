@@ -331,8 +331,7 @@
                                         ></div>
                                     {/if}
 
-                                    <svelte:component
-                                        this={item.icon}
+                                    <item.icon
                                         class="w-4 h-4 transition-transform duration-300 group-hover:scale-110 {isActive
                                             ? 'text-white'
                                             : 'text-primary-foreground/50'}"
@@ -394,8 +393,7 @@
                                         class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full bg-white"
                                     ></div>
                                 {/if}
-                                <svelte:component
-                                    this={item.icon}
+                                <item.icon
                                     class="w-4 h-4 transition-transform duration-300 group-hover:scale-110 {isActive
                                         ? 'text-white'
                                         : 'text-primary-foreground/50'}"
@@ -421,8 +419,7 @@
                             onclick={handleClose}
                             data-testid="nav-recipient-preview"
                         >
-                            <svelte:component
-                                this={previewItem.icon}
+                            <previewItem.icon
                                 class="w-4 h-4 text-primary-foreground/50 transition-transform duration-300 group-hover:scale-110"
                             />
                             <span class="text-sm flex-1">{previewItem.label}</span>

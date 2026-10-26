@@ -28,6 +28,7 @@
             return Cloud;
         return ExternalLink;
     }
+    const Icon = $derived(getIcon(archive.platform));
 </script>
 
 <div
@@ -38,7 +39,7 @@
             <div
                 class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500"
             >
-                <svelte:component this={getIcon(archive.platform)} size={20} />
+                <Icon size={20} />
             </div>
             <div>
                 <h3 class="font-bold text-slate-800">{archive.platform}</h3>

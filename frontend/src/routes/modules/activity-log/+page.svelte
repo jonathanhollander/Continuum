@@ -318,6 +318,7 @@
             </div>
         {:else}
             {#each filteredEntries as entry (entry.id)}
+                {@const Icon = actionIcons[entry.action]}
                 <div
                     class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 hover:shadow-md transition-all group"
                     transition:slide
@@ -330,8 +331,7 @@
                                     entry.action
                                 ]}"
                             >
-                                <svelte:component
-                                    this={actionIcons[entry.action]}
+                                <Icon
                                     size={18}
                                 />
                             </div>

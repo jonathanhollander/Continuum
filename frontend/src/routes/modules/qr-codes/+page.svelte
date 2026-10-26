@@ -178,6 +178,7 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {#each $qrStore.accessPacks as pack}
+                {@const Icon = pack.type === "Executor" ? Shield : Users}
                 <div
                     class="group relative bg-white rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-500 overflow-hidden flex flex-col md:flex-row"
                 >
@@ -189,10 +190,7 @@
                                     ? 'bg-slate-900 text-white'
                                     : 'bg-[#4A7C74] text-white'} shadow-xl"
                             >
-                                <svelte:component
-                                    this={pack.type === "Executor"
-                                        ? Shield
-                                        : Users}
+                                <Icon
                                     size={32}
                                 />
                             </div>

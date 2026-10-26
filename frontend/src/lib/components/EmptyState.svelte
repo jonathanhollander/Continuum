@@ -25,7 +25,7 @@
         title,
         whyMatters,
         encouragement = "Take your time. This will be here when you're ready.",
-        icon = Heart,
+        icon: Icon = Heart,
         iconClass = "text-primary",
         ctaLabel = "Explore this step",
         onAction,
@@ -40,7 +40,7 @@
         <div
             class="w-20 h-20 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl flex items-center justify-center shadow-sm"
         >
-            <svelte:component this={icon} size={36} class={iconClass} />
+            <Icon size={36} class={iconClass} />
         </div>
     </div>
 

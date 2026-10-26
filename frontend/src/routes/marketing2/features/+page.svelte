@@ -435,8 +435,7 @@
                             <div
                                 class="icon-container w-14 h-14 rounded-2xl bg-{card.color}-500/10 flex items-center justify-center mb-6"
                             >
-                                <svelte:component
-                                    this={card.icon}
+                                <card.icon
                                     size={28}
                                     class={card.iconClass}
                                 />

@@ -344,13 +344,13 @@
     {:else if viewMode === 'card'}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             {#each events as evt}
+                {@const Icon = eventTypeIcons[evt.type] ?? CalendarIcon}
                 <div
                     class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-all group relative overflow-hidden"
                 >
                     <!-- Type Badge -->
                     <div class="absolute top-14 right-0 p-4 opacity-10 pointer-events-none" aria-hidden="true">
-                        <svelte:component
-                            this={(eventTypeIcons[evt.type] ?? CalendarIcon)}
+                        <Icon
                             size={120}
                         />
                     </div>
@@ -360,8 +360,7 @@
                             <div
                                 class={`p-3 rounded-2xl ${eventTypeColors[evt.type] ?? eventTypeColors.other} inline-flex`}
                             >
-                                <svelte:component
-                                    this={(eventTypeIcons[evt.type] ?? CalendarIcon)}
+                                <Icon
                                     size={24}
                                 />
                             </div>
@@ -466,11 +465,12 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     {#each events as evt}
+                        {@const Icon = eventTypeIcons[evt.type] ?? CalendarIcon}
                         <tr class="hover:bg-slate-50 transition-colors group">
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-2">
                                     <div class={`p-1.5 rounded-lg ${eventTypeColors[evt.type] ?? eventTypeColors.other}`}>
-                                        <svelte:component this={(eventTypeIcons[evt.type] ?? CalendarIcon)} size={14} />
+                                        <Icon size={14} />
                                     </div>
                                     <span class="font-medium text-slate-800">{evt.title}</span>
                                 </div>

@@ -117,7 +117,7 @@
                     class="flex items-center gap-3 p-2 -mx-2 rounded-xl hover:bg-white/5 transition-colors group"
                 >
                     <div class="p-2 bg-amber-500/20 rounded-lg text-amber-400">
-                        <svelte:component this={nextStep.icon} size={16} />
+                        <nextStep.icon size={16} />
                     </div>
                     <div class="flex-1 min-w-0">
                         <p class="text-sm font-medium text-white truncate">
@@ -195,7 +195,7 @@
                             {#if step.complete}
                                 <Check size={20} />
                             {:else}
-                                <svelte:component this={step.icon} size={20} />
+                                <step.icon size={20} />
                             {/if}
                         </div>
 

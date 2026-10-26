@@ -751,6 +751,7 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {#each filteredTemplates as template (template.id)}
+                    {@const Icon = categoryIcons[ template.category ] || FileText}
                     <button
                         onclick={() => selectTransactional(template)}
                         class="group bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 text-left flex flex-col justify-between min-h-[160px]"
@@ -760,10 +761,7 @@
                                 <div
                                     class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-[#4A7C74] group-hover:text-white transition-all"
                                 >
-                                    <svelte:component
-                                        this={categoryIcons[
-                                            template.category
-                                        ] || FileText}
+                                    <Icon
                                         size={20}
                                     />
                                 </div>

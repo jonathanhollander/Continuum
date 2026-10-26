@@ -239,7 +239,7 @@
                     ? 'bg-white text-slate-900 shadow-md'
                     : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'}"
             >
-                <svelte:component this={tab.icon} size={16} />
+                <tab.icon size={16} />
                 {tab.label}
             </button>
         {/each}

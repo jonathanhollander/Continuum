@@ -413,6 +413,7 @@
                 </div>
 
                 {#each family as member (member.id)}
+                    {@const Icon = getRoleIcon(member.role)}
                     <div
                         class="glass-card p-6 rounded-xl flex items-center gap-4 relative group hover:border-rose-200 transition-colors shadow-sm"
                         transition:scale
@@ -433,8 +434,7 @@
                                     member.role,
                                 )} flex items-center justify-center shadow-inner border"
                             >
-                                <svelte:component
-                                    this={getRoleIcon(member.role)}
+                                <Icon
                                     size={20}
                                 />
                             </div>
@@ -491,6 +491,7 @@
         </h4>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {#each professionals as pro (pro.id)}
+                {@const Icon = getRoleIcon(pro.role)}
                 <div
                     class="bg-card border border-border p-5 rounded-lg hover:shadow-lg transition-all group relative"
                     transition:fade
@@ -508,8 +509,7 @@
                                     pro.role,
                                 )} flex items-center justify-center"
                             >
-                                <svelte:component
-                                    this={getRoleIcon(pro.role)}
+                                <Icon
                                     size={18}
                                 />
                             </div>

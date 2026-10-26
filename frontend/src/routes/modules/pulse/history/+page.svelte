@@ -111,6 +111,7 @@
     {:else if getFilteredHistory().length > 0}
         <div class="space-y-4">
             {#each getFilteredHistory() as checkin (checkin.id)}
+                {@const Icon = getMethodIcon(checkin.method)}
                 <div
                     class="bg-slate-900/50 border border-slate-800 rounded-xl p-4 flex items-center justify-between hover:bg-slate-800/80 transition-colors"
                     in:fade
@@ -119,8 +120,7 @@
                         <div
                             class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400"
                         >
-                            <svelte:component
-                                this={getMethodIcon(checkin.method)}
+                            <Icon
                                 class="w-5 h-5"
                             />
                         </div>

@@ -445,8 +445,7 @@
                                     <div
                                         class="icon-ring icon-ring-2 bg-{beat.color}-500/5"
                                     ></div>
-                                    <svelte:component
-                                        this={beat.icon}
+                                    <beat.icon
                                         size={48}
                                         class={beat.iconClass}
                                     />

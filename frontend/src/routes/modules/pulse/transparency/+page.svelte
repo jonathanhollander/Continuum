@@ -169,8 +169,7 @@
                         <div
                             class="p-2 rounded-lg bg-slate-950/50 {tier.color}"
                         >
-                            <svelte:component
-                                this={tier.icon}
+                            <tier.icon
                                 class="w-5 h-5"
                             />
                         </div>
@@ -224,8 +223,7 @@
                                             <div
                                                 class="flex items-center gap-3 p-3 rounded-lg bg-teal-500/5 border border-teal-500/10"
                                             >
-                                                <svelte:component
-                                                    this={item.icon}
+                                                <item.icon
                                                     class="w-4 h-4 text-teal-400"
                                                 />
                                                 <span
