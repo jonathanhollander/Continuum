@@ -44,6 +44,8 @@
     let searchQuery = $state("");
     let editingEntry = $state<JournalEntry | null>(null);
     let parsedCustomAttributes = $state<Record<string, any>>({});
+    let ethicalWill = $state<ReturnType<typeof EthicalWill>>();
+    let lifeLessons = $state<ReturnType<typeof LifeLessons>>();
 
     // Form state
     let newEntry = $state<Partial<JournalEntry>>({
@@ -195,13 +197,28 @@
     detailedDescription="Your life is filled with stories worth telling - moments of joy, lessons learned, values discovered. This journal is your space to preserve those treasures for the people who matter most."
     whyMatters="The stories we carry shape generations. Without a place to write them down, precious memories fade and wisdom goes unshared. Your words here become a lasting gift - a window into your heart that your loved ones can return to again and again."
 >
-    <button
-        onclick={openAddModal}
-        class="px-5 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
-    >
-        <Plus size={18} />
-        Share a memory
-    </button>
+    {#if activeTab === "accomplishments"}
+        <a
+            href="/modules/timeline"
+            class="w-fit px-5 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
+        >
+            <Plus size={18} />
+            Go to Timeline to Add
+        </a>
+    {:else}
+        <button
+            onclick={() =>
+                activeTab === "will"
+                    ? ethicalWill?.startNewValue()
+                    : activeTab === "lessons"
+                      ? lifeLessons?.openNew()
+                      : openAddModal()}
+            class="px-5 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
+        >
+            <Plus size={18} />
+            {activeTab === "will" ? "Add Value" : activeTab === "lessons" ? "Add a lesson" : "Share a memory"}
+        </button>
+    {/if}
 </LivingBlueprintHeader>
 
 {#if isLoading}
@@ -247,7 +264,7 @@
                 onclick={() => (activeTab = "accomplishments")}
                 class="px-5 py-2.5 rounded-full font-bold text-sm transition-all {activeTab ===
                 'accomplishments'
-                    ? 'bg-amber-600 text-white shadow-lg transform -translate-y-0.5'
+                    ? 'bg-primary text-primary-foreground shadow-lg transform -translate-y-0.5'
                     : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'}"
             >
                 Accomplishments
@@ -277,6 +294,7 @@
                                 type="text"
                                 bind:value={searchQuery}
                                 placeholder="Search your memories..."
+                                aria-label="Search your memories"
                                 class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                             />
                         </div>
@@ -343,7 +361,7 @@
 
                                         <div class="p-5">
                                             <!-- Title -->
-                                            <h3 class="font-serif font-bold text-lg text-slate-800 mb-2 line-clamp-2">
+                                            <h3 class="font-serif font-bold text-lg text-slate-800 mb-2 pr-20 break-words">
                                                 {entry.title || "Untitled Reflection"}
                                             </h3>
 
@@ -462,11 +480,11 @@
                 </div>
             {:else if activeTab === "will"}
                 <div in:fade={{ duration: 300 }}>
-                    <EthicalWill />
+                    <EthicalWill bind:this={ethicalWill} />
                 </div>
             {:else if activeTab === "lessons"}
                 <div in:fade={{ duration: 300 }}>
-                    <LifeLessons />
+                    <LifeLessons bind:this={lifeLessons} />
                 </div>
             {:else if activeTab === "accomplishments"}
                 <div in:fade={{ duration: 300 }}>

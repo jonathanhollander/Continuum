@@ -104,6 +104,12 @@ With all my love,
         showValueForm = true;
     }
 
+    // The page header's add button opens the same value form on the values section.
+    export function startNewValue() {
+        activeSection = "values";
+        openValueForm();
+    }
+
     // One save at a time: while it is open the button waits, so a second click sends nothing.
     let savingValue = $state(false);
     async function saveValue() {

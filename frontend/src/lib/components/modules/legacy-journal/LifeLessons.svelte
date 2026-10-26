@@ -21,7 +21,7 @@
 
     let lessons = $derived(journalStore.items.filter((e) => e.type === "life_lesson"));
 
-    function openNew() {
+    export function openNew() {
         editingId = undefined;
         newLesson = blankLesson();
         showAddModal = true;
@@ -214,6 +214,7 @@
                     type="text"
                     bind:value={searchQuery}
                     placeholder="Search wisdom..."
+                    aria-label="Search wisdom"
                     class="w-full pl-10 pr-4 py-2 rounded-xl border border-stone-200 focus:border-[#4A7C74] focus:ring-0 text-sm bg-white"
                 />
             </div>
