@@ -142,6 +142,7 @@ export const dictionary = {
             financial_intro: "Shall we walk through your accounts together, one question at a time?",
             family_intro: "Shall we capture one favorite family memory together?",
             digital_intro: "Shall we walk through your digital accounts together, one question at a time?",
+            insurance_intro: "Shall we walk through your insurance policies together, one question at a time?",
             // Financial
             financial_check: "Do you have a Checking Account?",
             financial_savings: "Do you have a Savings Account?",

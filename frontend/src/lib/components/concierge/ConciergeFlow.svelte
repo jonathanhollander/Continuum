@@ -31,9 +31,7 @@
         onanswer?: (detail: { id: string; value: any }) => void;
     }>();
 
-    // Pages listen either with the `oncomplete` prop or with `on:complete`; both are served.
     const dispatch = createEventDispatcher<{
-        complete: Record<string, any>;
         answer: { id: string; value: any };
     }>();
 
@@ -140,12 +138,7 @@
     }
 
     function complete() {
-        const result: Record<string, any> = { ...answers };
-        // Some `oncomplete` handlers read the answers directly, others read `event.detail`
-        // (written for the event form); a hidden `detail` pointing at the answers serves both.
-        Object.defineProperty(result, "detail", { value: result, enumerable: false });
-        oncomplete?.(result);
-        dispatch("complete", { ...answers });
+        oncomplete?.({ ...answers });
     }
 
     function handleKeydown(e: KeyboardEvent) {

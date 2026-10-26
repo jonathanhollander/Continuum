@@ -1,9 +1,11 @@
 <script lang="ts">
     import {
         insuranceStore,
+        insuranceSync,
         type InsurancePolicy,
     } from "$lib/stores/insuranceStore.svelte";
     import { activityLog } from "$lib/stores/activityLog.svelte";
+    import { notifications } from "$lib/stores/notificationStore";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { fade, slide, scale, fly } from "svelte/transition";
     import { quintOut, cubicOut } from "svelte/easing";
@@ -48,6 +50,7 @@
 
     // Concierge Imports
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
+    import { portal } from "$lib/actions/portal";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
 
@@ -85,9 +88,9 @@
     const wizardSteps = [
         {
             id: "intro",
-            question: "wizard.start",
+            question: "wizard.insurance_intro",
             type: "boolean" as const,
-            logic: { yes: "life", no: "cancel", next: "life" },
+            logic: { yes: "life", no: "EXIT" },
         },
         {
             id: "life",
@@ -114,24 +117,42 @@
             return;
         }
 
-        if (answers.life)
-            addWizardPolicy("Life Insurance", "Life", "Term Life");
-        if (answers.auto)
-            addWizardPolicy("Auto Insurance", "Auto", "Comprehensive");
+        const wanted: [string, any, string][] = [];
+        if (answers.life) wanted.push(["Life Insurance", "Life", "Term Life"]);
+        if (answers.auto) wanted.push(["Auto Insurance", "Auto", "Comprehensive"]);
         if (answers.home)
-            addWizardPolicy(
-                "Home/Renters Insurance",
-                "Home",
-                "Standard Fire & Theft",
-            );
+            wanted.push(["Home/Renters Insurance", "Home", "Standard Fire & Theft"]);
 
         showWizard = false;
+        if (wanted.length > 0) saveWizardPolicies(wanted);
+    }
+
+    // One wizard run is one save: the creates run quietly, then one affirmation when all land,
+    // or one gentle message whose Try Again re-sends only the policies still waiting.
+    async function saveWizardPolicies(wanted: [string, any, string][]) {
+        const results = await Promise.allSettled(
+            wanted.map(([name, type, insurer]) => addWizardPolicy(name, type, insurer)),
+        );
+        const waiting = wanted.filter((_, i) => results[i].status === "rejected");
+        if (waiting.length === 0) {
+            notifications.showAffirmation("general");
+            return;
+        }
+        const reason = results.find((r) => r.status === "rejected") as PromiseRejectedResult;
+        notifications.showError(
+            {
+                message:
+                    "Your answers are safe here. We can save them again whenever you're ready.",
+                code: "DATABASE_ERROR",
+                technicalDetails: reason.reason?.technicalDetails || reason.reason?.message || String(reason.reason),
+            } as any,
+            () => saveWizardPolicies(waiting),
+        );
     }
 
     async function addWizardPolicy(name: string, type: any, insurer = "TBD") {
-        let created;
-        try {
-        created = await insuranceStore.addPolicy({
+        const created = await insuranceSync.create({
+            id: crypto.randomUUID(),
             policyName: name,
             insuranceType: type,
             insurer: insurer,
@@ -145,17 +166,14 @@
             status: "Pending",
             policyDocuments: "",
             notes: "Added via Concierge Wizard",
-        });
-        } catch {
-            return; // the manager already showed the one gentle message
-        }
+        }, false, true);
 
         activityLog.logEvent({
             module: "Insurance",
             action: "CREATE",
             entityType: "Policy",
-            entityId: String(created!.id!),
-            entityName: created!.policyName,
+            entityId: String(created.id),
+            entityName: created.policyName,
             userContext: "Concierge",
         });
     }
@@ -372,7 +390,9 @@
 >
     <!-- Wizard Modal -->
     {#if showWizard}
+        <!-- Moved to <body>: the animated page wrapper would otherwise hold this "fixed" overlay below the fold. -->
         <div
+            use:portal
             class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
             transition:fade
         >
