@@ -1059,11 +1059,6 @@
             transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .reveal-section.revealed {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
     /* 3D Card transitions */
     .card-3d {
         transition:
@@ -1237,10 +1232,6 @@
     }
 
     /* Heart beat */
-    .heart-beat {
-        animation: heartBeat 1.5s ease-in-out infinite;
-    }
-
     @keyframes heartBeat {
         0%,
         100% {
@@ -1261,10 +1252,6 @@
     }
 
     /* Icon animations */
-    .icon-spin {
-        animation: iconSpin 20s linear infinite;
-    }
-
     @keyframes iconSpin {
         from {
             transform: rotate(0deg);
@@ -1272,10 +1259,6 @@
         to {
             transform: rotate(360deg);
         }
-    }
-
-    .icon-pulse {
-        animation: iconPulse 3s ease-in-out infinite;
     }
 
     @keyframes iconPulse {
@@ -1288,10 +1271,6 @@
             opacity: 0.8;
             transform: scale(1.1);
         }
-    }
-
-    .icon-shimmer {
-        animation: iconShimmer 3s ease-in-out infinite;
     }
 
     @keyframes iconShimmer {
@@ -1344,10 +1323,6 @@
     }
 
     /* Menu animations */
-    .animate-spin-in {
-        animation: spinIn 0.3s ease;
-    }
-
     @keyframes spinIn {
         from {
             transform: rotate(-90deg);
@@ -1357,10 +1332,6 @@
             transform: rotate(0deg);
             opacity: 1;
         }
-    }
-
-    .animate-spin-slow {
-        animation: spinSlow 10s linear infinite;
     }
 
     @keyframes spinSlow {
@@ -1416,10 +1387,6 @@
         .animate-float-medium,
         .animate-float-fast,
         .animate-float-particle,
-        .heart-beat,
-        .icon-spin,
-        .icon-pulse,
-        .icon-shimmer,
         .pulse-ring,
         .scroll-dot {
             animation: none;
@@ -1499,17 +1466,6 @@
     }
 
     /* Loading skeleton */
-    .skeleton {
-        background: linear-gradient(
-            90deg,
-            rgba(255, 255, 255, 0.05) 25%,
-            rgba(255, 255, 255, 0.1) 50%,
-            rgba(255, 255, 255, 0.05) 75%
-        );
-        background-size: 200% 100%;
-        animation: shimmer 1.5s infinite;
-    }
-
     @keyframes shimmer {
         0% {
             background-position: 200% 0;

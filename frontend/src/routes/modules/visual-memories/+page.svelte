@@ -55,7 +55,7 @@
 
     // Gallery State
     let viewMode = $state<"grid" | "carousel">("grid");
-    let fileInput: HTMLInputElement;
+    let fileInput: HTMLInputElement | undefined = $state();
     let isSelectionMode = $state(false);
     let selectedIds = $state<string[]>([]);
 
@@ -224,7 +224,7 @@
     }
 
     function triggerUpload() {
-        fileInput.click();
+        fileInput?.click();
     }
 
     function toggleSelectionMode() {

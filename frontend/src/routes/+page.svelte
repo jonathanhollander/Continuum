@@ -107,6 +107,8 @@
             mouseY = e.clientY;
         });
 
+        // Particle uses the canvas set up in this function and is created once per page load.
+        // svelte-ignore perf_avoid_nested_class
         class Particle {
             x: number;
             y: number;
@@ -553,6 +555,8 @@
                 </div>
 
                 <!-- The Anchor: The Device (Apple-esque Display Frame) -->
+                <!-- Decorative tilt that follows the pointer. -->
+                <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <div
                     class="relative group perspective-container w-full transition-all duration-300 px-4 md:px-0"
                     style="
@@ -668,6 +672,8 @@
                 </div>
             </div>
 
+            <!-- Decorative tilt that follows the pointer. -->
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div
                 class="relative group perspective-container reveal-card"
                 style="transition-delay: 0.3s"
@@ -1435,14 +1441,6 @@
         );
         pointer-events: none;
         z-index: 30;
-    }
-
-    /* Floating Shards Polish */
-    .floating-shard {
-        backdrop-filter: blur(30px);
-        -webkit-backdrop-filter: blur(30px);
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        will-change: transform;
     }
 
     /* Animations */

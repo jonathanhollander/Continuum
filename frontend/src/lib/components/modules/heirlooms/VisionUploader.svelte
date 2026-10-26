@@ -42,6 +42,8 @@
 </script>
 
 <div class="space-y-4">
+    <!-- Drag and drop is an extra way in; the Add a photo button inside covers keyboard use. -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
         class="relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 overflow-hidden group
         {isDragging

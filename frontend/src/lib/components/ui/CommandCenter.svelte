@@ -222,11 +222,15 @@
     }
 </script>
 
+<!-- Clicking the dimmed area closes the dialog; Escape does the same through focusTrap. -->
+<!-- svelte-ignore a11y_interactive_supports_focus, a11y_click_events_have_key_events -->
 <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => onclose() }}
     class="fixed inset-0 z-[200] flex items-start justify-center pt-24 px-4 bg-slate-900/40 backdrop-blur-sm"
     onclick={(e) => { if (e.target === e.currentTarget) onclose(); }}
     transition:fade={{ duration: 200 }}
 >
+    <!-- Arrow keys and Enter for the results list are handled here; the dialog itself closes with Escape. -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
         class="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200"
         transition:scale={{ start: 0.95, easing: quintOut }}

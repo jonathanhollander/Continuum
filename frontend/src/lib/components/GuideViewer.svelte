@@ -27,6 +27,8 @@
 <svelte:window on:keydown={handleKeydown} />
 
 {#if guide}
+    <!-- Clicking the dimmed area closes the guide; Escape does the same through the window handler. -->
+    <!-- svelte-ignore a11y_interactive_supports_focus, a11y_click_events_have_key_events -->
     <div use:focusTrap
         class="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8"
         transition:fade={{ duration: 200 }}

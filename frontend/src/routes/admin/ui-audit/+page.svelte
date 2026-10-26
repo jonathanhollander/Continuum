@@ -55,13 +55,20 @@
 
                 <div class="space-y-3">
                     {#each checks as check}
-                        <!-- svelte-ignore a11y-click-events-have-key-events - Admin tool -->
                         <div
                             class="flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-all
                             {check.checked
                                 ? 'bg-emerald-500/5 border-emerald-500/20'
                                 : 'bg-slate-950 border-slate-800 hover:border-slate-700'}"
+                            role="button"
+                            tabindex="0"
                             onclick={() => toggle(check.id)}
+                            onkeydown={(e) => {
+                                if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+                                    e.preventDefault();
+                                    toggle(check.id);
+                                }
+                            }}
                         >
                             <span
                                 class={check.checked

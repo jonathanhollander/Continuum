@@ -24,7 +24,15 @@
     <!-- Header -->
     <div
         class="bg-slate-50/80 p-4 border-b border-slate-100 flex justify-between items-center cursor-pointer hover:bg-slate-100 transition-colors"
+        role="button"
+        tabindex="0"
         on:click={() => (expanded = !expanded)}
+        on:keydown={(e) => {
+            if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+                e.preventDefault();
+                expanded = !expanded;
+            }
+        }}
     >
         <div class="flex items-center gap-3">
             <div

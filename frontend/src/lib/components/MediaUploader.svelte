@@ -128,6 +128,12 @@
             on:drop={handleDrop}
             on:dragover={handleDragOver}
             on:click={() => fileInput.click()}
+            on:keydown={(e) => {
+                if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+                    e.preventDefault();
+                    fileInput.click();
+                }
+            }}
             role="button"
             tabindex="0"
         >

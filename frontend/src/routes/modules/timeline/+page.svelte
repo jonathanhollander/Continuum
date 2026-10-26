@@ -158,9 +158,9 @@
     }
 
     // Reactively calculate Memento Mori Grid Data
-    let hoveredWeek: any = null;
-    let tooltipX = 0;
-    let tooltipY = 0;
+    let hoveredWeek: any = $state(null);
+    let tooltipX = $state(0);
+    let tooltipY = $state(0);
 
     function handleMouseMove(e: MouseEvent) {
         const tooltipWidth = 260; // Approx width of our w-64 tooltip + padding
@@ -512,7 +512,15 @@
                 {#each lifeEvents.filter((e) => e.type === "accomplishment") as trophy}
                     <div
                         class="bg-white border border-amber-100 p-6 rounded-2xl relative group cursor-pointer hover:shadow-xl hover:border-amber-300 transition-all flex flex-col h-full"
+                        role="button"
+                        tabindex="0"
                         onclick={() => editEvent(trophy)}
+                        onkeydown={(e) => {
+                            if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+                                e.preventDefault();
+                                editEvent(trophy);
+                            }
+                        }}
                     >
                         <div
                             class="absolute top-4 right-4 flex gap-2"
@@ -650,12 +658,16 @@
                 </div>
             </div>
 
+            <!-- Hover reveals the week details; the Life Events list holds the same entries for keyboard use. -->
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div
                 class="flex flex-wrap gap-1 justify-center max-h-[600px] overflow-y-auto p-4 custom-scrollbar relative"
                 onmouseleave={() => (hoveredWeek = null)}
                 onmousemove={handleMouseMove}
             >
                 {#each weeksData as week (week.index)}
+                    <!-- Hover reveals the week details; the Life Events list holds the same entries for keyboard use. -->
+                    <!-- svelte-ignore a11y_no_static_element_interactions -->
                     <div
                         class="w-2 h-2 rounded-[1px] transition-colors cursor-pointer relative group
                         {week.hasEvent

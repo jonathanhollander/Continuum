@@ -111,7 +111,18 @@
     >
         <h1 class="font-serif text-4xl text-white mb-10">Wellness Check-in</h1>
         <!-- Pulse Button Architecture -->
-        <div class="relative group cursor-pointer mb-8" onclick={checkIn}>
+        <div
+            class="relative group cursor-pointer mb-8"
+            role="button"
+            tabindex="0"
+            onclick={checkIn}
+            onkeydown={(e) => {
+                if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+                    e.preventDefault();
+                    checkIn();
+                }
+            }}
+        >
             <!-- Breathing Rings -->
             <div
                 class="absolute inset-0 bg-teal-500/20 rounded-full blur-3xl scale-125 animate-pulse-slow"

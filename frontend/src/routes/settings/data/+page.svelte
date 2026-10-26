@@ -420,16 +420,22 @@
                             {@const status = cardStatus(card)}
                             {@const isTest = card.keys.some((k) => testRegistry[k]?.length > 0)}
 
-                            <!-- svelte-ignore a11y-click-events-have-key-events -->
-                            <!-- svelte-ignore a11y-no-static-element-interactions -->
                             <div
                                 class="bg-white rounded-xl border transition-all cursor-pointer overflow-hidden group
                                     {selectedModule === key
                                     ? 'ring-2 ring-indigo-500 border-indigo-500 shadow-xl'
                                     : 'border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-300'}"
+                                role="button"
+                                tabindex="0"
                                 onclick={() =>
                                     (selectedModule =
                                         selectedModule === key ? null : key)}
+                                onkeydown={(e) => {
+                                    if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+                                        e.preventDefault();
+                                        selectedModule = selectedModule === key ? null : key;
+                                    }
+                                }}
                             >
                                 <div
                                     class="p-5 flex items-center justify-between border-b border-slate-100 bg-slate-50/50"
