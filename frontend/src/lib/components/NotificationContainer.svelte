@@ -2,10 +2,56 @@
 	import { notifications } from '$lib/stores/notificationStore';
 	import ErrorNotification from './ErrorNotification.svelte';
 
+	import { onMount } from 'svelte';
+
 	let notificationList = $derived($notifications);
+
+	// Keep the stack clear of any open dialog: use the free space beside it.
+	const GAP = 20;
+	const MIN_WIDTH = 280;
+	let placement = $state('');
+
+	function updatePlacement() {
+		const dialog = document.querySelector('[aria-modal="true"]');
+		if (!dialog) {
+			placement = '';
+			return;
+		}
+		const panel =
+			(dialog.querySelector(':scope > :not([role="presentation"])') as HTMLElement | null) ??
+			(dialog as HTMLElement);
+		const r = panel.getBoundingClientRect();
+		const vw = window.innerWidth;
+		if (r.width >= vw - 40 || r.width === 0) {
+			placement = '';
+			return;
+		}
+		const rightSpace = vw - r.right - GAP * 2;
+		const leftSpace = r.left - GAP * 2;
+		if (rightSpace >= 450) {
+			placement = '';
+		} else if (rightSpace >= MIN_WIDTH) {
+			placement = `max-width:${Math.floor(rightSpace)}px;`;
+		} else if (leftSpace >= MIN_WIDTH) {
+			placement = `right:auto;left:${GAP}px;max-width:${Math.min(450, Math.floor(leftSpace))}px;`;
+		} else {
+			placement = '';
+		}
+	}
+
+	onMount(() => {
+		updatePlacement();
+		const observer = new MutationObserver(updatePlacement);
+		observer.observe(document.body, { childList: true, subtree: true });
+		window.addEventListener('resize', updatePlacement);
+		return () => {
+			observer.disconnect();
+			window.removeEventListener('resize', updatePlacement);
+		};
+	});
 </script>
 
-<div class="notification-container">
+<div class="notification-container" style={placement}>
 	{#each notificationList as notification (notification.id)}
 		{#if notification.type === 'error'}
 			<ErrorNotification
@@ -77,6 +123,8 @@
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 		max-width: 450px;
 		width: 100%;
+		box-sizing: border-box;
+		padding-right: 52px;
 		position: relative;
 		animation: slideIn 0.3s ease-out;
 	}
