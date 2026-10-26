@@ -48,7 +48,7 @@ export async function aiDraftText(notes: string[], context: WriterContext = "let
     return cleanLetter(await callAiProxy([
         { role: "system", content: writerSystem(context) },
         { role: "user", content: `Please write one or two short, warm paragraphs from these notes:\n${list}` },
-    ]));
+    ], { preserveSensitiveValues: true }));
 }
 
 /** The field's text, rewritten with the chosen warmth (0 = plain and direct, 100 = tender and poetic). */
@@ -57,7 +57,7 @@ export async function aiSoftenText(text: string, warmth: number, context: Writer
     return cleanLetter(await callAiProxy([
         { role: "system", content: writerSystem(context) },
         { role: "user", content: `Please gently rewrite this so it reads ${tone} (warmth ${w} out of 100). Keep its meaning, its facts and roughly its length.\n\n${text}` },
-    ]));
+    ], { preserveSensitiveValues: true }));
 }
 
 // --- Letters: the writing helper beside a letter, through our own AI chat (/api/ai/chat). ---
@@ -77,7 +77,7 @@ export async function aiDraftLetter(notes: string[]): Promise<string> {
     return cleanLetter(await callAiProxy([
         { role: "system", content: LETTER_SYSTEM },
         { role: "user", content: `Please write a warm letter of three or four short paragraphs from these notes:\n${list}` },
-    ]));
+    ], { preserveSensitiveValues: true }));
 }
 
 /** The same letter, rewritten with the chosen warmth (0 = plain and direct, 100 = tender and poetic). */
@@ -86,5 +86,5 @@ export async function aiSoftenLetter(text: string, warmth: number): Promise<stri
     return cleanLetter(await callAiProxy([
         { role: "system", content: LETTER_SYSTEM },
         { role: "user", content: `Please gently rewrite this letter so it reads ${tone} (warmth ${w} out of 100). Keep its meaning, its facts and roughly its length.\n\n${text}` },
-    ]));
+    ], { preserveSensitiveValues: true }));
 }
