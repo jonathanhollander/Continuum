@@ -28,31 +28,6 @@
 
         <div class="container mx-auto px-6 py-12">
             <div class="max-w-4xl mx-auto space-y-12">
-                <!-- Status Card -->
-                <div
-                    class="bg-card border border-border p-8 rounded-lg shadow-sm"
-                >
-                    <h2 class="font-serif text-2xl mb-4 text-primary">
-                        Module Configuration
-                    </h2>
-                    <div class="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <span class="text-muted-foreground block mb-1"
-                                >ID</span
-                            >
-                            <span class="font-mono">{module.id}</span>
-                        </div>
-                        <div>
-                            <span class="text-muted-foreground block mb-1"
-                                >Role Access</span
-                            >
-                            <span class="uppercase tracking-wider font-bold"
-                                >{module.role}</span
-                            >
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Smart Module Router -->
                 {#if module.id.includes("financial") || module.id.includes("property") || module.id.includes("insurance") || module.id.includes("subscription") || module.id.includes("asset") || module.id.includes("vehicle") || module.id.includes("estate")}
                     <AssetManager {module} />

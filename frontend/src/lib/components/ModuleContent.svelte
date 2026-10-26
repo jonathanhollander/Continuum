@@ -7,12 +7,33 @@
         BookOpen,
         CircleAlert,
     } from "lucide-svelte";
-    import { fly } from "svelte/transition";
+    import { registerProfileSlice } from "$lib/services/sync.svelte";
 
     export let module: any;
 
-    let mounted = false;
+    // Every module's ticked steps, kept on this account's profile record (/api/estate/profile) as
+    // one JSON text, so a nested module id is never case-converted on the way.
+    type Ticks = Record<string, Record<string, boolean>>;
+    const checklists = registerProfileSlice<{ moduleChecklists: string }>(
+        "module_checklists",
+        (data: any) => ({
+            moduleChecklists:
+                typeof data?.moduleChecklists === "string"
+                    ? data.moduleChecklists
+                    : "{}",
+        }),
+    );
+    const readAll = (): Ticks => {
+        try {
+            const all = JSON.parse(checklists.data?.moduleChecklists || "{}");
+            return all && typeof all === "object" ? all : {};
+        } catch {
+            return {};
+        }
+    };
+
     let completedSteps: Record<string, boolean> = {};
+    let touched = false;
 
     // Generate simulated steps based on the module context
     // In a real app, these would come from the database/YAML
@@ -24,22 +45,44 @@
         `Finalize and archive record`,
     ];
 
+    const legacyKey = () => `continuum_module_${module.id}`;
+
     onMount(() => {
-        mounted = true;
-        // Load state from local storage
-        const saved = localStorage.getItem(`continuum_module_${module.id}`);
-        if (saved) {
-            completedSteps = JSON.parse(saved);
-        }
+        completedSteps = readAll()[module.id] || {};
+        checklists
+            .sync()
+            .then(async () => {
+                const all = readAll();
+                const server = all[module.id] || {};
+                // Ticks from before the move to the account: carried over once, then cleared here.
+                let legacy: Record<string, boolean> = {};
+                try {
+                    legacy = JSON.parse(localStorage.getItem(legacyKey()) || "{}") || {};
+                } catch {
+                    legacy = {};
+                }
+                const merged = { ...legacy, ...server };
+                if (Object.keys(legacy).length > 0) {
+                    all[module.id] = merged;
+                    await checklists.update({ moduleChecklists: JSON.stringify(all) });
+                }
+                localStorage.removeItem(legacyKey());
+                if (!touched) completedSteps = merged;
+            })
+            .catch(() => {});
     });
 
-    function toggleStep(stepIndex: number) {
+    async function toggleStep(stepIndex: number) {
+        touched = true;
         completedSteps[stepIndex] = !completedSteps[stepIndex];
-        // Persist to local storage
-        localStorage.setItem(
-            `continuum_module_${module.id}`,
-            JSON.stringify(completedSteps),
-        );
+        completedSteps = completedSteps;
+        const all = readAll();
+        all[module.id] = { ...completedSteps };
+        try {
+            await checklists.update({ moduleChecklists: JSON.stringify(all) });
+        } catch {
+            // The store has already shown its gentle retry message; the tick stays on screen.
+        }
     }
 
     $: progress = Math.round(
