@@ -4,60 +4,58 @@ import { conciergeEngine } from '../stores/conciergeEngine';
 class VoiceService {
     private recognition: any | null = null;
     private synthesis: SpeechSynthesis | null = null;
-    private listeningEpoch: number | null = null;
+    private Recognition: any | null = null;
 
     constructor() {
         if (typeof window !== 'undefined') {
-            // Initialize STT
-            const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-            if (SpeechRecognition) {
-                this.recognition = new SpeechRecognition();
-                this.recognition.continuous = false;
-                this.recognition.interimResults = false;
-                this.recognition.lang = 'en-US';
-
-                this.recognition.onresult = (event: any) => {
-                    if (this.listeningEpoch !== get(conciergeEngine).accountEpoch) return;
-                    const transcript = event.results[0][0].transcript;
-                    conciergeEngine.setListening(false);
-                    conciergeEngine.sendMessage(transcript, true);
-                };
-
-                this.recognition.onerror = () => {
-                    if (this.listeningEpoch !== get(conciergeEngine).accountEpoch) return;
-                    conciergeEngine.setListening(false);
-                };
-
-                this.recognition.onend = () => {
-                    if (this.listeningEpoch !== get(conciergeEngine).accountEpoch) return;
-                    conciergeEngine.setListening(false);
-                };
-            }
-
-            // Initialize TTS
+            this.Recognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
             this.synthesis = window.speechSynthesis;
         }
     }
 
     startListening() {
-        if (!this.recognition) {
+        if (!this.Recognition) {
             console.error('Speech recognition not supported');
             return;
         }
-        this.listeningEpoch = get(conciergeEngine).accountEpoch;
+        this.cancelListening();
+        // Each capture owns its handlers: an aborted capture's queued event cannot become a new capture.
+        const recognition = new this.Recognition();
+        const epoch = get(conciergeEngine).accountEpoch;
+        const isCurrent = () => this.recognition === recognition && epoch === get(conciergeEngine).accountEpoch;
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+        recognition.onresult = (event: any) => {
+            if (!isCurrent()) return;
+            const transcript = event.results[0][0].transcript;
+            conciergeEngine.setListening(false);
+            conciergeEngine.sendMessage(transcript, true);
+        };
+        recognition.onerror = recognition.onend = () => {
+            if (!isCurrent()) return;
+            this.recognition = null;
+            conciergeEngine.setListening(false);
+        };
+        this.recognition = recognition;
         conciergeEngine.setListening(true);
-        this.recognition.start();
-    }
-
-    stopListening() {
-        if (this.recognition) {
-            this.recognition.stop();
+        try {
+            recognition.start();
+        } catch (error) {
+            if (isCurrent()) this.cancelListening();
+            console.error('Speech recognition failed:', error);
         }
     }
 
+    stopListening() {
+        this.recognition?.stop();
+    }
+
     cancelListening() {
-        this.listeningEpoch = null;
-        this.recognition?.abort();
+        const recognition = this.recognition;
+        this.recognition = null;
+        recognition?.abort();
+        conciergeEngine.setListening(false);
     }
 
     speak(text: string) {

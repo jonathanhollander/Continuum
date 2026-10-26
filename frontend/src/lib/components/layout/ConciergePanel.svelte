@@ -214,11 +214,9 @@
             pipWindow.document.body.append(openedPanel);
 
             pipWindow.addEventListener("pagehide", () => {
-                // A closing window from an earlier account leaves the new account's panel alone.
-                if (accountEpoch === $conciergeEngine.accountEpoch && panelRef === openedPanel) {
-                    document.body.appendChild(openedPanel);
-                    conciergeEngine.popIn();
-                }
+                // The shared panel must leave the closing document even after an account switch.
+                if (panelRef === openedPanel) document.body.appendChild(openedPanel);
+                if (accountEpoch === $conciergeEngine.accountEpoch) conciergeEngine.popIn();
                 if (pipWindow === opened) pipWindow = null;
             });
         } catch (e) {
