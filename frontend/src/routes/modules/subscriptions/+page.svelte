@@ -86,13 +86,13 @@
         return `
             <p>Dear Customer Service Team,</p>
             
-            <p>Please accept this formal request to cancel the account and all associated services for <strong>${$estateProfile.ownerName || "[Name Not Set]"}</strong>, effective immediately.</p>
+            <p>Please accept this formal request to cancel the account and all associated services for <strong>${esc($estateProfile.ownerName || "[Name Not Set]")}</strong>, effective immediately.</p>
             
             <p><strong>Account Details:</strong></p>
             <ul>
-                <li>Service: ${sub.name}</li>
-                <li>Billing Address: ${$estateProfile.legalAddress || "[Address Not Set]"}</li>
-                <li>Payment Method: ${sub.paymentMethod || "On File"}</li>
+                <li>Service: ${esc(sub.name)}</li>
+                <li>Billing Address: ${esc($estateProfile.legalAddress || "[Address Not Set]")}</li>
+                <li>Payment Method: ${esc(sub.paymentMethod || "On File")}</li>
             </ul>
 
             <p>This request is being made on behalf of the estate by the designated executor. We request that you confirm this cancellation in writing and provide a final statement of account.</p>
@@ -848,7 +848,7 @@
                                 contenteditable="true"
                                 bind:this={letterBody}
                                 bind:innerHTML={customLetterContent}
-                                class="prose prose-sm max-w-none focus:outline-none focus:ring-2 focus:ring-indigo-100 rounded-lg p-2 -m-2 transition-all min-h-[200px]"
+                                class="max-w-none [&_p]:mb-3 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 focus:outline-none focus:ring-2 focus:ring-indigo-100 rounded-lg p-2 -m-2 transition-all min-h-[200px]"
                             ></div>
 
                             <div class="pt-8 space-y-1">
