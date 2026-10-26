@@ -63,14 +63,14 @@
 <div class="max-w-6xl mx-auto" in:fade>
     <!-- Compassionate Header -->
     <div class="mb-8">
-        <div class="flex items-center gap-2 mb-2 text-slate-400">
+        <div class="flex items-center gap-2 mb-2 text-muted-foreground">
             <Heart size={16} />
             <span class="text-sm font-medium">Executor Portal</span>
         </div>
-        <h1 class="text-3xl font-serif font-bold text-white mb-3">
+        <h1 class="text-3xl font-serif font-bold text-foreground mb-3">
             We're here to help
         </h1>
-        <p class="text-lg text-slate-300 max-w-2xl leading-relaxed">
+        <p class="text-lg text-muted-foreground max-w-2xl leading-relaxed">
             {#if deceasedName}
                 You're gathering information about {deceasedName}'s estate. Take your time. We've organized everything you need in one place.
             {:else}
@@ -91,11 +91,11 @@
 
     <!-- Essential Areas Grid -->
     <div class="mb-6">
-        <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-            <Clock size={20} class="text-indigo-400" />
+        <h2 class="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+            <Clock size={20} class="text-info" />
             Essential Areas
         </h2>
-        <p class="text-sm text-slate-400 mb-6">
+        <p class="text-sm text-muted-foreground mb-6">
             These areas may help most first. Everything else can wait until you're ready.
         </p>
     </div>
@@ -110,19 +110,19 @@
 
             <a
                 href={module.link}
-                class="group relative p-6 rounded-2xl bg-slate-800/40 border border-slate-700/50
-                       {tone.borderStrong} hover:bg-slate-800/60
+                class="group relative p-6 rounded-2xl bg-card/40 border border-border/50
+                       {tone.borderStrong} hover:bg-card/60
                        transition-all duration-300"
                 in:fly={{ y: 20, duration: 500, delay: i * 100 }}
             >
                 <!-- Status Indicator -->
                 <div class="absolute top-4 right-4">
                     {#if score >= 80}
-                        <div class="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
+                        <div class="w-3 h-3 rounded-full bg-success shadow-[0_0_10px_color-mix(in_srgb,var(--color-success)_50%,transparent)]"></div>
                     {:else if isStarted}
-                        <div class="w-3 h-3 rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]"></div>
+                        <div class="w-3 h-3 rounded-full bg-warning shadow-[0_0_10px_color-mix(in_srgb,var(--color-warning)_50%,transparent)]"></div>
                     {:else}
-                        <div class="w-3 h-3 rounded-full bg-slate-600"></div>
+                        <div class="w-3 h-3 rounded-full bg-muted-foreground/40"></div>
                     {/if}
                 </div>
 
@@ -132,16 +132,16 @@
                     </div>
 
                     <div class="flex-1">
-                        <h3 class="text-lg font-semibold text-white mb-1">
+                        <h3 class="text-lg font-semibold text-foreground mb-1">
                             {module.title}
                         </h3>
-                        <p class="text-sm text-slate-400 mb-3">
+                        <p class="text-sm text-muted-foreground mb-3">
                             {module.description}
                         </p>
 
                         {#if isStarted}
                             <div class="flex items-center gap-2 text-xs {tone.icon}">
-                                <div class="w-full max-w-[120px] h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                                <div class="w-full max-w-[120px] h-1.5 bg-border rounded-full overflow-hidden">
                                     <div
                                         class="h-full {tone.bar} transition-all duration-500"
                                         style="width: {score}%"
@@ -157,20 +157,20 @@
     </div>
 
     <!-- Gentle CTA for Additional Resources -->
-    <div class="mt-12 p-6 rounded-2xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20">
-        <h3 class="text-lg font-semibold text-white mb-2">
+    <div class="mt-12 p-6 rounded-2xl bg-info/10 border border-info/20">
+        <h3 class="text-lg font-semibold text-foreground mb-2">
             Explore more, whenever you like
         </h3>
-        <p class="text-slate-300 mb-4">
+        <p class="text-muted-foreground mb-4">
             Beyond these essentials, there are many other modules available—but only when you're ready.
             Rest with what matters most right now.
         </p>
         <a
             href="/catalog"
-            class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
+            class="inline-flex items-center gap-2 text-info hover:text-foreground font-medium transition-colors"
         >
             View all modules
-            <span class="opacity-50">→</span>
+            <span aria-hidden="true">→</span>
         </a>
     </div>
 </div>

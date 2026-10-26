@@ -105,10 +105,10 @@
             </p>
         </div>
         <div
-            class="px-6 py-4 bg-slate-900 rounded-2xl text-white flex items-center gap-4"
+            class="px-6 py-4 bg-card border border-border rounded-2xl text-foreground flex items-center gap-4"
         >
             <div
-                class="text-xs font-black uppercase tracking-widest text-slate-400"
+                class="text-xs font-black uppercase tracking-widest text-muted-foreground"
             >
                 Current Rating
             </div>
@@ -149,9 +149,9 @@
                 <ShieldAlert class="text-gold mb-4" size={32} />
                 <h4 class="font-bold text-lg mb-2 text-white">Proactive Protection</h4>
                 <p class="text-sm text-slate-300 leading-relaxed">
-                    Running these drills identifies "Dead Zones" in your
-                    legacy—information that exists but is inaccessible when
-                    needed most.
+                    Running these drills shows which parts of your legacy
+                    your loved ones can find and use when they need them
+                    most.
                 </p>
             </div>
         </div>
