@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onDestroy } from "svelte";
     import { ImagePlus, Upload } from "lucide-svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
     import HeirloomImage from "./HeirloomImage.svelte";
@@ -8,16 +9,29 @@
     let {
         imageUrl = $bindable(""),
         provenance = $bindable(""),
-    }: { imageUrl?: string; provenance?: string } = $props();
+        uploading = $bindable(false),
+        uploadFailed = $bindable(false),
+        onselect,
+    }: {
+        imageUrl?: string; provenance?: string; uploading?: boolean; uploadFailed?: boolean;
+        onselect?: () => void;
+    } = $props();
 
     let fileInput: HTMLInputElement;
     let isDragging = $state(false);
     // The photo goes to the media store; the record keeps only its address ("/api/media/N/download").
-    let uploading = $state(false);
+    let selectedFile: File | null = $state(null);
+    let sequence = 0;
+    let alive = true;
+    onDestroy(() => {
+        alive = false;
+        sequence++;
+        if (localPreview) URL.revokeObjectURL(localPreview);
+    });
     let message = $state<string | null>(null);
     let localPreview = $state<string | null>(null);
     let previewFor = $state<string | null>(null); // the saved address the local preview shows
-    let showLocal = $derived(!!localPreview && (uploading || (!!imageUrl && imageUrl === previewFor)));
+    let showLocal = $derived(!!localPreview && (uploading || uploadFailed || (!!imageUrl && imageUrl === previewFor)));
 
     function handleDragOver(e: DragEvent) {
         e.preventDefault();
@@ -36,21 +50,43 @@
         }
     }
 
+    /** A typed address is an explicit replacement for the selected upload. */
+    export function replaceWithAddress(address: string) {
+        sequence++;
+        selectedFile = null;
+        if (fileInput) fileInput.value = "";
+        uploading = false;
+        uploadFailed = false;
+        message = null;
+        previewFor = null;
+        if (localPreview) URL.revokeObjectURL(localPreview);
+        localPreview = null;
+        imageUrl = address;
+    }
+
     async function handleFile(file: File) {
         if (!file.type.startsWith("image/") || !isValidMediaType(file)) return;
+        const attempt = ++sequence;
+        selectedFile = file;
+        onselect?.();
         if (localPreview) URL.revokeObjectURL(localPreview);
         localPreview = URL.createObjectURL(file);
         previewFor = null;
         message = null;
         uploading = true;
+        uploadFailed = false;
         try {
             const media = await uploadMedia(file, "heirlooms");
+            // A newer selection or a replacement draft owns its own uploader.
+            if (!alive || attempt !== sequence) return;
             imageUrl = media.download_url;
             previewFor = media.download_url;
         } catch (err: any) {
+            if (!alive || attempt !== sequence) return;
+            uploadFailed = true;
             message = err?.message || "Saving this photo paused. It is still here, ready to try again.";
         } finally {
-            uploading = false;
+            if (alive && attempt === sequence) uploading = false;
         }
     }
 
@@ -143,6 +179,12 @@
         <p class="text-xs text-muted-foreground text-center" aria-live="polite">Saving your photo…</p>
     {:else if message}
         <p class="text-xs text-muted-foreground text-center" aria-live="polite">{message}</p>
+        {#if uploadFailed && selectedFile}
+            <div class="text-center">
+                <button type="button" onclick={() => selectedFile && handleFile(selectedFile)}
+                    class="text-sm font-semibold text-primary underline underline-offset-4">Try Again</button>
+            </div>
+        {/if}
     {/if}
 
     <!-- Provenance / Story Field with SmartTextarea -->
