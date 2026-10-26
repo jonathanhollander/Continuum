@@ -211,13 +211,18 @@ export async function fetchMediaBlob(ref: MediaRef, owner = captureSession()): P
 }
 
 /**
- * Read a just-uploaded file back from the server and confirm its size.
- * True only when the server returns the same number of bytes.
+ * Compare a server copy with its original before releasing browser bytes.
+ * Numeric size checks remain supported for callers without an original.
  */
-export async function verifyMediaRetrieval(ref: MediaRef, expectedSize: number, owner = captureSession()): Promise<boolean> {
+export async function verifyMediaRetrieval(ref: MediaRef, original: Blob | number, owner = captureSession()): Promise<boolean> {
     try {
         const blob = await fetchMediaBlob(ref, owner);
-        return blob.size === expectedSize;
+        if (typeof original === 'number') return blob.size === original;
+        if (blob.size !== original.size) return false;
+        const [remote, local] = await Promise.all([blob.arrayBuffer(), original.arrayBuffer()]);
+        assertCurrentSession(owner);
+        const localBytes = new Uint8Array(local);
+        return new Uint8Array(remote).every((byte, i) => byte === localBytes[i]);
     } catch (error) {
         if (error instanceof SessionChangedError) throw error;
         return false;
@@ -254,9 +259,17 @@ export async function uploadMedia(
         const response = await uploadMediaDirect(file, module, referenceId, description, onProgress, owner.session);
         requireMediaOwner(owner);
         if (keptLocally) {
-            const retrieved = await verifyMediaRetrieval(response.id, file.size, owner.session);
+            let identitySaved = false;
+            try {
+                await mediaStorage.rememberUpload(localKey, response, owner);
+                identitySaved = true;
+            } catch (e) {
+                if (e instanceof SessionChangedError) throw e;
+                console.warn('[media] Browser original retained while its uploaded-file identity waits to save', e);
+            }
+            const retrieved = await verifyMediaRetrieval(response.id, file, owner.session);
             requireMediaOwner(owner);
-            if (retrieved) {
+            if (retrieved && identitySaved) {
                 try { await mediaStorage.delete(localKey, owner); }
                 catch (e) {
                     if (e instanceof SessionChangedError) throw e;
