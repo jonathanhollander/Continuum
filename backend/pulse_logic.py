@@ -588,12 +588,11 @@ def owner_notes(session: Session, contact: PulseContact, limit: int = 50) -> lis
 ALL_CLEAR_PREFIX = tier_prefix(0)  # shown by the messages page as a system line
 
 def send_all_clear(session: Session, user_id: int, since: datetime) -> int:
-    """Called right after an owner check-in. If the outage that check-in closes (escalation rows
-    after `since`, the previous owner check-in) alerted guardians, tell each one the owner is
-    well. Returns the number accepted by an external email provider. Never raises."""
+    """Called after an owner check-in: follow up on accepted alerts since the previous one.
+    A personal wait can alert a guardian before a global tier is reached, so their accepted
+    message (rather than a global tier log) identifies them as part of this outage.
+    Returns the number accepted by an external email provider. Never raises."""
     try:
-        if not current_escalation(session, user_id, since):
-            return 0
         alerted = {cid for cid, msg in session.exec(select(PulseMessage.contact_id, PulseMessage.message).where(
             PulseMessage.user_id == user_id,
             PulseMessage.sent_at > since,
