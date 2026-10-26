@@ -167,6 +167,7 @@ export class SyncManager<T extends { id: number | string }> {
             const token = get(auth).token;
             if (!token) {
                 console.warn(`[Sync:${this.key}] No auth token, skipping sync`);
+                this.status = "idle";
                 return;
             }
 
@@ -457,7 +458,8 @@ export class SyncManager<T extends { id: number | string }> {
                 method: "DELETE",
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (!res.ok) {
+            // 404: the row is already gone on the server (removed on another device), so it is removed.
+            if (!res.ok && res.status !== 404) {
                 const errorBody = await res.text();
                 let errorDetail = `HTTP ${res.status}: ${res.statusText}`;
                 try {
@@ -467,6 +469,13 @@ export class SyncManager<T extends { id: number | string }> {
                 const error = new Error("Delete failed remote") as any;
                 error.technicalDetails = `${errorDetail}\n\nEndpoint: DELETE ${this.apiBase}/${this.endpoint}/${id}`;
                 throw error;
+            }
+            // Gone from the server: a later sync neither keeps its id as sent nor uploads it again.
+            const sentIds = getStored<string[] | null>(this.sentKey, null);
+            if (sentIds) setStored(this.sentKey, sentIds.filter(s => s !== String(id)));
+            const pending = getStored<T[]>(this.uploadKey, []);
+            if (pending.some(i => String(i.id) === String(id))) {
+                setStored(this.uploadKey, pending.filter(i => String(i.id) !== String(id)));
             }
             this.status = "synced";
             this.lastSync = new Date();

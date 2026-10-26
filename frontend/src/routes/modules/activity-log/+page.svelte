@@ -47,7 +47,15 @@
         "Funeral Planning",
         "Digital Guardian",
         "Family Hub",
-        "Estate Profile",
+        "Health & Medical",
+        "Insurance",
+        "Property",
+        "Heirlooms",
+        "QR Center",
+        "Letters",
+        "Ethical Will",
+        "Life Lessons",
+        "System",
     ];
 
     // Action colors

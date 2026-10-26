@@ -24,28 +24,6 @@ const mapper = (data: any): ActivityLogEntry => data;
 
 const manager = registerSync<ActivityLogEntry>('activity_log', 'activity_log', mapper, '/api/data');
 
-// --- Legacy Migration Logic ---
-
-const migrateLegacyData = () => {
-    if (typeof localStorage === 'undefined') return;
-
-    const legacy = localStorage.getItem('continuum_activity_log');
-    if (legacy) {
-        try {
-            const parsed = JSON.parse(legacy);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-                console.log(`[ActivityLog] Migrating ${parsed.length} legacy entries...`);
-                // We'll let SyncManager's migrateUp handle this if remote is empty
-                // but since the schema is slightly different (snake_case), we'll help it
-                return parsed.map(mapper);
-            }
-        } catch (e) {
-            console.error('Failed to parse legacy activity log:', e);
-        }
-    }
-    return [];
-};
-
 // --- Store Exports ---
 
 export const activityLog = {
