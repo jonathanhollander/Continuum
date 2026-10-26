@@ -2,6 +2,8 @@
     import { Check, Users, Files, Heart, ArrowRight, Sparkles } from "lucide-svelte";
     import { fade, slide } from "svelte/transition";
     import { familyStore } from "$lib/stores/familyStore.svelte";
+    import { documentStore } from "$lib/stores/documentStore.svelte";
+    import { pulse } from "$lib/stores/pulse.svelte";
     import { browser } from "$app/environment";
 
     // Props
@@ -12,25 +14,11 @@
 
     let { variant = "card", onDismiss }: Props = $props();
 
-    // Track completion of core actions
-    // In a real app, these would come from stores
+    // Each step reads the store that holds its records: contacts, the Document Vault
+    // (documentStore) and the Pulse settings saved with the account.
     let hasContacts = $derived(familyStore.members.length > 0);
-
-    // Check localStorage for documents and pulse setup
-    let hasDocuments = $state(false);
-    let hasPulse = $state(false);
-
-    $effect(() => {
-        if (browser) {
-            // Check if user has added any documents
-            const docs = localStorage.getItem("continuum_documents");
-            hasDocuments = docs ? JSON.parse(docs).length > 0 : false;
-
-            // Check if Pulse is set up
-            const pulse = localStorage.getItem("continuum_pulse_setup");
-            hasPulse = pulse === "true";
-        }
-    });
+    let hasDocuments = $derived(documentStore.items.length > 0);
+    let hasPulse = $derived(pulse.enabled);
 
     let steps = $derived([
         {
