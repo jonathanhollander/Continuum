@@ -344,6 +344,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | U60 | Grief support: lone "Find Local Help" card offset (U41) | `ui-standards-enforcer` / `general-purpose` | `routes/resources/grief-support/+page.svelte` | Closed, it sits alone in the last grid row away from the left edge — align it with the grid | Before/after 1440×900; 0 errors |
 | U61 | Sidebar rows content-width under the Tooltip wrapper (U38) | `ui-standards-enforcer` / `general-purpose` | `lib/components/ui/Tooltip.svelte`, `lib/config/navigation.ts` (unused `recipientPreviewEntry` only) | Tooltip wrapper shrinks every nav row, so the active highlight is narrower than the sidebar — wrapper `block w-full` where it wraps nav rows; drop the dead export | Active row spans the sidebar width; other tooltips unchanged; 0 errors |
 | U62 | Settings label warnings; family tree checkbox rows (U42, U51) | `ui-standards-enforcer` / `general-purpose` | `lib/components/concierge/ConciergeSettings.svelte` (Perspective, Language, Export scope labels; `<svelte:component>`), `lib/components/family/FamilyTreeGraph.svelte` (Designated Executor and Beneficiary rows, `#4A7C74` button) | Labels over button groups → `<span>` + `aria-labelledby`; deprecated `<svelte:component>` replaced; the two checkbox rows and the save button match the shared form controls (`bg-primary`) | svelte-check: 0 `a11y_label_has_associated_control` in the file; before/after 1440×900; 0 errors; also `lib/components/RoleSwitcher.svelte` backdrop covers the trigger, so the trigger cannot toggle the menu closed (X161) |
+| U63 | Tooltip trigger carries `role="tooltip"` (U61) | `ui-standards-enforcer` / `general-purpose` | `lib/components/ui/Tooltip.svelte` | Screen readers announce every nav row and dashboard card as a tooltip — role off the wrapper; `role="tooltip"` + `id` on the bubble, `aria-describedby` on the trigger while shown | Accessibility tree: 0 nav rows with role tooltip; hovered bubble has role tooltip and is linked; 0 errors |
 
  (decision 12; parallel track, approved by orchestrator diff review)
 
@@ -679,7 +680,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X170 | ▶ | | |
 | X171 | ▶ | | |
 | X172 | ▶ | | |
-| X173 | ☐ (queued: 20-agent limit) | | |
+| X173 | ▶ | | |
 | X174 | ☐ (queued: 20-agent limit) | | |
 | X138 | ☑ | c5a7077 | Toolbar Download (insurance, property) saves the stored files of every record shown (follows search; disabled when none; cached files reused); subscriptions Filter chips by the difficulty words already shown (Easy/Medium/Hard), clear on reclick or close; `aiGriefService` uses `contextStore.isExecutor` (store holds `executor` after X118 — the old check never matched). Downloads byte-identical, executor/planner personas checked with the AI call intercepted; 0 errors |
 | X114 | ☑ | fdd80b5 | `routers/pets.py`, `heirlooms.py`, `insurance.py` removed (no caller: the app uses `/api/data/pets`, `/heirlooms` → Asset, `/insurance_policies`; `heirlooms.py` wrote the unused `Heirloom` table). TestClient: before `200 {}`; after 405/404, the `/api/data/*` paths create and list; server starts clean |
@@ -838,8 +839,9 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | U58 | ▶ | | |
 | U59 | ▶ | | |
 | U60 | ▶ | | |
-| U61 | ▶ | | |
+| U61 | ☑ | 6e83151 | Tooltip wrapper `block`: every sidebar row 256 px (was 115–263; Wellness Check-in overflowed by 7 px); dashboard tooltips unchanged (343×90, hover intact). `recipientPreviewEntry` kept — still used by Sidebar. 0 errors. Finding → U63 |
 | U62 | ▶ | | |
+| U63 | ☐ (queued: 20-agent limit) | | |
 | U42 | ☑ | e127714 | Settings left-aligned like the dashboard (heading x 456 → 312); 5 profile inputs labelled (5 → 0 unlabelled); date of death shown to Executor and Family only (Owner 1 → 0). X156 confirm intact. 0 page errors. Finding → U62 |
 | G0 | ☐ (after Wave U) | | |
 | T0 | ☐ (after Wave U, with G0) | | |
