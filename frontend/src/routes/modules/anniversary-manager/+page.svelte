@@ -276,11 +276,11 @@
                                     </span>
                                 </div>
 
-                                <div class="flex-1 space-y-3">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center gap-3">
+                                <div class="flex-1 min-w-0 space-y-3">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 min-w-0">
                                             <h3
-                                                class="font-bold text-xl text-slate-900 uppercase tracking-tight"
+                                                class="font-bold text-xl text-slate-900 uppercase tracking-tight break-words min-w-0"
                                             >
                                                 {event.title}
                                             </h3>
@@ -292,7 +292,7 @@
                                                 {event.type}
                                             </span>
                                         </div>
-                                        <div class="flex items-center gap-1">
+                                        <div class="flex items-center gap-1 shrink-0">
                                             <button
                                                 onclick={() => openEdit(event.id)}
                                                 aria-label="Edit this item"
