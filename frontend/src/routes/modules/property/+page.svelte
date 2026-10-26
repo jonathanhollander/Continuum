@@ -305,6 +305,12 @@
         }
     }
 
+    // With no cover chosen, the first photo among the evidence is the cover.
+    function firstImageId(): number | null {
+        const img = (newItem.evidence ?? []).find((e) => e.mime?.startsWith("image/"));
+        return img ? img.id : null;
+    }
+
     async function handleAddItemOnce() {
         if (!newItem.name || !newItem.location) return;
 
@@ -313,7 +319,12 @@
         const itemData = {
             ...newItem,
             // The cover is one of this record's evidence images, or none.
-            thumbnail: cover !== null && keptIds.includes(cover) ? String(cover) : "",
+            thumbnail:
+                cover !== null && keptIds.includes(cover)
+                    ? String(cover)
+                    : firstImageId() !== null
+                      ? String(firstImageId())
+                      : "",
             custom_attributes: JSON.stringify(parsedCustomAttributes),
         };
 
@@ -540,89 +551,6 @@
         </div>
     </div>
 
-    <!-- AI Prompt Bar -->
-    <div class="max-w-3xl mx-auto mb-8">
-        <AIPromptBar context="property" />
-    </div>
-
-    <!-- Asset Stats Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div
-            class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
-        >
-            <div class="flex items-start justify-between mb-4">
-                <div
-                    class="p-3 bg-primary/10 rounded-2xl text-primary group-hover:scale-110 transition-transform"
-                >
-                    <DollarSign size={24} />
-                </div>
-                <div
-                    class="text-[10px] bg-primary/20 text-primary px-2 py-1 rounded-lg font-bold"
-                >
-                    TOTAL
-                </div>
-            </div>
-            <p
-                class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1"
-            >
-                Total Asset Value
-            </p>
-            <p class="text-3xl font-black text-slate-900 tracking-tight">
-                ${totalValuation.toLocaleString()}
-            </p>
-        </div>
-
-        <div
-            class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
-        >
-            <div class="flex items-start justify-between mb-4">
-                <div
-                    class="p-3 bg-primary/10 rounded-2xl text-primary group-hover:scale-110 transition-transform"
-                >
-                    <Building size={24} />
-                </div>
-                <div
-                    class="text-[10px] bg-primary/20 text-primary px-2 py-1 rounded-lg font-bold"
-                >
-                    COUNT
-                </div>
-            </div>
-            <p
-                class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1"
-            >
-                Real Estate Items
-            </p>
-            <p class="text-3xl font-black text-slate-900 tracking-tight">
-                {typeCounts["Real Estate"] || 0}
-            </p>
-        </div>
-
-        <div
-            class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
-        >
-            <div class="flex items-start justify-between mb-4">
-                <div
-                    class="p-3 bg-amber-50 rounded-2xl text-amber-600 group-hover:scale-110 transition-transform"
-                >
-                    <Gem size={24} />
-                </div>
-                <div
-                    class="text-[10px] bg-amber-100 text-amber-700 px-2 py-1 rounded-lg font-bold"
-                >
-                    HIGH-VALUE
-                </div>
-            </div>
-            <p
-                class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1"
-            >
-                Valuables Recorded
-            </p>
-            <p class="text-3xl font-black text-slate-900 tracking-tight">
-                {typeCounts["Valuable"] || 0}
-            </p>
-        </div>
-    </div>
-
     <!-- Search & Filters -->
     <div
         class="flex flex-col md:flex-row gap-4 items-center justify-between bg-white/50 backdrop-blur-sm p-4 rounded-2xl border border-slate-200 shadow-sm"
@@ -760,7 +688,7 @@
                             <p
                                 class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1"
                             >
-                                Ownership
+                                Current Status
                             </p>
                             <p
                                 class="text-sm font-black text-slate-700 tracking-tight capitalize"
@@ -815,25 +743,29 @@
                 </div>
 
                 <div class="mt-auto p-2">
-                    <div
-                        class="bg-primary rounded-2xl p-6 text-primary-foreground flex items-center justify-between group/footer hover:bg-slate-900 transition-colors duration-500 cursor-pointer"
-                    >
-                        <div>
-                            <p
-                                class="text-[10px] font-black uppercase tracking-widest opacity-70 mb-1"
-                            >
-                                Asset Verification
-                            </p>
-                            <h4 class="font-bold text-sm tracking-tight">
-                                View Ownership Documents
-                            </h4>
-                        </div>
-                        <div
-                            class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center group-hover/footer:translate-x-1 transition-transform"
+                    {#if (item.evidence ?? []).length > 0}
+                        <button
+                            type="button"
+                            onclick={() => editItem(item)}
+                            class="w-full text-left bg-slate-100 rounded-2xl p-6 text-slate-900 flex items-center justify-between group/footer hover:bg-slate-200 transition-colors duration-300"
                         >
-                            <ArrowRight size={20} />
-                        </div>
-                    </div>
+                            <span>
+                                <span
+                                    class="block text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1"
+                                >
+                                    Asset Verification
+                                </span>
+                                <span class="block font-bold text-sm tracking-tight">
+                                    View Ownership Documents
+                                </span>
+                            </span>
+                            <span
+                                class="w-10 h-10 rounded-full bg-slate-900/10 flex items-center justify-center group-hover/footer:translate-x-1 transition-transform"
+                            >
+                                <ArrowRight size={20} />
+                            </span>
+                        </button>
+                    {/if}
                 </div>
             </div>
         {:else}
@@ -961,6 +893,89 @@
             </div>
         {/if}
     {/if}
+
+    <!-- Asset Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div
+            class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
+        >
+            <div class="flex items-start justify-between mb-4">
+                <div
+                    class="p-3 bg-primary/10 rounded-2xl text-primary group-hover:scale-110 transition-transform"
+                >
+                    <DollarSign size={24} />
+                </div>
+                <div
+                    class="text-[10px] bg-primary/20 text-primary px-2 py-1 rounded-lg font-bold"
+                >
+                    TOTAL
+                </div>
+            </div>
+            <p
+                class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1"
+            >
+                Total Asset Value
+            </p>
+            <p class="text-3xl font-black text-slate-900 tracking-tight">
+                ${totalValuation.toLocaleString()}
+            </p>
+        </div>
+
+        <div
+            class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
+        >
+            <div class="flex items-start justify-between mb-4">
+                <div
+                    class="p-3 bg-primary/10 rounded-2xl text-primary group-hover:scale-110 transition-transform"
+                >
+                    <Building size={24} />
+                </div>
+                <div
+                    class="text-[10px] bg-primary/20 text-primary px-2 py-1 rounded-lg font-bold"
+                >
+                    COUNT
+                </div>
+            </div>
+            <p
+                class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1"
+            >
+                Real Estate Items
+            </p>
+            <p class="text-3xl font-black text-slate-900 tracking-tight">
+                {typeCounts["Real Estate"] || 0}
+            </p>
+        </div>
+
+        <div
+            class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
+        >
+            <div class="flex items-start justify-between mb-4">
+                <div
+                    class="p-3 bg-amber-50 rounded-2xl text-amber-600 group-hover:scale-110 transition-transform"
+                >
+                    <Gem size={24} />
+                </div>
+                <div
+                    class="text-[10px] bg-amber-100 text-amber-700 px-2 py-1 rounded-lg font-bold"
+                >
+                    HIGH-VALUE
+                </div>
+            </div>
+            <p
+                class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1"
+            >
+                Valuables Recorded
+            </p>
+            <p class="text-3xl font-black text-slate-900 tracking-tight">
+                {typeCounts["Valuable"] || 0}
+            </p>
+        </div>
+    </div>
+
+    <!-- AI Prompt Bar -->
+    <div class="max-w-3xl mx-auto mt-8">
+        <AIPromptBar context="property" />
+    </div>
 </div>
 {/if}
 
