@@ -5,7 +5,6 @@
         Image,
         Scroll,
         MapPin,
-        Music,
         Plus,
         X,
         Upload,
@@ -27,6 +26,9 @@
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import { onMount } from "svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
+    import { familyStore } from "$lib/stores/familyStore.svelte";
+    import { timelineStore } from "$lib/stores/timelineStore.svelte";
+    import { estateExecutorName } from "$lib/stores/analyticsStore";
     import { activityLog } from "$lib/stores/activityLog.svelte";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
@@ -74,7 +76,7 @@
         type: "photo",
         title: "",
         desc: "",
-        image: "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800&q=80",
+        image: "",
         author: $estateProfile.ownerName || "Me",
         date: new Date().getFullYear().toString(),
     });
@@ -218,7 +220,7 @@
             title: "",
             desc: "",
             author: $estateProfile.ownerName || "Me",
-            image: "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800&q=80",
+            image: "",
             date: new Date().getFullYear().toString(),
         };
     }
@@ -234,33 +236,6 @@
         removeFamilyMemory(id);
     }
 
-    const collections = [
-        {
-            title: "Photo Albums",
-            icon: Image,
-            color: "bg-rose-100 text-rose-600",
-            count: 12,
-        },
-        {
-            title: "Family Recipes",
-            icon: Scroll,
-            color: "bg-amber-100 text-amber-600",
-            count: 8,
-        },
-        {
-            title: "Places We Loved",
-            icon: MapPin,
-            color: "bg-emerald-100 text-emerald-600",
-            count: 5,
-        },
-        {
-            title: "Our Playlist",
-            icon: Music,
-            color: "bg-purple-100 text-purple-600",
-            count: 1,
-        },
-    ];
-
     // Slideshow Logic
     let showSlideshow = $state(false);
     let currentSlide = $state(0);
@@ -269,8 +244,15 @@
 
     let photoMemories = $derived(memories.filter((m) => m.type === "photo"));
 
+    // The three most recent events from The Life Timeline
+    let journeyEvents = $derived(
+        [...(timelineStore.items || [])]
+            .sort((a, b) => (Number(b.year) || 0) - (Number(a.year) || 0))
+            .slice(0, 3),
+    );
+
     function startSlideshow() {
-        if (photoMemories.length === 0) return alert("Add some photos first!");
+        if (photoMemories.length === 0) return;
         showSlideshow = true;
         currentSlide = 0;
         isPlaying = true;
@@ -491,7 +473,7 @@
                     </p>
                 </div>
             </div>
-            <div class="h-[600px] w-full bg-slate-50">
+            <div class="w-full bg-slate-50">
                 <FamilyTreeGraph />
             </div>
         </div>
@@ -516,7 +498,6 @@
         <div class="max-w-6xl mx-auto px-6 pb-20 relative z-30" in:fade>
             <!-- BLUEPRINT HEADER -->
             <div class="mb-12">
-                ...
                 <BlueprintCard
                     title="Establish Your Family Network"
                     description="Your estate plan relies on trusted people. Identify your key players to unlock the full power of the Continuum."
@@ -524,9 +505,9 @@
                     steps={[
                         {
                             label: "Connect 3 Family Members",
-                            completed: memories.length >= 3,
-                        } /* Using memories.length as proxy for now, but should be Family Members */,
-                        { label: "Designate an Executor", completed: false },
+                            completed: familyStore.members.length >= 3,
+                        },
+                        { label: "Designate an Executor", completed: !!$estateExecutorName },
                         {
                             label: "Upload a Shared Memory",
                             completed: memories.length > 0,
@@ -546,32 +527,6 @@
                 ]}
             />
 
-            <!-- Quick Access Collections -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
-                {#each collections as item}
-                    <button
-                        class="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-all hover:-translate-y-1 group text-center"
-                    >
-                        <div
-                            class="w-12 h-12 rounded-full {item.color} flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform"
-                        >
-                            <svelte:component
-                                this={item.icon}
-                                class="w-6 h-6"
-                            />
-                        </div>
-                        <h3 class="font-bold text-slate-800 mb-1">
-                            {item.title}
-                        </h3>
-                        <div
-                            class="text-xs text-slate-400 font-medium uppercase tracking-wider"
-                        >
-                            {item.count} Items
-                        </div>
-                    </button>
-                {/each}
-            </div>
-
             <!-- Latest Memories Grid -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <!-- Feed Column -->
@@ -581,7 +536,7 @@
                             <h2 class="font-serif text-3xl text-slate-800">
                                 Latest Memories
                             </h2>
-                            {#if memories.length > 0}
+                            {#if photoMemories.length > 0}
                                 <button
                                     onclick={startSlideshow}
                                     class="text-xs font-bold text-[#4A7C74] bg-[#4A7C74]/10 px-3 py-1.5 rounded-full hover:bg-[#4A7C74]/20 transition-colors flex items-center gap-1"
@@ -729,6 +684,22 @@
                                                     — {memory.author}
                                                 </div>
                                             </div>
+                                        {:else}
+                                            <div class="p-6">
+                                                <h3 class="font-bold text-slate-800 text-lg leading-tight">
+                                                    {memory.title}
+                                                </h3>
+                                                {#if memory.desc || memory.text}
+                                                    <p class="text-sm text-slate-600 mt-2 leading-relaxed">
+                                                        {memory.desc || memory.text}
+                                                    </p>
+                                                {/if}
+                                                {#if memory.date}
+                                                    <p class="text-xs text-slate-400 mt-2 font-medium tracking-wide uppercase">
+                                                        {memory.date}
+                                                    </p>
+                                                {/if}
+                                            </div>
                                         {/if}
                                     </div>
                                 {/each}
@@ -798,7 +769,7 @@
                             <PlayCircle size={120} />
                         </div>
                         <div class="relative z-10">
-                            <h3 class="font-serif font-bold text-xl mb-2">
+                            <h3 class="font-serif font-bold text-xl mb-2 text-white">
                                 Learning Center
                             </h3>
                             <p
@@ -824,51 +795,33 @@
                             <MapPin class="w-4 h-4 text-emerald-500" />
                             Our Journey
                         </h3>
+                        {#if journeyEvents.length > 0}
+                            <div
+                                class="space-y-6 relative pl-4 border-l-2 border-slate-100"
+                            >
+                                {#each journeyEvents as event, i (event.id)}
+                                    <div class="relative">
+                                        <div
+                                            class="absolute -left-[21px] top-1 w-3 h-3 rounded-full border-2 border-white {i === 0
+                                                ? 'bg-emerald-500 shadow-sm'
+                                                : 'bg-slate-300'}"
+                                        ></div>
+                                        <div
+                                            class="text-xs font-bold text-slate-400 mb-1"
+                                        >
+                                            {event.year}
+                                        </div>
+                                        <div class="font-medium text-slate-800">
+                                            {event.label}
+                                        </div>
+                                    </div>
+                                {/each}
+                            </div>
+                        {/if}
                         <div
-                            class="space-y-6 relative pl-4 border-l-2 border-slate-100"
-                        >
-                            <div class="relative">
-                                <div
-                                    class="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white shadow-sm"
-                                ></div>
-                                <div
-                                    class="text-xs font-bold text-slate-400 mb-1"
-                                >
-                                    2024
-                                </div>
-                                <div class="font-medium text-slate-800">
-                                    Moved to Seattle
-                                </div>
-                            </div>
-                            <div class="relative">
-                                <div
-                                    class="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-slate-300 border-2 border-white"
-                                ></div>
-                                <div
-                                    class="text-xs font-bold text-slate-400 mb-1"
-                                >
-                                    2018
-                                </div>
-                                <div class="font-medium text-slate-800">
-                                    Trip to Italy
-                                </div>
-                            </div>
-                            <div class="relative">
-                                <div
-                                    class="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-slate-300 border-2 border-white"
-                                ></div>
-                                <div
-                                    class="text-xs font-bold text-slate-400 mb-1"
-                                >
-                                    2010
-                                </div>
-                                <div class="font-medium text-slate-800">
-                                    Bought the Cabin
-                                </div>
-                            </div>
-                        </div>
-                        <div
-                            class="mt-4 pt-4 border-t border-slate-100 text-center"
+                            class="text-center {journeyEvents.length > 0
+                                ? 'mt-4 pt-4 border-t border-slate-100'
+                                : ''}"
                         >
                             <a
                                 href="/modules/timeline"
