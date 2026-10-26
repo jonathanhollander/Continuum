@@ -26,6 +26,7 @@
         ArrowDownLeft,
         MoreVertical,
         Trash2,
+        X,
         Calendar,
         DollarSign,
         Clock,
@@ -41,14 +42,11 @@
     import { fade, slide, scale } from "svelte/transition";
     import EmptyState from "$lib/components/EmptyState.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
-    import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
-    import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import { language } from "$lib/stores/localization";
 
-    let viewMode = $state<ViewMode>('card');
     let isLoading = $state(true);
 
     onMount(async () => {
@@ -158,12 +156,12 @@
                 c.claimNumber
                     ?.toLowerCase()
                     .includes(searchQuery.toLowerCase()) ||
-                c.note.toLowerCase().includes(searchQuery.toLowerCase()),
+                (c.note ?? "").toLowerCase().includes(searchQuery.toLowerCase()),
         ),
     );
     let filteredAccounts = $derived(
         $digitalAssetsStore.filter((a) =>
-            a.platform.toLowerCase().includes(searchQuery.toLowerCase()),
+            (a.platform ?? (a as any).name ?? "").toLowerCase().includes(searchQuery.toLowerCase()),
         ),
     );
 </script>
@@ -196,7 +194,6 @@
                     class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm"
                 />
             </div>
-            <DataViewToggle module="advanced-registry" onchange={(mode) => viewMode = mode} />
             <button
                 onclick={() => {
                     // Tab ids are plural; the form types are singular.
@@ -630,7 +627,7 @@
                                         <h3
                                             class="font-black text-slate-900 text-xl tracking-tight uppercase"
                                         >
-                                            {acc.platform}
+                                            {acc.platform ?? (acc as any).name ?? ""}
                                         </h3>
                                         <p
                                             class="text-[10px] font-black text-slate-400 tracking-[0.2em]"
@@ -746,7 +743,7 @@
                     onclick={() => (showAddModal = false)}
                     class="text-slate-400 hover:text-slate-900 transition-colors"
                 >
-                    <Trash2 size={24} />
+                    <X size={24} />
                 </button>
             </div>
 
@@ -1008,15 +1005,15 @@
                 <div class="pt-6 flex items-center gap-4">
                     <button
                         onclick={handleAdd}
-                        class="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black shadow-xl shadow-slate-900/20 hover:scale-[1.02] active:scale-[0.98] transition-all uppercase tracking-widest text-xs"
+                        class="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black shadow-xl shadow-slate-900/20 hover:scale-[1.02] active:scale-[0.98] transition-all text-sm"
                     >
-                        Confirm Registry Entry
+                        Save my thoughts
                     </button>
                     <button
                         onclick={() => (showAddModal = false)}
-                        class="px-8 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black hover:bg-slate-200 transition-all uppercase tracking-widest text-xs"
+                        class="px-8 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black hover:bg-slate-200 transition-all text-sm"
                     >
-                        Cancel
+                        Not right now
                     </button>
                 </div>
             </div>
