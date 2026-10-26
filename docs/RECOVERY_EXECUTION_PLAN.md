@@ -1203,6 +1203,6 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | O1 — release table | ☐ | | |
 | O2 — release screenshots | ☐ | | |
 | R0 | ☑ | docs/reviews/2026-10-26-R0/REPORT.md | Full completion test on merged main 17e17b7, local, synthetic data: 22 of 23 steps pass (owner adds/edits, controlled failure + retry, reload, preview, recipient finds note/steps/advisor/original, full letter, media). Fail: account transfer instructions missing from binder/PDF/recipient record → X275; smoke script out of date → X276 |
-| X275 | ▶ | | |
-| X276 | ▶ | | |
-| Release | ☐ | | |
+| X275 | ☑ | e279830 | Account "Transfer instructions" now prints for every account in all four outputs (binder, binder print-to-PDF, app PDF, recipient full record — one `SECTIONS` source); closed accounts show the date alone |
+| X276 | ☑ | 28ec576 | `scripts/smoke_test.py` sends today's payloads (documents, letters, time capsule, contact mappers, create strips id/created_at): fresh database 13/4 → 17 PASS, 0 FAIL |
+| Release | ▶ (step 9 done 2026-10-26: pg_dump 47 tables; ENVIRONMENT=production, new JWT_SECRET_KEY and SECRET_KEY, RP_ID, ORIGIN, FRONTEND_URL, API_URL, CORS_ORIGINS set; live /api/health environment production; sign-in 200, write without CSRF 403, in-app write with CSRF 200, 0 console errors) | | |
