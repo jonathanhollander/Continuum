@@ -260,7 +260,7 @@
                 <div
                     class="p-4 border-b border-border flex justify-between items-center bg-muted"
                 >
-                    <h3 class="font-bold text-primary-deep dark:text-primary-hover">New Life Event</h3>
+                    <h3 class="font-bold text-primary-deep dark:text-primary-hover">{newEvent.id ? "Update this event" : "New Life Event"}</h3>
                     <button aria-label="Close" onclick={resetForm}
                         ><X
                             size={20}
