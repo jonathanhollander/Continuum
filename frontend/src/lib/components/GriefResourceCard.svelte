@@ -102,7 +102,7 @@
 {:else}
     <div
         in:fly={{ y: 20, delay, duration: 600 }}
-        class="group relative p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 transition-all duration-300 hover:shadow-xl hover:shadow-{color}-500/10 cursor-pointer"
+        class="group relative p-6 rounded-2xl bg-white/5 border border-white/10 transition-all duration-300 {type === 'guide' ? 'hover:border-white/20 hover:shadow-xl hover:shadow-' + color + '-500/10 cursor-pointer' : ''}"
     >
         <div class="flex items-start justify-between mb-4">
             <div
@@ -123,7 +123,7 @@
         </div>
 
         <h3
-            class="text-lg font-medium mb-2 group-hover:text-white transition-colors"
+            class="text-lg font-medium mb-2 {type === 'guide' ? 'group-hover:text-white' : ''} transition-colors"
         >
             {title}
         </h3>
@@ -138,12 +138,14 @@
                 {/if}
                 <span>{getTypeLabel(type)}</span>
             </div>
-            <div
-                class="text-{color}-400 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-                {getActionLabel(type)}
-                <LucideExternalLink class="w-3 h-3" />
-            </div>
+            {#if type === "guide"}
+                <div
+                    class="text-{color}-400 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                    {getActionLabel(type)}
+                    <LucideExternalLink class="w-3 h-3" />
+                </div>
+            {/if}
         </div>
     </div>
 {/if}
