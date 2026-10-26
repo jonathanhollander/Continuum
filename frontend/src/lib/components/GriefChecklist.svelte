@@ -81,7 +81,7 @@
             onclick={() => (activePriority = "immediate")}
             class="px-4 py-2 rounded-xl text-sm font-medium transition-all {activePriority ===
             'immediate'
-                ? 'bg-rose-500/20 text-rose-200 border border-rose-500/30'
+                ? 'bg-primary/20 text-primary-hover border border-primary/30'
                 : 'bg-white/5 text-muted-foreground hover:text-slate-300'}"
         >
             Right now
@@ -90,7 +90,7 @@
             onclick={() => (activePriority = "soon")}
             class="px-4 py-2 rounded-xl text-sm font-medium transition-all {activePriority ===
             'soon'
-                ? 'bg-indigo-500/20 text-indigo-200 border border-indigo-500/30'
+                ? 'bg-primary/20 text-primary-hover border border-primary/30'
                 : 'bg-white/5 text-muted-foreground hover:text-slate-300'}"
         >
             In the Coming Days
@@ -112,7 +112,7 @@
                     >
                         {#if item.done}
                             <LucideCheckCircle2
-                                class="w-6 h-6 text-emerald-400"
+                                class="w-6 h-6 text-success"
                             />
                         {:else}
                             <LucideCircle class="w-6 h-6 text-muted-foreground" />
