@@ -7,6 +7,7 @@
     import { goto } from "$app/navigation";
     import { onMount, onDestroy } from "svelte";
     import { SvelteMap } from "svelte/reactivity";
+    import { captureSession, assertCurrentSession, isCurrentSession, SessionChangedError } from "$lib/services/sessionOwnership";
     import {
         fetchSnapshot,
         buildPacket,
@@ -84,6 +85,9 @@
         try {
             showFiles(await loadAttachmentFiles(snapshot, packet.attachments.filter((a) => a.key === key), undefined, () => {}, () => {}));
             downloadNote = fileCoverageLabel(fileCoverage(snapshot, packet, files));
+        } catch (e: any) {
+            downloadNote = e instanceof SessionChangedError ? "The account changed. Open the packet from the account you want to use."
+                : e?.message || "You can try gathering this file again.";
         } finally {
             busy = null;
         }
@@ -91,17 +95,20 @@
 
     async function downloadCopy() {
         if (!snapshot) return;
+        const owner = captureSession();
         busy = "zip";
         try {
-            const copy = await buildDownloadCopy(snapshot, (message) => downloadNote = message, files);
+            const copy = await buildDownloadCopy(snapshot, (message) => downloadNote = message, files, undefined, owner);
+            assertCurrentSession(owner);
             if (gone) return;
             showFiles(files);
             saveBlob(copy, `Continuum_download_copy_${day()}.zip`);
             downloadNote = downloadCopyStatus(fileCoverage(snapshot, packet!, files));
         } catch (e: any) {
-            note = e?.message || "Your binder is right here. You can save a download copy again whenever you're ready.";
+            downloadNote = e instanceof SessionChangedError ? "The account changed. Open the packet from the account you want to use."
+                : e?.message || "Your binder is right here. You can save a download copy again whenever you're ready.";
         } finally {
-            showFiles(files);
+            if (isCurrentSession(owner)) showFiles(files);
             busy = null;
         }
     }

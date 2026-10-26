@@ -57,6 +57,7 @@
     import { lettersSync, type Letter } from "$lib/stores/letterStore.svelte";
     import { contactSync } from "$lib/stores/familyStore.svelte";
     import { milestoneLabel } from "$lib/utils/milestones";
+    import { letterReadState, letterStateLabel, type LetterReadState } from "$lib/utils/letterReadiness";
 
     // One owner for the letters table: the store's 'letters' manager.
     const letterSync = lettersSync;
@@ -67,13 +68,18 @@
     // A gentle cue until the first server answer, unless this device already holds letters.
     let firstSyncPending = $derived(letterSync.lastSync === null && letterSync.status !== "error");
     let isLoading = $derived(firstSyncPending && savedLetters.length === 0);
-    // Header summary, in the same words as the letter cards ("Ready to read" / "On hold").
-    // Local plural until the shared helper (card X58) reaches main.
+    // Header, cards and table use the same personal-reader readiness and drafting states.
     const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
-    let heldCount = $derived(savedLetters.filter((l) => l.isLocked).length);
-    let readyCount = $derived(savedLetters.length - heldCount);
+    let readStates = $derived(new Map(savedLetters.map((letter) => [String(letter.id), letterReadState(letter, contacts)])));
+    const stateOf = (letter: Letter): LetterReadState => readStates.get(String(letter.id)) ?? 'draft';
+    let heldCount = $derived(savedLetters.filter((letter) => stateOf(letter) === 'held').length);
+    let readyCount = $derived(savedLetters.filter((letter) => stateOf(letter) === 'ready').length);
+    let draftCount = $derived(savedLetters.filter((letter) => stateOf(letter) === 'draft').length);
+    let institutionCount = $derived(savedLetters.filter((letter) => stateOf(letter) === 'institution').length);
     let letterStates = $derived(
-        [readyCount > 0 ? `${readyCount} ready to read` : "", heldCount > 0 ? `${heldCount} on hold` : ""]
+        [readyCount > 0 ? `${readyCount} ready to read` : "", heldCount > 0 ? `${heldCount} on hold` : "",
+         draftCount > 0 ? plural(draftCount, "draft", "drafts") : "",
+         institutionCount > 0 ? plural(institutionCount, "institution draft", "institution drafts") : ""]
             .filter(Boolean)
             .join(" · "),
     );
@@ -107,7 +113,7 @@
     }
 
     async function saveToVaultOnce() {
-        if (!generatedLetter) {
+        if (!generatedLetter.trim()) {
             notifications.showError({
                 message:
                     "Your letter is waiting for its first words. Go back whenever you're ready.",
@@ -118,11 +124,9 @@
 
         const title = letterTitle();
 
-        const recipient = contacts.find((c) => String(c.id) === letterRecipientId);
         const details = {
             content: generatedLetter,
-            recipientName: recipient?.name ?? "",
-            recipientContactId: recipient ? Number(recipient.id) : null,
+            ...recipientDetails(),
             triggerDate: letterTriggerDate || null,
             triggerMilestone: letterTriggerMilestone || null,
             isLocked: letterHold,
@@ -227,6 +231,9 @@
     function clearLetterDetails() {
         editingId = null;
         letterRecipientId = "";
+        recordedRecipientName = "";
+        recordedRecipientId = null;
+        recipientChanged = false;
         letterTriggerDate = "";
         letterTriggerMilestone = "";
         letterHold = false;
@@ -265,9 +272,13 @@
     function viewLetter(letter: Letter) {
         generatedLetter = letter.content;
         editingId = letter.id;
-        letterRecipientId = letter.recipientContactId != null
-            ? String(letter.recipientContactId)
-            : String(contacts.find((c) => c.name === letter.recipientName)?.id ?? "");
+        recordedRecipientName = letter.recipientName ?? "";
+        recordedRecipientId = letter.recipientContactId ?? null;
+        recipientChanged = false;
+        // A name-only or removed contact stays exactly as recorded until the owner chooses otherwise.
+        letterRecipientId = recordedRecipientId != null && contacts.some((c) => String(c.id) === String(recordedRecipientId))
+            ? String(recordedRecipientId)
+            : (recordedRecipientName || recordedRecipientId != null) ? RECORDED_RECIPIENT : "";
         letterTriggerDate = letter.triggerDate ?? "";
         letterTriggerMilestone = letter.triggerMilestone ?? "";
         letterHold = !!letter.isLocked;
@@ -342,10 +353,30 @@
 
     // Details of the letter being written or reopened
     let editingId = $state<number | string | null>(null);
+    const RECORDED_RECIPIENT = "__recorded_recipient__";
     let letterRecipientId = $state("");
+    let recordedRecipientName = $state("");
+    let recordedRecipientId = $state<number | null>(null);
+    let recipientChanged = $state(false);
     let letterTriggerDate = $state("");
     let letterTriggerMilestone = $state("");
     let letterHold = $state(false);
+
+    function recipientDetails() {
+        if (letterRecipientId === RECORDED_RECIPIENT || (editingId !== null && !recipientChanged)) {
+            return { recipientName: recordedRecipientName, recipientContactId: recordedRecipientId };
+        }
+        const recipient = contacts.find((contact) => String(contact.id) === letterRecipientId);
+        return { recipientName: recipient?.name ?? "", recipientContactId: recipient ? Number(recipient.id) : null };
+    }
+
+    let editorReadState = $derived(letterReadState({
+        ...recipientDetails(),
+        content: generatedLetter,
+        type: editingId !== null ? savedLetters.find((letter) => String(letter.id) === String(editingId))?.type
+            : emotionalFlow ? "emotional" : "transactional",
+        isLocked: letterHold,
+    }, contacts));
 
     function startEmotionalFlow(flow: "spouse" | "ethical_will") {
         clearLetterDetails();
@@ -533,9 +564,13 @@
         <select
             id="letter-recipient"
             bind:value={letterRecipientId}
+            onchange={() => { recipientChanged = true; }}
             class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground text-sm"
         >
             <option value="">Choose someone from your contacts</option>
+            {#if recordedRecipientName || recordedRecipientId != null}
+                <option value={RECORDED_RECIPIENT}>Keep recorded recipient{recordedRecipientName ? `: ${recordedRecipientName}` : ""}</option>
+            {/if}
             {#each contacts as contact (contact.id)}
                 <option value={String(contact.id)}
                     >{contact.name}{contact.relation
@@ -544,6 +579,9 @@
                 >
             {/each}
         </select>
+        {#if recordedRecipientName && !recipientChanged}
+            <p class="text-[11px] text-muted-foreground pl-1" data-testid="recorded-letter-recipient">Recorded recipient: {recordedRecipientName}</p>
+        {/if}
         {#if contacts.length === 0}
             <p class="text-[11px] text-muted-foreground pl-1">
                 People you add in <a
@@ -716,7 +754,7 @@
                             </thead>
                             <tbody>
                                 {#each savedLetters as letter (letter.id)}
-                                    <tr class="border-b border-border last:border-0" data-testid="saved-letter-row">
+                                    <tr class="border-b border-border last:border-0" data-testid="saved-letter-row" data-letter-id={letter.id} data-letter-state={stateOf(letter)}>
                                         <td class="px-5 py-3 font-bold text-foreground">{letter.title}</td>
                                         <td class="px-5 py-3 text-muted-foreground">{letter.recipientName}</td>
                                         <td class="px-5 py-3 text-muted-foreground">
@@ -728,11 +766,7 @@
                                             {/if}
                                         </td>
                                         <td class="px-5 py-3">
-                                            {#if letter.isLocked}
-                                                <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-muted text-muted-foreground">On hold</span>
-                                            {:else}
-                                                <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-primary-soft text-primary-hover">Ready to read</span>
-                                            {/if}
+                                            <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest {stateOf(letter) === 'ready' ? 'bg-primary-soft text-primary-hover' : 'bg-muted text-muted-foreground'}">{letterStateLabel(stateOf(letter))}</span>
                                         </td>
                                         <td class="px-5 py-3 whitespace-nowrap text-right">
                                             <button
@@ -759,22 +793,17 @@
                         <div
                             class="bg-card p-6 rounded-2xl border border-border shadow-sm flex flex-col gap-3"
                             data-testid="saved-letter"
+                            data-letter-id={letter.id}
+                            data-letter-state={stateOf(letter)}
                         >
                             <div class="flex items-start justify-between gap-3">
                                 <h4 class="font-bold text-foreground leading-snug">
                                     {letter.title}
                                 </h4>
-                                {#if letter.isLocked}
-                                    <span
-                                        class="shrink-0 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-muted text-muted-foreground"
-                                        >On hold</span
-                                    >
-                                {:else}
-                                    <span
-                                        class="shrink-0 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-primary-soft text-primary-hover"
-                                        >Ready to read</span
-                                    >
-                                {/if}
+                                <span
+                                    class="shrink-0 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest {stateOf(letter) === 'ready' ? 'bg-primary-soft text-primary-hover' : 'bg-muted text-muted-foreground'}"
+                                    >{letterStateLabel(stateOf(letter))}</span
+                                >
                             </div>
                             {#if letter.recipientName}
                                 <p class="text-sm text-muted-foreground">
@@ -1204,9 +1233,16 @@
                                     <span class="text-sm text-foreground">
                                         <span class="font-bold">Keep on hold</span><br />
                                         <span class="text-xs text-muted-foreground"
-                                            >{letterHold
+                                            data-testid="letter-readiness-hint"
+                                            >{editorReadState === 'held'
                                                 ? "This letter stays with you until you release it."
-                                                : "Ready for them to read in their view."}</span
+                                                : editorReadState === 'institution'
+                                                    ? "Saved as an institution draft for printing or sending when you choose."
+                                                    : editorReadState === 'ready'
+                                                        ? "Ready for them to read in their view."
+                                                        : !generatedLetter.trim()
+                                                            ? "Your letter is waiting for its first words."
+                                                            : "Choose someone from your contacts to prepare their view."}</span
                                         >
                                     </span>
                                 </label>

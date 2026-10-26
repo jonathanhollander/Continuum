@@ -19,6 +19,7 @@ import { estateTotals, isDebt } from '$lib/stores/financialAssetsStore.svelte';
 import { formatMoney, toCents, fromCents } from '$lib/utils/money';
 import { fetchMediaBlob } from '$lib/services/mediaService';
 import { dateWords } from '$lib/utils/dateWords';
+import { captureSession, assertCurrentSession, isCurrentSession, SessionChangedError, type SessionOwnership } from '$lib/services/sessionOwnership';
 
 export type ExportScope = 'full' | 'insurance' | 'medical';
 
@@ -681,6 +682,7 @@ export async function loadAttachmentFiles(
                 out.set(a.key, dataUrlBlob(v));
             }
         } catch (e) {
+            if (e instanceof SessionChangedError) throw e;
             console.warn('[export] Attachment open failed', a.key, e);
             failed.push(a);
             onFailure?.(a);
@@ -1016,14 +1018,18 @@ export async function buildDownloadCopy(
     snapshot: Snapshot,
     onProgress: (msg: string) => void = () => { },
     files?: Map<string, Blob>,
-    fetchBlob?: (a: SnapshotAttachment) => Promise<Blob>
+    fetchBlob?: (a: SnapshotAttachment) => Promise<Blob>,
+    owner: SessionOwnership | null = fetchBlob ? null : captureSession()
 ): Promise<Blob> {
+    if (owner) assertCurrentSession(owner);
+    const report = (message: string) => { if (!owner || isCurrentSession(owner)) onProgress(message); };
     const packet = buildPacket(snapshot, 'full');
     const blobs = files ?? new Map<string, Blob>();
     // A cached page can hold successful files alongside failed reads. Every download tries
     // the absent keys again; a previous failed request is never treated as a cached success.
-    const gathered = await loadAttachmentFiles(snapshot, packet.attachments.filter((a) => !blobs.has(a.key)), fetchBlob, onProgress, () => {});
+    const gathered = await loadAttachmentFiles(snapshot, packet.attachments.filter((a) => !blobs.has(a.key)), fetchBlob, report, () => {});
     for (const [key, blob] of gathered) blobs.set(key, blob);
+    if (owner) assertCurrentSession(owner);
     const coverage = fileCoverage(snapshot, packet, blobs);
     const enc = new TextEncoder();
     const entries: { path: string; data: Uint8Array }[] = [];
@@ -1031,7 +1037,7 @@ export async function buildDownloadCopy(
     const titleOf = new Map<string, string>();
     for (const s of packet.sections) for (const r of s.records) titleOf.set(`${r.section}:${r.id}`, r.title);
 
-    onProgress('Packing your files...');
+    report('Packing your files...');
     const included = packet.attachments.filter((a) => blobs.has(a.key));
     for (const a of included) {
         const data = new Uint8Array(await (blobs.get(a.key) as Blob).arrayBuffer());
@@ -1048,7 +1054,7 @@ export async function buildDownloadCopy(
         });
     }
 
-    onProgress('Writing the packet...');
+    report('Writing the packet...');
     const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${packet.ownerName ? `The estate of ${esc(packet.ownerName)}` : 'Continuum'}</title></head><body style="margin:0;background:#fff">${packetHTML(packet, (a) => (blobs.has(a.key) ? attachmentPath(a) : null), coverage)}</body></html>`;
     entries.unshift({ path: 'packet.html', data: enc.encode(html) });
     const images = await imageDataUrls(blobs, included);
@@ -1084,7 +1090,8 @@ export async function buildDownloadCopy(
             missing_attachments: snapshot.missing_attachments
         }, null, 2))
     });
+    if (owner) assertCurrentSession(owner);
     const copy = makeZip(entries);
-    onProgress(downloadCopyStatus(coverage));
+    report(downloadCopyStatus(coverage));
     return copy;
 }

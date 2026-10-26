@@ -22,6 +22,7 @@
         type SnapshotAttachment,
     } from "$lib/services/exportService";
     import { milestoneLabel } from "$lib/utils/milestones";
+    import { captureSession, assertCurrentSession, isCurrentSession, SessionChangedError } from "$lib/services/sessionOwnership";
     import type { RecipientView } from "$lib/services/recipientService";
 
     let {
@@ -74,7 +75,9 @@
                     failed.delete(a.key);
                     p = loadAttachmentFiles(snapshot, [a], fetchBlob, () => {}, (file) => {
                         if (!gone) failed.add(file.key);
-                    }).then(showFiles).finally(() => asked.delete(a.key));
+                    }).then(showFiles).catch((error) => {
+                        if (!(error instanceof SessionChangedError)) throw error;
+                    }).finally(() => asked.delete(a.key));
                     asked.set(a.key, p);
                 }
                 return p;
@@ -224,20 +227,25 @@
     };
 
     async function downloadCopy() {
+        const owner = view.preview ? captureSession() : null;
         busy = "download";
         downloadNote = null;
         try {
             await Promise.all(asked.values());
-            const blob = await buildDownloadCopy(snapshot, (m) => (downloadNote = m), files, fetchBlob);
+            const blob = await buildDownloadCopy(snapshot, (m) => (downloadNote = m), files, fetchBlob, owner);
+            if (owner) assertCurrentSession(owner);
             if (gone) return;
             const safe = (s: string) => s.replace(/[^\w\- ]+/g, "").trim() || "Continuum";
             saveBlob(blob, `${safe(packet.ownerName)} - for ${safe(recipient.name)}.zip`);
             downloadNote = downloadCopyStatus(fileCoverage(snapshot, packet, files));
-        } catch {
-            downloadNote = "Everything here stays open to read. You can save a copy again whenever you're ready.";
+        } catch (e) {
+            downloadNote = e instanceof SessionChangedError ? "The account changed. Open the packet from the account you want to use."
+                : "Everything here stays open to read. You can save a copy again whenever you're ready.";
         } finally {
-            showFiles(files);
-            for (const a of packet.attachments) if (!files.has(a.key)) failed.add(a.key);
+            if (!owner || isCurrentSession(owner)) {
+                showFiles(files);
+                for (const a of packet.attachments) if (!files.has(a.key)) failed.add(a.key);
+            }
             busy = null;
         }
     }

@@ -4,6 +4,7 @@
     import { onMount, onDestroy } from "svelte";
     import { page } from "$app/stores";
     import { goto } from "$app/navigation";
+    import { captureSession, assertCurrentSession, SessionChangedError } from "$lib/services/sessionOwnership";
     import {
         createPDFBlob,
         fetchSnapshot,
@@ -77,14 +78,17 @@
 
     async function downloadCopy() {
         if (!snapshot) return;
+        const owner = captureSession();
         packing = true;
         try {
-            const copy = await buildDownloadCopy(snapshot, (m) => (copyNote = m), copyFiles);
+            const copy = await buildDownloadCopy(snapshot, (m) => (copyNote = m), copyFiles, undefined, owner);
+            assertCurrentSession(owner);
             copyCoverage = fileCoverage(snapshot, buildPacket(snapshot, "full"), copyFiles);
             saveBlob(copy, `Continuum_download_copy_${day()}.zip`);
             copyNote = downloadCopyStatus(copyCoverage);
         } catch (e) {
-            copyNote = (e as Error)?.message || "Your packet is right here. You can save a download copy again whenever you're ready.";
+            copyNote = e instanceof SessionChangedError ? "The account changed. Open the packet from the account you want to use."
+                : (e as Error)?.message || "Your packet is right here. You can save a download copy again whenever you're ready.";
         } finally {
             packing = false;
         }
