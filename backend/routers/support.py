@@ -31,24 +31,11 @@ async def discover_local_support(
     api_key = os.getenv("TAVILY_API_KEY") or getattr(settings, "TAVILY_API_KEY", None)
     
     if not api_key:
-        logger.warning("TAVILY_API_KEY not configured. Returning mock results.")
-        return {
-            "query": f"{category} in {location}",
-            "results": [
-                {
-                    "title": f"Local Grief Center - {location}",
-                    "url": "https://example.org/local-support",
-                    "content": f"A dedicated space for those navigating loss in the {location} area. Offering support groups and 1:1 counseling.",
-                    "score": 0.95
-                },
-                {
-                    "title": "Compassionate Walkers",
-                    "url": "https://example.org/groups",
-                    "content": "A community-led walking group for bereaved individuals. Every Saturday morning.",
-                    "score": 0.88
-                }
-            ]
-        }
+        logger.warning("Local support discovery provider is not configured.")
+        raise HTTPException(
+            status_code=503,
+            detail="We can search for local support again whenever you're ready."
+        )
 
     try:
         async with httpx.AsyncClient() as client:
