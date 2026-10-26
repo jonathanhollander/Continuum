@@ -14,12 +14,15 @@
     import { preferenceStore } from "$lib/stores/preferenceStore";
     import { conciergeEngine } from "$lib/stores/conciergeEngine";
     import { API_BASE_URL } from "$lib/config";
+    import { apiFetch } from "$lib/api/client";
+    import { parseApiError, handleFetchError } from "$lib/services/errorHandler";
 
     // Flow states
     let ready = $state(false);
     let displayName = $state("");
     let nameSubmitted = $state(false);
     let isCompleting = $state(false);
+    let saveError = $state("");
 
     // Input ref for auto-focus
     let nameInputRef: HTMLInputElement | undefined = $state();
@@ -78,6 +81,13 @@
         }
     }
 
+    // Back to the name field (it is locked once Continue is chosen)
+    function editName() {
+        nameSubmitted = false;
+        saveError = "";
+        setTimeout(() => nameInputRef?.focus(), 0);
+    }
+
     function handleNameKeydown(event: KeyboardEvent) {
         if (event.key === "Enter" && displayName.trim().length > 0) {
             handleNameSubmit();
@@ -88,20 +98,23 @@
         if (isCompleting) return;
         isCompleting = true;
 
+        saveError = "";
+
         try {
-            // Persist to backend
-            await fetch(`${API_BASE_URL}/api/auth/onboarding`, {
+            // Persist to backend; only a saved answer marks onboarding complete
+            const response = await apiFetch(`/api/auth/onboarding`, {
                 method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${$auth.token}`,
-                },
                 body: JSON.stringify({
                     display_name: displayName.trim(),
                     onboarding_step: "complete",
                     onboarding_completed: true,
                 }),
             });
+            if (!response.ok) {
+                saveError = (await parseApiError(response)).message;
+                isCompleting = false;
+                return;
+            }
 
             // Mark complete in preference store (localStorage)
             preferenceStore.setOnboardingComplete(true);
@@ -116,6 +129,7 @@
             goto("/modules/contacts");
         } catch (e) {
             console.error("Failed to complete onboarding:", e);
+            saveError = handleFetchError(e).message;
             isCompleting = false;
         }
     }
@@ -217,6 +231,14 @@
                                 <span class="text-sm"
                                     >Nice to meet you, {displayName}!</span
                                 >
+                                <button
+                                    type="button"
+                                    onclick={editName}
+                                    disabled={isCompleting}
+                                    class="text-sm text-slate-400 underline underline-offset-2 hover:text-white transition-colors"
+                                >
+                                    Change name
+                                </button>
                             </div>
                         {/if}
                     </div>
@@ -294,6 +316,15 @@
                                 </div>
                             </button>
                         </div>
+
+                        {#if saveError}
+                            <p
+                                role="alert"
+                                class="text-sm text-amber-300 text-center"
+                            >
+                                {saveError}
+                            </p>
+                        {/if}
                     </div>
                 {/if}
             </div>

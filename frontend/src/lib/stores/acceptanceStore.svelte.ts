@@ -12,58 +12,48 @@ export interface AcceptanceTask {
     estTime: number;
     section: string;
     complexity: 'simple' | 'moderate' | 'complex';
+    href?: string; // the page this task is done on (from DEFAULT_TASKS; never sent)
 }
 
 const DEFAULT_TASKS: AcceptanceTask[] = [
-    { id: '1', taskId: '1', page: 'Preparation Hub', role: 'owner', check: 'Personalize details, attach relevant files, and remove helpers when finished.', status: 'Pending', estTime: 20, section: 'Top Level', complexity: 'simple' },
-    { id: '2', taskId: '2', page: 'Executor Hub', role: 'owner', check: 'Personalize details, attach relevant files, and remove helpers when finished.', status: 'Pending', estTime: 20, section: 'Top Level', complexity: 'simple' },
-    { id: '3', taskId: '3', page: 'Family Hub', role: 'owner', check: 'Personalize details, attach relevant files, and remove helpers when finished.', status: 'Pending', estTime: 20, section: 'Top Level', complexity: 'simple' },
-    { id: '4', taskId: '4', page: 'Legal Documents', role: 'owner', check: 'Personalize details, attach relevant files, and remove helpers when finished.', status: 'Pending', estTime: 25, section: 'Top Level', complexity: 'simple' },
-    { id: '5', taskId: '5', page: 'Financial Accounts', role: 'owner', check: 'Add institution contacts, balances, and closure steps.', status: 'Pending', estTime: 30, section: 'Top Level', complexity: 'moderate' },
-    { id: '6', taskId: '6', page: 'Property & Assets', role: 'owner', check: 'Add deed/mortgage info and point of contact.', status: 'Pending', estTime: 30, section: 'Top Level', complexity: 'moderate' },
-    { id: '7', taskId: '7', page: 'Insurance', role: 'owner', check: 'Personalize details, attach relevant files, and remove helpers when finished.', status: 'Pending', estTime: 30, section: 'Top Level', complexity: 'moderate' },
-    { id: '8', taskId: '8', page: 'Subscriptions', role: 'owner', check: 'List services, login methods, next billing dates.', status: 'Pending', estTime: 30, section: 'Top Level', complexity: 'moderate' },
-    { id: '9', taskId: '9', page: 'Letters', role: 'owner', check: 'Personalize details, attach relevant files, and remove helpers when finished.', status: 'Pending', estTime: 45, section: 'Top Level', complexity: 'moderate' },
-    { id: '10', taskId: '10', page: 'Memories & Keepsakes', role: 'owner', check: 'Personalize details, attach relevant files, and remove helpers when finished.', status: 'Pending', estTime: 20, section: 'Top Level', complexity: 'simple' },
-    { id: '11', taskId: '11', page: 'Contacts', role: 'owner', check: 'Personalize details, attach relevant files, and remove helpers when finished.', status: 'Pending', estTime: 25, section: 'Top Level', complexity: 'simple' },
-    { id: '12', taskId: '12', page: 'QR Codes', role: 'owner', check: 'Confirm each QR points to the intended page and permissions are correct.', status: 'Pending', estTime: 25, section: 'Top Level', complexity: 'moderate' },
-    { id: '13', taskId: '13', page: 'Living Will – Sample Document', role: 'owner', check: 'Personalize details, attach relevant files, and remove helpers when finished.', status: 'Pending', estTime: 75, section: 'Legal Documents', complexity: 'complex' },
-    { id: '14', taskId: '14', page: 'Power of Attorney – Sample', role: 'owner', check: 'Personalize details, attach relevant files, and remove helpers when finished.', status: 'Pending', estTime: 75, section: 'Legal Documents', complexity: 'complex' },
-    { id: '15', taskId: '15', page: 'Advance Directive – Sample', role: 'owner', check: 'Personalize details, attach relevant files, and remove helpers when finished.', status: 'Pending', estTime: 75, section: 'Legal Documents', complexity: 'complex' },
-    { id: '16', taskId: '16', page: 'Trust – Sample Outline', role: 'owner', check: 'Personalize details, attach relevant files, and remove helpers when finished.', status: 'Pending', estTime: 75, section: 'Legal Documents', complexity: 'complex' },
-    { id: '17', taskId: '17', page: 'Executor Checklist', role: 'owner', check: 'Review first-48-hours tasks and note what’s done.', status: 'Pending', estTime: 25, section: 'Executor Hub', complexity: 'simple' },
-    { id: '18', taskId: '18', page: 'Bank & Account Access Notes', role: 'owner', check: 'Add institution contacts, balances, and closure steps.', status: 'Pending', estTime: 30, section: 'Executor Hub', complexity: 'moderate' },
-    { id: '19', taskId: '19', page: 'Funeral & Memorial Preferences', role: 'owner', check: 'Personalize details, attach relevant files, and remove helpers when finished.', status: 'Pending', estTime: 25, section: 'Executor Hub', complexity: 'simple' },
-    { id: '20', taskId: '20', page: 'Messages for Family', role: 'owner', check: 'Write a short note in your own words and remove this prompt.', status: 'Pending', estTime: 25, section: 'Family Hub', complexity: 'simple' },
-    { id: '21', taskId: '21', page: 'Keepsakes Index', role: 'owner', check: 'Personalize details, attach relevant files, and remove helpers when finished.', status: 'Pending', estTime: 20, section: 'Family Hub', complexity: 'simple' },
-    { id: '22', taskId: '22', page: 'Primary Bank Accounts', role: 'owner', check: 'Add institution contacts, balances, and closure steps.', status: 'Pending', estTime: 30, section: 'Financial Accounts', complexity: 'moderate' },
-    { id: '23', taskId: '23', page: 'Credit Cards', role: 'owner', check: 'List issuer contacts, last four digits, and closure instructions.', status: 'Pending', estTime: 30, section: 'Financial Accounts', complexity: 'moderate' },
-    { id: '24', taskId: '24', page: 'Brokerage & Retirement', role: 'owner', check: 'Upload latest statements and confirm beneficiaries/transfers.', status: 'Pending', estTime: 25, section: 'Financial Accounts', complexity: 'complex' },
-    { id: '25', taskId: '25', page: 'Real Estate', role: 'owner', check: 'Add deed/mortgage info and point of contact.', status: 'Pending', estTime: 25, section: 'Property & Assets', complexity: 'moderate' },
-    { id: '26', taskId: '26', page: 'Vehicles', role: 'owner', check: 'Add VIN, title location, insurer details.', status: 'Pending', estTime: 25, section: 'Property & Assets', complexity: 'moderate' },
-    { id: '27', taskId: '27', page: 'Digital Assets', role: 'owner', check: 'Document access paths and any recovery instructions.', status: 'Pending', estTime: 50, section: 'Property & Assets', complexity: 'complex' },
-    { id: '28', taskId: '28', page: 'Life Insurance', role: 'owner', check: 'Upload policy, confirm beneficiary, note claim contact path.', status: 'Pending', estTime: 30, section: 'Insurance', complexity: 'moderate' },
-    { id: '29', taskId: '29', page: 'Homeowners/Renters', role: 'owner', check: 'Personalize details, attach relevant files, and remove helpers when finished.', status: 'Pending', estTime: 25, section: 'Insurance', complexity: 'simple' },
-    { id: '30', taskId: '30', page: 'Health Insurance', role: 'owner', check: 'Personalize details, attach relevant files, and remove helpers when finished.', status: 'Pending', estTime: 30, section: 'Insurance', complexity: 'simple' },
-    { id: '31', taskId: '31', page: 'Streaming Services', role: 'owner', check: 'Personalize details, attach relevant files, and remove helpers when finished.', status: 'Pending', estTime: 25, section: 'Subscriptions', complexity: 'simple' },
-    { id: '32', taskId: '32', page: 'Utilities', role: 'owner', check: 'List services, login methods, next billing dates.', status: 'Pending', estTime: 25, section: 'Subscriptions', complexity: 'moderate' },
-    { id: '33', taskId: '33', page: 'Online Services', role: 'owner', check: 'Personalize details, attach relevant files, and remove helpers when finished.', status: 'Pending', estTime: 25, section: 'Subscriptions', complexity: 'moderate' },
-    { id: '34', taskId: '34', page: 'QR – Family Essentials', role: 'owner', check: 'Confirm each QR points to the intended page and permissions are correct.', status: 'Pending', estTime: 10, section: 'QR Codes', complexity: 'simple' },
-    { id: '35', taskId: '35', page: 'QR – Full Access for Executor', role: 'owner', check: 'Confirm each QR points to the intended page and permissions are correct.', status: 'Pending', estTime: 10, section: 'QR Codes', complexity: 'moderate' },
-    { id: '36', taskId: '36', page: 'Letter — Bank Notification', role: 'owner', check: 'Add institution contacts, balances, and closure steps.', status: 'Pending', estTime: 45, section: 'Letters', complexity: 'moderate' },
-    { id: '37', taskId: '37', page: 'Letter — Credit Card Closure', role: 'owner', check: 'List issuer contacts, last four digits, and closure instructions.', status: 'Pending', estTime: 45, section: 'Letters', complexity: 'moderate' },
-    { id: '38', taskId: '38', page: 'Letter — Utility Transfer', role: 'owner', check: 'Add institution contacts, balances, and closure steps.', status: 'Pending', estTime: 45, section: 'Letters', complexity: 'moderate' },
-    { id: '39', taskId: '39', page: 'Letter — Insurance Claim', role: 'owner', check: 'Personalize details, attach relevant files, and remove helpers when finished.', status: 'Pending', estTime: 45, section: 'Letters', complexity: 'moderate' },
-    { id: '40', taskId: '40', page: 'Letter — Employer HR Notice', role: 'owner', check: 'Personalize details, attach relevant files, and remove helpers when finished.', status: 'Pending', estTime: 45, section: 'Letters', complexity: 'moderate' },
-    { id: '41', taskId: '41', page: 'Letter — Subscription Cancellation', role: 'owner', check: 'Personalize details, attach relevant files, and remove helpers when finished.', status: 'Pending', estTime: 45, section: 'Letters', complexity: 'moderate' },
-    { id: '42', taskId: '42', page: 'Letter — Social Media', role: 'owner', check: 'Personalize details, attach relevant files, and remove helpers when finished.', status: 'Pending', estTime: 45, section: 'Letters', complexity: 'moderate' },
-    { id: '43', taskId: '43', page: 'DB Setup: Accounts', role: 'owner', check: 'Add institution contacts, balances, and closure steps.', status: 'Pending', estTime: 20, section: 'Database Setup', complexity: 'moderate' },
-    { id: '44', taskId: '44', page: 'DB Setup: Property', role: 'owner', check: 'Add deed/mortgage info and point of contact.', status: 'Pending', estTime: 20, section: 'Database Setup', complexity: 'moderate' },
-    { id: '45', taskId: '45', page: 'DB Setup: Insurance', role: 'owner', check: 'Personalize details, attach relevant files, and remove helpers when finished.', status: 'Pending', estTime: 20, section: 'Database Setup', complexity: 'moderate' },
-    { id: '46', taskId: '46', page: 'DB Setup: Contacts', role: 'owner', check: 'Personalize details, attach relevant files, and remove helpers when finished.', status: 'Pending', estTime: 20, section: 'Database Setup', complexity: 'simple' },
-    { id: '47', taskId: '47', page: 'DB Setup: Subscriptions', role: 'owner', check: 'List services, login methods, next billing dates.', status: 'Pending', estTime: 20, section: 'Database Setup', complexity: 'moderate' },
-    { id: '48', taskId: '48', page: 'DB Setup: Keepsakes', role: 'owner', check: 'Personalize details, attach relevant files, and remove helpers when finished.', status: 'Pending', estTime: 20, section: 'Database Setup', complexity: 'simple' },
-    { id: '49', taskId: '49', page: 'DB Setup: Letters Index', role: 'owner', check: 'Personalize details, attach relevant files, and remove helpers when finished.', status: 'Pending', estTime: 20, section: 'Database Setup', complexity: 'moderate' }
+    { id: '1', taskId: '1', page: 'Preparation Hub', role: 'owner', check: 'Personalize details and attach relevant files.', status: 'Pending', estTime: 20, section: 'Top Level', complexity: 'simple', href: '/modules/preparation-hub' },
+    { id: '2', taskId: '2', page: 'Executor Hub', role: 'owner', check: 'Personalize details and attach relevant files.', status: 'Pending', estTime: 20, section: 'Top Level', complexity: 'simple', href: '/modules/executor-toolkit' },
+    { id: '3', taskId: '3', page: 'Family Hub', role: 'owner', check: 'Personalize details and attach relevant files.', status: 'Pending', estTime: 20, section: 'Top Level', complexity: 'simple', href: '/modules/family-hub' },
+    { id: '4', taskId: '4', page: 'Legal Documents', role: 'owner', check: 'Personalize details and attach relevant files.', status: 'Pending', estTime: 25, section: 'Top Level', complexity: 'simple', href: '/modules/legal-documents' },
+    { id: '5', taskId: '5', page: 'Financial Accounts', role: 'owner', check: 'Add institution contacts, balances, and closure steps.', status: 'Pending', estTime: 30, section: 'Top Level', complexity: 'moderate', href: '/modules/financial-accounts' },
+    { id: '6', taskId: '6', page: 'Property & Assets', role: 'owner', check: 'Add deed/mortgage info and point of contact.', status: 'Pending', estTime: 30, section: 'Top Level', complexity: 'moderate', href: '/modules/property' },
+    { id: '7', taskId: '7', page: 'Insurance', role: 'owner', check: 'Personalize details and attach relevant files.', status: 'Pending', estTime: 30, section: 'Top Level', complexity: 'moderate', href: '/modules/insurance' },
+    { id: '8', taskId: '8', page: 'Subscriptions', role: 'owner', check: 'List services, login methods, next billing dates.', status: 'Pending', estTime: 30, section: 'Top Level', complexity: 'moderate', href: '/modules/subscriptions' },
+    { id: '9', taskId: '9', page: 'Letters', role: 'owner', check: 'Personalize details and attach relevant files.', status: 'Pending', estTime: 45, section: 'Top Level', complexity: 'moderate', href: '/modules/letters' },
+    { id: '10', taskId: '10', page: 'Memories & Keepsakes', role: 'owner', check: 'Personalize details and attach relevant files.', status: 'Pending', estTime: 20, section: 'Top Level', complexity: 'simple', href: '/modules/heirlooms' },
+    { id: '11', taskId: '11', page: 'Contacts', role: 'owner', check: 'Personalize details and attach relevant files.', status: 'Pending', estTime: 25, section: 'Top Level', complexity: 'simple', href: '/modules/contacts' },
+    { id: '12', taskId: '12', page: 'QR Codes', role: 'owner', check: 'Confirm each QR points to the intended page and permissions are correct.', status: 'Pending', estTime: 25, section: 'Top Level', complexity: 'moderate', href: '/modules/qr-codes' },
+    { id: '17', taskId: '17', page: 'Executor Checklist', role: 'owner', check: 'Review first-48-hours tasks and note what’s done.', status: 'Pending', estTime: 25, section: 'Executor Hub', complexity: 'simple', href: '/modules/executor-toolkit' },
+    { id: '18', taskId: '18', page: 'Bank & Account Access Notes', role: 'owner', check: 'Add institution contacts, balances, and closure steps.', status: 'Pending', estTime: 30, section: 'Executor Hub', complexity: 'moderate', href: '/modules/financial-accounts' },
+    { id: '19', taskId: '19', page: 'Funeral & Memorial Preferences', role: 'owner', check: 'Personalize details and attach relevant files.', status: 'Pending', estTime: 25, section: 'Executor Hub', complexity: 'simple', href: '/modules/funeral' },
+    { id: '20', taskId: '20', page: 'Messages for Family', role: 'owner', check: 'Write a short note in your own words.', status: 'Pending', estTime: 25, section: 'Family Hub', complexity: 'simple', href: '/modules/letters' },
+    { id: '21', taskId: '21', page: 'Keepsakes Index', role: 'owner', check: 'Personalize details and attach relevant files.', status: 'Pending', estTime: 20, section: 'Family Hub', complexity: 'simple', href: '/modules/heirlooms' },
+    { id: '22', taskId: '22', page: 'Primary Bank Accounts', role: 'owner', check: 'Add institution contacts, balances, and closure steps.', status: 'Pending', estTime: 30, section: 'Financial Accounts', complexity: 'moderate', href: '/modules/financial-accounts' },
+    { id: '23', taskId: '23', page: 'Credit Cards', role: 'owner', check: 'List issuer contacts, last four digits, and closure instructions.', status: 'Pending', estTime: 30, section: 'Financial Accounts', complexity: 'moderate', href: '/modules/financial-accounts' },
+    { id: '24', taskId: '24', page: 'Brokerage & Retirement', role: 'owner', check: 'Upload latest statements and confirm beneficiaries/transfers.', status: 'Pending', estTime: 25, section: 'Financial Accounts', complexity: 'complex', href: '/modules/financial-accounts' },
+    { id: '25', taskId: '25', page: 'Real Estate', role: 'owner', check: 'Add deed/mortgage info and point of contact.', status: 'Pending', estTime: 25, section: 'Property & Assets', complexity: 'moderate', href: '/modules/property' },
+    { id: '26', taskId: '26', page: 'Vehicles', role: 'owner', check: 'Add VIN, title location, insurer details.', status: 'Pending', estTime: 25, section: 'Property & Assets', complexity: 'moderate', href: '/modules/property' },
+    { id: '27', taskId: '27', page: 'Digital Assets', role: 'owner', check: 'Document access paths and any recovery instructions.', status: 'Pending', estTime: 50, section: 'Property & Assets', complexity: 'complex', href: '/modules/digital-guardian' },
+    { id: '28', taskId: '28', page: 'Life Insurance', role: 'owner', check: 'Upload policy, confirm beneficiary, note claim contact path.', status: 'Pending', estTime: 30, section: 'Insurance', complexity: 'moderate', href: '/modules/insurance' },
+    { id: '29', taskId: '29', page: 'Homeowners/Renters', role: 'owner', check: 'Personalize details and attach relevant files.', status: 'Pending', estTime: 25, section: 'Insurance', complexity: 'simple', href: '/modules/insurance' },
+    { id: '30', taskId: '30', page: 'Health Insurance', role: 'owner', check: 'Personalize details and attach relevant files.', status: 'Pending', estTime: 30, section: 'Insurance', complexity: 'simple', href: '/modules/insurance' },
+    { id: '31', taskId: '31', page: 'Streaming Services', role: 'owner', check: 'Personalize details and attach relevant files.', status: 'Pending', estTime: 25, section: 'Subscriptions', complexity: 'simple', href: '/modules/subscriptions' },
+    { id: '32', taskId: '32', page: 'Utilities', role: 'owner', check: 'List services, login methods, next billing dates.', status: 'Pending', estTime: 25, section: 'Subscriptions', complexity: 'moderate', href: '/modules/subscriptions' },
+    { id: '33', taskId: '33', page: 'Online Services', role: 'owner', check: 'Personalize details and attach relevant files.', status: 'Pending', estTime: 25, section: 'Subscriptions', complexity: 'moderate', href: '/modules/subscriptions' },
+    { id: '34', taskId: '34', page: 'QR – Family Essentials', role: 'owner', check: 'Confirm each QR points to the intended page and permissions are correct.', status: 'Pending', estTime: 10, section: 'QR Codes', complexity: 'simple', href: '/modules/qr-codes' },
+    { id: '35', taskId: '35', page: 'QR – Full Access for Executor', role: 'owner', check: 'Confirm each QR points to the intended page and permissions are correct.', status: 'Pending', estTime: 10, section: 'QR Codes', complexity: 'moderate', href: '/modules/qr-codes' },
+    { id: '36', taskId: '36', page: 'Letter — Bank Notification', role: 'owner', check: 'Add institution contacts, balances, and closure steps.', status: 'Pending', estTime: 45, section: 'Letters', complexity: 'moderate', href: '/modules/letters' },
+    { id: '37', taskId: '37', page: 'Letter — Credit Card Closure', role: 'owner', check: 'List issuer contacts, last four digits, and closure instructions.', status: 'Pending', estTime: 45, section: 'Letters', complexity: 'moderate', href: '/modules/letters' },
+    { id: '38', taskId: '38', page: 'Letter — Utility Transfer', role: 'owner', check: 'Add institution contacts, balances, and closure steps.', status: 'Pending', estTime: 45, section: 'Letters', complexity: 'moderate', href: '/modules/letters' },
+    { id: '39', taskId: '39', page: 'Letter — Insurance Claim', role: 'owner', check: 'Personalize details and attach relevant files.', status: 'Pending', estTime: 45, section: 'Letters', complexity: 'moderate', href: '/modules/letters' },
+    { id: '40', taskId: '40', page: 'Letter — Employer HR Notice', role: 'owner', check: 'Personalize details and attach relevant files.', status: 'Pending', estTime: 45, section: 'Letters', complexity: 'moderate', href: '/modules/letters' },
+    { id: '41', taskId: '41', page: 'Letter — Subscription Cancellation', role: 'owner', check: 'Personalize details and attach relevant files.', status: 'Pending', estTime: 45, section: 'Letters', complexity: 'moderate', href: '/modules/letters' },
+    { id: '42', taskId: '42', page: 'Letter — Social Media', role: 'owner', check: 'Personalize details and attach relevant files.', status: 'Pending', estTime: 45, section: 'Letters', complexity: 'moderate', href: '/modules/letters' },
 ];
 
 export type EstateComplexity = 'simple' | 'moderate' | 'complex';
@@ -83,12 +73,23 @@ const complexityManager = registerProfileSlice<{ level: EstateComplexity; comple
     return { level, complexity: level };
 });
 
+/**
+ * The task list: every default task, with the status saved for it. A saved row stores only a
+ * task's progress (matched by taskId); the wording and page link always come from DEFAULT_TASKS,
+ * and saved rows for tasks no longer listed are left out.
+ */
+function withSaved(saved: AcceptanceTask[]): AcceptanceTask[] {
+    const byTask = new Map<string, AcceptanceTask>();
+    for (const row of saved) if (!byTask.has(String(row.taskId))) byTask.set(String(row.taskId), row);
+    return DEFAULT_TASKS.map(t => {
+        const row = byTask.get(t.taskId);
+        return row ? { ...t, status: row.status === 'Complete' ? 'Complete' : 'Pending' } : t;
+    });
+}
+
 export const acceptanceTasks = {
-    subscribe: taskManager.subscribe.bind(taskManager),
-    get items() {
-        if (taskManager.items.length === 0) return DEFAULT_TASKS;
-        return taskManager.items;
-    },
+    subscribe: (run: (value: AcceptanceTask[]) => void) => taskManager.subscribe((items) => run(withSaved(items))),
+    get items() { return withSaved(taskManager.items); },
     sync: () => taskManager.sync()
 };
 
@@ -98,22 +99,24 @@ export const estateComplexity = {
     set: (level: EstateComplexity) => complexityManager.update({ level, complexity: level })
 };
 
-export const acceptanceStore = {
-    toggleTask: (id: string | number) => {
-        const task = taskManager.items.find(t => String(t.id) === String(id)) || DEFAULT_TASKS.find(t => String(t.id) === String(id));
-        if (task) {
-            const newStatus = task.status === 'Pending' ? 'Complete' : 'Pending';
-            if (newStatus === 'Complete') triggerMagic('success');
+// Tasks whose first save is on its way: a second tap waits for it rather than adding a second row.
+const creating = new Set<string>();
 
-            // If it's a default task not yet in backend, create it
-            const existing = taskManager.items.find(t => String(t.id) === String(id));
-            if (!existing) {
-                const { id: _, ...dataToCreate } = task;
-                return taskManager.create({ ...dataToCreate, status: newStatus });
-            } else {
-                return taskManager.update(id, { status: newStatus });
-            }
-        }
+export const acceptanceStore = {
+    /** Flip one task (by taskId) between Pending and Complete, saving its progress. */
+    toggleTask: (taskId: string) => {
+        const task = DEFAULT_TASKS.find(t => t.taskId === String(taskId));
+        if (!task || creating.has(task.taskId)) return;
+        const saved = taskManager.items.find(t => String(t.taskId) === task.taskId);
+        const newStatus = (saved?.status ?? task.status) === 'Complete' ? 'Pending' : 'Complete';
+        if (newStatus === 'Complete') triggerMagic('success');
+
+        if (saved) return taskManager.update(saved.id, { status: newStatus });
+        // First progress for this task: save a row for it
+        const { id: _, href: __, ...dataToCreate } = task;
+        creating.add(task.taskId);
+        return taskManager.create({ ...dataToCreate, status: newStatus } as AcceptanceTask)
+            .finally(() => creating.delete(task.taskId));
     },
 
     resetTasks: async () => {
@@ -133,7 +136,7 @@ export const acceptanceStore = {
 export const filteredTasks = derived(
     [taskManager, complexityManager],
     ([$tasks, $complexity]) => {
-        const tasks = $tasks.length > 0 ? $tasks : DEFAULT_TASKS;
+        const tasks = withSaved($tasks);
         const level = $complexity?.level || 'moderate';
 
         return tasks.filter(task => {

@@ -1,13 +1,23 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { estateAudit } from "$lib/stores/auditStore.svelte";
-    import { TriangleAlert, Clock, Activity, ShieldAlert } from "lucide-svelte";
+    import { TriangleAlert, Activity, ShieldAlert } from "lucide-svelte";
 
     onMount(() => {
         estateAudit.runAudit();
     });
 
     let audit = $derived($estateAudit);
+    // The level box takes the level's colour (it was red even at Low)
+    const tones = {
+        High: { box: "bg-red-500/10 border-red-500/20", icon: "text-red-500", label: "text-red-400" },
+        Moderate: { box: "bg-amber-500/10 border-amber-500/20", icon: "text-amber-500", label: "text-amber-400" },
+        Low: { box: "bg-emerald-500/10 border-emerald-500/20", icon: "text-emerald-500", label: "text-emerald-400" },
+    };
+    let level = $derived(
+        audit.issues.length > 5 ? "High" : audit.issues.length > 0 ? "Moderate" : "Low",
+    );
+    let levelTone = $derived(tones[level as keyof typeof tones]);
 </script>
 
 <div class="space-y-8">
@@ -19,44 +29,39 @@
                 Data Health Center
             </h1>
             <p class="text-slate-400">
-                Deep diagnostics to detect data rot, missing metadata, and
-                security risks.
+                A look at how current each record is.
             </p>
         </div>
         <div
-            class="flex items-center gap-3 bg-red-500/10 px-4 py-2 rounded-lg border border-red-500/20"
+            class="flex items-center gap-3 px-4 py-2 rounded-lg border {levelTone.box}"
         >
-            <ShieldAlert class="text-red-500" size={24} />
+            <ShieldAlert class={levelTone.icon} size={24} />
             <div>
-                <div class="text-xs text-red-400 uppercase font-bold">
-                    Risk Level
+                <div class="text-xs uppercase font-bold {levelTone.label}">
+                    Care Level
                 </div>
                 <div class="text-lg font-bold text-white">
-                    {audit.issues.length > 5
-                        ? "High"
-                        : audit.issues.length > 0
-                          ? "Moderate"
-                          : "Low"}
+                    {level}
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Red Flags Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 gap-6">
         <section class="bg-slate-900 border border-slate-800 rounded-xl p-6">
             <h3
                 class="flex items-center gap-2 text-lg font-bold text-white mb-6"
             >
                 <TriangleAlert class="text-amber-500" size={20} />
-                Critical Metadata Gaps
+                Records worth a closer look
             </h3>
 
             {#if audit.issues.length === 0}
                 <div
                     class="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-sm flex items-center gap-2"
                 >
-                    <Activity size={16} /> All systems nominal. No gaps detected.
+                    <Activity size={16} /> Everything is current.
                 </div>
             {:else}
                 <ul class="space-y-2">
@@ -74,35 +79,6 @@
             {/if}
         </section>
 
-        <!-- Zombie Data (Staleness) -->
-        <section class="bg-slate-900 border border-slate-800 rounded-xl p-6">
-            <h3
-                class="flex items-center gap-2 text-lg font-bold text-white mb-6"
-            >
-                <Clock class="text-blue-500" size={20} />
-                Stale Data ("Zombie" Records)
-            </h3>
-
-            <p class="text-sm text-slate-500 mb-4">
-                Records that haven't been updated in over 180 days risk becoming
-                obsolete.
-            </p>
-
-            {#if audit.zombieData.length === 0}
-                <div
-                    class="p-8 text-center border-2 border-dashed border-slate-800 rounded-lg"
-                >
-                    <div class="text-lg font-bold text-slate-700">
-                        No Zombie Data Detected
-                    </div>
-                    <div class="text-xs text-slate-600">
-                        Timestamp data mock not yet active
-                    </div>
-                </div>
-            {:else}
-                <!-- Future implementation for version 4.1 -->
-            {/if}
-        </section>
     </div>
 
     <!-- JSON Inspector (Developer Tool) -->

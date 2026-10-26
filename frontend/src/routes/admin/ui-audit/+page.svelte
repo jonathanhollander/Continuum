@@ -1,31 +1,36 @@
 <script lang="ts">
     import { Palette, Monitor, Smartphone, Check } from "lucide-svelte";
+    import { registerProfileSlice } from "$lib/services/sync.svelte";
 
-    let checks = [
-        {
-            id: 1,
-            label: "Typography Hierarchy (Serif Headers / Sans Body)",
-            checked: true,
-        },
-        {
-            id: 2,
-            label: "Color System Consistency (#4A7C74 Primary)",
-            checked: true,
-        },
-        { id: 3, label: "Interactive States (Hover/Focus)", checked: false },
-        { id: 4, label: "Mobile Responsiveness (No overflow)", checked: false },
-        { id: 5, label: "Loading States (Skeletons/Spinners)", checked: true },
-        {
-            id: 6,
-            label: "Error Handling (Graceful degradation)",
-            checked: false,
-        },
+    // Ticks are saved with the account's profile (key ui_audit_checks), so they survive a reload
+    const tickSync = registerProfileSlice<{ uiAuditChecks: number[] }>(
+        "admin_ui_audit",
+        (data: Record<string, unknown>) => ({
+            uiAuditChecks: Array.isArray(data.uiAuditChecks)
+                ? (data.uiAuditChecks as number[])
+                : [],
+        }),
+    );
+
+    const checkList = [
+        { id: 1, label: "Typography Hierarchy (Serif Headers / Sans Body)" },
+        { id: 2, label: "Color System Consistency (#4A7C74 Primary)" },
+        { id: 3, label: "Interactive States (Hover/Focus)" },
+        { id: 4, label: "Mobile Responsiveness (No overflow)" },
+        { id: 5, label: "Loading States (Skeletons/Spinners)" },
+        { id: 6, label: "Error Handling (Graceful degradation)" },
     ];
 
+    let ticked = $derived(tickSync.data?.uiAuditChecks ?? []);
+    let checks = $derived(
+        checkList.map((c) => ({ ...c, checked: ticked.includes(c.id) })),
+    );
+
     function toggle(id: number) {
-        checks = checks.map((c) =>
-            c.id === id ? { ...c, checked: !c.checked } : c,
-        );
+        const next = ticked.includes(id)
+            ? ticked.filter((x) => x !== id)
+            : [...ticked, id];
+        tickSync.update({ uiAuditChecks: next }).catch(() => {});
     }
 </script>
 

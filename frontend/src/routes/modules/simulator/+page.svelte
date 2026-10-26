@@ -10,25 +10,17 @@
         CircleX,
         ArrowRight,
     } from "lucide-svelte";
-    import { onMount } from "svelte";
+    import { documentStore } from "$lib/stores/documentStore.svelte";
+    import { financialAssetsSync, isDebt } from "$lib/stores/financialAssetsStore.svelte";
+    import { medicalStore } from "$lib/stores/medicalStore.svelte";
 
     let activeScenario: "none" | "wallet" | "medical" | "passing" = "none";
     let simulationState: "idle" | "running" | "complete" = "idle";
     let report: any[] = [];
     let overallStatus: "pass" | "fail" | "warn" = "pass";
 
-    // Mock Data Store Access
-    let docs: any[] = [];
-    let assets: any[] = [];
-
-    import { getStored } from "$lib/stores/persistence";
-
-    // ...
-
-    onMount(() => {
-        docs = getStored<any[]>("documents", []);
-        assets = getStored<any[]>("assets_assets-main", []);
-    });
+    const named = (d: any, pattern: RegExp) =>
+        pattern.test(`${d?.name ?? ""} ${d?.title ?? ""}`.toLowerCase());
 
     const scenarios = [
         {
@@ -57,89 +49,99 @@
         },
     ];
 
-    function runSimulation(id: "wallet" | "medical" | "passing") {
+    async function runSimulation(id: "wallet" | "medical" | "passing") {
         activeScenario = id;
         simulationState = "running";
         report = [];
 
-        setTimeout(() => {
-            // Simulation Logic
-            if (id === "wallet") {
-                const hasIDs = docs.some((d) => d.type === "ID");
-                const hasCards = assets.some((a) => a.type === "Financial");
+        // The records saved in the Document Vault, Financial Accounts and Medical pages
+        await Promise.allSettled([
+            documentStore.sync(),
+            financialAssetsSync.sync(),
+            medicalStore.sync(),
+        ]);
+        if (activeScenario !== id) return; // went back while the records loaded
+        const docs: any[] = documentStore.items;
+        const assets: any[] = financialAssetsSync.items.filter((a: any) => !a.is_closed);
+        const directives: any[] = medicalStore.directives;
+        const checks: any[] = [];
 
-                report.push({
-                    check: "Digital ID Backup",
-                    status: hasIDs,
-                    msg: hasIDs
-                        ? "Passport/ID copies found in Vault."
-                        : "CRITICAL: No backup IDs found.",
-                });
-                report.push({
-                    check: "Card List",
-                    status: hasCards,
-                    msg: hasCards
-                        ? "Financial accounts listed."
-                        : "WARNING: No card numbers recorded.",
-                });
-                overallStatus = hasIDs && hasCards ? "pass" : "fail";
-            }
+        if (id === "wallet") {
+            const hasIDs = docs.some((d) => d.type === "ID");
+            const hasCards = assets.some(
+                (a) => a.type === "Financial" || isDebt(a),
+            );
 
-            if (id === "medical") {
-                const hasPOA = docs.some(
-                    (d) =>
-                        d.name.toLowerCase().includes("power of attorney") ||
-                        d.type === "Other",
-                ); // broad check
-                const hasHealth = docs.some(
-                    (d) =>
-                        d.name.toLowerCase().includes("health") ||
-                        d.type === "Other",
+            checks.push({
+                check: "Digital ID Backup",
+                status: hasIDs,
+                msg: hasIDs
+                    ? "Passport/ID copies found in Vault."
+                    : "CRITICAL: No backup IDs found.",
+            });
+            checks.push({
+                check: "Card List",
+                status: hasCards,
+                msg: hasCards
+                    ? "Financial accounts listed."
+                    : "WARNING: No card numbers recorded.",
+            });
+            overallStatus = hasIDs && hasCards ? "pass" : "fail";
+        }
+
+        if (id === "medical") {
+            // A directive from the Medical page, or a vault document named as one
+            const hasHealth =
+                directives.length > 0 ||
+                docs.some((d) =>
+                    named(d, /health|living will|advance directive|medical directive/),
                 );
+            const hasPOA = docs.some((d) => named(d, /power of attorney|\bpoa\b/));
 
-                report.push({
-                    check: "Medical Directive",
-                    status: hasHealth,
-                    msg: hasHealth
-                        ? "Healthcare Directive found."
-                        : "CRITICAL: Doctors don't know your wishes.",
-                });
-                report.push({
-                    check: "Power of Attorney",
-                    status: hasPOA,
-                    msg: hasPOA
-                        ? "POA found."
-                        : "CRITICAL: No one can pay your bills.",
-                });
-                overallStatus = hasHealth && hasPOA ? "pass" : "fail";
-            }
+            checks.push({
+                check: "Medical Directive",
+                status: hasHealth,
+                msg: hasHealth
+                    ? "Healthcare Directive found."
+                    : "CRITICAL: Doctors don't know your wishes.",
+            });
+            checks.push({
+                check: "Power of Attorney",
+                status: hasPOA,
+                msg: hasPOA
+                    ? "POA found."
+                    : "CRITICAL: No one can pay your bills.",
+            });
+            overallStatus = hasHealth && hasPOA ? "pass" : "fail";
+        }
 
-            if (id === "passing") {
-                const hasWill = docs.some((d) => d.type === "Will");
-                const hasTrust = docs.some((d) => d.type === "Trust");
-                const benCov =
-                    assets.filter((a) => a.beneficiaries).length /
-                    Math.max(1, assets.length);
+        if (id === "passing") {
+            const hasWill = docs.some((d) => d.type === "Will");
+            const hasTrust = docs.some((d) => d.type === "Trust");
+            const owned = assets.filter((a) => !isDebt(a));
+            const benCov =
+                owned.filter((a) => String(a.beneficiaries ?? "").trim()).length /
+                Math.max(1, owned.length);
 
-                report.push({
-                    check: "Will / Trust",
-                    status: hasWill || hasTrust,
-                    msg:
-                        hasWill || hasTrust
-                            ? "Legal structure found."
-                            : "CRITICAL: Estate is Intestate (Court decides).",
-                });
-                report.push({
-                    check: "Beneficiaries",
-                    status: benCov > 0.8,
-                    msg: `Beneficiaries named on ${Math.round(benCov * 100)}% of assets.`,
-                });
-                overallStatus =
-                    (hasWill || hasTrust) && benCov > 0.8 ? "pass" : "fail";
-            }
+            checks.push({
+                check: "Will / Trust",
+                status: hasWill || hasTrust,
+                msg:
+                    hasWill || hasTrust
+                        ? "Legal structure found."
+                        : "CRITICAL: Estate is Intestate (Court decides).",
+            });
+            checks.push({
+                check: "Beneficiaries",
+                status: benCov > 0.8,
+                msg: `Beneficiaries named on ${Math.round(benCov * 100)}% of assets.`,
+            });
+            overallStatus =
+                (hasWill || hasTrust) && benCov > 0.8 ? "pass" : "fail";
+        }
 
-            simulationState = "complete";
-        }, 1500);
+        report = checks;
+        simulationState = "complete";
     }
 
     function reset() {
