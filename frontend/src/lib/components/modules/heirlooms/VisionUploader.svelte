@@ -50,6 +50,19 @@
         }
     }
 
+    /** A typed address is an explicit replacement for the selected upload. */
+    export function replaceWithAddress(address: string) {
+        sequence++;
+        selectedFile = null;
+        uploading = false;
+        uploadFailed = false;
+        message = null;
+        previewFor = null;
+        if (localPreview) URL.revokeObjectURL(localPreview);
+        localPreview = null;
+        imageUrl = address;
+    }
+
     async function handleFile(file: File) {
         if (!file.type.startsWith("image/") || !isValidMediaType(file)) return;
         const attempt = ++sequence;

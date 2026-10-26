@@ -53,6 +53,7 @@
     let isLoading = $state(true);
     let photoUploading = $state(false);
     let photoUploadFailed = $state(false);
+    let photoUploader: { replaceWithAddress: (address: string) => void } | undefined = $state();
     // Selection counts as newer editing before an upload has a saved address.
     let photoRevision = 0;
 
@@ -677,6 +678,7 @@
             <div>
                 {#key newHeirloom}
                     <VisionUploader
+                        bind:this={photoUploader}
                         bind:imageUrl={newHeirloom.image}
                         bind:provenance={newHeirloom.ownershipDetails}
                         bind:uploading={photoUploading}
@@ -699,6 +701,10 @@
                             id="heirloom-image-url"
                             type="text"
                             bind:value={newHeirloom.image}
+                            oninput={(event) => {
+                                photoRevision++;
+                                photoUploader?.replaceWithAddress(event.currentTarget.value);
+                            }}
                             class="w-full px-4 py-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
                             placeholder="https://..."
                         />
