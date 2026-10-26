@@ -15,6 +15,7 @@ export interface ErrorDetails {
     code?: string; // Error code for programmatic handling
     details?: Record<string, any>; // Additional context
     timestamp?: string;
+    technicalDetails?: string; // Technical message for the collapsed "Show details" toggle
 }
 
 export interface ApiErrorResponse {
@@ -37,7 +38,8 @@ export async function parseApiError(response: Response): Promise<ErrorDetails> {
             message: data.error?.message || 'Something went wrong. Please try again.',
             code: data.error?.code,
             details: data.error?.details,
-            timestamp: data.error?.timestamp
+            timestamp: data.error?.timestamp,
+            technicalDetails: data._technical
         };
     } catch {
         // If response is not JSON, create generic error
@@ -218,6 +220,25 @@ export interface ErrorNotification {
 }
 
 /**
+ * Technical text for the collapsed "Show details" toggle.
+ * Uses the technical message when present, else the code and any extra details.
+ */
+function buildTechnicalDetails(error: ErrorDetails): string | undefined {
+    if (error.technicalDetails) return error.technicalDetails;
+    const lines: string[] = [];
+    if (error.code) lines.push(`Code: ${error.code}`);
+    if (error.details && Object.keys(error.details).length > 0) {
+        try {
+            lines.push(JSON.stringify(error.details, null, 2));
+        } catch {
+            lines.push(String(error.details));
+        }
+    }
+    if (error.timestamp) lines.push(`Time: ${error.timestamp}`);
+    return lines.length > 0 ? lines.join('\n') : undefined;
+}
+
+/**
  * Create an error notification from ErrorDetails.
  */
 export function createErrorNotification(error: ErrorDetails): ErrorNotification {
@@ -229,7 +250,8 @@ export function createErrorNotification(error: ErrorDetails): ErrorNotification 
         message: error.message,
         code: error.code,
         canRetry: action.canRetry,
-        timestamp: new Date()
+        timestamp: new Date(),
+        technicalDetails: buildTechnicalDetails(error)
     };
 }
 

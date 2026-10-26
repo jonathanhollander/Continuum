@@ -26,7 +26,6 @@
     import { slide, scale, fade, fly } from "svelte/transition";
     import FileUploader from "$lib/components/ui/FileUploader.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
-    import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import Modal from "$lib/components/ui/Modal.svelte";
