@@ -45,7 +45,8 @@
         } catch (e: any) {
             console.error("Magic link verification failed:", e);
             status = "error";
-            error = e.message || "The link is invalid or has expired";
+            error =
+                "This link may have been used already or expired. You can request a new one whenever you're ready.";
         }
     });
 </script>
