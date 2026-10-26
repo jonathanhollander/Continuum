@@ -172,6 +172,10 @@
 			$page.url.pathname.startsWith("/for/"),
 	);
 
+	// Recipient start page and the owner's preview (card X104): both read one server-filtered
+	// payload, so the owner's whole record set is left unsynced there until they move on.
+	let isRecipientRoute = $derived($page.url.pathname.startsWith("/for/"));
+
 	// Derived: Is this the Dashboard route? (needs dark background for glassmorphism)
 	let isDashboardRoute = $derived($page.url.pathname === "/dashboard");
 
@@ -183,7 +187,7 @@
 			lastSyncedToken = null;
 			clearAll();
 		}
-		if ($auth.token && !$auth.loading && $auth.token !== lastSyncedToken) {
+		if ($auth.token && !$auth.loading && $auth.token !== lastSyncedToken && !isRecipientRoute) {
 			console.log("[Layout] Auth detected, starting global sync...");
 			lastSyncedToken = $auth.token;
 			syncAll();

@@ -3,8 +3,9 @@
     // and the owner's preview (/for/preview/<contactId>), so the two always match. Everything
     // comes from the token-scoped snapshot (D1's builder, filtered on the server); files come
     // through the given fetcher, and the download copy is D1's zip built from the same files.
-    import { onDestroy, onMount } from "svelte";
+    import { onDestroy } from "svelte";
     import { slide } from "svelte/transition";
+    import { SvelteMap } from "svelte/reactivity";
     import { Archive, Loader2, Phone, Mail, ChevronDown } from "lucide-svelte";
     import {
         buildPacket,
@@ -31,22 +32,54 @@
     const firstName = $derived((recipient.name || "").trim().split(/\s+/)[0] || recipient.name);
     const ownerName = $derived(packet.ownerName || "the person who shared this");
 
-    // Files: fetched once, shown from blob URLs, reused by the download copy.
-    let files = $state<Map<string, Blob>>(new Map());
-    let urls = $state<Map<string, string>>(new Map());
-    let filesReady = $state(false);
+    // Files (card X104): each one is fetched when it comes into view (or when the full record or
+    // the download copy needs it), once, shown from a blob URL and reused by the download copy.
+    const files = new Map<string, Blob>();
+    const urls = new SvelteMap<string, string>();
+    const asked = new Map<string, Promise<void>>();
+    let gone = false;
     let busy = $state<string | null>(null);
     let downloadNote = $state<string | null>(null);
     let showFull = $state(false);
 
-    onMount(async () => {
-        files = await loadAttachmentFiles(snapshot, packet.attachments, fetchBlob);
-        const next = new Map<string, string>();
-        for (const [k, b] of files) next.set(k, URL.createObjectURL(b));
-        urls = next;
-        filesReady = true;
+    function want(list: SnapshotAttachment[]): Promise<void> {
+        return Promise.all(
+            list.map((a) => {
+                let p = asked.get(a.key);
+                if (!p) {
+                    p = loadAttachmentFiles(snapshot, [a], fetchBlob).then((got) => {
+                        const b = got.get(a.key);
+                        if (!b || gone) return;
+                        files.set(a.key, b);
+                        urls.set(a.key, URL.createObjectURL(b));
+                    });
+                    asked.set(a.key, p);
+                }
+                return p;
+            }),
+        ).then(() => {});
+    }
+
+    /** Asks for a file once its place on the page is near the screen. */
+    function inView(node: HTMLElement, a: SnapshotAttachment) {
+        const io = new IntersectionObserver(
+            (entries) => {
+                if (entries.some((e) => e.isIntersecting)) {
+                    io.disconnect();
+                    want([a]);
+                }
+            },
+            { rootMargin: "200px 0px" },
+        );
+        io.observe(node);
+        return { destroy: () => io.disconnect() };
+    }
+
+    $effect(() => {
+        if (showFull) want(packet.attachments);
     });
     onDestroy(() => {
+        gone = true;
         for (const u of urls.values()) URL.revokeObjectURL(u);
     });
 
@@ -146,7 +179,19 @@
         busy = "download";
         downloadNote = null;
         try {
-            const blob = await buildDownloadCopy(snapshot, (m) => (downloadNote = m), filesReady ? files : undefined, fetchBlob);
+            const missing = packet.attachments.filter((a) => !asked.has(a.key));
+            if (missing.length) {
+                const p = loadAttachmentFiles(snapshot, missing, fetchBlob, (m) => (downloadNote = m)).then((got) => {
+                    if (gone) return;
+                    for (const [k, b] of got) {
+                        files.set(k, b);
+                        urls.set(k, URL.createObjectURL(b));
+                    }
+                });
+                for (const a of missing) asked.set(a.key, p);
+            }
+            await Promise.all(asked.values());
+            const blob = await buildDownloadCopy(snapshot, (m) => (downloadNote = m), files, fetchBlob);
             const safe = (s: string) => s.replace(/[^\w\- ]+/g, "").trim() || "Continuum";
             saveBlob(blob, `${safe(packet.ownerName)} - for ${safe(recipient.name)}.zip`);
             downloadNote = "Your copy is saved. It opens in any browser, with every file beside it.";
@@ -163,6 +208,7 @@
         <div class="mt-4 flex flex-col gap-3">
             {#each list as a (a.key)}
                 {@const url = urls.get(a.key)}
+                <div use:inView={a} class="flex flex-col">
                 {#if url && a.mime_type.startsWith("video/")}
                     <video src={url} controls preload="metadata" class="w-full max-w-xl rounded-xl bg-black" data-testid="recipient-video"></video>
                 {:else if url && a.mime_type.startsWith("audio/")}
@@ -172,8 +218,9 @@
                 {:else if url}
                     <a href={url} download={a.filename} target="_blank" rel="noopener" class="text-[#304743] underline text-sm">Open {a.filename || "this file"}</a>
                 {:else}
-                    <span class="text-sm text-stone-500 inline-flex items-center gap-2"><Loader2 class="w-4 h-4 animate-spin" /> Opening {a.filename || "this file"}…</span>
+                    <span class="text-sm text-stone-500 inline-flex items-center gap-2 {a.mime_type.startsWith("image/") || a.mime_type.startsWith("video/") ? 'min-h-48' : ''}"><Loader2 class="w-4 h-4 animate-spin" /> Opening {a.filename || "this file"}…</span>
                 {/if}
+                </div>
             {/each}
         </div>
     {/if}

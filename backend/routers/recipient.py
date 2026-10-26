@@ -24,11 +24,15 @@ Owner endpoints (signed in):
   GET    /api/recipient/preview/{contact_id}   the page exactly as the recipient sees it
 Recipient endpoint (no sign-in):
   GET    /api/recipient/view/{token}
-Files for the view: GET /api/media/shared/{token}/{media_id} (routers/media.py).
+Files for the view: GET /api/media/shared/{token}/{media_id} (routers/media.py). The set of
+files a link shows is kept for SHOWN_TTL_SECONDS per token (card X104), so a page of photos does
+not rebuild the snapshot once per file; the token itself is checked fresh on every request.
 """
 import secrets
+import threading
+import time
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional, Set
+from typing import Any, Dict, FrozenSet, Optional, Set, Tuple
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, SQLModel, select
@@ -104,6 +108,51 @@ def contact_for_token(session: Session, token: str) -> PulseContact:
     return contact
 
 
+# Card X104: token -> (expires at, contact id, media ids the view shows). Only ever read after
+# contact_for_token() has passed for that token, so a closed or replaced link stops at once.
+SHOWN_TTL_SECONDS = 30
+_SHOWN_MAX = 512
+_shown: Dict[str, Tuple[float, int, FrozenSet[int]]] = {}
+_shown_lock = threading.Lock()
+_shown_build_lock = threading.Lock()
+
+
+def _media_ids(snap: Dict[str, Any]) -> FrozenSet[int]:
+    return frozenset(a.get("media_id") for a in snap["attachments"] if a.get("source") == "media")
+
+
+def _remember_shown(token: str, contact: PulseContact, ids: FrozenSet[int]) -> None:
+    now = time.monotonic()
+    with _shown_lock:
+        if len(_shown) >= _SHOWN_MAX:
+            for k in [k for k, v in _shown.items() if v[0] <= now]:
+                del _shown[k]
+            if len(_shown) >= _SHOWN_MAX:
+                _shown.clear()
+        _shown[token] = (now + SHOWN_TTL_SECONDS, contact.id, ids)
+
+
+def _cached_shown(token: str, contact: PulseContact) -> Optional[FrozenSet[int]]:
+    with _shown_lock:
+        hit = _shown.get(token)
+    if hit and hit[0] > time.monotonic() and hit[1] == contact.id:
+        return hit[2]
+    return None
+
+
+def shown_media_ids(session: Session, contact: PulseContact, token: str) -> FrozenSet[int]:
+    """The media ids a live link's page shows. `contact` must come from contact_for_token(token)."""
+    ids = _cached_shown(token, contact)
+    if ids is not None:
+        return ids
+    with _shown_build_lock:  # many files of one page arriving at once build the set once
+        ids = _cached_shown(token, contact)
+        if ids is None:
+            ids = _media_ids(recipient_snapshot(session, contact))
+            _remember_shown(token, contact, ids)
+    return ids
+
+
 def _view(session: Session, contact: PulseContact, preview: bool) -> Dict[str, Any]:
     return {
         "preview": preview,
@@ -146,7 +195,10 @@ class RecipientUpdate(SQLModel):
 
 @router.get("/view/{token}", summary="The recipient's start page (no sign-in; the link is the key)")
 def view(token: str, session: Session = Depends(get_session)):
-    return _view(session, contact_for_token(session, token), preview=False)
+    contact = contact_for_token(session, token)
+    out = _view(session, contact, preview=False)
+    _remember_shown(token, contact, _media_ids(out["snapshot"]))  # the page's files ask next
+    return out
 
 
 @router.get("/preview/{contact_id}", summary="The owner's preview of a recipient's start page")
