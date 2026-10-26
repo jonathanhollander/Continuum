@@ -7,7 +7,7 @@
         "duration": "05:00",
         "category": "Self-Care",
         "iconName": "LucideHeart",
-        "color": "emerald"
+        "tone": "primary"
     },
     {
         "id": "self-2",
@@ -16,7 +16,7 @@
         "type": "article",
         "category": "Self-Care",
         "iconName": "LucideHeart",
-        "color": "emerald"
+        "tone": "primary"
     },
     {
         "id": "self-3",
@@ -25,7 +25,7 @@
         "type": "article",
         "category": "Self-Care",
         "iconName": "LucideHeart",
-        "color": "emerald"
+        "tone": "primary"
     },
     {
         "id": "counsel-1",
@@ -35,7 +35,7 @@
         "url": "https://www.betterhelp.com/grief-counseling/",
         "category": "Counseling",
         "iconName": "LucideHeart",
-        "color": "violet"
+        "tone": "primary"
     },
     {
         "id": "counsel-2",
@@ -45,7 +45,7 @@
         "url": "https://www.talkspace.com/",
         "category": "Counseling",
         "iconName": "LucideHeart",
-        "color": "violet"
+        "tone": "primary"
     },
     {
         "id": "counsel-3",
@@ -55,7 +55,7 @@
         "url": "https://www.psychologytoday.com/us/therapists/grief",
         "category": "Counseling",
         "iconName": "LucideHeart",
-        "color": "violet"
+        "tone": "primary"
     },
     {
         "id": "group-1",
@@ -65,7 +65,7 @@
         "url": "https://www.griefshare.org/",
         "category": "Support Groups",
         "iconName": "LucideUsers",
-        "color": "sky"
+        "tone": "primary"
     },
     {
         "id": "group-2",
@@ -75,7 +75,7 @@
         "url": "https://www.thedinnerparty.org/",
         "category": "Support Groups",
         "iconName": "LucideUsers",
-        "color": "sky"
+        "tone": "primary"
     },
     {
         "id": "group-3",
@@ -85,7 +85,7 @@
         "url": "https://www.opentohope.com/",
         "category": "Support Groups",
         "iconName": "LucideUsers",
-        "color": "sky"
+        "tone": "primary"
     },
     {
         "id": "exec-1",
@@ -94,7 +94,7 @@
         "type": "article",
         "category": "Executors",
         "iconName": "LucideShieldAlert",
-        "color": "amber"
+        "tone": "gold"
     },
     {
         "id": "exec-2",
@@ -103,7 +103,7 @@
         "type": "article",
         "category": "Executors",
         "iconName": "LucideShieldAlert",
-        "color": "amber"
+        "tone": "gold"
     },
     {
         "id": "exec-3",
@@ -112,7 +112,7 @@
         "type": "article",
         "category": "Executors",
         "iconName": "LucideShieldAlert",
-        "color": "amber"
+        "tone": "gold"
     },
     {
         "id": "term-1",
@@ -122,7 +122,7 @@
         "duration": "12:40",
         "category": "Terminal Care",
         "iconName": "LucideHeart",
-        "color": "rose"
+        "tone": "primary"
     },
     {
         "id": "term-2",
@@ -132,7 +132,7 @@
         "duration": "08:15",
         "category": "Terminal Care",
         "iconName": "LucideHeart",
-        "color": "rose"
+        "tone": "primary"
     },
     {
         "id": "term-3",
@@ -141,7 +141,7 @@
         "type": "article",
         "category": "Terminal Care",
         "iconName": "LucideHeart",
-        "color": "rose"
+        "tone": "primary"
     },
     {
         "id": "term-4",
@@ -151,7 +151,7 @@
         "duration": "10:30",
         "category": "Terminal Care",
         "iconName": "LucideHeart",
-        "color": "rose"
+        "tone": "primary"
     },
     {
         "id": "fam-1",
@@ -160,7 +160,7 @@
         "type": "article",
         "category": "Family Support",
         "iconName": "LucideBookOpen",
-        "color": "indigo"
+        "tone": "primary"
     },
     {
         "id": "fam-2",
@@ -170,7 +170,7 @@
         "duration": "07:45",
         "category": "Family Support",
         "iconName": "LucideBookOpen",
-        "color": "indigo"
+        "tone": "primary"
     },
     {
         "id": "fam-3",
@@ -179,7 +179,7 @@
         "type": "article",
         "category": "Family Support",
         "iconName": "LucideBookOpen",
-        "color": "indigo"
+        "tone": "primary"
     },
     {
         "id": "fam-4",
@@ -188,7 +188,7 @@
         "type": "article",
         "category": "Family Support",
         "iconName": "LucideBookOpen",
-        "color": "indigo"
+        "tone": "primary"
     },
     {
         "id": "fam-5",
@@ -198,7 +198,7 @@
         "duration": "15:20",
         "category": "Family Support",
         "iconName": "LucideBookOpen",
-        "color": "indigo"
+        "tone": "primary"
     },
     {
         "id": "conv-1",
@@ -207,7 +207,7 @@
         "type": "guide",
         "category": "Conversations",
         "iconName": "LucideMessageCircle",
-        "color": "teal"
+        "tone": "primary"
     },
     {
         "id": "conv-2",
@@ -216,7 +216,7 @@
         "type": "guide",
         "category": "Conversations",
         "iconName": "LucideMessageCircle",
-        "color": "teal"
+        "tone": "primary"
     },
     {
         "id": "conv-3",
@@ -225,7 +225,7 @@
         "type": "guide",
         "category": "Conversations",
         "iconName": "LucideMessageCircle",
-        "color": "teal"
+        "tone": "primary"
     },
     {
         "id": "conv-4",
@@ -234,7 +234,7 @@
         "type": "guide",
         "category": "Conversations",
         "iconName": "LucideMessageCircle",
-        "color": "teal"
+        "tone": "primary"
     },
     {
         "id": "talk-1",
@@ -243,7 +243,7 @@
         "type": "guide",
         "category": "Talking to Family",
         "iconName": "LucideHelpCircle",
-        "color": "amber"
+        "tone": "gold"
     },
     {
         "id": "talk-2",
@@ -252,7 +252,7 @@
         "type": "guide",
         "category": "Talking to Family",
         "iconName": "LucideHelpCircle",
-        "color": "amber"
+        "tone": "gold"
     },
     {
         "id": "talk-3",
@@ -261,7 +261,7 @@
         "type": "guide",
         "category": "Talking to Family",
         "iconName": "LucideHelpCircle",
-        "color": "amber"
+        "tone": "gold"
     },
     {
         "id": "talk-4",
@@ -270,7 +270,7 @@
         "type": "guide",
         "category": "Talking to Family",
         "iconName": "LucideHelpCircle",
-        "color": "amber"
+        "tone": "gold"
     },
     {
         "id": "talk-5",
@@ -279,7 +279,7 @@
         "type": "guide",
         "category": "Talking to Family",
         "iconName": "LucideHelpCircle",
-        "color": "amber"
+        "tone": "gold"
     },
     {
         "id": "talk-6",
@@ -288,6 +288,6 @@
         "type": "guide",
         "category": "Talking to Family",
         "iconName": "LucideHelpCircle",
-        "color": "amber"
+        "tone": "gold"
     }
 ]

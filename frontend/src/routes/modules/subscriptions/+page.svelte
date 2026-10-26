@@ -423,15 +423,15 @@
             whyMatters="Every subscription you document helps your family keep money that might otherwise go to forgotten charges.<br/><br/>Documenting your subscriptions also gives your family the steps to close each one."
             encouragement="Start with the obvious ones—Netflix, Spotify, your gym. You can add others as you remember them."
             icon={Receipt}
-            iconClass="text-slate-600"
+            iconClass="text-muted-foreground"
             ctaLabel="Document first subscription"
             onAction={() => (showAddForm = true)}
         />
 
         <!-- Sample Data GhostRows -->
         <div class="mt-8">
-            <p class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-4 text-center">Example entries to inspire you</p>
-            <div class="space-y-3 opacity-60">
+            <p class="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-4 text-center">Example entries to inspire you</p>
+            <div class="space-y-3">
                 {#each getSmartSamples($language).subscriptions || [] as sample}
                     <GhostRow
                         name={sample.name}
@@ -450,7 +450,7 @@
                         }}
                     >
                         {#snippet icon()}
-                            <Receipt size={20} class="text-slate-400" />
+                            <Receipt size={20} class="text-muted-foreground" />
                         {/snippet}
                     </GhostRow>
                 {/each}
@@ -460,40 +460,40 @@
         <!-- Stats Grid -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div
-                class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm"
+                class="bg-card p-5 rounded-2xl border border-border shadow-sm"
             >
                 <div
-                    class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1"
+                    class="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1"
                 >
                     Monthly Burn
                 </div>
-                <div class="text-2xl font-bold text-slate-800">
+                <div class="text-2xl font-bold text-foreground">
                     {formatMoney(totalMonthly)}
                 </div>
             </div>
             <div
-                class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm"
+                class="bg-card p-5 rounded-2xl border border-border shadow-sm"
             >
                 <div
-                    class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1"
+                    class="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1"
                 >
                     Annual Impact
                 </div>
-                <div class="text-2xl font-bold text-slate-800">
+                <div class="text-2xl font-bold text-foreground">
                     {formatMoney(totalYearly)}
                 </div>
             </div>
             <div
-                class="bg-amber-50 p-5 rounded-2xl border border-amber-100 shadow-sm flex items-center gap-4"
+                class="bg-background p-5 rounded-2xl border border-border shadow-sm flex items-center gap-4"
             >
-                <div class="p-3 bg-white rounded-full text-amber-500 shadow-sm">
+                <div class="p-3 bg-card rounded-full text-primary shadow-sm">
                     <TrendingUp class="w-6 h-6" />
                 </div>
                 <div>
-                    <div class="text-sm text-amber-900 font-medium">
+                    <div class="text-sm text-foreground font-medium">
                         A gentle reminder
                     </div>
-                    <div class="text-xs text-amber-700/80">
+                    <div class="text-xs text-muted-foreground">
                         A yearly look keeps these amounts current.
                     </div>
                 </div>
@@ -503,12 +503,12 @@
         <!-- Main List -->
         <div class="space-y-4">
             <div
-                class="flex items-center justify-between pb-2 border-b border-slate-200"
+                class="flex items-center justify-between pb-2 border-b border-border"
             >
-                <h2 class="font-bold text-slate-700 flex items-center gap-2">
+                <h2 class="font-bold text-foreground flex items-center gap-2">
                     Recurring Charges
                     <span
-                        class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-xs"
+                        class="bg-muted text-muted-foreground px-2 py-0.5 rounded-full text-xs"
                         >{subscriptions.length}</span
                     >
                 </h2>
@@ -519,8 +519,8 @@
                                 onclick={() => (difficultyFilter = difficultyFilter === diff ? null : diff)}
                                 aria-pressed={difficultyFilter === diff}
                                 class="px-2.5 py-1 rounded-full text-xs font-bold border transition-colors {difficultyFilter === diff
-                                    ? 'bg-primary text-white border-primary'
-                                    : 'bg-white text-slate-500 border-slate-200 hover:text-slate-700'}"
+                                    ? 'bg-primary text-primary-foreground border-primary'
+                                    : 'bg-card text-muted-foreground border-border hover:text-foreground'}"
                             >
                                 {diff}
                             </button>
@@ -533,7 +533,7 @@
                             showDifficultyFilter = !showDifficultyFilter;
                             if (!showDifficultyFilter) difficultyFilter = null;
                         }}
-                        class="{showDifficultyFilter || difficultyFilter ? 'text-primary' : 'text-slate-400'} hover:text-slate-600"
+                        class="{showDifficultyFilter || difficultyFilter ? 'text-primary' : 'text-muted-foreground'} hover:text-muted-foreground"
                     >
                         <Filter class="w-4 h-4" />
                     </button>
@@ -548,18 +548,18 @@
                             onGenerateLetter={() => openLetterModal(sub)}
                         />
                         <div
-                            class="absolute top-3 right-2 flex gap-1 bg-white/50 backdrop-blur-sm rounded-full p-1"
+                            class="absolute top-3 right-2 flex gap-1 bg-card/50 backdrop-blur-sm rounded-full p-1"
                         >
                             <button
                                 onclick={() => editSubscription(sub)}
-                                class="p-1.5 hover:bg-primary/10 text-slate-400 hover:text-primary rounded-full transition-colors"
+                                class="p-1.5 hover:bg-primary/10 text-muted-foreground hover:text-primary rounded-full transition-colors"
                                 title="Edit"
                             >
                                 <Pencil size={14} />
                             </button>
                             <button
                                 onclick={() => removeSubscription(sub.id)}
-                                class="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-full transition-colors"
+                                class="p-1.5 hover:bg-danger-soft text-muted-foreground hover:text-danger rounded-full transition-colors"
                                 title="Remove"
                             >
                                 <X size={14} />
@@ -569,68 +569,68 @@
                 {/each}
             {:else}
                 <!-- Table View -->
-                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
                     <table class="w-full">
-                        <thead class="bg-slate-50 border-b border-slate-200">
+                        <thead class="bg-background border-b border-border">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Service</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Cost</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Cycle</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Difficulty</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Payment</th>
-                                <th class="px-4 py-3 text-right text-xs font-bold uppercase text-slate-500">Actions</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Service</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Cost</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Cycle</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Difficulty</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Payment</th>
+                                <th class="px-4 py-3 text-right text-xs font-bold uppercase text-muted-foreground">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100">
+                        <tbody class="divide-y divide-border">
                             {#each shownSubscriptions as sub (sub.id)}
-                                <tr class="hover:bg-slate-50 transition-colors group">
+                                <tr class="hover:bg-background transition-colors group">
                                     <td class="px-4 py-3">
                                         <div class="flex items-center gap-3">
-                                            <div class="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center text-slate-500">
+                                            <div class="w-8 h-8 bg-muted rounded-lg flex items-center justify-center text-muted-foreground">
                                                 <Receipt size={16} />
                                             </div>
-                                            <span class="font-medium text-slate-800">{sub.name}</span>
+                                            <span class="font-medium text-foreground">{sub.name}</span>
                                             {#if isClosed(sub)}
-                                                <span class="text-xs font-medium px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600">Closed</span>
+                                                <span class="text-xs font-medium px-2 py-0.5 rounded-lg bg-muted text-muted-foreground">Closed</span>
                                             {/if}
                                         </div>
                                     </td>
-                                    <td class="px-4 py-3 text-sm text-slate-600 font-medium">
+                                    <td class="px-4 py-3 text-sm text-muted-foreground font-medium">
                                         {formatMoney(sub.cost)}
                                     </td>
-                                    <td class="px-4 py-3 text-sm text-slate-600">{sub.cycle}</td>
+                                    <td class="px-4 py-3 text-sm text-muted-foreground">{sub.cycle}</td>
                                     <td class="px-4 py-3">
                                         {#if sub.difficulty}
                                             <span class="text-xs font-medium px-2 py-1 rounded-lg {
-                                                sub.difficulty === 'Easy' ? 'bg-green-100 text-green-700' :
-                                                sub.difficulty === 'Medium' ? 'bg-amber-100 text-amber-700' :
-                                                'bg-red-100 text-red-700'
+                                                sub.difficulty === 'Easy' ? 'bg-success/10 text-success' :
+                                                sub.difficulty === 'Medium' ? 'bg-warning-soft text-warning' :
+                                                'bg-muted text-foreground'
                                             }">
                                                 {sub.difficulty}
                                             </span>
                                         {/if}
                                     </td>
-                                    <td class="px-4 py-3 text-sm text-slate-600 max-w-[150px] truncate">
+                                    <td class="px-4 py-3 text-sm text-muted-foreground max-w-[150px] truncate">
                                         {sub.paymentMethod || '-'}
                                     </td>
                                     <td class="px-4 py-3 text-right">
                                         <div class="flex items-center justify-end gap-2 transition-opacity">
                                             <button
                                                 onclick={() => openLetterModal(sub)}
-                                                class="p-1.5 text-slate-400 hover:text-primary transition-colors"
+                                                class="p-1.5 text-muted-foreground hover:text-primary transition-colors"
                                                 title="Generate Letter"
                                             >
                                                 <FileText size={14} />
                                             </button>
                                             <button aria-label="Edit these details"
                                                 onclick={() => editSubscription(sub)}
-                                                class="p-1.5 text-slate-400 hover:text-primary transition-colors"
+                                                class="p-1.5 text-muted-foreground hover:text-primary transition-colors"
                                             >
                                                 <Pencil size={14} />
                                             </button>
                                             <button aria-label="Remove this item"
                                                 onclick={() => removeSubscription(sub.id)}
-                                                class="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
+                                                class="p-1.5 text-muted-foreground hover:text-danger transition-colors"
                                             >
                                                 <X size={14} />
                                             </button>
@@ -652,20 +652,20 @@
             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
         >
             <div
-                class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col"
+                class="bg-card rounded-2xl shadow-xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col"
             >
                 <div
-                    class="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-start shrink-0"
+                    class="p-6 border-b border-border bg-background flex justify-between items-start shrink-0"
                 >
                     <div class="flex-1 pr-4">
                         <h3
-                            class="font-serif font-bold text-2xl text-slate-800"
+                            class="font-serif font-bold text-2xl text-foreground"
                         >
                             {newSub.id
                                 ? "Update Subscription"
                                 : "Track a Recurring Charge"}
                         </h3>
-                        <p class="text-slate-500 text-sm mt-2 leading-relaxed">
+                        <p class="text-muted-foreground text-sm mt-2 leading-relaxed">
                             {newSub.id
                                 ? "Keep this information current—it makes the cancellation process smoother."
                                 : "Documenting these gives your family a clear path through closing each subscription."}
@@ -674,7 +674,7 @@
                     <button
                         aria-label="Close"
                         onclick={resetForm}
-                        class="p-2 -mr-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+                        class="p-2 -mr-2 text-muted-foreground hover:text-muted-foreground hover:bg-muted rounded-full transition-colors"
                     >
                         <X size={20} />
                     </button>
@@ -683,7 +683,7 @@
                 <div class="p-6 space-y-4 flex-1 overflow-y-auto">
                     <div>
                         <label for="subscription-name"
-                            class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                            class="block text-xs font-bold uppercase text-muted-foreground mb-1"
                             >What Service?</label
                         >
                         <!-- Focus moves to this field because the person just chose to add something here. -->
@@ -691,7 +691,7 @@
                         <input id="subscription-name"
                             type="text"
                             bind:value={newSub.name}
-                            class="w-full px-4 py-3 rounded-xl border border-gray-200"
+                            class="w-full px-4 py-3 rounded-xl border border-border"
                             placeholder="e.g. Netflix, Spotify, gym membership"
                             autoFocus
                         />
@@ -700,25 +700,25 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label for="subscription-cost"
-                                class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                                class="block text-xs font-bold uppercase text-muted-foreground mb-1"
                                 >Cost</label
                             >
                             <input id="subscription-cost"
                                 type="number"
                                 bind:value={newSub.cost}
-                                class="w-full px-4 py-3 rounded-xl border border-gray-200"
+                                class="w-full px-4 py-3 rounded-xl border border-border"
                                 placeholder="0.00"
                                 step="0.01"
                             />
                         </div>
                         <div>
                             <label for="subscription-cycle"
-                                class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                                class="block text-xs font-bold uppercase text-muted-foreground mb-1"
                                 >Cycle</label
                             >
                             <select id="subscription-cycle"
                                 bind:value={newSub.cycle}
-                                class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card"
                             >
                                 <option>Monthly</option>
                                 <option>Yearly</option>
@@ -728,7 +728,7 @@
 
                     <div>
                         <span id="subscription-difficulty-label"
-                            class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                            class="block text-xs font-bold uppercase text-muted-foreground mb-1"
                             >How easy it is to close</span
                         >
                         <div
@@ -742,7 +742,7 @@
                                     class="px-4 py-2 rounded-lg border text-sm font-bold transition-all {newSub.difficulty ===
                                     diff
                                         ? 'bg-primary text-primary-foreground border-primary'
-                                        : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}"
+                                        : 'bg-card text-muted-foreground border-border hover:border-slate-300'}"
                                     onclick={() =>
                                         (newSub.difficulty = diff as
                                             | "Easy"
@@ -757,25 +757,25 @@
 
                     <div>
                         <label for="subscription-cancellation-instructions"
-                            class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                            class="block text-xs font-bold uppercase text-muted-foreground mb-1"
                             >Cancellation Instructions</label
                         >
                         <textarea id="subscription-cancellation-instructions"
                             bind:value={newSub.cancellationInstructions}
-                            class="w-full px-4 py-3 rounded-xl border border-gray-200 h-24"
+                            class="w-full px-4 py-3 rounded-xl border border-border h-24"
                             placeholder="How do we turn this off?"
                         ></textarea>
                     </div>
 
                     <div>
                         <label for="subscription-payment-method"
-                            class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                            class="block text-xs font-bold uppercase text-muted-foreground mb-1"
                             >Payment Method (Optional)</label
                         >
                         <input id="subscription-payment-method"
                             type="text"
                             bind:value={newSub.paymentMethod}
-                            class="w-full px-4 py-3 rounded-xl border border-gray-200"
+                            class="w-full px-4 py-3 rounded-xl border border-border"
                             placeholder="e.g. Chase ending in 1234"
                         />
                     </div>
@@ -783,24 +783,24 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label for="subscription-next-billing"
-                                class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                                class="block text-xs font-bold uppercase text-muted-foreground mb-1"
                                 >Next Billing (Optional)</label
                             >
                             <input id="subscription-next-billing"
                                 type="date"
                                 bind:value={newSub.nextBilling}
-                                class="w-full px-4 py-3 rounded-xl border border-gray-200"
+                                class="w-full px-4 py-3 rounded-xl border border-border"
                             />
                         </div>
                         <div>
                             <label for="subscription-login-url"
-                                class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                                class="block text-xs font-bold uppercase text-muted-foreground mb-1"
                                 >Login Address (Optional)</label
                             >
                             <input id="subscription-login-url"
                                 type="text"
                                 bind:value={newSub.loginUrl}
-                                class="w-full px-4 py-3 rounded-xl border border-gray-200"
+                                class="w-full px-4 py-3 rounded-xl border border-border"
                                 placeholder="https://..."
                             />
                         </div>
@@ -808,28 +808,28 @@
 
                     <div>
                         <label for="subscription-notes"
-                            class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                            class="block text-xs font-bold uppercase text-muted-foreground mb-1"
                             >Notes (Optional)</label
                         >
                         <textarea id="subscription-notes"
                             bind:value={newSub.notes}
-                            class="w-full px-4 py-3 rounded-xl border border-gray-200 h-20"
+                            class="w-full px-4 py-3 rounded-xl border border-border h-20"
                         ></textarea>
                     </div>
 
                     <!-- Closed: kept on the list for the record, left out of the totals. -->
-                    <label class="flex items-center gap-3 text-sm text-slate-700 cursor-pointer">
+                    <label class="flex items-center gap-3 text-sm text-foreground cursor-pointer">
                         <input
                             type="checkbox"
                             checked={isClosed(newSub)}
                             onchange={(e) => (newSub.auto_renew = !e.currentTarget.checked)}
-                            class="w-4 h-4 rounded border-gray-300"
+                            class="w-4 h-4 rounded border-slate-300"
                         />
                         This subscription is closed
                     </label>
 
                     <!-- Custom Fields -->
-                    <div class="pt-4 mt-4 border-t border-gray-100">
+                    <div class="pt-4 mt-4 border-t border-border">
                         <CustomFieldsManager
                             entityType="subscription"
                             bind:data={parsedCustomAttributes}
@@ -837,17 +837,17 @@
                     </div>
                 </div>
 
-                <div class="p-6 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 shrink-0">
+                <div class="p-6 bg-background border-t border-border flex justify-end gap-3 shrink-0">
                     <button
                         onclick={resetForm}
-                        class="px-6 py-2 rounded-xl font-bold text-gray-500 hover:bg-gray-200"
+                        class="px-6 py-2 rounded-xl font-bold text-muted-foreground hover:bg-border"
                         >Maybe later</button
                     >
                     <button
                         onclick={saveSubscription}
                         disabled={!newSub.name || saving}
                         aria-busy={saving}
-                        class="px-6 py-2 rounded-xl font-bold bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50"
+                        class="px-6 py-2 rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
                     >
                         {saving
                             ? "Saving..."
@@ -867,32 +867,32 @@
             transition:fade
         >
             <div
-                class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]"
+                class="bg-card rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]"
                 in:scale
             >
                 <div
-                    class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50"
+                    class="p-6 border-b border-border flex justify-between items-center bg-background"
                 >
                     <div class="flex items-center gap-3">
-                        <div class="p-2 bg-primary/10 text-primary rounded-lg">
+                        <div class="p-2 bg-primary/10 text-primary-hover rounded-lg">
                             <FileText size={20} />
                         </div>
-                        <h3 class="font-serif font-bold text-xl text-slate-800">
+                        <h3 class="font-serif font-bold text-xl text-foreground">
                             Cancellation Request
                         </h3>
                     </div>
                     <button aria-label="Close"
                         onclick={closeLetterModal}
-                        class="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-400"
+                        class="p-2 hover:bg-border rounded-full transition-colors text-muted-foreground"
                     >
                         <X size={20} />
                     </button>
                 </div>
 
-                <div class="flex-1 overflow-y-auto p-8 bg-slate-50/30">
+                <div class="flex-1 overflow-y-auto p-8 bg-background/30">
                     <!-- Letter Document -->
                     <div
-                        class="bg-white shadow-sm border border-slate-200 p-12 aspect-[1/1.4] max-w-[500px] mx-auto text-sm text-slate-800 space-y-8 font-serif"
+                        class="bg-card shadow-sm border border-border p-12 aspect-[1/1.4] max-w-[500px] mx-auto text-sm text-foreground space-y-8 font-serif"
                     >
                         <div class="space-y-1">
                             <p class="font-bold">
@@ -912,7 +912,7 @@
                                 contenteditable="true"
                                 bind:this={letterBody}
                                 bind:innerHTML={customLetterContent}
-                                class="max-w-none [&_p]:mb-3 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 focus:outline-none focus:ring-2 focus:ring-indigo-100 rounded-lg p-2 -m-2 transition-all min-h-[200px]"
+                                class="max-w-none [&_p]:mb-3 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 focus:outline-none focus:ring-2 focus:ring-primary/20 rounded-lg p-2 -m-2 transition-all min-h-[200px]"
                             ></div>
 
                             <div class="pt-8 space-y-1">
@@ -924,7 +924,7 @@
                                     {$estateProfile.executorName ||
                                         "[Executor name]"}
                                 </p>
-                                <p class="text-xs text-slate-500 italic">
+                                <p class="text-xs text-muted-foreground italic">
                                     Executor of the Estate of {$estateProfile.ownerName}
                                 </p>
                             </div>
@@ -933,17 +933,17 @@
                 </div>
 
                 <div
-                    class="p-6 border-t border-slate-100 bg-white flex justify-end gap-3"
+                    class="p-6 border-t border-border bg-card flex justify-end gap-3"
                 >
                     <button
                         onclick={resetLetter}
-                        class="mr-auto px-4 py-2 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors"
+                        class="mr-auto px-4 py-2 text-xs font-bold text-muted-foreground hover:text-muted-foreground transition-colors"
                     >
                         Reset to Default
                     </button>
                     <button
                         onclick={printLetter}
-                        class="px-5 py-2.5 rounded-xl font-bold text-slate-500 hover:bg-slate-100 flex items-center gap-2 transition-all"
+                        class="px-5 py-2.5 rounded-xl font-bold text-muted-foreground hover:bg-muted flex items-center gap-2 transition-all"
                     >
                         <Printer size={16} /> Print
                     </button>

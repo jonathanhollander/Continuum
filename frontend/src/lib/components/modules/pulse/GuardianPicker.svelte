@@ -70,28 +70,28 @@
     aria-modal="true"
     aria-labelledby="guardian-dialog-title"
     use:focusTrap={{ onEscape: onclose }}
-    class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+    class="surface-dark fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
     transition:fade
 >
     <div
-        class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl"
+        class="bg-background border border-border rounded-2xl w-full max-w-md overflow-hidden shadow-2xl"
     >
         <div
-            class="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-950/50"
+            class="p-4 border-b border-border flex justify-between items-center bg-slate-950/50"
         >
-            <h3 id="guardian-dialog-title" class="font-bold text-slate-200">
+            <h3 id="guardian-dialog-title" class="font-bold text-foreground">
                 Choose a guardian
             </h3>
             <button onclick={onclose} aria-label="Close">
-                <X class="w-5 h-5 text-slate-500 hover:text-white" />
+                <X class="w-5 h-5 text-muted-foreground hover:text-foreground" />
             </button>
         </div>
         <div class="p-6">
-            <label class="text-sm text-slate-400 mb-4 flex items-center gap-2">
+            <label class="text-sm text-muted-foreground mb-4 flex items-center gap-2">
                 Choose a trusted contact to add to
                 <select
                     bind:value={targetTierId}
-                    class="bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-sm font-bold text-slate-200 focus:outline-none focus:border-teal-500/50"
+                    class="bg-card border border-border rounded-lg px-2 py-1 text-sm font-bold text-foreground focus:outline-none focus:border-primary/50"
                 >
                     {#each tiers as t (t.id)}
                         <option value={t.id}>Tier {t.tier_number}</option>
@@ -101,11 +101,11 @@
 
             {#if loaded && globalContacts.length === 0 && !error}
                 <div
-                    class="text-center py-6 bg-slate-800/50 rounded-xl border border-dashed border-slate-700"
+                    class="text-center py-6 bg-card/50 rounded-xl border border-dashed border-border"
                 >
                     <a
                         href="/modules/contacts"
-                        class="text-teal-400 text-sm font-bold hover:underline"
+                        class="text-primary text-sm font-bold hover:underline"
                         >Add someone in Family & Contacts</a
                     >
                 </div>
@@ -119,8 +119,8 @@
                         <label
                             class="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all {selectedContactId ===
                             contact.id
-                                ? 'bg-teal-500/10 border-teal-500/50'
-                                : 'bg-slate-800/50 border-slate-700 hover:border-slate-600'}"
+                                ? 'bg-primary/10 border-primary/50'
+                                : 'bg-card/50 border-border hover:border-slate-600'}"
                         >
                             <input
                                 type="radio"
@@ -135,23 +135,23 @@
                                 {(contact.name ?? "").charAt(0)}
                             </div>
                             <div class="flex-1">
-                                <div class="text-sm font-bold text-slate-200">
+                                <div class="text-sm font-bold text-foreground">
                                     {contact.name}
                                 </div>
-                                <div class="text-xs text-slate-500 break-all">
+                                <div class="text-xs text-muted-foreground break-all">
                                     {#if contact.email}
                                         {contact.email}
                                     {:else}
-                                        <span class="text-amber-300">Add an email so we can reach {contact.name}</span>
+                                        <span class="text-warning">Add an email so we can reach {contact.name}</span>
                                     {/if}
                                 </div>
                             </div>
                             {#if selectedContactId === contact.id}
-                                <Check class="w-4 h-4 text-teal-400" />
+                                <Check class="w-4 h-4 text-primary" />
                             {/if}
                             {#if current && current !== targetTierNumber}
                                 <span
-                                    class="text-[9px] uppercase bg-slate-900 text-slate-400 px-1.5 py-0.5 rounded"
+                                    class="text-[10px] uppercase bg-background text-muted-foreground px-1.5 py-0.5 rounded"
                                 >
                                     Tier {current}
                                 </span>
@@ -164,21 +164,21 @@
                     disabled={!selectedContactId || saving}
                     onclick={promoteContact}
                     class="w-full py-3 font-bold rounded-xl transition-colors {selectedContactId
-                        ? 'bg-teal-500 text-slate-950 hover:bg-teal-400'
-                        : 'bg-slate-800 text-slate-300 border border-slate-700 cursor-not-allowed'}"
+                        ? 'bg-primary text-primary-foreground hover:bg-primary-hover'
+                        : 'bg-card/60 text-muted-foreground border border-border cursor-not-allowed'}"
                 >
                     Add them to my circle
                 </button>
             {/if}
 
             {#if error}
-                <p class="mt-4 text-sm text-rose-300" role="alert">{error}</p>
+                <p class="mt-4 text-sm text-warning" role="alert">{error}</p>
             {/if}
 
             <div class="mt-4 pt-4 border-t border-slate-800 text-center">
                 <a
                     href="/modules/contacts"
-                    class="text-xs text-slate-400 hover:text-slate-200"
+                    class="text-xs text-muted-foreground hover:text-foreground"
                     >Open Family & Contacts</a
                 >
             </div>

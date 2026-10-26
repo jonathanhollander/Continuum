@@ -29,14 +29,14 @@
 
     // Difficulty colors
     const difficultyColors: Record<string, string> = {
-        Easy: "bg-emerald-100 text-emerald-700",
-        Medium: "bg-amber-100 text-amber-700",
-        Hard: "bg-red-100 text-red-700",
+        Easy: "bg-success/10 text-success",
+        Medium: "bg-warning-soft text-warning",
+        Hard: "bg-muted text-foreground",
     };
 </script>
 
 <div
-    class="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
+    class="bg-card rounded-xl border border-border shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
 >
     <!-- Main Row -->
     <button
@@ -48,19 +48,19 @@
         <div class="flex items-center gap-4">
             <!-- Icon placeholder or logo -->
             <div
-                class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold shrink-0"
+                class="w-10 h-10 rounded-full bg-primary-soft flex items-center justify-center text-primary-hover font-bold shrink-0"
             >
                 {sub.name.charAt(0)}
             </div>
 
             <div>
-                <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                <h3 class="font-bold text-foreground flex items-center gap-2">
                     {sub.name}
                     {#if sub.auto_renew === false}
-                        <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600">Closed</span>
+                        <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-muted text-muted-foreground">Closed</span>
                     {/if}
                 </h3>
-                <div class="flex items-center gap-2 text-xs text-slate-500">
+                <div class="flex items-center gap-2 text-xs text-muted-foreground">
                     {#if sub.paymentMethod}
                         <CreditCard class="w-3 h-3" />
                         <span>{sub.paymentMethod}</span>
@@ -76,10 +76,10 @@
 
         <div class="flex items-center gap-6">
             <div class="text-right hidden sm:block">
-                <div class="font-bold text-slate-800">
+                <div class="font-bold text-foreground">
                     {formatMoney(sub.cost)}
                 </div>
-                <div class="text-xs text-slate-500 uppercase tracking-wide">
+                <div class="text-xs text-muted-foreground uppercase tracking-wide">
                     /{sub.cycle}
                 </div>
             </div>
@@ -88,7 +88,7 @@
                 <span
                     class="px-2.5 py-1 rounded-full text-xs font-bold {difficultyColors[
                         sub.difficulty
-                    ] || 'bg-slate-100 text-slate-600'}"
+                    ] || 'bg-muted text-muted-foreground'}"
                 >
                     {sub.difficulty} to close
                 </span>
@@ -99,22 +99,22 @@
     <!-- Cancellation Guide (Expanded) -->
     {#if expanded}
         <div
-            class="border-t border-slate-100 bg-slate-50/50 p-4"
+            class="border-t border-border bg-background/50 p-4"
             transition:slide
         >
             <div class="flex items-start gap-4">
-                <div class="p-2 bg-red-50 text-red-600 rounded-lg shrink-0">
+                <div class="p-2 bg-muted text-muted-foreground rounded-lg shrink-0">
                     <CircleX class="w-5 h-5" />
                 </div>
                 <div class="flex-1 space-y-3">
                     {#if sub.cancellationInstructions}
                         <div>
                             <h4
-                                class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1"
+                                class="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1"
                             >
                                 Steps to close this subscription
                             </h4>
-                            <p class="text-sm text-slate-700 leading-relaxed">
+                            <p class="text-sm text-foreground leading-relaxed">
                                 {sub.cancellationInstructions}
                             </p>
                         </div>
@@ -125,7 +125,7 @@
                             href={sub.loginUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            class="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline"
+                            class="inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary-hover hover:underline"
                         >
                             <ExternalLink class="w-4 h-4" />
                             Open the account page
@@ -134,16 +134,16 @@
 
                     {#if sub.notes}
                         <div
-                            class="text-xs text-slate-500 italic bg-white p-2 rounded border border-slate-100"
+                            class="text-xs text-muted-foreground italic bg-card p-2 rounded border border-border"
                         >
                             Note: {sub.notes}
                         </div>
                     {/if}
 
-                    <div class="pt-4 border-t border-slate-100 flex gap-3">
+                    <div class="pt-4 border-t border-border flex gap-3">
                         <button
                             onclick={onGenerateLetter}
-                            class="flex-1 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-bold shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2"
+                            class="flex-1 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-bold shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2"
                         >
                             <CreditCard size={14} />
                             Prepare a letter for me

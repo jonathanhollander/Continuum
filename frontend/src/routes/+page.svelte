@@ -72,20 +72,20 @@
     const meshState = $derived.by(() => {
         if (scrollY < innerHeight * 0.5)
             return {
-                primary: "rgba(245, 158, 11, 0.12)", // Amber
+                primary: "color-mix(in srgb, var(--color-gold) 12%, transparent)", // Gold
                 secondary: "rgba(15, 17, 21, 1)",
-                accent: "rgba(251, 191, 36, 0.05)",
+                accent: "color-mix(in srgb, var(--color-gold) 5%, transparent)",
             };
         if (scrollY < innerHeight * 1.5)
             return {
                 primary: "rgba(31, 22, 16, 1)", // Warm Espresso
                 secondary: "rgba(15, 17, 21, 1)",
-                accent: "rgba(245, 158, 11, 0.08)",
+                accent: "color-mix(in srgb, var(--color-gold) 8%, transparent)",
             };
         return {
             primary: "rgba(8, 13, 18, 1)", // Midnight Navy
             secondary: "rgba(13, 43, 39, 0.15)", // Teal accents
-            accent: "rgba(45, 212, 191, 0.05)",
+            accent: "color-mix(in srgb, var(--color-primary) 5%, transparent)",
         };
     });
 
@@ -142,8 +142,8 @@
                     this.size = (Math.random() * 1.5 + 0.5) / this.depth;
                     this.color =
                         Math.random() > 0.6
-                            ? `rgba(245, 158, 11, ${0.5 / this.depth})`
-                            : `rgba(45, 212, 191, ${0.5 / this.depth})`;
+                            ? `rgba(212, 175, 55, ${0.5 / this.depth})` // gold (#D4AF37)
+                            : `rgba(127, 181, 171, ${0.5 / this.depth})`; // primary on dark (#7FB5AB)
                 }
             }
 
@@ -445,12 +445,12 @@
     <!-- Global Digital Grid Underlay -->
     <div
         class="fixed inset-0 pointer-events-none z-[-2] opacity-[0.05]"
-        style="background-image: linear-gradient(rgba(45, 212, 191, 0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(45, 212, 191, 0.2) 1px, transparent 1px); background-size: 50px 50px; transform: perspective(1000px) rotateX(60deg) translateY({scrollY *
+        style="background-image: linear-gradient(color-mix(in srgb, var(--color-primary) 20%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--color-primary) 20%, transparent) 1px, transparent 1px); background-size: 50px 50px; transform: perspective(1000px) rotateX(60deg) translateY({scrollY *
             -0.1}px);"
     >
         <!-- Scanning Beam -->
         <div
-            class="absolute inset-0 bg-gradient-to-b from-transparent via-teal-500/20 to-transparent h-40 w-full animate-scan"
+            class="absolute inset-0 bg-gradient-to-b from-transparent via-primary/20 to-transparent h-40 w-full animate-scan"
         ></div>
     </div>
 
@@ -461,7 +461,7 @@
         <defs>
             <linearGradient id="threadGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stop-color="transparent" />
-                <stop offset="50%" stop-color="#F59E0B" />
+                <stop offset="50%" style="stop-color: var(--color-gold)" />
                 <stop offset="100%" stop-color="transparent" />
             </linearGradient>
             <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
@@ -538,7 +538,7 @@
                             style="--delay: 0.3s"
                         >
                             <span
-                                class="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-500 italic relative"
+                                class="text-transparent bg-clip-text bg-gradient-to-r from-gold-text via-gold to-gold-muted italic relative"
                             >
                                 {$mt.heroSubtitle}
                             </span>
@@ -596,7 +596,7 @@
 
                             <!-- Screen Overlay Gradient -->
                             <div
-                                class="absolute inset-0 bg-gradient-to-tr from-amber-500/10 via-transparent to-transparent pointer-events-none"
+                                class="absolute inset-0 bg-gradient-to-tr from-gold/10 via-transparent to-transparent pointer-events-none"
                             ></div>
                         </div>
 
@@ -608,7 +608,7 @@
 
                     <!-- Ground Reflection (Parallax) -->
                     <div
-                        class="absolute -bottom-16 left-1/2 -translate-x-1/2 w-[95%] bg-amber-500/10 blur-[100px] rounded-full -z-10 transition-all duration-500"
+                        class="absolute -bottom-16 left-1/2 -translate-x-1/2 w-[95%] bg-gold/10 blur-[100px] rounded-full -z-10 transition-all duration-500"
                         style="
                         height: {60 + heroProgress * 60}px;
                         opacity: {heroProgress * 0.8};
@@ -623,7 +623,7 @@
                 style="opacity: {1 - heroProgress * 4}"
             >
                 <span
-                    class="text-white/40 text-[10px] font-bold uppercase tracking-[0.4em]"
+                    class="text-white/70 text-[10px] font-bold uppercase tracking-[0.4em]"
                     >{$mt.scrollIndicator}</span
                 >
                 <div
@@ -641,14 +641,14 @@
             style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 40px 40px; mask-image: linear-gradient(to bottom, transparent, black, transparent);"
         ></div>
         <div
-            class="absolute inset-0 bg-gradient-to-b from-indigo-500/5 via-transparent to-transparent pointer-events-none"
+            class="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none"
         ></div>
         <div
             class="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 md:gap-24 items-center"
         >
             <div class="space-y-8" use:reveal>
                 <div
-                    class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-900/20 border border-amber-800/50 text-xs font-mono uppercase tracking-widest text-amber-500 shadow-glow"
+                    class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gold/10 border border-gold/30 text-xs font-mono uppercase tracking-widest text-gold-text shadow-glow"
                 >
                     <Heart size={12} fill="currentColor" />
                     {$mt.giftTag}
@@ -661,7 +661,7 @@
                 </h2>
 
                 <div
-                    class="text-xl md:text-2xl text-slate-400 space-y-6 max-w-3xl mx-auto leading-relaxed"
+                    class="text-xl md:text-2xl text-muted-foreground space-y-6 max-w-3xl mx-auto leading-relaxed"
                 >
                     <p>
                         {$mt.giftDesc1}
@@ -702,7 +702,7 @@
         <div class="max-w-7xl mx-auto">
             <div class="mb-20 text-center" use:reveal>
                 <h2
-                    class="text-xs font-bold uppercase tracking-[0.3em] text-amber-500 mb-4"
+                    class="text-xs font-bold uppercase tracking-[0.3em] text-gold-text mb-4"
                 >
                     {$mt.toolkitTitle}
                 </h2>
@@ -710,7 +710,7 @@
                     class="text-4xl md:text-6xl font-serif font-bold text-white max-w-4xl mx-auto leading-tight"
                 >
                     Everything you need to leave <span
-                        class="italic text-amber-500">more than money.</span
+                        class="italic text-gold-text">more than money.</span
                     >
                 </p>
             </div>
@@ -726,7 +726,7 @@
                     style="--item-index: 1"
                 >
                     <div
-                        class="absolute inset-0 bg-[#0F1115] border border-white/10 group-hover:border-amber-500/30 transition-colors z-0"
+                        class="absolute inset-0 bg-[#0F1115] border border-white/10 group-hover:border-gold/30 transition-colors z-0"
                     ></div>
                     <img
                         src={assets.vault}
@@ -738,13 +738,13 @@
                     ></div>
 
                     <div class="absolute bottom-8 left-8 right-8 z-20">
-                        <div class="w-10 h-px bg-amber-500/50 mb-4"></div>
+                        <div class="w-10 h-px bg-gold/50 mb-4"></div>
                         <h3
                             class="text-3xl font-serif font-bold text-white mb-2"
                         >
                             {$mt.vaultTitle}
                         </h3>
-                        <p class="text-slate-400 max-w-lg">{$mt.vaultDesc}</p>
+                        <p class="text-muted-foreground max-w-lg">{$mt.vaultDesc}</p>
                     </div>
                 </div>
 
@@ -755,7 +755,7 @@
                     style="--item-index: 2"
                 >
                     <div
-                        class="absolute inset-0 bg-[#0F1115] border border-white/10 group-hover:border-amber-500/30 transition-colors z-0"
+                        class="absolute inset-0 bg-[#0F1115] border border-white/10 group-hover:border-gold/30 transition-colors z-0"
                     ></div>
                     <img
                         src={assets.letters}
@@ -767,13 +767,13 @@
                     ></div>
 
                     <div class="absolute bottom-8 left-8 right-8 z-20">
-                        <div class="w-10 h-px bg-amber-500/50 mb-4"></div>
+                        <div class="w-10 h-px bg-gold/50 mb-4"></div>
                         <h3
                             class="text-3xl font-serif font-bold text-white mb-2"
                         >
                             {$mt.lettersTitle}
                         </h3>
-                        <p class="text-slate-400">{$mt.lettersDesc}</p>
+                        <p class="text-muted-foreground">{$mt.lettersDesc}</p>
                     </div>
                 </div>
 
@@ -784,21 +784,21 @@
                     style="--item-index: 3"
                 >
                     <div
-                        class="absolute inset-0 bg-[#0F1115] border border-white/10 group-hover:border-amber-500/30 transition-colors z-0"
+                        class="absolute inset-0 bg-[#0F1115] border border-white/10 group-hover:border-gold/30 transition-colors z-0"
                     ></div>
                     <div
-                        class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent z-0"
+                        class="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent z-0"
                     ></div>
 
                     <div class="grid md:grid-cols-2 h-full z-10 relative">
                         <div class="p-8 flex flex-col justify-center">
-                            <div class="w-10 h-px bg-teal-500/50 mb-4"></div>
+                            <div class="w-10 h-px bg-primary/50 mb-4"></div>
                             <h3
                                 class="text-3xl font-serif font-bold text-white mb-2"
                             >
                                 {$mt.archivistBentoTitle}
                             </h3>
-                            <p class="text-slate-400">
+                            <p class="text-muted-foreground">
                                 {$mt.archivistBentoDesc}
                             </p>
                         </div>
@@ -818,13 +818,13 @@
             <!-- Section 3: The Guardian (Center Immersive) -->
             <div class="relative py-16" use:reveal style="--item-index: 4">
                 <div
-                    class="absolute inset-0 bg-blue-500/5 blur-[120px] rounded-full"
+                    class="absolute inset-0 bg-primary/5 blur-[120px] rounded-full"
                 ></div>
                 <div
                     class="relative z-10 max-w-4xl mx-auto text-center space-y-8"
                 >
                     <div
-                        class="inline-flex p-4 bg-blue-500/10 text-blue-400 rounded-3xl mb-4"
+                        class="inline-flex p-4 bg-primary/10 text-primary rounded-3xl mb-4"
                     >
                         <Sparkles size={32} />
                     </div>
@@ -834,14 +834,14 @@
                         {$mt.guideTitle}
                     </h3>
                     <p
-                        class="text-xl md:text-2xl text-slate-400 leading-relaxed"
+                        class="text-xl md:text-2xl text-muted-foreground leading-relaxed"
                     >
                         {$mt.guideDesc}
                     </p>
                     <div class="relative mt-12 group">
                         <img
                             src={assets.guardian}
-                            class="w-full h-auto rounded-[3rem] shadow-2xl border border-white/10 group-hover:border-blue-500/30 transition-all duration-700"
+                            class="w-full h-auto rounded-[3rem] shadow-2xl border border-white/10 group-hover:border-primary/30 transition-all duration-700"
                             alt="Guardian"
                         />
                         <div
@@ -859,10 +859,10 @@
             <div class="mb-20 text-center">
                 <div use:reveal>
                     <div
-                        class="reveal-text inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-bold uppercase tracking-widest mb-6"
+                        class="reveal-text inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-widest mb-6"
                     >
                         <span
-                            class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"
+                            class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"
                         ></span>
                         {$mt.aiTag}
                     </div>
@@ -872,14 +872,14 @@
                         <span class="block overflow-hidden">
                             <span class="block">{$mt.aiTitle}</span>
                         </span>
-                        <span class="block overflow-hidden text-[#F59E0B]">
+                        <span class="block overflow-hidden text-gold">
                             <span class="block" style="transition-delay: 0.1s"
                                 >{$mt.aiEmpathy}</span
                             >
                         </span>
                     </h1>
                     <p
-                        class="mt-8 text-xl md:text-2xl text-slate-400 max-w-2xl mx-auto font-light leading-relaxed"
+                        class="mt-8 text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto font-light leading-relaxed"
                     >
                         {$mt.aiDesc}
                     </p>
@@ -898,7 +898,7 @@
                         class="md:col-span-6 order-2 md:order-1 space-y-8 reveal"
                     >
                         <div
-                            class="w-16 h-16 bg-indigo-500/10 rounded-3xl flex items-center justify-center text-indigo-400"
+                            class="w-16 h-16 bg-primary/10 rounded-3xl flex items-center justify-center text-primary"
                         >
                             <ScanEye size={32} />
                         </div>
@@ -907,16 +907,16 @@
                         >
                             {$mt.archivistTitle}
                         </h3>
-                        <p class="text-xl text-slate-400 leading-relaxed">
+                        <p class="text-xl text-muted-foreground leading-relaxed">
                             {$mt.archivistDesc}
                         </p>
                     </div>
                     <div class="md:col-span-6 order-1 md:order-2">
                         <div
-                            class="aspect-square bg-gradient-to-br from-indigo-500/10 to-transparent rounded-[4rem] border border-white/5 flex items-center justify-center relative group overflow-hidden"
+                            class="aspect-square bg-gradient-to-br from-primary/10 to-transparent rounded-[4rem] border border-white/5 flex items-center justify-center relative group overflow-hidden"
                         >
                             <div
-                                class="absolute inset-0 blur-[60px] bg-indigo-500/5 group-hover:bg-indigo-500/10 transition-all"
+                                class="absolute inset-0 blur-[60px] bg-primary/5 group-hover:bg-primary/10 transition-all"
                             ></div>
                             <div class="relative w-full h-full p-12">
                                 <!-- Memories Stack -->
@@ -927,7 +927,7 @@
                                         class="absolute w-48 h-56 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl rotate-[-12deg] -translate-x-8 translate-y-4 shadow-2xl overflow-hidden group-hover:rotate-[-15deg] transition-transform duration-700"
                                     >
                                         <div
-                                            class="w-full h-40 bg-indigo-500/20"
+                                            class="w-full h-40 bg-primary/20"
                                         ></div>
                                         <div class="p-3 space-y-2">
                                             <div
@@ -948,7 +948,7 @@
                                         />
                                         <div class="p-3 space-y-2">
                                             <div
-                                                class="h-2 w-3/4 bg-amber-500/40 rounded"
+                                                class="h-2 w-3/4 bg-gold/40 rounded"
                                             ></div>
                                             <div
                                                 class="h-2 w-1/4 bg-white/10 rounded"
@@ -983,10 +983,10 @@
                 >
                     <div class="md:col-span-6 reveal">
                         <div
-                            class="aspect-square bg-gradient-to-br from-emerald-500/10 to-transparent rounded-[4rem] border border-white/5 flex items-center justify-center relative group overflow-hidden"
+                            class="aspect-square bg-gradient-to-br from-primary/10 to-transparent rounded-[4rem] border border-white/5 flex items-center justify-center relative group overflow-hidden"
                         >
                             <div
-                                class="absolute inset-0 blur-[60px] bg-emerald-500/5 group-hover:bg-emerald-500/10 transition-all"
+                                class="absolute inset-0 blur-[60px] bg-primary/5 group-hover:bg-primary/10 transition-all"
                             ></div>
                             <!-- Letter Preview -->
                             <div
@@ -1001,23 +1001,23 @@
                                     ></div>
                                     <div class="space-y-4">
                                         <div
-                                            class="h-px w-12 bg-emerald-800/30 mb-8"
+                                            class="h-px w-12 bg-primary-deep/30 mb-8"
                                         ></div>
                                         <h4
-                                            class="font-serif text-emerald-950 text-xl font-bold leading-tight"
+                                            class="font-serif text-slate-900 text-xl font-bold leading-tight"
                                             dir="auto"
                                         >
                                             {$mt.letterGreeting}
                                         </h4>
                                         <p
-                                            class="font-serif text-emerald-900/70 text-sm leading-relaxed"
+                                            class="font-serif text-slate-700 text-sm leading-relaxed"
                                             dir="auto"
                                         >
                                             {$mt.letterBody}
                                         </p>
                                         <div class="pt-8 flex justify-end">
                                             <div
-                                                class="font-serif italic text-emerald-950 text-lg opacity-40"
+                                                class="font-serif italic text-slate-700 text-lg"
                                             >
                                                 {$mt.letterSignOff}
                                             </div>
@@ -1028,7 +1028,7 @@
                                         class="absolute bottom-4 left-8 right-8 h-1 bg-black/5 rounded-full overflow-hidden"
                                     >
                                         <div
-                                            class="absolute left-0 top-0 h-full w-2/3 bg-emerald-500"
+                                            class="absolute left-0 top-0 h-full w-2/3 bg-primary-deep"
                                         ></div>
                                     </div>
                                 </div>
@@ -1039,7 +1039,7 @@
                         class="md:col-span-6 space-y-8 text-right flex flex-col items-end reveal"
                     >
                         <div
-                            class="w-16 h-16 bg-emerald-500/10 rounded-3xl flex items-center justify-center text-emerald-400"
+                            class="w-16 h-16 bg-primary/10 rounded-3xl flex items-center justify-center text-primary"
                         >
                             <Sparkles size={32} />
                         </div>
@@ -1048,7 +1048,7 @@
                         >
                             {$mt.empathyTitle}
                         </h3>
-                        <p class="text-xl text-slate-400 leading-relaxed">
+                        <p class="text-xl text-muted-foreground leading-relaxed">
                             {$mt.empathyDesc}
                         </p>
                     </div>
@@ -1064,7 +1064,7 @@
                         class="md:col-span-6 order-2 md:order-1 space-y-8 reveal"
                     >
                         <div
-                            class="w-16 h-16 bg-amber-500/10 rounded-3xl flex items-center justify-center text-amber-400"
+                            class="w-16 h-16 bg-gold/10 rounded-3xl flex items-center justify-center text-gold-text"
                         >
                             <FileText size={32} />
                         </div>
@@ -1073,16 +1073,16 @@
                         >
                             {$mt.jargonTitle}
                         </h3>
-                        <p class="text-xl text-slate-400 leading-relaxed">
+                        <p class="text-xl text-muted-foreground leading-relaxed">
                             {$mt.jargonDesc}
                         </p>
                     </div>
                     <div class="md:col-span-6 order-1 md:order-2">
                         <div
-                            class="aspect-square bg-gradient-to-br from-amber-500/10 to-transparent rounded-[4rem] border border-white/5 flex items-center justify-center relative group overflow-hidden"
+                            class="aspect-square bg-gradient-to-br from-gold/10 to-transparent rounded-[4rem] border border-white/5 flex items-center justify-center relative group overflow-hidden"
                         >
                             <div
-                                class="absolute inset-0 blur-[60px] bg-amber-500/5 group-hover:bg-amber-500/10 transition-all"
+                                class="absolute inset-0 blur-[60px] bg-gold/5 group-hover:bg-gold/10 transition-all"
                             ></div>
                             <!-- Legal Clarity Module -->
                             <div
@@ -1096,27 +1096,27 @@
                                             class="p-6 border-r border-white/5 space-y-3 bg-white/5"
                                         >
                                             <div
-                                                class="text-[10px] uppercase tracking-widest text-slate-500"
+                                                class="text-[10px] uppercase tracking-widest text-muted-foreground"
                                             >
                                                 {$mt.jargonOriginal}
                                             </div>
                                             <p
-                                                class="text-[11px] text-slate-400 font-mono leading-relaxed"
+                                                class="text-[11px] text-muted-foreground font-mono leading-relaxed"
                                                 dir="ltr"
                                             >
                                                 {$mt.jargonOriginalText}
                                             </p>
                                         </div>
                                         <div
-                                            class="p-6 space-y-3 bg-amber-500/5"
+                                            class="p-6 space-y-3 bg-gold/5"
                                         >
                                             <div
-                                                class="text-[10px] uppercase tracking-widest text-amber-500"
+                                                class="text-[10px] uppercase tracking-widest text-gold-text"
                                             >
                                                 {$mt.jargonContinuum}
                                             </div>
                                             <p
-                                                class="text-[11px] text-amber-200 leading-relaxed font-bold"
+                                                class="text-[11px] text-gold-text leading-relaxed font-bold"
                                                 dir="ltr"
                                             >
                                                 {$mt.jargonContinuumText}
@@ -1128,7 +1128,7 @@
                                         class="absolute inset-x-0 top-0 h-full pointer-events-none overflow-hidden"
                                     >
                                         <div
-                                            class="h-full w-[2px] bg-gradient-to-b from-transparent via-amber-500 to-transparent absolute top-0 left-1/2 -translate-x-1/2 animate-scan-horizontal shadow-[0_0_10px_rgba(245,158,11,0.5)]"
+                                            class="h-full w-[2px] bg-gradient-to-b from-transparent via-gold to-transparent absolute top-0 left-1/2 -translate-x-1/2 animate-scan-horizontal shadow-[0_0_10px_color-mix(in_srgb,var(--color-gold)_50%,transparent)]"
                                         ></div>
                                     </div>
                                 </div>
@@ -1148,40 +1148,40 @@
             <div class="grid md:grid-cols-3 gap-12">
                 <div class="space-y-4" use:reveal style="--item-index: 1">
                     <div
-                        class="w-12 h-12 bg-rose-500/10 rounded-2xl flex items-center justify-center text-rose-400"
+                        class="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary"
                     >
                         <Heart size={24} />
                     </div>
                     <h4 class="text-2xl font-serif font-bold text-white">
                         {$mt.healthSecurityTitle}
                     </h4>
-                    <p class="text-slate-400 leading-relaxed text-sm">
+                    <p class="text-muted-foreground leading-relaxed text-sm">
                         {$mt.healthSecurityDesc}
                     </p>
                 </div>
                 <div class="space-y-4" use:reveal style="--item-index: 2">
                     <div
-                        class="w-12 h-12 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-400"
+                        class="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary"
                     >
                         <InfinityIcon size={24} />
                     </div>
                     <h4 class="text-2xl font-serif font-bold text-white">
                         {$mt.lifeTimelineTitle}
                     </h4>
-                    <p class="text-slate-400 leading-relaxed text-sm">
+                    <p class="text-muted-foreground leading-relaxed text-sm">
                         {$mt.lifeTimelineDesc}
                     </p>
                 </div>
                 <div class="space-y-4" use:reveal style="--item-index: 3">
                     <div
-                        class="w-12 h-12 bg-teal-500/10 rounded-2xl flex items-center justify-center text-teal-400"
+                        class="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary"
                     >
                         <Shield size={24} />
                     </div>
                     <h4 class="text-2xl font-serif font-bold text-white">
                         {$mt.circleTrustTitle}
                     </h4>
-                    <p class="text-slate-400 leading-relaxed text-sm">
+                    <p class="text-muted-foreground leading-relaxed text-sm">
                         {$mt.circleTrustDesc}
                     </p>
                 </div>
@@ -1192,13 +1192,13 @@
     <!-- Legal Disclaimer Trust Signal -->
     <section class="py-12 border-b border-white/5 bg-black/40">
         <div class="max-w-4xl mx-auto px-6 text-center" use:reveal>
-            <div class="inline-flex items-center gap-2 mb-4 text-slate-500">
+            <div class="inline-flex items-center gap-2 mb-4 text-muted-foreground">
                 <Shield size={16} />
                 <span class="text-xs font-bold uppercase tracking-widest"
                     >{$mt.complianceTitle}</span
                 >
             </div>
-            <p class="text-slate-400 text-sm leading-relaxed max-w-2xl mx-auto">
+            <p class="text-muted-foreground text-sm leading-relaxed max-w-2xl mx-auto">
                 {$mt.complianceDesc}
             </p>
         </div>
@@ -1210,7 +1210,7 @@
     >
         <!-- Background Glow -->
         <div
-            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-amber-500/5 blur-[120px] rounded-full pointer-events-none"
+            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gold/5 blur-[120px] rounded-full pointer-events-none"
         ></div>
 
         <div
@@ -1228,7 +1228,7 @@
                     >
                         {$mt.pactTitle}
                     </h2>
-                    <p class="text-xl text-slate-400 max-w-xl mx-auto">
+                    <p class="text-xl text-muted-foreground max-w-xl mx-auto">
                         {$mt.pactDesc}
                     </p>
 
@@ -1239,7 +1239,7 @@
                             placeholder={$mt.placeholderSign}
                             onkeydown={(e) =>
                                 e.key === "Enter" && handleNameSubmit()}
-                            class="w-full bg-white/5 border-b border-white/20 p-6 text-3xl font-serif italic text-amber-200 outline-none focus:border-amber-500 transition-all text-center"
+                            class="w-full bg-white/5 border-b border-white/20 p-6 text-3xl font-serif italic text-gold-text outline-none focus:border-gold transition-all text-center"
                         />
                     </div>
 
@@ -1268,7 +1268,7 @@
                     <h3 class="text-2xl font-bold text-white mb-2">
                         {$mt.keeperTitle}
                     </h3>
-                    <p class="text-slate-400 mb-8">
+                    <p class="text-muted-foreground mb-8">
                         {$mt.keeperDesc}
                     </p>
                     <div class="relative max-w-md mx-auto">
@@ -1278,12 +1278,12 @@
                             placeholder="email@address.com"
                             onkeydown={(e) =>
                                 e.key === "Enter" && handleEmailSubmit()}
-                            class="w-full bg-white/5 border border-white/10 rounded-2xl p-6 text-xl text-white outline-none focus:border-amber-500 transition-all text-center"
+                            class="w-full bg-white/5 border border-white/10 rounded-2xl p-6 text-xl text-white outline-none focus:border-gold transition-all text-center"
                         />
                         {#if email.includes("@") && email.includes(".")}
                             <button
                                 onclick={handleEmailSubmit}
-                                class="w-full mt-6 bg-amber-500 hover:bg-amber-600 text-black py-5 rounded-2xl font-bold uppercase tracking-widest transition-all shadow-xl shadow-amber-500/20 active:scale-95"
+                                class="w-full mt-6 bg-gold hover:bg-gold-muted text-black py-5 rounded-2xl font-bold uppercase tracking-widest transition-all shadow-xl shadow-gold/20 active:scale-95"
                             >
                                 {$mt.btnCommit}
                             </button>
@@ -1291,7 +1291,7 @@
                     </div>
                     <button
                         onclick={() => (step = 0)}
-                        class="mt-8 text-slate-500 text-sm hover:text-white transition"
+                        class="mt-8 text-muted-foreground text-sm hover:text-white transition"
                         >{$mt.wizBtnBack}</button
                     >
                 </div>
@@ -1299,21 +1299,21 @@
                 <!-- Step 3: Success/Signed State -->
                 <div in:scale={{ duration: 800, start: 0.8 }} class="space-y-8">
                     <div
-                        class="w-24 h-24 bg-teal-500/10 rounded-full flex items-center justify-center mx-auto border border-teal-500/50 shadow-[0_0_50px_rgba(45,212,191,0.3)]"
+                        class="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto border border-primary/50 shadow-[0_0_50px_color-mix(in_srgb,var(--color-primary)_30%,transparent)]"
                     >
-                        <Fingerprint size={48} class="text-teal-400" />
+                        <Fingerprint size={48} class="text-primary" />
                     </div>
                     <h3 class="text-3xl font-serif font-bold text-white mb-2">
                         {$mt.welcomeTitle}
                         {signature}.
                     </h3>
-                    <p class="text-slate-400 mb-8">
+                    <p class="text-muted-foreground mb-8">
                         {$mt.sequenceSent}
-                        <span class="text-amber-200">{email}</span>
+                        <span class="text-gold-text">{email}</span>
                     </p>
                     <a
                         href="/start?email={encodeURIComponent(email)}&lang={$mLanguage}"
-                        class="inline-flex items-center gap-4 bg-teal-500 hover:bg-teal-600 text-white px-10 py-5 rounded-2xl font-bold uppercase tracking-widest transition-all shadow-xl shadow-teal-500/20"
+                        class="inline-flex items-center gap-4 bg-primary hover:bg-primary-hover text-primary-foreground px-10 py-5 rounded-2xl font-bold uppercase tracking-widest transition-all shadow-xl shadow-primary/20"
                     >
                         {$mt.btnEnterVault}
                         <ArrowRight size={20} />
@@ -1485,6 +1485,6 @@
     }
 
     .shadow-glow {
-        box-shadow: 0 0 50px -10px rgba(245, 158, 11, 0.4);
+        box-shadow: 0 0 50px -10px color-mix(in srgb, var(--color-gold) 40%, transparent);
     }
 </style>

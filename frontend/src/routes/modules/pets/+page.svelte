@@ -260,11 +260,11 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             {#each petStore.items as pet}
                 <div
-                    class="bg-white rounded-2xl border border-border shadow-sm overflow-hidden group hover:shadow-md transition-all"
+                    class="bg-card rounded-2xl border border-border shadow-sm overflow-hidden group hover:shadow-md transition-all"
                 >
                     <!-- Pet Header -->
                     <div
-                        class="min-h-32 bg-gradient-to-br from-orange-100 to-amber-50 relative p-6 group"
+                        class="min-h-32 bg-gradient-to-br from-primary/10 to-secondary/10 relative p-6 group"
                     >
                         <div class="absolute right-4 top-4 opacity-10">
                             {#if pet.type === "cat"}
@@ -274,7 +274,7 @@
                             {/if}
                         </div>
                         <div class="relative flex items-start justify-between gap-3">
-                            <h3 class="min-w-0 break-words text-3xl font-serif font-bold text-slate-900">
+                            <h3 class="min-w-0 break-words text-3xl font-serif font-bold text-foreground">
                                 {pet.name}
                             </h3>
                             <div class="flex shrink-0 gap-2 z-20">
@@ -283,7 +283,7 @@
                                         e.stopPropagation();
                                         editPet(pet);
                                     }}
-                                    class="p-2 bg-white/70 hover:bg-white text-primary/70 hover:text-primary rounded-full"
+                                    class="p-2 bg-card/70 hover:bg-card text-primary hover:text-primary-hover rounded-full"
                                     aria-label="Edit these details"
                                 >
                                     <Pencil size={16} />
@@ -293,29 +293,29 @@
                                         e.stopPropagation();
                                         removePet(pet.id as number);
                                     }}
-                                    class="p-2 bg-white/70 hover:bg-white text-red-400 hover:text-red-600 rounded-full"
+                                    class="p-2 bg-card/70 hover:bg-card text-muted-foreground hover:text-danger rounded-full"
                                     aria-label="Remove this item"
                                 >
                                     <Trash2 size={16} />
                                 </button>
                             </div>
                         </div>
-                        <p class="text-amber-800 font-medium">{pet.breed}</p>
+                        <p class="text-muted-foreground font-medium">{pet.breed}</p>
                     </div>
 
                     <!-- Pet Details -->
                     <div class="p-6 space-y-4">
                         {#if pet.guardian}
                         <div
-                            class="flex items-start gap-3 p-3 bg-red-50 rounded-xl"
+                            class="flex items-start gap-3 p-3 bg-primary/5 rounded-xl"
                         >
-                            <Heart class="text-red-500 mt-1 shrink-0" size={18} />
+                            <Heart class="text-primary mt-1 shrink-0" size={18} />
                             <div>
                                 <span
-                                    class="text-xs font-bold uppercase text-red-400 tracking-wide"
+                                    class="text-xs font-bold uppercase text-muted-foreground tracking-wide"
                                     >Designated Guardian</span
                                 >
-                                <div class="font-bold text-gray-900">
+                                <div class="font-bold text-foreground">
                                     {pet.guardian}
                                 </div>
                             </div>
@@ -327,15 +327,15 @@
                             {#if pet.vetName || pet.vetPhone}
                             <div class="flex items-start gap-2">
                                 <Phone
-                                    class="text-gray-400 mt-1 shrink-0"
+                                    class="text-muted-foreground mt-1 shrink-0"
                                     size={16}
                                 />
                                 <div>
                                     <span
-                                        class="text-xs font-bold uppercase text-gray-400"
+                                        class="text-xs font-bold uppercase text-muted-foreground"
                                         >Vet Contact</span
                                     >
-                                    <div class="text-sm font-medium text-gray-700">
+                                    <div class="text-sm font-medium text-foreground">
                                         {pet.vetName}
                                         {#if pet.vetName && pet.vetPhone}<br />{/if}
                                         {pet.vetPhone}
@@ -346,15 +346,15 @@
                             {#if pet.foodInstructions}
                             <div class="flex items-start gap-2">
                                 <Utensils
-                                    class="text-gray-400 mt-1 shrink-0"
+                                    class="text-muted-foreground mt-1 shrink-0"
                                     size={16}
                                 />
                                 <div>
                                     <span
-                                        class="text-xs font-bold uppercase text-gray-400"
+                                        class="text-xs font-bold uppercase text-muted-foreground"
                                         >Food</span
                                     >
-                                    <div class="text-sm font-medium text-gray-700">
+                                    <div class="text-sm font-medium text-foreground">
                                         {pet.foodInstructions}
                                     </div>
                                 </div>
@@ -365,18 +365,18 @@
 
                         {#if pet.medicalNeeds}
                             <div
-                                class="flex items-start gap-2 pt-2 border-t border-gray-100"
+                                class="flex items-start gap-2 pt-2 border-t border-border"
                             >
                                 <Syringe
-                                    class="text-gray-400 mt-1 shrink-0"
+                                    class="text-muted-foreground mt-1 shrink-0"
                                     size={16}
                                 />
                                 <div>
                                     <span
-                                        class="text-xs font-bold uppercase text-gray-400"
+                                        class="text-xs font-bold uppercase text-muted-foreground"
                                         >Meds & Routine</span
                                     >
-                                    <div class="text-sm font-medium text-gray-700">
+                                    <div class="text-sm font-medium text-foreground">
                                         {pet.medicalNeeds}
                                     </div>
                                 </div>
@@ -384,24 +384,24 @@
                         {/if}
 
                         {#if pet.microchipNumber || shownCustom(pet).length}
-                            <dl class="grid grid-cols-2 gap-x-4 gap-y-2 pt-2 border-t border-gray-100 text-sm">
+                            <dl class="grid grid-cols-2 gap-x-4 gap-y-2 pt-2 border-t border-border text-sm">
                                 {#if pet.microchipNumber}
                                     <div>
-                                        <dt class="text-xs font-bold uppercase text-gray-400">Microchip Number</dt>
-                                        <dd class="font-medium text-gray-700 font-mono break-all">{pet.microchipNumber}</dd>
+                                        <dt class="text-xs font-bold uppercase text-muted-foreground">Microchip Number</dt>
+                                        <dd class="font-medium text-foreground font-mono break-all">{pet.microchipNumber}</dd>
                                     </div>
                                 {/if}
                                 {#each shownCustom(pet) as [label, value] (label)}
                                     <div>
-                                        <dt class="text-xs font-bold uppercase text-gray-400 break-words">{label}</dt>
-                                        <dd class="font-medium text-gray-700 break-words">{value}</dd>
+                                        <dt class="text-xs font-bold uppercase text-muted-foreground break-words">{label}</dt>
+                                        <dd class="font-medium text-foreground break-words">{value}</dd>
                                     </div>
                                 {/each}
                             </dl>
                         {/if}
 
                         {#if pet.notes}
-                            <p class="text-sm text-gray-600 italic whitespace-pre-line pt-2 border-t border-gray-100">
+                            <p class="text-sm text-muted-foreground italic whitespace-pre-line pt-2 border-t border-border">
                                 {pet.notes}
                             </p>
                         {/if}
@@ -449,48 +449,48 @@
                 onAction={() => (showAddForm = true)}
             />
         {:else}
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
                 <table class="w-full">
-                    <thead class="bg-slate-50 border-b border-slate-200">
+                    <thead class="bg-background border-b border-border">
                         <tr>
-                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Name</th>
-                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Type</th>
-                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Breed</th>
-                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Guardian</th>
-                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Vet</th>
-                            <th class="px-4 py-3 text-right text-xs font-bold uppercase text-slate-500">Actions</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Name</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Type</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Breed</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Guardian</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Vet</th>
+                            <th class="px-4 py-3 text-right text-xs font-bold uppercase text-muted-foreground">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100">
+                    <tbody class="divide-y divide-border">
                         {#each petStore.items as pet}
-                            <tr class="hover:bg-slate-50 transition-colors group">
+                            <tr class="hover:bg-background transition-colors group">
                                 <td class="px-4 py-3">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-orange-600">
+                                        <div class="w-8 h-8 bg-primary-soft rounded-full flex items-center justify-center text-primary-hover">
                                             {#if pet.type === "cat"}
                                                 <Cat size={16} />
                                             {:else}
                                                 <Dog size={16} />
                                             {/if}
                                         </div>
-                                        <span class="font-medium text-slate-800">{pet.name}</span>
+                                        <span class="font-medium text-foreground">{pet.name}</span>
                                     </div>
                                 </td>
-                                <td class="px-4 py-3 text-sm text-slate-600 capitalize">{pet.type || 'dog'}</td>
-                                <td class="px-4 py-3 text-sm text-slate-600">{pet.breed || '-'}</td>
-                                <td class="px-4 py-3 text-sm text-slate-600">{pet.guardian || '-'}</td>
-                                <td class="px-4 py-3 text-sm text-slate-600">{pet.vetName || '-'}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground capitalize">{pet.type || 'dog'}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{pet.breed || '-'}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{pet.guardian || '-'}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{pet.vetName || '-'}</td>
                                 <td class="px-4 py-3 text-right">
                                     <div class="flex items-center justify-end gap-2">
                                         <button aria-label="Edit these details"
                                             onclick={() => editPet(pet)}
-                                            class="p-1.5 text-slate-400 hover:text-primary transition-colors"
+                                            class="p-1.5 text-muted-foreground hover:text-primary transition-colors"
                                         >
                                             <Pencil size={14} />
                                         </button>
                                         <button aria-label="Remove this item"
                                             onclick={() => removePet(pet.id as number)}
-                                            class="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
+                                            class="p-1.5 text-muted-foreground hover:text-danger transition-colors"
                                         >
                                             <Trash2 size={14} />
                                         </button>
@@ -516,13 +516,13 @@
         <div class="space-y-4">
             <div>
                 <label for="pet-name"
-                    class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1 mb-1.5"
+                    class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1 mb-1.5"
                     >Name</label
                 >
                 <input id="pet-name"
                     type="text"
                     bind:value={newPet.name}
-                    class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    class="w-full px-4 py-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     placeholder="e.g. Barnaby"
                 />
             </div>
@@ -530,12 +530,12 @@
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label for="pet-type"
-                        class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1 mb-1.5"
+                        class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1 mb-1.5"
                         >Type</label
                     >
                     <select id="pet-type"
                         bind:value={newPet.type}
-                        class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     >
                         <option value="dog">Dog</option>
                         <option value="cat">Cat</option>
@@ -544,13 +544,13 @@
                 </div>
                 <div>
                     <label for="pet-breed"
-                        class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1 mb-1.5"
+                        class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1 mb-1.5"
                         >Breed / Species</label
                     >
                     <input id="pet-breed"
                         type="text"
                         bind:value={newPet.breed}
-                        class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        class="w-full px-4 py-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                         placeholder="e.g. Golden Retriever"
                     />
                 </div>
@@ -558,29 +558,29 @@
 
             <div>
                 <label for="pet-microchip"
-                    class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1 mb-1.5"
+                    class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1 mb-1.5"
                     >Microchip Number</label
                 >
                 <input id="pet-microchip"
                     type="text"
                     bind:value={newPet.microchipNumber}
-                    class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-mono"
+                    class="w-full px-4 py-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-mono"
                     placeholder="e.g. 985112003456789"
                 />
             </div>
 
             <div>
                 <label for="pet-guardian"
-                    class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1 mb-1.5"
+                    class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1 mb-1.5"
                     >Their Next Loving Home</label
                 >
                 <input id="pet-guardian"
                     type="text"
                     bind:value={newPet.guardian}
-                    class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    class="w-full px-4 py-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     placeholder="Who will love them next?"
                 />
-                <p class="text-xs text-slate-400 mt-1.5 leading-relaxed px-1">
+                <p class="text-xs text-muted-foreground mt-1.5 leading-relaxed px-1">
                     Choose someone who already knows and loves them, if
                     possible. This person will receive all the care
                     details you provide here.
@@ -589,25 +589,25 @@
 
             <div>
                 <label for="pet-vet-name"
-                    class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1 mb-1.5"
+                    class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1 mb-1.5"
                     >Vet Name</label
                 >
                 <input id="pet-vet-name"
                     type="text"
                     bind:value={newPet.vetName}
-                    class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    class="w-full px-4 py-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     placeholder="Dr. Name"
                 />
             </div>
             <div>
                 <label for="pet-vet-phone"
-                    class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1 mb-1.5"
+                    class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1 mb-1.5"
                     >Vet Phone</label
                 >
                 <input id="pet-vet-phone"
                     type="text"
                     bind:value={newPet.vetPhone}
-                    class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    class="w-full px-4 py-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     placeholder="(xxx) xxx-xxxx"
                 />
             </div>
@@ -615,31 +615,31 @@
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label for="pet-food-instructions"
-                        class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1 mb-1.5"
+                        class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1 mb-1.5"
                         >Their Daily Routine</label
                     >
                     <input id="pet-food-instructions"
                         type="text"
                         bind:value={newPet.foodInstructions}
-                        class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        class="w-full px-4 py-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                         placeholder="Food brand, amounts, schedule"
                     />
                 </div>
                 <div>
                     <label for="pet-medical-needs"
-                        class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1 mb-1.5"
+                        class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1 mb-1.5"
                         >Health & Medications</label
                     >
                     <input id="pet-medical-needs"
                         type="text"
                         bind:value={newPet.medicalNeeds}
-                        class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        class="w-full px-4 py-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                         placeholder="Any ongoing care needs"
                     />
                 </div>
             </div>
 
-            <div class="pt-2 border-t border-slate-100">
+            <div class="pt-2 border-t border-border">
                 <UniversalUploader
                     value={formMediaUrl}
                     mediaId={formMedia?.id ?? null}
@@ -662,7 +662,7 @@
             </div>
 
             <!-- Custom Fields -->
-            <div class="pt-4 mt-4 border-t border-slate-100">
+            <div class="pt-4 mt-4 border-t border-border">
                 <CustomFieldsManager
                     entityType="pet"
                     bind:data={parsedCustomAttributes}
@@ -671,10 +671,10 @@
         </div>
 
         <!-- Footer buttons -->
-        <div class="-mx-6 -mb-6 px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 mt-6">
+        <div class="-mx-6 -mb-6 px-6 py-4 bg-background border-t border-border flex justify-end gap-3 mt-6">
             <button
                 onclick={closeAndReset}
-                class="px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-200 transition-colors"
+                class="px-6 py-2.5 rounded-xl font-semibold text-muted-foreground hover:bg-border transition-colors"
                 >Maybe later</button
             >
             <button

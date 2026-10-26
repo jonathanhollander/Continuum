@@ -425,46 +425,46 @@
     <!-- Global Successor Sync Card -->
     <div class="mb-12 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div
-            class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex items-center gap-5"
+            class="bg-card border border-border rounded-2xl p-6 shadow-sm flex items-center gap-5"
         >
-            <div class="p-4 bg-primary/10 text-primary rounded-2xl shrink-0">
+            <div class="p-4 bg-primary/10 text-primary-hover rounded-2xl shrink-0">
                 <UserCheck size={28} />
             </div>
             <div>
                 <span
-                    class="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-1"
+                    class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1"
                     >Primary Digital Successor</span
                 >
-                <div class="text-xl font-bold text-slate-800">
+                <div class="text-xl font-bold text-foreground">
                     {$estateExecutorName || "Your Lead Executor"}
                 </div>
-                <p class="text-xs text-slate-500 mt-1">
+                <p class="text-xs text-muted-foreground mt-1">
                     Synced from your Lead Executor designation.
                 </p>
             </div>
         </div>
 
         <div
-            class="bg-white border border-indigo-100 rounded-2xl p-6 shadow-sm flex items-center gap-5 relative overflow-hidden group"
+            class="bg-card border border-border rounded-2xl p-6 shadow-sm flex items-center gap-5 relative overflow-hidden group"
         >
             <div
                 class="absolute right-0 top-0 p-8 opacity-[0.03] group-hover:scale-110 transition-transform"
             >
                 <Fingerprint size={80} />
             </div>
-            <div class="p-4 bg-primary/10 text-primary rounded-2xl shrink-0">
+            <div class="p-4 bg-primary/10 text-primary-hover rounded-2xl shrink-0">
                 <Fingerprint size={28} />
             </div>
             <div>
                 <span
-                    class="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-1"
+                    class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1"
                     >Recovery Verification Info</span
                 >
-                <div class="text-xl font-bold text-slate-800">
+                <div class="text-xl font-bold text-foreground">
                     ID: {($estateProfile.ownerName || "").split(" ")[0]} / SSN: ***-**-{$estateProfile.last4SSN ||
                         "####"}
                 </div>
-                <p class="text-xs text-slate-500 mt-1">
+                <p class="text-xs text-muted-foreground mt-1">
                     Pre-filled for identity verification forms.
                 </p>
             </div>
@@ -473,17 +473,17 @@
 
     <!-- Access Drill (Verification Mode) -->
     <div
-        class="mb-12 bg-rose-50 border border-rose-100 rounded-2xl p-8 relative overflow-hidden"
+        class="mb-12 bg-primary/5 border border-primary/20 rounded-2xl p-8 relative overflow-hidden"
     >
         <div class="relative z-10 flex flex-col md:flex-row items-start gap-6">
-            <div class="p-4 bg-primary/10 text-primary rounded-2xl shrink-0">
+            <div class="p-4 bg-primary/10 text-primary-hover rounded-2xl shrink-0">
                 <Siren size={32} />
             </div>
             <div class="flex-1">
-                <h3 class="font-serif font-bold text-2xl text-[#304743] mb-2">
+                <h3 class="font-serif font-bold text-2xl text-foreground mb-2">
                     A gentle practice run
                 </h3>
-                <p class="text-gray-600 mb-6 max-w-xl leading-relaxed">
+                <p class="text-muted-foreground mb-6 max-w-xl leading-relaxed">
                     Walk through it once with your Legacy Contact, so getting in
                     is simple when it matters.
                 </p>
@@ -492,19 +492,19 @@
                     <button
                         class="text-left p-4 rounded-xl border transition-all group {fireDrill.key
                             ? 'bg-primary border-primary/20 text-primary-foreground'
-                            : 'bg-white border-rose-200 hover:shadow-md'}"
+                            : 'bg-card border-primary/20 hover:shadow-md'}"
                         onclick={() => toggleDrill("key")}
                     >
                         <span
                             class="block text-xs font-bold uppercase tracking-wide mb-1 {fireDrill.key
-                                ? 'text-white/80'
+                                ? 'text-primary-foreground'
                                 : 'text-primary'}">Step 1</span
                         >
                         <div class="flex items-center gap-2">
                             <span
                                 class="font-bold {fireDrill.key
-                                    ? 'text-white'
-                                    : 'text-gray-900 group-hover:text-primary'}"
+                                    ? 'text-primary-foreground'
+                                    : 'text-foreground group-hover:text-primary'}"
                                 >Locate the Key</span
                             >
                             {#if fireDrill.key}
@@ -515,19 +515,19 @@
                     <button
                         class="text-left p-4 rounded-xl border transition-all group {fireDrill.twoFactor
                             ? 'bg-primary border-primary/20 text-primary-foreground'
-                            : 'bg-white border-rose-200 hover:shadow-md'}"
+                            : 'bg-card border-primary/20 hover:shadow-md'}"
                         onclick={() => toggleDrill("twoFactor")}
                     >
                         <span
                             class="block text-xs font-bold uppercase tracking-wide mb-1 {fireDrill.twoFactor
-                                ? 'text-white/80'
+                                ? 'text-primary-foreground'
                                 : 'text-primary'}">Step 2</span
                         >
                         <div class="flex items-center gap-2">
                             <span
                                 class="font-bold {fireDrill.twoFactor
-                                    ? 'text-white'
-                                    : 'text-gray-900 group-hover:text-primary'}"
+                                    ? 'text-primary-foreground'
+                                    : 'text-foreground group-hover:text-primary'}"
                                 >Bypass 2FA</span
                             >
                             {#if fireDrill.twoFactor}
@@ -538,19 +538,19 @@
                     <button
                         class="text-left p-4 rounded-xl border transition-all group {fireDrill.login
                             ? 'bg-primary border-primary/20 text-primary-foreground'
-                            : 'bg-white border-rose-200 hover:shadow-md'}"
+                            : 'bg-card border-primary/20 hover:shadow-md'}"
                         onclick={() => toggleDrill("login")}
                     >
                         <span
                             class="block text-xs font-bold uppercase tracking-wide mb-1 {fireDrill.login
-                                ? 'text-white/80'
+                                ? 'text-primary-foreground'
                                 : 'text-primary'}">Step 3</span
                         >
                         <div class="flex items-center gap-2">
                             <span
                                 class="font-bold {fireDrill.login
-                                    ? 'text-white'
-                                    : 'text-gray-900 group-hover:text-primary'}"
+                                    ? 'text-primary-foreground'
+                                    : 'text-foreground group-hover:text-primary'}"
                                 >Confirm Login</span
                             >
                             {#if fireDrill.login}
@@ -561,19 +561,19 @@
                     <button
                         class="text-left p-4 rounded-xl border transition-all group {fireDrill.phone
                             ? 'bg-primary border-primary/20 text-primary-foreground'
-                            : 'bg-white border-rose-200 hover:shadow-md'}"
+                            : 'bg-card border-primary/20 hover:shadow-md'}"
                         onclick={() => toggleDrill("phone")}
                     >
                         <span
                             class="block text-xs font-bold uppercase tracking-wide mb-1 {fireDrill.phone
-                                ? 'text-white/80'
+                                ? 'text-primary-foreground'
                                 : 'text-primary'}">Step 4</span
                         >
                         <div class="flex items-center gap-2">
                             <span
                                 class="font-bold {fireDrill.phone
-                                    ? 'text-white'
-                                    : 'text-gray-900 group-hover:text-primary'}"
+                                    ? 'text-primary-foreground'
+                                    : 'text-foreground group-hover:text-primary'}"
                                 >Unlock Phone</span
                             >
                             {#if fireDrill.phone}
@@ -584,19 +584,19 @@
                     <button
                         class="text-left p-4 rounded-xl border transition-all group {fireDrill.email
                             ? 'bg-primary border-primary/20 text-primary-foreground'
-                            : 'bg-white border-rose-200 hover:shadow-md'}"
+                            : 'bg-card border-primary/20 hover:shadow-md'}"
                         onclick={() => toggleDrill("email")}
                     >
                         <span
                             class="block text-xs font-bold uppercase tracking-wide mb-1 {fireDrill.email
-                                ? 'text-white/80'
+                                ? 'text-primary-foreground'
                                 : 'text-primary'}">Step 5</span
                         >
                         <div class="flex items-center gap-2">
                             <span
                                 class="font-bold {fireDrill.email
-                                    ? 'text-white'
-                                    : 'text-gray-900 group-hover:text-primary'}"
+                                    ? 'text-primary-foreground'
+                                    : 'text-foreground group-hover:text-primary'}"
                                 >Access Email</span
                             >
                             {#if fireDrill.email}
@@ -607,19 +607,19 @@
                     <button
                         class="text-left p-4 rounded-xl border transition-all group {fireDrill.will
                             ? 'bg-primary border-primary/20 text-primary-foreground'
-                            : 'bg-white border-rose-200 hover:shadow-md'}"
+                            : 'bg-card border-primary/20 hover:shadow-md'}"
                         onclick={() => toggleDrill("will")}
                     >
                         <span
                             class="block text-xs font-bold uppercase tracking-wide mb-1 {fireDrill.will
-                                ? 'text-white/80'
+                                ? 'text-primary-foreground'
                                 : 'text-primary'}">Step 6</span
                         >
                         <div class="flex items-center gap-2">
                             <span
                                 class="font-bold {fireDrill.will
-                                    ? 'text-white'
-                                    : 'text-gray-900 group-hover:text-primary'}"
+                                    ? 'text-primary-foreground'
+                                    : 'text-foreground group-hover:text-primary'}"
                                 >Locate Will</span
                             >
                             {#if fireDrill.will}
@@ -635,14 +635,14 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
         <!-- Apple Legacy Contact -->
         <div
-            class="bg-white rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+            class="bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow"
         >
             <button
                 class="w-full text-left p-6 flex items-start gap-4 cursor-pointer"
                 onclick={() => toggleGuide("apple")}
             >
                 <div
-                    class="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center shrink-0"
+                    class="w-12 h-12 rounded-xl bg-background flex items-center justify-center shrink-0"
                 >
                     <Apple class="w-6 h-6 text-foreground" />
                 </div>
@@ -670,11 +670,11 @@
 
             {#if activeGuide === "apple"}
                 <div
-                    class="p-6 bg-gray-50 border-t border-gray-100"
+                    class="p-6 bg-background border-t border-border"
                     transition:slide
                 >
                     <ol
-                        class="space-y-4 text-sm text-gray-700 list-decimal pl-4 mb-6"
+                        class="space-y-4 text-sm text-foreground list-decimal pl-4 mb-6"
                     >
                         <li>
                             Open <strong>Settings</strong> on your iPhone / iPad.
@@ -696,18 +696,18 @@
                         </li>
                     </ol>
                     <div
-                        class="flex items-center gap-4 pt-4 border-t border-gray-200"
+                        class="flex items-center gap-4 pt-4 border-t border-border"
                     >
                         <a
                             href="https://support.apple.com/en-us/HT212360"
                             target="_blank"
-                            class="text-sky-600 font-bold text-xs flex items-center gap-1 hover:underline"
+                            class="text-primary font-bold text-xs flex items-center gap-1 underline"
                         >
                             Official Guide <ExternalLink size={12} />
                         </a>
                         <button
                             onclick={() => markComplete("apple")}
-                            class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-gray-300 hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors"
+                            class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-border hover:bg-success/10 hover:text-success hover:border-success/30 transition-colors"
                         >
                             {setupStatus.apple
                                 ? "Mark In Progress"
@@ -720,14 +720,14 @@
 
         <!-- Google Inactive Account Manager -->
         <div
-            class="bg-white rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+            class="bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow"
         >
             <button
                 class="w-full text-left p-6 flex items-start gap-4 cursor-pointer"
                 onclick={() => toggleGuide("google")}
             >
                 <div
-                    class="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center shrink-0"
+                    class="w-12 h-12 rounded-xl bg-background flex items-center justify-center shrink-0"
                 >
                     <Mail class="w-6 h-6 text-foreground" />
                 </div>
@@ -755,15 +755,15 @@
 
             {#if activeGuide === "google"}
                 <div
-                    class="p-6 bg-gray-50 border-t border-gray-100"
+                    class="p-6 bg-background border-t border-border"
                     transition:slide
                 >
-                    <p class="text-sm text-gray-600 mb-4">
+                    <p class="text-sm text-muted-foreground mb-4">
                         Google can notify your chosen contact after a period of
                         no sign-ins that you choose.
                     </p>
                     <ol
-                        class="space-y-4 text-sm text-gray-700 list-decimal pl-4 mb-6"
+                        class="space-y-4 text-sm text-foreground list-decimal pl-4 mb-6"
                     >
                         <li>Go to <strong>myaccount.google.com</strong>.</li>
                         <li>
@@ -779,18 +779,18 @@
                         <li>Review the auto-reply email they will receive.</li>
                     </ol>
                     <div
-                        class="flex items-center gap-4 pt-4 border-t border-gray-200"
+                        class="flex items-center gap-4 pt-4 border-t border-border"
                     >
                         <a
                             href="https://myaccount.google.com/inactive"
                             target="_blank"
-                            class="text-sky-600 font-bold text-xs flex items-center gap-1 hover:underline"
+                            class="text-primary font-bold text-xs flex items-center gap-1 underline"
                         >
                             Direct Link <ExternalLink size={12} />
                         </a>
                         <button
                             onclick={() => markComplete("google")}
-                            class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-gray-300 hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors"
+                            class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-border hover:bg-success/10 hover:text-success hover:border-success/30 transition-colors"
                         >
                             {setupStatus.google
                                 ? "Mark In Progress"
@@ -803,14 +803,14 @@
 
         <!-- Password Manager (The Master Key) -->
         <div
-            class="bg-white rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow md:col-span-2"
+            class="bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow md:col-span-2"
         >
             <button
                 class="w-full text-left p-6 flex items-start gap-4 cursor-pointer"
                 onclick={() => toggleGuide("passwordManager")}
             >
                 <div
-                    class="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center shrink-0"
+                    class="w-12 h-12 rounded-xl bg-background flex items-center justify-center shrink-0"
                 >
                     <Key class="w-6 h-6 text-foreground" />
                 </div>
@@ -837,11 +837,11 @@
             </button>
             {#if activeGuide === "passwordManager"}
                 <div
-                    class="p-6 bg-gray-50 border-t border-gray-100"
+                    class="p-6 bg-background border-t border-border"
                     transition:slide
                 >
                     <div
-                        class="flex gap-4 items-start bg-amber-50 p-4 rounded-lg border border-amber-100 text-amber-900 text-sm mb-6"
+                        class="flex gap-4 items-start bg-primary-soft p-4 rounded-lg border border-primary/20 text-foreground text-sm mb-6"
                     >
                         <Lock size={18} class="shrink-0 mt-0.5" />
                         <div>
@@ -858,7 +858,7 @@
                         Emergency Kit Checklist:
                     </h4>
                     <ul
-                        class="space-y-2 text-sm text-gray-700 list-disc pl-4 mb-6"
+                        class="space-y-2 text-sm text-foreground list-disc pl-4 mb-6"
                     >
                         <li>
                             Export your "Emergency Kit" PDF from your password
@@ -873,11 +873,11 @@
                         <li>Place in Red Binder or Safe.</li>
                     </ul>
                     <div
-                        class="flex items-center gap-4 pt-4 border-t border-gray-200"
+                        class="flex items-center gap-4 pt-4 border-t border-border"
                     >
                         <button
                             onclick={() => markComplete("passwordManager")}
-                            class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-gray-300 hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors"
+                            class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-border hover:bg-success/10 hover:text-success hover:border-success/30 transition-colors"
                         >
                             {setupStatus.passwordManager
                                 ? "Mark In Progress"
@@ -890,14 +890,14 @@
 
         <!-- Social Media -->
         <div
-            class="bg-white rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+            class="bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow"
         >
             <button
                 class="w-full text-left p-6 flex items-start gap-4 cursor-pointer"
                 onclick={() => toggleGuide("facebook")}
             >
                 <div
-                    class="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center shrink-0"
+                    class="w-12 h-12 rounded-xl bg-background flex items-center justify-center shrink-0"
                 >
                     <Facebook class="w-6 h-6 text-foreground" />
                 </div>
@@ -924,11 +924,11 @@
             </button>
             {#if activeGuide === "facebook"}
                 <div
-                    class="p-6 bg-gray-50 border-t border-gray-100"
+                    class="p-6 bg-background border-t border-border"
                     transition:slide
                 >
                     <ol
-                        class="space-y-4 text-sm text-gray-700 list-decimal pl-4 mb-6"
+                        class="space-y-4 text-sm text-foreground list-decimal pl-4 mb-6"
                     >
                         <li>Settings & Privacy > Settings.</li>
                         <li><strong>Memorialization Settings</strong>.</li>
@@ -939,11 +939,11 @@
                         <li>Or you can choose "Delete After Death".</li>
                     </ol>
                     <div
-                        class="flex items-center gap-4 pt-4 border-t border-gray-200"
+                        class="flex items-center gap-4 pt-4 border-t border-border"
                     >
                         <button
                             onclick={() => markComplete("facebook")}
-                            class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-gray-300 hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors"
+                            class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-border hover:bg-success/10 hover:text-success hover:border-success/30 transition-colors"
                         >
                             {setupStatus.facebook
                                 ? "Mark In Progress"
@@ -955,14 +955,14 @@
         </div>
 
         <div
-            class="bg-white rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+            class="bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow"
         >
             <button
                 class="w-full text-left p-6 flex items-start gap-4 cursor-pointer"
                 onclick={() => toggleGuide("linkedin")}
             >
                 <div
-                    class="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center shrink-0"
+                    class="w-12 h-12 rounded-xl bg-background flex items-center justify-center shrink-0"
                 >
                     <Linkedin class="w-6 h-6 text-foreground" />
                 </div>
@@ -989,14 +989,14 @@
             </button>
             {#if activeGuide === "linkedin"}
                 <div
-                    class="p-6 bg-gray-50 border-t border-gray-100"
+                    class="p-6 bg-background border-t border-border"
                     transition:slide
                 >
-                    <p class="text-sm text-gray-600 mb-4">
+                    <p class="text-sm text-muted-foreground mb-4">
                         Your executor can contact LinkedIn when the time comes.
                     </p>
                     <ul
-                        class="space-y-4 text-sm text-gray-700 list-disc pl-4 mb-6"
+                        class="space-y-4 text-sm text-foreground list-disc pl-4 mb-6"
                     >
                         <li>
                             Include your LinkedIn URL in your Executor Toolkit.
@@ -1011,11 +1011,11 @@
                         </li>
                     </ul>
                     <div
-                        class="flex items-center gap-4 pt-4 border-t border-gray-200"
+                        class="flex items-center gap-4 pt-4 border-t border-border"
                     >
                         <button
                             onclick={() => markComplete("linkedin")}
-                            class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-gray-300 hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors"
+                            class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-border hover:bg-success/10 hover:text-success hover:border-success/30 transition-colors"
                         >
                             {setupStatus.linkedin
                                 ? "Mark In Progress"
@@ -1033,17 +1033,17 @@
     >
         <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
             <div>
-                <h2 class="font-serif font-bold text-2xl text-[#304743]">
+                <h2 class="font-serif font-bold text-2xl text-foreground">
                     Digital Asset Inventory
                 </h2>
-                <p class="text-slate-500 text-sm">
+                <p class="text-muted-foreground text-sm">
                     Key accounts your executor needs access to.
                 </p>
             </div>
             <div class="flex flex-wrap items-center gap-3">
                 <button
                     onclick={() => (showWizard = true)}
-                    class="bg-[#304743] text-white px-4 py-2 rounded-full font-bold hover:bg-[#2a3f3b] transition-colors flex items-center gap-2 text-sm"
+                    class="bg-primary text-primary-foreground px-4 py-2 rounded-full font-bold hover:bg-primary-hover transition-colors flex items-center gap-2 text-sm"
                 >
                     <Siren size={16} /> Walk me through my accounts
                 </button>
@@ -1066,11 +1066,11 @@
                     transition:fade
                 >
                     <div
-                        class="w-full max-w-2xl relative bg-white rounded-2xl shadow-2xl overflow-hidden"
+                        class="w-full max-w-2xl relative bg-card rounded-2xl shadow-2xl overflow-hidden"
                         transition:slide
                     >
                         <button aria-label="Close"
-                            class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10"
+                            class="absolute top-4 right-4 text-muted-foreground hover:text-muted-foreground z-10"
                             onclick={() => (showWizard = false)}
                         >
                             <X size={20} />
@@ -1093,7 +1093,7 @@
                     transition:fade
                 >
                     <form
-                        class="w-full max-w-2xl relative bg-white rounded-2xl shadow-2xl overflow-hidden"
+                        class="w-full max-w-2xl relative bg-card rounded-2xl shadow-2xl overflow-hidden"
                         transition:slide
                         aria-label="Edit these details"
                         data-testid="digital-edit-form"
@@ -1102,44 +1102,44 @@
                         <button
                             type="button"
                             aria-label="Maybe later"
-                            class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10"
+                            class="absolute top-4 right-4 text-muted-foreground hover:text-muted-foreground z-10"
                             onclick={() => (editingId = null)}
                         >
                             <X size={20} />
                         </button>
                         <div class="p-8 space-y-4">
-                            <h3 class="font-serif font-bold text-2xl text-[#304743]">
+                            <h3 class="font-serif font-bold text-2xl text-foreground">
                                 {editingId === "new" ? "Add an account" : "Edit these details"}
                             </h3>
-                            <label class="block text-sm font-bold text-slate-600">
+                            <label class="block text-sm font-bold text-muted-foreground">
                                 Platform
-                                <input bind:value={draft.platform} name="platform" class="mt-1 w-full border border-slate-200 rounded-xl px-3 py-2 font-normal text-slate-800" />
+                                <input bind:value={draft.platform} name="platform" class="mt-1 w-full border border-border rounded-xl px-3 py-2 font-normal text-foreground" />
                             </label>
-                            <label class="block text-sm font-bold text-slate-600">
+                            <label class="block text-sm font-bold text-muted-foreground">
                                 Username
-                                <input bind:value={draft.username} name="username" class="mt-1 w-full border border-slate-200 rounded-xl px-3 py-2 font-normal text-slate-800" />
+                                <input bind:value={draft.username} name="username" class="mt-1 w-full border border-border rounded-xl px-3 py-2 font-normal text-foreground" />
                             </label>
-                            <label class="block text-sm font-bold text-slate-600">
+                            <label class="block text-sm font-bold text-muted-foreground">
                                 Type
-                                <input bind:value={draft.type} name="type" class="mt-1 w-full border border-slate-200 rounded-xl px-3 py-2 font-normal text-slate-800" />
+                                <input bind:value={draft.type} name="type" class="mt-1 w-full border border-border rounded-xl px-3 py-2 font-normal text-foreground" />
                             </label>
-                            <label class="block text-sm font-bold text-slate-600">
+                            <label class="block text-sm font-bold text-muted-foreground">
                                 Description
-                                <input bind:value={draft.description} name="description" class="mt-1 w-full border border-slate-200 rounded-xl px-3 py-2 font-normal text-slate-800" />
+                                <input bind:value={draft.description} name="description" class="mt-1 w-full border border-border rounded-xl px-3 py-2 font-normal text-foreground" />
                             </label>
                             <div class="grid grid-cols-2 gap-4">
-                                <label class="block text-sm font-bold text-slate-600">
+                                <label class="block text-sm font-bold text-muted-foreground">
                                     Preference
-                                    <select bind:value={draft.preference} name="preference" class="mt-1 w-full border border-slate-200 rounded-xl px-3 py-2 font-normal text-slate-800 bg-white">
+                                    <select bind:value={draft.preference} name="preference" class="mt-1 w-full border border-border rounded-xl px-3 py-2 font-normal text-foreground bg-card">
                                         <option value=""></option>
                                         <option value="memorialize">Memorialize</option>
                                         <option value="delete">Remove / Close the account</option>
                                         <option value="transfer">Transfer Ownership</option>
                                     </select>
                                 </label>
-                                <label class="block text-sm font-bold text-slate-600">
+                                <label class="block text-sm font-bold text-muted-foreground">
                                     Priority
-                                    <select bind:value={draft.priority} name="priority" class="mt-1 w-full border border-slate-200 rounded-xl px-3 py-2 font-normal text-slate-800 bg-white">
+                                    <select bind:value={draft.priority} name="priority" class="mt-1 w-full border border-border rounded-xl px-3 py-2 font-normal text-foreground bg-card">
                                         <option value=""></option>
                                         <option value="low">Low</option>
                                         <option value="medium">Medium</option>
@@ -1147,16 +1147,16 @@
                                     </select>
                                 </label>
                             </div>
-                            <label class="block text-sm font-bold text-slate-600">
+                            <label class="block text-sm font-bold text-muted-foreground">
                                 Final Instructions
-                                <textarea bind:value={draft.instructions} name="instructions" rows="3" placeholder="Any specific details about handling this item..." class="mt-1 w-full border border-slate-200 rounded-xl px-3 py-2 font-normal text-slate-800 resize-none"></textarea>
+                                <textarea bind:value={draft.instructions} name="instructions" rows="3" placeholder="Any specific details about handling this item..." class="mt-1 w-full border border-border rounded-xl px-3 py-2 font-normal text-foreground resize-none"></textarea>
                             </label>
                         </div>
-                        <div class="px-8 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+                        <div class="px-8 py-4 bg-background border-t border-border flex justify-end gap-3">
                             <button
                                 type="button"
                                 onclick={() => (editingId = null)}
-                                class="px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-200 transition-colors"
+                                class="px-6 py-2.5 rounded-xl font-semibold text-muted-foreground hover:bg-border transition-colors"
                             >
                                 Maybe later
                             </button>
@@ -1164,7 +1164,7 @@
                                 type="submit"
                                 disabled={!draft.platform.trim() || savingEdit}
                                 aria-busy={savingEdit}
-                                class="px-6 py-2.5 rounded-xl font-semibold bg-[#304743] text-white hover:bg-[#2a3f3b] transition-colors disabled:opacity-50"
+                                class="px-6 py-2.5 rounded-xl font-semibold bg-primary text-primary-foreground hover:bg-primary-hover transition-colors disabled:opacity-50"
                             >
                                 {savingEdit ? "Saving..." : editingId === "new" ? "Save my thoughts" : "Save my updates"}
                             </button>
@@ -1183,7 +1183,7 @@
                         onClick={() => openNew({ ...sample, type: "Vault" })}
                     >
                         {#snippet icon()}
-                            <Key size={20} class="text-slate-400" />
+                            <Key size={20} class="text-muted-foreground" />
                         {/snippet}
                     </GhostRow>
                 {/each}
@@ -1191,12 +1191,12 @@
                 {#if viewMode === 'card'}
                     {#each assets as asset (asset.id)}
                         <div
-                            class="bg-white p-4 rounded-xl border border-slate-100 flex justify-between items-center shadow-sm"
+                            class="bg-card p-4 rounded-xl border border-border flex justify-between items-center shadow-sm"
                             transition:slide
                         >
                             <div class="flex items-center gap-4">
                                 <div
-                                    class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary"
+                                    class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary-hover"
                                 >
                                     {#if asset.type === "Email"}
                                         <Mail size={18} />
@@ -1205,11 +1205,11 @@
                                     {/if}
                                 </div>
                                 <div>
-                                    <div class="font-bold text-slate-800">
+                                    <div class="font-bold text-foreground">
                                         {asset.platform || asset.name}
                                     </div>
                                     <div
-                                        class="text-xs text-slate-500 uppercase tracking-wider"
+                                        class="text-xs text-muted-foreground uppercase tracking-wider"
                                     >
                                         {[asset.username, asset.description].filter(Boolean).join(" - ")}
                                     </div>
@@ -1220,7 +1220,7 @@
                                     onclick={() => openEdit(asset)}
                                     aria-label="Edit these details"
                                     title="Edit these details"
-                                    class="text-slate-400 hover:text-primary p-2 hover:bg-primary/5 rounded-full transition-colors"
+                                    class="text-muted-foreground hover:text-primary p-2 hover:bg-primary/5 rounded-full transition-colors"
                                 >
                                     <Pencil size={16} />
                                 </button>
@@ -1228,7 +1228,7 @@
                                     onclick={() => deleteAsset(asset.id)}
                                     aria-label="Remove this item"
                                     title="Remove this item"
-                                    class="text-red-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-full transition-colors"
+                                    class="text-muted-foreground hover:text-danger p-2 hover:bg-danger-soft rounded-full transition-colors"
                                 >
                                     <X size={16} />
                                 </button>
@@ -1237,34 +1237,34 @@
                     {/each}
                 {:else}
                     <!-- Table View -->
-                    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                    <div class="bg-card rounded-xl border border-border overflow-hidden">
                         <table class="w-full">
-                            <thead class="bg-slate-50 border-b border-slate-200">
+                            <thead class="bg-background border-b border-border">
                                 <tr>
-                                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Platform</th>
-                                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Username</th>
-                                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Type</th>
-                                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Description</th>
-                                    <th class="text-right px-4 py-3 text-xs font-bold uppercase text-slate-500">Actions</th>
+                                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Platform</th>
+                                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Username</th>
+                                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Type</th>
+                                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Description</th>
+                                    <th class="text-right px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-100">
+                            <tbody class="divide-y divide-border">
                                 {#each assets as asset (asset.id)}
-                                    <tr class="hover:bg-slate-50 transition-colors">
-                                        <td class="px-4 py-3 font-medium text-slate-800">{asset.platform || asset.name}</td>
-                                        <td class="px-4 py-3 text-slate-600">{asset.username}</td>
+                                    <tr class="hover:bg-background transition-colors">
+                                        <td class="px-4 py-3 font-medium text-foreground">{asset.platform || asset.name}</td>
+                                        <td class="px-4 py-3 text-muted-foreground">{asset.username}</td>
                                         <td class="px-4 py-3">
-                                            <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-medium">
+                                            <span class="px-2 py-1 bg-muted text-muted-foreground rounded text-xs font-medium">
                                                 {asset.type}
                                             </span>
                                         </td>
-                                        <td class="px-4 py-3 text-slate-500 text-sm">{asset.description}</td>
+                                        <td class="px-4 py-3 text-muted-foreground text-sm">{asset.description}</td>
                                         <td class="px-4 py-3 text-right">
                                             <button
                                                 onclick={() => openEdit(asset)}
                                                 aria-label="Edit these details"
                                                 title="Edit these details"
-                                                class="text-slate-400 hover:text-primary p-1 hover:bg-primary/5 rounded transition-colors"
+                                                class="text-muted-foreground hover:text-primary p-1 hover:bg-primary/5 rounded transition-colors"
                                             >
                                                 <Pencil size={16} />
                                             </button>
@@ -1272,7 +1272,7 @@
                                                 onclick={() => deleteAsset(asset.id)}
                                                 aria-label="Remove this item"
                                                 title="Remove this item"
-                                                class="text-red-400 hover:text-red-600 p-1 hover:bg-red-50 rounded transition-colors"
+                                                class="text-muted-foreground hover:text-danger p-1 hover:bg-danger-soft rounded transition-colors"
                                             >
                                                 <X size={16} />
                                             </button>

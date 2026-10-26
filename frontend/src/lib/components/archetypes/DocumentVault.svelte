@@ -229,10 +229,10 @@
     function getStatusColor(doc: Doc) {
         const state = docState(doc);
         if (state === "review")
-            return "bg-amber-500/10 text-amber-700 border-amber-200";
+            return "bg-warning-soft text-warning border-warning/30";
         if (state === "locate")
-            return "bg-gray-500/10 text-gray-600 border-gray-200";
-        return "bg-[#4A7C74]/10 text-[#4A7C74] border-[#4A7C74]/20";
+            return "bg-slate-500/10 text-muted-foreground border-border";
+        return "bg-primary/10 text-primary-hover border-primary/20";
     }
 
     // Vault Health Logic
@@ -279,21 +279,21 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Protection Score Card -->
         <div
-            class="glass-panel p-6 rounded-2xl relative overflow-hidden group border-[#4A7C74]/20"
+            class="bg-card/70 backdrop-blur-md border border-border shadow-sm p-6 rounded-2xl relative overflow-hidden group border-primary/20"
         >
             <div
-                class="absolute -right-4 -top-4 opacity-10 rotate-12 transition-transform group-hover:scale-110 text-[#4A7C74]"
+                class="absolute -right-4 -top-4 opacity-10 rotate-12 transition-transform group-hover:scale-110 text-primary"
             >
                 <Shield size={120} />
             </div>
             <p
-                class="text-xs font-bold text-[#4A7C74] uppercase tracking-widest flex items-center gap-2"
+                class="text-xs font-bold text-primary uppercase tracking-widest flex items-center gap-2"
             >
                 <CircleCheck size={14} /> Peace of Mind Score
             </p>
             {#if healthScore === null}
                 <div class="mt-2" data-testid="vault-score">
-                    <span class="text-2xl font-serif font-bold text-[#304743]"
+                    <span class="text-2xl font-serif font-bold text-foreground"
                         >Ready when you are</span
                     >
                 </div>
@@ -302,7 +302,7 @@
                 </p>
             {:else}
                 <div class="mt-2 flex items-baseline gap-2" data-testid="vault-score">
-                    <span class="text-4xl font-serif font-bold text-[#304743]"
+                    <span class="text-4xl font-serif font-bold text-foreground"
                         >{healthScore}%</span
                     >
                     <span class="text-sm font-medium text-muted-foreground"
@@ -313,13 +313,13 @@
                 <div class="mt-4 flex gap-1">
                     {#if readyDocs === docs.length}
                         <div
-                            class="text-xs bg-[#4A7C74]/10 text-[#4A7C74] px-2 py-1 rounded-full flex items-center gap-1 font-bold"
+                            class="text-xs bg-primary/10 text-primary-hover px-2 py-1 rounded-full flex items-center gap-1 font-bold"
                         >
                             <CircleCheck size={10} /> Every document ready
                         </div>
                     {:else}
                         <div
-                            class="text-xs bg-amber-500/10 text-amber-700 px-2 py-1 rounded-full flex items-center gap-1 font-bold"
+                            class="text-xs bg-warning-soft text-warning px-2 py-1 rounded-full flex items-center gap-1 font-bold"
                         >
                             <CircleAlert size={10} /> {readyDocs} of {docs.length} ready
                         </div>
@@ -330,11 +330,11 @@
 
         <!-- Assistant Banner -->
         <div
-            class="md:col-span-2 glass-panel p-6 rounded-2xl flex flex-col justify-center bg-gradient-to-r from-background to-[#4A7C74]/5"
+            class="md:col-span-2 bg-card/70 backdrop-blur-md border border-border shadow-sm p-6 rounded-2xl flex flex-col justify-center bg-gradient-to-r from-background to-primary/5"
         >
             <div class="flex items-center gap-6 h-full">
                 <div
-                    class="hidden md:flex bg-white p-4 rounded-full shadow-md text-[#4A7C74]"
+                    class="hidden md:flex bg-card p-4 rounded-full shadow-md text-primary"
                 >
                     {#if !isLoading && docs.length > 0 && needsReview === 0}
                         <CircleCheck size={32} />
@@ -343,7 +343,7 @@
                     {/if}
                 </div>
                 <div>
-                    <h4 class="font-serif font-bold text-xl text-[#304743]">
+                    <h4 class="font-serif font-bold text-xl text-foreground">
                         {#if isLoading}
                             Gathering your documents…
                         {:else if docs.length === 0}
@@ -375,7 +375,7 @@
                     {#if !isLoading && docs.length === 0}
                         <button
                             onclick={startWizard}
-                            class="mt-4 text-sm font-bold text-[#4A7C74] hover:underline flex items-center gap-1"
+                            class="mt-4 text-sm font-bold text-primary hover:underline flex items-center gap-1"
                         >
                             Start Vault Assistant <ArrowRight size={14} />
                         </button>
@@ -387,7 +387,7 @@
 
     <!-- Actions -->
     <div
-        class="flex justify-between items-center bg-secondary/5 p-3 rounded-2xl border border-slate-200"
+        class="flex justify-between items-center bg-secondary/5 p-3 rounded-2xl border border-border"
     >
         <div class="relative flex-1 max-w-sm ml-2">
             <Search
@@ -407,7 +407,7 @@
                 type="button"
                 onclick={() => (showExampleWill = true)}
                 data-testid="example-will"
-                class="px-4 py-2.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-all flex items-center gap-2"
+                class="px-4 py-2.5 bg-card border border-border text-muted-foreground font-bold rounded-xl hover:bg-background transition-all flex items-center gap-2"
             >
                 <BookOpenText size={16} /> Example will, explained
             </button>
@@ -427,15 +427,15 @@
     {#if showUpload}
         <div
             transition:fly={{ y: 10 }}
-            class="glass-panel p-0 rounded-2xl border-l-4 border-l-[#4A7C74] overflow-hidden"
+            class="bg-card/70 backdrop-blur-md border border-border shadow-sm p-0 rounded-2xl border-l-4 border-l-primary overflow-hidden"
         >
             <!-- Wizard Mode -->
             {#if showWizard && wizardStep === 1}
-                <div class="p-8 bg-[#FBF9EB]/50">
+                <div class="p-8 bg-muted/50">
                     <div class="flex justify-between items-start mb-6">
                         <div>
                             <h4
-                                class="font-serif font-bold text-xl text-[#304743]"
+                                class="font-serif font-bold text-xl text-foreground"
                             >
                                 Vault Assistant
                             </h4>
@@ -445,7 +445,7 @@
                         </div>
                         <button
                             onclick={() => (showUpload = false)}
-                            class="p-2 -mr-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+                            class="p-2 -mr-2 text-muted-foreground hover:text-muted-foreground hover:bg-muted rounded-full transition-colors"
                             aria-label="Close"
                         >
                             <X class="w-5 h-5" />
@@ -459,10 +459,10 @@
                                     "Will",
                                     "Last Will & Testament",
                                 )}
-                            class="p-4 bg-white border border-slate-200 hover:border-[#4A7C74] rounded-2xl text-left transition-all hover:shadow-md group"
+                            class="p-4 bg-card border border-border hover:border-primary rounded-2xl text-left transition-all hover:shadow-md group"
                         >
                             <span
-                                class="block font-bold text-[#4A7C74] mb-1 group-hover:underline"
+                                class="block font-bold text-primary mb-1 group-hover:underline"
                                 >Legal Will</span
                             >
                             <span
@@ -473,10 +473,10 @@
                         <button
                             onclick={() =>
                                 selectWizardOption("Trust", "Living Trust")}
-                            class="p-4 bg-white border border-slate-200 hover:border-[#4A7C74] rounded-2xl text-left transition-all hover:shadow-md group"
+                            class="p-4 bg-card border border-border hover:border-primary rounded-2xl text-left transition-all hover:shadow-md group"
                         >
                             <span
-                                class="block font-bold text-[#4A7C74] mb-1 group-hover:underline"
+                                class="block font-bold text-primary mb-1 group-hover:underline"
                                 >Living Trust</span
                             >
                             <span
@@ -490,10 +490,10 @@
                                     "Insurance",
                                     "Life Insurance Policy",
                                 )}
-                            class="p-4 bg-white border border-slate-200 hover:border-[#4A7C74] rounded-2xl text-left transition-all hover:shadow-md group"
+                            class="p-4 bg-card border border-border hover:border-primary rounded-2xl text-left transition-all hover:shadow-md group"
                         >
                             <span
-                                class="block font-bold text-[#4A7C74] mb-1 group-hover:underline"
+                                class="block font-bold text-primary mb-1 group-hover:underline"
                                 >Insurance Policy</span
                             >
                             <span
@@ -516,12 +516,12 @@
                     <div
                         class="flex justify-between items-center mb-6 border-b border-border/50 pb-4"
                     >
-                        <h4 class="font-serif font-bold text-lg text-[#304743]">
+                        <h4 class="font-serif font-bold text-lg text-foreground">
                             Document Details
                         </h4>
                         {#if wizardStep === 2}
                             <span
-                                class="text-xs bg-[#4A7C74]/10 text-[#4A7C74] px-2 py-1 rounded-full font-bold flex items-center gap-1"
+                                class="text-xs bg-primary/10 text-primary-hover px-2 py-1 rounded-full font-bold flex items-center gap-1"
                             >
                                 <CircleCheck size={10} /> Assistant Auto-Filled
                             </span>
@@ -532,7 +532,7 @@
                         <div class="space-y-1.5">
                             <label
                                 for="doc-title"
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Document Title</label
                             >
                             <input
@@ -541,11 +541,11 @@
                                 oninput={() => (titleMissing = false)}
                                 aria-invalid={titleMissing}
                                 aria-describedby={titleMissing ? "doc-title-hint" : undefined}
-                                class="w-full px-4 py-3 rounded-xl border {titleMissing ? 'border-amber-400 ring-2 ring-amber-200' : 'border-slate-200'} bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                class="w-full px-4 py-3 rounded-xl border {titleMissing ? 'border-warning ring-2 ring-warning-soft' : 'border-border'} bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                                 placeholder="e.g. Last Will"
                             />
                             {#if titleMissing}
-                                <p id="doc-title-hint" class="text-xs text-amber-700 px-1">
+                                <p id="doc-title-hint" class="text-xs text-warning px-1">
                                     Give this document a title and it is ready to save.
                                 </p>
                             {/if}
@@ -553,13 +553,13 @@
                         <div class="space-y-1.5">
                             <label
                                 for="doc-category"
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Category</label
                             >
                             <select
                                 id="doc-category"
                                 bind:value={newDoc.type}
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                             >
                                 <option value="Will">Will</option>
                                 <option value="Trust">Trust</option>
@@ -588,51 +588,51 @@
                         <div class="space-y-1.5">
                             <label
                                 for="doc-location"
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Where the Original Is Kept</label
                             >
                             <input
                                 id="doc-location"
                                 bind:value={newDoc.location}
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                                 placeholder="e.g. Blue fire safe in the study"
                             />
                         </div>
                         <div class="space-y-1.5">
                             <label
                                 for="doc-witnesses"
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Witnesses</label
                             >
                             <input
                                 id="doc-witnesses"
                                 bind:value={newDoc.witnesses}
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                                 placeholder="Optional"
                             />
                         </div>
                         <div class="space-y-1.5">
                             <label
                                 for="doc-signed"
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Date Signed</label
                             >
                             <input
                                 id="doc-signed"
                                 type="date"
                                 bind:value={newDoc.signedDate}
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                             />
                         </div>
                         <div class="space-y-1.5">
                             <div class="flex justify-between">
                                 <label
                                     for="doc-review"
-                                    class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                                    class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                     >Next Review</label
                                 >
                                 <span
-                                    class="text-[10px] text-[#4A7C74] font-medium cursor-help"
+                                    class="text-[10px] text-primary font-medium cursor-help"
                                     title="A gentle date to look this over again, so it keeps reflecting your current wishes."
                                     >Why?</span
                                 >
@@ -641,13 +641,13 @@
                                 id="doc-review"
                                 type="date"
                                 bind:value={newDoc.nextReviewDate}
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                             />
                         </div>
                     </div>
 
                     <!-- Custom Fields -->
-                    <div class="mb-4 pt-4 border-t border-slate-100">
+                    <div class="mb-4 pt-4 border-t border-border">
                         <CustomFieldsManager
                             entityType="legal_document"
                             bind:data={newDoc.customAttributes}
@@ -657,7 +657,7 @@
                     <div class="flex justify-end gap-3 pt-4">
                         <button
                             onclick={resetForm}
-                            class="px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+                            class="px-6 py-2.5 rounded-xl font-semibold text-muted-foreground hover:bg-muted transition-colors"
                             >Not right now</button
                         >
                         <button
@@ -679,18 +679,18 @@
         <div class="grid grid-cols-1 gap-4">
             {#each visibleDocs as doc (doc.id)}
                 <div
-                    class="group glass-card p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between hover:bg-white/80 transition-all border border-transparent hover:border-[#4A7C74]/20 gap-4"
+                    class="group bg-card/60 backdrop-blur-sm border border-border shadow-sm hover:shadow-md transition-all duration-300 p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between hover:bg-card/80 transition-all border border-transparent hover:border-primary/20 gap-4"
                 >
                     <div class="flex items-start gap-5">
                         <div
-                            class="w-12 h-12 shrink-0 rounded-2xl bg-[#FBF9EB] border border-[#4A7C74]/10 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform text-[#4A7C74]"
+                            class="w-12 h-12 shrink-0 rounded-2xl bg-muted border border-primary/10 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform text-primary"
                         >
                             <FileText size={22} />
                         </div>
                         <div>
                             <div class="flex items-center gap-3 mb-1">
                                 <h4
-                                    class="font-serif font-bold text-lg leading-tight text-[#304743]"
+                                    class="font-serif font-bold text-lg leading-tight text-foreground"
                                 >
                                     {doc.name}
                                 </h4>
@@ -707,7 +707,7 @@
                                 class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground"
                             >
                                 <span
-                                    class="font-bold text-gray-500 uppercase tracking-wide flex items-center gap-1"
+                                    class="font-bold text-muted-foreground uppercase tracking-wide flex items-center gap-1"
                                 >
                                     <Shield size={10} />
                                     {doc.type}
@@ -723,7 +723,7 @@
                                 {#if doc.nextReviewDate}
                                     <span
                                         class="flex items-center gap-1 {reviewDue(doc)
-                                            ? 'text-amber-700 font-bold'
+                                            ? 'text-warning font-bold'
                                             : ''}"
                                     >
                                         <Calendar size={10} /> Review: {dateWords(doc.nextReviewDate)}
@@ -731,7 +731,7 @@
                                 {/if}
                                 {#if doc.filePath}
                                     <span
-                                        class="flex items-center gap-1 text-emerald-600 font-bold"
+                                        class="flex items-center gap-1 text-success font-bold"
                                     >
                                         <FileCheck size={10} /> Digital Copy Stored
                                     </span>
@@ -746,10 +746,10 @@
                                 </div>
                             {/if}
                             {#if doc.customAttributes && Object.keys(doc.customAttributes).some((k) => doc.customAttributes?.[k] !== "" && doc.customAttributes?.[k] != null)}
-                                <div class="mt-2 flex flex-wrap gap-2 text-[11px] text-slate-600">
+                                <div class="mt-2 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
                                     {#each Object.entries(doc.customAttributes) as [k, v] (k)}
                                         {#if v !== "" && v != null}
-                                            <span class="bg-slate-100 px-2 py-0.5 rounded"><span class="font-semibold">{k}:</span> {v === true ? "Yes" : v === false ? "No" : v}</span>
+                                            <span class="bg-muted px-2 py-0.5 rounded"><span class="font-semibold">{k}:</span> {v === true ? "Yes" : v === false ? "No" : v}</span>
                                         {/if}
                                     {/each}
                                 </div>
@@ -764,7 +764,7 @@
                             <button
                                 type="button"
                                 onclick={() => saveCopy(doc)}
-                                class="p-2 hover:bg-secondary/10 text-muted-foreground hover:text-[#4A7C74] rounded-full transition-colors"
+                                class="p-2 hover:bg-secondary/10 text-muted-foreground hover:text-primary rounded-full transition-colors"
                                 title="Save a copy of the digital file"
                                 aria-label="Save a copy of the digital file"
                             >
@@ -773,7 +773,7 @@
                         {/if}
                         <button
                             onclick={() => editDoc(doc)}
-                            class="p-2 hover:bg-secondary/10 text-muted-foreground hover:text-[#4A7C74] rounded-full transition-colors"
+                            class="p-2 hover:bg-secondary/10 text-muted-foreground hover:text-primary rounded-full transition-colors"
                             title="Edit Details"
                             aria-label="Edit Details"
                         >
@@ -792,7 +792,7 @@
             {/each}
             {#if isLoading}
                 <div class="flex flex-col items-center justify-center gap-3 py-12" role="status" data-testid="documents-loading">
-                    <Loader2 size={28} class="animate-spin text-[#4A7C74]" />
+                    <Loader2 size={28} class="animate-spin text-primary" />
                     <span class="sr-only">Gathering your documents…</span>
                 </div>
             {:else if docs.length === 0}
@@ -802,7 +802,7 @@
                 <div class="flex justify-center mt-4">
                     <button
                         onclick={startWizard}
-                        class="text-sm font-bold text-[#4A7C74] hover:bg-[#4A7C74]/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                        class="text-sm font-bold text-primary hover:bg-primary/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
                     >
                         <Sparkles size={14} /> Start Vault Assistant
                     </button>
@@ -811,32 +811,32 @@
         </div>
     {:else}
         <!-- Table View -->
-        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div class="bg-card rounded-xl border border-border overflow-hidden">
             <table class="w-full">
-                <thead class="bg-slate-50 border-b border-slate-200">
+                <thead class="bg-background border-b border-border">
                     <tr>
-                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Document</th>
-                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Type</th>
-                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Status</th>
-                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Date Signed</th>
-                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Location</th>
-                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Next Review</th>
-                        <th class="text-right px-4 py-3 text-xs font-bold uppercase text-slate-500">Actions</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Document</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Type</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Status</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Date Signed</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Location</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Next Review</th>
+                        <th class="text-right px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-border">
                     {#each visibleDocs as doc (doc.id)}
-                        <tr class="hover:bg-slate-50 transition-colors group">
+                        <tr class="hover:bg-background transition-colors group">
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 shrink-0 rounded-lg bg-[#FBF9EB] border border-[#4A7C74]/10 flex items-center justify-center text-[#4A7C74]">
+                                    <div class="w-8 h-8 shrink-0 rounded-lg bg-muted border border-primary/10 flex items-center justify-center text-primary">
                                         <FileText size={16} />
                                     </div>
-                                    <span class="font-medium text-slate-800">{doc.name}</span>
+                                    <span class="font-medium text-foreground">{doc.name}</span>
                                 </div>
                             </td>
                             <td class="px-4 py-3">
-                                <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-medium">
+                                <span class="px-2 py-1 bg-muted text-muted-foreground rounded text-xs font-medium">
                                     {doc.type}
                                 </span>
                             </td>
@@ -845,16 +845,16 @@
                                     {stateLabel[docState(doc)]}
                                 </span>
                             </td>
-                            <td class="px-4 py-3 text-slate-600 text-sm">{dateWords(doc.signedDate) || '-'}</td>
-                            <td class="px-4 py-3 text-slate-600 text-sm">{doc.location}</td>
-                            <td class="px-4 py-3 text-slate-500 text-sm">{dateWords(doc.nextReviewDate) || '-'}</td>
+                            <td class="px-4 py-3 text-muted-foreground text-sm">{dateWords(doc.signedDate) || '-'}</td>
+                            <td class="px-4 py-3 text-muted-foreground text-sm">{doc.location}</td>
+                            <td class="px-4 py-3 text-muted-foreground text-sm">{dateWords(doc.nextReviewDate) || '-'}</td>
                             <td class="px-4 py-3 text-right">
                                 <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                     {#if doc.filePath}
                                         <button
                                             type="button"
                                             onclick={() => saveCopy(doc)}
-                                            class="p-1 hover:bg-slate-100 text-slate-400 hover:text-[#4A7C74] rounded transition-colors"
+                                            class="p-1 hover:bg-muted text-muted-foreground hover:text-primary rounded transition-colors"
                                             title="Save a copy"
                                             aria-label="Save a copy"
                                         >
@@ -863,7 +863,7 @@
                                     {/if}
                                     <button
                                         onclick={() => editDoc(doc)}
-                                        class="p-1 hover:bg-slate-100 text-slate-400 hover:text-[#4A7C74] rounded transition-colors"
+                                        class="p-1 hover:bg-muted text-muted-foreground hover:text-primary rounded transition-colors"
                                         title="Edit"
                                         aria-label="Edit"
                                     >
@@ -871,7 +871,7 @@
                                     </button>
                                     <button
                                         onclick={() => (removing = doc)}
-                                        class="p-1 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded transition-colors"
+                                        class="p-1 hover:bg-danger-soft text-muted-foreground hover:text-danger rounded transition-colors"
                                         title="Remove this item"
                                         aria-label="Remove this item"
                                     >
@@ -885,18 +885,18 @@
             </table>
             {#if isLoading}
                 <div class="flex flex-col items-center justify-center gap-3 py-12" role="status" data-testid="documents-loading">
-                    <Loader2 size={28} class="animate-spin text-[#4A7C74]" />
+                    <Loader2 size={28} class="animate-spin text-primary" />
                     <span class="sr-only">Gathering your documents…</span>
                 </div>
             {:else if docs.length === 0}
-                <div class="p-8 text-center text-slate-500">
+                <div class="p-8 text-center text-muted-foreground">
                     <GhostRow type="Document" onclick={startWizard} />
                     <GhostRow type="Document" onclick={startWizard} />
                     <GhostRow type="Document" onclick={startWizard} />
                     <div class="flex justify-center mt-4">
                         <button
                             onclick={startWizard}
-                            class="text-sm font-bold text-[#4A7C74] hover:bg-[#4A7C74]/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                            class="text-sm font-bold text-primary hover:bg-primary/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
                         >
                             <Sparkles size={14} /> Start Vault Assistant
                         </button>
@@ -912,18 +912,18 @@
         title="Would you like to remove this document?"
         description="This action is permanent."
     >
-        <p class="font-serif font-bold text-[#304743]">{removing?.name}</p>
+        <p class="font-serif font-bold text-foreground">{removing?.name}</p>
         <div class="flex justify-end gap-3 pt-6">
             <button
                 type="button"
                 onclick={() => (removing = null)}
-                class="px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+                class="px-6 py-2.5 rounded-xl font-semibold text-muted-foreground hover:bg-muted transition-colors"
                 >Not right now</button
             >
             <button
                 type="button"
                 onclick={confirmRemove}
-                class="px-6 py-2.5 rounded-xl font-semibold bg-rose-600 text-white hover:bg-rose-700 transition-colors"
+                class="px-6 py-2.5 rounded-xl font-semibold bg-danger text-card hover:opacity-90 transition-colors"
                 >Remove this item</button
             >
         </div>

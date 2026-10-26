@@ -137,24 +137,24 @@
     <div class="flex items-center justify-between mb-6 shrink-0">
         <div>
             <h1
-                class="text-2xl font-serif text-slate-100 flex items-center gap-2"
+                class="text-2xl font-serif text-foreground flex items-center gap-2"
             >
-                <Inbox class="text-teal-400" />
+                <Inbox class="text-primary" />
                 Message Hub
             </h1>
-            <p class="text-slate-400 text-sm mt-1">
+            <p class="text-muted-foreground text-sm mt-1">
                 Notes between you and the people you trust.
             </p>
         </div>
         <a
             href="/modules/pulse"
-            class="text-sm text-teal-400 hover:text-teal-300"
+            class="text-sm text-primary hover:text-primary-hover"
             >Back to Wellness Check-in</a
         >
     </div>
 
     <div
-        class="flex-1 bg-slate-900/40 border border-slate-800 rounded-2xl overflow-hidden flex shadow-2xl backdrop-blur-sm"
+        class="flex-1 bg-background/40 border border-slate-800 rounded-2xl overflow-hidden flex shadow-2xl backdrop-blur-sm"
     >
         <!-- LEFT: Contact List -->
         <div
@@ -162,7 +162,7 @@
         >
             <div class="p-4 border-b border-slate-800">
                 <h3
-                    class="text-xs font-bold text-slate-500 uppercase tracking-widest"
+                    class="text-xs font-bold text-muted-foreground uppercase tracking-widest"
                 >
                     Conversations
                 </h3>
@@ -170,9 +170,9 @@
             <div class="flex-1 overflow-y-auto">
                 {#each contacts as contact}
                     <button
-                        class="w-full text-left p-4 hover:bg-slate-800/50 transition-colors flex items-center gap-3 border-b border-slate-800/50 {newMessage.contact_id ===
+                        class="w-full text-left p-4 hover:bg-card/50 transition-colors flex items-center gap-3 border-b border-slate-800/50 {newMessage.contact_id ===
                         contact.id
-                            ? 'bg-teal-500/10 border-l-2 border-l-teal-500'
+                            ? 'bg-primary/10 border-l-2 border-l-primary'
                             : ''}"
                         onclick={() => {
                             newMessage.contact_id = contact.id;
@@ -180,18 +180,18 @@
                         }}
                     >
                         <div
-                            class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 font-bold border border-slate-700"
+                            class="w-10 h-10 rounded-full bg-card flex items-center justify-center text-slate-300 font-bold border border-border"
                         >
                             {contact.name.charAt(0)}
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="flex justify-between items-baseline">
                                 <span
-                                    class="font-medium text-slate-200 truncate"
+                                    class="font-medium text-foreground truncate"
                                     >{contact.name}</span
                                 >
                                 {#if getLatestMessageTime(contact.id)}
-                                    <span class="text-[10px] text-slate-500"
+                                    <span class="text-[10px] text-muted-foreground"
                                         >{new Date(
                                             getLatestMessageTime(contact.id),
                                         ).toLocaleDateString(undefined, {
@@ -201,7 +201,7 @@
                                     >
                                 {/if}
                             </div>
-                            <p class="text-xs text-slate-500 truncate">
+                            <p class="text-xs text-muted-foreground truncate">
                                 {getLastMessagePreview(contact.id)}
                             </p>
                         </div>
@@ -209,12 +209,12 @@
                 {/each}
                 {#if contacts.length === 0}
                     <div class="p-8 text-center">
-                        <Inbox class="w-10 h-10 text-slate-600 mx-auto mb-3" />
-                        <p class="text-slate-400 text-sm font-medium mb-2">
+                        <Inbox class="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                        <p class="text-muted-foreground text-sm font-medium mb-2">
                             Your circle will appear here
                         </p>
                         <p
-                            class="text-slate-500 text-xs leading-relaxed max-w-xs mx-auto"
+                            class="text-muted-foreground text-xs leading-relaxed max-w-xs mx-auto"
                         >
                             When you add trusted contacts in Pulse Settings,
                             they will appear here.
@@ -225,7 +225,7 @@
         </div>
 
         <!-- RIGHT: Thread View -->
-        <div class="flex-1 flex flex-col bg-slate-900/20">
+        <div class="flex-1 flex flex-col bg-background/20">
             {#if newMessage.contact_id}
                 {@const activeContact = contacts.find(
                     (c) => c.id === newMessage.contact_id,
@@ -235,12 +235,12 @@
                 <div
                     class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950/50"
                 >
-                    <div class="font-medium text-slate-200">
+                    <div class="font-medium text-foreground">
                         {activeContact?.name}
                     </div>
                     {#if activeTier}
                         <span
-                            class="text-xs text-slate-500"
+                            class="text-xs text-muted-foreground"
                             data-testid="thread-tier">Tier {activeTier}</span
                         >
                     {/if}
@@ -261,8 +261,8 @@
                             <div
                                 class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 {msg.direction ===
                                 'user_to_contact'
-                                    ? 'bg-teal-500/20 text-teal-400'
-                                    : 'bg-slate-800 text-slate-400'}"
+                                    ? 'bg-primary/20 text-primary'
+                                    : 'bg-card text-muted-foreground'}"
                             >
                                 {#if msg.direction === "user_to_contact"}
                                     <User class="w-4 h-4" />
@@ -272,21 +272,21 @@
                             </div>
                             <div
                                 class="p-3 rounded-2xl text-sm leading-relaxed max-w-full {msg.system
-                                    ? 'bg-amber-900/20 border border-amber-500/30 text-amber-100 rounded-tr-2xl rounded-tl-2xl w-full text-center italic'
+                                    ? 'bg-warning-soft border border-warning/30 text-foreground rounded-tr-2xl rounded-tl-2xl w-full text-center italic'
                                     : msg.direction === 'user_to_contact'
-                                      ? 'bg-teal-500/20 text-white border border-teal-500/20 rounded-tr-none'
-                                      : 'bg-slate-800 text-slate-300 rounded-tl-none'}"
+                                      ? 'bg-primary/20 text-foreground border border-primary/20 rounded-tr-none'
+                                      : 'bg-card text-slate-300 rounded-tl-none'}"
                             >
                                 {#if msg.system}
                                     <span
-                                        class="text-[10px] font-bold uppercase tracking-widest text-amber-500 block mb-1"
+                                        class="text-[10px] font-bold uppercase tracking-widest text-warning block mb-1"
                                         >A gentle note from Continuum</span
                                     >
                                 {/if}
                                 {stripAlertPrefix(msg.message)}
                                 {#if msg.attempts > 1}
                                     <span
-                                        class="block mt-1 text-[11px] not-italic text-amber-300/80"
+                                        class="block mt-1 text-[11px] not-italic text-warning/90"
                                         data-testid="alert-attempts"
                                         >Sent {msg.attempts} times</span
                                     >
@@ -305,7 +305,7 @@
                         </div>
                     {:else}
                         <div
-                            class="flex-1 flex items-center justify-center text-slate-500 text-sm italic"
+                            class="flex-1 flex items-center justify-center text-muted-foreground text-sm italic"
                         >
                             Write the first note below whenever you're ready.
                         </div>
@@ -325,12 +325,12 @@
                             type="text"
                             bind:value={newMessage.text}
                             placeholder="Write a note for them..."
-                            class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-teal-500/50 transition-colors"
+                            class="flex-1 bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors"
                         />
                         <button aria-label="Send"
                             type="submit"
                             disabled={!newMessage.text}
-                            class="bg-teal-500 hover:bg-teal-500/80 disabled:opacity-50 disabled:cursor-not-allowed text-white p-3 rounded-xl transition-all"
+                            class="bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed text-primary-foreground p-3 rounded-xl transition-all"
                         >
                             <Send class="w-5 h-5" />
                         </button>
@@ -338,7 +338,7 @@
                 </div>
             {:else}
                 <div
-                    class="flex-1 flex flex-col items-center justify-center text-slate-500"
+                    class="flex-1 flex flex-col items-center justify-center text-muted-foreground"
                 >
                     <MessageSquare class="w-16 h-16 opacity-20 mb-4" />
                     <p>Choose a person to read your notes together.</p>
