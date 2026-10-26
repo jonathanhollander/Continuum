@@ -135,6 +135,10 @@ MODEL_MAP = {
     "automation_rules": AutomationRule
 }
 
+# CU-011: one row per user (user_id is unique); GET returns that row as an object, POST upserts it.
+SINGLETON_TYPES = {"funeral_data", "advanced_assets"}
+SINGLETON_JSON_FIELDS = {"wishes", "budget", "transactions", "maintenance", "claims"}  # stored as JSON text
+
 # CU-004: these data types share the Asset table; each owns the rows whose `category` equals it.
 ASSET_CATEGORIES = {"properties", "digital_assets", "heirlooms"}
 
@@ -220,7 +224,7 @@ def delete_custom_field_definition(field_id: int, user: User = Depends(get_curre
 
 # --- GENERIC ESTATE DATA ROUTES ---
 
-@router.get("/{data_type}", summary="Get estate items", response_model=List[Any])
+@router.get("/{data_type}", summary="Get estate items", response_model=Any)
 def get_items(data_type: str, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     """
     Fetch all items of a specific type for the current user.
@@ -230,6 +234,8 @@ def get_items(data_type: str, user: User = Depends(get_current_user), session: S
         raise HTTPException(status_code=400, detail=f"Invalid type: {data_type}")
     
     statement = select(model).where(model.user_id == user.id)
+    if data_type in SINGLETON_TYPES:
+        return session.exec(statement.order_by(model.id)).first() or {}
     clause = _category_clause(data_type)
     if clause is not None:
         statement = statement.where(clause)
@@ -284,6 +290,22 @@ def create_item(
         # Serialize custom_attributes if provided as dict
         if "custom_attributes" in validated_data and isinstance(validated_data["custom_attributes"], dict):
             validated_data["custom_attributes"] = json.dumps(validated_data["custom_attributes"])
+
+        if data_type in SINGLETON_TYPES:
+            for k in SINGLETON_JSON_FIELDS & set(validated_data):
+                if not isinstance(validated_data[k], str):
+                    validated_data[k] = json.dumps(validated_data[k])  # clients may send objects/lists
+            existing = session.exec(select(model).where(model.user_id == user.id).order_by(model.id)).first()
+            if existing:  # upsert: update the user's one row instead of adding another
+                for k, v in validated_data.items():
+                    if k != "user_id" and hasattr(existing, k):
+                        setattr(existing, k, v)
+                session.add(existing)
+                session.commit()
+                session.refresh(existing)
+                _log_estate_action(session, request, "update", user, data_type, existing.id)
+                session.refresh(existing)
+                return existing
 
         db_item = model.model_validate(validated_data)
         session.add(db_item)

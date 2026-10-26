@@ -294,14 +294,18 @@ def contact_mapper(item):  # familyStore.svelte.ts:41-82
             "tier_id": nn(g(item, "tierId"), g(item, "tier_id"))}
 
 
-def funeral_mapper(data):  # funeralStore.svelte.ts:61-79 (direction depends on typeof wishes)
-    if not truthy(data):
-        return data
-    if isinstance(g(data, "wishes"), str):
-        return {**spread(data), "wishes": json.loads(js_or(g(data, "wishes"), "{}")),
-                "budget": json.loads(js_or(g(data, "budget"), "[]"))}
-    return {**spread(data), "wishes": js_json(js_or(g(data, "wishes"), {})),
-            "budget": js_json(js_or(g(data, "budget"), []))}
+def funeral_mapper(data):  # funeralStore.svelte.ts funeralMapper (B3): always objects, never re-stringifies
+    if not isinstance(data, dict):
+        return {"wishes": {}, "budget": []}
+
+    def parse(v, fallback):
+        if not isinstance(v, str):
+            return fallback if v is None else v
+        try:
+            return json.loads(v or json.dumps(fallback))
+        except ValueError:
+            return fallback
+    return {**data, "wishes": parse(data.get("wishes"), {}), "budget": parse(data.get("budget"), [])}
 
 
 # ---------------------------------------------------------------------------
@@ -645,7 +649,7 @@ def final_wishes(c):
     remote = funeral_mapper(convert_keys(raw, to_camel)) if st == 200 else None
     if st != 200:
         problems.append(f"GET {url} -> {st}")
-    elif truthy(remote) and len(remote) > 0:
+    elif isinstance(raw, dict) and len(raw) > 0:  # server returns the one record as an object ({} if none)
         data = remote  # updateLocal(remoteData)
     edits = [("venue", "Synthetic Chapel"), ("disposition", "Cremation")]
     for field, val in edits:
@@ -653,19 +657,21 @@ def final_wishes(c):
         updated = {**current, "wishes": {**spread(g(current, "wishes")), field: val}}  # editWish
         data = {**spread(data), **updated}  # SingletonSyncManager.update
         payload = strip_undef(convert_keys(funeral_mapper(data), to_snake))
+        for k in ("id", "user_id", "created_at", "updated_at"):  # update() strips server-owned fields
+            payload.pop(k, None)
         st, resp = c.req("POST", url, body=payload)
         if not (200 <= st < 300):
             problems.append(f"save '{field}' POST -> {st}: {json.dumps(resp)[:200]}")
             break
         data = funeral_mapper(convert_keys(resp, to_camel))
     st, rows = c.req("GET", url)
-    if not isinstance(rows, list):
-        problems.append(f"reload GET -> {st}: {rows}")
+    if not isinstance(rows, dict):
+        problems.append(f"reload GET -> {st}: expected one object, got {rows!r}")
+    elif not rows:
+        problems.append("reload GET returned no funeral record")
     else:
-        if len(rows) != 1:
-            problems.append(f"reload returned {len(rows)} rows (expected one singleton record)")
         if rows:
-            row = rows[-1]
+            row = rows
             try:
                 wishes = json.loads(row.get("wishes") or "{}")
             except ValueError:

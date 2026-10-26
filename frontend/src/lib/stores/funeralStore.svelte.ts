@@ -58,24 +58,20 @@ export const DEFAULT_FUNERAL_DATA: FuneralData = {
     budget: []
 };
 
+// Always returns objects/arrays: the server stores wishes/budget as JSON text, but accepts
+// real objects on save, so nothing here re-stringifies.
+const parseJson = (v: any, fallback: any) => {
+    if (typeof v !== 'string') return v ?? fallback;
+    try { return JSON.parse(v || JSON.stringify(fallback)); } catch { return fallback; }
+};
+
 const funeralMapper = (data: any) => {
-    if (!data) return data;
-
-    const isRemote = typeof data.wishes === 'string';
-
-    if (isRemote) {
-        return {
-            ...data,
-            wishes: JSON.parse(data.wishes || '{}'),
-            budget: JSON.parse(data.budget || '[]')
-        };
-    } else {
-        return {
-            ...data,
-            wishes: JSON.stringify(data.wishes || {}),
-            budget: JSON.stringify(data.budget || [])
-        };
-    }
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return { wishes: {}, budget: [] };
+    return {
+        ...data,
+        wishes: parseJson(data.wishes, {}),
+        budget: parseJson(data.budget, [])
+    };
 };
 
 export const funeralSync = registerSingletonSync<FuneralData>('funeral_data', 'funeral_data', funeralMapper, '/api/data').setAffirmationContext('funeral');

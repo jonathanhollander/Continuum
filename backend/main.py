@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, status, Request
+from fastapi import FastAPI, Depends, HTTPException, status, Request, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
@@ -374,27 +374,40 @@ def get_estate_profile(user: User = Depends(get_current_user), session: Session 
     try:
         td = json.loads(estate.transparent_data or "{}")
         # Handle cases where td is the profile itself or contains estate_profile
-        if "estate_profile" in td:
-            return td["estate_profile"]
-        return td
+        if isinstance(td, dict) and "estate_profile" in td:
+            td = td["estate_profile"]
+        return td if isinstance(td, dict) else {}  # the UI always receives an object
     except Exception as e:
         logger.debug(f"Failed to parse estate profile: {e}")
         return {}
 
 @app.post("/api/estate/profile")
-def save_estate_profile(profile: EstateProfilePayload, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+def save_estate_profile(body: Dict[str, Any] = Body(...), user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    """Shallow-merge the posted keys into the stored profile. Accepts a raw object or {data: {...}}.
+    A key posted as null is removed from the profile."""
+    updates = body["data"] if set(body) == {"data"} and isinstance(body["data"], dict) else body
+    updates = EstateProfilePayload(data=updates).data  # size validation
     estate = session.exec(select(Estate).where(Estate.user_id == user.id)).first()
     if not estate:
         estate = Estate(user_id=user.id)
         session.add(estate)
-    
+
     try:
         td = json.loads(estate.transparent_data or "{}")
     except Exception as e:
         logger.debug(f"Transparent data parse failure in save_profile: {e}")
         td = {}
+    if not isinstance(td, dict):
+        td = {}
 
-    td["estate_profile"] = profile.data  # Use validated data from Pydantic model
+    current = td.get("estate_profile")
+    merged = dict(current) if isinstance(current, dict) else {}
+    for k, v in updates.items():
+        if v is None:
+            merged.pop(k, None)
+        else:
+            merged[k] = v
+    td["estate_profile"] = merged
     estate.transparent_data = json.dumps(td)
     session.commit()
     return td["estate_profile"]

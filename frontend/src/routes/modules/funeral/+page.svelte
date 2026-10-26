@@ -70,7 +70,10 @@
         if (val !== null) {
             funeralStore.update((data) => ({
                 ...data,
-                wishes: { ...data.wishes, [field]: val },
+                wishes: {
+                    ...(typeof data.wishes === "string" ? JSON.parse(data.wishes || "{}") : data.wishes),
+                    [field]: val,
+                },
             }));
         }
     }
