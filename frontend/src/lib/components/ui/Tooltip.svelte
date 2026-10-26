@@ -63,9 +63,8 @@
 
     function calculatePosition() {
         if (!parentNode) return;
+        // The bubble is position: fixed, so viewport coordinates are used as-is.
         const rect = parentNode.getBoundingClientRect();
-        const scrollX = window.scrollX;
-        const scrollY = window.scrollY;
 
         // Default gap
         const gap = 8;
@@ -73,26 +72,26 @@
         switch (position) {
             case "top":
                 coords = {
-                    x: rect.left + rect.width / 2 + scrollX,
-                    y: rect.top - gap + scrollY,
+                    x: rect.left + rect.width / 2,
+                    y: rect.top - gap,
                 };
                 break;
             case "bottom":
                 coords = {
-                    x: rect.left + rect.width / 2 + scrollX,
-                    y: rect.bottom + gap + scrollY,
+                    x: rect.left + rect.width / 2,
+                    y: rect.bottom + gap,
                 };
                 break;
             case "left":
                 coords = {
-                    x: rect.left - gap + scrollX,
-                    y: rect.top + rect.height / 2 + scrollY,
+                    x: rect.left - gap,
+                    y: rect.top + rect.height / 2,
                 };
                 break;
             case "right":
                 coords = {
-                    x: rect.right + gap + scrollX,
-                    y: rect.top + rect.height / 2 + scrollY,
+                    x: rect.right + gap,
+                    y: rect.top + rect.height / 2,
                 };
                 break;
         }
