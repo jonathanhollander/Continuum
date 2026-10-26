@@ -23,7 +23,7 @@
         Repeat,
         Wrench,
         FileCheck,
-        Skull,
+        Flower2,
         Plus,
         Search,
         Filter,
@@ -175,7 +175,7 @@
         { id: "transactions", label: "Transactions", icon: Repeat },
         { id: "maintenance", label: "Maintenance", icon: Wrench },
         { id: "claims", label: "Claims", icon: FileCheck },
-        { id: "killswitch", label: "Account Wishes", icon: Skull },
+        { id: "killswitch", label: "Account Wishes", icon: Flower2 },
     ];
 
     let filteredTransactions = $derived(
@@ -650,7 +650,7 @@
                     <div
                         class="w-20 h-20 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center shrink-0 shadow-inner"
                     >
-                        <Skull size={40} />
+                        <Flower2 size={40} />
                     </div>
                     <div class="space-y-2 relative z-10">
                         <h2 class="text-2xl font-black text-rose-900">

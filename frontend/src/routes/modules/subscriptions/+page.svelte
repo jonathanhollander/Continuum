@@ -91,7 +91,7 @@
         return `
             <p>Dear Customer Service Team,</p>
             
-            <p>Please accept this formal request to cancel the account and all associated services for <strong>${esc($estateProfile.ownerName || "[Name]")}</strong>, effective immediately.</p>
+            <p>Please accept this formal request to cancel the account and all associated services for <strong>${esc($estateProfile.ownerName || "[Name]")}</strong>, effective as of the date of this letter.</p>
             
             <p><strong>Account Details:</strong></p>
             <ul>
@@ -778,6 +778,43 @@
                             class="w-full px-4 py-3 rounded-xl border border-gray-200"
                             placeholder="e.g. Chase ending in 1234"
                         />
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="subscription-next-billing"
+                                class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                                >Next Billing (Optional)</label
+                            >
+                            <input id="subscription-next-billing"
+                                type="date"
+                                bind:value={newSub.nextBilling}
+                                class="w-full px-4 py-3 rounded-xl border border-gray-200"
+                            />
+                        </div>
+                        <div>
+                            <label for="subscription-login-url"
+                                class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                                >Login Address (Optional)</label
+                            >
+                            <input id="subscription-login-url"
+                                type="text"
+                                bind:value={newSub.loginUrl}
+                                class="w-full px-4 py-3 rounded-xl border border-gray-200"
+                                placeholder="https://..."
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="subscription-notes"
+                            class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                            >Notes (Optional)</label
+                        >
+                        <textarea id="subscription-notes"
+                            bind:value={newSub.notes}
+                            class="w-full px-4 py-3 rounded-xl border border-gray-200 h-20"
+                        ></textarea>
                     </div>
 
                     <!-- Closed: kept on the list for the record, left out of the totals. -->

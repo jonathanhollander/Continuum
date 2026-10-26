@@ -407,7 +407,7 @@ Sincerely,
         subject: "Estate Information - Essentials Access",
         body: `Dear Family,
 
-I have organized the essential information you might need immediately into this secure package.
+I have gathered the essential information you will want close at hand into this secure package.
 
 I’ve included a few QR codes that open only the pages you’ll likely need first (funeral wishes, immediate contacts, etc). They open only the essentials.
 
@@ -513,7 +513,7 @@ Sincerely,
         requiredDocs: [
             "Death Certificate (copy)"
         ],
-        followUp: "Ensure all medical records are requested if needed for insurance claims or legal reasons."
+        followUp: "When an insurance claim or legal matter calls for them, request the medical records."
     },
     {
         id: "club-resignation",

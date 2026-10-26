@@ -436,7 +436,7 @@
                     >Primary Digital Successor</span
                 >
                 <div class="text-xl font-bold text-slate-800">
-                    {$estateExecutorName || "None Designated"}
+                    {$estateExecutorName || "Your Lead Executor"}
                 </div>
                 <p class="text-xs text-slate-500 mt-1">
                     Synced from your Lead Executor designation.
@@ -710,7 +710,7 @@
                             class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-gray-300 hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors"
                         >
                             {setupStatus.apple
-                                ? "Mark Incomplete"
+                                ? "Mark In Progress"
                                 : "Mark Done"}
                         </button>
                     </div>
@@ -793,7 +793,7 @@
                             class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-gray-300 hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors"
                         >
                             {setupStatus.google
-                                ? "Mark Incomplete"
+                                ? "Mark In Progress"
                                 : "Mark Done"}
                         </button>
                     </div>
@@ -880,7 +880,7 @@
                             class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-gray-300 hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors"
                         >
                             {setupStatus.passwordManager
-                                ? "Mark Incomplete"
+                                ? "Mark In Progress"
                                 : "Mark Done"}
                         </button>
                     </div>
@@ -946,7 +946,7 @@
                             class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-gray-300 hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors"
                         >
                             {setupStatus.facebook
-                                ? "Mark Incomplete"
+                                ? "Mark In Progress"
                                 : "Mark Done"}
                         </button>
                     </div>
@@ -1018,7 +1018,7 @@
                             class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-gray-300 hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors"
                         >
                             {setupStatus.linkedin
-                                ? "Mark Incomplete"
+                                ? "Mark In Progress"
                                 : "Mark Done"}
                         </button>
                     </div>
