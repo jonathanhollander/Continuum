@@ -79,9 +79,15 @@
         recipientId: string;
         custom: Record<string, any>;
     };
-    const openDrafts = new Map<string, CapsuleDraft>();
+    const openDrafts = new Map<string, { draft: CapsuleDraft; preserve: boolean }>();
     let draftAccount: string | null = null;
     let draftOwner: SessionOwnership | null = null;
+    // Empty values can be deliberate edits. Presence of words cannot decide whether a
+    // retried device read may replace the current form.
+    let draftRevision = 0;
+    let draftHasCurrent = false;
+    const markDraftEdited = () => { draftRevision++; };
+    const preserveCurrentDraft = () => draftHasCurrent || draftRevision > 0;
     let draftNote = $state<string | null>(null);
     let draftNeedsRead = $state(false);
     let draftNeedsRetry = $state(false);
@@ -93,8 +99,6 @@
         recipientId: capsuleRecipientId,
         custom: $state.snapshot(parsedCustomAttributes),
     });
-    const hasDraftWords = (draft: CapsuleDraft) => !!draft.recipientId || Object.keys(draft.custom).length > 0 ||
-        Object.entries(draft.message).some(([key, value]) => key === "triggerType" ? value !== "date" : value !== "" && value !== null && value !== undefined);
     const ownsDraft = () => !!draftAccount && get(activeAccountId) === draftAccount && !!draftOwner && isCurrentSession(draftOwner);
 
     $effect(() => {
@@ -104,7 +108,7 @@
         const owner = captureSession();
         if (!isCurrentSession(owner) || (account === draftAccount && draftOwner?.generation === owner.generation)) return;
         untrack(() => {
-            if (draftAccount && !editingId) openDrafts.set(draftAccount, currentDraft());
+            if (draftAccount && !editingId) openDrafts.set(draftAccount, { draft: currentDraft(), preserve: preserveCurrentDraft() });
             draftAccount = account;
             draftOwner = owner;
             resetForm();
@@ -126,7 +130,8 @@
             return;
         }
         const draft = currentDraft();
-        openDrafts.set(draftAccount!, draft);
+        draftHasCurrent = true;
+        openDrafts.set(draftAccount!, { draft, preserve: true });
         setStored(DRAFT_KEY, draft, "owner", draftAccount!);
         // setStored can succeed in memory only. Save Draft promises a copy on this device.
         if (cacheStorageState(DRAFT_KEY, "owner", draftAccount!) !== "device") {
@@ -152,7 +157,8 @@
     function restoreDraft(keepCurrent = false) {
         if (!ownsDraft()) return;
         const account = draftAccount!;
-        const current = keepCurrent ? currentDraft() : openDrafts.get(account);
+        const retained = openDrafts.get(account);
+        const current = keepCurrent ? currentDraft() : retained?.preserve ? retained.draft : undefined;
         try {
             let draft = getStored<CapsuleDraft | null | undefined>(DRAFT_KEY, undefined, "owner", account);
             const storage = cacheStorageState(DRAFT_KEY, "owner", account);
@@ -164,11 +170,12 @@
             if (draft !== null && (!draft || typeof draft !== "object" || !draft.message || typeof draft.message !== "object")) {
                 throw new Error("Device draft needs another read");
             }
-            const restored = current && hasDraftWords(current) ? current : draft;
+            const restored = current ?? draft;
             if (restored) {
                 newMessage = { ...emptyMessage(), ...restored.message };
                 capsuleRecipientId = String(restored.recipientId ?? "");
                 parsedCustomAttributes = restored.custom ?? {};
+                draftHasCurrent = true;
             }
             draftNeedsRead = false;
             draftNeedsRetry = storage !== "device";
@@ -197,7 +204,7 @@
             return;
         }
         if (!retryStored(DRAFT_KEY, "owner", draftAccount!)) return;
-        restoreDraft(hasDraftWords(currentDraft()));
+        restoreDraft(preserveCurrentDraft());
     }
 
     async function removeCapsule(msg: TimeCapsuleMessage) {
@@ -254,6 +261,8 @@
         draftNote = null;
         draftNeedsRead = false;
         draftNeedsRetry = false;
+        draftRevision = 0;
+        draftHasCurrent = false;
     }
 
     function openNew() {
@@ -284,6 +293,7 @@
 
     function setTrigger(type: ReleaseTrigger) {
         if (newMessage.triggerType === type) return;
+        markDraftEdited();
         newMessage.triggerType = type;
         // The milestone list shows its first choice, so the value matches what is shown.
         newMessage.triggerValue = type === "milestone" ? COMMON_MILESTONES[0].id : "";
@@ -347,6 +357,7 @@
                     file_size: saved.file_size,
                 },
             };
+            markDraftEdited();
             isRecording = false;
         } catch (e: any) {
             // The recorder stays open with this recording, so Save Memory can try again (X223).
@@ -642,6 +653,7 @@
                                         triggerType: sample.triggerType,
                                         triggerValue: sample.triggerValue
                                     };
+                                    markDraftEdited();
                                     openNew();
                                 }}
                             >
@@ -715,6 +727,7 @@
     <!-- Modal for New Capsule -->
     {#if showAddModal}
         <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => (showAddModal = false) }}
+            oninput={markDraftEdited} onchange={markDraftEdited}
             class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md"
             aria-labelledby="capsule-form-title"
             transition:fade
