@@ -22,6 +22,10 @@
     // Initialize Registry safely via lazy getter
     const syncRegistry = getRegistry();
 
+    // The validation tooling and the cloud comparison are for the admin only: the same rule the
+    // server uses for admin access (backend/routers/email.py, user id 1).
+    let isAdmin = $derived($auth.user?.id === 1);
+
     let syncingAll = $state(false);
     let generatingTest = $state(false);
     let purgingTest = $state(false);
@@ -134,12 +138,11 @@
     }
 
     async function syncAll() {
-        if (!testDataFactory) return;
         syncingAll = true;
         // Object.values works on the proxy
         const managers = Object.values(syncRegistry);
         await Promise.all(managers.map((m) => m.sync()));
-        await runAudit();
+        if (isAdmin) await runAudit();
         syncingAll = false;
     }
 
@@ -336,6 +339,7 @@
         </div>
 
         <div class="flex items-center gap-3">
+            {#if isAdmin}
             <button
                 onclick={runAudit}
                 disabled={isAuditing}
@@ -346,6 +350,7 @@
                 </div>
                 {isAuditing ? "Verifying..." : "Verify Truth"}
             </button>
+            {/if}
 
             <button
                 onclick={syncAll}
@@ -359,6 +364,7 @@
     </div>
 
     <!-- Test Data Controls -->
+    {#if isAdmin}
     <div
         class="bg-indigo-50/50 border border-indigo-100 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6"
     >
@@ -403,6 +409,7 @@
             </button>
         </div>
     </div>
+    {/if}
 
     <!-- Module Grid -->
     <div class="space-y-12">
@@ -479,7 +486,9 @@
                                     </div>
                                 </div>
                                 <div
-                                    class="grid grid-cols-2 divide-x divide-slate-100"
+                                    class="grid {isAdmin
+                                        ? 'grid-cols-2 divide-x divide-slate-100'
+                                        : 'grid-cols-1'}"
                                 >
                                     <div class="p-4 text-center">
                                         <div
@@ -493,6 +502,7 @@
                                             {cardCount(card)}
                                         </div>
                                     </div>
+                                    {#if isAdmin}
                                     <div class="p-4 text-center bg-slate-50/30">
                                         <div
                                             class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1"
@@ -515,6 +525,7 @@
                                             </div>
                                         {/if}
                                     </div>
+                                    {/if}
                                 </div>
                             </div>
                         {/each}
@@ -580,7 +591,7 @@
                         class="bg-slate-50 sticky top-0 z-10 font-bold text-slate-500 uppercase tracking-wider text-xs"
                     >
                         <tr>
-                            <th class="p-4 border-b">Status</th>
+                            {#if isAdmin}<th class="p-4 border-b">Status</th>{/if}
                             <th class="p-4 border-b">Type</th>
                             <th class="p-4 border-b">Name/Title</th>
                             <th class="p-4 border-b">Origin</th>
@@ -602,6 +613,7 @@
                                     ? 'bg-indigo-50/30'
                                     : ''}"
                             >
+                                {#if isAdmin}
                                 <td class="p-4">
                                     {#if inCloud}
                                         <div
@@ -620,6 +632,7 @@
                                         </div>
                                     {/if}
                                 </td>
+                                {/if}
                                 <td class="p-4"
                                     ><span
                                         class="px-2 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200"
@@ -673,7 +686,7 @@
                         {#if cardCount(card) === 0 && !managers.some(([mkey]) => auditResults[mkey]?.details?.onlyRemote?.length)}
                             <tr
                                 ><td
-                                    colspan="5"
+                                    colspan={isAdmin ? 5 : 4}
                                     class="p-12 text-center text-slate-400 italic"
                                     >What you save in {card.label} will appear here.</td
                                 ></tr
