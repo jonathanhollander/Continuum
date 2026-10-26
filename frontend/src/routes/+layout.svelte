@@ -151,7 +151,9 @@
 			$page.url.pathname === "/signup" ||
 			$page.url.pathname.startsWith("/auth/") ||
 			$page.url.pathname.startsWith("/pulse/respond") ||
-			$page.url.pathname.startsWith("/pulse/verify"),
+			$page.url.pathname.startsWith("/pulse/verify") ||
+			// Guardian alert emails link here (backend/pulse_logic.py); trailing slash keeps "/portalX" protected
+			$page.url.pathname.startsWith("/portal/"),
 	);
 
 	// Derived: Is this the Dashboard route? (needs dark background for glassmorphism)
@@ -327,7 +329,7 @@
 			Verifying your security credentials...
 		</p>
 	</div>
-{:else if $page.url.pathname === "/login" || $page.url.pathname === "/signup" || $page.url.pathname.startsWith("/auth/") || $page.url.pathname.startsWith("/pulse/respond") || $page.url.pathname.startsWith("/pulse/verify") || $page.url.pathname.startsWith("/wizard") || $page.url.pathname.startsWith("/start") || $page.url.pathname.startsWith("/marketing") || $page.url.pathname === "/"}
+{:else if isWizardRoute || isMarketingRoute || isAuthRoute}
 	<!-- Wizard/Marketing Mode: Full exclusion of standard layout -->
 	{@render children()}
 {:else}
