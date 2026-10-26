@@ -359,7 +359,7 @@
 			/>
 		</div>
 		<p class="mt-6 text-muted-foreground font-medium tracking-wide animate-pulse">
-			Verifying your security credentials...
+			{$dict.loadingCredentials}
 		</p>
 	</div>
 {:else if isFullScreenRoute || isMarketingRoute || isAuthRoute}
