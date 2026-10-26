@@ -9,7 +9,7 @@ export type AccessPack = {
     name: string;
     description: string;
     type: 'Family' | 'Executor' | 'Public';
-    modules: string[]; // List of module IDs this pack grants access to
+    modules: string[]; // Suggested topics; pack codes open an authenticated page.
     qrUrl: string;
     lastGenerated: string;
 };
@@ -28,12 +28,17 @@ interface QRState {
     assetLabels: AssetLabel[];
 }
 
+const PACK_DESCRIPTIONS: Record<string, string> = {
+    'pack-family': 'Opens Dashboard in the signed-in account.',
+    'pack-executor': 'Opens the executor guide in the signed-in account.',
+};
+
 const initialState = (): QRState => ({
     accessPacks: [
         {
             id: 'pack-family',
             name: 'Family Essentials Pack',
-            description: 'Limited access to funeral wishes, immediate contacts, and heirloom stories.',
+            description: PACK_DESCRIPTIONS['pack-family'],
             type: 'Family',
             modules: ['funeral', 'contacts', 'heirlooms'],
             qrUrl: '',
@@ -42,7 +47,7 @@ const initialState = (): QRState => ({
         {
             id: 'pack-executor',
             name: 'Executor Master Pack',
-            description: 'Full access to financial accounts, legal documents, and digital legacy.',
+            description: PACK_DESCRIPTIONS['pack-executor'],
             type: 'Executor',
             modules: ['all'],
             qrUrl: '',
@@ -80,7 +85,12 @@ const packQrImage = (pack: AccessPack) =>
 // Codes are drawn on load and saved without their images, so every saved code opens a real page.
 const withCurrentLinks = (state: QRState): QRState => ({
     ...state,
-    accessPacks: state.accessPacks.map((p) => (p.qrUrl || p.lastGenerated ? { ...p, qrUrl: packQrImage(p) } : p)),
+    accessPacks: state.accessPacks.map((p) => ({
+        ...p,
+        // Descriptions are current product copy, including for packs saved before this wording.
+        description: PACK_DESCRIPTIONS[p.id] ?? p.description,
+        qrUrl: p.qrUrl || p.lastGenerated ? packQrImage(p) : '',
+    })),
     assetLabels: state.assetLabels.map((l) => ({ ...l, qrUrl: assetQrImage(l.assetType, l.assetId) })),
 });
 
