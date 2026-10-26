@@ -45,7 +45,8 @@ function calculateAudit(): AuditResult {
             let s = 20;
             const withBen = items.filter((i) => String(i.beneficiaries ?? '').trim() && i.beneficiaries !== 'None').length;
             s += (withBen / items.length) * 40;
-            const withVal = items.filter((i) => Number(i.value) > 0).length;
+            // An entered value counts, $0 included; only an empty one is missing
+            const withVal = items.filter((i) => i.value != null && String(i.value).trim() !== '' && Number.isFinite(Number(i.value))).length;
             s += (withVal / items.length) * 40;
             moduleScores['financial'] = Math.round(s);
             totalScore += moduleScores['financial'];
