@@ -70,6 +70,7 @@
 
     let input = $state("");
     let scrollContainer = $state<HTMLElement | null>(null);
+    $effect(() => { input = $conciergeEngine.composerDraft; });
 
     // Accessibility Derived
     const fontSizeClass = $derived(
@@ -123,7 +124,7 @@
     async function handleSend() {
         if (!input.trim()) return;
         const msg = input;
-        input = "";
+        conciergeEngine.setComposerDraft("");
         await conciergeEngine.sendMessage(msg);
     }
 
@@ -157,17 +158,36 @@
 
     // PiP Window Reference
     let pipWindow = $state<Window | null>(null);
+    let panelAccountEpoch = $conciergeEngine.accountEpoch;
+
+    // The composer and voice/PiP session belong to the same account as the thread.
+    $effect(() => {
+        const epoch = $conciergeEngine.accountEpoch;
+        if (epoch === panelAccountEpoch) return;
+        panelAccountEpoch = epoch;
+        isDragging = false;
+        isResizing = false;
+        voiceService.cancelListening();
+        voiceService.stopSpeaking();
+        pipWindow?.close();
+    });
 
     async function handlePiPToggle() {
         if (!browser || !("documentPictureInPicture" in window)) return;
 
+        const accountEpoch = $conciergeEngine.accountEpoch;
         try {
             // @ts-ignore
-            pipWindow = await window.documentPictureInPicture.requestWindow({
+            const opened = await window.documentPictureInPicture.requestWindow({
                 width: 400,
                 height: 700,
             });
 
+            if (accountEpoch !== $conciergeEngine.accountEpoch) {
+                opened?.close();
+                return;
+            }
+            pipWindow = opened;
             if (!pipWindow || !panelRef) return;
 
             // Move styles
@@ -190,15 +210,16 @@
             });
 
             // Move Panel
-            pipWindow.document.body.append(panelRef);
+            const openedPanel = panelRef;
+            pipWindow.document.body.append(openedPanel);
 
             pipWindow.addEventListener("pagehide", () => {
-                // Move panel back to main document before it's destroyed with the window
-                if (panelRef) {
-                    document.body.appendChild(panelRef);
+                // A closing window from an earlier account leaves the new account's panel alone.
+                if (accountEpoch === $conciergeEngine.accountEpoch && panelRef === openedPanel) {
+                    document.body.appendChild(openedPanel);
+                    conciergeEngine.popIn();
                 }
-                pipWindow = null;
-                conciergeEngine.popIn();
+                if (pipWindow === opened) pipWindow = null;
             });
         } catch (e) {
             console.error("PiP failed:", e);
@@ -392,7 +413,8 @@
             </div>
         </div>
 
-        <!-- Chat Rail -->
+        <!-- A different account replaces the rail immediately, without old-message outros. -->
+        {#key $conciergeEngine.accountEpoch}
         <div
             bind:this={scrollContainer}
             class="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth"
@@ -547,6 +569,8 @@
             {/if}
         </div>
 
+        {/key}
+
         <!-- Footer / Input -->
         <div class="p-6 border-t border-white/10 bg-black/40 space-y-4">
             <!-- Voice Pulse Visualizer -->
@@ -583,6 +607,7 @@
                 <div class="flex-1 relative">
                     <textarea
                         bind:value={input}
+                        oninput={(e) => conciergeEngine.setComposerDraft(e.currentTarget.value)}
                         onkeydown={handleKeydown}
                         aria-label="Your message to the concierge"
                         placeholder={$conciergeEngine.isListening

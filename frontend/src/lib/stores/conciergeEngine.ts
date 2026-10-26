@@ -1,7 +1,8 @@
 import { writable, get } from 'svelte/store';
 import { aiConciergeService } from '../services/aiConciergeService';
 import { overwhelmDetector } from '../services/overwhelmDetection';
-import { activeAccountId } from './keyringStore';
+import { auth } from './auth';
+import { captureSession, isCurrentSession, type SessionOwnership } from '../services/sessionOwnership';
 import { goto } from '$app/navigation';
 import { browser } from '$app/environment';
 import { navGroups } from '../config/navigation';
@@ -36,6 +37,9 @@ export interface Message {
 }
 
 interface ConciergeState {
+    accountId: number | null;
+    accountEpoch: number;
+    composerDraft: string;
     isOpen: boolean;
     messages: Message[];
     isThinking: boolean;
@@ -55,6 +59,9 @@ interface ConciergeState {
 
 function createConciergeEngine() {
     const initialState: ConciergeState = {
+        accountId: null,
+        accountEpoch: 0,
+        composerDraft: "",
         isOpen: false,
         messages: [],
         isThinking: false,
@@ -72,63 +79,101 @@ function createConciergeEngine() {
         floatingSize: { width: 340, height: 580 }
     };
 
-    // Load from localStorage if browser
-    let savedState = initialState;
-    if (browser) {
-        const saved = localStorage.getItem('continuum_concierge_state');
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved);
-                // Before v2 the default {x:50,y:50} was saved on every broadcast; read it once as unset.
-                const p = parsed?.floatingPosition;
-                const legacyDefault = parsed?.floatingPositionV !== 2 && p?.x === 50 && p?.y === 50;
-                savedState = {
-                    ...initialState,
-                    ...parsed,
-                    floatingPosition: legacyDefault ? null : (parsed?.floatingPosition ?? null),
-                    floatingPositionV: 2,
-                    isOpen: false,
-                    isPoppedOut: false,
-                    popOutMode: null
-                };
-            } catch (e) {
-                console.error("Failed to load concierge state:", e);
-            }
-        }
-    }
-
-    const { subscribe, set, update } = writable<ConciergeState>(savedState);
-
+    const { subscribe, set, update: updateStore } = writable<ConciergeState>({ ...initialState });
+    let accountId: number | null = null;
+    let accountSession: SessionOwnership | null = null;
+    let accountEpoch = 0;
+    let conversationEpoch = 0;
     let syncChannel: BroadcastChannel | null = null;
+    const stateKey = (id: number) => `continuum_concierge_state:user:${id}`;
 
-    const broadcastState = (state: ConciergeState) => {
-        if (browser) {
-            localStorage.setItem('continuum_concierge_state', JSON.stringify(state));
-        }
-        if (syncChannel) {
-            syncChannel.postMessage({ type: 'STATE_UPDATE', state });
+    // The old unscoped key has no owner metadata. Keep it on disk, but never assign its
+    // conversation to whichever person happens to sign in next.
+    const loadState = (id: number): ConciergeState => {
+        try {
+            const saved = localStorage.getItem(stateKey(id));
+            const parsed = saved ? JSON.parse(saved) : {};
+            const p = parsed?.floatingPosition;
+            const legacyDefault = parsed?.floatingPositionV !== 2 && p?.x === 50 && p?.y === 50;
+            return {
+                ...initialState,
+                ...parsed,
+                accountId: id,
+                accountEpoch,
+                messages: Array.isArray(parsed?.messages) ? parsed.messages : [],
+                composerDraft: typeof parsed?.composerDraft === "string" ? parsed.composerDraft : "",
+                floatingPosition: legacyDefault ? null : (parsed?.floatingPosition ?? null),
+                floatingPositionV: 2,
+                isOpen: false,
+                isThinking: false,
+                isListening: false,
+                isSpeaking: false,
+                isPoppedOut: false,
+                popOutMode: null
+            };
+        } catch (e) {
+            console.error("Failed to load concierge state:", e);
+            return { ...initialState, accountId: id, accountEpoch };
         }
     };
 
-    if (browser) {
-        syncChannel = new BroadcastChannel('continuum-concierge');
-        syncChannel.onmessage = (event) => {
+    const persistState = (state: ConciergeState) => {
+        if (!browser || accountId === null || state.accountId !== accountId
+            || !accountSession || !isCurrentSession(accountSession)) return;
+        try {
+            localStorage.setItem(stateKey(accountId), JSON.stringify(state));
+        } catch (e) {
+            console.error("Failed to keep concierge state on this device:", e);
+        }
+    };
+
+    // Every local change is kept for its authenticated owner. Replies and unconfirmed
+    // extracted details therefore survive a reload just like the account's own thread.
+    const update = (change: (state: ConciergeState) => ConciergeState) => updateStore(state => {
+        if (accountId !== null && (!accountSession || !isCurrentSession(accountSession))) return state;
+        const next = change(state);
+        persistState(next);
+        syncChannel?.postMessage({ type: 'STATE_UPDATE', accountId, state: next });
+        return next;
+    });
+
+    const followAccount = (session: { isAuthenticated: boolean; user: { id: number } | null }) => {
+        const owner = captureSession();
+        const nextId = owner.ready && session.isAuthenticated && session.user ? session.user.id : null;
+        if (nextId === accountId && (nextId === null || owner.generation === accountSession?.generation)) return;
+        persistState(get({ subscribe }));
+        accountEpoch++;
+        conversationEpoch++;
+        syncChannel?.close();
+        syncChannel = null;
+        accountId = nextId;
+        accountSession = nextId === null ? null : owner;
+        set(nextId === null ? { ...initialState, accountEpoch } : loadState(nextId));
+        if (nextId === null) return;
+
+        const channel = new BroadcastChannel(`continuum-concierge:user:${nextId}`);
+        const epoch = accountEpoch;
+        syncChannel = channel;
+        channel.onmessage = event => {
+            if (epoch !== accountEpoch || channel !== syncChannel || event.data?.accountId !== accountId
+                || !accountSession || !isCurrentSession(accountSession)) return;
             const { type, state: remoteState } = event.data;
-            if (type === 'STATE_UPDATE') {
-                update(s => {
-                    const newState = { ...s, ...remoteState };
-                    // Persist locally too
-                    localStorage.setItem('continuum_concierge_state', JSON.stringify(newState));
-                    return newState;
+            if (type === 'STATE_UPDATE' && remoteState?.accountId === accountId) {
+                updateStore(state => {
+                    const next = { ...state, ...remoteState, accountId, accountEpoch };
+                    persistState(next);
+                    return next;
                 });
             } else if (type === 'POPUP_CLOSED') {
-                update(s => {
-                    const newState = { ...s, isPoppedOut: false, isOpen: true };
-                    broadcastState(newState);
-                    return newState;
-                });
+                update(state => ({ ...state, isPoppedOut: false, isOpen: true }));
             }
         };
+    };
+    if (browser) {
+        auth.subscribe(followAccount);
+        window.addEventListener('storage', event => {
+            if (event.key === 'continuum_auth_token' || event.key === null) followAccount(get(auth));
+        });
     }
 
     const updateInitialGreeting = () => {
@@ -180,15 +225,14 @@ function createConciergeEngine() {
 
     return {
         subscribe,
+        setComposerDraft: (composerDraft: string) => update(state => ({ ...state, composerDraft })),
         toggle: () => update(s => {
             const newState = { ...s, isOpen: !s.isOpen };
-            broadcastState(newState);
             return newState;
         }),
         open: () => {
             update(s => {
                 const newState = { ...s, isOpen: true };
-                broadcastState(newState);
                 return newState;
             });
 
@@ -218,7 +262,6 @@ function createConciergeEngine() {
         close: () => {
             update(s => {
                 const newState = { ...s, isOpen: false };
-                broadcastState(newState);
                 return newState;
             });
         },
@@ -237,7 +280,6 @@ function createConciergeEngine() {
                     popOutMode: hasPiP ? ('pip' as const) : ('floating' as const),
                     isOpen: true
                 };
-                broadcastState(newState);
                 return newState;
             });
         },
@@ -245,7 +287,6 @@ function createConciergeEngine() {
         setFloatingPosition: (pos: { x: number; y: number }) => {
             update(s => {
                 const newState = { ...s, floatingPosition: pos };
-                broadcastState(newState);
                 return newState;
             });
         },
@@ -253,7 +294,6 @@ function createConciergeEngine() {
         setFloatingSize: (size: { width: number; height: number }) => {
             update(s => {
                 const newState = { ...s, floatingSize: size };
-                broadcastState(newState);
                 return newState;
             });
         },
@@ -261,7 +301,6 @@ function createConciergeEngine() {
         popIn: () => {
             update(s => {
                 const newState = { ...s, isPoppedOut: false, popOutMode: null, isOpen: true };
-                broadcastState(newState);
                 return newState;
             });
         },
@@ -283,7 +322,6 @@ function createConciergeEngine() {
                     currentRoute: route,
                     currentContextName: contextName
                 };
-                broadcastState(newState);
                 return newState;
             });
 
@@ -310,6 +348,10 @@ function createConciergeEngine() {
         },
 
         sendMessage: async (content: string, isDictated: boolean = false) => {
+            const owner = accountId;
+            const session = captureSession();
+            const epoch = conversationEpoch;
+            if (owner === null || !isCurrentSession(session)) return null;
             const userMsg: Message = {
                 id: Math.random().toString(36).substring(7),
                 role: 'user',
@@ -325,13 +367,13 @@ function createConciergeEngine() {
                     isThinking: true,
                     hasInteracted: true
                 };
-                broadcastState(newState);
                 return newState;
             });
 
             try {
                 const state = get({ subscribe });
                 const response = await aiConciergeService.chat(content, state.messages, state.currentContextName);
+                if (accountId !== owner || conversationEpoch !== epoch || !isCurrentSession(session)) return null;
 
                 // Parse response if it's JSON
                 let displayContent = response.content;
@@ -398,12 +440,12 @@ function createConciergeEngine() {
                         isThinking: false,
                         lastExtractedData: extractedDataFromResponse
                     };
-                    broadcastState(newState);
                     return newState;
                 });
 
                 return response;
             } catch (error) {
+                if (accountId !== owner || conversationEpoch !== epoch || !isCurrentSession(session)) return null;
                 console.error('Concierge Error:', error);
                 update(s => ({ ...s, isThinking: false }));
                 return null;
@@ -411,10 +453,15 @@ function createConciergeEngine() {
         },
 
         confirmExtractedData: () => {
+            const owner = accountId;
+            const session = captureSession();
+            const epoch = conversationEpoch;
+            if (owner === null || !isCurrentSession(session)) return;
             const data = get({ subscribe }).lastExtractedData;
             if (!data) return;
 
             import('./persistence').then(({ setStored }) => {
+                if (accountId !== owner || conversationEpoch !== epoch || !isCurrentSession(session)) return;
                 Object.entries(data).forEach(([key, value]) => {
                     setStored(key, value);
                 });
@@ -424,7 +471,8 @@ function createConciergeEngine() {
         },
 
         clearHistory: () => {
-            update(s => ({ ...s, messages: [], lastExtractedData: null }));
+            conversationEpoch++; // a reply from the conversation being cleared stays with that conversation
+            update(s => ({ ...s, messages: [], lastExtractedData: null, isThinking: false }));
             updateInitialGreeting();
         },
 
