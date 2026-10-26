@@ -6,7 +6,6 @@
     import { Check, X } from "lucide-svelte";
     import { focusTrap } from "$lib/actions/focusTrap";
     import { portal } from "$lib/actions/portal";
-    import { apiGet } from "$lib/api/client";
     import { contactSync } from "$lib/stores/familyStore.svelte";
     import { pulseTierNumber } from "./pulseTiers";
 
@@ -24,7 +23,8 @@
 
     const gentleRetry = "Let's try that once more in a moment.";
 
-    let globalContacts = $state<any[]>([]);
+    // The shared contacts store (SyncManager), so tiers set elsewhere show here at once.
+    const globalContacts = $derived(contactSync.items as any[]);
     let loaded = $state(false);
     let error = $state<string | null>(null);
     let saving = $state(false);
@@ -37,14 +37,9 @@
     );
 
     onMount(async () => {
-        try {
-            globalContacts = await apiGet("/api/contacts");
-        } catch (e) {
-            console.error(e);
-            error = gentleRetry;
-        } finally {
-            loaded = true;
-        }
+        await contactSync.sync();
+        if (contactSync.status === "error") error = gentleRetry;
+        loaded = true;
     });
 
     async function promoteContact() {
@@ -116,7 +111,10 @@
             {:else if loaded}
                 <div class="space-y-3 max-h-[300px] overflow-y-auto mb-6">
                     {#each globalContacts as contact (contact.id)}
-                        {@const current = pulseTierNumber(contact, tiers)}
+                        {@const current = pulseTierNumber(
+                            { tier_id: contact.tierId, call_tier: contact.callTier },
+                            tiers,
+                        )}
                         <label
                             class="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all {selectedContactId ===
                             contact.id
@@ -133,7 +131,7 @@
                             <div
                                 class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-300"
                             >
-                                {contact.name.charAt(0)}
+                                {(contact.name ?? "").charAt(0)}
                             </div>
                             <div class="flex-1">
                                 <div class="text-sm font-bold text-slate-200">
