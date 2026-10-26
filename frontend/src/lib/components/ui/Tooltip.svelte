@@ -26,9 +26,17 @@
         else trigger.removeAttribute("aria-describedby");
     }
 
+    // The bubble is placed once on open; hide it if anything scrolls while it shows.
+    // Capture phase so scrolls inside nested containers count too.
+    $: if (typeof window !== "undefined") {
+        if (isVisible) window.addEventListener("scroll", handleMouseLeave, { capture: true, passive: true });
+        else window.removeEventListener("scroll", handleMouseLeave, { capture: true });
+    }
+
     onDestroy(() => {
         clearTimeout(timeoutId);
         trigger?.removeAttribute("aria-describedby");
+        if (typeof window !== "undefined") window.removeEventListener("scroll", handleMouseLeave, { capture: true });
     });
 
     function handleMouseEnter(event: MouseEvent) {
