@@ -42,7 +42,6 @@
     );
 
     // Readiness logic for scenarios
-    // Readiness logic for scenarios
     let readiness = $derived({
         hasExecutor: !!$estateExecutorName,
         hasProxy: $estateAnalytics.pillars.legal.metrics.hasMedicalProxy,
@@ -50,6 +49,38 @@
         hasHeirlooms: $estateAnalytics.pillars.legacy.metrics.heirloomCount > 0,
         hasDigital: $estateAnalytics.pillars.financial.metrics.digitalCount > 0,
         score: $estateAnalytics.overallHealth,
+    });
+
+    // The drill checks shown below, in each scenario's order of priority.
+    // `goal` reuses each check's own wording for its met state.
+    type CheckKey = "hasExecutor" | "hasProxy" | "hasDigital" | "hasHeirlooms";
+    const checks: Record<CheckKey, { label: string; goal: string }> = {
+        hasProxy: {
+            label: "Healthcare Proxy",
+            goal: "decisions can be made immediately",
+        },
+        hasExecutor: {
+            label: "Executor",
+            goal: "they know their role",
+        },
+        hasDigital: {
+            label: "Digital Kill Switch Readiness",
+            goal: "there are instructions for all accounts",
+        },
+        hasHeirlooms: {
+            label: "Physical Heirloom Protocol",
+            goal: "pet & object care instructions are found",
+        },
+    };
+    const scenarioChecks: Record<string, CheckKey[]> = {
+        sudden_disability: ["hasProxy", "hasExecutor", "hasDigital", "hasHeirlooms"],
+        passing: ["hasExecutor", "hasDigital", "hasHeirlooms", "hasProxy"],
+    };
+    let nextCheck = $derived.by(() => {
+        const key = (scenarioChecks[activeScenarioId] ?? []).find(
+            (k) => !readiness[k],
+        );
+        return key ? checks[key] : null;
     });
 </script>
 
@@ -116,7 +147,7 @@
                 class="p-8 bg-gradient-to-br from-gray-800 to-gray-900 rounded-[40px] text-white"
             >
                 <ShieldAlert class="text-red-400 mb-4" size={32} />
-                <h4 class="font-bold text-lg mb-2">Proactive Protection</h4>
+                <h4 class="font-bold text-lg mb-2 text-white">Proactive Protection</h4>
                 <p class="text-sm text-gray-400 leading-relaxed">
                     Running these drills identifies "Dead Zones" in your
                     legacy—information that exists but is inaccessible when
@@ -309,24 +340,30 @@
                         class="p-10 bg-indigo-600 rounded-[48px] text-white flex flex-col md:flex-row items-center gap-8 shadow-2xl shadow-indigo-200"
                     >
                         <div class="flex-1">
-                            <h3 class="text-2xl font-black mb-2">
+                            <h3 class="text-2xl font-black mb-2 text-white">
                                 Drill Recommendations
                             </h3>
                             <p
                                 class="text-indigo-100/80 leading-relaxed font-medium"
                             >
-                                Based on the <strong
-                                    >{activeScenario.title}</strong
-                                >, your highest priority is to define a
-                                Healthcare Proxy. Without this, your medical
-                                wishes may be overruled during hospitalization.
+                                {#if nextCheck}
+                                    Based on the <strong
+                                        >{activeScenario.title}</strong
+                                    >, your highest priority is the
+                                    <strong>{nextCheck.label}</strong>, so that {nextCheck.goal}.
+                                {:else}
+                                    Every check for the <strong
+                                        >{activeScenario.title}</strong
+                                    > is in place.
+                                {/if}
                             </p>
                         </div>
-                        <button
+                        <a
+                            href="/export/preview?scope=full"
                             class="px-8 py-4 bg-white text-indigo-600 rounded-2xl font-black text-sm hover:scale-105 transition-transform active:scale-95 shadow-lg shadow-black/10"
                         >
                             GENERATE PDF REPORT
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>

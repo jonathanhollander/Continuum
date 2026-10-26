@@ -33,9 +33,9 @@
                 name: "Active (Normal)",
                 delay: "Always",
                 icon: Shield,
-                color: "text-primary",
-                bg: "bg-primary/10",
-                border: "border-primary/20",
+                color: "text-teal-400",
+                bg: "bg-teal-500/10",
+                border: "border-teal-500/20",
                 access: [
                     { name: "First Name", type: "public", icon: Users },
                     { name: "Status: Active", type: "public", icon: Activity },
@@ -140,7 +140,7 @@
             <h1
                 class="text-2xl font-serif text-slate-100 flex items-center gap-2"
             >
-                <Eye class="text-primary" />
+                <Eye class="text-teal-400" />
                 Data Transparency
             </h1>
             <p class="text-slate-400 text-sm mt-1">
@@ -149,8 +149,8 @@
         </div>
         <a
             href="/modules/pulse"
-            class="text-sm text-primary hover:text-primary/80 transition-colors"
-            >Back to Dashboard</a
+            class="text-sm text-teal-400 hover:text-teal-300 transition-colors"
+            >Back to Wellness Check-in</a
         >
     </div>
 
@@ -216,17 +216,17 @@
                                     <h3
                                         class="text-sm font-medium text-slate-300 mb-3 flex items-center gap-2"
                                     >
-                                        <Eye class="w-4 h-4 text-primary" /> Visible
+                                        <Eye class="w-4 h-4 text-teal-400" /> Visible
                                         Data
                                     </h3>
                                     <div class="grid gap-3">
                                         {#each tiers[activeTier].access as item}
                                             <div
-                                                class="flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/10"
+                                                class="flex items-center gap-3 p-3 rounded-lg bg-teal-500/5 border border-teal-500/10"
                                             >
                                                 <svelte:component
                                                     this={item.icon}
-                                                    class="w-4 h-4 text-primary"
+                                                    class="w-4 h-4 text-teal-400"
                                                 />
                                                 <span
                                                     class="text-slate-200 text-sm"

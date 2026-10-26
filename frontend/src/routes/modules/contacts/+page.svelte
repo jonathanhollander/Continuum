@@ -45,7 +45,6 @@
         getEmptyStateMessage,
         getActionLabel,
     } from "$lib/utils/contextualMessages";
-    import ContextualMessage from "$lib/components/ContextualMessage.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
     import { readCustom } from "$lib/utils/customFields";
     import RecipientLinkPanel from "$lib/components/recipient/RecipientLinkPanel.svelte";
@@ -75,12 +74,15 @@
     const ROLE_OPTIONS = ["Family", "Friend", "Medical", "Legal", "Financial", "Other", "Pet"];
 
     const TIER_OPTIONS = [
-        { value: "1_Immediate", label: "First Call", hint: "Someone who should hear it from family first." },
+        { value: "1_Immediate", label: "First Call", hint: "Among the very first to be called, directly." },
         { value: "2_SameDay", label: "Same Day", hint: "Close enough to be told directly." },
         { value: "3_Service", label: "Extended Circle", hint: "Can learn through the announcement." },
         { value: "4_DNR", label: "Kept private", hint: "Stays in your directory, off the call list." },
         { value: "", label: "Choose later", hint: "Stays in your directory until you choose a moment for them." },
     ];
+    // The one name for each call tier, used by the modal, the call-list headings and the badges.
+    const tierLabel = (tier?: string | null) =>
+        tier ? TIER_OPTIONS.find((o) => o.value === tier)?.label ?? "" : "";
     let tierHint = $derived(
         TIER_OPTIONS.find((o) => o.value === (newContact.tier ?? ""))?.hint ?? "",
     );
@@ -304,13 +306,7 @@
             class="px-5 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
         >
             <Plus size={18} />
-            <ContextualMessage
-                variants={{
-                    planning: "Share contact details",
-                    executor: "Share contact details",
-                    family: "Share contact details",
-                }}
-            />
+            {getActionLabel("add")}
         </button>
     </div>
 
@@ -374,15 +370,17 @@
     <div class="flex gap-2 mb-8 border-b border-slate-200 pb-1">
         <button
             onclick={() => (activeTab = "call-list")}
+            aria-pressed={activeTab === "call-list"}
             class="px-5 py-2.5 font-bold text-sm rounded-t-xl transition-all border-b-2
             {activeTab === 'call-list'
-                ? 'border-rose-500 text-rose-600 bg-rose-50'
+                ? 'border-primary text-primary bg-primary/10'
                 : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'}"
         >
             The Call List
         </button>
         <button
             onclick={() => (activeTab = "directory")}
+            aria-pressed={activeTab === "directory"}
             class="px-5 py-2.5 font-bold text-sm rounded-t-xl transition-all border-b-2
             {activeTab === 'directory'
                 ? 'border-primary text-primary bg-primary/10'
@@ -417,7 +415,7 @@
                 onAction={openAdd}
             />
         {:else if activeTab === "call-list"}
-            <div in:fade class="space-y-8 max-w-4xl mx-auto">
+            <div in:fade class="space-y-8">
                 <div
                     class="bg-primary/5 p-4 rounded-xl text-primary text-sm flex gap-3 border border-primary/10"
                 >
@@ -436,7 +434,7 @@
                     >
                         <CircleAlert size={20} />
                         <h2 class="font-bold text-lg">
-                            Tier 1: Immediate Notification
+                            {tierLabel("1_Immediate")}
                         </h2>
                         <span
                             class="text-xs bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full"
@@ -456,7 +454,7 @@
                     >
                         <Clock size={20} />
                         <h2 class="font-bold text-lg">
-                            Tier 2: Same Day (Inner Circle)
+                            {tierLabel("2_SameDay")}
                         </h2>
                     </div>
 
@@ -471,7 +469,7 @@
                     >
                         <Mail size={20} />
                         <h2 class="font-bold text-lg">
-                            Tier 3: Service Notice
+                            {tierLabel("3_Service")}
                         </h2>
                     </div>
                     {#each tier3 as contact}
@@ -494,7 +492,7 @@
                             <button
                                 onclick={() => deleteContact(contact.id)}
                                 aria-label="Remove {contact.name}"
-                                class="absolute top-4 right-4 text-slate-300 hover:text-red-500 transition-opacity"
+                                class="absolute top-4 right-4 p-1 rounded-md text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
                             >
                                 <Trash2 size={16} />
                             </button>
@@ -540,10 +538,14 @@
                             <div
                                 class="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center"
                             >
-                                <span
-                                    class="text-xs font-bold px-2 py-1 rounded bg-slate-100 text-slate-500"
-                                    >{contact.tier?.split("_")[1] || "Unassigned"}</span
-                                >
+                                {#if tierLabel(contact.tier)}
+                                    <span
+                                        class="text-xs font-bold px-2 py-1 rounded bg-slate-100 text-slate-600"
+                                        >{tierLabel(contact.tier)}</span
+                                    >
+                                {:else}
+                                    <span></span>
+                                {/if}
                                 <button
                                     onclick={() => openEdit(contact)}
                                     aria-label="Update details for {contact.name}"
@@ -586,9 +588,11 @@
                                     <td class="px-4 py-3 text-sm text-slate-600">{contact.phone || '-'}</td>
                                     <td class="px-4 py-3 text-sm text-slate-600">{contact.email || '-'}</td>
                                     <td class="px-4 py-3">
-                                        <span class="text-xs font-bold px-2 py-1 rounded bg-slate-100 text-slate-500">
-                                            {contact.tier?.split("_")[1] || "Unassigned"}
-                                        </span>
+                                        {#if tierLabel(contact.tier)}
+                                            <span class="text-xs font-bold px-2 py-1 rounded bg-slate-100 text-slate-600">
+                                                {tierLabel(contact.tier)}
+                                            </span>
+                                        {/if}
                                     </td>
                                     <td class="px-4 py-3 text-right whitespace-nowrap">
                                         <button
@@ -601,7 +605,7 @@
                                         <button
                                             onclick={() => deleteContact(contact.id)}
                                             aria-label="Remove {contact.name}"
-                                            class="text-slate-300 hover:text-red-500 transition-opacity"
+                                            class="text-slate-500 hover:text-red-600 transition-colors"
                                         >
                                             <Trash2 size={16} />
                                         </button>
@@ -667,7 +671,7 @@
                 <select
                     id="contact-role"
                     bind:value={newContact.role}
-                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white transition-all outline-none {$conciergeEngine
+                    class="w-full px-4 py-3 h-[calc(1.6em+1.5rem+2px)] rounded-xl border border-slate-200 bg-white transition-all outline-none {$conciergeEngine
                         .lastExtractedData?.relationship ||
                     $conciergeEngine.lastExtractedData?.family_member
                         ?.relationship
@@ -729,7 +733,7 @@
                 <select
                     id="contact-tier"
                     bind:value={newContact.tier}
-                    class="w-full px-4 py-3 rounded-xl border border-primary/20 bg-white shadow-sm focus:border-primary outline-none"
+                    class="w-full px-4 py-3 h-[calc(1.6em+1.5rem+2px)] rounded-xl border border-primary/20 bg-white shadow-sm focus:border-primary outline-none"
                 >
                     {#each TIER_OPTIONS as o}
                         <option value={o.value}>{o.label}</option>

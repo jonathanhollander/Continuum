@@ -14,6 +14,8 @@
         "Notified",
         "Unreachable",
     ];
+    // A contact with no saved status is still pending, so that chip shows as chosen.
+    let current = $derived(contact.notificationStatus || "Pending");
 </script>
 
 <div
@@ -57,10 +59,11 @@
         {#each statuses as status}
             <button
                 onclick={() => updateStatus(contact.id, status)}
+                aria-pressed={current === status}
                 class="px-3 py-1.5 rounded-lg text-xs font-bold border transition-all whitespace-nowrap
-                {contact.notificationStatus === status
+                {current === status
                     ? 'bg-slate-800 text-white border-slate-800'
-                    : 'bg-white text-slate-400 border-slate-200 hover:border-slate-400'}"
+                    : 'bg-white text-slate-500 border-slate-200 hover:border-slate-400'}"
             >
                 {status === "LeftMsg" ? "Left Msg" : status}
             </button>
