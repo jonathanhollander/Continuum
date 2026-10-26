@@ -205,7 +205,7 @@ class DatabaseError(ContinuumException):
 
         super().__init__(
             message=f"Database error during {operation}: {original_error}",
-            user_message="Saving is taking a moment. Your words are kept here; try again shortly.",
+            user_message="Everything you've saved is safe. We can save it again whenever you're ready.",
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             error_code="DATABASE_ERROR",
             details=details

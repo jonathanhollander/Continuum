@@ -42,7 +42,7 @@
             color: "bg-warning",
             bgColor: "bg-warning/20",
             label: "Needs attention",
-            tooltip: "Saving is taking a moment. Your words are still here, and we'll try again."
+            tooltip: "Everything you've saved is safe. We can try again whenever you're ready."
         },
         ready: {
             color: "bg-slate-400",
