@@ -188,10 +188,10 @@
 </svelte:head>
 
 <div
-    class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-100 p-6 md:p-12 mb-20"
+    class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-100 p-6 md:p-12"
 >
     {#if mounted}
-        <div in:fade={{ duration: 800 }} class="max-w-6xl mx-auto">
+        <div in:fade={{ duration: 800 }} class="grief-sanctuary max-w-6xl mx-auto">
             <!-- Header Section -->
             <header class="mb-16 text-center">
                 <div
@@ -288,7 +288,7 @@
                                 {/if}
                             </div>
 
-                            <h3 class="text-2xl font-medium mb-3">
+                            <h3 class="text-2xl font-medium mb-3 text-slate-100">
                                 Find Local Help
                             </h3>
                             <p class="text-slate-400 mb-6 max-w-md">
@@ -297,7 +297,9 @@
                                 bereavement care.
                             </p>
 
-                            <div class="relative w-full max-w-md group mb-8">
+                            <div
+                                class="flex w-full max-w-md flex-col items-start gap-3 group mb-8"
+                            >
                                 <input
                                     type="text"
                                     bind:value={searchLocation}
@@ -310,7 +312,7 @@
                                     onclick={handleDiscovery}
                                     disabled={!searchLocation.trim() ||
                                         isSearching}
-                                    class="absolute right-3 top-1/2 -translate-y-1/2 px-4 py-2 rounded-xl bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 transition-all disabled:opacity-30 text-sm font-medium"
+                                    class="px-4 py-2 rounded-xl bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 transition-all disabled:opacity-30 text-sm font-medium"
                                 >
                                     {isSearching
                                         ? "Searching..."
@@ -375,7 +377,7 @@
                                     />
                                 </div>
                                 <div>
-                                    <h3 class="text-xl font-medium">
+                                    <h3 class="text-xl font-medium text-slate-100">
                                         Bespoke Support
                                     </h3>
                                     <p class="text-sm text-slate-500 italic">
@@ -455,7 +457,7 @@
                     <div class="flex items-center justify-between gap-3 mb-8">
                         <div class="flex items-center gap-3">
                             <LucidePhone class="w-6 h-6 text-rose-400" />
-                            <h2 class="text-xl font-medium">Crisis Center</h2>
+                            <h2 class="text-xl font-medium text-slate-100">Crisis Center</h2>
                         </div>
 
                         <select
@@ -511,6 +513,19 @@
 
 <style>
     :global(body) {
+        background-color: #0f172a;
+    }
+
+    /* The global base rule paints h2/h3 in the dark foreground colour; on this
+       dark page the resource-card titles take the page's light text instead. */
+    .grief-sanctuary :global(h2),
+    .grief-sanctuary :global(h3) {
+        color: inherit;
+    }
+
+    /* The layout's <main> keeps bottom padding in the light theme colour; keep it
+       dark while this page is shown so no light band sits under the page. */
+    :global(main:has(.grief-sanctuary)) {
         background-color: #0f172a;
     }
 </style>
