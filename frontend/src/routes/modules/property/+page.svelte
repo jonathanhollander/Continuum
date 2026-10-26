@@ -900,7 +900,7 @@
                                     <span class="text-xs font-medium text-slate-600 capitalize">{item.status || 'owned'}</span>
                                 </td>
                                 <td class="px-4 py-3 text-right">
-                                    <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div class="flex items-center justify-end gap-2">
                                         <button
                                             onclick={() => generateQR(item)}
                                             class="p-1.5 text-slate-400 hover:text-amber-600 transition-colors"

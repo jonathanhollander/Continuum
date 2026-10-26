@@ -647,12 +647,6 @@
             >
                 Next Step <ArrowRight size={18} />
             </button>
-        {:else}
-            <button
-                class="px-8 py-3 bg-[#4A7C74] hover:bg-[#3b635d] text-white rounded-xl font-bold shadow-lg shadow-[#4A7C74]/20 flex items-center gap-2 transition-all hover:-translate-y-0.5"
-            >
-                <Check size={18} /> Save Plan
-            </button>
         {/if}
     </div>
 </div>

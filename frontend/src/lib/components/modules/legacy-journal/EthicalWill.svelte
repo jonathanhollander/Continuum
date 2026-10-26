@@ -253,19 +253,19 @@ With all my love,
                             data-testid="core-value"
                         >
                             <div
-                                class="absolute top-4 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                class="absolute top-4 right-4 flex gap-1"
                             >
                                 <button
                                     onclick={() => openValueForm(value)}
                                     class="p-1.5 hover:bg-stone-100 rounded-lg text-stone-400 hover:text-stone-700"
-                                    aria-label="Edit value"
+                                    aria-label="Edit these details"
                                 >
                                     <Edit3 size={14} />
                                 </button>
                                 <button
                                     onclick={() => removeValue(value.id)}
                                     class="p-1.5 hover:bg-stone-100 rounded-lg text-stone-400 hover:text-stone-700"
-                                    aria-label="Remove value"
+                                    aria-label="Remove this item"
                                 >
                                     <X size={14} />
                                 </button>
