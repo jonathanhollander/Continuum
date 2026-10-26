@@ -1,6 +1,6 @@
 # Continuum — Recovery Execution Plan (subagent-run)
 
-**Last Updated:** 2026-10-26 03:05 EST
+**Last Updated:** 2026-10-26 03:20 EST
 
 The how and the order for [PROJECT_RECOVERY_PLAN.md](PROJECT_RECOVERY_PLAN.md) (phases A–F).
 Issue IDs (CU-0xx) and their evidence are in
@@ -171,6 +171,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | A1 | Pin the full backend set | `general-purpose` | `backend/requirements.txt`, `nixpacks.toml` | Pin production's full `pip freeze`; keep `python311`. | A fresh 3.11 venv installs, the dev user seeds, login returns 200 |
 | A2 | Stale CI line | `general-purpose` | `CLAUDE.md` (Deployment) | "Run `npm run check` and `npm run build` by hand." | One-line diff |
 | A4 | Backend starts locally (from A1 findings) | `general-purpose` | `backend/main.py` (the `__main__` block and the static mounts only) | `uvicorn.run("backend.main:app")`; mount `frontend/dist` folders only when they exist | From the repo root, `python -m backend.main` starts with no `frontend/dist`, and login returns 200 |
+| A5 | Surrounding bugs from A1/A4 (decision 10) | `general-purpose` | `backend/auth.py`; `seed_dev_user` and the `__main__` block in `backend/main.py` | Seed failures logged with traceback; remove the no-op passlib "fix"; timezone-aware JWT expiry; local reload watches `backend/` only | Fresh DB: seed + login 200; an existing bcrypt-format hash verifies; token `exp` decodes correctly |
 | A3 | UI-payload smoke script (written test T-A3; see Test register) | `general-purpose` | `scripts/smoke_test.py` (new) | Reuse `docs/reviews/.../evidence/reproduce_api_probes.py`. Send each store's real payload (after `toSnake`), re-fetch, and diff every field. Cover every completion-scenario record type. | It reproduces CU-001, CU-002, CU-004 and CU-009 as failures, and journal/home-access as passes |
 
 ## Wave B — Shared contracts (one at a time: B1 → B2 → B3 → B4 → B5)
@@ -251,6 +252,7 @@ Listed so nothing is lost:
 | A4 | ☑ | 020f77c | No frontend/dist: `python -m backend.main` starts, dev seeds, login 200, SPA routes 404 not 500 |
 | A2 | ☑ | 8d54a13 | Diff = the Pre-deploy line plus the footer; `.github/` absent |
 | A3 | ▶ | | |
+| A5 | ▶ | | |
 | B1 | ☐ | | |
 | B2 | ☐ | | |
 | B3 | ☐ | | |
