@@ -60,6 +60,13 @@ export const pulse = {
     get enabled() { return settingsSync.data?.enabled ?? false; },
     get contacts() { return []; }, // Contacts are managed separately via PulseContact API
     init: () => statusSync.sync(),
+    /** The settings page's copy, snake_case as the server sends it, from the store's own fetch:
+     *  sync() joins the one the layout's syncAll starts, so the page adds no second GET.
+     *  null when the server could not be reached. */
+    async loadSettings(): Promise<Record<string, unknown> | null> {
+        await settingsSync.sync();
+        return settingsSync.status === 'error' ? null : settingsSync.wirePayloadOfData();
+    },
     /** Show the server's on/off on this device only (no save): the settings page has just
      *  read or saved it, so writing it back would be a second save the person never made. */
     showEnabled(enabled: boolean) {

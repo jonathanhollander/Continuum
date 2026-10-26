@@ -34,12 +34,11 @@
     async function loadData() {
         try {
             const [settingsData, tiersData] = await Promise.all([
-                apiGet("/api/pulse/settings"),
+                pulse.loadSettings(),
                 apiGet("/api/pulse/tiers"),
             ]);
 
-            settings = settingsData;
-            pulse.showEnabled(settings.enabled);
+            if (settingsData) settings = settingsData as typeof settings;
             tiers = tiersData;
         } catch (e) {
             console.error(e);
