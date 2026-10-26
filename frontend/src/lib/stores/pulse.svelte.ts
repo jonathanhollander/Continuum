@@ -5,6 +5,10 @@ export interface PulseStatus {
     status: 'active' | 'grace' | 'not_configured' | 'disabled';
     last_checkin: string | null;
     next_nudge: string | null;
+    // A guardian's "they're OK" since the owner's own last check-in (UTC ISO with "Z")
+    guardian_checkin?: { at: string; by: string } | null;
+    escalation_tier?: number | null;
+    alerts_paused_until?: string | null;
 }
 
 export interface PulseSettings {
@@ -54,6 +58,7 @@ export const pulse = {
     get status() { return statusSync.data?.status || 'disabled'; },
     get next_nudge() { return statusSync.data?.next_nudge || null; },
     get lastCheckin() { return statusSync.data?.last_checkin || null; },
+    get guardianCheckin() { return statusSync.data?.guardian_checkin || null; },
     get enabled() { return settingsSync.data?.enabled ?? false; },
     get contacts() { return []; }, // Contacts are managed separately via PulseContact API
     init: () => statusSync.sync(),

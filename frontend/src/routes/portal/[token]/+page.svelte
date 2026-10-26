@@ -64,10 +64,8 @@
         method: "POST",
       });
       if (res.ok) {
-        actionMessage = "Confirmed! The pulse timer has been reset.";
-        // Optimistically update UI
-        data.user_status = "active";
-        data.last_checkin = new Date().toISOString();
+        // A guardian confirmation pauses new alerts; the owner's own check-in time stays as shown
+        actionMessage = "Thank you for checking on them. This appears in their check-in history.";
       } else {
         actionMessage =
           "We couldn't record that just now. This link may have expired; please try again in a little while.";

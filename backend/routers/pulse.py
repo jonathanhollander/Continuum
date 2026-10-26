@@ -48,6 +48,9 @@ class WebAuthnCredentialPayload(BaseModel):
 @router.post("/checkin", summary="Record a life-check-in", description="Allows the user to manually check in, confirming they are safe. This resets the escalation timer.")
 @limiter.limit("5/minute")
 def checkin(request: Request, method: str = "manual", note: str = None, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    from backend.pulse_logic import GUARDIAN_CHECKIN_METHODS
+    if method in GUARDIAN_CHECKIN_METHODS:  # the owner's own check-in is never a guardian action
+        method = "manual"
     checkin = PulseCheckin(user_id=user.id, method=method, note=note)
     session.add(checkin)
     session.commit()
@@ -61,17 +64,30 @@ def get_status(user: User = Depends(get_current_user), session: Session = Depend
     if not settings.enabled:
         return {"status": "disabled"}
 
-    statement = select(PulseCheckin).where(PulseCheckin.user_id == user.id).order_by(PulseCheckin.timestamp.desc())
-    last_checkin = session.exec(statement).first()
-    
-    # Calculate next expected (simplified)
-    freq = settings.frequency_days or 2
-    next_time = (last_checkin.timestamp if last_checkin else datetime.utcnow()) + timedelta(days=freq)
-    
+    # Same clock as the scheduler and the guardian portal (pulse_logic): "active" until the owner's
+    # own last check-in + frequency_days; guardian check-ins are listed as such and never reset it.
+    from backend.pulse_logic import (owner_last_checkin, guardian_checkin_since,
+                                     current_escalation, alerts_paused_until)
+    now = datetime.utcnow()
+    last_checkin = owner_last_checkin(session, user.id)
+    since = last_checkin.timestamp if last_checkin else datetime.min
+    guardian = guardian_checkin_since(session, user.id, since)
+    escalation = current_escalation(session, user.id, since)
+    paused_until = alerts_paused_until(settings, guardian)
+
+    freq = timedelta(days=settings.frequency_days)
+    next_time = (last_checkin.timestamp if last_checkin else now) + freq
+
     return {
-        "status": "active" if (last_checkin and last_checkin.timestamp > datetime.utcnow() - timedelta(days=freq+1)) else "grace",
-        "last_checkin": last_checkin.timestamp if last_checkin else None,
-        "next_nudge": next_time.strftime("%Y-%m-%d %H:%M")
+        "status": "active" if (last_checkin and now < last_checkin.timestamp + freq) else "grace",
+        "last_checkin": _utc_iso(last_checkin.timestamp) if last_checkin else None,
+        "next_nudge": next_time.strftime("%Y-%m-%d %H:%M"),
+        "guardian_checkin": {
+            "at": _utc_iso(guardian.timestamp),
+            "by": (guardian.note or "").rpartition(" by ")[2] or "A guardian",
+        } if guardian else None,
+        "escalation_tier": escalation.tier_number if escalation else None,
+        "alerts_paused_until": _utc_iso(paused_until) if paused_until and now < paused_until else None,
     }
 
 @router.get("/settings", summary="Retrieve Pulse settings", description="Gets the user's Pulse configuration, including frequency and current check-in token.")
@@ -150,18 +166,23 @@ def delete_contact(contact_id: int, user: User = Depends(get_current_user), sess
 
 # --- Guardian portal helpers ---
 
-# A guardian's "I've confirmed they are OK" is stored as a PulseCheckin with this method so the
-# scheduler (pulse_logic.process_user_pulse reads any check-in) restarts the owner's timer. It is
-# a guardian action, not the owner's own check-in, so the portal ignores it for status, the shown
-# time and vault access; one guardian's snooze leaves every other guardian's access as it was.
+# A guardian's snooze ("they're OK") or confirmation ("I've spoken to them") is stored as a
+# PulseCheckin with a guardian method (pulse_logic.GUARDIAN_CHECKIN_METHODS). It pauses new alerts
+# (pulse_logic.alerts_paused_until) but is never the owner's own check-in, so the portal ignores
+# it for status, the shown time and vault access; one guardian's action leaves every other
+# guardian's access as it was.
 GUARDIAN_SNOOZE_METHOD = "guardian_snooze"
+GUARDIAN_CONFIRMATION_METHOD = "guardian_confirmation"
 
 
 def _owner_last_checkin(session: Session, user_id: int):
-    return session.exec(select(PulseCheckin).where(
-        PulseCheckin.user_id == user_id,
-        PulseCheckin.method != GUARDIAN_SNOOZE_METHOD,
-    ).order_by(PulseCheckin.timestamp.desc())).first()
+    from backend.pulse_logic import owner_last_checkin
+    return owner_last_checkin(session, user_id)
+
+
+def _this_outage_escalation(session: Session, user_id: int, last_checkin):
+    from backend.pulse_logic import current_escalation
+    return current_escalation(session, user_id, last_checkin.timestamp if last_checkin else datetime.min)
 
 
 def _utc_iso(ts: datetime):
@@ -191,13 +212,7 @@ def get_portal_view(request: Request, token: str, session: Session = Depends(get
     # Check active escalation for sensitive data: only this outage counts (rows after the last
     # check-in, as pulse_logic.process_user_pulse does), so a check-in closes access again.
     # Tier-0 rows are safety-timer alerts, not welfare tiers; they must not mask the tier already reached.
-    from backend.pulse_logic import SAFETY_TIMER_LOG_TIER
-    escalation_stmt = select(PulseEscalationLog).where(
-        PulseEscalationLog.user_id == user_id,
-        PulseEscalationLog.tier_number != SAFETY_TIMER_LOG_TIER,
-        PulseEscalationLog.triggered_at > (last_checkin.timestamp if last_checkin else datetime.min),
-    ).order_by(PulseEscalationLog.tier_number.desc())
-    last_escalation = session.exec(escalation_stmt).first()
+    last_escalation = _this_outage_escalation(session, user_id, last_checkin)
     
     tier = session.get(PulseEscalationTier, contact.tier_id) if contact.tier_id else None
     show_sensitive = bool(last_escalation and tier and last_escalation.tier_number >= tier.tier_number)
@@ -234,13 +249,8 @@ def get_portal_vault(request: Request, token: str, session: Session = Depends(ge
 
     # Same rule as the portal view: only once this outage's escalation (rows after the owner's
     # last check-in) has reached this guardian's tier. Tier-0 safety-timer rows don't count.
-    from backend.pulse_logic import SAFETY_TIMER_LOG_TIER
     last_checkin = _owner_last_checkin(session, contact.user_id)
-    last_escalation = session.exec(select(PulseEscalationLog).where(
-        PulseEscalationLog.user_id == contact.user_id,
-        PulseEscalationLog.tier_number != SAFETY_TIMER_LOG_TIER,
-        PulseEscalationLog.triggered_at > (last_checkin.timestamp if last_checkin else datetime.min),
-    ).order_by(PulseEscalationLog.tier_number.desc())).first()
+    last_escalation = _this_outage_escalation(session, contact.user_id, last_checkin)
     tier = session.get(PulseEscalationTier, contact.tier_id) if contact.tier_id else None
     if not (last_escalation and tier and last_escalation.tier_number >= tier.tier_number):
         return []
@@ -267,8 +277,8 @@ def guardian_respond(request: Request, token: str, action: str, session: Session
         raise HTTPException(status_code=401, detail="Token expired")
         
     if action == "snooze":
-        # Restarts the owner's check-in timer (the scheduler reads every check-in); the portal
-        # routes skip this method, so other guardians' access stays as it was
+        # Pauses new alerts (pulse_logic.alerts_paused_until); the owner's own clock, escalation
+        # history and other guardians' access stay as they were
         checkin_rec = PulseCheckin(user_id=contact.user_id, method=GUARDIAN_SNOOZE_METHOD, note=f"Marked OK by {contact.name}")
         session.add(checkin_rec)
         session.commit()
@@ -386,11 +396,10 @@ def confirm_contact(request: Request, token: str, session: Session = Depends(get
     if contact.portal_token_expires and contact.portal_token_expires < datetime.utcnow():
         raise HTTPException(status_code=401, detail="Token expired")
 
-    # Resetting the user's safety timer or logging a 'spoken to' event
-    # This effectively acts as a proxy check-in
+    # A guardian action, like a snooze: pauses new alerts, never the owner's own check-in
     checkin = PulseCheckin(
-        user_id=contact.user_id, 
-        method="guardian_confirmation", 
+        user_id=contact.user_id,
+        method=GUARDIAN_CONFIRMATION_METHOD,
         note=f"Confirmed by {contact.name}"
     )
     session.add(checkin)

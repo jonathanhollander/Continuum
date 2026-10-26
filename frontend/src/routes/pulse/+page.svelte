@@ -106,6 +106,18 @@
                     <h2 class="text-2xl font-medium text-slate-900">
                         {statusLabels[pulse.status]}
                     </h2>
+                    {#if pulse.guardianCheckin}
+                        <p class="text-teal-700 flex items-center justify-center gap-2">
+                            <Users class="w-4 h-4" />
+                            {pulse.guardianCheckin.by} checked on you on {new Date(
+                                pulse.guardianCheckin.at,
+                            ).toLocaleString(undefined, {
+                                weekday: "long",
+                                hour: "numeric",
+                                minute: "2-digit",
+                            })}.
+                        </p>
+                    {/if}
                     {#if pulse.status === "active" && pulse.next_nudge}
                         <p
                             class="text-slate-500 flex items-center justify-center gap-2"
