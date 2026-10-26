@@ -10,8 +10,11 @@
     import { t } from "$lib/stores/localization";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import { notifications } from "$lib/stores/notificationStore";
+    import { userRole } from "$lib/stores/conciergeStore.svelte";
 
     let showWizard = $state(false);
+    // Add Asset lives beside Guided Setup; the manager below opens its form from this.
+    let showAddForm = $state(false);
     let reloadKey = $state(0);
 
     // The financial_assets store owns this registry key (and its mapper).
@@ -142,13 +145,23 @@
         detailedDescription="Gathering your financial accounts in one place isn't just about numbers—it's about ensuring your family isn't left searching for resources they might desperately need. This clarity provides immediate stability during a time of uncertainty."
         whyMatters="Unclaimed assets and lost accounts are a common burden for grieving families. By documenting these now, you ensure resources go to supporting your loved ones rather than being lost to bureaucracy."
     >
-        <button
-            onclick={() => (showWizard = true)}
-            class="flex items-center gap-2 px-5 py-3 border border-primary/10 text-primary font-bold rounded-2xl hover:bg-primary/5 transition-colors"
-        >
-            <Sparkles size={18} />
-            {$t("wizard.start")}
-        </button>
+        <div class="flex items-center gap-3">
+            <button
+                onclick={() => (showWizard = true)}
+                class="flex items-center gap-2 px-5 py-3 border border-primary/10 text-primary font-bold rounded-2xl hover:bg-primary/5 transition-colors"
+            >
+                <Sparkles size={18} />
+                {$t("wizard.start")}
+            </button>
+            {#if $userRole !== "Family"}
+                <button
+                    onclick={() => (showAddForm = true)}
+                    class="flex items-center gap-2 px-5 py-3 border border-primary bg-primary text-primary-foreground font-bold rounded-2xl hover:opacity-90 transition-all shadow-lg shadow-primary/20"
+                >
+                    <Plus size={18} /> Add Asset
+                </button>
+            {/if}
+        </div>
     </LivingBlueprintHeader>
 
 <div class="max-w-6xl mx-auto p-8">
@@ -167,7 +180,7 @@
         </div>
     {:else}
         {#key reloadKey}
-            <AssetManager module={{ id: "assets-main" }} />
+            <AssetManager module={{ id: "assets-main" }} bind:showAddForm headerAdd={false} />
         {/key}
     {/if}
 </div>

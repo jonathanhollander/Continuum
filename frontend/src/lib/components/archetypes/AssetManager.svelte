@@ -47,7 +47,12 @@
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
     import { focusTrap } from "$lib/actions/focusTrap";
 
-    let { module } = $props<{ module: any }>();
+    // showAddForm is bindable so a page can place Add Asset in its own header (headerAdd=false).
+    let {
+        module,
+        showAddForm = $bindable(false),
+        headerAdd = true,
+    } = $props<{ module: any; showAddForm?: boolean; headerAdd?: boolean }>();
 
     // Determine sync key based on module ID
     // Financial Accounts passes 'assets-main', so we map it to 'financial_assets'
@@ -104,7 +109,6 @@
     }
 
     let assets = $derived(assetSync.items);
-    let showAddForm = $state(false);
     let viewMode = $state<ViewMode>('card');
 
     let newAsset = $state<Partial<Asset> & { id?: string; documents?: string }>({
@@ -550,7 +554,7 @@
         </div>
         <div class="flex gap-3 items-center">
             <DataViewToggle module="financial-accounts" onchange={(mode) => viewMode = mode} />
-            {#if $userRole !== "Family"}
+            {#if $userRole !== "Family" && headerAdd}
                 <button
                     onclick={() => (showAddForm = true)}
                     class="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 transition-all flex items-center gap-2 shadow-lg shadow-primary/20"
