@@ -121,7 +121,19 @@
         showAddModal = true;
     }
 
+    // One save at a time: while it is open the button waits, so a second click sends nothing.
+    let saving = $state(false);
     async function saveEntry() {
+        if (saving) return;
+        saving = true;
+        try {
+            await saveEntryOnce();
+        } finally {
+            saving = false;
+        }
+    }
+
+    async function saveEntryOnce() {
         if (!newEntry.content) return;
 
         const data = {
@@ -539,10 +551,11 @@
         </button>
         <button
             onclick={saveEntry}
-            disabled={!newEntry.content}
+            disabled={!newEntry.content || saving}
+            aria-busy={saving}
             class="px-6 py-2.5 rounded-xl font-semibold bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 transition-all shadow-lg shadow-primary/20"
         >
-            {editingEntry ? "Save my updates" : "Preserve this memory"}
+            {saving ? "Saving..." : editingEntry ? "Save my updates" : "Preserve this memory"}
         </button>
     </div>
 </Modal>

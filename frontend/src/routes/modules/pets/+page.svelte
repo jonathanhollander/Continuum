@@ -68,7 +68,19 @@
         notes: "",
     });
 
+    // One save at a time: while it is open the button waits, so a second click sends nothing.
+    let saving = $state(false);
     async function savePet() {
+        if (saving) return;
+        saving = true;
+        try {
+            await savePetOnce();
+        } finally {
+            saving = false;
+        }
+    }
+
+    async function savePetOnce() {
         if (!newPet.name) return;
 
         const { [PET_MEDIA_KEY]: _ignored, ...customValues } = parsedCustomAttributes;
@@ -615,10 +627,11 @@
             >
             <button
                 onclick={savePet}
-                disabled={!newPet.name}
+                disabled={!newPet.name || saving}
+                aria-busy={saving}
                 class="px-6 py-2.5 rounded-xl font-semibold bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-                {newPet.id ? "Save changes" : "Record detail"}
+                {saving ? "Saving..." : newPet.id ? "Save changes" : "Record detail"}
             </button>
         </div>
     </Modal>

@@ -261,7 +261,19 @@
         parsedCustomAttributes = {};
     }
 
+    // One save at a time: while it is open the button waits, so a second click sends nothing.
+    let saving = $state(false);
     async function handleAddPolicy() {
+        if (saving) return;
+        saving = true;
+        try {
+            await handleAddPolicyOnce();
+        } finally {
+            saving = false;
+        }
+    }
+
+    async function handleAddPolicyOnce() {
         if (!newPolicy.policyName || !newPolicy.insurer) return;
 
         // Serialize custom attributes
@@ -1258,10 +1270,11 @@
                 </button>
                 <button
                     onclick={handleAddPolicy}
-                    disabled={!newPolicy.policyName || !newPolicy.insurer}
+                    disabled={!newPolicy.policyName || !newPolicy.insurer || saving}
+                    aria-busy={saving}
                     class="px-6 py-2.5 rounded-xl font-semibold bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {isEditing ? "Save my updates" : "Save my thoughts"}
+                    {saving ? "Saving..." : isEditing ? "Save my updates" : "Save my thoughts"}
                 </button>
             </div>
         </div>

@@ -152,7 +152,19 @@
         isLoading = false;
     });
 
+    // One save at a time: while it is open the button waits, so a second click sends nothing.
+    let saving = $state(false);
     async function addContact() {
+        if (saving) return;
+        saving = true;
+        try {
+            await addContactOnce();
+        } finally {
+            saving = false;
+        }
+    }
+
+    async function addContactOnce() {
         if (!newContact.name) return;
 
         // Default values for new contact
@@ -210,6 +222,16 @@
     }
 
     async function saveEdit() {
+        if (saving) return;
+        saving = true;
+        try {
+            await saveEditOnce();
+        } finally {
+            saving = false;
+        }
+    }
+
+    async function saveEditOnce() {
         if (editingId === null || !newContact.name?.trim()) return;
         // The store saves optimistically; on failure it rolls back and shows a gentle
         // message with Try Again, and the form stays open with the draft.
@@ -750,9 +772,11 @@
                 </button>
                 <button
                     onclick={editingId !== null ? saveEdit : addContact}
-                    class="px-6 py-2.5 rounded-xl font-semibold bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 transition-all"
+                    disabled={saving}
+                    aria-busy={saving}
+                    class="px-6 py-2.5 rounded-xl font-semibold bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50"
                 >
-                    {editingId !== null ? "Save these details" : "Include this person"}
+                    {saving ? "Saving..." : editingId !== null ? "Save these details" : "Include this person"}
                 </button>
             </div>
         </div>

@@ -77,7 +77,19 @@
         showVendorModal = true;
     }
 
+    // One save at a time: while it is open the button waits, so a second click sends nothing.
+    let saving = $state(false);
     async function saveVendor() {
+        if (saving) return;
+        saving = true;
+        try {
+            await saveVendorOnce();
+        } finally {
+            saving = false;
+        }
+    }
+
+    async function saveVendorOnce() {
         if (!vendorForm.category || !vendorForm.name) return;
         const fields = {
             category: vendorForm.category,
@@ -112,6 +124,16 @@
     }
 
     async function saveCode() {
+        if (saving) return;
+        saving = true;
+        try {
+            await saveCodeOnce();
+        } finally {
+            saving = false;
+        }
+    }
+
+    async function saveCodeOnce() {
         if (!codeForm.location) return;
         const fields = {
             location: codeForm.location,
@@ -146,6 +168,16 @@
     }
 
     async function saveUtility() {
+        if (saving) return;
+        saving = true;
+        try {
+            await saveUtilityOnce();
+        } finally {
+            saving = false;
+        }
+    }
+
+    async function saveUtilityOnce() {
         if (!utilityForm.service_type) return;
         const fields = {
             service_type: utilityForm.service_type,
@@ -238,10 +270,11 @@
                 </button>
                 <button
                     onclick={saveVendor}
-                    disabled={!vendorForm.category || !vendorForm.name}
+                    disabled={!vendorForm.category || !vendorForm.name || saving}
+                    aria-busy={saving}
                     class="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-bold text-sm shadow-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
                 >
-                    <Save size={16} /> Save Vendor
+                    <Save size={16} /> {saving ? "Saving..." : "Save Vendor"}
                 </button>
             </div>
         </div>
@@ -317,10 +350,11 @@
                 </button>
                 <button
                     onclick={saveCode}
-                    disabled={!codeForm.location}
+                    disabled={!codeForm.location || saving}
+                    aria-busy={saving}
                     class="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-bold text-sm shadow-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
                 >
-                    <Save size={16} /> Save Code
+                    <Save size={16} /> {saving ? "Saving..." : "Save Code"}
                 </button>
             </div>
         </div>
@@ -402,10 +436,11 @@
                 </button>
                 <button
                     onclick={saveUtility}
-                    disabled={!utilityForm.service_type}
+                    disabled={!utilityForm.service_type || saving}
+                    aria-busy={saving}
                     class="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-bold text-sm shadow-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
                 >
-                    <Save size={16} /> Save Utility
+                    <Save size={16} /> {saving ? "Saving..." : "Save Utility"}
                 </button>
             </div>
         </div>

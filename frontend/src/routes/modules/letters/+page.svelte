@@ -97,7 +97,19 @@
 
     // onMount removed
 
+    // One save at a time: while it is open the button waits, so a second click sends nothing.
+    let saving = $state(false);
     async function saveToVault() {
+        if (saving) return;
+        saving = true;
+        try {
+            await saveToVaultOnce();
+        } finally {
+            saving = false;
+        }
+    }
+
+    async function saveToVaultOnce() {
         if (!generatedLetter) {
             notifications.showError({
                 message:
@@ -852,6 +864,8 @@
                     </div>
                     <button aria-label="Save my letter"
                         onclick={saveToVault}
+                        disabled={saving}
+                        aria-busy={saving}
                         class="p-4 bg-[#4A7C74] text-white rounded-2xl shadow-xl shadow-[#4A7C74]/20"
                     >
                         <ArrowRight size={20} />
@@ -946,9 +960,11 @@
 
                 <button
                     onclick={saveToVault}
-                    class="w-full bg-slate-900 text-white p-6 rounded-2xl font-black flex items-center justify-center gap-3 shadow-2xl shadow-slate-900/30 hover:scale-105 active:scale-95 transition-all"
+                    disabled={saving}
+                    aria-busy={saving}
+                    class="w-full bg-slate-900 text-white p-6 rounded-2xl font-black flex items-center justify-center gap-3 shadow-2xl shadow-slate-900/30 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
                 >
-                    Save my letter <ArrowRight size={20} />
+                    {saving ? "Saving..." : "Save my letter"} <ArrowRight size={20} />
                 </button>
             </div>
         </div>
@@ -1018,10 +1034,12 @@
                     </button>
                     <button
                         onclick={saveToVault}
-                        class="flex items-center gap-2 px-8 py-3 bg-[#4A7C74] text-white rounded-xl font-black shadow-xl shadow-[#4A7C74]/20 hover:scale-105 active:scale-95 transition-all"
+                        disabled={saving}
+                        aria-busy={saving}
+                        class="flex items-center gap-2 px-8 py-3 bg-[#4A7C74] text-white rounded-xl font-black shadow-xl shadow-[#4A7C74]/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
                     >
                         <Save size={18} />
-                        Save my letter
+                        {saving ? "Saving..." : "Save my letter"}
                     </button>
                 </div>
             </div>

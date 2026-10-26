@@ -105,7 +105,19 @@
 
     // save() removed (SyncManager handles persistence)
 
+    // One save at a time: while it is open the button waits, so a second click sends nothing.
+    let saving = $state(false);
     async function saveSubscription() {
+        if (saving) return;
+        saving = true;
+        try {
+            await saveSubscriptionOnce();
+        } finally {
+            saving = false;
+        }
+    }
+
+    async function saveSubscriptionOnce() {
         if (!newSub.name) return;
 
         try {
@@ -669,10 +681,13 @@
                     >
                     <button
                         onclick={saveSubscription}
-                        disabled={!newSub.name}
+                        disabled={!newSub.name || saving}
+                        aria-busy={saving}
                         class="px-6 py-2 rounded-xl font-bold bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50"
                     >
-                        {newSub.id
+                        {saving
+                            ? "Saving..."
+                            : newSub.id
                             ? "Update Subscription"
                             : "Save Subscription"}
                     </button>

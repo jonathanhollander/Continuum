@@ -293,7 +293,19 @@
         };
     }
 
+    // One save at a time: while it is open the button waits, so a second click sends nothing.
+    let saving = $state(false);
     async function handleAddItem() {
+        if (saving) return;
+        saving = true;
+        try {
+            await handleAddItemOnce();
+        } finally {
+            saving = false;
+        }
+    }
+
+    async function handleAddItemOnce() {
         if (!newItem.name || !newItem.location) return;
 
         const keptIds = formMediaIds();
@@ -1194,10 +1206,11 @@
                 </button>
                 <button
                     onclick={handleAddItem}
-                    disabled={!newItem.name || !newItem.location}
+                    disabled={!newItem.name || !newItem.location || saving}
+                    aria-busy={saving}
                     class="px-6 py-2.5 rounded-xl font-semibold bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    Save my thoughts
+                    {saving ? "Saving..." : "Save my thoughts"}
                 </button>
             </div>
         </div>

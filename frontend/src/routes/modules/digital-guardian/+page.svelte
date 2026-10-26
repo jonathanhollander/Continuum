@@ -318,7 +318,19 @@
         };
     }
 
+    // One save at a time: while it is open the button waits, so a second click sends nothing.
+    let savingEdit = $state(false);
     async function saveEdit() {
+        if (savingEdit) return;
+        savingEdit = true;
+        try {
+            await saveEditOnce();
+        } finally {
+            savingEdit = false;
+        }
+    }
+
+    async function saveEditOnce() {
         if (!editingId) return;
         const id = editingId;
         const changes = { ...$state.snapshot(draft), name: draft.platform };
@@ -1087,10 +1099,11 @@
                             </button>
                             <button
                                 type="submit"
-                                disabled={!draft.platform.trim()}
+                                disabled={!draft.platform.trim() || savingEdit}
+                                aria-busy={savingEdit}
                                 class="px-6 py-2.5 rounded-xl font-semibold bg-[#304743] text-white hover:bg-[#2a3f3b] transition-colors disabled:opacity-50"
                             >
-                                Save my updates
+                                {savingEdit ? "Saving..." : "Save my updates"}
                             </button>
                         </div>
                     </form>
