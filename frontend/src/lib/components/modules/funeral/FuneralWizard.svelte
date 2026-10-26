@@ -223,8 +223,8 @@
                         suggestions={activeTradition.smartTextareaPrompts
                             .foundation || []}
                         value={wishes.ceremonyDetails?.type || ""}
-                        on:change={(e) =>
-                            updateField(["ceremonyDetails", "type"], e.detail)}
+                        onchange={(v) =>
+                            updateField(["ceremonyDetails", "type"], v)}
                         minHeight="120px"
                     />
                 </div>
@@ -352,7 +352,7 @@
                             <input
                                 type="text"
                                 value={wishes.venue || ""}
-                                on:input={(e) =>
+                                on:change={(e) =>
                                     updateField(
                                         ["venue"],
                                         e.currentTarget.value,
@@ -371,7 +371,7 @@
                             <input
                                 type="text"
                                 value={wishes.ceremonyDetails?.officiant || ""}
-                                on:input={(e) =>
+                                on:change={(e) =>
                                     updateField(
                                         ["ceremonyDetails", "officiant"],
                                         e.currentTarget.value,
@@ -442,7 +442,7 @@
                         suggestions={activeTradition.smartTextareaPrompts
                             .atmosphere || []}
                         value={wishes.mood || ""}
-                        on:change={(e) => updateField(["mood"], e.detail)}
+                        onchange={(v) => updateField(["mood"], v)}
                         minHeight="150px"
                     />
 
@@ -486,7 +486,7 @@
                                         if (s)
                                             updateField(
                                                 ["music"],
-                                                [...wishes.music, s],
+                                                [...(wishes.music || []), s],
                                             );
                                     }}>+ Add Song</button
                                 >
@@ -540,8 +540,8 @@
                         suggestions={activeTradition.smartTextareaPrompts
                             .legacy || []}
                         value={wishes.legacy?.obituaryNotes || ""}
-                        on:change={(e) =>
-                            updateField(["legacy", "obituaryNotes"], e.detail)}
+                        onchange={(v) =>
+                            updateField(["legacy", "obituaryNotes"], v)}
                         minHeight="180px"
                     />
 
@@ -554,7 +554,7 @@
                             <input
                                 type="text"
                                 value={wishes.legacy?.charity || ""}
-                                on:input={(e) =>
+                                on:change={(e) =>
                                     updateField(
                                         ["legacy", "charity"],
                                         e.currentTarget.value,

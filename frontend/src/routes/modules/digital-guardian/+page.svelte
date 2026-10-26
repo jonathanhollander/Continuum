@@ -78,14 +78,51 @@
         }
     }
 
-    // A failed save keeps the toggle on screen (the manager shows the one gentle retry line).
-    async function saveChecks(next: { setupStatus?: GuardianChecks; fireDrill?: GuardianChecks }) {
-        try {
-            await digitalGuardianSync.update(next);
-        } catch {
-            digitalGuardianSync.updateLocal({ ...(digitalGuardianSync.data ?? {}), ...next });
-        }
+    // Toggles show at once and are saved together ~500 ms after the last one. Until a save that
+    // carries them succeeds they stay in `pending`, drawn over whatever the manager holds (its
+    // rollback, a sync, or its own Try Again), and the next save re-sends them.
+    type Checks = { setupStatus?: GuardianChecks; fireDrill?: GuardianChecks };
+    let pending = $state<Checks | null>(null);
+    let saveTimer: ReturnType<typeof setTimeout> | undefined;
+    let saving = false;
+    let failed = false;
+
+    function saveChecks(next: Checks) {
+        pending = { ...(pending ?? {}), ...next };
+        digitalGuardianSync.updateLocal({ ...(digitalGuardianSync.data ?? {}), ...pending });
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(flushChecks, 500);
     }
+
+    async function flushChecks() {
+        if (!pending) return;
+        if (saving) { saveTimer = setTimeout(flushChecks, 500); return; }
+        const sent = pending;
+        saving = true;
+        try {
+            await digitalGuardianSync.update(sent);
+            failed = false;
+            if (pending === sent) pending = null;
+        } catch {
+            failed = true;
+            // the manager shows the one gentle retry line; `pending` keeps the toggles
+        } finally {
+            saving = false;
+        }
+        if (pending) digitalGuardianSync.updateLocal({ ...(digitalGuardianSync.data ?? {}), ...pending });
+    }
+
+    // The manager's Try Again re-sends the save that failed; once it lands, send anything newer.
+    $effect(() => {
+        if (digitalGuardianSync.status === "synced" && pending && failed && !saving) {
+            failed = false;
+            const data: Checks = digitalGuardianSync.data ?? {};
+            const keys = Object.keys(pending) as (keyof Checks)[];
+            if (keys.every((k) => JSON.stringify(data[k]) === JSON.stringify(pending![k]))) { pending = null; return; }
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(flushChecks, 500);
+        }
+    });
 
     // Default Status
     const DEFAULT_STATUS = {
@@ -99,7 +136,7 @@
 
     let setupStatus = $derived<GuardianStatus>({
         ...DEFAULT_STATUS,
-        ...(digitalGuardianSync.data?.setupStatus ?? {}),
+        ...(pending?.setupStatus ?? digitalGuardianSync.data?.setupStatus ?? {}),
         id: "main",
     });
 
@@ -125,7 +162,7 @@
 
     let fireDrill = $derived<FireDrill>({
         ...DEFAULT_DRILL,
-        ...(digitalGuardianSync.data?.fireDrill ?? {}),
+        ...(pending?.fireDrill ?? digitalGuardianSync.data?.fireDrill ?? {}),
         id: "main",
     });
 
