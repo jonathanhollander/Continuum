@@ -39,7 +39,7 @@
         EMOTIONAL_PROMPTS,
         type LetterTemplate,
     } from "$lib/data/letterTemplates";
-    import { onMount, tick } from "svelte";
+    import { onMount, tick, untrack } from "svelte";
     import { activityLog } from "$lib/stores/activityLog.svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import LetterAssistant from "$lib/components/modules/letters/LetterAssistant.svelte";
@@ -89,6 +89,8 @@
     onMount(() => {
         letterSync.init().catch(() => {});
         contactSync.init().catch(() => {});
+        // Fetched with the page's own data, so template fields can fill from it right away.
+        estateProfile.sync().catch(() => {});
     });
     let filterCategory = $state("All");
 
@@ -295,36 +297,55 @@
         refreshQuestion();
     }
 
+    // Template fields the Estate Profile can fill.
+    function profileValues(): Record<string, string> {
+        const p = $estateProfile;
+        return {
+            "Account Holder Name": p.ownerName,
+            "Deceased Name": p.ownerName,
+            "Cardholder Name": p.ownerName,
+            "Borrower Name": p.ownerName,
+            "Date of Death": p.dateOfDeath,
+            "Executor/Administrator": p.executorName,
+            "Executor Name": p.executorName,
+            Spouse: p.spouseName,
+            "Primary Beneficiary": p.primaryBeneficiary,
+            SSN: p.last4SSN,
+            "Social Security Number": p.last4SSN,
+            "Last 4 digits of SSN": p.last4SSN,
+            City: p.legalCityState.split(",")[0]?.trim() || "",
+            State: p.legalCityState.split(",")[1]?.trim() || "",
+        };
+    }
+
+    // Fill the chosen template's empty fields from the profile; what the person typed stays.
+    function fillFromProfile(withDate = false) {
+        const values = profileValues();
+        if (withDate) values.Date = new Date().toLocaleDateString();
+        for (const v of detectedVariables) {
+            if (templateVariables[v] || !values[v]) continue;
+            templateVariables[v] = values[v];
+            if (v !== "Date") filledFromProfile = true;
+        }
+    }
+
+    // The profile can answer after a template is opened: fill its fields when it arrives.
+    $effect(() => {
+        $estateProfile;
+        untrack(() => {
+            if (mode === "variable_input") fillFromProfile();
+        });
+    });
+
     function selectTransactional(template: LetterTemplate) {
         clearLetterDetails();
         selectedTemplate = template;
         const regex = /\[(.*?)\]/g;
         const matches = [...template.body.matchAll(regex)];
         detectedVariables = [...new Set(matches.map((m) => m[1]))];
-        templateVariables = {};
-
-        const mappingKeys: Record<string, string> = {
-            "Account Holder Name": $estateProfile.ownerName,
-            "Deceased Name": $estateProfile.ownerName,
-            "Cardholder Name": $estateProfile.ownerName,
-            "Borrower Name": $estateProfile.ownerName,
-            "Date of Death": $estateProfile.dateOfDeath,
-            "Executor/Administrator": $estateProfile.executorName,
-            "Executor Name": $estateProfile.executorName,
-            Spouse: $estateProfile.spouseName,
-            "Primary Beneficiary": $estateProfile.primaryBeneficiary,
-            SSN: $estateProfile.last4SSN,
-            "Social Security Number": $estateProfile.last4SSN,
-            "Last 4 digits of SSN": $estateProfile.last4SSN,
-            City: $estateProfile.legalCityState.split(",")[0]?.trim() || "",
-            State: $estateProfile.legalCityState.split(",")[1]?.trim() || "",
-            Date: new Date().toLocaleDateString(),
-        };
-
-        detectedVariables.forEach((v) => {
-            templateVariables[v] = mappingKeys[v] || "";
-        });
-        filledFromProfile = detectedVariables.some((v) => v !== "Date" && !!mappingKeys[v]);
+        templateVariables = Object.fromEntries(detectedVariables.map((v) => [v, ""]));
+        filledFromProfile = false;
+        fillFromProfile(true);
 
         if (detectedVariables.length > 0) {
             mode = "variable_input";
