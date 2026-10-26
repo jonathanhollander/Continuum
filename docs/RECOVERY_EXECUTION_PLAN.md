@@ -1,6 +1,6 @@
 # Continuum — Recovery Execution Plan (subagent-run)
 
-**Last Updated:** 2026-10-26 04:30 EST
+**Last Updated:** 2026-10-26 04:50 EST
 
 The how and the order for [PROJECT_RECOVERY_PLAN.md](PROJECT_RECOVERY_PLAN.md) (phases A–F).
 Issue IDs (CU-0xx) and their evidence are in
@@ -120,7 +120,7 @@ Every written test is listed here: approved before it is written, and completed 
    - This is the last part of finishing the coding pass, not an approval step. Per-card proofs can pass while the merged app fails, and fixing that locally is cheaper than fixing it after deploy.
 
 **Release pass (once):**
-9. Run `npm run check` and `npm run build`, then `railway up`. Poll `/api/health` until the new version is live, and confirm the pinned versions with `railway ssh -- /opt/venv/bin/pip freeze`.
+9. **Before `railway up`, set the Railway variables X3 requires** (names; new random values generated on the spot, never printed): `ENVIRONMENT=production`, `JWT_SECRET_KEY` (new, ≥32 bytes; logs everyone out once), `SECRET_KEY` (new), `RP_ID=continuum.estate` (production's current value through `RAILWAY_PUBLIC_DOMAIN`, so its 3 passkeys keep working), `ORIGIN=https://continuum.estate`, `FRONTEND_URL=https://continuum.estate`, `API_URL=https://continuum.estate`. `alembic upgrade head` applies B0/B0.1 (additive only). Then run `npm run check` and `npm run build`, then `railway up`. Poll `/api/health` until the new version is live, and confirm the pinned versions with `railway ssh -- /opt/venv/bin/pip freeze`.
 10. **Full browser test on production, desktop 1440×900:**
    - the completion test, in owner and recipient contexts;
    - every module: load, save, edit, reload, second-context retrieval;
@@ -276,7 +276,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | A5 | ☑ | 151c77b | Fresh DB: seed + login 200; token exp = configured 15 min; legacy `$2b$` hash verifies (was broken: passlib 1.7.4 + bcrypt 5 raise ValueError) |
 | B0 | ☑ | 6f14c65 | Fresh DB, re-run, and simulated production schema: every model column present; second upgrade a no-op; smoke run: 0 "no column named" errors (5 PASS, 12 FAIL left for B1–C10). Also added 6 models missing from `alembic/env.py` |
 | B0.1 | ▶ | | |
-| B1 | ☐ | | |
+| B1 | ▶ | | |
 | B2 | ☐ | | |
 | B3 | ☐ | | |
 | B4 | ☐ | | |
@@ -305,7 +305,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | E8 | ☐ | | |
 | X1 | ☑ | 4575c17 | Build with fake `sk-or-` key: no `sk-or-`/`openrouter.ai` in dist; `/api/ai/chat` 401 without token, 503 gentle message with no key. Also fixed: duplicate user message, unsanitised history, CSRF header on the AI call |
 | X2 | ☑ | 91321f9 | `git ls-files` lists no .db; `*.db` ignored; local copies kept on disk. Old copy in `34780fe` (branch `origin/stash-backup/2026-01-26-34780fe`) holds 1 non-dev user row, empty password. Owner 2026-10-26: bundled to `docs/archive/stash-backup-2026-01-26-34780fe.bundle` (local only, git-ignored, verified), remote branch deleted |
-| X3 | ▶ | | |
+| X3 | ☑ | 70068dd | `ENVIRONMENT=production` locally: health 200 "production"; POST without CSRF header 403, with cookie+header 200; no `_technical`; login 200; fetch wrapper (bundled, node stub) adds the header to same-origin writes only. Also fixed: HTTPS redirect loop behind Railway's proxy (would have broken the deploy), CORS substring match. Release must set the variables below |
 | X4 | ☑ | 9e539f4 | Started from `backend/` and from the root: `/`, `/_app/...`, `/modules/x` 200; traversal variants never leak; prefix check replaced by `commonpath` (sibling `dist-other` could pass before) |
 | X11 | ▶ | | |
 | X5 | ☐ | | |
@@ -313,7 +313,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X7 | ☑ | 8a5b462 | Fresh DB: login, /me, refresh 200; magic-link token on /me 401; "BYPASS_AUTH" stored value 401 (was 500); sub-less magic link 401 (was 500); valid magic link 200; jh@ bypass 200 |
 | X8 | ☐ (after Wave C) | | |
 | X9 | ☑ | b95307d | Magic link verifies once (200), second use 401 "already used"; request logged as `magic_link_requested`, not an auth success; `sub:"abc"` 401; login/me/refresh/jh@ 200. Passkey-finish fixes (keep specific 400/401, audit, missing-user 401) read, not run: needs a real WebAuthn assertion — check in the release browser test |
-| X10 | ☐ (after X3, X4 merge: shares nothing, but waits on O1 re-time) | | |
+| X10 | ☑ | c2e8ad1 | Echo off: 503 path p50 2.6 ms, p95 4.1 ms; O1's 473 ms was echo-logging overhead. One shared httpx client |
 | O1 — per wave (A–E) | ▶ (A done: login p95 133, /me 4.8, refresh 19.2, ai/chat 503 path 473 → X10) | | |
 | O2 — per wave (A–E) | ☐ | | |
 | O1 — release table | ☐ | | |
