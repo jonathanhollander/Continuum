@@ -1,5 +1,4 @@
 import { registerSync } from "$lib/services/sync.svelte";
-import { getLegacy } from './persistence';
 
 export type AssetType = 'Property' | 'Financial' | 'Business' | 'Vehicle' | 'Digital' | 'Other';
 
@@ -22,27 +21,6 @@ export interface FinancialAsset {
     is_closed: boolean;
     closure_date?: string;
     customAttributes?: string;
-}
-
-// Migration from legacy localStorage keys
-function migrateFinancialAssets(): FinancialAsset[] {
-    if (typeof localStorage === 'undefined') return [];
-
-    let combined: FinancialAsset[] = [];
-
-    // Check legacy key
-    const legacyData = getLegacy('financial_assets');
-    if (legacyData) {
-        try {
-            const parsed = JSON.parse(legacyData);
-            if (Array.isArray(parsed)) combined = [...combined, ...parsed];
-        } catch { }
-    }
-
-    return combined.map(a => ({
-        ...a,
-        id: String(a.id)
-    }));
 }
 
 function parseHistory(v: any): number[] {
@@ -70,16 +48,8 @@ const financialAssetMapper = (item: any) => {
 
 export const financialAssetsSync = registerSync<FinancialAsset>('financial_assets', 'financial_assets', financialAssetMapper).setAffirmationContext('general');
 
-// Lazy Migration
-if (typeof window !== 'undefined') {
-    if (financialAssetsSync.items.length === 0) {
-        const legacy = migrateFinancialAssets();
-        if (legacy.length > 0) {
-            console.log("Migrating financial assets...", legacy);
-            financialAssetsSync.items = legacy;
-        }
-    }
-}
+// Un-namespaced legacy keys ('financial_assets') carry no account, so they are never adopted:
+// the first signed-in account with an empty list would otherwise upload someone else's records.
 
 // Wrapper for dashboard compatibility
 export const financialAssetsStore = {

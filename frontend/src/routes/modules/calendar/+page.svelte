@@ -76,28 +76,8 @@
 
     // --- Logic ---
 
-    import { registerSync } from "$lib/services/sync.svelte";
-
-    // The server stores `recurring`, `description` and `ritual_instructions`;
-    // the page works with isRecurring, wish and emailTemplate. Runs both ways
-    // and is safe to apply twice.
-    function calendarMapper(item: any) {
-        if (!item) return item;
-        const out = { ...item };
-        const recurring = 'isRecurring' in item ? item.isRecurring : item.recurring;
-        out.isRecurring = !!recurring;
-        out.recurring = !!recurring;
-        const wish = 'wish' in item ? item.wish : item.description;
-        out.wish = wish ?? '';
-        out.description = wish ?? '';
-        let tpl = item.emailTemplate;
-        if (!('emailTemplate' in item)) {
-            try { tpl = item.ritualInstructions ? JSON.parse(item.ritualInstructions) : undefined; } catch { tpl = undefined; }
-        }
-        out.emailTemplate = tpl && typeof tpl === 'object' ? tpl : undefined;
-        out.ritualInstructions = out.emailTemplate ? JSON.stringify(out.emailTemplate) : '';
-        return out;
-    }
+    import { calendarSync as calendarStoreSync } from "$lib/stores/calendarStore.svelte";
+    import type { SyncManager } from "$lib/services/sync.svelte";
 
     // Stored dates are "MMDD" / "YYYYMMDD" (older rows may be "MM-DD" / "YYYY-MM-DD").
     function normDate(d: string, recurring: boolean) {
@@ -105,51 +85,15 @@
         return recurring ? digits.slice(-4) : digits;
     }
 
-    // Register Sync
-    const calendarSync = registerSync<CalendarEvent>(
-        "calendar_events",
-        "calendar_events",
-        calendarMapper,
-    );
+    // One owner for 'calendar_events': the store (shared with the anniversary manager). Its mapper
+    // maps isRecurring / wish / emailTemplate to the server's recurring / description / ritual_instructions.
+    const calendarSync = calendarStoreSync as unknown as SyncManager<CalendarEvent>;
     let events = $derived(calendarSync.items);
     let isLoading = $state(true);
 
     onMount(async () => {
         await calendarSync.init();
         isLoading = false;
-    });
-
-    // Seeding Logic (only if empty)
-    $effect(() => {
-        if (
-            calendarSync.status === "synced" &&
-            calendarSync.items.length === 0
-        ) {
-            // Check legacy
-            const legacy = localStorage.getItem("calendar");
-            if (legacy) {
-                try {
-                    // Logic to migrate or just load legacy
-                    // For now, we seed defaults if absolutely nothing exists
-                    const defaults = [
-                        {
-                            title: "My Birthday",
-                            date: "0615",
-                            type: "birthday",
-                            isRecurring: true,
-                            wish: "Have a slice of cheesecake for me. It was my favorite.",
-                            emailTemplate: {
-                                recipient: "family@example.com",
-                                subject: "Thinking of you on my birthday",
-                                body: "Hi everyone,\n\nIf you're reading this, it's my birthday. I hope you're not too sad. Go have some fun today!\n\nLove,\nMe",
-                            },
-                        },
-                    ];
-                    // Only seed if no legacy either?
-                    // We'll trust user to add.
-                } catch {}
-            }
-        }
     });
 
     // onMount removed

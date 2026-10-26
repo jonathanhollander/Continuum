@@ -23,13 +23,14 @@ const convertKeys = (obj: any, converter: (s: string) => string): any => {
     return newObj;
 };
 
-// Wire contract: these SQLModel fields (Asset, FinancialAccount, Subscription) are camelCase
+// Wire contract: these SQLModel fields (Asset, FinancialAccount, Subscription, Letter) are camelCase
 // columns. They go over the wire exactly as named; every other key is sent as snake_case.
 const CAMEL_WIRE_KEYS = new Set([
     'ownershipDetails', 'purchaseDate', 'maintenanceSchedule',
     'accountNumber', 'ownershipPercentage', 'loginUrl', 'beneficiaryEmail',
     'valueHistory', 'closureNotes',
     'paymentMethod', 'cancellationInstructions', 'nextBilling',
+    'triggerDate', 'triggerMilestone', 'isLocked',
 ]);
 // Text columns that hold JSON; the UI keeps them as arrays/objects.
 const JSON_TEXT_WIRE_KEYS = ['valueHistory', 'maintenanceSchedule', 'evidence'];
