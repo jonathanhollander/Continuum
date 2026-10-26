@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { MapPin, ExternalLink, Search, DollarSign, Building2, AlertCircle } from "lucide-svelte";
+    import { MapPin, ExternalLink, Search, DollarSign, Building2, AlertCircle, ArrowRight } from "lucide-svelte";
 
     function openTreasureHunt() {
-        window.open("https://unclaimed.org/", "_blank");
+        window.open("https://unclaimed.org/", "_blank", "noopener,noreferrer");
     }
 </script>
 
@@ -85,6 +85,13 @@
             <p class="text-slate-500 text-sm mt-4">
                 Opens unclaimed.org in a new tab. This is a free government-affiliated service.
             </p>
+            <a
+                href="/modules/financial-accounts"
+                class="inline-flex items-center gap-2 mt-6 text-amber-400 hover:text-amber-300 font-semibold"
+            >
+                Found something? Add it to your Financial Accounts
+                <ArrowRight size={18} />
+            </a>
         </div>
 
         <!-- Tips Section -->
