@@ -303,14 +303,12 @@ async def health_check(session: Session = Depends(get_session)):
     Perform a robust health check that verifies:
     1. Database connectivity
     2. Storage write permissions
-    3. Frontend availability (loopback)
+    3. Scheduler status
     """
-    import httpx
     health = {
         "status": "healthy",
         "database": False,
         "storage": False,
-        "frontend_reachable": False,
         "scheduler": False,
         "environment": settings.ENVIRONMENT,
         "version": settings.APP_VERSION
@@ -337,19 +335,7 @@ async def health_check(session: Session = Depends(get_session)):
         logger.error(f"Health check failure: Storage is not writable: {e}")
         health["status"] = "unhealthy"
 
-    # 3. Verify Frontend Reachability
-    try:
-        async with httpx.AsyncClient() as client:
-            # Check for 200 OK or 301/302 from the frontend
-            response = await client.head(settings.FRONTEND_URL, timeout=2.0, follow_redirects=True)
-            if response.status_code < 400:
-                health["frontend_reachable"] = True
-            else:
-                logger.warning(f"Health check: Frontend returned status {response.status_code}")
-    except Exception as e:
-        logger.warning(f"Health check: Frontend loopback check failed: {e}")
-
-    # 4. Verify Scheduler
+    # 3. Verify Scheduler
     try:
         from backend.pulse_scheduler import scheduler
         health["scheduler"] = scheduler.running

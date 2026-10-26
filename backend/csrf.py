@@ -44,12 +44,18 @@ CSRF_EXEMPT_PATHS = {
     "/api/auth/passkey/login/finish",
     "/api/auth/magic-link",
     "/api/auth/magic-link/verify",
-    "/api/pulse/checkin/respond",  # Public check-in response (uses token in URL)
+    "/api/pulse/checkin/respond",  # Legacy path (no such route today)
     "/api/health",
     "/docs",
     "/redoc",
     "/openapi.json",
 }
+
+# Public guardian routes that carry a secret token in the URL (/respond/{token}, /confirm/{token})
+CSRF_EXEMPT_PREFIXES = (
+    "/api/pulse/respond/",
+    "/api/pulse/confirm/",
+)
 
 
 def generate_csrf_token() -> str:
@@ -71,13 +77,13 @@ def is_csrf_exempt(request: Request) -> bool:
     """Check if the request path is exempt from CSRF protection."""
     path = request.url.path
 
-    # Check exact matches
+    # Exact matches only
     if path in CSRF_EXEMPT_PATHS:
         return True
 
-    # Check prefix matches (for paths with dynamic segments)
-    for exempt_path in CSRF_EXEMPT_PATHS:
-        if path.startswith(exempt_path):
+    # Tokenised public routes: the path segment after the prefix is the token
+    for prefix in CSRF_EXEMPT_PREFIXES:
+        if path.startswith(prefix) and len(path) > len(prefix):
             return True
 
     return False
