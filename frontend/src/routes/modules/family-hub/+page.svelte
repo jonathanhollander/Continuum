@@ -186,7 +186,7 @@
             });
         } else {
             // Create Mode
-            await addFamilyMemory({
+            const created = await addFamilyMemory({
                 ...newMemory,
                 is_favorite: false,
             } as any, saveMemory);
@@ -196,7 +196,7 @@
                 module: "Family Hub",
                 action: "CREATE",
                 entityType: "Memory",
-                entityId: "new",
+                entityId: String(created?.id ?? "new"),
                 entityName: newMemory.title || "Unnamed Memory",
                 userContext: $estateProfile.ownerName || "User",
             });
@@ -230,7 +230,7 @@
         if (id === undefined) return;
         if (
             !(await askConfirm(
-                "Remove this memory? It will be preserved in your activity log.",
+                "Remove this memory? You can always add it back later if needed.",
             ))
         )
             return;
@@ -442,7 +442,7 @@
                         onclick={saveMemory}
                         class="w-full py-4 bg-[#4A7C74] text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:bg-[#3b635d] transition-all transform active:scale-95"
                     >
-                        {newMemory.id ? "Update Memory" : "Save Memory"}
+                        Save this memory
                     </button>
                 </div>
             </div>
@@ -490,7 +490,7 @@
                     onclick={() => (viewMode = "dashboard")}
                     class="text-slate-400 hover:text-slate-600 underline text-sm"
                 >
-                    Skip tour, go to dashboard
+                    Continue to your dashboard
                 </button>
             </div>
         </div>
@@ -500,16 +500,16 @@
             <div class="mb-12">
                 <BlueprintCard
                     title="Establish Your Family Network"
-                    description="Your estate plan relies on trusted people. Identify your key players to unlock the full power of the Continuum."
-                    timeEstimate="5 mins"
+                    description="Your plan is held by trusted people. Add them here whenever you feel ready."
+                    timeEstimate="At your own pace"
                     steps={[
                         {
-                            label: "Connect 3 Family Members",
+                            label: "Welcome 3 family members",
                             completed: familyStore.members.length >= 3,
                         },
-                        { label: "Designate an Executor", completed: !!$estateExecutorName },
+                        { label: "Name your executor", completed: !!$estateExecutorName },
                         {
-                            label: "Upload a Shared Memory",
+                            label: "Share a memory",
                             completed: memories.length > 0,
                         },
                     ]}
@@ -618,7 +618,7 @@
                                             onclick={() => deleteMemory(memory.id)}
                                             aria-label="Remove this item"
                                             class="absolute top-2 right-2 p-1.5 bg-white/80 rounded-full z-10 hover:bg-red-100 text-red-500"
-                                            title="Delete Memory"
+                                            title="Remove this memory"
                                         >
                                             <X size={14} />
                                         </button>
@@ -771,8 +771,8 @@
                             <p
                                 class="text-emerald-100/80 text-sm mb-4 line-clamp-2"
                             >
-                                Watch our guide videos to understand your role
-                                in the estate plan.
+                                Our guide videos are here for you, whenever you want
+                                to learn more about your role.
                             </p>
                         </div>
                     </button>

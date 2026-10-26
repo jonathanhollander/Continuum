@@ -7,7 +7,10 @@
         dict,
     } from "$lib/stores/conciergeStore.svelte";
     import { accessibilityStore } from "$lib/stores/accessibilityStore";
-    import { estateProfile } from "$lib/stores/estateStore.svelte";
+    import {
+        estateProfile,
+        type EstateProfile,
+    } from "$lib/stores/estateStore.svelte";
     import {
         Download,
         FileText,
@@ -31,9 +34,8 @@
     import { goto } from "$app/navigation";
     import type { ExportScope } from "$lib/services/exportService";
 
-    import { profiles, currentProfileId } from "$lib/stores/profileContext";
+    import { profiles } from "$lib/stores/profileContext";
     import { triggerMagic } from "$lib/stores/magicStore";
-    import { get } from "svelte/store";
 
     const roles = [
         { id: "Owner", key: "roleOwner", descKey: "roleOwnerDesc" },
@@ -92,28 +94,52 @@
         }
     }
 
+    // The profile form edits a local draft; "Save Profile" writes it through estateProfile.update.
+    // (estateProfile has no set, so binding $estateProfile.x directly threw on every keystroke.)
+    const profileKeys = [
+        "ownerName",
+        "executorName",
+        "dateOfDeath",
+        "last4SSN",
+        "legalCityState",
+        "legalAddress",
+        "spouseName",
+        "primaryBeneficiary",
+    ] as const;
+    type ProfileDraft = Pick<EstateProfile, (typeof profileKeys)[number]>;
+    const pickDraft = (p: EstateProfile): ProfileDraft =>
+        Object.fromEntries(profileKeys.map((k) => [k, p[k] ?? ""])) as ProfileDraft;
+
+    let draft = $state<ProfileDraft>(pickDraft(estateProfile.current));
+    // Set while the person has unsaved edits, so a sync arriving meanwhile keeps their words.
+    let draftEdited = false;
+
+    $effect(() => {
+        const p = $estateProfile;
+        if (!draftEdited) draft = pickDraft(p);
+    });
+
     async function saveProfile() {
+        if (isSaving) return;
         isSaving = true;
+        try {
+            await estateProfile.update({ ...draft });
+            draftEdited = false;
 
-        // 1. Sync owner name to profiles store if we are looking at the 'owner' profile
-        // or if we are the owner and changing the 'ownerName'
-        const pid = get(currentProfileId);
-        profiles.update((current) => {
-            return current.map((p) => {
-                if (p.id === "owner" && $estateProfile.ownerName) {
-                    return { ...p, name: $estateProfile.ownerName };
-                }
-                return p;
-            });
-        });
-
-        // 2. Trigger feedback
-        triggerMagic("success");
-
-        // Artificial delay
-        setTimeout(() => {
+            // Keep the owner profile chip's name in step with the saved owner name
+            if (draft.ownerName) {
+                profiles.update((current) =>
+                    current.map((p) =>
+                        p.id === "owner" ? { ...p, name: draft.ownerName } : p,
+                    ),
+                );
+            }
+            triggerMagic("success");
+        } catch {
+            // The store has already shown the gentle failure note with a retry; the draft stays.
+        } finally {
             isSaving = false;
-        }, 1000);
+        }
     }
 </script>
 
@@ -208,6 +234,7 @@
 
         <div
             class="space-y-6 bg-slate-50 p-6 rounded-2xl border border-slate-100 shadow-inner"
+            oninput={() => (draftEdited = true)}
         >
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Names -->
@@ -220,7 +247,7 @@
                         <input
  id="cs-owner"
                             type="text"
-                            bind:value={$estateProfile.ownerName}
+                            bind:value={draft.ownerName}
                             placeholder={$dict.placeholderName}
                             class="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm"
                         />
@@ -233,8 +260,34 @@
                         <input
  id="cs-executor"
                             type="text"
-                            bind:value={$estateProfile.executorName}
+                            bind:value={draft.executorName}
                             placeholder={$dict.placeholderPrimary}
+                            class="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm"
+                        />
+                    </div>
+                    <div class="grid grid-cols-1 gap-1.5">
+                        <label for="cs-spouse"
+                            class="text-[10px] font-bold text-slate-400 uppercase"
+                            >{$dict.labelSpouse || "Spouse / Partner"}</label
+                        >
+                        <input
+                            id="cs-spouse"
+                            type="text"
+                            bind:value={draft.spouseName}
+                            placeholder={$dict.placeholderName}
+                            class="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm"
+                        />
+                    </div>
+                    <div class="grid grid-cols-1 gap-1.5">
+                        <label for="cs-beneficiary"
+                            class="text-[10px] font-bold text-slate-400 uppercase"
+                            >{$dict.labelPrimaryBeneficiary || "Primary Beneficiary"}</label
+                        >
+                        <input
+                            id="cs-beneficiary"
+                            type="text"
+                            bind:value={draft.primaryBeneficiary}
+                            placeholder={$dict.placeholderName}
                             class="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm"
                         />
                     </div>
@@ -252,7 +305,7 @@
                             <input
  id="cs-death"
                                 type="date"
-                                bind:value={$estateProfile.dateOfDeath}
+                                bind:value={draft.dateOfDeath}
                                 class="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none shadow-sm"
                             />
                         </div>
@@ -266,7 +319,7 @@
  id="cs-ssn"
                                 type="text"
                                 maxlength="4"
-                                bind:value={$estateProfile.last4SSN}
+                                bind:value={draft.last4SSN}
                                 placeholder="####"
                                 class="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none shadow-sm"
                             />
@@ -280,8 +333,21 @@
                         <input
  id="cs-residence"
                             type="text"
-                            bind:value={$estateProfile.legalCityState}
+                            bind:value={draft.legalCityState}
                             placeholder={$dict.placeholderCityState}
+                            class="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none shadow-sm"
+                        />
+                    </div>
+                    <div class="grid grid-cols-1 gap-1.5">
+                        <label for="cs-address"
+                            class="text-[10px] font-bold text-slate-400 uppercase"
+                            >{$dict.labelLegalAddress || "Legal Address"}</label
+                        >
+                        <input
+                            id="cs-address"
+                            type="text"
+                            bind:value={draft.legalAddress}
+                            placeholder="Street, City, State, ZIP"
                             class="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none shadow-sm"
                         />
                     </div>

@@ -18,7 +18,7 @@ function createAccessibilityStore() {
         reducedMotion: false,
         fontSize: 'normal',
         theme: 'light',
-        color: 'carbon'
+        color: 'teal'
     };
 
     const initial: AccessibilityState = browser ? (JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || defaults) : defaults;
@@ -69,7 +69,7 @@ function createAccessibilityStore() {
         // New Methods
         setTheme: (theme: AccessibilityState['theme']) => update(s => ({ ...s, theme })),
         setColor: (color: AccessibilityState['color']) => update(s => ({ ...s, color })),
-        resetDefaults: () => update(s => ({ ...s, color: 'carbon' })) // Only resets color as requested
+        resetDefaults: () => update(s => ({ ...s, color: 'teal' })) // Only resets color as requested
     };
 }
 

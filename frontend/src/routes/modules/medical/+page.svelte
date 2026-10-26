@@ -39,6 +39,7 @@
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
+    import { familyStore } from "$lib/stores/familyStore.svelte";
     import { activityLog } from "$lib/stores/activityLog.svelte";
     import LegalDisclaimer from "$lib/components/common/LegalDisclaimer.svelte";
     import GriefSupportBanner from "$lib/components/GriefSupportBanner.svelte";
@@ -74,6 +75,8 @@
 
     // Sync medical data on mount and update reactive profile
     onMount(() => {
+        // Contacts fill the proxy suggestions; the page opens without waiting for them.
+        familyStore.sync().catch(() => undefined);
         medicalStore.sync().then(() => {
             isLoading = false;
         });
@@ -82,6 +85,11 @@
             currentProfile = medicalStore.profile;
         });
     });
+
+    function openProfileEdit() {
+        tempProfile = { ...medicalStore.profile };
+        showProfileEdit = true;
+    }
 
     async function saveProfile() {
         try {
@@ -168,6 +176,13 @@
         }
     }
 
+    /** A proxy picked from contacts brings their phone along when that field is still empty. */
+    function fillProxyPhone() {
+        const name = (newDirective.primaryContact || "").trim();
+        const person = familyStore.members.find((m) => m.name === name);
+        if (person?.phone && !newDirective.contactPhone) newDirective.contactPhone = person.phone;
+    }
+
     function editDirective(dir: MedicalDirective) {
         newDirective = { ...dir };
         const { [DIRECTIVE_MEDIA_KEY]: _media, ...customValues } = readCustom(dir);
@@ -196,7 +211,7 @@
                 : { id, mime_type: file?.mime_type ?? "", filename: file?.filename ?? "", file_size: file?.file_size ?? 0 };
     }
 
-    /** The modal closes through ×, Escape, the backdrop or "Not right now"; each one drops the draft. */
+    /** The modal closes through ×, Escape, the backdrop or "Maybe later"; each one drops the draft. */
     function setFormOpen(open: boolean) {
         if (open) showAddForm = true;
         else if (showAddForm) resetForm();
@@ -221,7 +236,7 @@
     async function removeDirective(id: string | number) {
         if (
             !(await askConfirm(
-                "Remove this directive? This should only be done if the document has been revoked.",
+                "Remove this directive? Do this when the document has been replaced.",
             ))
         )
             return;
@@ -248,7 +263,7 @@
         title="Health & Medical"
         subtitle="Your Voice at the End of Life"
         detailedDescription="Your voice in healthcare decisions matters, even when you can't speak for yourself. Document your directives and medical history to guide your advocates."
-        whyMatters="Medical uncertainty places a heavy burden on families. Clear directives relieve them of agonizing guessing games and ensure your care aligns with your values."
+        whyMatters="Clear directives give your family certainty and ease, and ensure your care aligns with your values."
     >
         <button
             onclick={() => (showAddForm = true)}
@@ -293,10 +308,19 @@
                                     >
                                         Blood Type
                                     </p>
-                                    <p class="text-xl font-bold text-gray-900">
-                                        {medicalStore.profile.bloodType ||
-                                            "Not Set"}
-                                    </p>
+                                    {#if medicalStore.profile.bloodType}
+                                        <p class="text-xl font-bold text-gray-900">
+                                            {medicalStore.profile.bloodType}
+                                        </p>
+                                    {:else}
+                                        <button
+                                            type="button"
+                                            onclick={openProfileEdit}
+                                            class="text-sm font-semibold text-primary hover:underline"
+                                        >
+                                            Add blood type
+                                        </button>
+                                    {/if}
                                 </div>
                                 {#if medicalStore.profile.bloodType}
                                     <span
@@ -315,12 +339,21 @@
                                 <p
                                     class="text-xs font-bold uppercase text-orange-400 mb-1"
                                 >
-                                    Critical Allergies
+                                    Allergies
                                 </p>
-                                <p class="text-sm font-medium text-orange-900">
-                                    {medicalStore.profile.allergies ||
-                                        "None reported"}
-                                </p>
+                                {#if medicalStore.profile.allergies}
+                                    <p class="text-sm font-medium text-orange-900">
+                                        {medicalStore.profile.allergies}
+                                    </p>
+                                {:else}
+                                    <button
+                                        type="button"
+                                        onclick={openProfileEdit}
+                                        class="text-sm font-semibold text-primary hover:underline"
+                                    >
+                                        Add any allergies
+                                    </button>
+                                {/if}
                             </div>
 
                             <div
@@ -340,19 +373,16 @@
                                         size={20}
                                     />
                                     <p class="text-sm font-bold text-blue-900">
-                                        Organ Donor Status Unknown
+                                        Add your donor wishes
                                     </p>
                                 {/if}
                             </div>
 
                             <button
-                                onclick={() => {
-                                    tempProfile = { ...medicalStore.profile };
-                                    showProfileEdit = true;
-                                }}
+                                onclick={openProfileEdit}
                                 class="w-full py-3 text-primary hover:bg-primary/5 rounded-xl transition-colors font-bold text-sm"
                             >
-                                Update Profile
+                                Edit my profile
                             </button>
                         </div>
                     {:else}
@@ -380,7 +410,7 @@
                             <div>
                                 <label for="medical-allergies"
                                     class="block text-xs font-bold uppercase text-gray-500 mb-1"
-                                    >Critical Allergies</label
+                                    >Allergies</label
                                 >
                                 <textarea id="medical-allergies"
                                     bind:value={tempProfile.allergies}
@@ -410,7 +440,7 @@
                                 <button
                                     onclick={() => (showProfileEdit = false)}
                                     class="flex-1 px-4 py-2 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm"
-                                    >Not right now</button
+                                    >Maybe later</button
                                 >
                             </div>
                         </div>
@@ -431,7 +461,7 @@
                     </h3>
                     <p class="text-sm text-primary/80 mt-1 leading-relaxed">
                         Providing clear guidance for your medical care is a gift
-                        to your family. It removes the burden of uncertainty and
+                        to your family. It gives your family certainty and
                         ensures your wishes are honored with dignity.
                     </p>
                 </div>
@@ -538,7 +568,7 @@
             {#if medicalStore.directives.length === 0}
                 <EmptyState
                     title="Your healthcare wishes matter"
-                    whyMatters="<strong>Without advance directives, doctors and family members must guess what you would want during a medical crisis.</strong> This creates agonizing decisions for loved ones who are already suffering.<br/><br/>Documenting your healthcare wishes—whether it's a healthcare proxy, living will, or DNR—gives them clarity, legal authority, and peace of mind. They'll know they're honoring your choices, not making impossible decisions on your behalf."
+                    whyMatters="<strong>With advance directives, doctors and family know what you would want, and your loved ones feel the ease of honoring your choices.</strong><br/><br/>Documenting your healthcare wishes—whether it's a healthcare proxy, living will, or DNR—gives them clarity, legal authority, and peace of mind."
                     encouragement="When you're ready, start with just one directive. You can always add more later."
                     icon={Shield}
                     iconClass="text-primary"
@@ -645,10 +675,18 @@
                 >
                 <input id="medical-primary-contact"
                     type="text"
+                    list="medical-contact-options"
                     bind:value={newDirective.primaryContact}
+                    onchange={fillProxyPhone}
                     placeholder="e.g. Dr. Sarah Chen"
                     class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                 />
+                <!-- People from Family & Contacts; any other name can still be typed. -->
+                <datalist id="medical-contact-options">
+                    {#each familyStore.members as person (person.id)}
+                        <option value={person.name}>{person.relation || person.role}</option>
+                    {/each}
+                </datalist>
             </div>
             <div>
                 <label for="medical-contact-phone"
@@ -699,7 +737,7 @@
                 onclick={resetForm}
                 class="flex-1 py-3 px-6 bg-slate-100 text-slate-600 rounded-xl font-semibold hover:bg-slate-200 transition-colors"
             >
-                Not right now
+                Maybe later
             </button>
             <button
                 type="submit"

@@ -15,7 +15,12 @@
     } from "lucide-svelte";
     import { fade, fly } from "svelte/transition";
 
-    let email = "";
+    // Email carried from the marketing CTA via /start; read before the
+    // layout's handoff pickup strips ?email from the URL
+    let email =
+        typeof window !== "undefined"
+            ? new URLSearchParams(window.location.search).get("email") ?? ""
+            : "";
     let isLoading = false;
     let step: "email" | "passkey" | "complete" = "email";
     let userId: number | null = null;
@@ -58,7 +63,7 @@
     async function handleEmailSubmit() {
         if (!email) {
             notifications.showError({
-                message: "Please enter your email address",
+                message: "Your email address will help us begin.",
                 code: "VALIDATION_ERROR",
             });
             return;
@@ -104,7 +109,7 @@
             // Show error notification to user
             if (e.message?.includes("already registered") || e.message?.includes("already exists")) {
                 notifications.showError({
-                    message: "This email is already registered. Please sign in instead.",
+                    message: "Welcome back. This email already has a space here. You can sign in whenever you're ready.",
                     code: "DUPLICATE_EMAIL",
                 });
             } else {
@@ -272,7 +277,7 @@
                             This is faster and more secure than passwords.
                         </p>
                         <p class="text-slate-400 text-sm italic">
-                            No passwords required. Ever.
+                            Your passkey is all you'll use to sign in
                         </p>
                     </div>
                 </div>
@@ -318,8 +323,8 @@
                         <p
                             class="text-slate-300 text-lg leading-relaxed max-w-md mx-auto"
                         >
-                            Please follow the prompts on your device to create
-                            your passkey using your fingerprint, face, or PIN.
+                            Your device will guide you to create your passkey
+                            with your fingerprint, face, or PIN.
                         </p>
                     </div>
                 </div>
