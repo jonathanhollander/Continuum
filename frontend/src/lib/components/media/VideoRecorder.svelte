@@ -27,6 +27,7 @@
     let error: string | null = null;
     let isSaving = false;
     let cameraReady = false;
+    let destroyed = false;
 
     async function startCamera() {
         cameraReady = false;
@@ -35,6 +36,10 @@
                 video: true,
                 audio: true,
             });
+            if (destroyed) {
+                stream.getTracks().forEach((track) => track.stop());
+                return;
+            }
             if (videoPreview) {
                 videoPreview.srcObject = stream;
                 videoPreview.muted = true; // Avoid feedback loop
@@ -122,6 +127,7 @@
     });
 
     onDestroy(() => {
+        destroyed = true;
         stopTimer();
         stream?.getTracks().forEach((track) => track.stop());
         if (recordedUrl) URL.revokeObjectURL(recordedUrl);
@@ -168,7 +174,9 @@
                 <div
                     class="w-2 h-2 rounded-full {isRecording
                         ? 'bg-rose-500 animate-pulse'
-                        : 'bg-emerald-500'}"
+                        : cameraReady
+                          ? 'bg-emerald-500'
+                          : 'bg-slate-400'}"
                 ></div>
                 <span class="text-white font-mono font-bold tracking-widest"
                     >{formatTime(duration)}</span
