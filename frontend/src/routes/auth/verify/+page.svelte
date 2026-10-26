@@ -135,7 +135,7 @@
                             href="/login"
                             class="inline-block bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold py-4 px-8 rounded-2xl transition-all text-lg"
                         >
-                            Try Again
+                            Sign in when you're ready
                         </a>
                     </div>
                 </div>

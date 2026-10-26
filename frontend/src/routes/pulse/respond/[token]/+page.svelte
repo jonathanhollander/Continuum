@@ -79,9 +79,7 @@
     <LivingMesh
         status={state.error
             ? "disabled"
-            : state.data?.user_status === "active"
-              ? "active"
-              : "grace"}
+            : "active"}
     />
 
     <div
@@ -148,18 +146,18 @@
                 <div class="space-y-4" in:slide>
                     <!-- Alert Context -->
                     <div
-                        class="bg-warning/10 border border-warning/20 rounded-2xl p-6 backdrop-blur-md"
+                        class="bg-primary/10 border border-primary/20 rounded-2xl p-6 backdrop-blur-md"
                     >
                         <div class="flex gap-4">
-                            <Clock class="w-10 h-10 text-warning shrink-0" />
+                            <Clock class="w-10 h-10 text-primary shrink-0" />
                             <div>
-                                <h3 class="font-medium text-warning">
+                                <h3 class="font-medium text-foreground">
                                     {state.data.user_status === "active"
                                         ? "Checked in recently"
                                         : "It has been quiet for a little while"}
                                 </h3>
                                 <p
-                                    class="text-sm text-warning/90 mt-1 leading-relaxed"
+                                    class="text-sm text-muted-foreground mt-1 leading-relaxed"
                                 >
                                     {#if state.data.last_checkin}
                                         {state.data.user_name}'s last check-in was {parseUtc(

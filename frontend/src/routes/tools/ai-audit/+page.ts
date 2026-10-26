@@ -1,1 +1,1 @@
-export const load = () => ({ title: "AI Completeness Check" });
+export const load = () => ({ title: "Plan Check-in" });
