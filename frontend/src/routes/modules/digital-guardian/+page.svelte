@@ -28,6 +28,7 @@
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import { activityLog } from "$lib/stores/activityLog.svelte";
+    import { notifications } from "$lib/stores/notificationStore";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
@@ -204,49 +205,66 @@
     const wizardSteps = [
         {
             id: "intro",
-            question: "wizard.start",
+            question: "wizard.digital_intro",
             type: "boolean" as const,
-            logic: {
-                yes: "password_manager",
-                no: "cancel",
-                next: "password_manager",
-            },
+            logic: { yes: "password_manager", no: "EXIT" },
         },
-        // ... (keep steps same)
         {
             id: "password_manager",
             question:
                 "Do you use a Password Manager (like 1Password, LastPass)?",
             type: "boolean" as const,
-            logic: { yes: "email", no: "email", next: "email" },
+            logic: { next: "email" },
         },
         {
             id: "email",
             question: "What is your primary email provider?",
             type: "select" as const,
             options: ["Gmail", "Outlook", "Yahoo", "iCloud", "Other"],
-            logic: { next: "finish" },
         },
     ];
 
-    async function handleWizardComplete(e: CustomEvent) {
-        const answers = e.detail;
+    async function handleWizardComplete(answers: Record<string, any>) {
         if (answers.intro === false) {
             showWizard = false;
             return;
         }
 
+        const wanted: [string, string, string][] = [];
         if (answers.password_manager) {
             // Update status (fire and forget update)
             updateStatus("passwordManager", true);
-            await addAsset("1Password", "Master Account", "Access");
+            wanted.push(["1Password", "Master Account", "Access"]);
         }
-
         if (answers.email) {
-            await addAsset(answers.email, "Primary Account", "Email");
+            wanted.push([answers.email, "Primary Account", "Email"]);
         }
 
         showWizard = false;
+        if (wanted.length > 0) await saveWizardAssets(wanted);
+    }
+
+    // One wizard run is one save: the creates run quietly, then one affirmation when all land,
+    // or one gentle message whose Try Again re-sends only the accounts still waiting.
+    async function saveWizardAssets(wanted: [string, string, string][]) {
+        const results = await Promise.allSettled(
+            wanted.map(([platform, username, type]) => addAsset(platform, username, type, true)),
+        );
+        const waiting = wanted.filter((_, i) => results[i].status === "rejected");
+        if (waiting.length === 0) {
+            notifications.showAffirmation("general");
+            return;
+        }
+        const reason = results.find((r) => r.status === "rejected") as PromiseRejectedResult;
+        notifications.showError(
+            {
+                message:
+                    "Your answers are safe here. We can save them again whenever you're ready.",
+                code: "DATABASE_ERROR",
+                technicalDetails: reason.reason?.technicalDetails || reason.reason?.message || String(reason.reason),
+            } as any,
+            () => saveWizardAssets(waiting),
+        );
     }
 
     function updateStatus(
@@ -257,7 +275,7 @@
         saveChecks({ setupStatus: { ...current, [key]: value } });
     }
 
-    async function addAsset(platform: string, username: string, type: string) {
+    async function addAsset(platform: string, username: string, type: string, quiet = false) {
         let newAsset;
         try {
         newAsset = await digitalAssetsSync.create({
@@ -269,8 +287,9 @@
             instructions: "",
             priority: "medium",
             isClosed: false,
-        }, false, false, () => addAsset(platform, username, type));
-        } catch {
+        }, false, quiet, quiet ? undefined : () => addAsset(platform, username, type));
+        } catch (e) {
+            if (quiet) throw e; // the wizard shows one message for the whole run
             return; // the manager already showed the one gentle message
         }
 
@@ -981,7 +1000,7 @@
                         </button>
                         <ConciergeFlow
                             steps={wizardSteps}
-                            on:complete={handleWizardComplete}
+                            oncomplete={handleWizardComplete}
                         />
                     </div>
                 </div>

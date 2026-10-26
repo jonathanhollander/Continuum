@@ -1,9 +1,11 @@
 <script lang="ts">
     import {
         propertyStore,
+        propertySync,
         type PropertyItem,
     } from "$lib/stores/propertyStore.svelte";
     import { activityLog } from "$lib/stores/activityLog.svelte";
+    import { notifications } from "$lib/stores/notificationStore";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { fade, slide, scale } from "svelte/transition";
     import { quintOut, cubicOut } from "svelte/easing";
@@ -78,9 +80,9 @@
     const wizardSteps = [
         {
             id: "intro",
-            question: "wizard.start",
+            question: "wizard.property_intro",
             type: "boolean" as const,
-            logic: { yes: "real", no: "cancel", next: "real" },
+            logic: { yes: "real", no: "EXIT" },
         },
         {
             id: "real",
@@ -101,25 +103,47 @@
         },
     ];
 
-    function handleWizardComplete(event: CustomEvent) {
-        const answers = event.detail;
+    function handleWizardComplete(answers: Record<string, any>) {
         if (answers.intro === false) {
             showWizard = false;
             return;
         }
 
-        if (answers.real) addWizardItem("Primary Residence", "Real Estate");
-        if (answers.vehicle) addWizardItem("Daily Driver", "Vehicle");
-        if (answers.personal)
-            addWizardItem("Jewelry / Watch Collection", "Valuable");
+        const wanted: [string, any][] = [];
+        if (answers.real) wanted.push(["Primary Residence", "Real Estate"]);
+        if (answers.vehicle) wanted.push(["Daily Driver", "Vehicle"]);
+        if (answers.personal) wanted.push(["Jewelry / Watch Collection", "Valuable"]);
 
         showWizard = false;
+        if (wanted.length > 0) saveWizardItems(wanted);
+    }
+
+    // One wizard run is one save: the creates run quietly, then one affirmation when all land,
+    // or one gentle message whose Try Again re-sends only the items still waiting.
+    async function saveWizardItems(wanted: [string, any][]) {
+        const results = await Promise.allSettled(
+            wanted.map(([name, type]) => addWizardItem(name, type)),
+        );
+        const waiting = wanted.filter((_, i) => results[i].status === "rejected");
+        if (waiting.length === 0) {
+            notifications.showAffirmation("general");
+            return;
+        }
+        const reason = results.find((r) => r.status === "rejected") as PromiseRejectedResult;
+        notifications.showError(
+            {
+                message:
+                    "Your answers are safe here. We can save them again whenever you're ready.",
+                code: "DATABASE_ERROR",
+                technicalDetails: reason.reason?.technicalDetails || reason.reason?.message || String(reason.reason),
+            } as any,
+            () => saveWizardItems(waiting),
+        );
     }
 
     async function addWizardItem(name: string, type: any) {
-        let created;
-        try {
-            created = await propertyStore.addItem({
+        const created = await propertySync.create({
+            id: crypto.randomUUID(),
             name: name,
             type: type,
             location: "TBD",
@@ -130,10 +154,7 @@
             notes: "Added via Concierge Wizard",
             evidence: [],
             thumbnail: "",
-        });
-        } catch {
-            return; // the manager already showed the one gentle message
-        }
+        }, false, true);
 
         activityLog.logEvent({
             module: "Property",

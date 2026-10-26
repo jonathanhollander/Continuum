@@ -137,6 +137,11 @@ export const dictionary = {
             next: "Next",
             save: "Save Item",
             finish: "Finish Setup",
+            // Openings: the first question of each guided walk-through
+            property_intro: "Shall we walk through your home, vehicles and valuables together, one question at a time?",
+            financial_intro: "Shall we walk through your accounts together, one question at a time?",
+            family_intro: "Shall we capture one favorite family memory together?",
+            digital_intro: "Shall we walk through your digital accounts together, one question at a time?",
             // Financial
             financial_check: "Do you have a Checking Account?",
             financial_savings: "Do you have a Savings Account?",
@@ -147,7 +152,6 @@ export const dictionary = {
             insurance_auto: "Do you have Auto Insurance?",
             insurance_home: "Do you have Home/Renters Insurance?",
             // Property
-            property_main: "Do you own your primary residence?",
             property_vehicle: "Do you own any vehicles?",
             property_real: "Do you own a home or other real estate?",
             property_personal: "Do you have valuables, such as jewelry, art or collections, you would like to record?",
@@ -350,7 +354,6 @@ export const dictionary = {
             insurance_life: "¿Tiene Seguro de Vida?",
             insurance_auto: "¿Tiene Seguro de Auto?",
             insurance_home: "¿Tiene Seguro de Hogar/Inquilino?",
-            property_main: "¿Es dueño de su residencia principal?",
             property_vehicle: "¿Posee algún vehículo?",
             family_emergency: "¿Quién es su Contacto de Emergencia?",
             family_doctor: "¿Quién es su Médico?",
@@ -544,7 +547,6 @@ export const dictionary = {
             insurance_life: "Avez-vous une assurance vie ?",
             insurance_auto: "Avez-vous une assurance auto ?",
             insurance_home: "Avez-vous une assurance habitation ?",
-            property_main: "Êtes-vous propriétaire de votre résidence principale ?",
             property_vehicle: "Possédez-vous un véhicule ?",
             family_emergency: "Qui est votre contact d'urgence ?",
             family_doctor: "Qui est votre médecin ?",
@@ -738,7 +740,6 @@ export const dictionary = {
             insurance_life: "Haben Sie eine Lebensversicherung?",
             insurance_auto: "Haben Sie eine Autoversicherung?",
             insurance_home: "Haben Sie eine Hausratversicherung?",
-            property_main: "Besitzen Sie Ihr Hauptwohnsitz?",
             property_vehicle: "Besitzen Sie ein Fahrzeug?",
             family_emergency: "Wer ist Ihr Notfallkontakt?",
             family_doctor: "Wer ist Ihr Arzt?",
