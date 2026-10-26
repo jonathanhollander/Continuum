@@ -46,10 +46,8 @@
     import BulkActionBar from "$lib/components/modules/visual-memories/BulkActionBar.svelte";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
-    import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
 
     let activeTab = $state<"gallery" | "archives">("gallery");
-    let customAttributes = $state<Record<string, any>>({});
     // The Cards/Table choice is kept per module in the person's preferences.
     let dataViewMode = $derived<ViewMode>(userPreferencesStore.getViewMode('visual-memories'));
 
@@ -326,14 +324,6 @@
                         />
                     </div>
                 </div>
-
-                <!-- Custom Fields -->
-                <div class="pt-4 border-t border-slate-100">
-                    <CustomFieldsManager
-                        entityType="external_archive"
-                        bind:data={customAttributes}
-                    />
-                </div>
             </div>
 
             <div
@@ -343,7 +333,7 @@
                     onclick={() => (showArchiveModal = false)}
                     class="px-4 py-2 font-bold text-slate-500 hover:text-slate-700 text-sm"
                 >
-                    Cancel
+                    Maybe later
                 </button>
                 <button
                     onclick={saveArchive}
@@ -436,8 +426,8 @@
                             onclick={toggleSelectionMode}
                         >
                             {isSelectionMode
-                                ? "Done Selecting"
-                                : "Select Items"}
+                                ? "Finished choosing"
+                                : "Choose items"}
                         </button>
                     </div>
                 {/if}
@@ -547,7 +537,7 @@
                 >
                     <EmptyState
                         title="Your memories live in many places"
-                        whyMatters="<strong>Your family's most precious photos and videos are scattered across services they may not even know exist.</strong> iCloud, Google Photos, Dropbox, old hard drives, Facebook albums—each one holds irreplaceable memories that could be lost forever if no one knows where to look.<br/><br/>By mapping where your digital memories live, you're ensuring that future generations can access the visual story of your life. These aren't just files—they're birthdays, vacations, quiet moments, and family history."
+                        whyMatters="<strong>Your family's photos and videos live in many places.</strong> iCloud, Google Photos, Dropbox, old hard drives, Facebook albums each hold irreplaceable memories.<br/><br/>Listing where they live helps your family find the visual story of your life: birthdays, vacations, quiet moments, family history."
                         encouragement="Start with just one location—wherever you store most of your photos. You can add more as you remember them."
                         icon={Image}
                         iconClass="text-purple-500"

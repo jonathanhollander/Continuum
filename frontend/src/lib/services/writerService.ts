@@ -1,10 +1,6 @@
-export type WriterContext = "heirloom" | "timeline" | "contact" | "pet" | "funeral" | "letter" | "ethical_will" | "life_lesson" | "storytelling";
+import { callAiProxy } from "./aiConciergeService";
 
-const VARIATIONS = [
-    "This is a first variation using a warm and sentimental tone.",
-    "Here is a second option that is slightly more formal and structured.",
-    "A third possibility, focusing on the emotional impact and legacy."
-];
+export type WriterContext = "heirloom" | "timeline" | "contact" | "pet" | "funeral" | "letter" | "ethical_will" | "life_lesson" | "storytelling";
 
 export const CONTEXT_SUGGESTIONS: Record<WriterContext, string[]> = {
     heirloom: ["How did you acquire this?", "Who gave it to you?", "What is your favorite memory of it?"],
@@ -23,7 +19,6 @@ export async function draftFromBullets(bullets: string[], context: WriterContext
     await new Promise(resolve => setTimeout(resolve, 1500));
 
     const core = bullets.map(b => b.trim()).filter(b => b).join(" ");
-    const randomVar = VARIATIONS[Math.floor(Math.random() * VARIATIONS.length)];
 
     // Context-aware mocking
     switch (context) {
@@ -59,7 +54,32 @@ export async function softenTone(text: string, context: WriterContext = "letter"
     return `${randomPrefix}${text}`;
 }
 
-export async function expandThought(shortText: string): Promise<string> {
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    return `${shortText} This is something I've held close to my heart for many years, and I believe it's important to pass this wisdom on to you.`;
+// --- Letters: the writing helper beside a letter, through our own AI chat (/api/ai/chat). ---
+// Each call returns a suggestion only; the page decides whether it replaces the letter.
+
+const LETTER_SYSTEM = `You help someone write a personal letter to the people they love, as part of planning for the end of their life.
+Write in their own voice, in the first person. Use only the facts, names and memories they give you; never invent people, events or details.
+Keep any name or signature they wrote. Reply with the letter text alone: no title, no notes, no quotation marks, no markdown.`;
+
+function cleanLetter(text: string): string {
+    return String(text ?? "").replace(/^```[a-z]*\s*/i, "").replace(/\s*```$/, "").trim();
+}
+
+/** A first draft from a few notes (a memory, what it taught, a wish). */
+export async function aiDraftLetter(notes: string[]): Promise<string> {
+    const list = notes.map((n) => n.trim()).filter(Boolean).map((n) => `- ${n}`).join("\n");
+    return cleanLetter(await callAiProxy([
+        { role: "system", content: LETTER_SYSTEM },
+        { role: "user", content: `Please write a warm letter of three or four short paragraphs from these notes:\n${list}` },
+    ]));
+}
+
+/** The same letter, rewritten with the chosen warmth (0 = plain and direct, 100 = tender and poetic). */
+export async function aiSoftenLetter(text: string, warmth: number): Promise<string> {
+    const w = Math.max(0, Math.min(100, Math.round(warmth)));
+    const tone = w < 34 ? "plain, clear and direct" : w < 67 ? "warm and gentle" : "tender and poetic";
+    return cleanLetter(await callAiProxy([
+        { role: "system", content: LETTER_SYSTEM },
+        { role: "user", content: `Please gently rewrite this letter so it reads ${tone} (warmth ${w} out of 100). Keep its meaning, its facts and roughly its length.\n\n${text}` },
+    ]));
 }

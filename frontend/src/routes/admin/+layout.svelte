@@ -1,5 +1,8 @@
-<script>
+<script lang="ts">
+    import type { Snippet } from "svelte";
     import { page } from "$app/stores";
+    import { goto } from "$app/navigation";
+    import { auth } from "$lib/stores/auth";
     import {
         LayoutDashboard,
         Stethoscope,
@@ -7,6 +10,16 @@
         Zap,
         ArrowLeft,
     } from "lucide-svelte";
+
+    let { children }: { children: Snippet } = $props();
+
+    // The app's one admin rule (Settings › Data and the email admin routes use it too)
+    let isAdmin = $derived($auth.user?.id === 1);
+
+    // Anyone else goes to their dashboard once sign-in has settled
+    $effect(() => {
+        if (!$auth.loading && !isAdmin) goto("/dashboard", { replaceState: true });
+    });
 
     const navItems = [
         {
@@ -20,6 +33,7 @@
     ];
 </script>
 
+{#if isAdmin}
 <div
     class="min-h-screen bg-slate-950 text-slate-200 flex font-sans antialiased selection:bg-emerald-500/30"
 >
@@ -52,7 +66,7 @@
                         ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                         : 'text-slate-400 hover:text-white hover:bg-slate-800'}"
                 >
-                    <svelte:component this={item.icon} size={18} />
+                    <item.icon size={18} />
                     {item.label}
                 </a>
             {/each}
@@ -60,7 +74,7 @@
 
         <div class="p-4 border-t border-slate-800">
             <a
-                href="/"
+                href="/dashboard"
                 class="flex items-center gap-2 text-xs text-slate-500 hover:text-white transition-colors"
             >
                 <ArrowLeft size={14} />
@@ -74,7 +88,8 @@
         <div
             class="max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500"
         >
-            <slot />
+            {@render children()}
         </div>
     </main>
 </div>
+{/if}

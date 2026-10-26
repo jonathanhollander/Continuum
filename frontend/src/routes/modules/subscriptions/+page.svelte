@@ -43,6 +43,8 @@
         cancellationInstructions: string;
         loginUrl?: string;
         notes?: string;
+        // false once the subscription is closed: it stays listed and leaves the totals.
+        auto_renew?: boolean;
         custom_attributes?: string;
     };
 
@@ -76,7 +78,10 @@
         difficulty: "Easy",
         cycle: "Monthly",
         cost: 0,
+        auto_renew: true,
     });
+    const isClosed = (s: Partial<Subscription>) => s.auto_renew === false;
+    let activeSubscriptions = $derived(subscriptions.filter((s) => !isClosed(s)));
 
     let selectedSubForLetter = $state<Subscription | null>(null);
     let showLetterModal = $state(false);
@@ -86,12 +91,12 @@
         return `
             <p>Dear Customer Service Team,</p>
             
-            <p>Please accept this formal request to cancel the account and all associated services for <strong>${esc($estateProfile.ownerName || "[Name Not Set]")}</strong>, effective immediately.</p>
+            <p>Please accept this formal request to cancel the account and all associated services for <strong>${esc($estateProfile.ownerName || "[Name]")}</strong>, effective immediately.</p>
             
             <p><strong>Account Details:</strong></p>
             <ul>
                 <li>Service: ${esc(sub.name)}</li>
-                <li>Billing Address: ${esc($estateProfile.legalAddress || "[Address Not Set]")}</li>
+                ${$estateProfile.legalAddress ? `<li>Billing Address: ${esc($estateProfile.legalAddress)}</li>` : ""}
                 <li>Payment Method: ${esc(sub.paymentMethod || "On File")}</li>
             </ul>
 
@@ -133,6 +138,7 @@
                 cancellationInstructions: newSub.cancellationInstructions,
                 loginUrl: newSub.loginUrl,
                 notes: newSub.notes,
+                auto_renew: !isClosed(newSub),
                 custom_attributes: JSON.stringify(parsedCustomAttributes),
             });
 
@@ -163,6 +169,7 @@
                 cancellationInstructions: newSub.cancellationInstructions || "",
                 loginUrl: newSub.loginUrl || "",
                 notes: newSub.notes || "",
+                auto_renew: !isClosed(newSub),
                 custom_attributes: JSON.stringify(parsedCustomAttributes),
             }, false, false, saveSubscription);
 
@@ -202,6 +209,7 @@
             cancellationInstructions: "",
             loginUrl: "",
             notes: "",
+            auto_renew: true,
         };
         parsedCustomAttributes = {};
     }
@@ -266,7 +274,7 @@
             date: `Date: ${new Date().toLocaleDateString()}`,
             to: `To: ${sub.name} Billing Department`,
             subject: `Subject: Account Cancellation Request - ${sub.name}`,
-            signer: $estateProfile.executorName || "[Executor Name Not Set]",
+            signer: $estateProfile.executorName || "[Executor name]",
             role: `Executor of the Estate of ${$estateProfile.ownerName || ""}`,
         };
     }
@@ -356,14 +364,14 @@
     // Derived stats
     // Totals summed in whole cents; a yearly cost's month is its twelfth, rounded once.
     let totalMonthly = $derived(
-        fromCents(subscriptions.reduce(
+        fromCents(activeSubscriptions.reduce(
             (sum, s) => sum + (s.cycle === "Yearly" ? Math.round(toCents(s.cost) / 12) : toCents(s.cost)),
             0,
         )),
     );
 
     let totalYearly = $derived(
-        fromCents(subscriptions.reduce(
+        fromCents(activeSubscriptions.reduce(
             (sum, s) => sum + (s.cycle === "Yearly" ? toCents(s.cost) : toCents(s.cost) * 12),
             0,
         )),
@@ -373,8 +381,8 @@
 <LivingBlueprintHeader
     title="Subscriptions & Services"
     subtitle="Prevent forgotten charges that drain your estate"
-    detailedDescription="Every subscription you document is money your family won't lose to forgotten charges. This simple list can save them hundreds—or even thousands—in the months after you're gone."
-    whyMatters="After you're gone, these charges will keep hitting your bank account until someone notices and cancels them. Without a record, your family won't know what to look for or how to cancel them. Each service you document is one less headache for them."
+    detailedDescription="Every subscription you document helps your family keep money that might otherwise go to forgotten charges."
+    whyMatters="A short list of your subscriptions gives your family the names and steps to close each one, one less thing for them to carry."
 >
     <div class="flex items-center gap-4">
         <DataViewToggle module="subscriptions" onchange={(mode) => viewMode = mode} />
@@ -411,8 +419,8 @@
     <!-- Content -->
     {#if subscriptions.length === 0}
         <EmptyState
-            title="Identify your 'zombie bills'"
-            whyMatters="<strong>After you're gone, these charges will keep hitting your bank account until someone notices and cancels them.</strong> But without a record, your family won't know what to look for or how to cancel them.<br/><br/>Documenting your subscriptions isn't just about saving money—it's about preventing your spouse or executor from spending weeks hunting down mystery charges while grieving. Each service you document is one less headache for them."
+            title="Gather your recurring charges"
+            whyMatters="Every subscription you document helps your family keep money that might otherwise go to forgotten charges.<br/><br/>Documenting your subscriptions also gives your family the steps to close each one."
             encouragement="Start with the obvious ones—Netflix, Spotify, your gym. You can add others as you remember them."
             icon={Receipt}
             iconClass="text-slate-600"
@@ -483,10 +491,10 @@
                 </div>
                 <div>
                     <div class="text-sm text-amber-900 font-medium">
-                        Inflation Alert
+                        A gentle reminder
                     </div>
                     <div class="text-xs text-amber-700/80">
-                        Review annually. Prices tend to creep up.
+                        A yearly look keeps these amounts current.
                     </div>
                 </div>
             </div>
@@ -498,7 +506,7 @@
                 class="flex items-center justify-between pb-2 border-b border-slate-200"
             >
                 <h2 class="font-bold text-slate-700 flex items-center gap-2">
-                    Active Recurring Charges
+                    Recurring Charges
                     <span
                         class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-xs"
                         >{subscriptions.length}</span
@@ -582,6 +590,9 @@
                                                 <Receipt size={16} />
                                             </div>
                                             <span class="font-medium text-slate-800">{sub.name}</span>
+                                            {#if isClosed(sub)}
+                                                <span class="text-xs font-medium px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600">Closed</span>
+                                            {/if}
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 text-sm text-slate-600 font-medium">
@@ -657,7 +668,7 @@
                         <p class="text-slate-500 text-sm mt-2 leading-relaxed">
                             {newSub.id
                                 ? "Keep this information current—it makes the cancellation process smoother."
-                                : "Subscriptions keep charging even when no one's watching. Documenting these helps your family avoid months of unnecessary charges and navigate the often-frustrating cancellation process."}
+                                : "Documenting these gives your family a clear path through closing each subscription."}
                         </p>
                     </div>
                     <button
@@ -718,7 +729,7 @@
                     <div>
                         <span id="subscription-difficulty-label"
                             class="block text-xs font-bold uppercase text-gray-500 mb-1"
-                            >Difficulty to Cancel</span
+                            >How easy it is to close</span
                         >
                         <div
                             class="flex gap-2"
@@ -769,6 +780,17 @@
                         />
                     </div>
 
+                    <!-- Closed: kept on the list for the record, left out of the totals. -->
+                    <label class="flex items-center gap-3 text-sm text-slate-700 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            checked={isClosed(newSub)}
+                            onchange={(e) => (newSub.auto_renew = !e.currentTarget.checked)}
+                            class="w-4 h-4 rounded border-gray-300"
+                        />
+                        This subscription is closed
+                    </label>
+
                     <!-- Custom Fields -->
                     <div class="pt-4 mt-4 border-t border-gray-100">
                         <CustomFieldsManager
@@ -782,7 +804,7 @@
                     <button
                         onclick={resetForm}
                         class="px-6 py-2 rounded-xl font-bold text-gray-500 hover:bg-gray-200"
-                        >Not right now</button
+                        >Maybe later</button
                     >
                     <button
                         onclick={saveSubscription}
@@ -863,7 +885,7 @@
                                 ></div>
                                 <p class="font-bold">
                                     {$estateProfile.executorName ||
-                                        "[Executor Name Not Set]"}
+                                        "[Executor name]"}
                                 </p>
                                 <p class="text-xs text-slate-500 italic">
                                     Executor of the Estate of {$estateProfile.ownerName}

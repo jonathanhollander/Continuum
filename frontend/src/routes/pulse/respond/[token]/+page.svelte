@@ -16,6 +16,8 @@
     let state = $state({
         loading: true,
         error: null as string | null,
+        // The page could not be reached (network), as opposed to a link that no longer opens
+        offline: false,
         data: null as any,
         actionSuccess: null as "snoozed" | "acknowledged" | null,
         actionError: null as string | null,
@@ -34,8 +36,14 @@
             if (res.ok) {
                 state.data = await res.json();
             } else {
-                state.error = "Invalid responder token.";
+                // Same wording as /pulse/portal for a link that no longer opens
+                state.error =
+                    "This link may have expired or been replaced. The person who shared it can send you a new one.";
             }
+        } catch (e) {
+            console.error(e);
+            state.offline = true;
+            state.error = "Let's try opening this page again in a moment.";
         } finally {
             state.loading = false;
         }
@@ -84,11 +92,8 @@
                     <AlertTriangle class="w-6 h-6" />
                 </div>
                 <h1 class="text-xl font-serif text-white tracking-wide">
-                    Pulse Alert Response
-                </h1>
-                <p class="text-slate-400 text-sm">
                     Checking in on {state.data?.user_name || "your loved one"}
-                </p>
+                </h1>
             </div>
 
             {#if state.loading}
@@ -104,9 +109,11 @@
                     class="bg-rose-950/20 border border-rose-900/50 rounded-2xl p-8 text-center backdrop-blur-md"
                 >
                     <Shield class="w-12 h-12 text-rose-500 mx-auto mb-4" />
-                    <h2 class="text-lg font-medium text-white mb-2">
-                        Link Inactive
-                    </h2>
+                    {#if !state.offline}
+                        <h2 class="text-lg font-medium text-white mb-2">
+                            This link has rested
+                        </h2>
+                    {/if}
                     <p class="text-slate-400 text-sm">{state.error}</p>
                 </div>
             {:else if state.actionSuccess}
@@ -118,13 +125,15 @@
                         class="w-16 h-16 text-teal-400 mx-auto mb-6"
                     />
                     <h2 class="text-2xl font-serif text-white mb-4">
-                        Action Confirmed
+                        {state.actionSuccess === "snoozed"
+                            ? "Thank you, it's recorded"
+                            : "Thank you"}
                     </h2>
                     <p class="text-slate-300">
                         {#if state.actionSuccess === "snoozed"}
-                            Thank you for checking on {state.data.user_name}.
-                            Their check-in schedule starts fresh from now, and
-                            this appears in their check-in history.
+                            We'll pause further alerts for a while; thank you
+                            for checking on {state.data.user_name}. This
+                            appears in their check-in history.
                         {:else}
                             Thank you for looking in on {state.data.user_name}.
                             It means a great deal to have you close.
@@ -143,7 +152,7 @@
                                 <h3 class="font-medium text-amber-200">
                                     {state.data.user_status === "active"
                                         ? "Checked in recently"
-                                        : "Hasn't checked in for a little while"}
+                                        : "It has been quiet for a little while"}
                                 </h3>
                                 <p
                                     class="text-sm text-amber-200/70 mt-1 leading-relaxed"
@@ -155,7 +164,7 @@
                                             state.data.last_checkin,
                                         ).toLocaleTimeString()}.
                                     {:else}
-                                        {state.data.user_name} hasn't checked in yet.
+                                        We're waiting to hear from {state.data.user_name}.
                                     {/if}
                                 </p>
                             </div>
@@ -176,10 +185,10 @@
                                     <div
                                         class="text-slate-100 font-medium text-sm"
                                     >
-                                        I've confirmed they are OK
+                                        I've spoken with {state.data.user_name} and they're well
                                     </div>
                                     <div class="text-slate-500 text-xs mt-0.5">
-                                        Starts their check-in schedule fresh from now
+                                        Pauses further alerts for a while
                                     </div>
                                 </div>
                             </div>
@@ -195,10 +204,10 @@
                                     <div
                                         class="text-slate-300 font-medium text-sm"
                                     >
-                                        Acknowledged
+                                        I've seen this
                                     </div>
                                     <div class="text-slate-500 text-xs mt-0.5">
-                                        I am aware and coordinating check-in
+                                        I'm looking in on them
                                     </div>
                                 </div>
                             </div>

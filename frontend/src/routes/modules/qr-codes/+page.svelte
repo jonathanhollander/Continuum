@@ -83,14 +83,14 @@
         });
     }
 
-    async function deleteAssetQR(id: string, name: string) {
+    async function deleteAssetQR(id: string, name: string, type: AssetLabel["assetType"]) {
         if (
             !(await askConfirm(
                 `Remove the QR label for "${name}"? You can create a new one anytime.`,
             ))
         )
             return;
-        qrStore.removeAssetQR(id);
+        qrStore.removeAssetQR(id, type);
 
         activityLog.logEvent({
             module: "QR Center",
@@ -270,7 +270,7 @@
                                 <Smartphone size={32} class="mb-2 opacity-20" />
                                 <span
                                     class="text-[10px] font-black uppercase text-center px-4"
-                                    >Key Not Yet Generated</span
+                                    >Ready to generate</span
                                 >
                             </div>
                         {/if}
@@ -320,7 +320,7 @@
                     <ScanLine size={40} />
                 </div>
                 <h3 class="text-xl font-bold text-slate-400">
-                    No Asset Labels Generated
+                    Your asset labels will appear here
                 </h3>
                 <p class="text-slate-400 max-w-sm mx-auto text-sm">
                     Visit the Heirlooms or Property modules to generate labels
@@ -391,6 +391,7 @@
                                                 deleteAssetQR(
                                                     label.assetId,
                                                     label.assetName,
+                                                    label.assetType,
                                                 )}
                                             class="text-slate-200 hover:text-rose-500 transition-colors"
                                         >
@@ -458,7 +459,7 @@
                                                 <Printer size={16} />
                                             </button>
                                             <button aria-label="Remove this item"
-                                                onclick={() => deleteAssetQR(label.assetId, label.assetName)}
+                                                onclick={() => deleteAssetQR(label.assetId, label.assetName, label.assetType)}
                                                 class="p-1 text-slate-300 hover:text-rose-500 transition-colors"
                                             >
                                                 <Trash2 size={16} />
@@ -527,7 +528,7 @@
                             <p class="text-slate-400">
                                 The "Family Essentials" pack is designed for
                                 convenience, while the "Executor Master" pack
-                                granted access to sensitive data.
+                                grants access to sensitive data.
                             </p>
                         </div>
                     </div>

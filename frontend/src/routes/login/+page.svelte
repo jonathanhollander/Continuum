@@ -43,6 +43,13 @@
                 magicLinkEmail = lastEmail;
             }
         }
+
+        // Arriving from /start with the marketing email this browser knows: fill it in
+        const handoffEmail = $page.url.searchParams.get("email");
+        if (handoffEmail) {
+            magicLinkEmail = handoffEmail;
+            showMagicLink = true;
+        }
     });
 
     async function handlePasskeyLogin() {
@@ -205,13 +212,14 @@
         }
     }
 
-    // Leaving the email form drops ?method=email (kept by signup's email-link choice) so a reload
-    // stays on the passkey view; other params such as ?redirect are kept.
+    // Leaving the email form drops ?method=email (kept by signup's email-link choice) and the
+    // /start ?email so a reload stays on the passkey view; other params such as ?redirect are kept.
     function backToPasskey() {
         showMagicLink = false;
         const url = new URL($page.url);
-        if (url.searchParams.has("method")) {
+        if (url.searchParams.has("method") || url.searchParams.has("email")) {
             url.searchParams.delete("method");
+            url.searchParams.delete("email");
             goto(url.pathname + url.search, { replaceState: true, keepFocus: true, noScroll: true });
         }
     }

@@ -1,9 +1,9 @@
 <script lang="ts">
     import { fade, scale } from "svelte/transition";
     import { Gift, Heart, QrCode, User, ZoomIn } from "lucide-svelte";
-    import { createEventDispatcher } from "svelte";
+    import HeirloomImage from "./HeirloomImage.svelte";
 
-    let { heirloom, onPrintQr } = $props<{
+    let { heirloom, onPrintQr, focused = false } = $props<{
         heirloom: {
             id: string | number;
             name: string;
@@ -11,20 +11,28 @@
             recipient: string;
             story: string;
             value?: string;
+            ownershipDetails?: string;
         };
         onPrintQr?: (id: string | number) => void;
+        // Opened from a scanned label: the story starts open.
+        focused?: boolean;
     }>();
 
     let isExpanded = $state(false);
+    $effect(() => {
+        if (focused) isExpanded = true;
+    });
 </script>
 
 <div
-    class="group bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 relative"
+    class="group bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 relative {focused
+        ? 'ring-2 ring-primary'
+        : ''}"
 >
     <!-- Card Image Area -->
     <div class="h-48 w-full bg-stone-100 relative overflow-hidden">
         {#if heirloom.image}
-            <img
+            <HeirloomImage
                 src={heirloom.image}
                 alt={heirloom.name}
                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
@@ -59,6 +67,16 @@
             {heirloom.story}
         </p>
 
+        {#if heirloom.ownershipDetails}
+            <p
+                class="text-xs text-stone-500 leading-relaxed mb-4"
+                class:line-clamp-2={!isExpanded}
+            >
+                <span class="font-bold uppercase tracking-wide">Provenance:</span>
+                {heirloom.ownershipDetails}
+            </p>
+        {/if}
+
         <div
             class="flex items-center justify-between pt-4 border-t border-stone-100"
         >
@@ -89,7 +107,7 @@
             class="bg-primary text-primary-foreground text-[10px] font-bold px-2 py-1 rounded-md shadow-lg flex items-center gap-1"
         >
             <Heart size={10} class="fill-current" />
-            SENTIMENTAL
+            TREASURED
         </div>
     </div>
 </div>

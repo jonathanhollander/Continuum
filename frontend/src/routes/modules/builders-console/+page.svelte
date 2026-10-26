@@ -282,10 +282,11 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {#each tasks as task (task.id)}
+                    {#each tasks as task (task.taskId)}
+                        <div class="relative">
                         <button
-                            onclick={() => acceptanceStore.toggleTask(task.id)}
-                            class="group relative text-left p-5 rounded-2xl border transition-all duration-300 hover:shadow-lg hover:translate-y-[-2px] {task.status ===
+                            onclick={() => acceptanceStore.toggleTask(task.taskId)?.catch(() => {})}
+                            class="group relative w-full h-full text-left p-5 pb-10 rounded-2xl border transition-all duration-300 hover:shadow-lg hover:translate-y-[-2px] {task.status ===
                             'Complete'
                                 ? 'bg-emerald-50/30 border-emerald-200'
                                 : 'bg-white border-slate-200 hover:border-indigo-300'}"
@@ -353,6 +354,15 @@
                                 ></div>
                             {/if}
                         </button>
+                        {#if task.href}
+                            <a
+                                href={task.href}
+                                class="absolute bottom-4 right-5 text-xs text-indigo-600 hover:text-indigo-700 flex items-center gap-1 font-bold"
+                            >
+                                Go to page <ArrowRight size={12} />
+                            </a>
+                        {/if}
+                        </div>
                     {/each}
                 </div>
             </div>
@@ -394,12 +404,13 @@
                 estate's integrity.
             </p>
         </div>
-        <button
+        <a
+            href="/modules/analytics"
             class="px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all flex items-center gap-2"
         >
             View Analytics
             <ArrowRight size={18} />
-        </button>
+        </a>
     </div>
 </div>
 

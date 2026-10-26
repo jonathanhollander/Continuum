@@ -48,7 +48,7 @@
             cameraReady = true;
         } catch (err) {
             console.error("Camera access denied:", err);
-            error = "Camera access denied. Please verify permissions.";
+            error = "The camera is waiting for your permission. You can turn it on in your browser settings.";
         }
     }
 
@@ -62,7 +62,9 @@
         };
 
         mediaRecorder.onstop = () => {
-            recordedBlob = new Blob(chunks, { type: "video/webm" });
+            // The browser's own format (Safari and iPhone record MP4, Chrome and Firefox WebM).
+            const type = mediaRecorder?.mimeType || chunks[0]?.type || "video/webm";
+            recordedBlob = new Blob(chunks, { type });
             recordedUrl = URL.createObjectURL(recordedBlob);
             if (videoPreview) {
                 videoPreview.srcObject = null;
@@ -155,7 +157,7 @@
             in:fade
         >
             <CircleAlert size={48} class="text-rose-500 mb-4" />
-            <h3 class="font-bold text-xl mb-2 text-white">Camera Error</h3>
+            <h3 class="font-bold text-xl mb-2 text-white">Your camera needs a moment</h3>
             <p class="text-slate-400">{error}</p>
             <button
                 on:click={startCamera}
@@ -236,7 +238,7 @@
                 disabled={isSaving}
             >
                 <RefreshCw size={18} />
-                Retake
+                Record again
             </button>
 
             <button

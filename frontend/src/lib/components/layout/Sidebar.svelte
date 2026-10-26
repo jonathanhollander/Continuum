@@ -7,6 +7,8 @@
         pulseSubNav,
         recipientPreviewEntry,
         recipientPreviewAfterGroup,
+        helpEntry,
+        helpAfterGroup,
     } from "$lib/config/navigation";
     import { auth } from "$lib/stores/auth";
     import { API_BASE_URL } from "$lib/config";
@@ -47,14 +49,15 @@
         $page.url.pathname.startsWith("/modules/pulse"),
     );
 
-    // Filter Nav Items
+    // Filter Nav Items (Help & Resources closes the Extras group)
     let filteredNavGroups = $derived(
         navGroups
             .map((group) => ({
                 ...group,
-                items: group.items.filter((item) =>
-                    item.allowedRoles.includes($userRole),
-                ),
+                items: (group.groupKey === helpAfterGroup
+                    ? [...group.items, helpEntry]
+                    : group.items
+                ).filter((item) => item.allowedRoles.includes($userRole)),
             }))
             .filter((group) => group.items.length > 0),
     );
@@ -65,14 +68,30 @@
         $language === "en" ? label : $dict[key] || label;
 
     // "For My Son (preview)": the owner's preview of their recipient's start page
-    // (card D2). Looked up on each page change, so a recipient chosen in
-    // Family & Contacts appears on the next navigation.
+    // (card D2). Looked up once per sign-in, and again on leaving Family & Contacts
+    // (where a recipient is chosen), so a new choice appears on the next navigation.
     type Recipient = { contact_id: number; name: string; relation?: string | null };
     let recipient = $state<Recipient | null>(null);
+    let recipientLookedUpFor: string | null = null;
+    let lastPath = "";
     $effect(() => {
         const path = $page.url.pathname;
         const token = $auth.token;
-        if (!token || $userRole !== "Owner" || path.startsWith("/for/")) return;
+        // Keyed by account, so a refreshed access token is no new sign-in.
+        const account = $auth.user ? String($auth.user.id) : null;
+        const leftContacts =
+            lastPath.startsWith("/modules/contacts") && !path.startsWith("/modules/contacts");
+        lastPath = path;
+        if (!token || !account) {
+            if (!token) {
+                recipientLookedUpFor = null;
+                recipient = null;
+            }
+            return;
+        }
+        if ($userRole !== "Owner" || path.startsWith("/for/")) return;
+        if (recipientLookedUpFor === account && !leftContacts) return;
+        recipientLookedUpFor = account;
         fetch(`${API_BASE_URL}/api/recipient/links`, {
             headers: { Authorization: `Bearer ${token}` },
         })

@@ -1,5 +1,9 @@
 <script lang="ts">
     import { focusTrap } from "$lib/actions/focusTrap";
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
+    import { milestoneLabel } from "$lib/services/exportService";
+    import { activeAccountId } from "$lib/stores/keyringStore";
+    import { get } from "svelte/store";
     import { readCustom } from "$lib/utils/customFields";
     import {
         timeCapsuleStore,
@@ -60,9 +64,52 @@
     let capsuleRecipientId = $state("");
 
     onMount(() => {
+        restoreDraft();
         timeCapsuleStore.sync().catch(() => {});
         contactSync.init().catch(() => {});
     });
+
+    // A new capsule's draft, kept in this browser for the signed-in account until it is sealed.
+    const draftKey = () => `continuum_capsule_draft:${get(activeAccountId) || "anonymous"}`;
+
+    function saveDraft() {
+        try {
+            localStorage.setItem(
+                draftKey(),
+                JSON.stringify({ message: newMessage, recipientId: capsuleRecipientId, custom: parsedCustomAttributes }),
+            );
+        } catch {
+            // Storage full or blocked: the draft stays in the open page.
+        }
+        showAddModal = false;
+    }
+
+    function clearDraft() {
+        try {
+            localStorage.removeItem(draftKey());
+        } catch {}
+    }
+
+    function restoreDraft() {
+        try {
+            const raw = localStorage.getItem(draftKey());
+            if (!raw) return;
+            const draft = JSON.parse(raw);
+            newMessage = { ...emptyMessage(), ...(draft.message ?? {}) };
+            capsuleRecipientId = draft.recipientId ?? "";
+            parsedCustomAttributes = draft.custom ?? {};
+        } catch {}
+    }
+
+    async function removeCapsule(msg: TimeCapsuleMessage) {
+        if (
+            !(await askConfirm(
+                `Remove the capsule "${msg.title}"? You can always start over if you feel like it later.`,
+            ))
+        )
+            return;
+        await timeCapsuleStore.removeMessage(msg.id).catch(() => {});
+    }
 
     function chooseRecipient(id: string) {
         capsuleRecipientId = id;
@@ -164,6 +211,7 @@
                 await timeCapsuleStore.updateMessage(editingId, fields);
             } else {
                 await timeCapsuleStore.addMessage(fields);
+                clearDraft();
             }
             resetForm();
             showAddModal = false;
@@ -179,7 +227,9 @@
         isUploading = true;
         formNote = null;
         try {
-            const file = new File([blob], "capsule.webm", { type: blob.type || "video/webm" });
+            const type = blob.type || "video/webm";
+            const ext = type.startsWith("video/mp4") ? "mp4" : type.startsWith("video/quicktime") ? "mov" : "webm";
+            const file = new File([blob], `capsule.${ext}`, { type });
             const saved = await uploadMedia(file, "time_capsules", editingId ?? undefined);
             newMessage.videoUrl = saved.download_url;
             newMessage.mediaId = undefined;
@@ -222,7 +272,7 @@
     }
 
     function getMilestoneLabel(id: string) {
-        return COMMON_MILESTONES.find((m) => m.id === id)?.label || id;
+        return milestoneLabel(id);
     }
 
     /** "2030-01-01" -> "January 1, 2030" in the reader's locale, read as a local day (no time-zone shift). */
@@ -300,7 +350,7 @@
                             <Pencil size={16} />
                         </button>
                         <button
-                            onclick={() => timeCapsuleStore.removeMessage(msg.id)}
+                            onclick={() => removeCapsule(msg)}
                             aria-label="Remove this capsule"
                             class="p-2 text-slate-300 hover:text-rose-500 transition-colors"
                         >
@@ -536,7 +586,7 @@
                                     <Pencil size={16} />
                                 </button>
                                 <button aria-label="Remove this item"
-                                    onclick={() => timeCapsuleStore.removeMessage(msg.id)}
+                                    onclick={() => removeCapsule(msg)}
                                     class="p-1 text-slate-300 hover:text-rose-500 transition-all"
                                 >
                                     <Trash2 size={16} />
@@ -779,19 +829,21 @@
                 <div class="flex gap-4">
                     <button
                         onclick={() => {
-                            resetForm();
+                            if (editingId) resetForm(); // a new capsule's draft stays for later
                             showAddModal = false;
                         }}
                         class="px-6 py-4 border border-slate-200 rounded-2xl font-bold text-slate-500 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-100 transition-all"
                     >
-                        Cancel
+                        Maybe later
                     </button>
+                    {#if !editingId}
                     <button
-                        onclick={() => (showAddModal = false)}
+                        onclick={saveDraft}
                         class="flex-1 py-4 px-6 border border-slate-200 rounded-2xl font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-all"
                     >
                         Save Draft
                     </button>
+                    {/if}
                     <button
                         onclick={handleAdd}
                         disabled={isUploading || isSaving}
@@ -847,9 +899,3 @@
     {/if}
 </div>
 {/if}
-
-<style>
-    :global(body) {
-        background-color: #f8fafc;
-    }
-</style>

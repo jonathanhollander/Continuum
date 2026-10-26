@@ -1,6 +1,6 @@
 <script lang="ts">
     import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
-    import { tagList, removeMemory, type VisualMemory } from "$lib/stores/visualMemoryStore.svelte";
+    import { tagList, removeMemory, updateMemory, type VisualMemory } from "$lib/stores/visualMemoryStore.svelte";
     import {
         Grid,
         LayoutTemplate,
@@ -10,6 +10,7 @@
         Heart,
         Play,
         Trash2,
+        Pencil,
     } from "lucide-svelte";
     import { fade, fly } from "svelte/transition";
     import { onDestroy } from "svelte";
@@ -114,6 +115,36 @@
             removeMemory(Number(id));
         }
     }
+
+    // Naming and describing the memory open in the carousel.
+    let editingId = $state<string | null>(null);
+    let editName = $state("");
+    let editDescription = $state("");
+    let isSavingDetails = $state(false);
+
+    function startEdit(m: VisualMemory) {
+        editingId = String(m.id);
+        editName = m.name ?? "";
+        editDescription = m.description ?? "";
+    }
+
+    async function saveDetails() {
+        if (!editingId || !editName.trim() || isSavingDetails) return;
+        isSavingDetails = true;
+        try {
+            await updateMemory(Number(editingId), { name: editName.trim(), description: editDescription.trim() });
+            editingId = null;
+        } catch {
+            // The sync manager shows a gentle note; the words stay in the form.
+        } finally {
+            isSavingDetails = false;
+        }
+    }
+
+    // Moving to another memory closes the form.
+    $effect(() => {
+        if (viewMode !== "carousel" || String(memories[activeIndex]?.id) !== editingId) editingId = null;
+    });
 
     function toggleFavorite(id: string, e: Event) {
         e.stopPropagation();
@@ -331,6 +362,39 @@
                 class="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent text-white"
             >
                 <div class="flex justify-between items-end">
+                    {#if editingId === String(memories[activeIndex].id)}
+                    <div class="flex-1 max-w-2xl space-y-2 mb-4">
+                        <label for="memory-name" class="sr-only">Name</label>
+                        <input
+                            id="memory-name"
+                            bind:value={editName}
+                            placeholder="Name this memory"
+                            class="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/30 text-white placeholder-white/50 outline-none focus:border-white"
+                        />
+                        <label for="memory-description" class="sr-only">Description</label>
+                        <textarea
+                            id="memory-description"
+                            bind:value={editDescription}
+                            placeholder="The story behind this memory..."
+                            class="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/30 text-white placeholder-white/50 outline-none focus:border-white h-20 resize-none text-sm"
+                        ></textarea>
+                        <div class="flex gap-2">
+                            <button
+                                onclick={saveDetails}
+                                disabled={!editName.trim() || isSavingDetails}
+                                class="px-4 py-2 bg-white text-slate-900 rounded-lg font-bold text-sm disabled:opacity-50"
+                            >
+                                Save my changes
+                            </button>
+                            <button
+                                onclick={() => (editingId = null)}
+                                class="px-4 py-2 rounded-lg font-bold text-sm text-white hover:bg-white/10"
+                            >
+                                Maybe later
+                            </button>
+                        </div>
+                    </div>
+                    {:else}
                     <div>
                         <h2 class="text-xl font-bold mb-2 text-white">
                             {memories[activeIndex].name}
@@ -343,13 +407,23 @@
                                 >
                             {/each}
                         </div>
-                        <p class="text-white/80 text-sm max-w-2xl">
-                            {memories[activeIndex].description ||
-                                "No description provided."}
-                        </p>
+                        {#if memories[activeIndex].description}
+                            <p class="text-white/80 text-sm max-w-2xl whitespace-pre-wrap">
+                                {memories[activeIndex].description}
+                            </p>
+                        {/if}
                     </div>
+                    {/if}
 
                     <div class="flex gap-2 mb-1">
+                    <button
+                        class="p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+                        onclick={() => startEdit(memories[activeIndex])}
+                        aria-label="Name and describe this memory"
+                        title="Name and describe this memory"
+                    >
+                        <Pencil size={20} />
+                    </button>
                     <button
                         class="p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
                         onclick={() => handleRemove(String(memories[activeIndex].id))}

@@ -36,6 +36,7 @@
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
 
     let viewMode = $state<ViewMode>('card');
 
@@ -236,14 +237,15 @@
             return;
         }
 
+        // Only what the answers say: the manager and usernames are left for the person to fill in.
         const wanted: [string, string, string][] = [];
         if (answers.password_manager) {
             // Update status (fire and forget update)
             updateStatus("passwordManager", true);
-            wanted.push(["1Password", "Master Account", "Access"]);
+            wanted.push(["Password Manager", "", "Access"]);
         }
         if (answers.email) {
-            wanted.push([answers.email, "Primary Account", "Email"]);
+            wanted.push([answers.email === "Other" ? "Email" : answers.email, "", "Email"]);
         }
 
         showWizard = false;
@@ -281,19 +283,18 @@
         saveChecks({ setupStatus: { ...current, [key]: value } });
     }
 
-    async function addAsset(platform: string, username: string, type: string, quiet = false) {
+    type Wishes = Pick<DigitalAccount, "description" | "preference" | "instructions" | "priority">;
+    async function addAsset(platform: string, username: string, type: string, quiet = false, wishes: Wishes = {}) {
         let newAsset;
         try {
         newAsset = await digitalAssetsSync.create({
             platform,
             username,
-            description: `${type} Account`,
             type,
-            preference: "none",
-            instructions: "",
-            priority: "medium",
             isClosed: false,
-        }, false, quiet, quiet ? undefined : () => addAsset(platform, username, type));
+            ...wishes,
+            description: wishes.description || `${type} Account`,
+        }, false, quiet, quiet ? undefined : () => addAsset(platform, username, type, false, wishes));
         } catch (e) {
             if (quiet) throw e; // the wizard shows one message for the whole run
             return; // the manager already showed the one gentle message
@@ -311,11 +312,22 @@
 
     // Edit: the add modal's shell, filled in with the account's details; one update on save.
     let editingId = $state<string | null>(null);
-    let draft = $state({ platform: "", username: "", type: "", description: "" });
+    // Wishes (preference, instructions, priority) are set here too, not only in the Advanced Registry.
+    const EMPTY_DRAFT = { platform: "", username: "", type: "", description: "", preference: "", instructions: "", priority: "" };
+    let draft = $state({ ...EMPTY_DRAFT });
 
-    function openNew() {
+    // An example row opens the form filled in; nothing is saved until the person saves it.
+    function openNew(prefill: Partial<DigitalAccount> = {}) {
         editingId = "new";
-        draft = { platform: "", username: "", type: "", description: "" };
+        draft = {
+            ...EMPTY_DRAFT,
+            platform: prefill.platform ?? "",
+            username: prefill.username ?? "",
+            type: prefill.type ?? "",
+            preference: prefill.preference && prefill.preference !== "none" ? prefill.preference : "",
+            instructions: prefill.instructions ?? "",
+            priority: prefill.priority ?? "",
+        };
     }
 
     function openEdit(asset: DigitalAccount) {
@@ -325,6 +337,9 @@
             username: asset.username ?? "",
             type: asset.type ?? "",
             description: asset.description ?? "",
+            preference: asset.preference && asset.preference !== "none" ? asset.preference : "",
+            instructions: asset.instructions ?? "",
+            priority: asset.priority ?? "",
         };
     }
 
@@ -346,7 +361,8 @@
         if (id === "new") {
             const d = $state.snapshot(draft);
             editingId = null;
-            await addAsset(d.platform.trim(), d.username, d.type || "Account");
+            const { platform, username, type, ...wishes } = d;
+            await addAsset(platform.trim(), username, type || "Account", false, wishes as Wishes);
             return;
         }
         const changes = { ...$state.snapshot(draft), name: draft.platform };
@@ -359,6 +375,7 @@
     }
 
     async function deleteAsset(id: string) {
+        if (!(await askConfirm("Remove this account from your inventory?"))) return;
         try {
             await digitalAssetsSync.delete(id);
         } catch {
@@ -395,9 +412,9 @@
     <!-- Header -->
     <LivingBlueprintHeader
         title="Digital Guardian"
-        subtitle="Protect your digital legacy from being locked away forever"
-        detailedDescription="Your physical assets are protected by law. Your digital assets are protected by passwords. Set up legacy contacts, inactive account managers, and document your digital inventory so your family isn't locked out of your photos, emails, and accounts."
-        whyMatters="Without these specific setups, your family may lose access to irreplaceable memories, important accounts, and digital assets. Taking action now ensures your digital life can be properly managed."
+        subtitle="Keep your digital legacy within your family's reach"
+        detailedDescription="Your physical assets are protected by law. Your digital assets are protected by passwords. Set up legacy contacts, inactive account managers, and document your digital inventory so your family can reach your photos, emails, and accounts."
+        whyMatters="These setups keep your family connected to irreplaceable memories, important accounts, and digital assets."
     />
 
     <!-- AI Prompt Bar -->
@@ -464,11 +481,11 @@
             </div>
             <div class="flex-1">
                 <h3 class="font-serif font-bold text-2xl text-[#304743] mb-2">
-                    The Fire Drill
+                    A gentle practice run
                 </h3>
                 <p class="text-gray-600 mb-6 max-w-xl leading-relaxed">
-                    Hope is not a strategy. Verify that your Legacy Contact can
-                    actually get in when you aren't there to help.
+                    Walk through it once with your Legacy Contact, so getting in
+                    is simple when it matters.
                 </p>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -645,8 +662,8 @@
                         {/if}
                     </div>
                     <p class="text-sm text-muted-foreground">
-                        Allow someone to access your Apple account data after
-                        you pass away.
+                        Choose someone who can reach your Apple account data
+                        when you're gone.
                     </p>
                 </div>
             </button>
@@ -742,8 +759,8 @@
                     transition:slide
                 >
                     <p class="text-sm text-gray-600 mb-4">
-                        Google acts as a "Dead Man's Switch". If you don't log
-                        in for X months, it notifies your contact.
+                        Google can notify your chosen contact after a period of
+                        no sign-ins that you choose.
                     </p>
                     <ol
                         class="space-y-4 text-sm text-gray-700 list-decimal pl-4 mb-6"
@@ -813,8 +830,8 @@
                         {/if}
                     </div>
                     <p class="text-sm text-muted-foreground">
-                        Ensure your executor has access to your master password
-                        through a secure mechanism (e.g., emergency kit).
+                        You can let your executor know where to find your master
+                        password, through a secure mechanism (e.g., emergency kit).
                     </p>
                 </div>
             </button>
@@ -829,7 +846,7 @@
                         <Lock size={18} class="shrink-0 mt-0.5" />
                         <div>
                             <strong
-                                >Do NOT store your Master Password digitally.</strong
+                                >It is safest to keep your Master Password on paper, in your Red Binder.</strong
                             ><br />
                             It should be written down on the Emergency Card in your
                             physical Red Binder, or stored in a bank safety deposit
@@ -848,11 +865,10 @@
                             manager.
                         </li>
                         <li>
-                            Write the Master Password on it (it is usually
-                            blank).
+                            You can write the Master Password on it.
                         </li>
                         <li>
-                            Seal it in an envelope marked "For Executor Only".
+                            You can seal it in an envelope marked "For Executor".
                         </li>
                         <li>Place in Red Binder or Safe.</li>
                     </ul>
@@ -920,7 +936,7 @@
                             Choose a friend to manage your account (they can pin
                             posts, change profile pic).
                         </li>
-                        <li>Alternatively, select "Delete After Death".</li>
+                        <li>Or you can choose "Delete After Death".</li>
                     </ol>
                     <div
                         class="flex items-center gap-4 pt-4 border-t border-gray-200"
@@ -977,8 +993,7 @@
                     transition:slide
                 >
                     <p class="text-sm text-gray-600 mb-4">
-                        LinkedIn does not allow pre-selection. Your executor
-                        must contact them.
+                        Your executor can contact LinkedIn when the time comes.
                     </p>
                     <ul
                         class="space-y-4 text-sm text-gray-700 list-disc pl-4 mb-6"
@@ -991,8 +1006,8 @@
                             (stays up) or <strong>Close Account</strong>.
                         </li>
                         <li>
-                            Executor will need: Link to obituary or death
-                            certificate.
+                            Your executor will have a link to the obituary or the
+                            death certificate ready.
                         </li>
                     </ul>
                     <div
@@ -1030,15 +1045,15 @@
                     onclick={() => (showWizard = true)}
                     class="bg-[#304743] text-white px-4 py-2 rounded-full font-bold hover:bg-[#2a3f3b] transition-colors flex items-center gap-2 text-sm"
                 >
-                    <Siren size={16} /> Run Discovery Wizard
+                    <Siren size={16} /> Walk me through my accounts
                 </button>
                 <button
-                    onclick={openNew}
+                    onclick={() => openNew()}
                     data-testid="digital-add"
                     class="flex items-center gap-2 px-5 py-2 bg-primary text-primary-foreground rounded-xl font-semibold shadow-lg shadow-primary/20 hover:opacity-90 transition-all text-sm"
                 >
                     <Plus class="w-4 h-4" />
-                    Add an account
+                    Share an account
                 </button>
                 <DataViewToggle module="digital-guardian" onchange={(mode) => viewMode = mode} />
             </div>
@@ -1086,7 +1101,7 @@
                     >
                         <button
                             type="button"
-                            aria-label="Not right now"
+                            aria-label="Maybe later"
                             class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10"
                             onclick={() => (editingId = null)}
                         >
@@ -1112,6 +1127,30 @@
                                 Description
                                 <input bind:value={draft.description} name="description" class="mt-1 w-full border border-slate-200 rounded-xl px-3 py-2 font-normal text-slate-800" />
                             </label>
+                            <div class="grid grid-cols-2 gap-4">
+                                <label class="block text-sm font-bold text-slate-600">
+                                    Preference
+                                    <select bind:value={draft.preference} name="preference" class="mt-1 w-full border border-slate-200 rounded-xl px-3 py-2 font-normal text-slate-800 bg-white">
+                                        <option value=""></option>
+                                        <option value="memorialize">Memorialize</option>
+                                        <option value="delete">Remove / Close the account</option>
+                                        <option value="transfer">Transfer Ownership</option>
+                                    </select>
+                                </label>
+                                <label class="block text-sm font-bold text-slate-600">
+                                    Priority
+                                    <select bind:value={draft.priority} name="priority" class="mt-1 w-full border border-slate-200 rounded-xl px-3 py-2 font-normal text-slate-800 bg-white">
+                                        <option value=""></option>
+                                        <option value="low">Low</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="high">High</option>
+                                    </select>
+                                </label>
+                            </div>
+                            <label class="block text-sm font-bold text-slate-600">
+                                Final Instructions
+                                <textarea bind:value={draft.instructions} name="instructions" rows="3" placeholder="Any specific details about handling this item..." class="mt-1 w-full border border-slate-200 rounded-xl px-3 py-2 font-normal text-slate-800 resize-none"></textarea>
+                            </label>
                         </div>
                         <div class="px-8 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
                             <button
@@ -1119,7 +1158,7 @@
                                 onclick={() => (editingId = null)}
                                 class="px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-200 transition-colors"
                             >
-                                Not right now
+                                Maybe later
                             </button>
                             <button
                                 type="submit"
@@ -1141,9 +1180,7 @@
                         name={sample.platform}
                         subtitle={`${sample.username} - ${sample.instructions}`}
                         type="Security"
-                        onClick={() => {
-                            addAsset(sample.platform, sample.username, "Vault");
-                        }}
+                        onClick={() => openNew({ ...sample, type: "Vault" })}
                     >
                         {#snippet icon()}
                             <Key size={20} class="text-slate-400" />
@@ -1174,7 +1211,7 @@
                                     <div
                                         class="text-xs text-slate-500 uppercase tracking-wider"
                                     >
-                                        {asset.username} - {asset.description}
+                                        {[asset.username, asset.description].filter(Boolean).join(" - ")}
                                     </div>
                                 </div>
                             </div>

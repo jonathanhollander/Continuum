@@ -14,8 +14,27 @@
         Zap,
         Navigation,
         XCircle,
+        Settings,
+        Users,
     } from "lucide-svelte";
-    import LivingMesh from "$lib/components/pulse/LivingMesh.svelte";
+    import { notifications } from "$lib/stores/notificationStore";
+    import { contactSync } from "$lib/stores/familyStore.svelte";
+    import { pulseTierNumber } from "$lib/components/modules/pulse/pulseTiers";
+
+    const gentleRetry = "Let's try that once more in a moment.";
+
+    // Guardians (a Pulse tier) and the people told when a safety timer ends, from the shared
+    // contacts store (notifyOnSafetyTimer is the "Told when I start a timer" switch on the
+    // Escalation Plan).
+    const guardians = $derived(
+        (contactSync.items as any[]).filter(
+            (c) => c.tierId || pulseTierNumber({ call_tier: c.callTier }, []) !== null,
+        ),
+    );
+    // pulse_logic.trigger_safety_timer_alert tells every contact with this switch on
+    const timerPeople = $derived(
+        (contactSync.items as any[]).filter((c) => c.notifyOnSafetyTimer).map((c) => c.name),
+    );
     import PetalDrift from "$lib/components/pulse/PetalDrift.svelte";
 
     let petals: PetalDrift;
@@ -31,6 +50,7 @@
 
     onMount(() => {
         pulse.init();
+        contactSync.sync();
         fetchSafetyStatus();
         const interval = setInterval(fetchSafetyStatus, 10000);
         // Ticks the countdown each second between status refreshes
@@ -60,6 +80,8 @@
                 setTimeout(() => {
                     localStatus.lastSuccess = false;
                 }, 3000);
+            } else {
+                notifications.showError(gentleRetry);
             }
         } finally {
             localStatus.checkingIn = false;
@@ -79,6 +101,7 @@
             localStatus.showSafetyConfig = false;
         } catch (e) {
             console.error(e);
+            notifications.showError(gentleRetry);
         }
     }
 
@@ -88,14 +111,23 @@
             localStatus.safetyTimer = null;
         } catch (e) {
             console.error(e);
+            notifications.showError(gentleRetry);
         }
     }
 
     let now = $state(Date.now());
 
+    const statusLabels: Record<string, string> = {
+        active: "Heartbeat Active",
+        grace: "Grace Period",
+        disabled: "Resting for now",
+        not_configured: "Ready when you are",
+    };
+
+    // null once the timer has ended
     function getTimeRemaining(expiry: string) {
         const diff = new Date(expiry).getTime() - now;
-        if (diff <= 0) return "EXPIRED";
+        if (diff <= 0) return null;
         const mins = Math.floor(diff / 60000);
         const secs = Math.floor((diff % 60000) / 1000);
         return `${mins}:${secs.toString().padStart(2, "0")}`;
@@ -141,7 +173,7 @@
                     <Loader2 class="w-12 h-12 text-teal-400 animate-spin" />
                     <span
                         class="text-xs font-bold text-teal-400 mt-4 uppercase tracking-[0.3em]"
-                        >Synching...</span
+                        >Letting them know...</span
                     >
                 {:else if localStatus.lastSuccess}
                     <CheckCircle2
@@ -149,7 +181,7 @@
                     />
                     <span
                         class="text-xs font-bold text-teal-400 mt-4 uppercase tracking-[0.3em]"
-                        >Verified</span
+                        >Received, thank you</span
                     >
                 {:else}
                     <div
@@ -170,10 +202,8 @@
         </div>
 
         <div class="space-y-2">
-            <h2 class="text-2xl font-serif text-white flex items-center gap-3">
-                {pulse.status === "active"
-                    ? "Heartbeat Active"
-                    : "Seeking Connection"}
+            <h2 class="text-2xl font-serif text-white flex items-center justify-center gap-3">
+                {statusLabels[pulse.status] ?? statusLabels.disabled}
                 {#if pulse.status === "active"}
                     <span
                         class="inline-block w-2 h-2 bg-teal-500 rounded-full animate-ping"
@@ -183,14 +213,33 @@
             <p
                 class="text-slate-400 text-sm max-w-sm mx-auto leading-relaxed italic"
             >
-                Your inner circle is standing by. {#if pulse.next_nudge}
-                    Your next gentle nudge is {new Date(
-                        pulse.next_nudge,
-                    ).toLocaleString(undefined, {
-                        weekday: "long",
-                        hour: "numeric",
-                        minute: "2-digit",
-                    })}.{/if}
+                {#if pulse.status === "active"}
+                    {#if guardians.length > 0}Your inner circle is standing by.{/if}
+                    {#if pulse.next_nudge}
+                        Your next gentle nudge is {new Date(
+                            pulse.next_nudge,
+                        ).toLocaleString(undefined, {
+                            weekday: "long",
+                            hour: "numeric",
+                            minute: "2-digit",
+                        })}.{/if}
+                {:else if pulse.status === "grace"}
+                    Whenever you're ready, a check-in lets your circle know
+                    you're well.
+                {:else if pulse.status === "disabled"}
+                    Whenever you'd like check-ins to begin again,
+                    <a
+                        href="/modules/pulse/settings"
+                        class="text-teal-400 hover:text-teal-300 not-italic"
+                        >your settings are here</a
+                    >.
+                {:else}
+                    <a
+                        href="/modules/pulse/settings"
+                        class="text-teal-400 hover:text-teal-300 not-italic"
+                        >Choose how often we check in</a
+                    >, and we'll gently keep watch from there.
+                {/if}
             </p>
             {#if pulse.guardianCheckin}
                 <p class="text-teal-400 text-sm max-w-sm mx-auto">
@@ -199,6 +248,18 @@
                     ).toLocaleString()}.
                 </p>
             {/if}
+            <div class="flex items-center justify-center gap-6 pt-4 text-sm">
+                <a
+                    href="/modules/pulse/settings"
+                    class="text-teal-400 hover:text-teal-300 flex items-center gap-1.5"
+                    ><Settings class="w-4 h-4" /> Configure</a
+                >
+                <a
+                    href="/modules/pulse/contacts"
+                    class="text-teal-400 hover:text-teal-300 flex items-center gap-1.5"
+                    ><Users class="w-4 h-4" /> Manage Contacts</a
+                >
+            </div>
         </div>
     </div>
 
@@ -226,24 +287,30 @@
             {#if localStatus.safetyTimer}
                 <div class="space-y-4">
                     <div class="text-center py-4">
-                        <div
-                            class="text-4xl font-mono text-teal-400 tracking-tighter mb-1"
-                        >
-                            {getTimeRemaining(
-                                localStatus.safetyTimer.expires_at,
-                            )}
-                        </div>
+                        {#if getTimeRemaining(localStatus.safetyTimer.expires_at)}
+                            <div
+                                class="text-4xl font-mono text-teal-400 tracking-tighter mb-1"
+                            >
+                                {getTimeRemaining(
+                                    localStatus.safetyTimer.expires_at,
+                                )}
+                            </div>
+                        {:else}
+                            <div class="text-lg font-serif text-teal-400 mb-1">
+                                Your check-in time has arrived
+                            </div>
+                        {/if}
                         <p
-                            class="text-[10px] text-teal-400/60 uppercase tracking-widest uppercase"
+                            class="text-[10px] text-teal-400/60 uppercase tracking-widest"
                         >
-                            Immediate Escalation on Zero
+                            Your circle is told shortly after the timer ends
                         </p>
                     </div>
                     <button
                         onclick={cancelSafety}
                         class="w-full bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 py-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 transition-all"
                     >
-                        <XCircle class="w-4 h-4" /> Cancel Monitoring
+                        <XCircle class="w-4 h-4" /> I'm safe, end timer
                     </button>
                 </div>
             {:else if localStatus.showSafetyConfig}
@@ -254,7 +321,7 @@
                         class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-300"
                     >
                         <option>Walking home</option>
-                        <option>Meeting stranger</option>
+                        <option>Meeting someone new</option>
                         <option>Health check</option>
                     </select>
                     <div class="flex items-center gap-4">
@@ -271,23 +338,34 @@
                             >{localStatus.safetyInput}m</span
                         >
                     </div>
+                    {#if timerPeople.length > 0}
+                        <p class="text-xs text-slate-400 leading-relaxed" data-testid="timer-people">
+                            If the time passes, we gently tell {timerPeople.join(", ")}.
+                            <a href="/modules/pulse/escalation" class="text-teal-400 hover:text-teal-300">Choose who</a>
+                        </p>
+                    {:else}
+                        <p class="text-xs text-slate-400 leading-relaxed" data-testid="timer-people">
+                            <a href="/modules/pulse/escalation" class="text-teal-400 hover:text-teal-300">Choose who is told</a>
+                            on your Escalation Plan, with "Told when I start a timer".
+                        </p>
+                    {/if}
                     <button
                         onclick={startSafety}
                         class="w-full bg-teal-500 hover:bg-teal-500/90 text-white py-3 rounded-2xl text-xs font-bold transition-all"
                     >
-                        Activate Immediate Guard
+                        Begin the timer
                     </button>
                 </div>
             {:else}
                 <p class="text-sm text-slate-500 leading-relaxed mb-6">
-                    Activate high-frequency monitoring for short durations.
-                    Notifies responders immediately if expired.
+                    Share a short walk or visit with your circle. If the time
+                    passes, the people you chose are gently told.
                 </p>
                 <button
                     onclick={() => (localStatus.showSafetyConfig = true)}
                     class="w-full bg-slate-900 border border-slate-800 text-slate-300 py-3 rounded-2xl text-xs font-bold hover:border-teal-500/50 hover:text-white transition-all"
                 >
-                    Start Safety Timer
+                    Begin a safety timer
                 </button>
             {/if}
         </div>
@@ -311,7 +389,7 @@
                     </h3>
                 </div>
                 <p class="text-sm text-slate-500 leading-relaxed">
-                    View heartbeats and notes sent from your Guardians.
+                    Read the notes and check-ins from your guardians.
                 </p>
             </div>
             <div class="pt-6">
@@ -341,13 +419,13 @@
                     </h3>
                 </div>
                 <p class="text-sm text-slate-500 leading-relaxed">
-                    Visualize exactly what data your guardians can see and when.
+                    See what your guardians can see, and when
                 </p>
             </div>
             <div class="pt-6">
                 <span
                     class="text-[10px] text-amber-500 font-bold uppercase tracking-widest border border-amber-500/20 px-3 py-1 rounded-full"
-                    >Secure Disclosure</span
+                    >What is shared</span
                 >
             </div>
         </a>

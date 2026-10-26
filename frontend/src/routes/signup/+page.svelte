@@ -15,8 +15,7 @@
     } from "lucide-svelte";
     import { fade, fly } from "svelte/transition";
 
-    // Email carried from the marketing CTA via /start; read before the
-    // layout's handoff pickup strips ?email from the URL
+    // Email carried from the marketing CTA via /start
     let email =
         typeof window !== "undefined"
             ? new URLSearchParams(window.location.search).get("email") ?? ""
@@ -56,7 +55,7 @@
     // Redirect if already logged in
     onMount(() => {
         if ($auth.user) {
-            goto("/dashboard");
+            goto($page.url.searchParams.get("redirect") || "/dashboard");
         }
     });
 
@@ -172,9 +171,10 @@
 
             // Show success and redirect to onboarding
             step = "complete";
-            setTimeout(() => {
-                auth.init();
-                goto("/onboarding");
+            // A path chosen on /start (?redirect=) continues there once signed in
+            setTimeout(async () => {
+                await auth.init();
+                goto($page.url.searchParams.get("redirect") || "/onboarding");
             }, 2000);
         } catch (e: any) {
             console.warn("Passkey registration did not finish:", e?.name);

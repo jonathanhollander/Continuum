@@ -1,42 +1,19 @@
 <script lang="ts">
     import { focusTrap } from "$lib/actions/focusTrap";
     import { onMount } from "svelte";
-    import {
-        Search,
-        X,
-        Command,
-        ArrowRight,
-        FileText,
-        Shield,
-        User,
-        Settings,
-        Activity,
-        Briefcase,
-        Heart,
-        Calendar,
-        Dog,
-        Scroll,
-        Siren,
-        Library,
-        Wallet,
-        Users,
-        Files,
-        History,
-        QrCode,
-        ShieldCheck,
-        Sparkles,
-        Box,
-        BarChart3,
-        Layers,
-        BookOpen,
-    } from "lucide-svelte";
+    import { Search, Command, ArrowRight, Shield, Heart, Dog } from "lucide-svelte";
     import { fade, scale } from "svelte/transition";
     import { quintOut } from "svelte/easing";
-    import { page } from "$app/stores";
     import { goto } from "$app/navigation";
+    import {
+        navGroups,
+        catalogCategories,
+        helpEntry,
+        type NavItem,
+    } from "$lib/config/navigation";
+    import { dict, language, userRole } from "$lib/stores/conciergeStore.svelte";
 
     import { insuranceStore } from "$lib/stores/insuranceStore.svelte";
-    import { advancedAssetStore } from "$lib/stores/advancedAssetStore.svelte"; // Assuming basic asset store for now
     import { petStore } from "$lib/stores/petStore.svelte";
     import { medicalStore } from "$lib/stores/medicalStore.svelte";
 
@@ -45,114 +22,60 @@
     let selectedIndex = $state(0);
     let inputElement: HTMLInputElement | undefined = $state();
 
-    const searchItems = [
-        {
-            label: "Dashboard",
-            href: "/",
-            icon: Activity,
-            keywords: ["home", "main"],
-        },
-        {
-            label: "Assets & Wealth",
-            href: "/modules/financial-accounts",
-            icon: Wallet,
-            keywords: ["money", "bank", "crypto"],
-        },
-        {
-            label: "Property & Assets",
-            href: "/modules/property",
-            icon: Box,
-            keywords: ["home", "real estate"],
-        },
-        {
-            label: "Insurance Portfolio",
-            href: "/modules/insurance",
-            icon: Shield,
-            keywords: ["policy", "life", "health"],
-        },
-        {
-            label: "The Red Binder",
-            href: "/binder",
-            icon: Activity,
-            keywords: ["physical", "documents"],
-        },
-        {
-            label: "Executor Toolkit",
-            href: "/modules/executor-toolkit",
-            icon: Briefcase,
-            keywords: ["checklist", "guide"],
-        },
-        {
-            label: "Digital Guardian",
-            href: "/modules/digital-guardian",
-            icon: Shield,
-            keywords: ["password", "accounts", "social"],
-        },
-        {
-            label: "Document Vault",
-            href: "/modules/legal-documents",
-            icon: Files,
-            keywords: ["storage", "upload", "legal"],
-        },
-        {
-            label: "Health & Medical",
-            href: "/modules/medical",
-            icon: Heart,
-            keywords: ["doctor", "prescription"],
-        },
-        {
-            label: "Pet Care Plan",
-            href: "/modules/pets",
-            icon: Dog,
-            keywords: ["vet", "food", "animal"],
-        },
-        {
-            label: "Legacy Letters",
-            href: "/modules/letters",
-            icon: Heart,
-            keywords: ["message", "love"],
-        },
-        {
-            label: "Life Timeline",
-            href: "/modules/timeline",
-            icon: Calendar,
-            keywords: ["history", "biography"],
-        },
-        {
-            label: "Family & Contacts",
-            href: "/modules/contacts",
-            icon: Users,
-            keywords: ["people", "phone"],
-        },
-        {
-            label: "funeral Planner",
-            href: "/modules/funeral",
-            icon: Scroll,
-            keywords: ["wishes", "burial"],
-        },
-    ];
+    // Every page in the sidebar and the catalog, each once (by href), with the names the
+    // sidebar shows; only the pages the current role can open (G0e X-d).
+    const extraKeywords: Record<string, string[]> = {
+        dashboard: ["home", "main"],
+        financial: ["money", "bank", "crypto", "assets", "wealth"],
+        property: ["home", "real estate"],
+        insurance: ["policy", "life", "health"],
+        binder: ["physical", "documents", "print"],
+        executor: ["checklist", "guide"],
+        guardian: ["password", "accounts", "social"],
+        documents: ["storage", "upload", "legal", "will"],
+        medical: ["doctor", "prescription"],
+        pets: ["vet", "food", "animal"],
+        letters: ["message", "love"],
+        timeline: ["history", "biography"],
+        contacts: ["people", "phone", "family"],
+        funeral: ["wishes", "burial", "funeral"],
+        pulse: ["pulse", "check-in"],
+        help: ["support", "faq", "questions"],
+    };
+    const allPages: NavItem[] = (() => {
+        const seen = new Set<string>();
+        return [
+            ...navGroups.flatMap((g) => g.items),
+            ...catalogCategories.flatMap((c) => c.items),
+            helpEntry,
+        ].filter((i) => !seen.has(i.href) && !!seen.add(i.href));
+    })();
+    const canOpen = (href: string) =>
+        allPages.find((i) => i.href === href)?.allowedRoles.includes($userRole) ?? true;
+    const pageName = (i: NavItem) =>
+        $language === "en" ? i.label : ($dict as Record<string, string>)[i.key] || i.label;
 
     // Search Source based on stores
     // We create a derived store to auto-update search index when data changes
     const searchIndex = $derived.by(() => {
             const index = [
-                ...searchItems.map((i) => ({
-                    ...i,
-                    type: "navigation",
-                    description: "Jump to module",
-                })),
+                ...allPages
+                    .filter((i) => i.allowedRoles.includes($userRole))
+                    .map((i) => ({
+                        label: pageName(i),
+                        href: i.href,
+                        icon: i.icon,
+                        keywords: [...(extraKeywords[i.key] ?? []), i.tooltip ?? ""],
+                        type: "navigation",
+                        description: "",
+                    })),
                 ...(insuranceStore.policies || []).map((p: any) => ({
                     label: p.insurer + " " + p.insuranceType,
-                    href: "/modules/insurance", // Could be deep link if supported
+                    href: "/modules/insurance",
                     icon: Shield,
-                    keywords: [
-                        "policy",
-                        "insurance",
-                        p.insurer,
-                        p.policyNumber,
-                    ],
+                    keywords: ["policy", "insurance", p.insurer, p.policyNumber],
                     type: "policy",
-                    description: `Policy #${p.policyNumber || "N/A"}`,
+                    description: p.policyNumber ? `Policy #${p.policyNumber}` : "",
                 })),
                 ...(petStore.items || []).map((p: any) => ({
                     label: p.name,
@@ -160,7 +83,7 @@
                     icon: Dog,
                     keywords: ["pet", "dog", "cat", p.breed],
                     type: "family",
-                    description: `${p.type} - ${p.breed || "Unknown"}`,
+                    description: [p.type, p.breed].filter(Boolean).join(" - "),
                 })),
                 ...(medicalStore.directives || []).map((c: any) => ({
                     label: c.title,
@@ -170,7 +93,7 @@
                     type: "contact",
                     description: c.summary || c.type,
                 })),
-            ];
+            ].filter((i) => canOpen(i.href));
             return index;
     });
 
@@ -178,7 +101,7 @@
         searchIndex
         .filter((item) => {
             const text = (
-                item.label + (item.keywords || []).join(" ")
+                item.label + " " + (item.keywords || []).join(" ")
             ).toLowerCase();
             return text.includes(query.toLowerCase());
         })
@@ -244,7 +167,7 @@
             <input
                 bind:this={inputElement}
                 bind:value={query}
-                placeholder="Search modules, features, or tools... (e.g. 'Will')"
+                placeholder="Find what you're looking for..."
                 class="flex-1 bg-transparent border-none outline-none text-lg font-medium text-slate-800 placeholder:text-slate-300"
             />
             <div
@@ -260,7 +183,7 @@
                 <div
                     class="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest"
                 >
-                    Quick Navigation
+                    Where would you like to go?
                 </div>
                 {#each filteredItems as item, i}
                     {@const Icon = item.icon}
@@ -301,9 +224,8 @@
                         <Command size={32} />
                     </div>
                     <div class="text-center">
-                        <p class="font-bold">No results found for "{query}"</p>
                         <p class="text-sm">
-                            Try searching for 'Digital', 'Executor', or 'Will'
+                            Try 'Digital', 'Executor' or 'Will' to find your way.
                         </p>
                     </div>
                 </div>

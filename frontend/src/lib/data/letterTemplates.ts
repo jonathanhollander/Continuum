@@ -38,11 +38,11 @@ Sincerely,
             "Executor ID",
             "Latest Account Statement"
         ],
-        followUp: "If no response within 5 business days, call the bank's estate services department."
+        followUp: "After 5 business days, a call to the bank's estate services department can help."
     },
     {
         id: "credit-card-cancel",
-        title: "Credit Card Cancellation",
+        title: "Closing a Credit Card",
         category: "Financial",
         audience: "Card Issuer",
         subject: "Notification of Death - Account Closure Request",
@@ -50,7 +50,7 @@ Sincerely,
 
 Please be advised that [Cardholder Name] passed away on [Date of Death].
 
-I am requesting that you immediately close the following credit card account(s) to prevent any new charges:
+I am requesting that you close the following credit card account(s) at your earliest convenience to prevent any new charges:
 - Card Ending In: [Last 4 Digits]
 
 Please send a final statement to the estate address listed below.
@@ -62,7 +62,7 @@ Sincerely,
             "Certified Death Certificate",
             "Executor status proof"
         ],
-        followUp: "Stop automatic payments immediately and notify all merchants with recurring charges."
+        followUp: "When you're ready, pause automatic payments and let merchants with recurring charges know."
     },
     {
         id: "mortgage-notice",
@@ -86,7 +86,7 @@ Sincerely,
             "Death Certificate",
             "Executor Appointment"
         ],
-        followUp: "Maintain homeowners insurance payments during probate to prevent policy cancellation."
+        followUp: "Maintain homeowners insurance payments during probate to keep the policy in place."
     },
     {
         id: "brokerage-transfer",
@@ -110,7 +110,7 @@ Sincerely,
             "Beneficiary Designation Forms",
             "W-9 Forms"
         ],
-        followUp: "Brokerage transfers typically take 4-8 weeks. Request account freeze to prevent trades during probate."
+        followUp: "Brokerage transfers typically take 4-8 weeks. Ask for an account freeze to protect the account during probate."
     },
 
     // --- Government ---
@@ -137,7 +137,7 @@ Sincerely,
             "Proof of Executor Status",
             "Marriage Certificate (if survivor benefits)"
         ],
-        followUp: "SSA is often notified by funeral home, but confirm. Return any benefits received after death immediately."
+        followUp: "SSA is often notified by funeral home, but confirm. Any benefits received after the date of passing will need to be returned when you can."
     },
     {
         id: "irs-ein",
@@ -158,7 +158,7 @@ Sincerely,
             "Letters Testamentary",
             "Last filed tax return"
         ],
-        followUp: "Final 1040 due April 15 of year after death. Estate tax return (Form 706) due 9 months after death if required."
+        followUp: "Final 1040 is due April 15 of the year after. Form 706 is due 9 months after, where it applies. Your CPA can help with the dates."
     },
     {
         id: "dmv-transfer",
@@ -212,7 +212,7 @@ Sincerely,
     },
     {
         id: "utility-cancel",
-        title: "Utility Transfer/Cancel",
+        title: "Utility Transfer or Closure",
         category: "Service",
         audience: "Utility Provider",
         subject: "Account Change Request - [Account Number]",
@@ -232,17 +232,17 @@ Sincerely,
             "Death Certificate",
             "Executor Status proof"
         ],
-        followUp: "Don't disconnect utilities if property is being shown to buyers or needs maintenance."
+        followUp: "Keep utilities on while the property is being shown or maintained."
     },
     {
         id: "subscription-cancel",
-        title: "Subscription Cancellation",
+        title: "Closing a Subscription",
         category: "Service",
         audience: "Service Provider",
         subject: "Cancellation Request - Deceased Subscriber",
         body: `To Support Team,
 
-Please cancel the subscription for account email [Email Address] immediately due to the death of the subscriber.
+Please cancel the subscription for account email [Email Address] at your earliest convenience, due to the death of the subscriber.
 
 Please refund any prepaid amounts to the original payment method.
 
@@ -275,7 +275,7 @@ Sincerely,
             "Executor Appointment",
             "Form 3575 (Official Forwarding Mail Order)"
         ],
-        followUp: "Mail forwarding for deceased individuals must be done in person at a post office."
+        followUp: "Mail forwarding for deceased individuals is arranged in person at a post office."
     },
 
     // --- Employment ---
@@ -301,7 +301,7 @@ Sincerely,
             "Death Certificate",
             "Letters Testamentary"
         ],
-        followUp: "Contact HR within 30 days. COBRA election must be made within 60 days of loss of coverage."
+        followUp: "HR can walk you through the 30 and 60 day windows for COBRA."
     },
 
     // --- Assets ---
@@ -397,7 +397,7 @@ Sincerely,
             "Death Certificate",
             "Letters Testamentary"
         ],
-        followUp: "Secure the property immediately and change locks if necessary (and legal) to protect assets."
+        followUp: "When you can, secure the property and, where appropriate, change the locks."
     },
     {
         id: "cover-letter-family-qr",
@@ -409,14 +409,14 @@ Sincerely,
 
 I have organized the essential information you might need immediately into this secure package.
 
-I’ve included a few QR codes that open only the pages you’ll likely need first (funeral wishes, immediate contacts, etc). They don’t expose everything—just the essentials.
+I’ve included a few QR codes that open only the pages you’ll likely need first (funeral wishes, immediate contacts, etc). They open only the essentials.
 
 Please scan the codes with your phone camera to access the digital copies.
 
 With love,
 [Your Name]`,
         requiredDocs: [],
-        followUp: "Ensure all family members know how to use the QR codes and who has the physical pack."
+        followUp: "It helps when family members know how to use the QR codes and who has the physical pack."
     },
     {
         id: "cover-letter-executor-qr",
@@ -430,7 +430,7 @@ This package contains the master keys to the digital estate.
 
 These QR codes open all sections you will need to manage the estate, including financial accounts, legal documents, and passwords.
 
-Please keep this document extremely secure, as it provides high-level access to the entire estate plan.
+Thank you for keeping this document somewhere safe, as it opens the whole estate plan.
 
 Sincerely,
 [Your Name]`,
@@ -480,7 +480,7 @@ As the appointed Executor, I request that you secure all files and records relat
 2. Existing legal files and active matters.
 3. Current asset management and transition steps.
 
-Please provide a summary of any current deadlines or urgent actions required.
+Please provide a summary of any upcoming dates the estate should know about.
 
 Sincerely,
 [Your Name]
@@ -505,7 +505,7 @@ Please cancel all future appointments and close the patient's billing account. P
 
 [Estate Address]
 
-We request that you do not send further correspondence to the primary residence.
+Please direct all further correspondence to the Estate Address below.
 
 Sincerely,
 [Your Name]
@@ -523,7 +523,7 @@ Sincerely,
         subject: "Resignation of Membership - Deceased Member [Name]",
         body: `To the Membership Committee,
 
-I am writing to resign the membership of [Name] at [Club/Organization Name] effective immediately, due to their passing on [Date of Death].
+I am writing to resign the membership of [Name] at [Club/Organization Name] effective at your earliest convenience, due to their passing on [Date of Death].
 
 Please stop all future dues and assessments. We would appreciate a refund of any prepaid membership fees or security deposits to the Estate.
 

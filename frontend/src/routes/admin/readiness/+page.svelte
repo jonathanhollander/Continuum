@@ -42,9 +42,7 @@
     <div>
         <h1 class="text-3xl font-bold text-white mb-2">Estate Readiness Hub</h1>
         <p class="text-slate-400 max-w-2xl">
-            Track the completion status of every critical module in the estate.
-            This replaces the traditional "rollout" view with a live data
-            readiness check.
+            See how complete each section is.
         </p>
     </div>
 
