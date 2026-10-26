@@ -405,7 +405,7 @@ export class SyncManager<T extends { id: number | string }> {
             if (!skipLocal) { this.status = "error"; this.error = errMessage(e) || "Failed to save"; }
             // One gentle message. Nothing was added locally, so the caller's draft is untouched.
             notifications.showError({
-                message: 'We couldn\'t save that just yet. Your words are still here \u2014 try again when you\'re ready.',
+                message: 'Your draft is kept. We can save it again whenever you\'re ready.',
                 code: 'DATABASE_ERROR',
                 technicalDetails: errTechnical(e)
             }, () => { (onRetry ? onRetry() : this.create(data, skipLocal)).catch(() => {}); });
@@ -547,7 +547,7 @@ export class SyncManager<T extends { id: number | string }> {
             // Rollback restores the saved record; the caller's form still holds the typed draft,
             // and Try Again re-applies exactly those edits.
             notifications.showError({
-                message: 'We couldn\'t save that just yet. Your words are still here \u2014 try again when you\'re ready.',
+                message: 'Your draft is kept. We can save it again whenever you\'re ready.',
                 code: 'DATABASE_ERROR',
                 technicalDetails: errTechnical(e)
             }, () => { this.update(id, updates, affirm).catch(() => {}); });
@@ -617,7 +617,7 @@ export class SyncManager<T extends { id: number | string }> {
             this.status = "error";
             this.error = errMessage(e) || "Failed to remove";
             notifications.showError({
-                message: 'We couldn\'t remove this just yet. It is still safely in your list \u2014 try again when you\'re ready.',
+                message: 'It is still in your list. We can remove it again whenever you\'re ready.',
                 code: 'DATABASE_ERROR',
                 technicalDetails: errTechnical(e)
             }, () => { this.delete(id, onRemoved).catch(() => {}); });
@@ -1056,7 +1056,7 @@ export class SingletonSyncManager<T extends object> {
             this.error = (e as { message?: string } | null)?.message || "Failed to save";
             if (quiet) throw e; // background upload: console only, like a quiet create
             notifications.showError({
-                message: 'We couldn\'t save that just yet. Your words are still here \u2014 try again when you\'re ready.',
+                message: 'Your draft is kept. We can save it again whenever you\'re ready.',
                 code: 'DATABASE_ERROR',
                 technicalDetails: (e as { message?: string } | null)?.message || String(e)
             }, () => { this.update(newData).catch(() => {}); });
@@ -1092,7 +1092,7 @@ export class SingletonSyncManager<T extends object> {
             this.error = (e as { message?: string } | null)?.message || "Failed to save";
             if (quiet) throw e;
             notifications.showError({
-                message: 'We couldn\'t save that just yet. Your words are still here \u2014 try again when you\'re ready.',
+                message: 'Your draft is kept. We can save it again whenever you\'re ready.',
                 code: 'DATABASE_ERROR',
                 technicalDetails: (e as { message?: string } | null)?.message || String(e)
             }, () => { this.update(newData).catch(() => {}); });
