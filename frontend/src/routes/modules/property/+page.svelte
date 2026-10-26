@@ -201,9 +201,12 @@
     ];
 
     function resetForm() {
-        // Files added in this form but never saved on the record.
-        removeMediaQuietly(formMediaIds().filter((id) => !savedMediaIds.includes(id)));
+        // Files added in this form but never saved on the record, except those a Try Again still holds.
+        removeMediaQuietly(
+            formMediaIds().filter((id) => !savedMediaIds.includes(id) && !retryMediaIds.has(id)),
+        );
         savedMediaIds = [];
+        draftSeq += 1;
         newItem = {
             name: "",
             type: "Real Estate",
@@ -223,6 +226,12 @@
 
     // Media ids the record being edited already holds; anything else in the form is new this time.
     let savedMediaIds: number[] = [];
+
+    // Each fresh form is a new draft. A failed new save keeps its own copy of the draft for
+    // Try Again, and its uploads stay until that copy is saved.
+    let draftSeq = 0;
+    const savedDrafts = new Set<number>();
+    const retryMediaIds = new Set<number>();
 
     function formMediaIds(): number[] {
         return (newItem.evidence ?? []).map((e) => e.id);
@@ -298,22 +307,8 @@
                 userContext: $estateProfile.ownerName || "User",
             });
         } else {
-            const created = await propertyStore.addItem(
-                itemData as Omit<PropertyItem, "id">,
-                handleAddItem,
-            );
-            for (const id of keptIds) {
-                updateMediaMetadata(id, undefined, String(created.id)).catch(() => undefined);
-            }
-
-            activityLog.logEvent({
-                module: "Property",
-                action: "CREATE",
-                entityType: "Asset",
-                entityId: created.id,
-                entityName: created.name,
-                userContext: $estateProfile.ownerName || "User",
-            });
+            await saveNewItem($state.snapshot(itemData) as Omit<PropertyItem, "id">, keptIds, draftSeq);
+            return;
         }
 
         // The record now holds this list; files taken out of it go.
@@ -325,11 +320,39 @@
         }
     }
 
+    // Saves one new-property draft as captured at save time; Try Again re-sends the same copy.
+    async function saveNewItem(itemData: Omit<PropertyItem, "id">, keptIds: number[], seq: number) {
+        if (savedDrafts.has(seq)) return;
+        for (const id of keptIds) retryMediaIds.add(id);
+        const created = await propertyStore.addItem(itemData, () => saveNewItem(itemData, keptIds, seq));
+        savedDrafts.add(seq);
+        for (const id of keptIds) retryMediaIds.delete(id);
+        for (const id of keptIds) {
+            updateMediaMetadata(id, undefined, String(created.id)).catch(() => undefined);
+        }
+
+        activityLog.logEvent({
+            module: "Property",
+            action: "CREATE",
+            entityType: "Asset",
+            entityId: created.id,
+            entityName: created.name,
+            userContext: $estateProfile.ownerName || "User",
+        });
+
+        // The form still holds this draft: it is saved now, so the form closes.
+        if (draftSeq === seq) {
+            savedMediaIds = keptIds;
+            resetForm();
+        }
+    }
+
     function editItem(item: PropertyItem) {
         newItem = { ...item, evidence: [...(item.evidence ?? [])] };
         savedMediaIds = (item.evidence ?? []).map((e) => e.id);
         parsedCustomAttributes = readCustom(item);
         isEditing = true;
+        draftSeq += 1;
         showAddModal = true;
     }
 
