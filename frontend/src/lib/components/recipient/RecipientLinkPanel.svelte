@@ -23,52 +23,86 @@
     let busy = $state<string | null>(null);
     let message = $state<string | null>(null);
     let copied = $state(false);
+    // An earlier visit to this contact must not settle into a newly opened panel.
+    let generation = 0;
+    const isCurrent = (contact: string | null, version: number) => id === contact && generation === version;
+    let operationSeq = 0;
+    let requestedNote: { contact: string; version: number; draft: string } | null = null;
 
     $effect(() => {
         const current = id;
+        const version = ++generation;
         link = null;
+        note = "";
+        busy = null;
         message = null;
+        copied = false;
         if (!current) return;
         getLinkState(current)
             .then((s) => {
-                if (id !== current) return;
+                if (!isCurrent(current, version)) return;
                 link = s;
                 note = s.note;
             })
-            .catch(() => (message = "Your sharing settings are kept safe. Refreshing the page shows them again."));
+            .catch(() => {
+                if (isCurrent(current, version)) message = "Your sharing settings are kept safe. Refreshing the page shows them again.";
+            });
+        return () => { generation++; };
     });
 
-    async function run(kind: string, task: () => Promise<RecipientLinkState>, done: string) {
+    async function run(kind: string, task: (contact: string) => Promise<RecipientLinkState>, done: string) {
+        const current = id;
+        const version = generation;
+        if (!current || (kind !== "note" && busy !== null)) return;
+        const draft = note;
+        if (kind === "note" && requestedNote?.contact === current && requestedNote.version === version && requestedNote.draft === draft) return;
+        const noteRequest = kind === "note" ? { contact: current, version, draft } : null;
+        if (noteRequest) requestedNote = noteRequest;
+        const operation = ++operationSeq;
+        // Flag/link operations save their own fields, so an already-edited note stays a draft.
+        const keepDraft = kind !== "note" && note !== link?.note;
         busy = kind;
         message = null;
         try {
-            link = await task();
-            note = link.note;
-            message = done;
+            const saved = await task(current);
+            if (!isCurrent(current, version)) return;
+            link = saved;
+            // A response confirms the submitted words, never words typed while it was pending.
+            if (!keepDraft && note === draft) note = saved.note;
+            if (operation === operationSeq) message = done;
         } catch {
-            message = "Your sharing settings are just as they were. You can try again whenever you're ready.";
+            // Note failures have one service-owned retry notice, including after this panel closes.
+            if (kind !== "note" && isCurrent(current, version) && operation === operationSeq) message = "Your sharing settings are just as they were. You can try again whenever you're ready.";
         } finally {
-            busy = null;
+            if (requestedNote === noteRequest) requestedNote = null;
+            if (isCurrent(current, version) && operation === operationSeq) busy = null;
         }
     }
 
     const toggle = (on: boolean) =>
-        run("flag", () => updateRecipient(id!, { is_recipient: on }), on ? `${who} now has a start page of their own.` : `${who}'s start page is put away.`);
+        run("flag", (contact) => updateRecipient(contact, { is_recipient: on }), on ? `${who} now has a start page of their own.` : `${who}'s start page is put away.`);
     // The note shows its own saved state (card U8), so the modal's footer only closes; it also
-    // saves when the field is left, so a note typed before closing the modal is kept.
-    const saveNote = () => run("note", () => updateRecipient(id!, { note }), "");
+    // saves when the field is left, even while another change is pending. The service captures
+    // the contact, words and session now and serializes that request after the earlier mutation.
+    function saveNote() {
+        const draft = note;
+        return run("note", (contact) => updateRecipient(contact, { note: draft }), "");
+    }
     const noteChanged = $derived(!!link && note !== link.note);
-    const make = () => run("create", () => createLink(id!), "Their link is ready to share.");
-    const close = () => run("revoke", () => revokeLink(id!), "The link is closed. A fresh one is a click away.");
+    const make = () => run("create", (contact) => createLink(contact), "Their link is ready to share.");
+    const close = () => run("revoke", (contact) => revokeLink(contact), "The link is closed. A fresh one is a click away.");
 
     async function copy() {
+        const current = id;
+        const version = generation;
         if (!link?.path) return;
         try {
             await navigator.clipboard.writeText(linkUrl(link.path));
+            if (!isCurrent(current, version)) return;
             copied = true;
-            setTimeout(() => (copied = false), 2000);
+            setTimeout(() => { if (isCurrent(current, version)) copied = false; }, 2000);
         } catch {
-            message = "The link is shown above, ready to copy by hand.";
+            if (isCurrent(current, version)) message = "The link is shown above, ready to copy by hand.";
         }
     }
 </script>
@@ -97,7 +131,7 @@
                     id="recipient-note"
                     bind:value={note}
                     onblur={() => {
-                        if (noteChanged && busy === null) saveNote();
+                        if (noteChanged) saveNote();
                     }}
                     rows="3"
                     placeholder="The first words they'll read on their page"
@@ -108,9 +142,10 @@
                     <button
                         onclick={saveNote}
                         disabled={busy !== null}
+                        aria-busy={busy === "note"}
                         class="px-4 py-2 rounded-xl text-sm font-semibold border border-primary/30 text-primary hover:bg-primary/5 disabled:opacity-50"
                         data-testid="recipient-note-save"
-                    >Save this note</button>
+                    >{busy === "note" ? "Saving..." : "Save this note"}</button>
                 {:else if link.note}
                     <p class="inline-flex items-center gap-1.5 text-xs text-muted-foreground" data-testid="recipient-note-saved">
                         <Check class="w-4 h-4 text-primary" /> Your note is saved.
