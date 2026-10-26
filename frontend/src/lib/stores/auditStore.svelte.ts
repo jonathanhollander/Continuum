@@ -3,6 +3,21 @@ import { insuranceStore } from './insuranceStore.svelte';
 import { familyStore } from './familyStore.svelte';
 import { medicalStore } from './medicalStore.svelte';
 import { digitalAssetsStore } from './digitalAssetsStore.svelte';
+import { heirloomStore } from './heirloomStore.svelte';
+import { letterStore } from './letterStore.svelte';
+import { funeralStore } from './funeralStore.svelte';
+import { journalStore } from './journalStore.svelte';
+import { visualMemories } from './visualMemoryStore.svelte';
+import { timeCapsuleStore } from './timeCapsuleStore.svelte';
+
+// A saved wish is any filled value; the untouched default tradition ("secular") is no choice yet
+const filled = (v: any): boolean =>
+    Array.isArray(v) ? v.some(filled)
+        : v && typeof v === 'object' ? Object.values(v).some(filled)
+            : typeof v === 'string' ? v.trim() !== '' : typeof v === 'number' || v === true;
+export const hasFuneralWishes = (wishes: any): boolean =>
+    !!wishes && typeof wishes === 'object' && Object.entries(wishes)
+        .some(([k, v]) => !(k === 'religiousTradition' && v === 'secular') && filled(v));
 
 export interface AuditResult {
     totalScore: number;
@@ -93,6 +108,24 @@ function calculateAudit(): AuditResult {
         }
     }
 
+    // 6. Legacy: 25 points each for heirlooms, letters, funeral wishes and memories
+    //    (a journal entry, a visual memory or a time capsule message)
+    {
+        const parts = [
+            { ok: heirloomStore.items.length > 0, issue: '[Legacy] Add a treasured heirloom when you are ready' },
+            { ok: letterStore.items.length > 0, issue: '[Legacy] Write a letter to someone you love when you are ready' },
+            { ok: hasFuneralWishes(funeralStore.wishes), issue: '[Legacy] Share your funeral wishes when you are ready' },
+            {
+                ok: journalStore.items.length > 0 || visualMemories.items.length > 0 || timeCapsuleStore.items.length > 0,
+                issue: '[Legacy] Keep a memory when you are ready'
+            }
+        ];
+        maxTotalScore += 100;
+        moduleScores['legacy'] = parts.filter((p) => p.ok).length * 25;
+        totalScore += moduleScores['legacy'];
+        parts.forEach((p) => { if (!p.ok) issues.push(p.issue); });
+    }
+
     return {
         totalScore,
         maxTotalScore,
@@ -119,7 +152,7 @@ export class AuditStore {
     }
 
     /** The most points each area can earn, for progress bars. */
-    static readonly maxScores: Record<string, number> = { financial: 100, insurance: 50, family: 50, medical: 50, digital: 50 };
+    static readonly maxScores: Record<string, number> = { financial: 100, insurance: 50, family: 50, medical: 50, digital: 50, legacy: 100 };
 
     // Store compatibility: the current value right away (as a store must), then each change
     subscribe(run: (value: AuditResult) => void) {

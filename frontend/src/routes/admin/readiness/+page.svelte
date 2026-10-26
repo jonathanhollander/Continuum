@@ -31,6 +31,7 @@
         family: "contacts",
         medical: "medical",
         digital: "digital-guardian",
+        legacy: "heirlooms",
     };
     const share = (id: string, score: number) =>
         Math.min(1, score / (AuditStore.maxScores[id] || 50));
