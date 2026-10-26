@@ -12,7 +12,7 @@
  * 2. The Weight - The problem
  * 3. The Guide - AI assistance (permission to not know)
  * 4. The Pulse - Automated handover
- * 5. The Distinction - Not lawyers/financial advisors
+ * 5. The Distinction - Working alongside your lawyer and advisors
  * 6. The Gift - What they receive
  * 7. The Invitation - Begin when ready
  */
@@ -38,7 +38,7 @@ export const marketing2Dictionary = {
         // Section 3: The Guide
         guideTitle: "You don't have to know where to start.",
         guideDesc: "Continuum's guide walks beside you—suggesting what might matter, translating the confusing parts, helping you find words for things you've never had to say.",
-        guideReassurance: "There's no right order. No required fields. Gentle guidance, at your pace.",
+        guideReassurance: "Begin anywhere, in any order. Gentle guidance, at your pace.",
 
         // Section 4: The Pulse
         pulseTitle: "You don't have to have the difficult conversation.",
@@ -48,8 +48,8 @@ export const marketing2Dictionary = {
         pulseGift: "You already took care of them. This was your final gift.",
 
         // Section 5: The Distinction
-        distinctionTitle: "We're not lawyers or financial advisors.",
-        distinctionDesc: "Continuum doesn't write wills or give financial advice. Your professionals do that.",
+        distinctionTitle: "Made to work alongside your lawyer and advisors.",
+        distinctionDesc: "Wills, trusts and financial advice come from your professionals.",
         distinctionRole: "We're the organization layer. We help you gather what they create—and what you want to say—so it's found, understood, and used.",
         distinctionTagline: "They create the plan. We make sure it works.",
 
@@ -144,7 +144,7 @@ export const marketing2Dictionary = {
         metaDescHow: "Three gentle steps: start where feels right, build over time, and let it open when needed.",
 
         // Footer
-        footerDisclaimer: "Continuum is a documentation and organization tool. We do not provide legal, financial, tax, or medical advice.",
+        footerDisclaimer: "Continuum is a documentation and organization tool. For legal, financial, tax or medical advice, a qualified professional can help.",
         footerTagline: "The organized life. The gentle handover.",
 
         // Navigation
@@ -174,7 +174,7 @@ export const marketing2Dictionary = {
         // Section 3: The Guide
         guideTitle: "No tienes que saber por dónde empezar.",
         guideDesc: "La guía de Continuum camina a tu lado—sugiriendo lo que podría importar, traduciendo las partes confusas, ayudándote a encontrar palabras para cosas que nunca has tenido que decir.",
-        guideReassurance: "No hay un orden correcto. No hay campos obligatorios. Orientación gentil, a tu ritmo.",
+        guideReassurance: "Empieza por donde quieras, en el orden que quieras. Orientación gentil, a tu ritmo.",
 
         // Section 4: The Pulse
         pulseTitle: "No tienes que tener la conversación difícil.",
@@ -184,8 +184,8 @@ export const marketing2Dictionary = {
         pulseGift: "Ya cuidaste de ellos. Este fue tu último regalo.",
 
         // Section 5: The Distinction
-        distinctionTitle: "No somos abogados ni asesores financieros.",
-        distinctionDesc: "Continuum no redacta testamentos ni da asesoramiento financiero. Tus profesionales hacen eso.",
+        distinctionTitle: "Pensado para trabajar junto a tu abogado y tus asesores.",
+        distinctionDesc: "Los testamentos, los fideicomisos y el asesoramiento financiero vienen de tus profesionales.",
         distinctionRole: "Somos la capa de organización. Te ayudamos a reunir lo que ellos crean—y lo que quieres decir—para que se encuentre, se entienda y se use.",
         distinctionTagline: "Ellos crean el plan. Nosotros nos aseguramos de que funcione.",
 
@@ -280,7 +280,7 @@ export const marketing2Dictionary = {
         metaDescHow: "Tres pasos amables: empieza donde te sientas cómodo, construye con el tiempo, y deja que se abra cuando sea necesario.",
 
         // Footer
-        footerDisclaimer: "Continuum es una herramienta de documentación y organización. No proporcionamos asesoramiento legal, financiero, fiscal o médico.",
+        footerDisclaimer: "Continuum es una herramienta de documentación y organización. Para asesoramiento legal, financiero, fiscal o médico, un profesional calificado puede ayudarte.",
         footerTagline: "La vida organizada. La entrega gentil.",
 
         // Navigation
@@ -310,7 +310,7 @@ export const marketing2Dictionary = {
         // Section 3: The Guide
         guideTitle: "Vous n'avez pas besoin de savoir par où commencer.",
         guideDesc: "Le guide de Continuum marche à vos côtés—suggérant ce qui pourrait compter, traduisant les parties confuses, vous aidant à trouver les mots pour des choses que vous n'avez jamais eu à dire.",
-        guideReassurance: "Il n'y a pas d'ordre correct. Pas de champs obligatoires. Des conseils bienveillants, à votre rythme.",
+        guideReassurance: "Commencez où vous voulez, dans l'ordre qui vous convient. Des conseils bienveillants, à votre rythme.",
 
         // Section 4: The Pulse
         pulseTitle: "Vous n'avez pas besoin d'avoir la conversation difficile.",
@@ -320,8 +320,8 @@ export const marketing2Dictionary = {
         pulseGift: "Vous avez déjà pris soin d'eux. C'était votre dernier cadeau.",
 
         // Section 5: The Distinction
-        distinctionTitle: "Nous ne sommes ni avocats ni conseillers financiers.",
-        distinctionDesc: "Continuum ne rédige pas de testaments et ne donne pas de conseils financiers. Vos professionnels font cela.",
+        distinctionTitle: "Conçu pour travailler aux côtés de votre avocat et de vos conseillers.",
+        distinctionDesc: "Les testaments, les fiducies et les conseils financiers viennent de vos professionnels.",
         distinctionRole: "Nous sommes la couche d'organisation. Nous vous aidons à rassembler ce qu'ils créent—et ce que vous voulez dire—pour que cela soit trouvé, compris et utilisé.",
         distinctionTagline: "Ils créent le plan. Nous nous assurons qu'il fonctionne.",
 
@@ -416,7 +416,7 @@ export const marketing2Dictionary = {
         metaDescHow: "Trois étapes douces : commencez où vous vous sentez à l'aise, construisez au fil du temps, et laissez-le s'ouvrir quand c'est nécessaire.",
 
         // Footer
-        footerDisclaimer: "Continuum est un outil de documentation et d'organisation. Nous ne fournissons pas de conseils juridiques, financiers, fiscaux ou médicaux.",
+        footerDisclaimer: "Continuum est un outil de documentation et d'organisation. Pour des conseils juridiques, financiers, fiscaux ou médicaux, un professionnel qualifié peut vous aider.",
         footerTagline: "La vie organisée. La transmission douce.",
 
         // Navigation
@@ -446,7 +446,7 @@ export const marketing2Dictionary = {
         // Section 3: The Guide
         guideTitle: "Sie müssen nicht wissen, wo Sie anfangen sollen.",
         guideDesc: "Der Continuum-Leitfaden begleitet Sie—schlägt vor, was wichtig sein könnte, übersetzt verwirrende Teile, hilft Ihnen, Worte für Dinge zu finden, die Sie nie sagen mussten.",
-        guideReassurance: "Es gibt keine richtige Reihenfolge. Keine Pflichtfelder. Sanfte Anleitung, in Ihrem Tempo.",
+        guideReassurance: "Beginnen Sie, wo Sie möchten, in jeder Reihenfolge. Sanfte Anleitung, in Ihrem Tempo.",
 
         // Section 4: The Pulse
         pulseTitle: "Sie müssen das schwierige Gespräch nicht führen.",
@@ -456,8 +456,8 @@ export const marketing2Dictionary = {
         pulseGift: "Sie haben bereits für sie gesorgt. Das war Ihr letztes Geschenk.",
 
         // Section 5: The Distinction
-        distinctionTitle: "Wir sind keine Anwälte oder Finanzberater.",
-        distinctionDesc: "Continuum verfasst keine Testamente und gibt keine Finanzberatung. Das machen Ihre Fachleute.",
+        distinctionTitle: "Gemacht für die Zusammenarbeit mit Ihrem Anwalt und Ihren Beratern.",
+        distinctionDesc: "Testamente, Treuhandverfügungen und Finanzberatung kommen von Ihren Fachleuten.",
         distinctionRole: "Wir sind die Organisationsebene. Wir helfen Ihnen, das zu sammeln, was sie erstellen—und was Sie sagen möchten—damit es gefunden, verstanden und verwendet wird.",
         distinctionTagline: "Sie erstellen den Plan. Wir sorgen dafür, dass er funktioniert.",
 
@@ -552,7 +552,7 @@ export const marketing2Dictionary = {
         metaDescHow: "Drei sanfte Schritte: Beginnen Sie, wo es sich richtig anfühlt, bauen Sie mit der Zeit auf, und lassen Sie es sich öffnen, wenn nötig.",
 
         // Footer
-        footerDisclaimer: "Continuum ist ein Dokumentations- und Organisationswerkzeug. Wir bieten keine rechtliche, finanzielle, steuerliche oder medizinische Beratung.",
+        footerDisclaimer: "Continuum ist ein Dokumentations- und Organisationswerkzeug. Für rechtliche, finanzielle, steuerliche oder medizinische Beratung kann Ihnen eine qualifizierte Fachperson helfen.",
         footerTagline: "Das organisierte Leben. Die sanfte Übergabe.",
 
         // Navigation
@@ -582,7 +582,7 @@ export const marketing2Dictionary = {
         // Section 3: The Guide
         guideTitle: "Вам не нужно знать, с чего начать.",
         guideDesc: "Гид Continuum идёт рядом с вами—подсказывает, что может быть важным, переводит запутанные части, помогает найти слова для того, что вам никогда не приходилось говорить.",
-        guideReassurance: "Нет правильного порядка. Нет обязательных полей. Мягкое руководство в вашем темпе.",
+        guideReassurance: "Начинайте с чего угодно и в любом порядке. Мягкое руководство в вашем темпе.",
 
         // Section 4: The Pulse
         pulseTitle: "Вам не нужно вести трудный разговор.",
@@ -592,8 +592,8 @@ export const marketing2Dictionary = {
         pulseGift: "Вы уже позаботились о них. Это был ваш последний подарок.",
 
         // Section 5: The Distinction
-        distinctionTitle: "Мы не юристы и не финансовые консультанты.",
-        distinctionDesc: "Continuum не составляет завещания и не даёт финансовых советов. Этим занимаются ваши специалисты.",
+        distinctionTitle: "Создан для работы вместе с вашим юристом и консультантами.",
+        distinctionDesc: "Завещания, трасты и финансовые советы — это работа ваших специалистов.",
         distinctionRole: "Мы — уровень организации. Мы помогаем вам собрать то, что они создают—и то, что вы хотите сказать—чтобы это было найдено, понято и использовано.",
         distinctionTagline: "Они создают план. Мы следим за тем, чтобы он работал.",
 
@@ -688,7 +688,7 @@ export const marketing2Dictionary = {
         metaDescHow: "Три мягких шага: начните там, где чувствуете себя комфортно, стройте со временем, и позвольте ему открыться, когда нужно.",
 
         // Footer
-        footerDisclaimer: "Continuum — это инструмент документирования и организации. Мы не предоставляем юридических, финансовых, налоговых или медицинских консультаций.",
+        footerDisclaimer: "Continuum — это инструмент документирования и организации. За юридической, финансовой, налоговой или медицинской консультацией обратитесь к квалифицированному специалисту.",
         footerTagline: "Организованная жизнь. Мягкая передача.",
 
         // Navigation
@@ -718,7 +718,7 @@ export const marketing2Dictionary = {
         // Section 3: The Guide
         guideTitle: "אתם לא צריכים לדעת מאיפה להתחיל.",
         guideDesc: "המדריך של Continuum הולך לצידכם—מציע מה עשוי להיות חשוב, מתרגם את החלקים המבלבלים, עוזר לכם למצוא מילים לדברים שמעולם לא הייתם צריכים לומר.",
-        guideReassurance: "אין סדר נכון. אין שדות חובה. הדרכה עדינה, בקצב שלכם.",
+        guideReassurance: "התחילו מכל מקום, בכל סדר. הדרכה עדינה, בקצב שלכם.",
 
         // Section 4: The Pulse
         pulseTitle: "אתם לא צריכים לנהל את השיחה הקשה.",
@@ -728,8 +728,8 @@ export const marketing2Dictionary = {
         pulseGift: "כבר דאגתם להם. זו הייתה המתנה האחרונה שלכם.",
 
         // Section 5: The Distinction
-        distinctionTitle: "אנחנו לא עורכי דין או יועצים פיננסיים.",
-        distinctionDesc: "Continuum לא כותב צוואות ולא נותן ייעוץ פיננסי. אנשי המקצוע שלכם עושים את זה.",
+        distinctionTitle: "נבנה כדי לעבוד לצד עורך הדין והיועצים שלכם.",
+        distinctionDesc: "צוואות, נאמנויות וייעוץ פיננסי מגיעים מאנשי המקצוע שלכם.",
         distinctionRole: "אנחנו שכבת הארגון. אנחנו עוזרים לכם לאסוף את מה שהם יוצרים—ומה שאתם רוצים לומר—כדי שזה יימצא, יובן וישמש.",
         distinctionTagline: "הם יוצרים את התוכנית. אנחנו מוודאים שהיא עובדת.",
 
@@ -824,7 +824,7 @@ export const marketing2Dictionary = {
         metaDescHow: "שלושה צעדים עדינים: התחילו איפה שמרגיש נכון, בנו עם הזמן, ותנו לזה להיפתח כשצריך.",
 
         // Footer
-        footerDisclaimer: "Continuum הוא כלי תיעוד וארגון. איננו מספקים ייעוץ משפטי, פיננסי, מס או רפואי.",
+        footerDisclaimer: "Continuum הוא כלי תיעוד וארגון. לייעוץ משפטי, פיננסי, מס או רפואי, איש מקצוע מוסמך יכול לעזור.",
         footerTagline: "החיים המאורגנים. המסירה העדינה.",
 
         // Navigation

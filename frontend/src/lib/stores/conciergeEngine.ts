@@ -141,7 +141,7 @@ function createConciergeEngine() {
         // Proactive Contextual Greetings
         const contextGreetings: Record<string, string> = {
             'Property & Real Estate': "I'm here to help you catalog your assets. Your home is the foundation of so much family history—where shall we begin?",
-            'Financial Accounts': "Let's secure your financial legacy. Thinking ahead about these resources is such a kind thing to do for your family. Which account is most important to record first?",
+            'Financial Accounts': "Thinking ahead about these resources is such a kind thing to do for your family. Which account is most important to record first?",
             'Document Vault': "Building a solid legal foundation is an act of great care. Do you have a copy of your Will or Trust ready to upload?",
             'Health & Medical': "With medical clarity, doctors and family know what you would want. Have you designated a healthcare proxy or created a living will?",
             'Family & Contacts': "Legacy is all about the people you care for. Who is the first person you'd like to include in your circle of trust?",
@@ -161,7 +161,7 @@ function createConciergeEngine() {
         }
 
         const greetingBody = contextGreetings[contextName] ||
-            (isHome ? "To begin, we need to secure your legacy by identifying your circle of trust. Who is your primary emergency contact?" : `What's the first detail we should record here in ${contextName}?`);
+            (isHome ? "To begin, let's gather your circle of trust. Who is your primary emergency contact?" : `What's the first detail we should record here in ${contextName}?`);
 
         const newGreeting = `${prefix}${greetingBody}`;
 

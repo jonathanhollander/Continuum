@@ -242,7 +242,7 @@
             class="flex items-center justify-center gap-2 text-muted-foreground text-[10px] font-bold uppercase tracking-[0.4em]"
         >
             <Sparkles size={12} />
-            <span>Powered by Continuum EQ</span>
+            <span>Gentle guidance, at your pace</span>
         </div>
     </div>
 </div>
