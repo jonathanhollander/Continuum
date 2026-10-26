@@ -19,10 +19,27 @@
     let step: "email" | "passkey" | "complete" = "email";
     let userId: number | null = null;
     let lastOptions: any = null;
+    let passkeyFailed = false;
+    const PASSKEY_WAIT_MS = 12000;
+
+    function waitForPasskey(options: any) {
+        return new Promise<any>((resolve, reject) => {
+            const timer = setTimeout(() => {
+                const err: any = new Error("passkey wait elapsed");
+                err.name = "PasskeyWaitElapsed";
+                reject(err);
+            }, PASSKEY_WAIT_MS);
+            startRegistration({ optionsJSON: options }).then(
+                (v) => { clearTimeout(timer); resolve(v); },
+                (e) => { clearTimeout(timer); reject(e); },
+            );
+        });
+    }
 
     // Retry function for passkey registration
     function retryPasskeyRegistration() {
         if (lastOptions && userId) {
+            passkeyFailed = false;
             handlePasskeyRegistration(lastOptions);
         } else {
             // Restart from email step
@@ -97,13 +114,21 @@
         }
     }
 
+    function goToEmailLink() {
+        if (typeof localStorage !== "undefined" && email) {
+            localStorage.setItem("continuum_last_email", email);
+        }
+        goto("/login");
+    }
+
     async function handlePasskeyRegistration(options: any) {
         isLoading = true;
+        passkeyFailed = false;
 
         try {
             // Step 2: Show browser passkey creation prompt
             // Note: v11+ API requires { optionsJSON: options } format
-            const credential = await startRegistration({ optionsJSON: options });
+            const credential = await waitForPasskey(options);
 
             // Step 3: Finish registration and get JWT
             const result = await apiPost("/api/auth/passkey/register/finish", {
@@ -143,28 +168,10 @@
                 goto("/onboarding");
             }, 2000);
         } catch (e: any) {
-            console.error("Passkey registration failed:", e);
-
-            if (e.name === "NotAllowedError") {
-                notifications.showError(
-                    {
-                        message:
-                            "Passkey creation was cancelled. Please try again.",
-                        code: "VALIDATION_ERROR",
-                    },
-                    retryPasskeyRegistration,
-                );
-            } else if (e.name === "NotSupportedError") {
-                notifications.showError({
-                    message:
-                        "Your device does not support passkeys. Please try a different device or contact support.",
-                    code: "VALIDATION_ERROR",
-                });
-            } else {
-                notifications.showError(e, retryPasskeyRegistration);
-            }
-
-            step = "email";
+            console.warn("Passkey registration did not finish:", e?.name);
+            // Stay on the passkey step and offer the way forward
+            passkeyFailed = true;
+            step = "passkey";
         } finally {
             isLoading = false;
         }
@@ -267,6 +274,32 @@
                 </div>
             {:else if step === "passkey"}
                 <!-- Step 2: Passkey Creation (Loading) -->
+                {#if passkeyFailed}
+                <div
+                    class="text-center py-12 space-y-6"
+                    data-testid="passkey-options"
+                    in:fly={{ y: 20, duration: 300 }}
+                >
+                    <div class="space-y-3">
+                        <h3 class="text-white font-bold text-2xl">
+                            Your account is ready for a passkey
+                        </h3>
+                        <p class="text-slate-300 text-lg leading-relaxed max-w-md mx-auto">
+                            When you're ready, you can try again, or sign in with an email link instead.
+                        </p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                        <button
+                            on:click={retryPasskeyRegistration}
+                            class="bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold py-3 px-6 rounded-2xl transition-colors"
+                        >Try again</button>
+                        <button
+                            on:click={goToEmailLink}
+                            class="border border-slate-600 hover:border-teal-400 text-white font-bold py-3 px-6 rounded-2xl transition-colors"
+                        >Use an email link instead</button>
+                    </div>
+                </div>
+                {:else}
                 <div
                     class="text-center py-12 space-y-6"
                     in:fly={{ y: 20, duration: 300 }}
@@ -286,6 +319,7 @@
                         </p>
                     </div>
                 </div>
+                {/if}
             {:else if step === "complete"}
                 <!-- Step 3: Success -->
                 <div
