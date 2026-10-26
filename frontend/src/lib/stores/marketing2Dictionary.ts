@@ -66,7 +66,7 @@ export const marketing2Dictionary = {
         // Section 6: The Gift
         giftTitle: "What they'll receive",
         giftClarity: "Clarity",
-        giftClarityDesc: "Everything organized. Easy to find.",
+        giftClarityDesc: "Everything organized. Found when it's needed.",
         giftGuidance: "Guidance",
         giftGuidanceDesc: "Step-by-step help when they need it most.",
         giftVoice: "Your voice",
@@ -202,7 +202,7 @@ export const marketing2Dictionary = {
         // Section 6: The Gift
         giftTitle: "Lo que recibirán",
         giftClarity: "Claridad",
-        giftClarityDesc: "Todo organizado. Fácil de encontrar.",
+        giftClarityDesc: "Todo organizado. A mano cuando se necesita.",
         giftGuidance: "Orientación",
         giftGuidanceDesc: "Ayuda paso a paso cuando más la necesiten.",
         giftVoice: "Tu voz",
@@ -338,7 +338,7 @@ export const marketing2Dictionary = {
         // Section 6: The Gift
         giftTitle: "Ce qu'ils recevront",
         giftClarity: "Clarté",
-        giftClarityDesc: "Tout organisé. Facile à trouver.",
+        giftClarityDesc: "Tout organisé. Trouvé quand on en a besoin.",
         giftGuidance: "Accompagnement",
         giftGuidanceDesc: "Une aide étape par étape quand ils en auront le plus besoin.",
         giftVoice: "Votre voix",
@@ -474,7 +474,7 @@ export const marketing2Dictionary = {
         // Section 6: The Gift
         giftTitle: "Was sie erhalten werden",
         giftClarity: "Klarheit",
-        giftClarityDesc: "Alles organisiert. Leicht zu finden.",
+        giftClarityDesc: "Alles organisiert. Zur Hand, wenn es gebraucht wird.",
         giftGuidance: "Anleitung",
         giftGuidanceDesc: "Schritt-für-Schritt-Hilfe, wenn sie sie am meisten brauchen.",
         giftVoice: "Ihre Stimme",
@@ -610,7 +610,7 @@ export const marketing2Dictionary = {
         // Section 6: The Gift
         giftTitle: "Что они получат",
         giftClarity: "Ясность",
-        giftClarityDesc: "Всё организовано. Легко найти.",
+        giftClarityDesc: "Всё организовано. Под рукой, когда это нужно.",
         giftGuidance: "Руководство",
         giftGuidanceDesc: "Пошаговая помощь, когда она больше всего нужна.",
         giftVoice: "Ваш голос",
@@ -746,7 +746,7 @@ export const marketing2Dictionary = {
         // Section 6: The Gift
         giftTitle: "מה הם יקבלו",
         giftClarity: "בהירות",
-        giftClarityDesc: "הכל מאורגן. קל למצוא.",
+        giftClarityDesc: "הכל מאורגן. נמצא כשצריך.",
         giftGuidance: "הדרכה",
         giftGuidanceDesc: "עזרה צעד אחר צעד כשהם הכי צריכים.",
         giftVoice: "הקול שלכם",

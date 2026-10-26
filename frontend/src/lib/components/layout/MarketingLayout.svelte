@@ -2,6 +2,7 @@
     import { onMount } from "svelte";
     import { Globe } from "lucide-svelte";
     import { mLanguage, mt } from "$lib/stores/marketing";
+    import { auth } from "$lib/stores/auth";
 
     let { children } = $props();
 
@@ -57,10 +58,10 @@
             </div>
 
             <a
-                href="/login?lang={$mLanguage}"
+                href={$auth.token ? "/dashboard" : `/login?lang=${$mLanguage}`}
                 class="px-6 py-2 border border-white/20 rounded-full hover:bg-white hover:text-black transition-all text-sm font-bold uppercase tracking-widest backdrop-blur-md"
             >
-                {$mt.login}
+                {$auth.token ? $mt.openMyPlan : $mt.login}
             </a>
         </div>
     </header>

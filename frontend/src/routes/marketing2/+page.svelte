@@ -881,33 +881,6 @@
             </div>
         </section>
 
-        <!-- Testimonial Section -->
-        <section
-            class="py-24 px-6 bg-gradient-to-b from-transparent via-white/[0.01] to-transparent"
-        >
-            <div class="max-w-3xl mx-auto reveal-section" use:reveal>
-                <div class="text-center">
-                    <div class="flex justify-center mb-6">
-                        {#each Array(5) as _, i}
-                            <span
-                                class="text-gold-text/60 text-sm"
-                                style="animation: starPop 0.3s ease {i *
-                                    0.1}s both">★</span
-                            >
-                        {/each}
-                    </div>
-                    <blockquote
-                        class="text-xl md:text-2xl font-serif text-white/70 italic mb-8 leading-relaxed"
-                    >
-                        "I spent months putting off this conversation with my
-                        family. Continuum let me say everything I needed to say,
-                        in my own time, in my own words."
-                    </blockquote>
-                    <p class="text-sm text-white/70">— A Continuum user</p>
-                </div>
-            </div>
-        </section>
-
         <!-- Section 7: The Invitation & Signup -->
         <section class="py-32 px-6 min-h-[80vh] flex items-center">
             <div class="max-w-2xl mx-auto w-full reveal-section" use:reveal>
@@ -1403,21 +1376,6 @@
         to {
             opacity: 1;
             transform: translateX(0);
-        }
-    }
-
-    /* Star pop animation */
-    @keyframes starPop {
-        0% {
-            transform: scale(0);
-            opacity: 0;
-        }
-        50% {
-            transform: scale(1.2);
-        }
-        100% {
-            transform: scale(1);
-            opacity: 1;
         }
     }
 

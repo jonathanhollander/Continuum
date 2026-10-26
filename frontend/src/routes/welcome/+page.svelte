@@ -91,7 +91,6 @@
                         </div>
                         <div class="text-left">
                             <h2 class="font-bold text-lg text-white">Your First Step</h2>
-                            <p class="text-white/80 text-sm">Takes about 2 minutes</p>
                         </div>
                     </div>
                 </div>
