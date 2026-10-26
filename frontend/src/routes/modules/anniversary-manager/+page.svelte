@@ -99,9 +99,11 @@
         formYear = digits.length >= 8 ? digits.slice(0, 4) : "";
     }
 
+    // A yearly date keeps month and day; a one-time date keeps its year (this year when none was set).
     function formDateValue() {
         if (!formMonth || !formDay) return "";
-        return formYear ? `${formYear}-${formMonth}-${formDay}` : `${formMonth}-${formDay}`;
+        if (newEvent.recurring) return `${formMonth}-${formDay}`;
+        return `${formYear || new Date().getFullYear()}-${formMonth}-${formDay}`;
     }
 
     function openEdit(id: string | number) {
@@ -183,6 +185,7 @@
                 date,
                 type: newEvent.type,
                 description: newEvent.description,
+                recurring: !!newEvent.recurring,
                 custom_attributes: JSON.stringify(customAttributes),
             };
             // Events made on the calendar page keep their email template in ritual instructions.
@@ -598,6 +601,16 @@
                                 {/each}
                             </select>
                         </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 pl-1">
+                        <input
+                            id="remembrance-recurring"
+                            type="checkbox"
+                            bind:checked={newEvent.recurring}
+                            class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                        />
+                        <label for="remembrance-recurring" class="text-sm font-medium text-slate-700">Every year</label>
                     </div>
 
                     <div class="space-y-1">

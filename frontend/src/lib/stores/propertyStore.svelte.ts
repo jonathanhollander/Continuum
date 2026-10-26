@@ -65,6 +65,9 @@ const propertyMapper = (item: any) => {
     if (!item) return item;
     return {
         ...item,
+        // Columns the server can return as null; the page's search and cards read them as text.
+        name: item.name ?? '',
+        location: item.location ?? '',
         purchaseDate: typeof item.purchaseDate === 'string' && item.purchaseDate
             ? item.purchaseDate.slice(0, 10)
             : item.purchaseDate,
