@@ -30,7 +30,6 @@
     import { activityLog } from "$lib/stores/activityLog.svelte";
     import { notifications } from "$lib/stores/notificationStore";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
-    import EvidenceGalleryUploader from "$lib/components/ui/EvidenceGalleryUploader.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import { REFLECTION_POOLS } from "$lib/data/reflectionPools";
@@ -287,14 +286,9 @@
         try {
             await heirloomSync.create({
                 name: newHeirloom.name || "Unknown Treasure",
-                recipient: newHeirloom.recipient || "Undecided",
+                recipient: newHeirloom.recipient || "",
                 story: newHeirloom.story || "",
-                image:
-                    newHeirloom.image ||
-                    getsuggestedImage(
-                        newHeirloom.name || "",
-                        newHeirloom.story || "",
-                    ),
+                image: newHeirloom.image || "",
                 ownershipDetails: newHeirloom.ownershipDetails || "",
                 custom_attributes: JSON.stringify(parsedCustomAttributes),
             }, false, false, saveHeirloom);
@@ -601,11 +595,13 @@
                         >
                             {qrTarget.name}
                         </h2>
-                        <p
-                            class="text-xs text-stone-500 uppercase tracking-wide font-bold mb-4"
-                        >
-                            For {qrTarget.recipient}
-                        </p>
+                        {#if qrTarget.recipient}
+                            <p
+                                class="text-xs text-stone-500 uppercase tracking-wide font-bold mb-4"
+                            >
+                                For {qrTarget.recipient}
+                            </p>
+                        {/if}
 
                         <div
                             class="bg-white p-2 rounded-lg inline-block shadow-sm mb-4 print:shadow-none"
