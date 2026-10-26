@@ -464,7 +464,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | O1 / O2 oversight (all waves) | ☐ | | |
 | R0 — Local rehearsal | ☐ | | |
 | Release — deploy + full browser test | ☐ | | |
-| Wave U — Final UI/UX pass | ☐ | | |
+| Wave U — Final UI/UX pass | ▶ | | U0 running |
 | Wave G — Role-based page gap review | ☐ | | |
 | Wave T — Tone review of every page | ☐ | | |
 | Wave V — Colour review of every page | ☐ | | |
@@ -670,7 +670,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X79 | ☑ | 545df37 | One `lifespan` context replaces both `on_event` handlers, same order (logging, DB, seed, scheduler; scheduler stop on shutdown). Fresh SQLite, no `frontend/dist`: starts, seeds, scheduler starts, health and login 200, SIGTERM stops the scheduler cleanly; no `on_event` warning |
 | X9 | ☑ | b95307d | Magic link verifies once (200), second use 401 "already used"; request logged as `magic_link_requested`, not an auth success; `sub:"abc"` 401; login/me/refresh/jh@ 200. Passkey-finish fixes (keep specific 400/401, audit, missing-user 401) read, not run: needs a real WebAuthn assertion — check in the release browser test |
 | X10 | ☑ | c2e8ad1 | Echo off: 503 path p50 2.6 ms, p95 4.1 ms; O1's 473 ms was echo-logging overhead. One shared httpx client |
-| U0 | ☐ | | |
+| U0 | ▶ | | 4 read-only reviewers on main: U0a legacy and letters, U0b finances and estate, U0c family, contacts, recipient and Pulse, U0d dashboard, navigation, settings, tools |
 | G0 | ☐ (after Wave U) | | |
 | T0 | ☐ (after Wave U, with G0) | | |
 | V0 | ☐ (after Wave U, with G0 and T0) | | |
