@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Body
 from backend.limiter import limiter
 from sqlmodel import Session, select, func, and_, or_
+from sqlalchemy import Integer
 from typing import List, Any, Dict, Optional
 from pydantic import BaseModel, field_validator, model_validator
 import json
@@ -178,6 +179,12 @@ def _category_clause(data_type: str):
     return or_(Asset.category == data_type, and_(Asset.category.is_(None), legacy))
 
 
+def _pk(model, item_id: str):
+    """URL id -> the model's primary-key type (time capsules have text ids, the rest integers)."""
+    pk_type = next(iter(model.__table__.primary_key.columns)).type
+    return int(item_id) if isinstance(pk_type, Integer) else item_id
+
+
 def _in_category(session: Session, data_type: str, item) -> bool:
     clause = _category_clause(data_type)
     if clause is None:
@@ -340,7 +347,7 @@ def create_item(
 def update_item(
     request: Request,
     data_type: str,
-    item_id: int,
+    item_id: str,
     body: Dict[str, Any] = Body(...),
     user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
@@ -354,7 +361,7 @@ def update_item(
         raise HTTPException(status_code=400, detail="Invalid data type")
 
     try:
-        db_item = session.get(model, item_id)
+        db_item = session.get(model, _pk(model, item_id))
         if not db_item:
             raise HTTPException(status_code=404, detail="Item not found")
         if getattr(db_item, "user_id") != user.id:
@@ -405,7 +412,7 @@ def update_item(
 # 600/minute per client IP (slowapi key_func=get_remote_address): a first upload of
 # a few hundred local items (SyncManager.migrateUp, one POST each) completes.
 @limiter.limit("600/minute")
-def delete_item(request: Request, data_type: str, item_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+def delete_item(request: Request, data_type: str, item_id: str, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     """
     Delete an estate item with audit logging.
     """
@@ -414,7 +421,7 @@ def delete_item(request: Request, data_type: str, item_id: int, user: User = Dep
         raise HTTPException(status_code=400, detail="Invalid data type")
     
     try:
-        db_item = session.get(model, item_id)
+        db_item = session.get(model, _pk(model, item_id))
         if not db_item:
             raise HTTPException(status_code=404, detail="Item not found")
         if getattr(db_item, "user_id") != user.id:
