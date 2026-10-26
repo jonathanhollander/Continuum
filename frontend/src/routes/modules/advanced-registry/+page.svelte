@@ -10,9 +10,14 @@
     } from "$lib/stores/advancedAssetStore.svelte";
     import {
         digitalAssetsStore,
+        digitalAssetsSync,
         type DigitalAccount,
         type ClosurePreference,
     } from "$lib/stores/digitalAssetsStore.svelte";
+    import { propertySync } from "$lib/stores/propertyStore.svelte";
+    import { financialAssetsSync } from "$lib/stores/financialAssetsStore.svelte";
+    import { insuranceSync } from "$lib/stores/insuranceStore.svelte";
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import {
         Layers,
         Repeat,
@@ -50,9 +55,29 @@
     let isLoading = $state(true);
 
     onMount(async () => {
-        await advancedAssetStore.sync?.();
+        // The registry links to properties, accounts and policies, and lists digital account wishes.
+        await Promise.allSettled([
+            advancedAssetStore.sync?.(),
+            digitalAssetsSync.init(),
+            propertySync.init(),
+            financialAssetsSync.init(),
+            insuranceSync.init(),
+        ]);
         isLoading = false;
     });
+
+    // Transactions point at a real record: "property:<id>" or "financial:<id>".
+    let assetOptions = $derived([
+        ...propertySync.items.map((a) => ({ value: `property:${a.id}`, label: a.name || "Property" })),
+        ...financialAssetsSync.items.map((a) => ({ value: `financial:${a.id}`, label: a.name || "Account" })),
+    ]);
+    // Older rows hold free text; it is shown as it was typed.
+    const assetName = (id?: string) => (id ? (assetOptions.find((o) => o.value === id)?.label ?? id) : "");
+    const policyName = (id?: string) => {
+        if (!id) return "";
+        const pol = insuranceSync.items.find((x) => String(x.id) === String(id));
+        return pol ? [pol.policyName, pol.insurer].filter(Boolean).join(" · ") || "Policy" : "";
+    };
 
     let activeTab = $state<
         "transactions" | "maintenance" | "claims" | "killswitch"
@@ -90,46 +115,59 @@
         priority: "medium",
     });
 
-    function handleAdd() {
+    const today = () => new Date().toISOString().split("T")[0];
+
+    // One save; the form closes and clears only when it lands (a failure shows the manager's
+    // one gentle message and keeps what was typed).
+    async function handleAdd() {
         const customAttrsString = JSON.stringify(parsedCustomAttributes);
+        try {
+            if (addType === "transaction")
+                await advancedAssetStore.addTransaction({
+                    ...newTx,
+                    custom_attributes: customAttrsString,
+                } as Omit<AssetTransaction, "id">);
+            if (addType === "maintenance")
+                await advancedAssetStore.addMaintenance({
+                    ...newMaint,
+                    custom_attributes: customAttrsString,
+                } as Omit<MaintenanceLog, "id">);
+            if (addType === "claim")
+                await advancedAssetStore.addClaim({
+                    ...newClaim,
+                    custom_attributes: customAttrsString,
+                } as Omit<InsuranceClaim, "id">);
+            if (addType === "account")
+                await digitalAssetsSync.create({
+                    ...$state.snapshot(newAccount),
+                    isClosed: false,
+                } as Partial<DigitalAccount>);
+        } catch {
+            return;
+        }
 
-        if (addType === "transaction")
-            advancedAssetStore.addTransaction({
-                ...newTx,
-                custom_attributes: customAttrsString,
-            } as Omit<AssetTransaction, "id">);
-        if (addType === "maintenance")
-            advancedAssetStore.addMaintenance({
-                ...newMaint,
-                custom_attributes: customAttrsString,
-            } as Omit<MaintenanceLog, "id">);
-        if (addType === "claim")
-            advancedAssetStore.addClaim({
-                ...newClaim,
-                custom_attributes: customAttrsString,
-            } as Omit<InsuranceClaim, "id">);
-        if (addType === "account")
-            digitalAssetsStore.addAccount(
-                newAccount as Omit<DigitalAccount, "id" | "isClosed">,
-            );
-
+        if (addType === "transaction") newTx = { type: "purchase", amount: 0, description: "", date: today() };
+        if (addType === "maintenance") newMaint = { item: "", cost: 0, date: today() };
+        if (addType === "claim") newClaim = { status: "pending", amountClaimed: 0, dateFiled: today() };
+        if (addType === "account") newAccount = { platform: "", username: "", preference: "memorialize", priority: "medium" };
         parsedCustomAttributes = {};
         showAddModal = false;
     }
 
     // The store has no remove calls: save the record without the item, the same
     // singleton update the adds use. A failed save shows its own message and rolls back.
-    function removeTransaction(id: string) {
+    async function removeFrom(list: "transactions" | "maintenance" | "claims", id: string) {
+        if (!(await askConfirm("Remove this item?"))) return;
         const current = advancedAssetSync.data || DEFAULT_ADVANCED_STATE;
         advancedAssetSync
-            .update({ ...current, transactions: current.transactions.filter((t) => t.id !== id) })
+            .update({ ...current, [list]: (current[list] as { id: string }[]).filter((x) => x.id !== id) })
             .catch(() => {});
     }
 
-    function removeClaim(id: string) {
+    function setClaimStatus(id: string, status: InsuranceClaim["status"]) {
         const current = advancedAssetSync.data || DEFAULT_ADVANCED_STATE;
         advancedAssetSync
-            .update({ ...current, claims: current.claims.filter((c) => c.id !== id) })
+            .update({ ...current, claims: current.claims.map((c) => (c.id === id ? { ...c, status } : c)) })
             .catch(() => {});
     }
 
@@ -137,7 +175,7 @@
         { id: "transactions", label: "Transactions", icon: Repeat },
         { id: "maintenance", label: "Maintenance", icon: Wrench },
         { id: "claims", label: "Claims", icon: FileCheck },
-        { id: "killswitch", label: "Kill Switch", icon: Skull },
+        { id: "killswitch", label: "Account Wishes", icon: Skull },
     ];
 
     let filteredTransactions = $derived(
@@ -159,6 +197,7 @@
                 (c.note ?? "").toLowerCase().includes(searchQuery.toLowerCase()),
         ),
     );
+    const hasWish = (a: DigitalAccount) => !!a.preference && a.preference !== "none";
     let filteredAccounts = $derived(
         $digitalAssetsStore.filter((a) =>
             (a.platform ?? a.name ?? "").toLowerCase().includes(searchQuery.toLowerCase()),
@@ -176,10 +215,10 @@
 >
     <!-- Header -->
     <LivingBlueprintHeader
-        title="Complete Record"
-        subtitle="Precision tracking for assets, maintenance, and digital legacies"
-        detailedDescription="The Advanced Registry brings together all detailed records about your assets—purchase history, maintenance logs, insurance claims, and digital account management. This comprehensive documentation helps your family understand not just what you own, but its complete history."
-        whyMatters="Detailed asset records prevent costly mistakes and lost value. Your family will know when the roof was last inspected, what warranties still apply, and how to manage your digital footprint—information that would otherwise take months to piece together."
+        title="Your Full Record"
+        subtitle="A fuller record of your assets, upkeep, and digital legacy"
+        detailedDescription="The Advanced Registry brings together all detailed records about your assets—purchase history, maintenance logs, insurance claims, and digital account management. This comprehensive documentation helps your family understand what you own and its complete history."
+        whyMatters="Detailed asset records give your family the history behind each asset. Your family will know when the roof was last inspected, what warranties still apply, and how to care for your digital footprint."
     >
         <div class="flex items-center gap-4">
             <div class="relative w-full md:w-64">
@@ -291,11 +330,13 @@
                                     >
                                         {tx.description}
                                     </p>
-                                    <p
-                                        class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter"
-                                    >
-                                        Asset ID: {tx.assetId}
-                                    </p>
+                                    {#if assetName(tx.assetId)}
+                                        <p
+                                            class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter"
+                                        >
+                                            {assetName(tx.assetId)}
+                                        </p>
+                                    {/if}
                                 </td>
                                 <td class="px-8 py-5 text-center">
                                     <span
@@ -317,9 +358,7 @@
                                 <td class="px-8 py-5 text-right">
                                     <button aria-label="Remove this item"
                                         onclick={() =>
-                                            removeTransaction(
-                                                tx.id,
-                                            )}
+                                            removeFrom("transactions", tx.id)}
                                         class="p-2 text-slate-300 hover:text-rose-500 transition-colors"
                                     >
                                         <Trash2 size={16} />
@@ -332,7 +371,7 @@
                 {#if filteredTransactions.length === 0}
                     <EmptyState
                         title="Your financial story, documented"
-                        whyMatters="<strong>Asset transactions tell the story of your financial life—purchases, sales, transfers, and valuations.</strong> Without this record, your family may struggle to understand where assets came from, what they're worth, or who has claims to them.<br/><br/>Documenting these transactions creates a clear audit trail that protects your family from disputes and confusion during an already difficult time."
+                        whyMatters="<strong>Asset transactions tell the story of your financial life—purchases, sales, transfers, and valuations.</strong> This record helps your family understand where each asset came from and who it is meant for."
                         encouragement="Start with your most significant assets. You can add more details as you remember them."
                         icon={Repeat}
                         iconClass="text-indigo-500"
@@ -396,16 +435,24 @@
                                 >
                                     <Wrench size={20} />
                                 </div>
-                                <span
-                                    class="px-3 py-1 bg-white text-[10px] font-black uppercase text-slate-400 rounded-full border border-slate-100"
-                                    >{log.date}</span
-                                >
+                                <div class="flex items-center gap-1">
+                                    <span
+                                        class="px-3 py-1 bg-white text-[10px] font-black uppercase text-slate-400 rounded-full border border-slate-100"
+                                        >{log.date}</span
+                                    >
+                                    <button aria-label="Remove this item"
+                                        onclick={() => removeFrom("maintenance", log.id)}
+                                        class="p-2 text-slate-300 hover:text-rose-500 transition-colors"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                </div>
                             </div>
                             <h3 class="font-bold text-slate-900">{log.item}</h3>
                             <div
                                 class="flex items-center justify-between text-xs text-slate-500 font-medium"
                             >
-                                <span>Provider: {log.provider}</span>
+                                <span>{#if log.provider}Provider: {log.provider}{/if}</span>
                                 <span class="text-slate-900 font-black"
                                     >${log.cost}</span
                                 >
@@ -424,7 +471,7 @@
                 {#if filteredMaintenance.length === 0}
                     <EmptyState
                         title="Keep your property running smoothly"
-                        whyMatters="<strong>Maintenance records are invaluable for whoever inherits your property.</strong> Knowing when the roof was last inspected, who services the HVAC, or when the septic was pumped saves them thousands in unnecessary repairs and helps them maintain what you built.<br/><br/>These logs also ensure warranty coverage isn't lost and help identify recurring issues before they become emergencies."
+                        whyMatters="<strong>Maintenance records are invaluable for whoever inherits your property.</strong> Knowing when the roof was last inspected, who services the HVAC, or when the septic was pumped helps them care for what you built and keeps warranties in view."
                         encouragement="Start with your most recent service call or inspection. The history will build over time."
                         icon={Wrench}
                         iconClass="text-amber-500"
@@ -497,6 +544,11 @@
                                     >
                                         {claim.note}
                                     </p>
+                                    {#if policyName(claim.policyId)}
+                                        <p class="text-xs text-slate-400 font-bold mt-1">
+                                            {policyName(claim.policyId)}
+                                        </p>
+                                    {/if}
                                 </div>
                             </div>
                             <div class="flex items-center gap-10">
@@ -506,14 +558,20 @@
                                     >
                                         Status
                                     </p>
-                                    <span
-                                        class="px-3 py-1 rounded-full text-[10px] font-black uppercase {claim.status ===
+                                    <select
+                                        aria-label="Claim status"
+                                        value={claim.status}
+                                        onchange={(e) => setClaimStatus(claim.id, e.currentTarget.value as InsuranceClaim["status"])}
+                                        class="px-3 py-1 rounded-full text-[10px] font-black uppercase cursor-pointer {claim.status ===
                                         'paid'
                                             ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
                                             : 'bg-amber-50 text-amber-600 border border-amber-100'}"
                                     >
-                                        {claim.status}
-                                    </span>
+                                        <option value="pending">Pending</option>
+                                        <option value="approved">Approved</option>
+                                        <option value="paid">Paid</option>
+                                        {#if claim.status === "denied"}<option value="denied">Denied</option>{/if}
+                                    </select>
                                 </div>
                                 <div class="text-right">
                                     <p
@@ -524,14 +582,12 @@
                                     <p
                                         class="font-black text-slate-900 font-mono"
                                     >
-                                        ${claim.amountClaimed.toLocaleString()}
+                                        ${(claim.amountClaimed ?? 0).toLocaleString()}
                                     </p>
                                 </div>
                                 <button aria-label="Remove this item"
                                     onclick={() =>
-                                        removeClaim(
-                                            claim.id,
-                                        )}
+                                        removeFrom("claims", claim.id)}
                                     class="p-2 text-slate-200 hover:text-rose-500 transition-colors"
                                 >
                                     <Trash2 size={20} />
@@ -542,7 +598,7 @@
                     {#if filteredClaims.length === 0}
                         <EmptyState
                             title="Track your insurance claims"
-                            whyMatters="<strong>Insurance claims can take months or even years to resolve.</strong> If something happens to you during that time, your family needs to know which claims are pending, what amounts are expected, and who to follow up with.<br/><br/>Documenting active claims ensures no money is left on the table and gives your family the information they need to continue advocating for what you're owed."
+                            whyMatters="<strong>Open claims can take a while.</strong> Noting them here gives your family what they need to follow through."
                             encouragement="If you have any pending claims, add them here. Even resolved claims create a helpful history."
                             icon={FileCheck}
                             iconClass="text-emerald-500"
@@ -598,19 +654,29 @@
                     </div>
                     <div class="space-y-2 relative z-10">
                         <h2 class="text-2xl font-black text-rose-900">
-                            Digital Inheritance Protocols
+                            How to care for your online presence
                         </h2>
                         <p
                             class="text-rose-800/70 max-w-2xl font-medium leading-relaxed"
                         >
-                            Define exactly how your online presence should be
-                            managed. High-priority accounts should include
-                            explicit instructions for executors regarding
-                            memorialization or total data deletion.
+                            Define how your online presence should be managed,
+                            with clear wishes for your executor about
+                            memorializing or removing each account.
                         </p>
                     </div>
                 </div>
 
+                {#if filteredAccounts.length === 0}
+                    <EmptyState
+                        title="Share your account wishes"
+                        whyMatters="<strong>Each account can carry its own wish.</strong> Clear wishes for your executor about memorializing or removing each account make the path simple for your family."
+                        encouragement="Start with your most important account. You can add more details as you remember them."
+                        icon={Monitor}
+                        iconClass="text-indigo-500"
+                        ctaLabel="Share an account"
+                        onAction={() => { addType = 'account'; showAddModal = true; }}
+                    />
+                {/if}
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {#each filteredAccounts as acc (acc.id)}
                         <div
@@ -629,22 +695,26 @@
                                         >
                                             {acc.platform ?? acc.name ?? ""}
                                         </h3>
-                                        <p
-                                            class="text-[10px] font-black text-slate-400 tracking-[0.2em]"
-                                        >
-                                            {acc.username || "@username"}
-                                        </p>
+                                        {#if acc.username}
+                                            <p
+                                                class="text-[10px] font-black text-slate-400 tracking-[0.2em]"
+                                            >
+                                                {acc.username}
+                                            </p>
+                                        {/if}
                                     </div>
                                 </div>
                                 <div class="flex flex-col items-end gap-2">
-                                    <span
-                                        class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider {acc.priority ===
-                                        'high'
-                                            ? 'bg-rose-100 text-rose-700'
-                                            : 'bg-slate-100 text-slate-500'}"
-                                    >
-                                        {acc.priority} Priority
-                                    </span>
+                                    {#if acc.priority}
+                                        <span
+                                            class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider {acc.priority ===
+                                            'high'
+                                                ? 'bg-rose-100 text-rose-700'
+                                                : 'bg-slate-100 text-slate-500'}"
+                                        >
+                                            {acc.priority} Priority
+                                        </span>
+                                    {/if}
                                     <button
                                         onclick={() =>
                                             digitalAssetsStore.toggleClosure(
@@ -671,37 +741,42 @@
                                 </div>
                             </div>
 
+                            {#if acc.instructions || hasWish(acc) || (acc.isClosed && acc.closureDate)}
                             <div
                                 class="p-5 bg-slate-50 rounded-2xl border border-slate-100 space-y-2"
                             >
-                                <h4
-                                    class="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2"
-                                >
-                                    <ArrowUpRight
-                                        size={12}
-                                        class="text-indigo-600"
-                                    />
-                                    Final Instruction
-                                </h4>
-                                <p
-                                    class="text-sm font-bold text-slate-700 italic"
-                                >
-                                    "{acc.instructions}"
-                                </p>
+                                {#if acc.instructions}
+                                    <h4
+                                        class="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2"
+                                    >
+                                        <ArrowUpRight
+                                            size={12}
+                                            class="text-indigo-600"
+                                        />
+                                        Final Instruction
+                                    </h4>
+                                    <p
+                                        class="text-sm font-bold text-slate-700 italic"
+                                    >
+                                        "{acc.instructions}"
+                                    </p>
+                                {/if}
                                 <div
-                                    class="pt-3 border-t border-slate-200 mt-2 flex items-center justify-between"
+                                    class="flex items-center justify-between {acc.instructions ? 'pt-3 border-t border-slate-200 mt-2' : ''}"
                                 >
                                     <div class="flex items-center gap-2">
-                                        <span
-                                            class="w-2 h-2 rounded-full {acc.preference ===
-                                            'delete'
-                                                ? 'bg-rose-500'
-                                                : 'bg-indigo-500'}"
-                                        ></span>
-                                        <span
-                                            class="text-[10px] font-black uppercase text-slate-600 tracking-wider"
-                                            >Protocol: {acc.preference}</span
-                                        >
+                                        {#if hasWish(acc)}
+                                            <span
+                                                class="w-2 h-2 rounded-full {acc.preference ===
+                                                'delete'
+                                                    ? 'bg-rose-500'
+                                                    : 'bg-indigo-500'}"
+                                            ></span>
+                                            <span
+                                                class="text-[10px] font-black uppercase text-slate-600 tracking-wider"
+                                                >Protocol: {acc.preference}</span
+                                            >
+                                        {/if}
                                     </div>
                                     {#if acc.isClosed && acc.closureDate}
                                         <span
@@ -713,6 +788,7 @@
                                     {/if}
                                 </div>
                             </div>
+                            {/if}
                         </div>
                     {/each}
                 </div>
@@ -755,14 +831,18 @@
                                 <label
                                     for="asset-id"
                                     class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
-                                    >Asset ID</label
+                                    >Asset</label
                                 >
-                                <input
+                                <select
                                     id="asset-id"
                                     bind:value={newTx.assetId}
                                     class="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold"
-                                    placeholder="RE-101"
-                                />
+                                >
+                                    <option value={undefined}></option>
+                                    {#each assetOptions as o (o.value)}
+                                        <option value={o.value}>{o.label}</option>
+                                    {/each}
+                                </select>
                             </div>
                             <div class="space-y-2">
                                 <label
@@ -874,6 +954,33 @@
                                 />
                             </div>
                         </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <label
+                                    for="maint-provider"
+                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+                                    >Provider</label
+                                >
+                                <input
+                                    id="maint-provider"
+                                    bind:value={newMaint.provider}
+                                    class="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold"
+                                />
+                            </div>
+                            <div class="space-y-2">
+                                <label
+                                    for="maint-next"
+                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+                                    >Next Due</label
+                                >
+                                <input
+                                    id="maint-next"
+                                    type="date"
+                                    bind:value={newMaint.nextDueDate}
+                                    class="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold"
+                                />
+                            </div>
+                        </div>
                         <div class="pt-4 mt-4 border-t border-slate-100">
                             <CustomFieldsManager
                                 entityType="maintenance"
@@ -895,6 +1002,38 @@
                                 class="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold"
                                 placeholder="CL-882299"
                             />
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <label
+                                    for="claim-amount"
+                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+                                    >Amount ($)</label
+                                >
+                                <input
+                                    id="claim-amount"
+                                    type="number"
+                                    bind:value={newClaim.amountClaimed}
+                                    class="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold font-mono"
+                                />
+                            </div>
+                            <div class="space-y-2">
+                                <label
+                                    for="claim-policy"
+                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+                                    >Policy</label
+                                >
+                                <select
+                                    id="claim-policy"
+                                    bind:value={newClaim.policyId}
+                                    class="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold"
+                                >
+                                    <option value={undefined}></option>
+                                    {#each insuranceSync.items as pol (pol.id)}
+                                        <option value={String(pol.id)}>{policyName(String(pol.id))}</option>
+                                    {/each}
+                                </select>
+                            </div>
                         </div>
                         <div class="space-y-2">
                             <label
@@ -962,7 +1101,7 @@
                                         >Memorialize</option
                                     >
                                     <option value="delete"
-                                        >Delete / Close</option
+                                        >Remove / Close the account</option
                                     >
                                     <option value="transfer"
                                         >Transfer Ownership</option
@@ -1013,7 +1152,7 @@
                         onclick={() => (showAddModal = false)}
                         class="px-8 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black hover:bg-slate-200 transition-all text-sm"
                     >
-                        Not right now
+                        Maybe later
                     </button>
                 </div>
             </div>
