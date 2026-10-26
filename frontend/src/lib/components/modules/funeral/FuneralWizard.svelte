@@ -94,16 +94,18 @@
     }
 
     function updateField(path: string[], value: any) {
+        // Copy each object along the path, so the saved data stays untouched
+        // and a failed save rolls back to the value that was really saved.
         funeralStore.update((data) => {
-            const newData = { ...data };
-            let current: any = newData.wishes;
+            const wishes: any = { ...data.wishes };
+            let current: any = wishes;
             for (let i = 0; i < path.length - 1; i++) {
-                if (!current[path[i]]) current[path[i]] = {};
+                current[path[i]] = { ...(current[path[i]] || {}) };
                 current = current[path[i]];
             }
             current[path[path.length - 1]] = value;
-            return newData;
-        });
+            return { ...data, wishes };
+        }).catch(() => {}); // the manager rolls back and shows the gentle retry line
     }
 
     function nextStep() {

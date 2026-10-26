@@ -3,10 +3,12 @@
 
     let {
         onrefresh,
+        onRefresh,
         label = "Refresh",
         size = 16,
     } = $props<{
-        onrefresh: () => void;
+        onrefresh?: () => void;
+        onRefresh?: () => void;
         label?: string;
         size?: number;
     }>();
@@ -15,7 +17,7 @@
 
     function handleClick() {
         isSpinning = true;
-        onrefresh();
+        (onrefresh ?? onRefresh)?.();
         setTimeout(() => {
             isSpinning = false;
         }, 500);

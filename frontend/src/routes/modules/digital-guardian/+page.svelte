@@ -20,7 +20,7 @@
     } from "lucide-svelte";
     import { onMount } from "svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
-    import { getStored } from "$lib/stores/persistence";
+    import { getStored, setStored } from "$lib/stores/persistence";
     import { digitalGuardianSync, type GuardianChecks } from "$lib/stores/digitalGuardianStore.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
@@ -82,10 +82,26 @@
     // carries them succeeds they stay in `pending`, drawn over whatever the manager holds (its
     // rollback, a sync, or its own Try Again), and the next save re-sends them.
     type Checks = { setupStatus?: GuardianChecks; fireDrill?: GuardianChecks };
-    let pending = $state<Checks | null>(null);
+    // `pending` is also kept on this device (namespaced like the manager's own key), so unsaved
+    // toggles survive a reload; it is cleared once a save carrying them lands.
+    const PENDING_KEY = "digital_guardian_pending";
+    let pending = $state<Checks | null>(getStored<Checks | null>(PENDING_KEY, null));
     let saveTimer: ReturnType<typeof setTimeout> | undefined;
     let saving = false;
     let failed = false;
+    $effect(() => {
+        setStored(PENDING_KEY, pending ? $state.snapshot(pending) : null);
+    });
+    // Toggles kept from before a reload: shown at once, sent once the server row has loaded.
+    let restored = pending !== null;
+    if (pending) digitalGuardianSync.updateLocal({ ...(digitalGuardianSync.data ?? {}), ...pending });
+    $effect(() => {
+        if (restored && digitalGuardianSync.status === "synced") {
+            restored = false;
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(flushChecks, 500);
+        }
+    });
 
     function saveChecks(next: Checks) {
         pending = { ...(pending ?? {}), ...next };
