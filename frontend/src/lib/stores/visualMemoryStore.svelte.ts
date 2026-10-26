@@ -1,6 +1,7 @@
 import { registerSync } from "$lib/services/sync.svelte";
 import { notifications } from "$lib/stores/notificationStore";
 import { deleteMedia, mediaIdFromRef } from "$lib/services/mediaService";
+import { oneSpelling } from "$lib/utils/oneSpelling";
 
 // --- Types ---
 
@@ -51,7 +52,8 @@ export interface FamilyMemory {
 const visualMapper = (data: Record<string, unknown>): VisualMemory => {
     if (!data) return data as unknown as VisualMemory;
     const tags = Array.isArray(data.tags) ? data.tags.join(',') : (data.tags ?? '');
-    return { ...data, tags } as unknown as VisualMemory;
+    // Server rows arrive camel-cased (isFavorite); the store and pages read is_favorite.
+    return oneSpelling({ ...data, tags }, { is_favorite: 'isFavorite' }) as unknown as VisualMemory;
 };
 
 export const tagList = (tags: string | string[] | null | undefined): string[] =>
@@ -184,7 +186,7 @@ export const updateFamilyMemory = (id: number, updates: Partial<FamilyMemory>) =
     const item = familyManager.items.find(m => m.id === id);
     if (item) return familyManager.update(id, { ...item, ...updates });
     notifications.showError({
-        message: 'We couldn\'t find that memory to save. It may have been moved \u2014 please refresh and try again when you\'re ready.',
+        message: 'That memory has moved. Refresh whenever you\'re ready and it will be here to save.',
         code: 'NOT_FOUND',
         technicalDetails: `updateFamilyMemory: no item with id ${id}`
     });

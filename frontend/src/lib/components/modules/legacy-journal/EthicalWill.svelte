@@ -20,10 +20,10 @@
 
     // Suggestions only: clicking one fills the form, the person decides whether to save it.
     const SUGGESTED_VALUES = [
-        { title: "Integrity", desc: "Doing the right thing, even when no one is watching.", iconName: "Shield" },
-        { title: "Curiosity", desc: "Keep learning and asking questions.", iconName: "Sun" },
-        { title: "Kindness", desc: "Everyone is fighting a battle you know nothing about.", iconName: "Heart" },
-        { title: "Resilience", desc: "What matters is how you get up after a fall.", iconName: "Anchor" },
+        { title: "Integrity", desc: "Doing the right thing, whoever is watching.", iconName: "Shield" },
+        { title: "Curiosity", desc: "A love of learning and asking questions.", iconName: "Sun" },
+        { title: "Kindness", desc: "Everyone carries something unseen.", iconName: "Heart" },
+        { title: "Resilience", desc: "What matters is how you rise after a fall.", iconName: "Anchor" },
     ];
 
     const EXAMPLE_LETTER = `To my dearest family,
@@ -205,7 +205,7 @@ With all my love,
                     <button
                         onclick={() => openValueForm()}
                         class="text-sm font-bold text-[#4A7C74] hover:underline"
-                        >+ Add Value</button
+                        >+ Add a value</button
                     >
                 </div>
 
