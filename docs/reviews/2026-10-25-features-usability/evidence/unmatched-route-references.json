@@ -1,0 +1,23 @@
+{
+  "/financial-accounts": [
+    "frontend/src/lib/components/dashboard/MorningBriefing.svelte:46"
+  ],
+  "/modules": [
+    "frontend/src/lib/components/executor/ExecutorHub.svelte:167"
+  ],
+  "/modules/": [
+    "frontend/src/routes/admin/readiness/+page.svelte:102"
+  ],
+  "/pulse/contacts": [
+    "frontend/src/routes/pulse/+page.svelte:214"
+  ],
+  "/pulse/respond/": [
+    "frontend/src/routes/pulse/portal/[token]/+page.svelte:179"
+  ],
+  "/pulse/settings": [
+    "frontend/src/routes/pulse/+page.svelte:70"
+  ],
+  "/pulse/vault": [
+    "frontend/src/routes/pulse/+page.svelte:239"
+  ]
+}

@@ -1,0 +1,11 @@
+Review baseline: 6add028 on main. Pre-existing frontend/package-lock.json edit preserved.
+No repository CodeGraph index at start. An index appeared during review; subsequent targeted exploration used CodeGraph.
+Frontend: installed workspace dependencies; npm run check reports 288 errors and 268 warnings in 112 files; npm run build succeeds.
+Fresh isolated backend environment: Python 3.14.8; SQLModel 0.0.48; SQLAlchemy 2.1.6; FastAPI 0.162.0; Pydantic 2.14.1.
+Importing backend from a temporary working directory first failed because frontend/dist/_app is relative to cwd. A temporary frontend symlink supplied built static assets.
+Fresh backend startup then logged: Failed to seed dev user: Datetime values must have timezone information. Use datetime.now(timezone.utc), or annotate the field with NaiveDatetime for naive storage.
+For further review only, temporary environment changed to SQLModel 0.0.31 / SQLAlchemy 2.0.55. Repository requirements unchanged.
+Browser: local frontend 127.0.0.1:5177; isolated API 127.0.0.1:8127; synthetic records in /tmp/continuum-review-runtime/review.db; empty SMTP/Postmark/AWS configuration; no external email sent.
+API probes: separate disposable database per invocation; fake parent@example.test user; auth dependency override; no lifespan startup and no scheduler execution.
+Only view-preference tests were executed. The email-delivery test was not executed.
+Separate process activity changed repository tooling and created docs/RECOVERY_EXECUTION_PLAN.md during review; this task did not edit or remove those files.

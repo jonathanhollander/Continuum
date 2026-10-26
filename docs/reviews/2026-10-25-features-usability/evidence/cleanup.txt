@@ -1,0 +1,1 @@
+Temporary browser closed. Review-only servers stopped. Removed disposable virtual environment, synthetic databases, local outboxes/uploads and fixture directories. Reclaimed approximately 110.5 MiB by file size. No worktrees created or removed. Main checkout, application source, existing databases and unrelated changes preserved. Evidence retained in this directory.

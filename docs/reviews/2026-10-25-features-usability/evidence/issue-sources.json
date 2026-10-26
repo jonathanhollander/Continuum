@@ -1,0 +1,142 @@
+{
+  "CU-001": [
+    "frontend/src/lib/services/sync.svelte.ts",
+    "frontend/src/lib/components/archetypes/AssetManager.svelte",
+    "backend/estate_models.py",
+    "backend/routers/estate_data.py"
+  ],
+  "CU-002": [
+    "frontend/src/lib/components/archetypes/DocumentVault.svelte",
+    "backend/routers/estate_data.py",
+    "backend/routers/documents.py"
+  ],
+  "CU-003": [
+    "frontend/src/routes/binder/+page.svelte",
+    "frontend/src/lib/services/exportService.ts",
+    "frontend/src/routes/export/preview/+page.svelte"
+  ],
+  "CU-004": [
+    "backend/routers/estate_data.py",
+    "backend/estate_models.py",
+    "backend/routers/heirlooms.py"
+  ],
+  "CU-005": [
+    "frontend/src/routes/executor/+page.svelte",
+    "frontend/src/routes/portal/[token]/+page.svelte",
+    "frontend/src/routes/+layout.svelte",
+    "backend/routers/pulse.py"
+  ],
+  "CU-006": [
+    "frontend/src/lib/services/sync.svelte.ts",
+    "frontend/src/lib/stores/estateStore.svelte.ts",
+    "backend/main.py"
+  ],
+  "CU-007": [
+    "frontend/src/lib/components/modules/legacy-journal/EthicalWill.svelte",
+    "frontend/src/lib/components/modules/legacy-journal/LifeLessons.svelte",
+    "backend/routers/estate_data.py"
+  ],
+  "CU-008": [
+    "frontend/src/routes/modules/letters/+page.svelte",
+    "frontend/src/lib/stores/letterStore.svelte.ts",
+    "backend/estate_models.py"
+  ],
+  "CU-009": [
+    "frontend/src/lib/stores/timeCapsuleStore.svelte.ts",
+    "frontend/src/routes/modules/time-capsule/+page.svelte",
+    "backend/routers/estate_data.py"
+  ],
+  "CU-010": [
+    "frontend/src/lib/services/mediaService.ts",
+    "frontend/src/lib/stores/auth.ts",
+    "frontend/src/lib/components/ui/FileUploader.svelte",
+    "frontend/src/lib/components/ui/EvidenceGalleryUploader.svelte",
+    "backend/routers/media.py"
+  ],
+  "CU-011": [
+    "frontend/src/lib/stores/funeralStore.svelte.ts",
+    "frontend/src/lib/stores/advancedAssetStore.svelte.ts",
+    "frontend/src/lib/services/sync.svelte.ts",
+    "backend/routers/estate_data.py"
+  ],
+  "CU-012": [
+    "frontend/src/lib/components/archetypes/DocumentVault.svelte",
+    "frontend/src/lib/stores/auditStore.svelte.ts",
+    "frontend/src/lib/utils/readiness.ts",
+    "frontend/src/lib/components/dashboard/EstateNetWorth.svelte",
+    "frontend/src/lib/components/archetypes/AssetManager.svelte"
+  ],
+  "CU-013": [
+    "frontend/src/lib/stores/activityLog.svelte.ts",
+    "backend/models/activity_models.py",
+    "frontend/src/lib/services/sync.svelte.ts",
+    "frontend/src/lib/stores/syncStatusStore.svelte.ts"
+  ],
+  "CU-014": [
+    "frontend/src/lib/stores/persistence.ts",
+    "frontend/src/lib/stores/profileContext.ts",
+    "frontend/src/lib/services/sync.svelte.ts",
+    "frontend/src/routes/+layout.svelte",
+    "backend/routers/estate_data.py"
+  ],
+  "CU-015": [
+    "frontend/src/routes/modules/executor-toolkit/+page.svelte",
+    "frontend/src/routes/executor/+page.svelte",
+    "frontend/src/routes/estate/[id]/+page.svelte"
+  ],
+  "CU-016": [
+    "frontend/src/lib/stores/calendarStore.svelte.ts",
+    "frontend/src/lib/stores/calendarStore.ts",
+    "frontend/src/lib/stores/timeCapsuleStore.svelte.ts"
+  ],
+  "CU-017": [
+    "frontend/src/lib/stores/auth.ts",
+    "backend/config.py",
+    "backend/routers/auth.py"
+  ],
+  "CU-018": [
+    "frontend/src/lib/config/navigation.ts",
+    "frontend/src/routes/dashboard/+page.svelte",
+    "frontend/src/routes/onboarding/+page.svelte"
+  ],
+  "CU-019": [
+    "frontend/src/lib/components/LivingBlueprintHeader.svelte",
+    "frontend/src/routes/modules/financial-accounts/+page.svelte",
+    "frontend/src/lib/components/layout/Sidebar.svelte"
+  ],
+  "CU-020": [
+    "frontend/src/lib/services/visionService.ts",
+    "frontend/src/lib/services/legalService.ts",
+    "frontend/src/lib/services/writerService.ts",
+    "frontend/src/routes/modules/letters/+page.svelte",
+    "frontend/src/routes/+layout.svelte"
+  ],
+  "CU-021": [
+    "frontend/src/lib/stores/qrStore.ts",
+    "frontend/src/routes/pulse/+page.svelte"
+  ],
+  "CU-022": [
+    "frontend/package.json",
+    "docs/TESTING.md",
+    "docs/README.md",
+    "CLAUDE.md"
+  ],
+  "CU-023": [
+    "backend/requirements.txt",
+    "backend/database.py",
+    "backend/main.py",
+    "backend/pulse_scheduler.py",
+    "backend/alembic/env.py"
+  ],
+  "CU-024": [
+    "backend/database.py",
+    "backend/routers/auth.py",
+    "backend/test_view_preferences.py",
+    "frontend/src/lib/stores/userPreferencesStore.svelte.ts"
+  ],
+  "CU-025": [
+    "frontend/src/lib/components/ui/Modal.svelte",
+    "frontend/src/lib/components/layout/MobileBottomNav.svelte",
+    "frontend/svelte.config.js"
+  ]
+}

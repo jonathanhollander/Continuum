@@ -1,0 +1,1024 @@
+[
+  {
+    "route": "/",
+    "source": "frontend/src/routes/+page.svelte",
+    "lines": 1492,
+    "stores_services": [
+      "keyringStore",
+      "marketing",
+      "persistence"
+    ],
+    "handlers": [
+      "animate",
+      "handleTilt",
+      "resetTilt",
+      "reveal",
+      "handleNameSubmit",
+      "handleEmailSubmit"
+    ]
+  },
+  {
+    "route": "/admin",
+    "source": "frontend/src/routes/admin/+page.svelte",
+    "lines": 55,
+    "stores_services": [],
+    "handlers": []
+  },
+  {
+    "route": "/admin/automation",
+    "source": "frontend/src/routes/admin/automation/+page.svelte",
+    "lines": 118,
+    "stores_services": [
+      "automationStore.svelte"
+    ],
+    "handlers": [
+      "toggleRule"
+    ]
+  },
+  {
+    "route": "/admin/health",
+    "source": "frontend/src/routes/admin/health/+page.svelte",
+    "lines": 122,
+    "stores_services": [
+      "auditStore.svelte"
+    ],
+    "handlers": []
+  },
+  {
+    "route": "/admin/readiness",
+    "source": "frontend/src/routes/admin/readiness/+page.svelte",
+    "lines": 133,
+    "stores_services": [
+      "auditStore.svelte"
+    ],
+    "handlers": []
+  },
+  {
+    "route": "/admin/ui-audit",
+    "source": "frontend/src/routes/admin/ui-audit/+page.svelte",
+    "lines": 116,
+    "stores_services": [],
+    "handlers": [
+      "toggle"
+    ]
+  },
+  {
+    "route": "/auth/verify",
+    "source": "frontend/src/routes/auth/verify/+page.svelte",
+    "lines": 143,
+    "stores_services": [],
+    "handlers": []
+  },
+  {
+    "route": "/binder",
+    "source": "frontend/src/routes/binder/+page.svelte",
+    "lines": 220,
+    "stores_services": [
+      "persistence"
+    ],
+    "handlers": [
+      "printBinder"
+    ]
+  },
+  {
+    "route": "/catalog",
+    "source": "frontend/src/routes/catalog/+page.svelte",
+    "lines": 165,
+    "stores_services": [],
+    "handlers": []
+  },
+  {
+    "route": "/concierge-window",
+    "source": "frontend/src/routes/concierge-window/+page.svelte",
+    "lines": 40,
+    "stores_services": [
+      "conciergeEngine"
+    ],
+    "handlers": []
+  },
+  {
+    "route": "/dashboard",
+    "source": "frontend/src/routes/dashboard/+page.svelte",
+    "lines": 935,
+    "stores_services": [
+      "auditStore.svelte",
+      "auth",
+      "conciergeStore.svelte",
+      "contextStore.svelte",
+      "digitalAssetsStore.svelte",
+      "estateStore.svelte",
+      "familyStore.svelte",
+      "financialAssetsStore.svelte",
+      "insuranceStore.svelte",
+      "medicalStore.svelte",
+      "notificationStore",
+      "preferenceStore",
+      "propertyStore.svelte",
+      "syncStatusStore.svelte"
+    ],
+    "handlers": [
+      "getModuleStatus",
+      "toggleStatusFilter",
+      "toggleSection",
+      "handleNavigation"
+    ]
+  },
+  {
+    "route": "/debug-textarea",
+    "source": "frontend/src/routes/debug-textarea/+page.svelte",
+    "lines": 36,
+    "stores_services": [],
+    "handlers": []
+  },
+  {
+    "route": "/estate/[id]",
+    "source": "frontend/src/routes/estate/[id]/+page.svelte",
+    "lines": 197,
+    "stores_services": [],
+    "handlers": []
+  },
+  {
+    "route": "/executor",
+    "source": "frontend/src/routes/executor/+page.svelte",
+    "lines": 297,
+    "stores_services": [
+      "auditStore.svelte",
+      "contextStore.svelte"
+    ],
+    "handlers": [
+      "toggleArea"
+    ]
+  },
+  {
+    "route": "/export/preview",
+    "source": "frontend/src/routes/export/preview/+page.svelte",
+    "lines": 145,
+    "stores_services": [
+      "exportService"
+    ],
+    "handlers": [
+      "downloadPDF",
+      "goBack"
+    ]
+  },
+  {
+    "route": "/help",
+    "source": "frontend/src/routes/help/+page.svelte",
+    "lines": 138,
+    "stores_services": [],
+    "handlers": []
+  },
+  {
+    "route": "/login",
+    "source": "frontend/src/routes/login/+page.svelte",
+    "lines": 403,
+    "stores_services": [
+      "auth",
+      "keyringStore",
+      "notificationStore"
+    ],
+    "handlers": [
+      "handlePasskeyLogin",
+      "handleMagicLink",
+      "handleKeydown"
+    ]
+  },
+  {
+    "route": "/marketing2",
+    "source": "frontend/src/routes/marketing2/+page.svelte",
+    "lines": 1533,
+    "stores_services": [
+      "keyringStore",
+      "marketing2",
+      "marketing2Dictionary",
+      "persistence"
+    ],
+    "handlers": [
+      "reveal",
+      "tilt3D",
+      "textReveal",
+      "handleNameSubmit",
+      "handleEmailSubmit",
+      "setLanguage"
+    ]
+  },
+  {
+    "route": "/marketing2/features",
+    "source": "frontend/src/routes/marketing2/features/+page.svelte",
+    "lines": 732,
+    "stores_services": [
+      "marketing2",
+      "marketing2Dictionary"
+    ],
+    "handlers": [
+      "reveal",
+      "tilt3D",
+      "setLanguage"
+    ]
+  },
+  {
+    "route": "/marketing2/how",
+    "source": "frontend/src/routes/marketing2/how/+page.svelte",
+    "lines": 769,
+    "stores_services": [
+      "marketing2",
+      "marketing2Dictionary"
+    ],
+    "handlers": [
+      "reveal",
+      "iconAnimate",
+      "setLanguage"
+    ]
+  },
+  {
+    "route": "/modules/[id]",
+    "source": "frontend/src/routes/modules/[id]/+page.svelte",
+    "lines": 88,
+    "stores_services": [],
+    "handlers": []
+  },
+  {
+    "route": "/modules/activity-log",
+    "source": "frontend/src/routes/modules/activity-log/+page.svelte",
+    "lines": 438,
+    "stores_services": [
+      "activityLog.svelte",
+      "userPreferencesStore.svelte"
+    ],
+    "handlers": [
+      "formatTimestamp",
+      "getAbsoluteTimestamp",
+      "exportAsJSON",
+      "exportAsCSV",
+      "clearLog",
+      "resetFilters"
+    ]
+  },
+  {
+    "route": "/modules/advanced-registry",
+    "source": "frontend/src/routes/modules/advanced-registry/+page.svelte",
+    "lines": 1022,
+    "stores_services": [
+      "advancedAssetStore.svelte",
+      "digitalAssetsStore.svelte",
+      "localization",
+      "userPreferencesStore.svelte"
+    ],
+    "handlers": [
+      "handleAdd"
+    ]
+  },
+  {
+    "route": "/modules/analytics",
+    "source": "frontend/src/routes/modules/analytics/+page.svelte",
+    "lines": 329,
+    "stores_services": [
+      "analyticsStore"
+    ],
+    "handlers": [
+      "getHealthColor",
+      "getHealthBg"
+    ]
+  },
+  {
+    "route": "/modules/anniversary-manager",
+    "source": "frontend/src/routes/modules/anniversary-manager/+page.svelte",
+    "lines": 537,
+    "stores_services": [
+      "calendarStore.svelte",
+      "localization",
+      "userPreferencesStore.svelte"
+    ],
+    "handlers": [
+      "handleAdd",
+      "formatDate"
+    ]
+  },
+  {
+    "route": "/modules/builders-console",
+    "source": "frontend/src/routes/modules/builders-console/+page.svelte",
+    "lines": 409,
+    "stores_services": [
+      "acceptanceStore.svelte"
+    ],
+    "handlers": [
+      "formatTime"
+    ]
+  },
+  {
+    "route": "/modules/calendar",
+    "source": "frontend/src/routes/modules/calendar/+page.svelte",
+    "lines": 706,
+    "stores_services": [
+      "localization",
+      "sync.svelte",
+      "userPreferencesStore.svelte"
+    ],
+    "handlers": [
+      "handleSave",
+      "editEvent",
+      "removeEvent",
+      "resetForm",
+      "formatDisplayDate",
+      "getMailtoLink"
+    ]
+  },
+  {
+    "route": "/modules/contacts",
+    "source": "frontend/src/routes/modules/contacts/+page.svelte",
+    "lines": 679,
+    "stores_services": [
+      "conciergeEngine",
+      "contextStore.svelte",
+      "familyStore.svelte",
+      "localization",
+      "userPreferencesStore.svelte"
+    ],
+    "handlers": [
+      "addContact",
+      "deleteContact",
+      "updateStatus"
+    ]
+  },
+  {
+    "route": "/modules/digital-guardian",
+    "source": "frontend/src/routes/modules/digital-guardian/+page.svelte",
+    "lines": 1017,
+    "stores_services": [
+      "activityLog.svelte",
+      "digitalAssetsStore.svelte",
+      "estateStore.svelte",
+      "localization",
+      "persistence",
+      "sync.svelte",
+      "userPreferencesStore.svelte"
+    ],
+    "handlers": [
+      "handleWizardComplete",
+      "updateStatus",
+      "addAsset",
+      "deleteAsset",
+      "markComplete",
+      "toggleGuide",
+      "toggleDrill"
+    ]
+  },
+  {
+    "route": "/modules/executor-guide",
+    "source": "frontend/src/routes/modules/executor-guide/+page.svelte",
+    "lines": 193,
+    "stores_services": [],
+    "handlers": []
+  },
+  {
+    "route": "/modules/executor-toolkit",
+    "source": "frontend/src/routes/modules/executor-toolkit/+page.svelte",
+    "lines": 229,
+    "stores_services": [
+      "scenarioStore.svelte"
+    ],
+    "handlers": [
+      "toggleCompletion"
+    ]
+  },
+  {
+    "route": "/modules/family-hub",
+    "source": "frontend/src/routes/modules/family-hub/+page.svelte",
+    "lines": 989,
+    "stores_services": [
+      "activityLog.svelte",
+      "estateStore.svelte",
+      "localization",
+      "userPreferencesStore.svelte",
+      "visualMemoryStore.svelte"
+    ],
+    "handlers": [
+      "handleConciergeAnswer",
+      "handleConciergeComplete",
+      "saveMemory",
+      "editMemory",
+      "resetForm",
+      "deleteMemory",
+      "startSlideshow",
+      "startTimer",
+      "stopTimer",
+      "nextSlide",
+      "prevSlide",
+      "togglePlay",
+      "closeSlideshow"
+    ]
+  },
+  {
+    "route": "/modules/financial-accounts",
+    "source": "frontend/src/routes/modules/financial-accounts/+page.svelte",
+    "lines": 156,
+    "stores_services": [
+      "localization",
+      "sync.svelte"
+    ],
+    "handlers": [
+      "handleWizardComplete",
+      "createAsset"
+    ]
+  },
+  {
+    "route": "/modules/funeral",
+    "source": "frontend/src/routes/modules/funeral/+page.svelte",
+    "lines": 615,
+    "stores_services": [
+      "activityLog.svelte",
+      "estateStore.svelte",
+      "funeralStore.svelte",
+      "localization",
+      "userPreferencesStore.svelte"
+    ],
+    "handlers": [
+      "editWish",
+      "addSong",
+      "removeSong",
+      "saveExpense",
+      "editExpense",
+      "resetExpenseForm",
+      "removeExpense",
+      "updateMood",
+      "prefillEstimates"
+    ]
+  },
+  {
+    "route": "/modules/funeral/traditions/[type]",
+    "source": "frontend/src/routes/modules/funeral/traditions/[type]/+page.svelte",
+    "lines": 97,
+    "stores_services": [],
+    "handlers": []
+  },
+  {
+    "route": "/modules/heirlooms",
+    "source": "frontend/src/routes/modules/heirlooms/+page.svelte",
+    "lines": 677,
+    "stores_services": [
+      "activityLog.svelte",
+      "estateStore.svelte",
+      "heirloomStore.svelte",
+      "localization",
+      "qrStore",
+      "userPreferencesStore.svelte",
+      "visionService"
+    ],
+    "handlers": [
+      "handleWizardComplete",
+      "addWizardItem",
+      "handleAnalysis",
+      "getsuggestedImage",
+      "addHeirloom",
+      "removeHeirloom",
+      "openQrModal",
+      "printLabel"
+    ]
+  },
+  {
+    "route": "/modules/home-manual",
+    "source": "frontend/src/routes/modules/home-manual/+page.svelte",
+    "lines": 887,
+    "stores_services": [
+      "localization",
+      "persistence",
+      "sync.svelte",
+      "userPreferencesStore.svelte"
+    ],
+    "handlers": [
+      "openVendorModal",
+      "saveVendor",
+      "deleteVendor",
+      "openCodeModal",
+      "saveCode",
+      "deleteCode",
+      "openUtilityModal",
+      "saveUtility",
+      "deleteUtility"
+    ]
+  },
+  {
+    "route": "/modules/insurance",
+    "source": "frontend/src/routes/modules/insurance/+page.svelte",
+    "lines": 1173,
+    "stores_services": [
+      "activityLog.svelte",
+      "estateStore.svelte",
+      "insuranceStore.svelte",
+      "localization",
+      "userPreferencesStore.svelte"
+    ],
+    "handlers": [
+      "handleWizardComplete",
+      "addWizardPolicy",
+      "resetForm",
+      "handleAddPolicy",
+      "editPolicy",
+      "deletePolicy"
+    ]
+  },
+  {
+    "route": "/modules/legacy-journal",
+    "source": "frontend/src/routes/modules/legacy-journal/+page.svelte",
+    "lines": 557,
+    "stores_services": [
+      "journalStore.svelte",
+      "localization",
+      "userPreferencesStore.svelte"
+    ],
+    "handlers": [
+      "openAddModal",
+      "openEditModal",
+      "saveEntry",
+      "deleteEntry",
+      "formatDate",
+      "prefillFromSample"
+    ]
+  },
+  {
+    "route": "/modules/legal-documents",
+    "source": "frontend/src/routes/modules/legal-documents/+page.svelte",
+    "lines": 43,
+    "stores_services": [
+      "userPreferencesStore.svelte"
+    ],
+    "handlers": []
+  },
+  {
+    "route": "/modules/letters",
+    "source": "frontend/src/routes/modules/letters/+page.svelte",
+    "lines": 1203,
+    "stores_services": [
+      "activityLog.svelte",
+      "estateStore.svelte",
+      "notificationStore",
+      "persistence",
+      "sync.svelte",
+      "userPreferencesStore.svelte"
+    ],
+    "handlers": [
+      "saveToVault",
+      "resetSelection",
+      "deleteLetter",
+      "viewLetter",
+      "refreshQuestion",
+      "startEmotionalFlow",
+      "selectTransactional",
+      "applyVariables",
+      "nextEmotionalPrompt",
+      "generateEmotionalDraft",
+      "simulateVoiceToText",
+      "stopRecording"
+    ]
+  },
+  {
+    "route": "/modules/medical",
+    "source": "frontend/src/routes/modules/medical/+page.svelte",
+    "lines": 621,
+    "stores_services": [
+      "activityLog.svelte",
+      "estateStore.svelte",
+      "localization",
+      "medicalStore.svelte",
+      "userPreferencesStore.svelte"
+    ],
+    "handlers": [
+      "saveProfile",
+      "saveDirective",
+      "editDirective",
+      "resetForm",
+      "removeDirective"
+    ]
+  },
+  {
+    "route": "/modules/pets",
+    "source": "frontend/src/routes/modules/pets/+page.svelte",
+    "lines": 561,
+    "stores_services": [
+      "activityLog.svelte",
+      "estateStore.svelte",
+      "localization",
+      "petStore.svelte",
+      "userPreferencesStore.svelte"
+    ],
+    "handlers": [
+      "savePet",
+      "editPet",
+      "resetForm",
+      "closeAndReset",
+      "removePet"
+    ]
+  },
+  {
+    "route": "/modules/property",
+    "source": "frontend/src/routes/modules/property/+page.svelte",
+    "lines": 1135,
+    "stores_services": [
+      "activityLog.svelte",
+      "estateStore.svelte",
+      "localization",
+      "propertyStore.svelte",
+      "qrStore",
+      "userPreferencesStore.svelte"
+    ],
+    "handlers": [
+      "handleWizardComplete",
+      "addWizardItem",
+      "resetForm",
+      "handleAddItem",
+      "editItem",
+      "deleteItem",
+      "generateQR"
+    ]
+  },
+  {
+    "route": "/modules/pulse",
+    "source": "frontend/src/routes/modules/pulse/+page.svelte",
+    "lines": 391,
+    "stores_services": [
+      "pulse.svelte"
+    ],
+    "handlers": [
+      "fetchSafetyStatus",
+      "checkIn",
+      "startSafety",
+      "cancelSafety",
+      "getTimeRemaining"
+    ]
+  },
+  {
+    "route": "/modules/pulse/contacts",
+    "source": "frontend/src/routes/modules/pulse/contacts/+page.svelte",
+    "lines": 30,
+    "stores_services": [],
+    "handlers": []
+  },
+  {
+    "route": "/modules/pulse/escalation",
+    "source": "frontend/src/routes/modules/pulse/escalation/+page.svelte",
+    "lines": 30,
+    "stores_services": [],
+    "handlers": []
+  },
+  {
+    "route": "/modules/pulse/history",
+    "source": "frontend/src/routes/modules/pulse/history/+page.svelte",
+    "lines": 157,
+    "stores_services": [],
+    "handlers": [
+      "getFilteredHistory",
+      "getMethodIcon"
+    ]
+  },
+  {
+    "route": "/modules/pulse/messages",
+    "source": "frontend/src/routes/modules/pulse/messages/+page.svelte",
+    "lines": 289,
+    "stores_services": [],
+    "handlers": [
+      "refreshData",
+      "sendMessage",
+      "getMessagesForContact",
+      "getLatestMessageTime",
+      "getLastMessagePreview"
+    ]
+  },
+  {
+    "route": "/modules/pulse/settings",
+    "source": "frontend/src/routes/modules/pulse/settings/+page.svelte",
+    "lines": 503,
+    "stores_services": [
+      "pulse.svelte"
+    ],
+    "handlers": [
+      "loadData",
+      "saveSettings",
+      "updateTier",
+      "updateContact",
+      "toggleGhostMode",
+      "toggleBiometric",
+      "getContactsForTier",
+      "addContact",
+      "deleteContact"
+    ]
+  },
+  {
+    "route": "/modules/pulse/transparency",
+    "source": "frontend/src/routes/modules/pulse/transparency/+page.svelte",
+    "lines": 285,
+    "stores_services": [],
+    "handlers": [
+      "mapTiersToUI"
+    ]
+  },
+  {
+    "route": "/modules/pulse/vault",
+    "source": "frontend/src/routes/modules/pulse/vault/+page.svelte",
+    "lines": 333,
+    "stores_services": [],
+    "handlers": [
+      "loadVault",
+      "addItem",
+      "deleteItem"
+    ]
+  },
+  {
+    "route": "/modules/qr-codes",
+    "source": "frontend/src/routes/modules/qr-codes/+page.svelte",
+    "lines": 616,
+    "stores_services": [
+      "activityLog.svelte",
+      "estateStore.svelte",
+      "localization",
+      "qrStore",
+      "userPreferencesStore.svelte"
+    ],
+    "handlers": [
+      "generatePack",
+      "printPack",
+      "deleteAssetQR"
+    ]
+  },
+  {
+    "route": "/modules/scenario-mode",
+    "source": "frontend/src/routes/modules/scenario-mode/+page.svelte",
+    "lines": 336,
+    "stores_services": [
+      "analyticsStore",
+      "estateStore.svelte"
+    ],
+    "handlers": []
+  },
+  {
+    "route": "/modules/simulator",
+    "source": "frontend/src/routes/modules/simulator/+page.svelte",
+    "lines": 328,
+    "stores_services": [
+      "persistence"
+    ],
+    "handlers": [
+      "runSimulation",
+      "reset"
+    ]
+  },
+  {
+    "route": "/modules/subscriptions",
+    "source": "frontend/src/routes/modules/subscriptions/+page.svelte",
+    "lines": 786,
+    "stores_services": [
+      "activityLog.svelte",
+      "estateStore.svelte",
+      "localization",
+      "sync.svelte",
+      "userPreferencesStore.svelte"
+    ],
+    "handlers": [
+      "generateDefaultLetter",
+      "saveSubscription",
+      "editSubscription",
+      "resetForm",
+      "removeSubscription",
+      "openLetterModal",
+      "resetLetter",
+      "closeLetterModal"
+    ]
+  },
+  {
+    "route": "/modules/time-capsule",
+    "source": "frontend/src/routes/modules/time-capsule/+page.svelte",
+    "lines": 621,
+    "stores_services": [
+      "indexedDB",
+      "localization",
+      "timeCapsuleStore.svelte",
+      "userPreferencesStore.svelte"
+    ],
+    "handlers": [
+      "handleAdd",
+      "handleSaveVideo",
+      "playVideo",
+      "getMilestoneLabel",
+      "formatDate"
+    ]
+  },
+  {
+    "route": "/modules/timeline",
+    "source": "frontend/src/routes/modules/timeline/+page.svelte",
+    "lines": 945,
+    "stores_services": [
+      "familyStore.svelte",
+      "localization",
+      "timelineStore.svelte",
+      "userPreferencesStore.svelte"
+    ],
+    "handlers": [
+      "saveEvent",
+      "editEvent",
+      "resetForm",
+      "removeEvent",
+      "getPosition",
+      "handleMouseMove",
+      "getIcon"
+    ]
+  },
+  {
+    "route": "/modules/treasure-hunt",
+    "source": "frontend/src/routes/modules/treasure-hunt/+page.svelte",
+    "lines": 113,
+    "stores_services": [],
+    "handlers": [
+      "openTreasureHunt"
+    ]
+  },
+  {
+    "route": "/modules/visual-memories",
+    "source": "frontend/src/routes/modules/visual-memories/+page.svelte",
+    "lines": 475,
+    "stores_services": [
+      "userPreferencesStore.svelte",
+      "visualMemoryStore.svelte"
+    ],
+    "handlers": [
+      "openArchiveModal",
+      "saveArchive",
+      "handleDeleteArchive",
+      "handleFileUpload",
+      "triggerUpload",
+      "toggleSelectionMode",
+      "handleBulkDeleteSubmit",
+      "handleBulkTag"
+    ]
+  },
+  {
+    "route": "/onboarding",
+    "source": "frontend/src/routes/onboarding/+page.svelte",
+    "lines": 336,
+    "stores_services": [
+      "auth",
+      "conciergeEngine",
+      "preferenceStore"
+    ],
+    "handlers": [
+      "checkOnboardingStatus",
+      "handleNameSubmit",
+      "handleNameKeydown",
+      "completeOnboarding"
+    ]
+  },
+  {
+    "route": "/portal/[token]",
+    "source": "frontend/src/routes/portal/[token]/+page.svelte",
+    "lines": 183,
+    "stores_services": [],
+    "handlers": [
+      "sendNudge",
+      "confirmContact"
+    ]
+  },
+  {
+    "route": "/pulse",
+    "source": "frontend/src/routes/pulse/+page.svelte",
+    "lines": 251,
+    "stores_services": [
+      "pulse.svelte"
+    ],
+    "handlers": [
+      "handleCheckin"
+    ]
+  },
+  {
+    "route": "/pulse/portal/[token]",
+    "source": "frontend/src/routes/pulse/portal/[token]/+page.svelte",
+    "lines": 337,
+    "stores_services": [
+      "pulse.svelte"
+    ],
+    "handlers": [
+      "fetchPortal",
+      "sendHug"
+    ]
+  },
+  {
+    "route": "/pulse/respond/[token]",
+    "source": "frontend/src/routes/pulse/respond/[token]/+page.svelte",
+    "lines": 200,
+    "stores_services": [],
+    "handlers": [
+      "handleAction"
+    ]
+  },
+  {
+    "route": "/pulse/verify/[token]",
+    "source": "frontend/src/routes/pulse/verify/[token]/+page.svelte",
+    "lines": 130,
+    "stores_services": [],
+    "handlers": []
+  },
+  {
+    "route": "/resources/grief-support",
+    "source": "frontend/src/routes/resources/grief-support/+page.svelte",
+    "lines": 516,
+    "stores_services": [
+      "aiGriefService",
+      "conciergeStore.svelte",
+      "hotlineService",
+      "localization",
+      "supportService"
+    ],
+    "handlers": [
+      "handleResourceClick",
+      "closeGuide",
+      "handleChat",
+      "handleDiscovery",
+      "refreshHotlines"
+    ]
+  },
+  {
+    "route": "/settings",
+    "source": "frontend/src/routes/settings/+page.svelte",
+    "lines": 29,
+    "stores_services": [
+      "conciergeStore.svelte"
+    ],
+    "handlers": []
+  },
+  {
+    "route": "/settings/data",
+    "source": "frontend/src/routes/settings/data/+page.svelte",
+    "lines": 516,
+    "stores_services": [
+      "sync.svelte",
+      "testDataFactory"
+    ],
+    "handlers": [
+      "refreshTestRegistry",
+      "runAudit",
+      "syncAll",
+      "generateTestData",
+      "purgeTestData",
+      "isTestRow",
+      "getGroupKey"
+    ]
+  },
+  {
+    "route": "/signup",
+    "source": "frontend/src/routes/signup/+page.svelte",
+    "lines": 340,
+    "stores_services": [
+      "auth",
+      "notificationStore"
+    ],
+    "handlers": [
+      "for",
+      "retryPasskeyRegistration",
+      "handleEmailSubmit",
+      "handlePasskeyRegistration",
+      "handleKeydown"
+    ]
+  },
+  {
+    "route": "/start",
+    "source": "frontend/src/routes/start/+page.svelte",
+    "lines": 226,
+    "stores_services": [
+      "accessibilityStore",
+      "conciergeEngine",
+      "preferenceStore"
+    ],
+    "handlers": [
+      "startGuided",
+      "startExpert"
+    ]
+  },
+  {
+    "route": "/test-registry",
+    "source": "frontend/src/routes/test-registry/+page.svelte",
+    "lines": 6,
+    "stores_services": [],
+    "handlers": []
+  },
+  {
+    "route": "/tools/ai-audit",
+    "source": "frontend/src/routes/tools/ai-audit/+page.svelte",
+    "lines": 258,
+    "stores_services": [],
+    "handlers": [
+      "getIcon",
+      "getColor"
+    ]
+  },
+  {
+    "route": "/welcome",
+    "source": "frontend/src/routes/welcome/+page.svelte",
+    "lines": 178,
+    "stores_services": [
+      "auth",
+      "notificationStore"
+    ],
+    "handlers": [
+      "goToContacts",
+      "skipForNow",
+      "goToGuided"
+    ]
+  }
+]

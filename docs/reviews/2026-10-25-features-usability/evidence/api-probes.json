@@ -1,0 +1,529 @@
+{
+  "isolation": "Disposable DB; fake user; dependency override; no lifespan, external email, or scheduler; SQLModel 0.0.31 compatibility environment",
+  "results": [
+    {
+      "probe": "document UI endpoint",
+      "method": "GET",
+      "path": "/api/data/vault_documents",
+      "status": 400,
+      "response": {
+        "error": {
+          "message": "Invalid type: vault_documents",
+          "code": "HTTP_ERROR",
+          "details": {},
+          "timestamp": "2026-10-26T04:00:57.557711"
+        },
+        "_technical": "HTTP 400: Invalid type: vault_documents"
+      }
+    },
+    {
+      "probe": "ethical will UI endpoint",
+      "method": "GET",
+      "path": "/api/data/ethical_will",
+      "status": 400,
+      "response": {
+        "error": {
+          "message": "Invalid type: ethical_will",
+          "code": "HTTP_ERROR",
+          "details": {},
+          "timestamp": "2026-10-26T04:00:57.562624"
+        },
+        "_technical": "HTTP 400: Invalid type: ethical_will"
+      }
+    },
+    {
+      "probe": "life lessons UI endpoint",
+      "method": "GET",
+      "path": "/api/data/life_lessons",
+      "status": 400,
+      "response": {
+        "error": {
+          "message": "Invalid type: life_lessons",
+          "code": "HTTP_ERROR",
+          "details": {},
+          "timestamp": "2026-10-26T04:00:57.566508"
+        },
+        "_technical": "HTTP 400: Invalid type: life_lessons"
+      }
+    },
+    {
+      "probe": "estate profile raw singleton payload",
+      "method": "POST",
+      "path": "/api/estate/profile",
+      "status": 422,
+      "response": {
+        "detail": [
+          {
+            "type": "missing",
+            "loc": [
+              "body",
+              "data"
+            ],
+            "msg": "Field required",
+            "input": {
+              "owner_name": "Review Parent"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "probe": "estate profile server envelope control",
+      "method": "POST",
+      "path": "/api/estate/profile",
+      "status": 200,
+      "response": {
+        "ownerName": "Review Parent"
+      }
+    },
+    {
+      "probe": "funeral singleton gets collection",
+      "method": "GET",
+      "path": "/api/data/funeral_data",
+      "status": 200,
+      "response": []
+    },
+    {
+      "probe": "funeral singleton posts object",
+      "method": "POST",
+      "path": "/api/data/funeral_data",
+      "status": 200,
+      "response": {
+        "user_id": 1,
+        "wishes": "{\"venue\": \"Review Hall\"}",
+        "custom_attributes": "{}",
+        "budget": "[]",
+        "id": 1
+      }
+    },
+    {
+      "probe": "funeral singleton reload",
+      "method": "GET",
+      "path": "/api/data/funeral_data",
+      "status": 200,
+      "response": [
+        {
+          "user_id": 1,
+          "wishes": "{\"venue\": \"Review Hall\"}",
+          "custom_attributes": "{}",
+          "budget": "[]",
+          "id": 1
+        }
+      ]
+    },
+    {
+      "probe": "property snake payload loses camel model fields",
+      "method": "POST",
+      "path": "/api/data/properties",
+      "status": 200,
+      "response": {
+        "location": null,
+        "platform": null,
+        "type": "Real Estate",
+        "purchaseDate": null,
+        "username": null,
+        "status": "active",
+        "maintenanceSchedule": null,
+        "instructions": null,
+        "ownershipDetails": null,
+        "thumbnail": null,
+        "priority": null,
+        "user_id": 1,
+        "documents": "Review deed",
+        "beneficiary_id": null,
+        "image": null,
+        "id": 1,
+        "notes": null,
+        "recipient": null,
+        "is_closed": false,
+        "name": "Review House",
+        "custom_attributes": "{}",
+        "story": null,
+        "closure_date": null,
+        "valuation": 100000.0
+      }
+    },
+    {
+      "probe": "digital category sees property",
+      "method": "GET",
+      "path": "/api/data/digital_assets",
+      "status": 200,
+      "response": [
+        {
+          "location": null,
+          "platform": null,
+          "type": "Real Estate",
+          "purchaseDate": null,
+          "username": null,
+          "status": "active",
+          "maintenanceSchedule": null,
+          "instructions": null,
+          "ownershipDetails": null,
+          "thumbnail": null,
+          "priority": null,
+          "user_id": 1,
+          "documents": "Review deed",
+          "beneficiary_id": null,
+          "image": null,
+          "id": 1,
+          "notes": null,
+          "recipient": null,
+          "is_closed": false,
+          "name": "Review House",
+          "custom_attributes": "{}",
+          "story": null,
+          "closure_date": null,
+          "valuation": 100000.0
+        }
+      ]
+    },
+    {
+      "probe": "heirloom category sees property",
+      "method": "GET",
+      "path": "/api/data/heirlooms",
+      "status": 200,
+      "response": [
+        {
+          "location": null,
+          "platform": null,
+          "type": "Real Estate",
+          "purchaseDate": null,
+          "username": null,
+          "status": "active",
+          "maintenanceSchedule": null,
+          "instructions": null,
+          "ownershipDetails": null,
+          "thumbnail": null,
+          "priority": null,
+          "user_id": 1,
+          "documents": "Review deed",
+          "beneficiary_id": null,
+          "image": null,
+          "id": 1,
+          "notes": null,
+          "recipient": null,
+          "is_closed": false,
+          "name": "Review House",
+          "custom_attributes": "{}",
+          "story": null,
+          "closure_date": null,
+          "valuation": 100000.0
+        }
+      ]
+    },
+    {
+      "probe": "digital screen payload lacks required asset name",
+      "method": "POST",
+      "path": "/api/data/digital_assets",
+      "status": 422,
+      "response": {
+        "error": {
+          "message": "1 validation error for Asset\nname\n  Field required [type=missing, input_value={'platform': 'Review Mail...'Ask son', 'user_id': 1}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.14/v/missing",
+          "code": "HTTP_ERROR",
+          "details": {},
+          "timestamp": "2026-10-26T04:00:57.631137"
+        },
+        "_technical": "HTTP 422: 1 validation error for Asset\nname\n  Field required [type=missing, input_value={'platform': 'Review Mail...'Ask son', 'user_id': 1}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.14/v/missing"
+      }
+    },
+    {
+      "probe": "financial UI payload camel fields converted to snake",
+      "method": "POST",
+      "path": "/api/data/financial_accounts",
+      "status": 200,
+      "response": {
+        "custom_attributes": "{}",
+        "notes": "Call review advisor",
+        "customAttributes": null,
+        "user_id": 1,
+        "name": "Review Checking",
+        "loginUrl": null,
+        "id": 1,
+        "type": "Financial",
+        "beneficiaryEmail": null,
+        "institution": null,
+        "value": 1234.0,
+        "image": null,
+        "account_type": null,
+        "location": null,
+        "is_closed": false,
+        "account_number_encrypted": null,
+        "accountNumber": null,
+        "closure_date": null,
+        "holder_name": null,
+        "ownershipPercentage": null,
+        "valueHistory": null,
+        "balance_estimate": null,
+        "beneficiaries": "Review Son",
+        "closureNotes": null
+      }
+    },
+    {
+      "probe": "financial edit snake field is ignored",
+      "method": "PUT",
+      "path": "/api/data/financial_accounts/1",
+      "status": 200,
+      "response": {
+        "custom_attributes": "{}",
+        "notes": "Call review advisor",
+        "customAttributes": null,
+        "user_id": 1,
+        "name": "Review Checking",
+        "loginUrl": null,
+        "id": 1,
+        "type": "Financial",
+        "beneficiaryEmail": null,
+        "institution": null,
+        "value": 1234.0,
+        "image": null,
+        "account_type": null,
+        "location": null,
+        "is_closed": false,
+        "account_number_encrypted": null,
+        "accountNumber": null,
+        "closure_date": null,
+        "holder_name": null,
+        "ownershipPercentage": null,
+        "valueHistory": null,
+        "balance_estimate": null,
+        "beneficiaries": "Review Son",
+        "closureNotes": null
+      }
+    },
+    {
+      "probe": "plain journal create",
+      "method": "POST",
+      "path": "/api/data/journal_entries",
+      "status": 200,
+      "response": {
+        "id": 1,
+        "title": "Review memory",
+        "tags": null,
+        "content": "A synthetic memory for my son.",
+        "user_id": 1,
+        "type": "reflection",
+        "created_at": "2026-10-26T04:00:57.650531"
+      }
+    },
+    {
+      "probe": "journal edit carries created_at",
+      "method": "PUT",
+      "path": "/api/data/journal_entries/1",
+      "status": 422,
+      "response": {
+        "error": {
+          "message": "Cannot update protected fields: {'created_at'}",
+          "code": "HTTP_ERROR",
+          "details": {},
+          "timestamp": "2026-10-26T04:00:57.658631"
+        },
+        "_technical": "HTTP 422: Cannot update protected fields: {'created_at'}"
+      }
+    },
+    {
+      "probe": "plain letter create",
+      "method": "POST",
+      "path": "/api/data/future_letters",
+      "status": 200,
+      "response": {
+        "title": "For my son",
+        "id": 1,
+        "release_condition": "death",
+        "date": null,
+        "triggerDate": null,
+        "isLocked": false,
+        "content": "Synthetic review letter.",
+        "user_id": 1,
+        "recipient_name": null,
+        "status": "draft",
+        "type": "emotional",
+        "triggerMilestone": null,
+        "custom_attributes": "{}"
+      }
+    },
+    {
+      "probe": "time capsule mapper carries created_at",
+      "method": "POST",
+      "path": "/api/data/time_capsule",
+      "status": 422,
+      "response": {
+        "error": {
+          "message": "Cannot set protected fields: {'created_at'}",
+          "code": "HTTP_ERROR",
+          "details": {},
+          "timestamp": "2026-10-26T04:00:57.673989"
+        },
+        "_technical": "HTTP 422: Cannot set protected fields: {'created_at'}"
+      }
+    },
+    {
+      "probe": "medical profile partial payload lacks user_id",
+      "method": "POST",
+      "path": "/api/medical/profile",
+      "status": 200,
+      "response": {}
+    },
+    {
+      "probe": "medical profile persisted values after save",
+      "method": "GET",
+      "path": "/api/medical/profile",
+      "status": 200,
+      "response": {
+        "organ_donor": true,
+        "blood_type": "O+",
+        "custom_attributes": "{}",
+        "allergies": "None",
+        "user_id": 1
+      }
+    },
+    {
+      "probe": "subscription UI payload",
+      "method": "POST",
+      "path": "/api/data/subscriptions",
+      "status": 200,
+      "response": {
+        "frequency": "monthly",
+        "user_id": 1,
+        "name": "Review Service",
+        "difficulty": null,
+        "renewal_date": null,
+        "custom_attributes": "{}",
+        "nextBilling": null,
+        "notes": null,
+        "id": 1,
+        "cost": 10.0,
+        "cycle": "monthly",
+        "paymentMethod": null,
+        "auto_renew": true,
+        "cancellationInstructions": null,
+        "loginUrl": null
+      }
+    },
+    {
+      "probe": "home access actual UI contract control",
+      "method": "POST",
+      "path": "/api/data/home_access",
+      "status": 200,
+      "response": {
+        "location": "Review safe",
+        "instructions": "Upstairs",
+        "user_id": 1,
+        "code_encrypted": "1234",
+        "id": 1
+      }
+    },
+    {
+      "probe": "vendor control",
+      "method": "POST",
+      "path": "/api/data/vendors",
+      "status": 200,
+      "response": {
+        "category": "Plumber",
+        "id": 1,
+        "email": null,
+        "notes": null,
+        "user_id": 1,
+        "name": "Review Plumber",
+        "phone": "555-0100",
+        "website": null
+      }
+    },
+    {
+      "probe": "utility control",
+      "method": "POST",
+      "path": "/api/data/utilities",
+      "status": 200,
+      "response": {
+        "id": 1,
+        "user_id": 1,
+        "service_type": "Water",
+        "account_number": null,
+        "provider": "Review Water",
+        "location": null,
+        "support_phone": null
+      }
+    },
+    {
+      "probe": "calendar UI camel fields converted to snake",
+      "method": "POST",
+      "path": "/api/data/calendar_events",
+      "status": 200,
+      "response": {
+        "type": "anniversary",
+        "user_id": 1,
+        "title": "Review Anniversary",
+        "description": null,
+        "recurring": true,
+        "tags": null,
+        "id": 1,
+        "date": "2026-10-25",
+        "ritual_instructions": null,
+        "custom_attributes": "{}"
+      }
+    },
+    {
+      "probe": "actual document API control",
+      "method": "POST",
+      "path": "/api/data/documents",
+      "status": 200,
+      "response": {
+        "user_id": 1,
+        "title": "Review Will",
+        "category": "will",
+        "location_physical": "Review safe",
+        "status": "verified",
+        "notes": null,
+        "id": 1,
+        "name": null,
+        "file_path": null,
+        "is_digitized": false,
+        "location": null
+      }
+    },
+    {
+      "probe": "activity log actual payload after UUID ID stripped",
+      "method": "POST",
+      "path": "/api/data/activity_log",
+      "status": 400,
+      "response": {
+        "error": {
+          "message": "Could not create item: (sqlite3.IntegrityError) NOT NULL constraint failed: activity_log_entries.id\n[SQL: INSERT INTO activity_log_entries (user_id, timestamp, module, action, entity_type, entity_id, entity_name, changes, user_context) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)]\n[parameters: (1, '2026-01-01 00:00:00.000000', 'Financial', 'CREATE', 'Asset', '1', 'Review Checking', 'null', 'Review Parent')]\n(Background on this error at: https://sqlalche.me/e/20/gkpj)",
+          "code": "HTTP_ERROR",
+          "details": {},
+          "timestamp": "2026-10-26T04:00:57.749299"
+        },
+        "_technical": "HTTP 400: Could not create item: (sqlite3.IntegrityError) NOT NULL constraint failed: activity_log_entries.id\n[SQL: INSERT INTO activity_log_entries (user_id, timestamp, module, action, entity_type, entity_id, entity_name, changes, user_context) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)]\n[parameters: (1, '2026-01-01 00:00:00.000000', 'Financial', 'CREATE', 'Asset', '1', 'Review Checking', 'null', 'Review Parent')]\n(Background on this error at: https://sqlalche.me/e/20/gkpj)"
+      }
+    },
+    {
+      "probe": "journal update with normalized writable fields control",
+      "method": "PUT",
+      "path": "/api/data/journal_entries/1",
+      "status": 200,
+      "response": {
+        "id": 1,
+        "title": "Review edit",
+        "tags": null,
+        "content": "Updated synthetic reflection",
+        "user_id": 1,
+        "type": "reflection",
+        "created_at": "2026-10-26T04:00:57.650531"
+      }
+    },
+    {
+      "probe": "media without bearer token (service reads wrong storage key)",
+      "method": "GET",
+      "path": "/api/media/",
+      "status": 401,
+      "response": {
+        "error": {
+          "message": "Could not validate credentials",
+          "code": "HTTP_ERROR",
+          "details": {},
+          "timestamp": "2026-10-26T04:00:57.758965"
+        },
+        "_technical": "HTTP 401: Could not validate credentials"
+      }
+    }
+  ]
+}

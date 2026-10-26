@@ -1,0 +1,16 @@
+backend/test_email.py::test_email_service
+backend/test_view_preferences.py::test_user_model
+backend/test_view_preferences.py::test_pydantic_models
+
+=============================== warnings summary ===============================
+../continuum-review-venv/lib/python3.14/site-packages/sqlmodel/main.py:534
+../continuum-review-venv/lib/python3.14/site-packages/sqlmodel/main.py:534
+  /private/tmp/continuum-review-venv/lib/python3.14/site-packages/sqlmodel/main.py:534: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.14/migration/
+    new_cls = super().__new__(cls, name, bases, dict_used, **config_kwargs)
+
+../continuum-review-venv/lib/python3.14/site-packages/slowapi/extension.py:720: 11 warnings
+  /private/tmp/continuum-review-venv/lib/python3.14/site-packages/slowapi/extension.py:720: DeprecationWarning: 'asyncio.iscoroutinefunction' is deprecated and slated for removal in Python 3.16; use inspect.iscoroutinefunction() instead
+    if asyncio.iscoroutinefunction(func):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+3 tests collected in 0.70s

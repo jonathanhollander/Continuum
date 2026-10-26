@@ -1,0 +1,91 @@
+F.                                                                       [100%]
+=================================== FAILURES ===================================
+_______________________________ test_user_model ________________________________
+
+    def test_user_model():
+        """Test that User model has view_preferences field"""
+        print("Testing User model...")
+    
+        with Session(engine) as session:
+            # Get first user or create test user
+            user = session.exec(select(User)).first()
+    
+            if not user:
+                print("No users found. Creating test user...")
+                from backend.auth import get_password_hash
+                user = User(
+                    email="test@example.com",
+                    external_id="test-user",
+                    hashed_password=get_password_hash("test123")
+                )
+                session.add(user)
+                session.commit()
+                session.refresh(user)
+                print(f"Created test user: {user.email}")
+    
+            print(f"Using user: {user.email}")
+    
+            # Test that view_preferences field exists and can be set
+>           print(f"Current view_preferences: {user.view_preferences}")
+                                               ^^^^^^^^^^^^^^^^^^^^^
+
+/Users/jonathanhollander/AI Code/Continuum/backend/test_view_preferences.py:41: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = User(external_id='dev-user-1', email='dev@continuum.im', public_key=None, created_at=datetime.datetime(2026, 10, 26, 3...unt=0, user_role='planning', overwhelm_muted=False, deceased_name=None, onboarding_completed=False, font_size='normal')
+item = 'view_preferences'
+
+    def __getattr__(self, item: str) -> Any:
+        private_attributes = object.__getattribute__(self, '__private_attributes__')
+        if item in private_attributes:
+            attribute = private_attributes[item]
+            if hasattr(attribute, '__get__'):
+                return attribute.__get__(self, type(self))  # type: ignore
+    
+            try:
+                # Note: self.__pydantic_private__ cannot be None if self.__private_attributes__ has items
+                return self.__pydantic_private__[item]  # type: ignore
+            except KeyError as exc:
+                raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}') from exc
+        else:
+            # `__pydantic_extra__` can fail to be set if the model is not yet fully initialized.
+            # See `BaseModel.__repr_args__` for more details
+            try:
+                pydantic_extra = object.__getattribute__(self, '__pydantic_extra__')
+            except AttributeError:
+                pydantic_extra = None
+    
+            if pydantic_extra and item in pydantic_extra:
+                return pydantic_extra[item]
+            else:
+                if hasattr(self.__class__, item):
+                    return super().__getattribute__(item)  # Raises AttributeError if appropriate
+                else:
+                    # this is the current error
+>                   raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+E                   AttributeError: 'User' object has no attribute 'view_preferences'
+
+../continuum-review-venv/lib/python3.14/site-packages/pydantic/main.py:1105: AttributeError
+----------------------------- Captured stdout call -----------------------------
+Testing User model...
+Using user: dev@continuum.im
+=============================== warnings summary ===============================
+../continuum-review-venv/lib/python3.14/site-packages/sqlmodel/main.py:534
+../continuum-review-venv/lib/python3.14/site-packages/sqlmodel/main.py:534
+  /private/tmp/continuum-review-venv/lib/python3.14/site-packages/sqlmodel/main.py:534: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.14/migration/
+    new_cls = super().__new__(cls, name, bases, dict_used, **config_kwargs)
+
+../continuum-review-venv/lib/python3.14/site-packages/slowapi/extension.py:720: 11 warnings
+  /private/tmp/continuum-review-venv/lib/python3.14/site-packages/slowapi/extension.py:720: DeprecationWarning: 'asyncio.iscoroutinefunction' is deprecated and slated for removal in Python 3.16; use inspect.iscoroutinefunction() instead
+    if asyncio.iscoroutinefunction(func):
+
+backend/test_view_preferences.py::test_pydantic_models
+  /private/tmp/continuum-review-venv/lib/python3.14/site-packages/_pytest/python.py:171: PytestReturnNotNoneWarning: Test functions should return None, but backend/test_view_preferences.py::test_pydantic_models returned <class 'bool'>.
+  Did you mean to use `assert` instead of `return`?
+  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED ../../../Users/jonathanhollander/AI Code/Continuum/backend/test_view_preferences.py::test_user_model
+1 failed, 1 passed, 14 warnings in 0.74s
