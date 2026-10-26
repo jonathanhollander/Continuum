@@ -31,6 +31,11 @@
             goto(redirectUrl);
         }
 
+        // Arriving from signup's email-link choice: open the email-link form
+        if ($page.url.searchParams.get("method") === "email") {
+            showMagicLink = true;
+        }
+
         // Remember Me: pre-fill last used email
         if (typeof localStorage !== "undefined") {
             const lastEmail = localStorage.getItem("continuum_last_email");

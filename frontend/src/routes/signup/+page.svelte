@@ -118,7 +118,7 @@
         if (typeof localStorage !== "undefined" && email) {
             localStorage.setItem("continuum_last_email", email);
         }
-        goto("/login");
+        goto("/login?method=email");
     }
 
     async function handlePasskeyRegistration(options: any) {
