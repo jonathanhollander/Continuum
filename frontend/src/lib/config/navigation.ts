@@ -54,6 +54,8 @@ export type NavItem = {
     behaviour?: "background-tab";
     isExternal?: boolean;
     tooltip?: string;
+    // Shows an "Early preview" tag next to the item (card E2).
+    isPreview?: boolean;
 };
 
 export type NavGroup = {
@@ -288,6 +290,7 @@ export const navGroups: NavGroup[] = [
             {
                 label: "Wellness Check-in",
                 key: "pulse",
+                isPreview: true,
                 href: "/modules/pulse",
                 icon: Heart,
                 allowedRoles: ["Owner", "Executor", "Family"],
@@ -313,6 +316,7 @@ export const navGroups: NavGroup[] = [
             {
                 label: "Future Scenarios",
                 key: "scenario",
+                isPreview: true,
                 href: "/modules/scenario-mode",
                 icon: Compass,
                 allowedRoles: ["Owner"],
@@ -337,6 +341,7 @@ export const navGroups: NavGroup[] = [
             {
                 label: "Builder Tools",
                 key: "builders",
+                isPreview: true,
                 href: "/modules/builders-console",
                 icon: Hammer,
                 allowedRoles: ["Owner"],
@@ -345,6 +350,7 @@ export const navGroups: NavGroup[] = [
             {
                 label: "Treasure Hunt",
                 key: "treasurehunt",
+                isPreview: true,
                 href: "/modules/treasure-hunt",
                 icon: MapPin,
                 allowedRoles: ["Owner", "Executor", "Family"],
@@ -475,16 +481,16 @@ export const catalogCategories: CatalogCategory[] = [
         items: [
             { label: "The Red Binder", key: "binder", href: "/binder", icon: Activity, allowedRoles: ["Owner", "Executor"] },
             { label: "Executor Guide", key: "executor", href: "/modules/executor-toolkit", icon: Briefcase, allowedRoles: ["Owner", "Executor"] },
-            { label: "Practice Run", key: "simulator", href: "/modules/simulator", icon: Siren, allowedRoles: ["Owner"] },
-            { label: "QR Access Codes", key: "qrcodes", href: "/modules/qr-codes", icon: QrCode, allowedRoles: ["Owner", "Executor"] },
-            { label: "Insights", key: "analytics", href: "/modules/analytics", icon: BarChart3, allowedRoles: ["Owner"] },
+            { label: "Practice Run", key: "simulator", href: "/modules/simulator", icon: Siren, allowedRoles: ["Owner"], isPreview: true },
+            { label: "QR Access Codes", key: "qrcodes", href: "/modules/qr-codes", icon: QrCode, allowedRoles: ["Owner", "Executor"], isPreview: true },
+            { label: "Insights", key: "analytics", href: "/modules/analytics", icon: BarChart3, allowedRoles: ["Owner"], isPreview: true },
             { label: "Activity History", key: "activity", href: "/modules/activity-log", icon: History, allowedRoles: ["Owner"] },
             { label: "Important Dates", key: "anniversary", href: "/modules/anniversary-manager", icon: Sparkles, allowedRoles: ["Owner", "Executor", "Family"] },
-            { label: "Future Scenarios", key: "scenario", href: "/modules/scenario-mode", icon: Compass, allowedRoles: ["Owner"] },
+            { label: "Future Scenarios", key: "scenario", href: "/modules/scenario-mode", icon: Compass, allowedRoles: ["Owner"], isPreview: true },
             { label: "Event Calendar", key: "calendar", href: "/modules/calendar", icon: Calendar, allowedRoles: ["Owner", "Executor", "Family"] },
             { label: "Complete Record", key: "advanced-registry", href: "/modules/advanced-registry", icon: Database, allowedRoles: ["Owner", "Executor"] },
-            { label: "Treasure Hunt", key: "treasurehunt", href: "/modules/treasure-hunt", icon: MapPin, allowedRoles: ["Owner", "Executor", "Family"] },
-            { label: "Builder Tools", key: "builders", href: "/modules/builders-console", icon: Hammer, allowedRoles: ["Owner"] },
+            { label: "Treasure Hunt", key: "treasurehunt", href: "/modules/treasure-hunt", icon: MapPin, allowedRoles: ["Owner", "Executor", "Family"], isPreview: true },
+            { label: "Builder Tools", key: "builders", href: "/modules/builders-console", icon: Hammer, allowedRoles: ["Owner"], isPreview: true },
         ]
     },
 ];
