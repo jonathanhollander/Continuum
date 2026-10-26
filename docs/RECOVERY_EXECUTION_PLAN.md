@@ -344,6 +344,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X60 | Wizard step definitions (X51 findings) | Pages define ConciergeFlow steps inconsistently: property and family-hub pass `oncomplete` but read `event.detail`; heirlooms' intro has `no: "cancel"`, a step that does not exist; property and financial open with the title "Guided Setup" as their first question (`wizard.start`); `wizard.property_main` is unused | The step arrays and handlers in property, family-hub, heirlooms, financial-accounts pages | One handler style; "No" on an intro closes gently; the first question is a question | 1440×900: each wizard opens on a question, No closes it, finish saves |
 | X61 | Funeral wizard save errors and a double guardian POST (X55 findings) | `setTradition`, `setDisposition`, `toggleRitual` in `FuneralWizard.svelte` ignore the rejected promise, so a failed save throws an uncaught "Update failed" page error; a new account with no guardian row sends the same data twice on reload (manager upload + the page's pending send) | `FuneralWizard.svelte` those three functions; digital-guardian pending send | Failed saves show only the gentle line, no page error; one POST | 1440×900: forced-500 on each of the three → 0 page errors, saved value returns; new account reload with a pending toggle → 1 POST |
 | X62 | An upload can finish under the next account (X56 finding) | `migrateUp`/`create` in `sync.svelte.ts` read `get(auth).token` fresh for every POST; if a first upload is still running when the account switches, `reset` drops the guard but the old loop continues and posts A's remaining items with B's token, into B's account | `migrateUp` and the list `create` token handling in `sync.svelte.ts` (not the singleton `runSync`, X49) | The upload captures the account once and stops when the account changes; the remaining items stay on A's device copy | 1440×900: 200 planted items, slow the POSTs by route interception, switch account mid-upload → B receives 0 of A's items; signing back in as A finishes A's upload |
+| X63 | Media notice honesty and the pets uploader (C2 findings) | `MediaMigrationNotice.svelte` says "Media Migration Available", "Migrate Now", "secure cloud storage" (untrue while S3 is off) and "Migration completed with N errors. Check console"; pets passes `hideBorder`, which `UniversalUploader` lacks (svelte-check); noted for the owner: `MAX_UPLOAD_SIZE` 10 MB (env var) is small for real videos, and S3 presigned downloads would need bucket CORS for the read-back | `MediaMigrationNotice.svelte`; the pets uploader prop | Gentle, true wording with a path forward, no console talk; the pets uploader renders as intended | 1440×900: notice shows the new words, re-upload still works; pets uploader 0 errors |
 | X6 | Rotate the OpenRouter key (was F1) | The key is public in shipped JS | Owner step at openrouter.ai (Claude may not create or copy API keys) | Create a new key, put it in the Railway variable X1 reads, revoke the old one | Done after X1 is live; the old key returns 401 |
 
 ---
@@ -415,14 +416,14 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X39 | ☑ | c06a63d + no-token line | 1440×900: used magic link → "This link may have been used already or expired. You can request a new one whenever you're ready.", no raw text, Try Again → /login, 0 page errors. Orchestrator gave the no-token case the same sentence |
 | X30 | ☑ | 10d72b3 | 1440×900: magic link from outbox → /dashboard → /onboarding signed in, no reload; `/api/**` blocked + reload → stays, tokens kept; bad access+refresh tokens → /login. Verify uses `storeTokens` + `auth.init`; `offline` flag keeps the session while the server is unreachable. Findings (minor, left): verify does not guard a missing `access_token`; `refreshSession` treats 400/422 as definite logout |
 | C6 | ☑ | 4cb1abb | 1440×900: 17 pages render text, no raw keys or [object Object], 0 page errors; EN→ES switch changes sidebar (`$dict`), headers (`$t`) and the guided-setup wizard, survives reload, server profile `language=es`. The concierge `language` store won (the switchers set it; `activeLanguage` was never set, so `$t` pages never translated). svelte-check `t`/`dict` errors 17 → 0 |
-| C2 | ▶ | | |
-| C1 | ☐ | | |
-| C3 | ☐ | | |
-| C4 | ☐ | | |
-| C5 | ☐ | | |
-| C7 | ☐ | | |
-| C8 | ☐ | | |
-| C9 | ☐ | | |
+| C2 | ☑ | f483d36 | 1440×900: PDF, PNG, WAV, MP4 uploaded through the real uploader; IndexedDB original removed only after read-back; with download forced to 500 the original stays and the migration notice re-uploads it; second context same account: all four sha1-identical, image decodes, audio and video play; second account 404 on every file, no token 401; 0 CSRF warnings, 0 page errors. Also fixed: XHR upload lacked CSRF (production would refuse every upload), every local media save failed in a fresh browser (DB opened without version), CSP lacked `blob:` for images/media, path-traversal via `module` |
+| C1 | ▶ | | |
+| C3 | ▶ | | |
+| C4 | ▶ | | |
+| C5 | ▶ | | |
+| C7 | ▶ | | |
+| C8 | ▶ | | |
+| C9 | ▶ | | |
 | C10 | ☐ | | |
 | D1 | ☐ | | |
 | D2 | ☐ | | |
@@ -461,6 +462,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X53 | ☑ | ef9d4dd | Write limits on the generic data routes 30 → 600/minute (per IP, one bucket per route shared by all types; the upload uses the same create route, so an exemption would need a frontend change). 60 planted pets → all on the server, every POST 200, 0 429s, 0 console errors. Found the duplicate-upload race → X56 |
 | X56 | ☑ | 3928565 | 1440×900: 60 planted pets, empty server → "Migrating 60" once, exactly 60 POSTs, 60 rows; sign out, new account → 0 pets, no POSTs, A still 60; 0 console errors. Managers record the account they loaded for; `syncAll` resets only on a real switch and joins a running sync (a token refresh no longer resets) |
 | X62 | ▶ | | |
+| X63 | ▶ | | |
 | X57 | ▶ (merged 648b88c; live check after deploy) | | |
 | X58 | ☐ (after X49, X54: same pages) | | |
 | X54 | ☐ (after X49: same property page) | | |
