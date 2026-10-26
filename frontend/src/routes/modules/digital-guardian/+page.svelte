@@ -389,7 +389,6 @@
 {:else}
 <div class="max-w-5xl mx-auto p-8 animate-in fade-in duration-500">
     <!-- Header -->
-    <div class="-mx-6">
     <LivingBlueprintHeader
         title="Digital Guardian"
         subtitle="Protect your digital legacy from being locked away forever"
@@ -397,7 +396,6 @@
         detailedDescription="Your physical assets are protected by law. Your digital assets are protected by passwords. Set up legacy contacts, inactive account managers, and document your digital inventory so your family isn't locked out of your photos, emails, and accounts."
         whyMatters="Without these specific setups, your family may lose access to irreplaceable memories, important accounts, and digital assets. Taking action now ensures your digital life can be properly managed."
     />
-    </div>
 
     <!-- AI Prompt Bar -->
     <div class="max-w-3xl mx-auto mb-8">

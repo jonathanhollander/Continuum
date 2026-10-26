@@ -16,13 +16,24 @@
     export { className as class };
 
     let mounted = false;
+    let headerEl: HTMLElement;
+    // Inside a padded page wrapper the header already sits on the body's left
+    // edge, so its content takes no inset of its own; full-width it takes the
+    // same 32px inset as the module page bodies (p-8).
+    let nested = false;
 
     onMount(() => {
+        const host = headerEl.closest("main") ?? document.body;
+        nested =
+            headerEl.getBoundingClientRect().left -
+                host.getBoundingClientRect().left >
+            1;
         mounted = true;
     });
 </script>
 
 <header
+    bind:this={headerEl}
     class={cn(
         "relative overflow-hidden bg-background text-foreground border-b border-border py-12",
         "before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_center,var(--color-primary)_0%,transparent_70%)] before:opacity-5",
@@ -52,7 +63,7 @@
     </div>
 
     <!-- Layer 3: Content using Heirloom Typography -->
-    <div class="container relative z-10 px-6 mx-auto">
+    <div class={cn("container relative z-10 mx-auto", nested ? "px-0" : "px-8")}>
         <div class="max-w-3xl space-y-4">
             {#if mounted}
                 <div in:fly={{ y: 20, duration: 800 }}>
