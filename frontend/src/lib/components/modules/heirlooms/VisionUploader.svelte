@@ -14,6 +14,8 @@
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
 
     export let imageUrl: string = "";
+    // Bound by the page so the Provenance text is saved with the heirloom.
+    export let provenance: string = "";
 
     const dispatch = createEventDispatcher<{
         analyze: AnalyzedHeirloom;
@@ -23,7 +25,6 @@
     let isDragging = false;
     let isAnalyzing = false;
     let analysisComplete = false;
-    let provenance = "";
 
     function handleDragOver(e: DragEvent) {
         e.preventDefault();
@@ -133,7 +134,9 @@
                             >Analysis Complete</span
                         >
                     </div>
+                {/if}
 
+                {#if !isAnalyzing}
                     <button
                         on:click={triggerUpload}
                         class="absolute top-2 right-2 p-2 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors"

@@ -11,6 +11,7 @@
         Download,
         Share2,
         Loader2,
+        Pencil,
     } from "lucide-svelte";
     import Modal from "$lib/components/ui/Modal.svelte";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
@@ -22,6 +23,7 @@
     import { onMount } from "svelte";
     import {
         heirloomSync,
+        heirloomStore,
         type Heirloom,
     } from "$lib/stores/heirloomStore.svelte";
     import { qrStore } from "$lib/stores/qrStore";
@@ -42,6 +44,7 @@
     let viewMode = $state<ViewMode>('card');
     let parsedCustomAttributes = $state<Record<string, any>>({});
     let isEditing = $state(false);
+    let editingId = $state<string | number | null>(null);
     let selectedImage = $state<string | null>(null);
     let showWizard = $state(false);
     let isLoading = $state(true);
@@ -51,6 +54,7 @@
         recipient: "",
         story: "",
         image: "",
+        ownershipDetails: "",
     });
 
     // Derived items from SyncManager
@@ -226,8 +230,53 @@
 
     let showAddForm = $state(false);
 
-    async function addHeirloom() {
+    function openAddForm() {
+        isEditing = false;
+        editingId = null;
+        newHeirloom = { name: "", recipient: "", story: "", image: "", ownershipDetails: "" };
+        parsedCustomAttributes = {};
+        showAddForm = true;
+    }
+
+    function openEditForm(item: Heirloom) {
+        isEditing = true;
+        editingId = item.id;
+        newHeirloom = {
+            name: item.name || "",
+            recipient: item.recipient || "",
+            story: item.story || "",
+            image: item.image || "",
+            ownershipDetails: item.ownershipDetails || "",
+        };
+        try {
+            parsedCustomAttributes = item.custom_attributes ? JSON.parse(item.custom_attributes) : {};
+        } catch {
+            parsedCustomAttributes = {};
+        }
+        showAddForm = true;
+    }
+
+    async function saveHeirloom() {
         if (!newHeirloom.name) return;
+
+        if (isEditing && editingId !== null) {
+            try {
+                await heirloomStore.updateItem(editingId, {
+                    name: newHeirloom.name,
+                    recipient: newHeirloom.recipient || "",
+                    story: newHeirloom.story || "",
+                    image: newHeirloom.image || "",
+                    ownershipDetails: newHeirloom.ownershipDetails || "",
+                    custom_attributes: JSON.stringify(parsedCustomAttributes),
+                });
+            } catch {
+                return; // the manager already showed the one gentle message; the form keeps the edits
+            }
+            showAddForm = false;
+            isEditing = false;
+            editingId = null;
+            return;
+        }
 
         try {
             await heirloomSync.create({
@@ -240,20 +289,19 @@
                         newHeirloom.name || "",
                         newHeirloom.story || "",
                     ),
+                ownershipDetails: newHeirloom.ownershipDetails || "",
                 custom_attributes: JSON.stringify(parsedCustomAttributes),
-            }, false, false, addHeirloom);
+            }, false, false, saveHeirloom);
         } catch {
             return; // the manager already showed the one gentle message; the form keeps the draft
         }
 
         showAddForm = false;
-        newHeirloom = {
-            image: "",
-        };
+        newHeirloom = { name: "", recipient: "", story: "", image: "", ownershipDetails: "" };
         parsedCustomAttributes = {};
     }
 
-    async function removeHeirloom(id: string) {
+    async function removeHeirloom(id: string | number) {
         if (
             !confirm(
                 "Remove this heirloom? Your story will be preserved in the activity log.",
@@ -282,7 +330,7 @@
 
         qrStore.generateAssetQR({
             id: crypto.randomUUID(),
-            assetId: item.id,
+            assetId: String(item.id),
             assetName: item.name,
             assetType: "Heirloom",
             location: "Registry",
@@ -292,7 +340,7 @@
             module: "Heirlooms",
             action: "CREATE",
             entityType: "QR Label",
-            entityId: item.id,
+            entityId: String(item.id),
             entityName: item.name,
             userContext: $estateProfile.ownerName || "User",
         });
@@ -339,7 +387,7 @@
         </button>
         <button
             class="bg-primary text-primary-foreground shadow-primary/20 hover:opacity-90 disabled:opacity-50 transition-all font-bold px-6 py-2 rounded-xl"
-            onclick={() => (showAddForm = true)}
+            onclick={openAddForm}
         >
             <Plus size={20} /> Share a story or object
         </button>
@@ -387,7 +435,7 @@
             icon={Gift}
             iconClass="text-amber-500"
             ctaLabel="Preserve your first treasure"
-            onAction={() => (showAddForm = true)}
+            onAction={openAddForm}
         />
         <!-- Hidden Ghost Rows for reference -->
         <div
@@ -405,6 +453,8 @@
                             story: sample.story,
                             recipient: sample.recipient,
                         };
+                        isEditing = false;
+                        editingId = null;
                         showAddForm = true;
                     }}
                 >
@@ -427,6 +477,14 @@
                             onPrintQr={() => openQrModal(heirloom)}
                         />
                         <button
+                            onclick={() => openEditForm(heirloom)}
+                            class="absolute top-2 right-12 p-2 bg-white/90 text-primary rounded-full shadow-md opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all hover:bg-primary/10"
+                            title="Edit these details"
+                            aria-label="Edit these details"
+                        >
+                            <Pencil size={16} />
+                        </button>
+                        <button
                             onclick={() => removeHeirloom(heirloom.id)}
                             class="absolute top-2 right-2 p-2 bg-white/90 text-primary rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all hover:bg-primary/10"
                             title="Remove"
@@ -439,7 +497,7 @@
                 <!-- Add New Placeholder -->
                 <button
                     class="border-2 border-dashed border-stone-200 rounded-2xl flex flex-col items-center justify-center text-stone-400 hover:border-[#4A7C74] hover:text-[#4A7C74] hover:bg-[#4A7C74]/5 transition-all min-h-[350px] group"
-                    onclick={() => (showAddForm = true)}
+                    onclick={openAddForm}
                 >
                     <div
                         class="w-16 h-16 rounded-full bg-stone-100 group-hover:bg-[#4A7C74]/10 flex items-center justify-center mb-4 transition-colors"
@@ -486,6 +544,14 @@
                                             title="Generate QR"
                                         >
                                             <QrCode size={14} />
+                                        </button>
+                                        <button
+                                            onclick={() => openEditForm(heirloom)}
+                                            class="p-1.5 text-slate-400 hover:text-primary transition-colors"
+                                            title="Edit these details"
+                                            aria-label="Edit these details"
+                                        >
+                                            <Pencil size={14} />
                                         </button>
                                         <button
                                             onclick={() => removeHeirloom(heirloom.id)}
@@ -546,7 +612,7 @@
                         </div>
 
                         <p class="text-xs text-stone-400 font-mono">
-                            ID: {qrTarget.id.split("-")[0]} // Scan to view story
+                            ID: {String(qrTarget.id).split("-")[0]} // Scan to view story
                         </p>
                     </div>
 
@@ -622,10 +688,12 @@
 
             <div>
                 <VisionUploader
-                    imageUrl={newHeirloom.image || ""}
+                    bind:imageUrl={newHeirloom.image}
+                    bind:provenance={newHeirloom.ownershipDetails}
                     on:analyze={handleAnalysis}
                 />
-                {#if !newHeirloom.image}
+                <!-- A photo read from a file is kept as a data URL; any typed address stays editable here. -->
+                {#if !newHeirloom.image?.startsWith("data:")}
                     <div class="mt-2 text-center">
                         <span class="text-xs text-stone-400">or</span>
                     </div>
@@ -661,7 +729,7 @@
                 >Not right now</button
             >
             <button
-                onclick={addHeirloom}
+                onclick={saveHeirloom}
                 disabled={!newHeirloom.name}
                 class="px-6 py-2.5 rounded-xl font-semibold bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 transition-all shadow-lg shadow-primary/20"
             >
