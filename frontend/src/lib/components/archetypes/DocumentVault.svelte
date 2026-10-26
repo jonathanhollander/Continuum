@@ -368,8 +368,8 @@
                             A quick look keeps each one current and easy for
                             your family to find.
                         {:else}
-                            Rest easy knowing your critical information is
-                            organized and accessible to those you trust.
+                            Each one is current, with its file or the place
+                            it's kept.
                         {/if}
                     </p>
 

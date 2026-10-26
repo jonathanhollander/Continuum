@@ -484,8 +484,8 @@
                     A gentle practice run
                 </h3>
                 <p class="text-muted-foreground mb-6 max-w-xl leading-relaxed">
-                    Walk through it once with your Legacy Contact, so getting in
-                    is simple when it matters.
+                    Walk through it once with your Legacy Contact, so they know
+                    the way in when it matters.
                 </p>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
