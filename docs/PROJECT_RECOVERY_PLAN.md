@@ -1,19 +1,21 @@
 # Continuum — Project Recovery Plan
 
-**Last Updated:** 2026-10-26 14:54 EDT
+**Last Updated:** 2026-10-26 15:32 EDT
 
 **Revised 2026-10-26** after the features/usability review (`docs/reviews/2026-10-25-features-usability/REVIEW.md`): the order is now built around the handover, not the existing navigation.
 
 **Execution:** task cards for each phase are in [RECOVERY_EXECUTION_PLAN.md](RECOVERY_EXECUTION_PLAN.md).
 
-**Current recovery status (2026-10-26):** Phases A–E and the subsequent UI/UX,
-role, tone and colour passes are complete in the canonical execution plan. The
-local rehearsal and production browser test are recorded there, including the
-targeted fixes and prior live verification of release defects X292–X294.
-See [the release browser report](reviews/2026-10-26-release/BROWSER-TEST.md)
-and the completion-test evidence below. This update reconciles existing evidence;
-it does not report a new browser run. Open owner actions and decisions remain in
-the execution plan, including X6 key rotation and X141 Railway config apply.
+**Current recovery status (2026-10-26):** the later [code/plan cross-check](reviews/2026-10-26-plan-crosscheck/REVIEW.md)
+found 55 follow-up cards (X303–X357: 27 P1, 28 P2) and reopened 29 contradicted
+acceptance rows plus affected section/Release marks in the canonical execution
+plan. The previous local rehearsal, browser release and targeted X292–X294 fixes
+remain recorded evidence for their specific scenarios; they do not prove the new
+account-boundary, save-concurrency, text/file completeness and status-truth paths.
+See [the prior browser report](reviews/2026-10-26-release/BROWSER-TEST.md) and
+the historical completion-test results below. This was a source review with
+isolated synthetic probes, not a new browser run or deployment. X6 key rotation,
+X141 config apply and intentional product deferrals remain separate owner items.
 
 **Scope:** Features and the user's experience come first. Broader security, admin,
 CI and infrastructure hardening remain deferred; Phase F distinguishes the

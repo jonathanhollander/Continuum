@@ -1,12 +1,18 @@
 # Recovery closure handoff
 
-**Last Updated:** 2026-10-26 14:54 EDT
+**Last Updated:** 2026-10-26 15:32 EDT
 
 The canonical task board remains [RECOVERY_EXECUTION_PLAN.md](RECOVERY_EXECUTION_PLAN.md). This handoff supersedes the earlier orchestrator snapshot; its operational history remains in Git.
 
-## Completed recovery scope
+## Current source-review status
 
-Waves A–E, U, G, T and V, O1/O2 oversight, R0 and the release are recorded complete in the plan. The closure audit reconciled 494 card-status rows with no duplicate IDs and checked the release-fix commits in Git. It identified two owner-only cards, X6 and X141, after the owner's X154 decision was implemented.
+The owner's later code/plan review supersedes the engineering closure below. Nine area agents and an independent validator found **55 follow-up cards (27 P1, 28 P2)**, now X303–X357 in the existing execution plan. Twenty-nine historical acceptance rows and affected sections are reopened with links to those corrective cards; they are not additional independent work items to redispatch. See the [review and prioritized evidence index](reviews/2026-10-26-plan-crosscheck/REVIEW.md) and [coverage inventory](reviews/2026-10-26-plan-crosscheck/COVERAGE.md).
+
+Application code remains at source snapshot `8751f22`. This pass changed documentation only, with isolated synthetic source/schema probes, no production access, external messages, automatic fixing, deployment or scheduled loop. Authenticated production, PostgreSQL concurrency and working-interface acceptance remain unverified for these new findings. The next implementation should use the new focused X cards; existing owner deferrals remain separate.
+
+## Earlier recovery closure, before this review
+
+Before the later source review, Waves A–E, U, G, T and V, O1/O2 oversight, R0 and the release had been recorded complete. That earlier closure audit checked status rows and release-fix commits. The current inventory corrects its former count of 494: source snapshot `8751f22` contains **496 marked status rows**, now **551** after the 55 new follow-ups, with no duplicate status IDs. The earlier closure left two owner-only cards, X6 and X141, after the owner's X154 decision was implemented. The current reopened state is in the execution plan and source review linked above.
 
 **X154:** the owner approved matching Pulse alerts to the displayed “When should they know?” tier. Commit `8c73c54` aligns initial alerts, retries, custom delays, portal tier labels and guardian access. An explicit own Pulse tier wins; otherwise First Call / Same Day / Extended map to tiers 1 / 2 / 3 and Kept private is excluded. Persistent guardian links are issued for eligible new contacts and existing contacts missing a link. Five backend files, no migration or frontend change.
 
@@ -27,7 +33,7 @@ Uploads remain on Railway volume `continuum-volume`, mounted at `/data`, with `U
 - **X6:** rotate the exposed old OpenRouter key, update the Railway variable, and revoke the old key. Key creation/rotation remains the owner's task.
 - **X141:** review and apply the Railway configuration migration before **2026-12-01**. Branch `card/X141` at `1955d51` retains two unmerged commits. The plan records the last reviewed zero-destroy plan, exact CLI-version workaround and prior automatic approval rejection. It remains an owner apply step; this closure did not apply infrastructure changes.
 
-Wave X is marked engineering-complete with these owner follow-ups explicitly retained as open cards. This is completion of the authorized recovery implementation, not an assertion that every future product decision is resolved.
+The earlier Wave X engineering-completion mark is reopened by the later source evidence. X6/X141 remain owner follow-ups, separate from X303–X357 implementation work. Previous passing proof records remain useful for their exact scenarios and do not establish whole-application completion.
 
 ## Deferred product choices and limits
 
@@ -42,9 +48,10 @@ The following remain on hold in their existing plan/review entries:
 - Public QR family scan page remains on hold.
 - Financial accounts versus property/digital records (G10 / G0b X-l) remain an owner scope decision; do not imply that account totals include all property valuations.
 - `MAX_UPLOAD_SIZE` remains 10 MB, a practical limit for video recordings; no upload-size/infrastructure change was made here.
+- Utility instructions and Home Manual custom-field columns remain owner schema decisions (C7.3/X77). Existing utility account-number/support-phone fields are a separate current UI omission, tracked as X334.
 - Phone/tablet completion, security/admin expansion and commercial features remain outside this recovery scope except for already recorded fixes.
 
-E8, X138, X146, C5 and D2 are verified cards, not open implementation work. Historical branches retained by E8 remain the owner's deletion decision.
+E8, X138, X146 and C5 retain their prior verified scope. D2's broader recipient acceptance is now reopened for the new reader/draft/attachment findings; its earlier successful proof is preserved. Historical branches retained by E8 remain the owner's deletion decision.
 
 ## Worktree cleanup and preservation
 
