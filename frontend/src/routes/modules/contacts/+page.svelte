@@ -61,12 +61,27 @@
     let editingId = $state<string | number | null>(null);
 
 
-    // Form State
-    let newContact = $state<Partial<FamilyMember>>({
+    // Form State. tier "" means the person is in the directory without a call-list tier.
+    const blankContact = (): Partial<FamilyMember> => ({
         role: "Family",
         notes: "",
         relation: "",
+        tier: "1_Immediate",
     });
+    let newContact = $state<Partial<FamilyMember>>(blankContact());
+
+    const ROLE_OPTIONS = ["Family", "Friend", "Medical", "Legal", "Financial", "Other", "Pet"];
+
+    const TIER_OPTIONS = [
+        { value: "1_Immediate", label: "First Call", hint: "Someone who should hear it from family first." },
+        { value: "2_SameDay", label: "Same Day", hint: "Close enough to be told directly." },
+        { value: "3_Service", label: "Extended Circle", hint: "Can learn through the announcement." },
+        { value: "4_DNR", label: "Kept private", hint: "Stays in your directory, off the call list." },
+        { value: "", label: "Choose later", hint: "Stays in your directory until you choose a moment for them." },
+    ];
+    let tierHint = $derived(
+        TIER_OPTIONS.find((o) => o.value === (newContact.tier ?? ""))?.hint ?? "",
+    );
 
     // Helper to get tier name from ID (mock logic for now or we fetch tiers map)
     // Tweak: We will filter based on tier_id existence for "Call List"
@@ -150,7 +165,7 @@
             isBeneficiary: false,
             isEmergencyContact: false,
             tierId: null, // Pulse escalation tier: set on the Pulse page
-            tier: newContact.tier || "1_Immediate", // Call-list tier from "When Should They Know?"
+            tier: newContact.tier || undefined, // Call-list tier from "When Should They Know?"; "" = choose later
             notificationStatus: "Pending",
             avatar: newContact.avatar,
             custom_attributes: JSON.stringify(parsedCustomAttributes),
@@ -165,13 +180,13 @@
         }
 
         showAddModal = false;
-        newContact = { role: "Family", notes: "", relation: "" };
+        newContact = blankContact();
         parsedCustomAttributes = {};
     }
 
     function openAdd() {
         editingId = null;
-        newContact = { role: "Family", notes: "", relation: "" };
+        newContact = blankContact();
         parsedCustomAttributes = {};
         showAddModal = true;
     }
@@ -185,7 +200,8 @@
             phone: contact.phone,
             email: contact.email,
             notes: contact.notes,
-            tier: contact.tier || "1_Immediate",
+            // A contact without a call-list tier stays that way unless one is chosen here.
+            tier: contact.tier ?? "",
         };
         try {
             parsedCustomAttributes = contact.custom_attributes ? JSON.parse(contact.custom_attributes) : {};
@@ -207,15 +223,17 @@
                 phone: newContact.phone || "",
                 email: newContact.email || "",
                 notes: newContact.notes || "",
-                tier: newContact.tier || "1_Immediate",
+                tier: newContact.tier || undefined,
+                // The store maps `tier ?? callTier` to call_tier, so clearing needs callTier too.
+                callTier: newContact.tier || null,
                 custom_attributes: JSON.stringify(parsedCustomAttributes),
-            });
+            } as Partial<FamilyMember>);
         } catch {
             return;
         }
         showAddModal = false;
         editingId = null;
-        newContact = { role: "Family", notes: "", relation: "" };
+        newContact = blankContact();
         parsedCustomAttributes = {};
     }
 
@@ -306,10 +324,12 @@
                     Pending Immediate
                 </div>
                 <div class="text-2xl font-bold text-rose-700">
-                    {tier1.filter((c) =>
-                        ["Pending", "Called", "LeftMsg"].includes(
-                            c.notificationStatus,
-                        ),
+                    {tier1.filter(
+                        (c) =>
+                            !c.notificationStatus ||
+                            ["Pending", "Called", "LeftMsg"].includes(
+                                c.notificationStatus,
+                            ),
                     ).length}
                 </div>
             </div>
@@ -404,13 +424,6 @@
                             >Call Now</span
                         >
                     </div>
-                    {#if tier1.length === 0}
-                        <div
-                            class="text-center py-6 text-slate-400 italic bg-slate-50 rounded-xl border border-dashed border-slate-200"
-                        >
-                            No immediate contacts set.
-                        </div>
-                    {/if}
 
                     {#each tier1 as contact}
                         <ContactRow {contact} {updateStatus} />
@@ -427,13 +440,6 @@
                             Tier 2: Same Day (Inner Circle)
                         </h2>
                     </div>
-                    {#if tier2.length === 0}
-                        <div
-                            class="text-center py-6 text-slate-400 italic bg-slate-50 rounded-xl border border-dashed border-slate-200"
-                        >
-                            No Tier 2 contacts found.
-                        </div>
-                    {/if}
 
                     {#each tier2 as contact}
                         <ContactRow {contact} {updateStatus} />
@@ -449,13 +455,6 @@
                             Tier 3: Service Notice
                         </h2>
                     </div>
-                    {#if tier3.length === 0}
-                        <div
-                            class="text-center py-6 text-slate-400 italic bg-slate-50 rounded-xl border border-dashed border-slate-200"
-                        >
-                            No Tier 3 contacts found.
-                        </div>
-                    {/if}
                     {#each tier3 as contact}
                         <ContactRow {contact} {updateStatus} />
                     {/each}
@@ -608,7 +607,9 @@
     >
         <div class="space-y-4">
             <div class="relative group">
+                <label for="contact-name" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-1 ml-1">Full name</label>
                 <input
+                    id="contact-name"
                     bind:value={newContact.name}
                     class="w-full px-4 py-3 rounded-xl border border-slate-200 transition-all {$conciergeEngine
                         .lastExtractedData?.name ||
@@ -629,7 +630,9 @@
 
             <div class="grid grid-cols-2 gap-4">
                 <div class="relative group">
+                    <label for="contact-relation" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-1 ml-1">Relation</label>
                     <input
+                        id="contact-relation"
                         bind:value={newContact.relation}
                         class="w-full px-4 py-3 rounded-xl border border-slate-200 transition-all outline-none {$conciergeEngine
                             .lastExtractedData?.relationship ||
@@ -640,7 +643,10 @@
                         placeholder="Relation (e.g. Spouse)"
                     />
                 </div>
+                <div>
+                <label for="contact-role" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-1 ml-1">Role</label>
                 <select
+                    id="contact-role"
                     bind:value={newContact.role}
                     class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white transition-all outline-none {$conciergeEngine
                         .lastExtractedData?.relationship ||
@@ -649,18 +655,23 @@
                         ? 'amber-glow border-amber-500/50'
                         : 'focus:border-primary focus:ring-2 focus:ring-primary/20'}"
                 >
-                    <option>Family</option>
-                    <option>Friend</option>
-                    <option>Medical</option>
-                    <option>Legal</option>
-                    <option>Financial</option>
-                    <option>Other</option>
-                    <option>Pet</option>
+                    {#each ROLE_OPTIONS as r}
+                        <option value={r}>{r}</option>
+                    {/each}
+                    <!-- A stored role outside the list (e.g. "Advisor") stays selectable as itself. -->
+                    {#if newContact.role && !ROLE_OPTIONS.includes(newContact.role)}
+                        <option value={newContact.role}>{newContact.role}</option>
+                    {/if}
                 </select>
+                </div>
             </div>
 
             <div class="grid grid-cols-2 gap-4">
+                <div>
+                <label for="contact-phone" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-1 ml-1">Phone</label>
                 <input
+                    id="contact-phone"
+                    type="tel"
                     bind:value={newContact.phone}
                     class="w-full px-4 py-3 rounded-xl border border-slate-200 transition-all outline-none {$conciergeEngine
                         .lastExtractedData?.phone ||
@@ -670,7 +681,12 @@
                         : 'focus:border-primary focus:ring-2 focus:ring-primary/20'}"
                     placeholder="Phone"
                 />
+                </div>
+                <div>
+                <label for="contact-email" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-1 ml-1">Email</label>
                 <input
+                    id="contact-email"
+                    type="email"
                     bind:value={newContact.email}
                     class="w-full px-4 py-3 rounded-xl border border-slate-200 transition-all outline-none {$conciergeEngine
                         .lastExtractedData?.email ||
@@ -680,6 +696,7 @@
                         : 'focus:border-primary focus:ring-2 focus:ring-primary/20'}"
                     placeholder="Email"
                 />
+                </div>
             </div>
 
             <div
@@ -695,34 +712,25 @@
                     bind:value={newContact.tier}
                     class="w-full px-4 py-3 rounded-xl border border-primary/20 bg-white shadow-sm focus:border-primary outline-none"
                 >
-                    <option value="1_Immediate"
-                        >First Call — Someone who should hear it from
-                        family, not others</option
-                    >
-                    <option value="2_SameDay"
-                        >Same Day — Close enough to be told directly</option
-                    >
-                    <option value="3_Service"
-                        >Extended Circle — Can learn through
-                        announcement</option
-                    >
-                    <option value="4_DNR">No Notification Needed</option
-                    >
+                    {#each TIER_OPTIONS as o}
+                        <option value={o.value}>{o.label}</option>
+                    {/each}
                 </select>
+                <p class="text-sm text-slate-700 mt-2">{tierHint}</p>
                 <p class="text-xs text-indigo-500 mt-2">
                     Think about how they'd want to hear the news. The
-                    people closest to you deserve to be told directly,
-                    not find out on social media.
+                    people closest to you deserve to hear it directly.
                 </p>
             </div>
 
+            <!-- 140px keeps SmartTextarea's starter chips (absolutely placed behind the textarea) from showing below it. -->
             <div class="space-y-1">
                 <SmartTextarea
                     bind:value={newContact.notes}
                     context="contact"
                     placeholder="Private notes for the caller (e.g. 'Be gentle, they are fragile')"
                     label="Caller Notes"
-                    minHeight="100px"
+                    minHeight="140px"
                 />
             </div>
 
