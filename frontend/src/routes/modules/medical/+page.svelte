@@ -43,8 +43,6 @@
     import GriefSupportBanner from "$lib/components/GriefSupportBanner.svelte";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
-    import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
-    import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
 
     let showAddForm = $state(false);
     let parsedCustomAttributes = $state<Record<string, any>>({});
@@ -54,7 +52,6 @@
     let formMediaUrl = $derived(formMedia ? `/api/media/${formMedia.id}/download` : "");
     let editMode = $state(false);
     let isLoading = $state(true);
-    let viewMode = $state<ViewMode>('card');
     let newDirective: Partial<MedicalDirective> = $state({
         type: "healthcare_proxy",
         title: "",
@@ -262,18 +259,11 @@
         </button>
     </LivingBlueprintHeader>
 
-    <!-- View Toggle -->
-    <div class="flex justify-end mb-4">
-        <DataViewToggle module="medical" onchange={(mode) => viewMode = mode} />
-    </div>
-
-    <div class="max-w-3xl">
-        <GriefSupportBanner compact={true} />
-    </div>
+    <GriefSupportBanner compact={true} />
 
 
     <!-- AI Prompt Bar -->
-    <div class="max-w-3xl mb-8">
+    <div class="mb-8">
         <AIPromptBar context="medical" />
     </div>
 
@@ -308,15 +298,15 @@
                                             "Not Set"}
                                     </p>
                                 </div>
-                                <div
-                                    class="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center font-bold"
-                                >
-                                    {medicalStore.profile.bloodType?.includes(
-                                        "+",
-                                    )
-                                        ? "+"
-                                        : "-"}
-                                </div>
+                                {#if medicalStore.profile.bloodType}
+                                    <span
+                                        class="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold"
+                                    >
+                                        Rh {medicalStore.profile.bloodType.includes("+")
+                                            ? "positive"
+                                            : "negative"}
+                                    </span>
+                                {/if}
                             </div>
 
                             <div
@@ -414,12 +404,12 @@
                             <div class="flex gap-2">
                                 <button
                                     onclick={saveProfile}
-                                    class="flex-1 py-2 bg-primary text-primary-foreground rounded-xl font-bold text-sm"
+                                    class="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-xl font-bold text-sm"
                                     >Save my updates</button
                                 >
                                 <button
                                     onclick={() => (showProfileEdit = false)}
-                                    class="flex-1 py-2 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm"
+                                    class="flex-1 px-4 py-2 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm"
                                     >Not right now</button
                                 >
                             </div>
@@ -502,7 +492,9 @@
                         </div>
                     </div>
 
-                    <div class="mt-6 grid grid-cols-2 gap-4">
+                    {#if dir.primaryContact || dir.contactPhone || dir.locationOfOriginal}
+                    <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {#if dir.primaryContact || dir.contactPhone}
                         <div
                             class="p-4 bg-gray-50 rounded-2xl border border-gray-100"
                         >
@@ -510,16 +502,22 @@
                                 class="text-[10px] font-black uppercase text-gray-400 block mb-1"
                                 >Primary Contact / Proxy</span
                             >
-                            <p class="text-sm font-bold text-gray-900">
-                                {dir.primaryContact}
-                            </p>
-                            <p
-                                class="text-xs text-gray-500 flex items-center gap-1 mt-1"
-                            >
-                                <Phone size={12} />
-                                {dir.contactPhone}
-                            </p>
+                            {#if dir.primaryContact}
+                                <p class="text-sm font-bold text-gray-900">
+                                    {dir.primaryContact}
+                                </p>
+                            {/if}
+                            {#if dir.contactPhone}
+                                <p
+                                    class="text-xs text-gray-500 flex items-center gap-1 mt-1"
+                                >
+                                    <Phone size={12} />
+                                    {dir.contactPhone}
+                                </p>
+                            {/if}
                         </div>
+                        {/if}
+                        {#if dir.locationOfOriginal}
                         <div
                             class="p-4 bg-gray-50 rounded-2xl border border-gray-100"
                         >
@@ -531,7 +529,9 @@
                                 {dir.locationOfOriginal}
                             </p>
                         </div>
+                        {/if}
                     </div>
+                    {/if}
                 </div>
             {/each}
 
