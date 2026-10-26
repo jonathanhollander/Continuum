@@ -18,7 +18,7 @@ from datetime import datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Union
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from backend.config import settings
 from sqlmodel import Session
@@ -46,6 +46,10 @@ class EmailResult(BaseModel):
     provider: str
     error: Optional[str] = None
     file_path: Optional[str] = None
+
+
+def _name_from_email(to_email: Optional[str]) -> str:
+    return str(to_email or "").split('@')[0].title() or "Friend"
 
 
 class EmailService:
@@ -318,6 +322,16 @@ class EmailService:
             "message_id": f"local-{timestamp}"
         }
 
+    def _build_payload(self, **fields) -> Union[EmailPayload, EmailResult]:
+        """Validate a payload; a missing or invalid recipient is a failed result, not a crash."""
+        try:
+            return EmailPayload(**fields)
+        except ValidationError as e:
+            logger.error(f"Email '{fields.get('template_name')}' not sent: invalid recipient "
+                         f"{fields.get('to_email')!r} (user {fields.get('user_id')}): {e.errors()[0].get('msg')}")
+            return EmailResult(status="failed", provider=self.provider,
+                               error=f"Invalid recipient address: {fields.get('to_email')!r}")
+
     # Convenience methods for common email types
 
     def send_magic_link(
@@ -327,13 +341,15 @@ class EmailService:
         db_session: Optional[Session] = None
     ) -> EmailResult:
         """Send magic link authentication email."""
-        payload = EmailPayload(
+        payload = self._build_payload(
             to_email=to_email,
-            recipient_name=to_email.split('@')[0].title(),
+            recipient_name=_name_from_email(to_email),
             subject="Your Secure Continuum Login Link",
             template_name="magic_link",
             template_context={"magic_link_url": magic_link_url}
         )
+        if isinstance(payload, EmailResult):
+            return payload
         return self.send_email(payload=payload, db_session=db_session)
 
     def send_pulse_alert(
@@ -361,21 +377,16 @@ class EmailService:
             4: "Continuum Pulse: EMERGENCY - Full Vault Access"
         }
 
-        try:
-            payload = EmailPayload(
-                to_email=to_email,
-                recipient_name=recipient_name,
-                subject=tier_subjects.get(tier_number, f"Continuum Pulse: Tier {tier_number} Alert"),
-                template_name=f"pulse_escalation_tier{tier_number}",
-                template_context=context,
-                user_id=user_id
-            )
-        except ValidationError as e:
-            # A missing or invalid guardian address is a failed send, not a crash
-            logger.error(f"Pulse Tier {tier_number} alert not sent: invalid recipient {to_email!r} "
-                         f"(user {user_id}): {e.errors()[0].get('msg')}")
-            return EmailResult(status="failed", error=f"Invalid recipient address: {to_email!r}",
-                               provider=self.provider)
+        payload = self._build_payload(
+            to_email=to_email,
+            recipient_name=recipient_name,
+            subject=tier_subjects.get(tier_number, f"Continuum Pulse: Tier {tier_number} Alert"),
+            template_name=f"pulse_escalation_tier{tier_number}",
+            template_context=context,
+            user_id=user_id
+        )
+        if isinstance(payload, EmailResult):
+            return payload
         return self.send_email(payload=payload, db_session=db_session)
 
     def send_welcome_email(
@@ -386,14 +397,16 @@ class EmailService:
         db_session: Optional[Session] = None
     ) -> EmailResult:
         """Send welcome email to new users."""
-        payload = EmailPayload(
+        payload = self._build_payload(
             to_email=to_email,
-            recipient_name=to_email.split('@')[0].title(),
+            recipient_name=_name_from_email(to_email),
             subject="Welcome to Continuum - Your Digital Legacy is Protected",
             template_name="welcome",
             template_context={"dashboard_url": dashboard_url},
             user_id=user_id
         )
+        if isinstance(payload, EmailResult):
+            return payload
         return self.send_email(payload=payload, db_session=db_session)
 
 

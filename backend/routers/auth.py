@@ -183,12 +183,15 @@ def signup(request: Request, signup_data: SignupRequest, session: Session = Depe
         )
 
         # Check if email was saved locally (development mode)
-        if result.get("status") == "saved_local":
+        # EmailResult is a model, not a dict (result.get raised, so every signup reported a failed email)
+        if result.status == "saved_local":
             warnings.append(WarningMessage(
                 code="EMAIL_LOCAL_ONLY",
                 message="Your account is ready! Email was saved locally (development mode). Check backend/outbox/ for the welcome email.",
                 severity="info"
             ))
+        elif result.status == "failed":
+            raise RuntimeError(result.error or "Welcome email not sent")
     except Exception as e:
         logger.warning(
             "Welcome email failed during signup",
