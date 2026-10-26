@@ -913,7 +913,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | U72 | ▶ | | |
 | U73 | ☑ | f96bf85 | Tooltip drops `scrollX/Y` from its fixed position (scrolled 506 px: bubble 506 px below link → level with it; unscrolled unchanged). 0 errors. Finding → U75 |
 | U74 | ☑ | 24ea5ca | Command Center data rows show description and type (policy row "Policy #Z-1", POLICY tag); file on runes; keyboard selection unchanged. 0 errors. Finding → U78 |
-| U75 | ▶ | | |
+| U75 | ☑ | 6791ff8 | Tooltip hides on any scroll (capture, passive) while shown; listener removed on hide and destroy. Hover + 40 px wheel on dashboard: bubble overlapping its card by 32 px → hidden. 0 errors. Reappears on the next hover (intended: acceptance is "hidden") |
 | U77 | ☑ | d267b6d | FileUploader error `role="alert"`; subscriptions Difficulty buttons (filter and modal) `type="button"`. Attributes only; svelte-check 0 errors on the files; build passes. No browser run (attribute-only; diff reviewed) |
 | U78 | ▶ | | |
 | U42 | ☑ | e127714 | Settings left-aligned like the dashboard (heading x 456 → 312); 5 profile inputs labelled (5 → 0 unlabelled); date of death shown to Executor and Family only (Owner 1 → 0). X156 confirm intact. 0 page errors. Finding → U62 |
