@@ -10,67 +10,56 @@ export type ModuleStatus = {
     path: string;
 };
 
-// Keys should now be the suffix used in persistence.ts
-// e.g. 'assets' -> continuum_acc_{id}_prof_{pid}_assets
+// Keys are the SyncManager storage keys (persistence.ts namespaces them per account and profile):
+// e.g. 'financial_assets' -> continuum_acc_{id}_prof_{pid}_financial_assets
 export const MODULES_CONFIG = [
-    { id: 'assets_assets-main', name: 'Financial Accounts', path: '/modules/financial-accounts' },
+    { id: 'financial_assets', name: 'Financial Accounts', path: '/modules/financial-accounts' },
     { id: 'docs_legal-vault', name: 'Legal Documents', path: '/modules/legal-documents' },
     { id: 'insurance_policies', name: 'Insurance', path: '/modules/insurance' },
     { id: 'subscriptions', name: 'Subscriptions', path: '/modules/subscriptions' },
     { id: 'heirlooms', name: 'Heirlooms', path: '/modules/heirlooms' },
     { id: 'family_memories', name: 'Family Memories', path: '/modules/family-hub' },
     { id: 'timeline_events', name: 'Life Timeline', path: '/modules/timeline' },
-    { id: 'executor_tasks', name: 'Executor Tasks', path: '/modules/executor-toolkit' },
     { id: 'digital_guardian', name: 'Digital Guardian', path: '/modules/digital-guardian' },
     { id: 'pets', name: 'Pets', path: '/modules/pets' },
-    { id: 'funeral_wishes', name: 'Funeral Plans', path: '/modules/funeral' },
+    { id: 'funeral_data', name: 'Funeral Plans', path: '/modules/funeral' },
 ];
+
+/** A value someone actually filled in: text, a number, a yes, or a list or object holding one. */
+function isFilled(v: unknown): boolean {
+    if (v === null || v === undefined || v === '' || v === false) return false;
+    if (Array.isArray(v)) return v.some(isFilled);
+    if (typeof v === 'object') return Object.values(v as object).some(isFilled);
+    return true;
+}
 
 export function analyzeEstateHealth(): ModuleStatus[] {
     if (typeof localStorage === 'undefined') return [];
 
     return MODULES_CONFIG.map(mod => {
-        // Use getStored to handle account/profile namespacing automatically
         const data = getStored<any>(mod.id, null);
 
         let count = 0;
-        let hasData = false;
-
-        if (data) {
-            try {
-                // If getStored returns a string (unlikely if we typed it, but possible for legacy), parse it
-                // But getStored implementation JSON.parses for us usually.
-                // However, let's assume it returns the object already.
-                const parsed = typeof data === 'string' ? JSON.parse(data) : data;
-
-                if (Array.isArray(parsed)) {
-                    count = parsed.length;
-                    hasData = count > 0;
-                } else if (typeof parsed === 'object') {
-                    // For single object stores like Digital Guardian
-                    count = Object.keys(parsed).length;
-                    hasData = count > 0;
-                }
-            } catch (e) {
-                console.error(`Failed to analyze ${mod.id}`, e);
+        try {
+            const parsed = typeof data === 'string' ? JSON.parse(data) : data;
+            if (Array.isArray(parsed)) {
+                count = parsed.filter(Boolean).length;
+            } else if (parsed && typeof parsed === 'object') {
+                // Single-record stores (Digital Guardian, Funeral Plans): the fields someone filled in
+                count = Object.values(parsed).filter(isFilled).length;
             }
+        } catch (e) {
+            console.error(`Failed to analyze ${mod.id}`, e);
         }
 
-        let health: 'critical' | 'partial' | 'healthy' = 'critical';
-        if (hasData) {
-            health = 'healthy';
-            // Add custom logic for partial here if needed, e.g. checking specific fields
-            if (mod.id === 'assets_assets-main' && count < 3) health = 'partial'; // Arbitrary threshold
-        }
-
+        const hasData = count > 0;
         return {
             id: mod.id,
             name: mod.name,
             path: mod.path,
             hasData,
             itemCount: count,
-            health
+            health: hasData ? 'healthy' : 'critical'
         };
     });
 }
-

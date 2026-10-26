@@ -39,6 +39,7 @@
         financialAssetsSync,
         estateTotals,
         isDebt,
+        ownedValue,
     } from "$lib/stores/financialAssetsStore.svelte";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import { conciergeEngine } from "$lib/stores/conciergeEngine";
@@ -461,6 +462,15 @@
     // Debts are owed: subtracted from the estate, never added.
     const totals = $derived(estateTotals(assets));
 
+    // Dollars and cents, with the sign before the symbol: -$1,250.50
+    const money = (n: number) =>
+        (Number(n) || 0).toLocaleString("en-US", { style: "currency", currency: "USD" });
+    // The owned share as a whole percent, when it is something other than sole ownership
+    const partShare = (a: any): number | null => {
+        const pct = ownershipOf(a.ownershipPercentage);
+        return pct === 100 ? null : pct;
+    };
+
     function exportToCSV() {
         const headers = [
             "Name",
@@ -512,14 +522,14 @@
             </h2>
             <div class="text-4xl font-serif font-bold text-[#304743]" data-testid="estate-net">
                 {#if $userRole !== "Family"}
-                    {totals.net < 0 ? "-" : ""}${Math.abs(totals.net).toLocaleString()}
+                    {money(totals.net)}
                 {:else}
                     $•••,•••,•••
                 {/if}
             </div>
             {#if $userRole !== "Family" && totals.debts > 0}
                 <p class="text-xs text-gray-500 mt-1" data-testid="estate-breakdown">
-                    ${totals.assets.toLocaleString()} in assets, less ${totals.debts.toLocaleString()} owed
+                    {money(totals.assets)} in assets, less {money(totals.debts)} owed
                 </p>
             {/if}
         </div>
@@ -905,10 +915,15 @@
                     <div class="text-right">
                         {#if $userRole !== "Family"}
                             <div class="font-bold text-lg text-foreground">
-                                {isDebt(asset) ? "-" : ""}${Math.abs(asset.value || 0).toLocaleString()}
+                                {isDebt(asset) ? "-" : ""}{money(Math.abs(asset.value || 0))}
                             </div>
                             {#if isDebt(asset)}
                                 <div class="text-[11px] text-slate-500 font-medium">Owed</div>
+                            {/if}
+                            {#if partShare(asset) !== null}
+                                <div class="text-[11px] text-slate-500 font-medium" data-testid="owned-share">
+                                    Your {partShare(asset)}% share: {money(Math.abs(ownedValue(asset)))}
+                                </div>
                             {/if}
                         {:else}
                             <div
@@ -1076,7 +1091,10 @@
                         <td class="px-4 py-3 text-slate-600 text-sm">{asset.location || '-'}</td>
                         <td class="px-4 py-3 text-right">
                             {#if $userRole !== "Family"}
-                                <span class="font-bold text-slate-800">{isDebt(asset) ? "-" : ""}${Math.abs(asset.value || 0).toLocaleString()}</span>
+                                <span class="font-bold text-slate-800">{isDebt(asset) ? "-" : ""}{money(Math.abs(asset.value || 0))}</span>
+                                {#if partShare(asset) !== null}
+                                    <div class="text-[11px] text-slate-500">Your {partShare(asset)}% share: {money(Math.abs(ownedValue(asset)))}</div>
+                                {/if}
                             {:else}
                                 <span class="font-bold text-muted-foreground blur-sm select-none">$•••,•••</span>
                             {/if}

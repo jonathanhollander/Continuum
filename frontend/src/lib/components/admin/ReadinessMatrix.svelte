@@ -4,6 +4,7 @@
         analyzeEstateHealth,
         type ModuleStatus,
     } from "$lib/utils/readiness";
+    import { plural } from "$lib/utils/plural";
     import { CircleCheck, CircleAlert, TriangleAlert } from "lucide-svelte";
 
     let modules: ModuleStatus[] = [];
@@ -14,7 +15,9 @@
         const healthyCount = modules.filter(
             (m) => m.health === "healthy",
         ).length;
-        overallHealth = Math.round((healthyCount / modules.length) * 100);
+        overallHealth = modules.length
+            ? Math.round((healthyCount / modules.length) * 100)
+            : 0;
     });
 </script>
 
@@ -71,9 +74,9 @@
                         </div>
                         <div class="text-xs text-stone-500">
                             {#if mod.hasData}
-                                {mod.itemCount} items found
+                                {plural(mod.itemCount, "item")} saved
                             {:else}
-                                No data detected
+                                Ready when you are
                             {/if}
                         </div>
                     </div>

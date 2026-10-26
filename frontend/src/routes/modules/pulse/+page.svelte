@@ -1,5 +1,6 @@
 <script lang="ts">
     import { pulse } from "$lib/stores/pulse.svelte";
+    import { estateAudit } from "$lib/stores/auditStore.svelte";
     import { apiGet, apiPost } from "$lib/api/client";
     import { onMount } from "svelte";
     import { slide } from "svelte/transition";
@@ -349,14 +350,20 @@
             <h3
                 class="text-xs font-bold text-slate-500 uppercase tracking-[0.4em] mb-4"
             >
-                Estate Readiness Influence
+                Estate Readiness
             </h3>
-            <div class="text-5xl md:text-7xl font-serif text-white mb-2">
-                85<span class="text-primary">%</span>
-            </div>
+            {#if estateAudit.percentage > 0}
+                <div class="text-5xl md:text-7xl font-serif text-white mb-2" data-testid="pulse-readiness">
+                    {estateAudit.percentage}<span class="text-primary">%</span>
+                </div>
+            {:else}
+                <div class="text-3xl md:text-4xl font-serif text-white mb-2" data-testid="pulse-readiness">
+                    Ready when you are
+                </div>
+            {/if}
             <p class="text-sm text-slate-400 max-w-sm">
-                The Pulse adds <span class="text-primary font-bold">+15%</span>
-                to your overall estate verification score by ensuring active presence.
+                Each part of your plan you add brings this closer to complete,
+                and your check-ins keep the people you trust reassured.
             </p>
         </div>
     </div>
