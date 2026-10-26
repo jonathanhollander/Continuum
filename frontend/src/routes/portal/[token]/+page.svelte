@@ -31,16 +31,21 @@
     if (!data) return;
     actionLoading = true;
     try {
-      const res = await fetch(
-        `${API_BASE_URL}/api/pulse/nudge?contact_id=${data.contact_id}`,
-        { method: "POST" },
-      );
+      const res = await fetch(`${API_BASE_URL}/api/pulse/nudge/${token}`, {
+        method: "POST",
+      });
       if (res.ok) {
         actionMessage = "Message sent! We've notified them you're checking in.";
-        setTimeout(() => (actionMessage = ""), 5000);
+      } else {
+        actionMessage =
+          "We couldn't send your note just now. Please try again in a little while.";
       }
+      setTimeout(() => (actionMessage = ""), 5000);
     } catch (e) {
       console.error(e);
+      actionMessage =
+        "We couldn't send your note just now. Please try again in a little while.";
+      setTimeout(() => (actionMessage = ""), 5000);
     } finally {
       actionLoading = false;
     }

@@ -76,6 +76,9 @@ class Settings(BaseSettings):
     # Postmark (recommended for production)
     POSTMARK_API_KEY: Optional[str] = None
     POSTMARK_FROM_EMAIL: str = "noreply@continuum.im"
+    # Shared secret for the Postmark bounce webhook (sent as the HTTP basic-auth
+    # password, or as ?token=). When unset the webhook accepts all requests.
+    POSTMARK_WEBHOOK_SECRET: Optional[str] = None
 
     # SMTP Configuration (fallback or alternative provider)
     SMTP_ENABLED: bool = False

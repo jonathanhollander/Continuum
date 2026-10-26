@@ -57,6 +57,7 @@ CSRF_EXEMPT_PATHS = {
 CSRF_EXEMPT_PREFIXES = (
     "/api/pulse/respond/",
     "/api/pulse/confirm/",
+    "/api/pulse/nudge/",
 )
 
 
