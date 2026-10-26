@@ -7,7 +7,6 @@
     import AssetManager from "$lib/components/archetypes/AssetManager.svelte";
     import ContactDirectory from "$lib/components/archetypes/ContactDirectory.svelte";
     import TaskDashboard from "$lib/components/archetypes/TaskDashboard.svelte";
-    import DocumentVault from "$lib/components/archetypes/DocumentVault.svelte";
 
     // Robustly extract the array
     const registryData = (registryRaw as any).default || registryRaw;
@@ -61,8 +60,7 @@
                     <ContactDirectory {module} />
                 {:else if module.id.includes("task") || module.id.includes("checklist") || module.id.includes("guide")}
                     <TaskDashboard {module} />
-                {:else if module.id.includes("legal") || module.id.includes("letter") || module.id.includes("file") || module.id.includes("keepsake") || module.id.includes("document")}
-                    <DocumentVault {module} />
+                <!-- Vault ids (legal, letter, file, keepsake, document) go to /modules/legal-documents in +page.ts -->
                 {:else}
                     <!-- Fallback to Generic Guide -->
                     <ModuleContent {module} />

@@ -18,7 +18,7 @@ from backend.pulse_scheduler import start_scheduler, stop_scheduler
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import select
 from datetime import timedelta
-from backend.routers import pulse, contacts, estate_data, insurance, medical, pets, memories, auth as auth_router, media, email, heirlooms, support, documents, ai_proxy
+from backend.routers import pulse, contacts, estate_data, insurance, medical, pets, memories, auth as auth_router, media, email, heirlooms, support, ai_proxy
 
 from backend.errors import ContinuumException, handle_exception
 from slowapi import _rate_limit_exceeded_handler
@@ -150,9 +150,6 @@ app.include_router(auth_router.router)
 app.include_router(email.router)
 app.include_router(pulse.router)
 app.include_router(contacts.router)
-# Note: documents router must come BEFORE estate_data router
-# because estate_data has a generic /{data_type} route that would intercept /vault_documents
-app.include_router(documents.router)
 app.include_router(estate_data.router)
 app.include_router(insurance.router)
 app.include_router(medical.router)
