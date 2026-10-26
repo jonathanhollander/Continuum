@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 from typing import Optional, List
+from sqlalchemy import Column, JSON
 from sqlmodel import Field, SQLModel, create_engine, Session, select
 from backend.config import settings
 
@@ -26,6 +27,8 @@ class User(SQLModel, table=True):
     onboarding_completed: bool = Field(default=False)  # Whether onboarding is complete
     language: Optional[str] = Field(default="en")  # Preferred language
     font_size: Optional[str] = Field(default="normal")  # Preferred font size (normal, large, xlarge)
+    # Per-module card/table view toggles (migration 817c6b026811 adds this as JSON)
+    view_preferences: Optional[dict] = Field(default=None, sa_column=Column(JSON, nullable=True))
 
 
 class RefreshToken(SQLModel, table=True):
