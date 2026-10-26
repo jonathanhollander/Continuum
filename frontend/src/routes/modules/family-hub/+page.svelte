@@ -38,7 +38,7 @@
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
     import * as registryRaw from "$lib/data/registry.json";
 
-    let dataViewMode = $state<ViewMode>('card');
+    let dataViewMode = $derived<ViewMode>(userPreferencesStore.getViewMode('family-hub'));
 
     // Registry Data Handling
     const registryData = (registryRaw as any).default || registryRaw;
@@ -546,7 +546,7 @@
                             {/if}
                         </div>
                         <div class="flex items-center gap-3">
-                            <DataViewToggle module="family-hub" onchange={(mode) => dataViewMode = mode} />
+                            <DataViewToggle module="family-hub" />
                             <button
                                 onclick={() => (showAddModal = true)}
                                 class="flex items-center gap-2 px-4 py-2 bg-rose-100 text-rose-700 rounded-full font-bold hover:bg-rose-200 transition-colors"
