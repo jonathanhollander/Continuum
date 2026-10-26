@@ -105,7 +105,7 @@
             recipient,
             story: "Family heirloom passed down...",
             image: "",
-        });
+        }).catch(() => {}); // the manager already showed the one gentle message
     }
 
     onMount(async () => {
@@ -228,21 +228,25 @@
 
     let showAddForm = $state(false);
 
-    function addHeirloom() {
+    async function addHeirloom() {
         if (!newHeirloom.name) return;
 
-        heirloomSync.create({
-            name: newHeirloom.name || "Unknown Treasure",
-            recipient: newHeirloom.recipient || "Undecided",
-            story: newHeirloom.story || "",
-            image:
-                newHeirloom.image ||
-                getsuggestedImage(
-                    newHeirloom.name || "",
-                    newHeirloom.story || "",
-                ),
-            custom_attributes: JSON.stringify(parsedCustomAttributes),
-        });
+        try {
+            await heirloomSync.create({
+                name: newHeirloom.name || "Unknown Treasure",
+                recipient: newHeirloom.recipient || "Undecided",
+                story: newHeirloom.story || "",
+                image:
+                    newHeirloom.image ||
+                    getsuggestedImage(
+                        newHeirloom.name || "",
+                        newHeirloom.story || "",
+                    ),
+                custom_attributes: JSON.stringify(parsedCustomAttributes),
+            }, false, false, addHeirloom);
+        } catch {
+            return; // the manager already showed the one gentle message; the form keeps the draft
+        }
 
         showAddForm = false;
         showAffirmation = true;
@@ -252,14 +256,18 @@
         parsedCustomAttributes = {};
     }
 
-    function removeHeirloom(id: string) {
+    async function removeHeirloom(id: string) {
         if (
             !confirm(
                 "Remove this heirloom? Your story will be preserved in the activity log.",
             )
         )
             return;
-        heirloomSync.delete(id);
+        try {
+            await heirloomSync.delete(id);
+        } catch {
+            // the manager already showed the one gentle message
+        }
     }
 
     // QR Logic

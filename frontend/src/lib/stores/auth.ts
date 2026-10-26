@@ -76,7 +76,8 @@ export function refreshSession(): Promise<RefreshResult> {
                 storeTokens(data.access_token, data.refresh_token);
                 return { ok: true, token: data.access_token };
             }
-            return { ok: false, definite: res.status === 401 || res.status === 400 || res.status === 422 };
+            // Only the server refusing the token is definite; any other status (a proxy's 4xx, a 5xx) keeps the tokens
+            return { ok: false, definite: res.status === 401 || res.status === 403 };
         } catch {
             return { ok: false, definite: false };
         }

@@ -123,11 +123,11 @@
     $effect(() => {
         // Initialize Status if empty
         if (statusSync.status === "synced" && statusSync.items.length === 0) {
-            statusSync.create(DEFAULT_STATUS);
+            statusSync.create(DEFAULT_STATUS).catch(() => {});
         }
         // Initialize Drill if empty
         if (drillSync.status === "synced" && drillSync.items.length === 0) {
-            drillSync.create(DEFAULT_DRILL);
+            drillSync.create(DEFAULT_DRILL).catch(() => {});
         }
     });
 
@@ -180,14 +180,18 @@
     }
 
     // Helper to update status safely
-    function updateStatus(
+    async function updateStatus(
         key: keyof Omit<GuardianStatus, "id">,
         value: boolean,
     ) {
-        if (statusSync.items.length > 0) {
-            statusSync.update("main", { [key]: value });
-        } else {
-            statusSync.create({ ...DEFAULT_STATUS, [key]: value });
+        try {
+            if (statusSync.items.length > 0) {
+                await statusSync.update("main", { [key]: value });
+            } else {
+                await statusSync.create({ ...DEFAULT_STATUS, [key]: value });
+            }
+        } catch {
+            // the manager already showed the one gentle message
         }
     }
 
@@ -219,8 +223,12 @@
         showAffirmation = true;
     }
 
-    function deleteAsset(id: string) {
-        digitalAssetsSync.delete(id);
+    async function deleteAsset(id: string) {
+        try {
+            await digitalAssetsSync.delete(id);
+        } catch {
+            // the manager already showed the one gentle message
+        }
     }
 
     function markComplete(id: keyof Omit<GuardianStatus, "id">) {
@@ -237,12 +245,16 @@
         }
     }
 
-    function toggleDrill(step: keyof Omit<FireDrill, "id">) {
+    async function toggleDrill(step: keyof Omit<FireDrill, "id">) {
         const current = fireDrill[step];
-        if (drillSync.items.length > 0) {
-            drillSync.update("main", { [step]: !current });
-        } else {
-            drillSync.create({ ...DEFAULT_DRILL, [step]: !current });
+        try {
+            if (drillSync.items.length > 0) {
+                await drillSync.update("main", { [step]: !current });
+            } else {
+                await drillSync.create({ ...DEFAULT_DRILL, [step]: !current });
+            }
+        } catch {
+            // the manager already showed the one gentle message
         }
     }
 </script>

@@ -29,6 +29,9 @@
             }
 
             const { access_token, refresh_token } = await res.json();
+            if (typeof access_token !== "string" || !access_token) {
+                throw new Error("Verification failed");
+            }
 
             storeTokens(access_token, refresh_token);
             await auth.init();
