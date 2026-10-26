@@ -11,7 +11,7 @@
      */
     const blobUrls = new Map<number, Promise<string>>();
 
-    function blobUrlFor(id: number): Promise<string> {
+    export function blobUrlFor(id: number): Promise<string> {
         let url = blobUrls.get(id);
         if (!url) {
             url = fetchMediaBlob(id).then((blob) => URL.createObjectURL(blob));

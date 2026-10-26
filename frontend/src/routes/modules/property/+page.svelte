@@ -35,6 +35,8 @@
         Loader2,
     } from "lucide-svelte";
     import EvidenceGalleryUploader from "$lib/components/ui/EvidenceGalleryUploader.svelte";
+    import { blobUrlFor } from "$lib/components/ui/MediaView.svelte";
+    import { deleteMedia, mediaIdFromRef, updateMediaMetadata } from "$lib/services/mediaService";
     import UniversalUploader from "$lib/components/ui/UniversalUploader.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
@@ -199,6 +201,9 @@
     ];
 
     function resetForm() {
+        // Files added in this form but never saved on the record.
+        removeMediaQuietly(formMediaIds().filter((id) => !savedMediaIds.includes(id)));
+        savedMediaIds = [];
         newItem = {
             name: "",
             type: "Real Estate",
@@ -216,11 +221,42 @@
         isEditing = false;
     }
 
+    // Media ids the record being edited already holds; anything else in the form is new this time.
+    let savedMediaIds: number[] = [];
+
+    function formMediaIds(): number[] {
+        return (newItem.evidence ?? []).map((e) => e.id);
+    }
+
+    function removeMediaQuietly(ids: number[]) {
+        for (const id of ids) {
+            deleteMedia(id).catch((e) => console.warn("[property] evidence removal paused", id, e));
+        }
+    }
+
+    // Card covers, as object URLs from the shared authorised cache.
+    let coverUrls = $state<Record<string, string>>({});
+    $effect(() => {
+        for (const item of items) {
+            const id = mediaIdFromRef(item.thumbnail);
+            if (id === null || coverUrls[id] !== undefined) continue;
+            coverUrls[id] = "";
+            blobUrlFor(id).then(
+                (u) => (coverUrls[id] = u),
+                (e) => console.warn("[property] cover open paused", id, e),
+            );
+        }
+    });
+
     async function handleAddItem() {
         if (!newItem.name || !newItem.location) return;
 
+        const keptIds = formMediaIds();
+        const cover = mediaIdFromRef(newItem.thumbnail);
         const itemData = {
             ...newItem,
+            // The cover is one of this record's evidence images, or none.
+            thumbnail: cover !== null && keptIds.includes(cover) ? String(cover) : "",
             custom_attributes: JSON.stringify(parsedCustomAttributes),
         };
 
@@ -266,6 +302,9 @@
                 itemData as Omit<PropertyItem, "id">,
                 handleAddItem,
             );
+            for (const id of keptIds) {
+                updateMediaMetadata(id, undefined, String(created.id)).catch(() => undefined);
+            }
 
             activityLog.logEvent({
                 module: "Property",
@@ -277,6 +316,9 @@
             });
         }
 
+        // The record now holds this list; files taken out of it go.
+        removeMediaQuietly(savedMediaIds.filter((id) => !keptIds.includes(id)));
+        savedMediaIds = keptIds;
         resetForm();
         } catch {
             // The manager already showed the one gentle message; the form stays open with the draft.
@@ -284,7 +326,8 @@
     }
 
     function editItem(item: PropertyItem) {
-        newItem = { ...item };
+        newItem = { ...item, evidence: [...(item.evidence ?? [])] };
+        savedMediaIds = (item.evidence ?? []).map((e) => e.id);
         parsedCustomAttributes = readCustom(item);
         isEditing = true;
         showAddModal = true;
@@ -550,13 +593,13 @@
                     easing: quintOut,
                 }}
             >
-                {#if item.thumbnail}
+                {#if item.thumbnail && coverUrls[item.thumbnail]}
                     <div class="absolute inset-0 h-48 z-0">
                         <div
                             class="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent z-10"
                         ></div>
                         <img
-                            src={item.thumbnail}
+                            src={coverUrls[item.thumbnail]}
                             alt={item.name}
                             class="w-full h-full object-cover opacity-50 group-hover:opacity-80 transition-opacity"
                         />
@@ -1062,7 +1105,8 @@
 
                     <EvidenceGalleryUploader
                         bind:evidence={newItem.evidence}
-                        on:setCover={(e) => (newItem.thumbnail = e.detail)}
+                        referenceId={newItem.id ? String(newItem.id) : undefined}
+                        onsetCover={(id: number) => (newItem.thumbnail = String(id))}
                     />
                 </section>
 

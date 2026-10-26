@@ -1,19 +1,39 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
-    import { Upload, Loader2, Video, Image as ImageIcon } from "lucide-svelte";
+    import { Upload, Loader2 } from "lucide-svelte";
     import MediaGallery, { type GalleryItem } from "./MediaGallery.svelte";
+    import { blobUrlFor } from "./MediaView.svelte";
+    import { uploadMedia } from "$lib/services/mediaService";
+    import { notifications } from "$lib/stores/notificationStore";
     import type { EvidenceItem } from "$lib/stores/propertyStore.svelte";
 
+    /** Stored evidence (media references). Files upload as they are chosen; the
+     *  owner saves the list on its record and removes media it no longer keeps. */
     export let evidence: EvidenceItem[] = [];
-
-    const dispatch = createEventDispatcher<{
-        change: EvidenceItem[];
-        setCover: string;
-    }>();
+    export let module = "properties";
+    export let referenceId: string | undefined = undefined;
+    export let onsetCover: ((mediaId: number) => void) | undefined = undefined;
 
     let isDragging = false;
     let isProcessing = false;
     let fileInput: HTMLInputElement;
+
+    // Object URLs from the shared authorised cache, by media id.
+    let urls: Record<number, string> = {};
+    $: loadUrls(evidence);
+
+    function loadUrls(list: EvidenceItem[]) {
+        for (const e of list) {
+            if (e.id in urls) continue;
+            urls[e.id] = "";
+            blobUrlFor(e.id).then(
+                (u) => (urls = { ...urls, [e.id]: u }),
+                (err) => {
+                    delete urls[e.id];
+                    console.warn("[evidence] file open paused", e.id, err);
+                },
+            );
+        }
+    }
 
     function handleDragOver(e: DragEvent) {
         e.preventDefault();
@@ -37,62 +57,50 @@
         if (target.files) {
             handleFiles(Array.from(target.files));
         }
+        target.value = "";
     }
 
     async function handleFiles(files: File[]) {
         isProcessing = true;
-        const newItems: EvidenceItem[] = [];
-
-        for (const file of files) {
-            // Determine Type
-            const isVideo = file.type.startsWith("video/");
-            const isImage = file.type.startsWith("image/");
-
-            if (!isVideo && !isImage) continue;
-
-            const url = URL.createObjectURL(file);
-            const name = file.name;
-
-            // Video Thumbnail Logic (Basic)
-            let thumbnailUrl: string | undefined;
-
-            newItems.push({
-                id: crypto.randomUUID(),
-                type: isVideo ? "video" : "image",
-                url,
-                thumbnailUrl,
-                name,
-                dateAdded: Date.now(),
-                size: file.size,
-            });
+        try {
+            for (const file of files) {
+                if (!file.type.startsWith("video/") && !file.type.startsWith("image/")) continue;
+                try {
+                    const saved = await uploadMedia(file, module, referenceId);
+                    evidence = [
+                        ...evidence,
+                        { id: saved.id, filename: saved.filename, mime: saved.mime_type },
+                    ];
+                } catch (e: any) {
+                    notifications.showError(e);
+                }
+            }
+        } finally {
+            isProcessing = false;
         }
-
-        evidence = [...evidence, ...newItems];
-        dispatch("change", evidence);
-        isProcessing = false;
     }
 
     function handleDelete(e: CustomEvent<string>) {
-        evidence = evidence.filter((i) => i.id !== e.detail);
-        dispatch("change", evidence);
+        evidence = evidence.filter((i) => String(i.id) !== String(e.detail));
     }
 
     function handleSetCover(e: CustomEvent<string>) {
-        dispatch("setCover", e.detail);
+        onsetCover?.(Number(e.detail));
     }
 
-    // Convert EvidenceItem -> GalleryItem for display
-    $: galleryItems = evidence.map(
-        (e) =>
-            ({
-                id: e.id,
-                url: e.url,
-                type: e.type,
-                thumbnailUrl: e.thumbnailUrl,
-                name: e.name,
-                isFavorite: false,
-            }) as GalleryItem,
-    );
+    // EvidenceItem -> GalleryItem, once its file has opened
+    $: galleryItems = evidence
+        .filter((e) => urls[e.id])
+        .map(
+            (e) =>
+                ({
+                    id: String(e.id),
+                    url: urls[e.id],
+                    type: e.mime.startsWith("video/") ? "video" : "image",
+                    name: e.filename,
+                    isFavorite: false,
+                }) as GalleryItem,
+        );
 </script>
 
 <div class="space-y-6">

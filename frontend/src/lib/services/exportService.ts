@@ -209,7 +209,7 @@ const SECTIONS: SectionDef[] = [
             ['notes', 'Notes', { long: true }],
             [(r) => {
                 const ev = parseJSON(r.evidence);
-                return Array.isArray(ev) ? ev.map((e: any) => (typeof e === 'string' ? (isFileValue(e) ? '' : e) : e?.name || e?.label || '')).filter(Boolean).join(', ') : '';
+                return Array.isArray(ev) ? ev.map((e: any) => (typeof e === 'string' ? (isFileValue(e) ? '' : e) : e?.name || e?.filename || e?.label || '')).filter(Boolean).join(', ') : '';
             }, 'Evidence']
         ],
         consumed: ['evidence'],
