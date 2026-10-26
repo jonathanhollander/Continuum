@@ -24,6 +24,7 @@
     import { onMount } from "svelte";
     import { browser } from "$app/environment";
     import { CheckCircle2 } from "lucide-svelte";
+    import { focusTrap } from "$lib/actions/focusTrap";
     import ResourceCard from "$lib/components/concierge/ResourceCard.svelte";
 
     const {
@@ -89,6 +90,20 @@
         if (scrollContainer) {
             scrollContainer.scrollTop = scrollContainer.scrollHeight;
         }
+    }
+
+    // Trap focus only for the sidebar; floating, PiP and standalone windows stay free to tab out of.
+    function sidebarTrap(node: HTMLElement, enabled: boolean) {
+        let inner: ReturnType<typeof focusTrap> | null = null;
+        const sync = (on: boolean) => {
+            if (on && !inner) inner = focusTrap(node, { onEscape: () => onClose?.() });
+            else if (!on && inner) {
+                inner.destroy();
+                inner = null;
+            }
+        };
+        sync(enabled);
+        return { update: sync, destroy: () => sync(false) };
     }
 
     async function handleSend() {
@@ -260,6 +275,10 @@
     <!-- Panel -->
     <div
         bind:this={panelRef}
+        role="dialog"
+        aria-label="AI Concierge"
+        aria-modal={!isActuallyPoppedOut}
+        use:sidebarTrap={!isActuallyPoppedOut}
         class="fixed bg-slate-900 shadow-2xl z-50 flex flex-col overflow-hidden transition-all duration-300 pointer-events-auto"
         transition:fly={{ x: 400, duration: 400, opacity: 1 }}
         class:h-full={!popOutMode}

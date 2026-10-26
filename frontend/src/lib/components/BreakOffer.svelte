@@ -55,6 +55,11 @@
         }
     }
 
+    function closeOffer() {
+        showModal = false;
+        dismiss();
+    }
+
     function takeBreak() {
         logger.info("User accepted full break experience", { signals });
         showBreakScreen = true;
@@ -121,7 +126,7 @@
 
 {#if showModal && !showBreakScreen}
     <!-- Initial Overwhelm Intervention Prompt -->
-    <div aria-modal="true" use:focusTrap
+    <div aria-modal="true" use:focusTrap={{ onEscape: closeOffer }}
         class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
         transition:fade={{ duration: 300 }}
         role="dialog"
@@ -180,10 +185,7 @@
 
                 <!-- Dismiss -->
                 <button
-                    onclick={() => {
-                        showModal = false;
-                        dismiss();
-                    }}
+                    onclick={closeOffer}
                     class="w-full py-3 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors"
                 >
                     I'm okay to continue
@@ -207,9 +209,9 @@
             </div>
         </div>
     </div>
-{:else}
+{:else if showBreakScreen}
     <!-- Full Break Experience Screen -->
-    <div role="dialog" aria-modal="true" use:focusTrap
+    <div role="dialog" aria-modal="true" aria-labelledby="break-title" use:focusTrap={{ onEscape: endBreak }}
         class="fixed inset-0 z-[100] bg-gradient-to-br from-teal-50 via-blue-50 to-indigo-50 dark:from-zinc-900 dark:via-zinc-800 dark:to-zinc-900 flex items-center justify-center p-6"
         transition:fade={{ duration: 500 }}
     >
@@ -232,6 +234,7 @@
             </div>
 
             <h2
+                id="break-title"
                 class="text-3xl font-semibold mb-4 text-zinc-900 dark:text-zinc-100"
             >
                 You're taking a break
