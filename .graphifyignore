@@ -11,3 +11,4 @@ backend/outbox/
 legacy_nextjs_archive/public/
 .agent/agents/
 .agent/skills/
+docs/reviews/*/evidence/

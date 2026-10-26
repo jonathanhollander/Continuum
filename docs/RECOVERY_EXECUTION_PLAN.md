@@ -224,7 +224,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | E5 | Desktop keyboard basics | 025 (desktop part) | `frontend/src/lib/components/ui/Modal.svelte`, plus unnamed icon buttons in the files E1–E4 don't own | Focus is trapped and returns in dialogs; every control has a name; every journey in the completion test can be done by keyboard at 1440×900 |
 | E6 | Park unused stores | — | `frontend/src/lib/stores/{calendarStore,visualMemoryStore,advancedAssetStore}.ts` → `frontend/_archive/` (outside `src/`) | 0 importers before the move; the build passes; `svelte-check` no longer lists them |
 | E7 | Remaining type errors in touched files | — | Files changed in Waves B–E that still have svelte-check errors, excluding files another E card owns | Those files show 0 errors; behaviour fixes are noted per file |
-| E8 | Branch triage | — | Remote branches | Delete merged branches (keep `stash-backup/2026-01-26-34780fe`, owner decision); list the rest with their unique commits |
+| E8 | Branch triage | — | Remote branches | Delete merged branches; list the rest with their unique commits |
 
 ## Wave X — Out-of-build bugs (decision 12; parallel track, approved by orchestrator diff review)
 
@@ -290,7 +290,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | E7 | ☐ | | |
 | E8 | ☐ | | |
 | X1 | ▶ | | |
-| X2 | ☑ | 91321f9 | `git ls-files` lists no .db; `*.db` ignored; local copies kept on disk. Old copy in `34780fe` (branch `origin/stash-backup/2026-01-26-34780fe`) holds 1 non-dev user row, empty password. Owner 2026-10-26: deleting that branch "not needed"; it stays, and E8 must not delete it |
+| X2 | ☑ | 91321f9 | `git ls-files` lists no .db; `*.db` ignored; local copies kept on disk. Old copy in `34780fe` (branch `origin/stash-backup/2026-01-26-34780fe`) holds 1 non-dev user row, empty password. Owner 2026-10-26: bundled to `docs/archive/stash-backup-2026-01-26-34780fe.bundle` (local only, git-ignored, verified), remote branch deleted |
 | X3 | ☐ | | |
 | X4 | ☐ | | |
 | X5 | ☐ | | |
