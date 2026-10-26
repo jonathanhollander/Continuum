@@ -10,13 +10,18 @@ export interface Utility {
     support_phone?: string;
 }
 
-const mapper = (data: any): Utility => ({
-    ...data,
-    id: typeof data.id === 'string' && data.id.length > 10 ? undefined : Number(data.id) || data.id,
-    service_type: data.service_type ?? data.serviceType,
-    account_number: data.account_number ?? data.accountNumber,
-    support_phone: data.support_phone ?? data.supportPhone,
-});
+// Runs on server records (camelCase), local records and outgoing payloads alike: keep the
+// server id, and keep one spelling of each field so an edit is the value that gets sent.
+const mapper = (data: any): Utility => {
+    const { serviceType, accountNumber, supportPhone, type, ...rest } = data;
+    return {
+        ...rest,
+        id: typeof data.id === 'string' && data.id.length > 10 ? undefined : Number(data.id) || data.id,
+        service_type: data.service_type ?? serviceType ?? type,
+        account_number: data.account_number ?? accountNumber,
+        support_phone: data.support_phone ?? supportPhone,
+    };
+};
 
 const manager = registerSync<Utility>('utilities', 'utilities', mapper, '/api/data')
     .setAffirmationContext('general');

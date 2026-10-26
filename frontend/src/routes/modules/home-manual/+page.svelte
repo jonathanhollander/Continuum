@@ -25,8 +25,9 @@
     import EmptyState from "$lib/components/EmptyState.svelte";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
-    import { onMount } from "svelte";
-    import { registerSync } from "$lib/services/sync.svelte";
+    import { vendorStore, type Vendor } from "$lib/stores/vendorStore.svelte";
+    import { homeAccessStore, type HomeAccess } from "$lib/stores/homeAccessStore.svelte";
+    import { utilityStore, type Utility } from "$lib/stores/utilityStore.svelte";
     import { getStored } from "$lib/stores/persistence";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import { t, language } from "$lib/stores/localization";
@@ -37,157 +38,123 @@
     let viewMode = $state<ViewMode>('card');
     let customAttributes = $state<Record<string, any>>({});
 
-    // MAPPERS
-    // Maps local/legacy objects to backend schema
-    const vendorMapper = (item: any) => {
-        const payload = { ...item };
-        if (item.category === undefined && item.role)
-            payload.category = item.role;
-        // Backend requires 'category'
-        payload.category = payload.category || "Other";
-        delete payload.id;
-        return payload;
-    };
-
-    const accessMapper = (item: any) => {
-        const payload = { ...item };
-        if (item.label && !item.location) payload.location = item.label;
-        if (item.code && !item.code_encrypted)
-            payload.code_encrypted = item.code;
-        if (item.notes && !item.instructions) payload.instructions = item.notes;
-
-        payload.location = payload.location || "Unknown";
-        payload.code_encrypted = payload.code_encrypted || "****";
-        delete payload.id;
-        return payload;
-    };
-
-    const utilityMapper = (item: any) => {
-        const payload = { ...item };
-        if (item.type && !item.service_type) payload.service_type = item.type;
-        if (item.shutoffInstructions && !item.instructions)
-            payload.instructions = item.shutoffInstructions;
-        delete payload.id;
-        return payload;
-    };
-
-    // Interfaces (Frontend View)
-    interface Vendor {
-        id: number | string;
-        category: string;
-        name: string;
-        phone?: string;
-        company?: string;
-        notes?: string;
-    }
-    interface AccessCode {
-        id: number | string;
-        location: string;
-        code_encrypted: string;
-        instructions?: string;
-    }
-    interface Utility {
-        id: number | string;
-        service_type: string;
-        provider: string;
-        location?: string;
-        shutoffInstructions?: string;
-    }
-
-    // Initialize Services
-    const vendorSync = registerSync<Vendor>(
-        "home_vendors",
-        "vendors",
-        vendorMapper,
-    ).setAffirmationContext("general");
-    const accessSync = registerSync<AccessCode>(
-        "home_access",
-        "home_access",
-        accessMapper,
-    ).setAffirmationContext("general");
-    const utilitySync = registerSync<Utility>(
-        "home_utilities",
-        "utilities",
-        utilityMapper,
-    ).setAffirmationContext("general");
+    // One sync manager per endpoint: the stores own the keys (vendors, home_access, utilities)
+    // and the mappers, so records keep their server ids across reloads.
+    const vendorSync = vendorStore;
+    const accessSync = homeAccessStore;
+    const utilitySync = utilityStore;
 
     let activeTab = $state("vendors");
-    let isLoading = $state(true);
+    // The session sync (layout) and a store's first registration each fetch once; the page shows
+    // what they hold instead of fetching again. Wait only while there is nothing saved to show yet.
+    const waiting = (st: { status: string; items: unknown[] }) =>
+        st.items.length === 0 && (st.status === "idle" || st.status === "syncing");
+    let isLoading = $derived(waiting(vendorSync) || waiting(accessSync) || waiting(utilitySync));
 
     // Modal States
     let showVendorModal = $state(false);
     let showCodeModal = $state(false);
     let showUtilityModal = $state(false);
+    // Set while a modal is updating a saved record; null while it adds a new one.
+    let editingVendorId = $state<number | null>(null);
+    let editingCodeId = $state<number | null>(null);
+    let editingUtilityId = $state<number | null>(null);
 
     // Form States
     let vendorForm = $state({ category: "", name: "", phone: "" });
     let codeForm = $state({ location: "", code: "" });
-    let utilityForm = $state({ service_type: "", provider: "" });
-
-    onMount(async () => {
-        await Promise.all([
-            vendorSync.init(),
-            accessSync.init(),
-            utilitySync.init(),
-        ]);
-        isLoading = false;
-    });
+    let utilityForm = $state({ service_type: "", provider: "", location: "" });
 
     // Handlers
     function openVendorModal() {
+        editingVendorId = null;
         vendorForm = { category: "", name: "", phone: "" };
+        showVendorModal = true;
+    }
+
+    function editVendor(vendor: Vendor) {
+        editingVendorId = vendor.id ?? null;
+        vendorForm = { category: vendor.category, name: vendor.name, phone: vendor.phone || "" };
         showVendorModal = true;
     }
 
     async function saveVendor() {
         if (!vendorForm.category || !vendorForm.name) return;
-        await vendorSync.create({
+        const fields = {
             category: vendorForm.category,
             name: vendorForm.name,
             phone: vendorForm.phone,
-        });
+        };
+        if (editingVendorId != null) await vendorSync.update(editingVendorId, fields);
+        else await vendorSync.create(fields);
         showVendorModal = false;
     }
 
-    async function deleteVendor(id: number | string) {
+    async function deleteVendor(id: number | undefined) {
+        if (id == null) return;
         if (!confirm("Remove this item? You can add it back anytime.")) return;
         await vendorSync.delete(id);
     }
 
     function openCodeModal() {
+        editingCodeId = null;
         codeForm = { location: "", code: "" };
+        showCodeModal = true;
+    }
+
+    function editCode(item: HomeAccess) {
+        editingCodeId = item.id ?? null;
+        codeForm = { location: item.location, code: item.code_encrypted };
         showCodeModal = true;
     }
 
     async function saveCode() {
         if (!codeForm.location) return;
-        await accessSync.create({
+        const fields = {
             location: codeForm.location,
             code_encrypted: codeForm.code || "****",
-        });
+        };
+        if (editingCodeId != null) await accessSync.update(editingCodeId, fields);
+        else await accessSync.create(fields);
         showCodeModal = false;
     }
 
-    async function deleteCode(id: number | string) {
+    async function deleteCode(id: number | undefined) {
+        if (id == null) return;
         if (!confirm("Remove this item? You can add it back anytime.")) return;
         await accessSync.delete(id);
     }
 
     function openUtilityModal() {
-        utilityForm = { service_type: "", provider: "" };
+        editingUtilityId = null;
+        utilityForm = { service_type: "", provider: "", location: "" };
+        showUtilityModal = true;
+    }
+
+    function editUtility(item: Utility) {
+        editingUtilityId = item.id ?? null;
+        utilityForm = {
+            service_type: item.service_type,
+            provider: item.provider,
+            location: item.location || "",
+        };
         showUtilityModal = true;
     }
 
     async function saveUtility() {
         if (!utilityForm.service_type) return;
-        await utilitySync.create({
+        const fields = {
             service_type: utilityForm.service_type,
             provider: utilityForm.provider || "Unknown",
-        });
+            location: utilityForm.location,
+        };
+        if (editingUtilityId != null) await utilitySync.update(editingUtilityId, fields);
+        else await utilitySync.create(fields);
         showUtilityModal = false;
     }
 
-    async function deleteUtility(id: number | string) {
+    async function deleteUtility(id: number | undefined) {
+        if (id == null) return;
         if (!confirm("Remove this item? You can add it back anytime.")) return;
         await utilitySync.delete(id);
     }
@@ -210,7 +177,7 @@
         >
             <div class="p-6 border-b border-slate-100 flex justify-between items-center">
                 <h3 class="font-serif font-bold text-xl text-[#304743]">
-                    Add Trusted Vendor
+                    {editingVendorId != null ? "Update" : "Add"} Trusted Vendor
                 </h3>
                 <button
                     onclick={() => (showVendorModal = false)}
@@ -297,7 +264,7 @@
         >
             <div class="p-6 border-b border-slate-100 flex justify-between items-center">
                 <h3 class="font-serif font-bold text-xl text-[#304743]">
-                    Add Access Code
+                    {editingCodeId != null ? "Update" : "Add"} Access Code
                 </h3>
                 <button
                     onclick={() => (showCodeModal = false)}
@@ -372,7 +339,7 @@
         >
             <div class="p-6 border-b border-slate-100 flex justify-between items-center">
                 <h3 class="font-serif font-bold text-xl text-[#304743]">
-                    Add Utility Shutoff
+                    {editingUtilityId != null ? "Update" : "Add"} Utility Shutoff
                 </h3>
                 <button
                     onclick={() => (showUtilityModal = false)}
@@ -408,6 +375,18 @@
                         type="text"
                         bind:value={utilityForm.provider}
                         placeholder="e.g. City Water Dept, PG&E"
+                        class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium"
+                    />
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">
+                        Shutoff Location
+                    </label>
+                    <input
+                        type="text"
+                        bind:value={utilityForm.location}
+                        placeholder="e.g. Front yard, by the meter"
                         class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium"
                     />
                 </div>
@@ -520,6 +499,7 @@
                                     subtitle={`${sample.category} - ${sample.phone}`}
                                     type="Vendor"
                                     onClick={() => {
+                                        editingVendorId = null;
                                         vendorForm = {
                                             category: sample.category,
                                             name: sample.name,
@@ -564,22 +544,30 @@
                                                 class="px-2 py-1 bg-primary/10 text-primary text-[10px] font-bold uppercase rounded-md tracking-wider"
                                                 >{vendor.category}</span
                                             >
-                                            <button
-                                                onclick={() =>
-                                                    deleteVendor(vendor.id)}
-                                                class="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                                            >
-                                                &times;
-                                            </button>
+                                            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button
+                                                    onclick={() => editVendor(vendor)}
+                                                    aria-label="Update {vendor.name}"
+                                                    class="text-slate-300 hover:text-primary"
+                                                >
+                                                    <Pencil size={14} />
+                                                </button>
+                                                <button
+                                                    onclick={() =>
+                                                        deleteVendor(vendor.id)}
+                                                    aria-label="Remove {vendor.name}"
+                                                    class="text-slate-300 hover:text-red-500"
+                                                >
+                                                    &times;
+                                                </button>
+                                            </div>
                                         </div>
                                         <h3
                                             class="font-bold text-slate-800 text-lg"
                                         >
                                             {vendor.name}
                                         </h3>
-                                        <div class="text-sm text-slate-500 mb-4">
-                                            {vendor.company}
-                                        </div>
+                                        <div class="mb-4"></div>
 
                                         <div
                                             class="flex items-center gap-2 text-slate-600 font-mono bg-slate-50 p-2 rounded-lg mb-3"
@@ -617,7 +605,6 @@
                                         <tr>
                                             <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Name</th>
                                             <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Category</th>
-                                            <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Company</th>
                                             <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Phone</th>
                                             <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Notes</th>
                                             <th class="text-right px-4 py-3 text-xs font-bold uppercase text-slate-500">Actions</th>
@@ -632,12 +619,19 @@
                                                         {vendor.category}
                                                     </span>
                                                 </td>
-                                                <td class="px-4 py-3 text-slate-600">{vendor.company || '-'}</td>
                                                 <td class="px-4 py-3 text-slate-600 font-mono">{vendor.phone || '-'}</td>
                                                 <td class="px-4 py-3 text-slate-500 text-sm max-w-[150px] truncate">{vendor.notes || '-'}</td>
                                                 <td class="px-4 py-3 text-right">
                                                     <button
+                                                        onclick={() => editVendor(vendor)}
+                                                        aria-label="Update {vendor.name}"
+                                                        class="text-slate-300 hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity mr-2"
+                                                    >
+                                                        <Pencil size={16} />
+                                                    </button>
+                                                    <button
                                                         onclick={() => deleteVendor(vendor.id)}
+                                                        aria-label="Remove {vendor.name}"
                                                         class="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                                                     >
                                                         <Trash2 size={16} />
@@ -675,6 +669,7 @@
                                     subtitle={sample.instructions}
                                     type="Code"
                                     onClick={() => {
+                                        editingCodeId = null;
                                         codeForm = {
                                             location: sample.location,
                                             code: sample.code_encrypted
@@ -734,12 +729,22 @@
                                             {item.instructions}
                                         </div>
                                     {/if}
-                                    <button
-                                        onclick={() => deleteCode(item.id)}
-                                        class="text-slate-300 hover:text-red-500 p-2"
-                                    >
-                                        &times;
-                                    </button>
+                                    <div class="flex items-center">
+                                        <button
+                                            onclick={() => editCode(item)}
+                                            aria-label="Update {item.location}"
+                                            class="text-slate-300 hover:text-primary p-2"
+                                        >
+                                            <Pencil size={14} />
+                                        </button>
+                                        <button
+                                            onclick={() => deleteCode(item.id)}
+                                            aria-label="Remove {item.location}"
+                                            class="text-slate-300 hover:text-red-500 p-2"
+                                        >
+                                            &times;
+                                        </button>
+                                    </div>
                                 </div>
                             {/each}
                         </div>
@@ -769,9 +774,11 @@
                                     subtitle={sample.location}
                                     type="Utility"
                                     onClick={() => {
+                                        editingUtilityId = null;
                                         utilityForm = {
                                             service_type: sample.service_type,
-                                            provider: sample.provider
+                                            provider: sample.provider,
+                                            location: sample.location || ""
                                         };
                                         showUtilityModal = true;
                                     }}
@@ -808,12 +815,22 @@
                                 <div
                                     class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-6 items-start relative group"
                                 >
-                                    <button
-                                        onclick={() => deleteUtility(item.id)}
-                                        class="absolute top-4 right-4 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                                    >
-                                        &times;
-                                    </button>
+                                    <div class="absolute top-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                            onclick={() => editUtility(item)}
+                                            aria-label="Update {item.service_type} shutoff"
+                                            class="text-slate-300 hover:text-primary"
+                                        >
+                                            <Pencil size={14} />
+                                        </button>
+                                        <button
+                                            onclick={() => deleteUtility(item.id)}
+                                            aria-label="Remove {item.service_type} shutoff"
+                                            class="text-slate-300 hover:text-red-500"
+                                        >
+                                            &times;
+                                        </button>
+                                    </div>
                                     <div
                                         class="p-4 bg-primary/5 text-primary rounded-2xl shrink-0"
                                     >
@@ -836,44 +853,22 @@
                                                 {item.service_type} Shutoff
                                             </h3>
                                             <p class="text-slate-500 text-sm">
-                                                Provider: {item.provider ||
-                                                    "Unknown"}
+                                                Provider: {item.provider}
                                             </p>
                                         </div>
 
-                                        <div
-                                            class="grid grid-cols-1 md:grid-cols-2 gap-4"
-                                        >
-                                            <div
-                                                class="bg-slate-50 p-4 rounded-lg"
-                                            >
+                                        {#if item.location}
+                                            <div class="bg-slate-50 p-4 rounded-lg">
                                                 <div
                                                     class="text-xs font-bold uppercase text-slate-400 mb-1 flex items-center gap-1"
                                                 >
                                                     <MapPin size={10} /> Location
                                                 </div>
-                                                <div
-                                                    class="font-medium text-slate-700"
-                                                >
+                                                <div class="font-medium text-slate-700">
                                                     {item.location}
                                                 </div>
                                             </div>
-                                            <div
-                                                class="bg-slate-50 p-4 rounded-lg"
-                                            >
-                                                <div
-                                                    class="text-xs font-bold uppercase text-slate-400 mb-1 flex items-center gap-1"
-                                                >
-                                                    <Shield size={10} /> Instructions
-                                                </div>
-                                                <div
-                                                    class="font-medium text-slate-700"
-                                                >
-                                                    {item.shutoffInstructions ||
-                                                        "No instructions set."}
-                                                </div>
-                                            </div>
-                                        </div>
+                                        {/if}
                                     </div>
                                 </div>
                             {/each}
