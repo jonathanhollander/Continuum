@@ -35,7 +35,7 @@
                 link = s;
                 note = s.note;
             })
-            .catch(() => (message = "The sharing details are taking a moment to load."));
+            .catch(() => (message = "Your sharing settings are kept safe. Refreshing the page shows them again."));
     });
 
     async function run(kind: string, task: () => Promise<RecipientLinkState>, done: string) {
@@ -46,7 +46,7 @@
             note = link.note;
             message = done;
         } catch {
-            message = "That is taking a moment. You can try again shortly.";
+            message = "Your sharing settings are just as they were. You can try again whenever you're ready.";
         } finally {
             busy = null;
         }

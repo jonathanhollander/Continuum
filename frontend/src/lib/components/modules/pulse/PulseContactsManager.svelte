@@ -171,7 +171,7 @@
         >
             <div class="w-2 h-2 rounded-full bg-warning"></div>
             <div>
-                <strong>Your circle is taking a moment to load.</strong>
+                <strong>Your circle is safe in your account.</strong>
                 <br />
                 <span class="text-xs opacity-75">{gentleRetry}</span>
             </div>

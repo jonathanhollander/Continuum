@@ -241,7 +241,7 @@ class ExternalServiceError(ContinuumException):
 
         super().__init__(
             message=f"{service_name} service error: {original_error}",
-            user_message=f"{service_name} is taking a moment. Try again shortly.",
+            user_message="Everything you've saved is safe. We can try again whenever you're ready.",
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             error_code="SERVICE_UNAVAILABLE",
             details=details

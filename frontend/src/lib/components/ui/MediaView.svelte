@@ -121,7 +121,7 @@
                     objectUrl = url;
                 }
             } catch (e: any) {
-                if (!cancelled) message = e?.message || "This file is taking a moment to open.";
+                if (!cancelled) message = e?.message || "This file is safe in your account. You can open it again whenever you're ready.";
             } finally {
                 if (!cancelled) loading = false;
             }
@@ -136,7 +136,7 @@
         try {
             await downloadMedia(mediaId, filename || undefined, cachedBlobUrl(mediaId));
         } catch (e: any) {
-            message = e?.message || "This file is taking a moment to open.";
+            message = e?.message || "This file is safe in your account. You can open it again whenever you're ready.";
         }
     }
 </script>

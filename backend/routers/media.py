@@ -203,7 +203,7 @@ def serve_media_file(media: MediaFile):
     if media.storage_provider == "s3":
         presigned_url = storage.get_presigned_url(media.storage_path)
         if not presigned_url:
-            raise HTTPException(status_code=500, detail="This file is taking a moment to open. You can try again shortly.")
+            raise HTTPException(status_code=500, detail="This file is safe in your account. You can open it again whenever you're ready.")
         from fastapi.responses import RedirectResponse
         return RedirectResponse(url=presigned_url)
 

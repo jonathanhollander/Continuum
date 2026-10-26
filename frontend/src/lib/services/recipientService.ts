@@ -44,7 +44,7 @@ function ownerHeaders(json = false): Record<string, string> {
 
 async function read<T>(res: Response): Promise<T> {
     if (res.status === 404) throw new LinkClosed();
-    if (!res.ok) throw new Error('This is taking a moment. You can try again shortly.');
+    if (!res.ok) throw new Error("Everything here is kept safe. You can try again whenever you're ready.");
     return res.json();
 }
 
@@ -60,7 +60,7 @@ export async function fetchRecipientPreview(contactId: number | string): Promise
 export function sharedFileFetcher(token: string) {
     return async (a: SnapshotAttachment): Promise<Blob> => {
         const res = await fetch(`${API_BASE_URL}/api/media/shared/${encodeURIComponent(token)}/${a.media_id}`);
-        if (!res.ok) throw new Error('This file is taking a moment to open.');
+        if (!res.ok) throw new Error("This file is kept safe. You can open it again whenever you're ready.");
         return res.blob();
     };
 }

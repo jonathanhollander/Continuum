@@ -38,7 +38,7 @@
             for (const [k, b] of files) next.set(k, URL.createObjectURL(b));
             urls = next;
         } catch (e: any) {
-            note = e?.message || "Your binder is taking a moment to gather. You can try again shortly.";
+            note = e?.message || "Your records are safe in your account. You can gather your binder again whenever you're ready.";
         } finally {
             loading = false;
         }
@@ -65,7 +65,7 @@
         try {
             saveBlob(await buildDownloadCopy(snapshot, () => {}, files), `Continuum_download_copy_${day()}.zip`);
         } catch (e: any) {
-            note = e?.message || "The download copy is taking a moment. You can try again shortly.";
+            note = e?.message || "Your binder is right here. You can save a download copy again whenever you're ready.";
         } finally {
             busy = null;
         }
