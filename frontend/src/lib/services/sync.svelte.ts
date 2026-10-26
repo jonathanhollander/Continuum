@@ -499,9 +499,9 @@ export class SyncManager<T extends { id: number | string }> {
     }
 }
 
-// Several singleton stores keep their keys in one server record (estate/profile: estate, scenario,
-// tone, onboarding, concierge, complexity). Within one sync round they share one GET, and their
-// first-load uploads go out together as one POST (the server merges the posted keys).
+// Singleton stores registered on the same endpoint share one GET per sync round, and their first-load
+// uploads go out together as one POST (the server merges the posted keys). The estate profile's
+// stores go further and share one manager (SharedRecord, below).
 const _sharedGets = new Map<string, Promise<any>>();
 const _pendingUploads = new Map<string, { payload: Record<string, any>; waiters: { resolve: (v: any) => void; reject: (e: any) => void }[] }>();
 
@@ -544,6 +544,143 @@ function sharedUpload(url: string, token: string, payload: Record<string, any>):
     return new Promise((resolve, reject) => target.waiters.push({ resolve, reject }));
 }
 
+const isEmptyRecord = (r: any) => !r || typeof r !== 'object' || Object.keys(r).length === 0;
+const ACCOUNT_CHANGED = new Error("account changed before this save was sent");
+
+type ProfileBatch = { token: string; payload: Record<string, any>; waiters: { resolve: () => void; reject: (e: any) => void }[] };
+
+/** One server record that several singleton stores share, each owning its own keys (estate/profile:
+ *  estate, scenario, tone, onboarding, concierge, complexity). It is the one manager of that record:
+ *  one GET per account per page session (stores that register later read what it holds), and one
+ *  POST in flight at a time; saves made meanwhile wait and go together in the next POST (the server
+ *  merges posted keys), so no response or reload can undo another store's save. */
+class SharedRecord {
+    private slices = new Set<SingletonSyncManager<any>>();
+    private server: Record<string, any> = {}; // the record as the server last returned it (camelCase)
+    private queue: ProfileBatch[] = [];
+    private sending: ProfileBatch | null = null;
+    private inflight: Promise<void> | null = null;
+    synced = false;
+    epoch = 0;
+    loadedFor: string | null = storageAccount();
+
+    constructor(private url: string) {}
+
+    attach(slice: SingletonSyncManager<any>) { this.slices.add(slice); }
+
+    /** The server record with every save not yet confirmed laid over it. */
+    get current(): Record<string, any> {
+        const out = { ...this.server };
+        for (const b of [this.sending, ...this.queue]) if (b) Object.assign(out, convertKeys(b.payload, toCamel));
+        return out;
+    }
+
+    /** Account change (clear: logout). Saves not yet sent belong to the old account and are dropped. */
+    reset(clear: boolean) {
+        const account = clear ? null : storageAccount();
+        if (!clear && this.loadedFor === account) return; // still this account: keep the record and any sync
+        this.epoch++;
+        this.synced = false;
+        this.inflight = null;
+        this.server = {};
+        this.queue.splice(0).forEach(b => b.waiters.forEach(w => w.reject(ACCOUNT_CHANGED)));
+        this.loadedFor = account;
+    }
+
+    /** Bring one store up to date: joins the session's single GET, or reads the record already held. */
+    async syncSlice(slice: SingletonSyncManager<any>) {
+        this.attach(slice);
+        if (!this.synced) return this.sync();
+        // A store that registers after the first load and holds this device's earlier data uploads it
+        // only while the account's record is still empty (as its own first load would have).
+        if (isEmptyRecord(this.current) && slice.hasLocalData()) {
+            const epoch = this.epoch;
+            try { await this.write(slice.wirePayload(slice.data)); } catch (e) { if (e !== ACCOUNT_CHANGED) slice.syncFailed(e); return; }
+            if (epoch !== this.epoch) return;
+        }
+        slice.applyRemote(this.current);
+    }
+
+    private sync(): Promise<void> {
+        if (this.inflight) return this.inflight;
+        const p: Promise<void> = this.run(this.epoch).finally(() => { if (this.inflight === p) this.inflight = null; });
+        this.inflight = p;
+        return p;
+    }
+
+    private async run(epoch: number) {
+        const token = get(auth).token;
+        if (!token) { this.slices.forEach(s => { s.status = "idle"; }); return; }
+        this.slices.forEach(s => { s.status = "syncing"; s.error = null; });
+        try {
+            const res = await fetch(this.url, { headers: { 'Authorization': `Bearer ${token}` } });
+            if (!res.ok) throw new Error("Failed to fetch remote data");
+            const raw = await res.json();
+            if (epoch !== this.epoch || get(auth).token !== token) return; // account changed mid-flight
+            this.server = convertKeys(raw, toCamel) || {};
+
+            // First load of an empty account: every store's own device data goes up in one POST
+            // (quietly; a store holding only its mapper's defaults sends nothing).
+            if (isEmptyRecord(raw)) {
+                const upload: Record<string, any> = {};
+                this.slices.forEach(s => { if (s.hasLocalData()) Object.assign(upload, s.wirePayload(s.data)); });
+                if (!isEmptyRecord(upload)) {
+                    console.log(`[Sync:${this.url}] Migrating local profile to cloud...`);
+                    await this.write(upload, token);
+                    if (epoch !== this.epoch) return;
+                }
+            }
+            this.synced = true;
+            const current = this.current;
+            this.slices.forEach(s => s.applyRemote(current));
+        } catch (e: any) {
+            if (e === ACCOUNT_CHANGED || epoch !== this.epoch) return;
+            this.slices.forEach(s => s.syncFailed(e));
+        }
+    }
+
+    /** Queue a save of some keys (snake_case). Resolves once the server holds them. */
+    write(payload: Record<string, any>, token: string | null = get(auth).token): Promise<void> {
+        const t = token || '';
+        let b = this.queue[this.queue.length - 1];
+        if (!b || b.token !== t) { b = { token: t, payload: {}, waiters: [] }; this.queue.push(b); }
+        Object.assign(b.payload, payload); // later save of the same key wins
+        const batch = b;
+        const done = new Promise<void>((resolve, reject) => batch.waiters.push({ resolve, reject }));
+        this.pump();
+        return done;
+    }
+
+    private pump() {
+        if (this.sending || this.queue.length === 0) return;
+        const b = this.queue.shift()!;
+        this.sending = b;
+        const epoch = this.epoch;
+        fetch(this.url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${b.token}` },
+            body: JSON.stringify(b.payload)
+        })
+            .then(res => { if (!res.ok) throw new Error("Update failed"); return res.json(); })
+            .then(raw => {
+                if (epoch === this.epoch) this.server = convertKeys(raw, toCamel) || {};
+                this.sending = null;
+                b.waiters.forEach(w => w.resolve());
+            }, e => {
+                this.sending = null;
+                b.waiters.forEach(w => w.reject(e));
+            })
+            .finally(() => this.pump());
+    }
+}
+
+const _sharedRecords = new Map<string, SharedRecord>();
+function sharedRecord(url: string) {
+    let r = _sharedRecords.get(url);
+    if (!r) { r = new SharedRecord(url); _sharedRecords.set(url, r); }
+    return r;
+}
+
 export class SingletonSyncManager<T extends object> {
     data = $state<T | null>(null);
     status = $state<SyncStatus>("idle");
@@ -556,12 +693,18 @@ export class SingletonSyncManager<T extends object> {
     private endpoint: string;
     private mapper?: (local: any) => T;
     private apiBase: string;
+    /** Set when this store is one slice of a record other stores share (see SharedRecord). */
+    private record?: SharedRecord;
 
-    constructor(key: string, endpoint: string, mapper?: (local: any) => T, apiBase: string = "/api") {
+    constructor(key: string, endpoint: string, mapper?: (local: any) => T, apiBase: string = "/api", shared = false) {
         this.key = key;
         this.endpoint = endpoint;
         this.mapper = mapper;
         this.apiBase = apiBase;
+        if (shared) {
+            this.record = sharedRecord(`${BASE_URL}${apiBase}/${endpoint}`);
+            this.record.attach(this);
+        }
 
         // Load Initial & Map legacy local data if needed
         const raw = getStored<T>(key, {} as T);
@@ -585,6 +728,7 @@ export class SingletonSyncManager<T extends object> {
     /** Account change: see SyncManager.reset. */
     reset(clear = false) {
         this.inflight = null;
+        this.record?.reset(clear);
         this.loadedFor = clear ? null : storageAccount();
         const raw = clear ? ({} as T) : getStored<T>(this.key, {} as T);
         this.data = this.mapper ? this.mapper(raw) : raw;
@@ -599,6 +743,7 @@ export class SingletonSyncManager<T extends object> {
     }
 
     sync(): Promise<void> {
+        if (this.record) return this.record.syncSlice(this);
         if (this.inflight) return this.inflight;
         const p: Promise<void> = this.runSync().finally(() => { if (this.inflight === p) this.inflight = null; });
         this.inflight = p;
@@ -642,7 +787,7 @@ export class SingletonSyncManager<T extends object> {
 
     /** True when the raw device copy (before mapping) holds more than the mapper's defaults:
      *  a mapper fills defaults, and defaults are never uploaded. */
-    private hasLocalData(): boolean {
+    hasLocalData(): boolean {
         const stored = getStored<any>(this.key, null);
         if (!stored || typeof stored !== 'object' || Object.keys(stored).length === 0) return false;
         if (!this.mapper) return true;
@@ -650,13 +795,27 @@ export class SingletonSyncManager<T extends object> {
     }
 
     /** The record as sent: mapped, snake_case, without the fields the server owns. */
-    private wirePayload(data: T): any {
+    wirePayload(data: T): any {
         const payload = convertKeys(this.mapper ? this.mapper(data) : data, toSnake);
         // Server-owned fields; the server rejects them (422) if sent back.
         if (payload && typeof payload === 'object') {
             for (const k of ['id', 'user_id', 'created_at', 'updated_at']) delete payload[k];
         }
         return payload;
+    }
+
+    /** Shared record: the server's copy arrived (or was already held); take this store's slice. */
+    applyRemote(record: Record<string, any>) {
+        this.updateLocal((this.mapper ? this.mapper(record) : record) as T);
+        this.status = "synced";
+        this.error = null;
+        this.lastSync = new Date();
+    }
+
+    syncFailed(e: any) {
+        console.error(`[Sync:${this.key}] Error:`, e);
+        this.status = "error";
+        this.error = e?.message || String(e);
     }
 
     // quiet: a background write — no affirmation, failures go to the console only.
@@ -667,6 +826,8 @@ export class SingletonSyncManager<T extends object> {
         this.data = { ...(this.data || {} as T), ...newData } as T;
         setStored(this.key, this.data);
         this.notify();
+
+        if (this.record) return this.updateShared(newData, original, quiet);
 
         try {
             const token = get(auth).token;
@@ -704,6 +865,42 @@ export class SingletonSyncManager<T extends object> {
             this.status = "error";
             this.error = (e as any)?.message || "Failed to save";
             if (quiet) throw e; // background upload: console only, like a quiet create
+            notifications.showError({
+                message: 'We couldn\'t save that just yet. Your words are still here \u2014 try again when you\'re ready.',
+                code: 'DATABASE_ERROR',
+                technicalDetails: (e as any)?.message || String(e)
+            } as any, () => { this.update(newData).catch(() => {}); });
+            throw e;
+        }
+    }
+
+    /** A save into the shared record: only the keys this save changed are sent, so it never
+     *  rewrites a key with a value this device read before another save. */
+    private async updateShared(newData: Partial<T>, original: T | null, quiet: boolean) {
+        const record = this.record!;
+        const epoch = record.epoch;
+        const full = this.wirePayload(this.data!);
+        const changed = new Set(Object.keys(newData).map(toSnake));
+        const payload: Record<string, any> = {};
+        for (const k of Object.keys(full || {})) if (changed.has(k)) payload[k] = full[k];
+        try {
+            await record.write(isEmptyRecord(payload) ? full : payload);
+            if (epoch !== record.epoch) return; // signed out or switched account meanwhile
+            const saved = (this.mapper ? this.mapper(record.current) : record.current) as T;
+            this.updateLocal(saved);
+            this.status = "synced";
+            this.lastSync = new Date();
+            if (this.affirmationContext && !quiet) notifications.showAffirmation(this.affirmationContext);
+            return saved;
+        } catch (e) {
+            if (e === ACCOUNT_CHANGED || epoch !== record.epoch) return;
+            console.error(`[Sync:${this.key}] Update failed, rolling back`, e);
+            // Back to what the server holds, keeping saves still waiting to be sent.
+            const rolled = (this.mapper ? this.mapper(record.current) : { ...(original || {}), ...record.current }) as T;
+            this.updateLocal(rolled);
+            this.status = "error";
+            this.error = (e as any)?.message || "Failed to save";
+            if (quiet) throw e;
             notifications.showError({
                 message: 'We couldn\'t save that just yet. Your words are still here \u2014 try again when you\'re ready.',
                 code: 'DATABASE_ERROR',
@@ -779,6 +976,12 @@ export function registerSync<T extends { id: number | string }>(key: string, end
 
 export function registerSingletonSync<T extends object>(key: string, endpoint: string, mapper?: any, apiBase?: string) {
     return registerManager(key, endpoint, apiBase, () => new SingletonSyncManager<T>(key, endpoint, mapper, apiBase)) as unknown as SingletonSyncManager<T>;
+}
+
+/** A store that owns some keys of the one estate profile record (/api/estate/profile). Every such
+ *  store reads and writes its slice through that record's single manager (SharedRecord). */
+export function registerProfileSlice<T extends object>(key: string, mapper: (data: any) => T) {
+    return registerManager(key, 'estate/profile', '/api', () => new SingletonSyncManager<T>(key, 'estate/profile', mapper, '/api', true)) as unknown as SingletonSyncManager<T>;
 }
 
 /** Signed-in session start (or account switch): a store holding another account's records (or

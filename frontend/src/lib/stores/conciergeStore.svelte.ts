@@ -1,4 +1,4 @@
-import { registerSingletonSync } from "$lib/services/sync.svelte";
+import { registerProfileSlice } from "$lib/services/sync.svelte";
 import { derived } from 'svelte/store';
 import { dictionary } from './dictionary';
 import { logger } from '../utils/logger';
@@ -13,11 +13,11 @@ interface ConciergeSettings {
     language: Language;
 }
 
-const manager = registerSingletonSync<ConciergeSettings>('concierge_settings', 'estate/profile', (data: any) => ({
+const manager = registerProfileSlice<ConciergeSettings>('concierge_settings', (data: any) => ({
     encouragementMode: data.encouragementMode || data.encouragement || 'Full',
     userRole: data.userRole || 'Owner',
     language: data.language || 'en'
-}), '/api');
+}));
 
 export const conciergeStore = {
     subscribe: manager.subscribe.bind(manager),

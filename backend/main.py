@@ -435,7 +435,8 @@ def save_estate_profile(body: Dict[str, Any] = Body(...), user: User = Depends(g
     if not isinstance(td, dict):
         td = {}
 
-    current = td.get("estate_profile")
+    # An older row keeps the profile at the top level (GET reads it there); carry those keys over.
+    current = td.get("estate_profile") if "estate_profile" in td else td
     merged = dict(current) if isinstance(current, dict) else {}
     for k, v in updates.items():
         if v is None:

@@ -1,4 +1,4 @@
-import { registerSingletonSync } from "$lib/services/sync.svelte";
+import { registerProfileSlice } from "$lib/services/sync.svelte";
 
 export type EstateProfile = {
     ownerName: string;
@@ -43,12 +43,7 @@ const estateMapper = (data: any): EstateProfile => {
     return out;
 };
 
-const estateManager = registerSingletonSync<EstateProfile>(
-    'estate_profile',
-    'estate/profile',
-    estateMapper,
-    '/api'
-);
+const estateManager = registerProfileSlice<EstateProfile>('estate_profile', estateMapper);
 
 export const estateProfile = {
     get current() { return estateManager.data || DEFAULT_PROFILE; },
