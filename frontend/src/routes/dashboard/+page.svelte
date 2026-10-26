@@ -20,6 +20,7 @@
     import {
         getModuleSyncStatus,
         moduleManagers,
+        moduleSyncKeys,
         syncStatusStore,
     } from "$lib/stores/syncStatusStore.svelte";
     import { fade, fly } from "svelte/transition";
@@ -42,7 +43,19 @@
         type NavItem,
         type NavGroup,
     } from "$lib/config/navigation";
-    import { dict, userRole } from "$lib/stores/conciergeStore.svelte";
+    import { dict, language, userRole } from "$lib/stores/conciergeStore.svelte";
+    import { letterStore } from "$lib/stores/letterStore.svelte";
+    import { subscriptionStore } from "$lib/stores/subscriptionStore.svelte";
+    import { petStore } from "$lib/stores/petStore.svelte";
+    import { calendarStore } from "$lib/stores/calendarStore.svelte";
+    import { homeAccessStore } from "$lib/stores/homeAccessStore.svelte";
+    import { utilityStore } from "$lib/stores/utilityStore.svelte";
+    import { vendorStore } from "$lib/stores/vendorStore.svelte";
+    import { heirloomStore } from "$lib/stores/heirloomStore.svelte";
+    import { journalStore } from "$lib/stores/journalStore.svelte";
+    import { visualMemories } from "$lib/stores/visualMemoryStore.svelte";
+    import { timeCapsuleStore } from "$lib/stores/timeCapsuleStore.svelte";
+    import { timelineStore } from "$lib/stores/timelineStore.svelte";
 
     import { notifications } from "$lib/stores/notificationStore";
     import Tooltip from "$lib/components/ui/Tooltip.svelte";
@@ -85,6 +98,14 @@
     // The same net the financial page shows: open assets less open debts
     let totalValue = $derived(estateTotals(financialAssetsStore.items).net);
 
+    // English names come from navigation.ts, the same names the sidebar shows;
+    // other languages read the dictionary by key (as the sidebar does).
+    const navText = (key: string, label: string) =>
+        $language === "en" ? label : $dict[key] || label;
+
+    // Only cards that hold saved records show a save badge (not Settings, the catalog, tools).
+    const holdsRecords = (key: string) => key in moduleSyncKeys;
+
     // Filter nav groups by user role
     let filteredNavGroups = $derived(
         navGroups
@@ -98,6 +119,10 @@
             }))
             .filter((group) => group.items.length > 0),
     );
+
+    function recordCount(count: number, one: string, many?: string) {
+        return { inProgress: count > 0, count, label: pluralWord(count, one, many) };
+    }
 
     // Module status mapping - connects nav items to audit data and stores
     function getModuleStatus(item: NavItem): {
@@ -120,7 +145,7 @@
                 return {
                     inProgress: financialAssetsStore.items.length > 0,
                     count: accountCount,
-                    label: pluralWord(accountCount, "account"),
+                    label: pluralWord(accountCount, "open account"),
                 };
             case "insurance":
                 return {
@@ -145,6 +170,11 @@
                     label: pluralWord(medicalStore.directives.length, "directive"),
                 };
             case "subscriptions":
+                return {
+                    inProgress: subscriptionStore.items.length > 0,
+                    count: subscriptionStore.items.length,
+                    label: pluralWord(subscriptionStore.items.length, "subscription"),
+                };
             case "guardian":
                 return {
                     inProgress:
@@ -159,6 +189,30 @@
                     count: propertyStore.items.length,
                     label: pluralWord(propertyStore.items.length, "property", "properties"),
                 };
+            case "letters":
+                return recordCount(letterStore.items.length, "letter");
+            case "heirlooms":
+                return recordCount(heirloomStore.items.length, "heirloom");
+            case "journal":
+                return recordCount(journalStore.items.length, "entry", "entries");
+            case "visual-memories":
+                return recordCount(visualMemories.items.length, "memory", "memories");
+            case "capsule":
+                return recordCount(timeCapsuleStore.items.length, "message");
+            case "timeline":
+                return recordCount(timelineStore.items.length, "moment");
+            case "pets":
+                return recordCount(petStore.items.length, "pet");
+            case "calendar":
+                return recordCount(calendarStore.items.length, "event");
+            case "home-manual":
+                return recordCount(
+                    homeAccessStore.items.length +
+                        utilityStore.items.length +
+                        vendorStore.items.length,
+                    "entry",
+                    "entries",
+                );
             default:
                 return { inProgress: false, count: 0, label: "" };
         }
@@ -173,7 +227,7 @@
 
         for (const group of filteredNavGroups) {
             for (const item of group.items) {
-                const label = $dict[item.key] || item.label;
+                const label = navText(item.key, item.label);
                 if (label.toLowerCase().includes(query)) {
                     results.push(item);
                 }
@@ -206,7 +260,9 @@
             .map((group) => ({
                 ...group,
                 items: group.items.filter(
-                    (item) => getModuleSyncStatus(item.key) === filterByStatus,
+                    (item) =>
+                        holdsRecords(item.key) &&
+                        getModuleSyncStatus(item.key) === filterByStatus,
                 ),
             }))
             .filter((g) => g.items.length > 0);
@@ -359,7 +415,7 @@
             <!-- Welcome Header -->
             <div class="mb-8" in:fade={{ duration: 600 }}>
                 <div
-                    class="font-mono text-sm text-primary/60 uppercase tracking-[0.2em] mb-2"
+                    class="font-mono text-sm text-slate-400 uppercase tracking-[0.2em] mb-2"
                 >
                     {greeting}<span class="animate-pulse">_</span>
                 </div>
@@ -382,11 +438,11 @@
                         class="bg-white/5 border border-white/10 rounded-xl p-4 text-center hover:bg-white/10 hover:border-primary/30 hover:scale-[1.02] transition-all cursor-pointer block"
                     >
                         <div class="flex items-center justify-center mb-2">
-                            <Users size={20} class="text-primary" />
+                            <Users size={20} class="text-indigo-300" />
                         </div>
                         {#if contactsLoading}
                             <div class="flex h-8 items-center justify-center" role="status" data-testid="tile-loading">
-                                <Loader2 size={20} class="animate-spin text-primary" />
+                                <Loader2 size={20} class="animate-spin text-indigo-300" />
                                 <span class="sr-only">Gathering your records...</span>
                             </div>
                         {:else}
@@ -397,17 +453,22 @@
                         <div class="text-sm text-slate-400">
                             {pluralWord(contactCount, "Contact")}
                         </div>
+                        {#if !contactsLoading && !cardLoading("contacts")}
+                            <div class="mt-2 flex justify-center">
+                                <SyncBadge status={getModuleSyncStatus("contacts")} size="md" showLabel={true} />
+                            </div>
+                        {/if}
                     </a>
                     <a
                         href="/modules/insurance"
                         class="bg-white/5 border border-white/10 rounded-xl p-4 text-center hover:bg-white/10 hover:border-primary/30 hover:scale-[1.02] transition-all cursor-pointer block"
                     >
                         <div class="flex items-center justify-center mb-2">
-                            <Shield size={20} class="text-primary" />
+                            <Shield size={20} class="text-indigo-300" />
                         </div>
                         {#if policiesLoading}
                             <div class="flex h-8 items-center justify-center" role="status" data-testid="tile-loading">
-                                <Loader2 size={20} class="animate-spin text-primary" />
+                                <Loader2 size={20} class="animate-spin text-indigo-300" />
                                 <span class="sr-only">Gathering your records...</span>
                             </div>
                         {:else}
@@ -418,17 +479,22 @@
                         <div class="text-sm text-slate-400">
                             {pluralWord(policyCount, "Policy", "Policies")}
                         </div>
+                        {#if !policiesLoading && !cardLoading("insurance")}
+                            <div class="mt-2 flex justify-center">
+                                <SyncBadge status={getModuleSyncStatus("insurance")} size="md" showLabel={true} />
+                            </div>
+                        {/if}
                     </a>
                     <a
                         href="/modules/financial-accounts"
                         class="bg-white/5 border border-white/10 rounded-xl p-4 text-center hover:bg-white/10 hover:border-primary/30 hover:scale-[1.02] transition-all cursor-pointer block"
                     >
                         <div class="flex items-center justify-center mb-2">
-                            <FileText size={20} class="text-primary" />
+                            <FileText size={20} class="text-indigo-300" />
                         </div>
                         {#if accountsLoading}
                             <div class="flex h-8 items-center justify-center" role="status" data-testid="tile-loading">
-                                <Loader2 size={20} class="animate-spin text-primary" />
+                                <Loader2 size={20} class="animate-spin text-indigo-300" />
                                 <span class="sr-only">Gathering your records...</span>
                             </div>
                         {:else}
@@ -437,19 +503,24 @@
                             </div>
                         {/if}
                         <div class="text-sm text-slate-400">
-                            {pluralWord(accountCount, "Account")}
+                            {pluralWord(accountCount, "Open account")}
                         </div>
+                        {#if !accountsLoading && !cardLoading("financial")}
+                            <div class="mt-2 flex justify-center">
+                                <SyncBadge status={getModuleSyncStatus("financial")} size="md" showLabel={true} />
+                            </div>
+                        {/if}
                     </a>
                     <a
                         href="/modules/medical"
                         class="bg-white/5 border border-white/10 rounded-xl p-4 text-center hover:bg-white/10 hover:border-primary/30 hover:scale-[1.02] transition-all cursor-pointer block"
                     >
                         <div class="flex items-center justify-center mb-2">
-                            <Heart size={20} class="text-primary" />
+                            <Heart size={20} class="text-indigo-300" />
                         </div>
                         {#if medicalLoading}
                             <div class="flex h-8 items-center justify-center" role="status" data-testid="tile-loading">
-                                <Loader2 size={20} class="animate-spin text-primary" />
+                                <Loader2 size={20} class="animate-spin text-indigo-300" />
                                 <span class="sr-only">Gathering your records...</span>
                             </div>
                         {:else}
@@ -458,6 +529,11 @@
                             </div>
                         {/if}
                         <div class="text-sm text-slate-400">Medical</div>
+                        {#if !medicalLoading && !cardLoading("medical")}
+                            <div class="mt-2 flex justify-center">
+                                <SyncBadge status={getModuleSyncStatus("medical")} size="md" showLabel={true} />
+                            </div>
+                        {/if}
                     </a>
                 </div>
             {/if}
@@ -467,10 +543,11 @@
                 <div class="mb-8" in:fly={{ y: 20, duration: 600, delay: 400 }}>
                     <div class="relative w-full max-w-md mx-auto lg:mx-0 group">
                         <Search
-                            class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 size-4 transition-colors group-focus-within:text-primary"
+                            class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 size-4 transition-colors group-focus-within:text-indigo-300"
                         />
                         <input
                             type="text"
+                            aria-label="Find a section of your plan"
                             bind:value={searchQuery}
                             placeholder="Find what you need..."
                             class="w-full bg-slate-950/50 border border-white/10 rounded-xl pl-11 pr-4 py-3 text-white placeholder-slate-500 focus:border-primary/50 focus:outline-none transition-all backdrop-blur-sm"
@@ -484,7 +561,7 @@
                 <!-- Status Key Cards (clickable to filter) -->
                 {#if !chipsAnswered}
                     <div class="mb-6 flex items-center gap-2" role="status" data-testid="chips-loading">
-                        <Loader2 size={14} class="animate-spin text-primary" />
+                        <Loader2 size={14} class="animate-spin text-indigo-300" />
                         <span class="text-xs text-slate-500">Gathering your records...</span>
                     </div>
                 {:else}
@@ -604,7 +681,7 @@
                                 {#each searchResults as item, i (item.key)}
                                     {@const status = getModuleStatus(item)}
                                     <Tooltip
-                                        content={item.tooltip}
+                                        content={item.tooltip ?? ""}
                                         position="top"
                                         delay={500}
                                     >
@@ -644,8 +721,7 @@
                                                         <h3
                                                             class="font-semibold text-lg text-white truncate group-hover:text-indigo-300 transition-colors"
                                                         >
-                                                            {$dict[item.key] ||
-                                                                item.label}
+                                                            {navText(item.key, item.label)}
                                                         </h3>
                                                         {#if item.isPreview}<span class="inline-block text-xs font-medium px-2 py-0.5 rounded-md bg-white/10 text-slate-300" data-testid="preview-tag">Early preview</span>{/if}
                                                         {#if status.count > 0}
@@ -658,7 +734,7 @@
                                                         {/if}
                                                     </div>
                                                     <!-- Sync Badge with label -->
-                                                    {#if !cardLoading(item.key)}
+                                                    {#if holdsRecords(item.key) && !cardLoading(item.key)}
                                                     <SyncBadge
                                                         status={getModuleSyncStatus(
                                                             item.key,
@@ -705,8 +781,7 @@
                                             <h2
                                                 class="text-lg font-semibold text-slate-200"
                                             >
-                                                {$dict[group.groupKey] ||
-                                                    group.groupLabel}
+                                                {navText(group.groupKey, group.groupLabel)}
                                             </h2>
                                         </div>
                                         <div
@@ -716,7 +791,7 @@
                                                 {@const status =
                                                     getModuleStatus(item)}
                                                 <Tooltip
-                                                    content={item.tooltip}
+                                                    content={item.tooltip ?? ""}
                                                     position="top"
                                                     delay={500}
                                                 >
@@ -752,22 +827,19 @@
                                                                         size={24}
                                                                         class={status.inProgress
                                                                             ? "text-emerald-400"
-                                                                            : "text-primary"}
+                                                                            : "text-indigo-300"}
                                                                     />
                                                                 </div>
                                                                 <div
                                                                     class="flex-1 min-w-0"
                                                                 >
                                                                     <h3
-                                                                        class="font-semibold text-lg text-white group-hover:text-primary transition-colors truncate"
+                                                                        class="font-semibold text-lg text-white group-hover:text-indigo-300 transition-colors truncate"
                                                                     >
-                                                                        {$dict[
-                                                                            item
-                                                                                .key
-                                                                        ] ||
-                                                                            item.label}
+                                                                        {navText(item.key, item.label)}
                                                                     </h3>
-                                                                    {#if status.inProgress && status.count > 0}
+                                                                    {#if item.isPreview}<span class="inline-block text-xs font-medium px-2 py-0.5 rounded-md bg-white/10 text-slate-300" data-testid="preview-tag">Early preview</span>{/if}
+{#if status.inProgress && status.count > 0}
                                                                         <p
                                                                             class="text-sm text-emerald-400/80 mt-0.5"
                                                                         >
@@ -782,7 +854,7 @@
                                                                         </p>
                                                                     {/if}
                                                                 </div>
-                                                                {#if !cardLoading(item.key)}
+                                                                {#if holdsRecords(item.key) && !cardLoading(item.key)}
                                                                 <SyncBadge
                                                                     status={getModuleSyncStatus(
                                                                         item.key,
@@ -831,8 +903,7 @@
                                             <h2
                                                 class="text-lg font-bold text-amber-400 uppercase tracking-wide"
                                             >
-                                                {$dict[group.groupKey] ||
-                                                    group.groupLabel}
+                                                {navText(group.groupKey, group.groupLabel)}
                                             </h2>
                                         </div>
                                         {#if group.groupDescription}
@@ -856,8 +927,7 @@
                                                 <h2
                                                     class="text-lg font-semibold text-slate-200"
                                                 >
-                                                    {$dict[group.groupKey] ||
-                                                        group.groupLabel}
+                                                    {navText(group.groupKey, group.groupLabel)}
                                                 </h2>
                                                 {#if group.groupDescription}
                                                     <p
@@ -891,7 +961,7 @@
                                             {@const status =
                                                 getModuleStatus(item)}
                                             <Tooltip
-                                                content={item.tooltip}
+                                                content={item.tooltip ?? ""}
                                                 position="top"
                                                 delay={500}
                                             >
@@ -928,7 +998,7 @@
                                                                     size={24}
                                                                     class={status.inProgress
                                                                         ? "text-emerald-400"
-                                                                        : "text-primary"}
+                                                                        : "text-indigo-300"}
                                                                 />
                                                             </div>
 
@@ -937,14 +1007,12 @@
                                                                 class="flex-1 min-w-0"
                                                             >
                                                                 <h3
-                                                                    class="font-semibold text-lg text-white group-hover:text-primary transition-colors truncate"
+                                                                    class="font-semibold text-lg text-white group-hover:text-indigo-300 transition-colors truncate"
                                                                 >
-                                                                    {$dict[
-                                                                        item.key
-                                                                    ] ||
-                                                                        item.label}
+                                                                    {navText(item.key, item.label)}
                                                                 </h3>
-                                                                {#if status.inProgress && status.count > 0}
+                                                                {#if item.isPreview}<span class="inline-block text-xs font-medium px-2 py-0.5 rounded-md bg-white/10 text-slate-300" data-testid="preview-tag">Early preview</span>{/if}
+{#if status.inProgress && status.count > 0}
                                                                     <p
                                                                         class="text-sm text-emerald-400/80 mt-0.5"
                                                                     >
@@ -961,7 +1029,7 @@
                                                             </div>
 
                                                             <!-- Sync Badge with label -->
-                                                            {#if !cardLoading(item.key)}
+                                                            {#if holdsRecords(item.key) && !cardLoading(item.key)}
                                                             <SyncBadge
                                                                 status={getModuleSyncStatus(
                                                                     item.key,
