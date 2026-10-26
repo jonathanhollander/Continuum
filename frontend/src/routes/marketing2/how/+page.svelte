@@ -413,6 +413,7 @@
                                 class={i % 2 === 0 ? "order-2 md:order-1" : ""}
                             >
                                 <div
+                                    aria-hidden="true"
                                     class="text-6xl font-serif text-white/10 mb-4 number-reveal"
                                     style="animation: numberPop 0.6s ease {i *
                                         0.2}s both"
@@ -475,7 +476,7 @@
                 class="max-w-3xl mx-auto text-center reveal-section"
                 use:reveal
             >
-                <div class="quote-marks text-6xl text-white/5 font-serif mb-4">
+                <div class="quote-marks text-6xl text-white/5 font-serif mb-4" aria-hidden="true">
                     "
                 </div>
                 <p

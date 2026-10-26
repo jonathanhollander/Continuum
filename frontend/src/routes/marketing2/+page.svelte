@@ -847,7 +847,7 @@
                 </h2>
 
                 <div class="grid md:grid-cols-3 gap-8">
-                    {#each [{ title: $m2t.giftClarity, desc: $m2t.giftClarityDesc, color: "amber" }, { title: $m2t.giftGuidance, desc: $m2t.giftGuidanceDesc, color: "amber" }, { title: $m2t.giftVoice, desc: $m2t.giftVoiceDesc, color: "amber" }] as card, i}
+                    {#each [{ title: $m2t.giftClarity, desc: $m2t.giftClarityDesc }, { title: $m2t.giftGuidance, desc: $m2t.giftGuidanceDesc }, { title: $m2t.giftVoice, desc: $m2t.giftVoiceDesc }] as card, i}
                         <div
                             class="card-3d text-center p-8 rounded-2xl bg-white/[0.02] border border-white/5 reveal-section transition-all duration-500"
                             use:reveal={{ delay: i * 150 }}
