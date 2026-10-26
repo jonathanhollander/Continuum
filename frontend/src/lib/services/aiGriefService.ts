@@ -58,7 +58,7 @@ Example: { "message": "The silence they leave behind can be so loud... it's okay
                         role: "user",
                         content: content
                     }
-        ]);
+        ], { purpose: 'grief.chat' });
 
         try {
             const cleanContent = rawContent.replace(/^```json\s*/, '').replace(/^```\s*/, '').replace(/\s*```$/, '');
