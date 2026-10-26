@@ -32,11 +32,9 @@
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
-    import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
 
     let viewMode = $state<ViewMode>('card');
-    let customAttributes = $state<Record<string, any>>({});
 
     // One sync manager per endpoint: the stores own the keys (vendors, home_access, utilities)
     // and the mappers, so records keep their server ids across reloads.
@@ -228,14 +226,6 @@
                         class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium"
                     />
                 </div>
-
-                <!-- Custom Fields -->
-                <div class="pt-4 border-t border-slate-100">
-                    <CustomFieldsManager
-                        entityType="home_vendor"
-                        bind:data={customAttributes}
-                    />
-                </div>
             </div>
 
             <div class="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
@@ -314,14 +304,6 @@
                         placeholder="e.g. Enter the code, then press # within ten seconds"
                         class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium"
                     ></textarea>
-                </div>
-
-                <!-- Custom Fields -->
-                <div class="pt-4 border-t border-slate-100">
-                    <CustomFieldsManager
-                        entityType="home_access_code"
-                        bind:data={customAttributes}
-                    />
                 </div>
             </div>
 
@@ -405,14 +387,6 @@
                         bind:value={utilityForm.location}
                         placeholder="e.g. Front yard, by the meter"
                         class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium"
-                    />
-                </div>
-
-                <!-- Custom Fields -->
-                <div class="pt-4 border-t border-slate-100">
-                    <CustomFieldsManager
-                        entityType="home_utility"
-                        bind:data={customAttributes}
                     />
                 </div>
             </div>
