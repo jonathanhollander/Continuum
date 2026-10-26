@@ -10,8 +10,9 @@ What the recipient view holds (and the download copy made from it):
 - every section of the owner's snapshot, except
 - letters: only those for this person (recipient_contact_id, or the same name on older
   letters), and never one the owner holds (isLocked = the owner's "Hold", card C3);
-- time capsules: only released ones for this person (card C5 rule: marked released, or a
-  date capsule whose date has arrived; milestone capsules via "Milestone reached");
+- time capsules: only released ones for this person (recipient_contact_id, card X100, or
+  the same name on older capsules; card C5 rule: marked released, or a date capsule whose
+  date has arrived; milestone capsules via "Milestone reached");
 - the other contacts' recipient notes and every link secret are removed.
 
 Owner endpoints (signed in):
@@ -73,16 +74,18 @@ def recipient_snapshot(session: Session, contact: PulseContact) -> Dict[str, Any
     names = _names(contact)
     today = datetime.now(timezone.utc).date().isoformat()
 
+    def for_this_person(row: Dict[str, Any], text_field: str) -> bool:
+        """The chosen contact wins; rows with no chosen contact match on their text."""
+        rid = row.get("recipient_contact_id")
+        if rid not in (None, ""):
+            return str(rid) == str(contact.id)
+        return _is_for(row.get(text_field), names)
+
     def keep(section: str, row: Dict[str, Any]) -> bool:
         if section == "letters":
-            if row.get("isLocked"):
-                return False
-            rid = row.get("recipient_contact_id")
-            if rid not in (None, ""):
-                return str(rid) == str(contact.id)
-            return _is_for(row.get("recipient_name"), names)
+            return not row.get("isLocked") and for_this_person(row, "recipient_name")
         if section == "time_capsule":
-            return capsule_released(row, today) and _is_for(row.get("recipient"), names)
+            return capsule_released(row, today) and for_this_person(row, "recipient")
         return True
 
     snap = build_snapshot(session, contact.user_id, keep=keep)

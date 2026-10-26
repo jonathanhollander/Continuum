@@ -46,15 +46,28 @@
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
+    import { contactSync } from "$lib/stores/familyStore.svelte";
 
     let viewMode = $state<ViewMode>('card');
     // A gentle cue until the first server answer, unless this device already holds capsules.
     let firstSyncPending = $derived(timeCapsuleSync.lastSync === null && timeCapsuleSync.status !== "error");
     let isLoading = $derived(firstSyncPending && timeCapsuleSync.items.length === 0);
 
+    // The people in contacts; a capsule can name one of them (recipientContactId).
+    let contacts = $derived(contactSync.items);
+    /** The contact chosen in the form, as the select's string value ("" for none). */
+    let capsuleRecipientId = $state("");
+
     onMount(() => {
         timeCapsuleStore.sync().catch(() => {});
+        contactSync.init().catch(() => {});
     });
+
+    function chooseRecipient(id: string) {
+        capsuleRecipientId = id;
+        const person = contacts.find((c) => String(c.id) === id);
+        if (person && !newMessage.recipient?.trim()) newMessage.recipient = person.name;
+    }
 
     let showAddModal = $state(false);
     let parsedCustomAttributes = $state<Record<string, any>>({});
@@ -80,6 +93,7 @@
     function resetForm() {
         newMessage = emptyMessage();
         parsedCustomAttributes = {};
+        capsuleRecipientId = "";
         editingId = null;
         isRecording = false;
         formNote = null;
@@ -102,6 +116,7 @@
             videoUrl: msg.videoUrl,
             mediaId: msg.mediaId,
         };
+        capsuleRecipientId = msg.recipientContactId != null ? String(msg.recipientContactId) : "";
         parsedCustomAttributes = readCustom(msg);
         activeCapsule = null;
         showAddModal = true;
@@ -115,6 +130,8 @@
     }
 
     async function handleAdd() {
+        const person = contacts.find((c) => String(c.id) === capsuleRecipientId);
+        if (!newMessage.recipient?.trim() && person) newMessage.recipient = person.name;
         if (!newMessage.title || !newMessage.recipient || !newMessage.triggerValue) {
             formNote = "A title, a name and a release moment complete this capsule.";
             return;
@@ -124,6 +141,7 @@
         const fields = {
             title: newMessage.title,
             recipient: newMessage.recipient,
+            recipientContactId: person ? Number(person.id) : null,
             contentPreview: newMessage.contentPreview ?? "",
             triggerType: newMessage.triggerType as ReleaseTrigger,
             triggerValue: newMessage.triggerValue,
@@ -575,6 +593,25 @@
                             placeholder="e.g., Emily (Daughter)"
                             class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium"
                         />
+                        <label for="capsule-recipient-contact" class="sr-only">The person in your contacts</label>
+                        <select
+                            id="capsule-recipient-contact"
+                            value={capsuleRecipientId}
+                            on:change={(e) => chooseRecipient(e.currentTarget.value)}
+                            class="w-full mt-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm text-slate-700"
+                        >
+                            <option value="">Choose them from your contacts</option>
+                            {#each contacts as contact (contact.id)}
+                                <option value={String(contact.id)}
+                                    >{contact.name}{contact.relation ? ` (${contact.relation})` : ""}</option
+                                >
+                            {/each}
+                        </select>
+                        {#if contacts.length === 0}
+                            <p class="text-[11px] text-slate-500 pl-1">
+                                People you add in <a href="/modules/contacts" class="text-indigo-600 underline">Contacts</a> appear here.
+                            </p>
+                        {/if}
                     </div>
                 </div>
 

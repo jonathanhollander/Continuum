@@ -385,7 +385,8 @@ class TimeCapsuleMessage(SQLModel, table=True):
     id: Optional[str] = Field(default_factory=lambda: uuid.uuid4().hex, primary_key=True)  # text PK: the server names new rows
     user_id: int = Field(foreign_key="users.id", index=True)
     title: str
-    recipient: str
+    recipient: str  # the words the owner wrote ("my boy"); older capsules match on this alone
+    recipient_contact_id: Optional[int] = None  # the contacts row (PulseContact.id) it is for (card X100)
     video_url: Optional[str] = None
     audio_url: Optional[str] = None
     media_id: Optional[str] = None

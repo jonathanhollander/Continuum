@@ -21,7 +21,8 @@ export const COMMON_MILESTONES: Milestone[] = [
 export interface TimeCapsuleMessage {
     id: string;
     title: string;
-    recipient: string;
+    recipient: string; // the owner's own words ("my boy")
+    recipientContactId?: number | null; // contacts row (PulseContact.id) it is for
     videoUrl?: string;
     audioUrl?: string;
     mediaId?: string;
@@ -57,8 +58,12 @@ const timeCapsuleMapper = (item: any) => {
     if (!item) return item;
     // Server rows arrive camel-cased (customAttributes); the page reads custom_attributes.
     const customAttributes = item.custom_attributes ?? item.customAttributes;
+    // One spelling for the chosen person, so clearing it (null) is never undone by a stale copy.
+    const { recipient_contact_id, ...rest } = item;
+    const recipientContactId = 'recipientContactId' in item ? item.recipientContactId : recipient_contact_id;
     return {
-        ...item,
+        ...rest,
+        recipientContactId: recipientContactId ?? null,
         custom_attributes: customAttributes,
         customAttributes,
         // Remote -> Local
