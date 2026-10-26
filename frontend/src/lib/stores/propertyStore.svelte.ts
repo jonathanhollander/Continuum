@@ -1,13 +1,12 @@
 import { registerSync } from "$lib/services/sync.svelte";
+import { deleteMedia, mediaIdFromRef } from "$lib/services/mediaService";
 
+/** A stored evidence file: the media id plus what the gallery needs to show it.
+ *  One-word keys, so the wire's snake-casing leaves them as they are. */
 export interface EvidenceItem {
-    id: string;
-    type: 'image' | 'video';
-    url: string; // Blob URL or remote URL
-    thumbnailUrl?: string; // Optional for videos
-    name: string;
-    dateAdded: number;
-    size?: number;
+    id: number; // media id
+    filename: string;
+    mime: string;
 }
 
 export interface PropertyItem {
@@ -23,20 +22,43 @@ export interface PropertyItem {
     maintenanceSchedule?: string;
     notes: string;
     evidence?: EvidenceItem[];
-    thumbnail?: string; // Cover image URL
+    thumbnail?: string; // Cover: the media id of one evidence image
     custom_attributes?: string; // JSON string of custom field values
 }
 
 // Asset.purchaseDate travels as a plain YYYY-MM-DD string; the server may return a full timestamp
+// Only entries that point at a stored media file are kept; older entries held
+// page-local `blob:` URLs that no longer open, so they are left out.
 function parseEvidence(v: any): EvidenceItem[] | undefined {
-    if (Array.isArray(v) || v === undefined || v === null) return v ?? undefined;
-    if (typeof v === 'string' && v) {
+    if (v === undefined) return undefined;
+    let list: any = v;
+    if (typeof v === 'string') {
         try {
-            const parsed = JSON.parse(v);
-            if (Array.isArray(parsed)) return parsed;
-        } catch { }
+            list = v ? JSON.parse(v) : [];
+        } catch {
+            list = [];
+        }
     }
-    return [];
+    if (!Array.isArray(list)) return [];
+    return list.flatMap((e: any) => {
+        const id = mediaIdFromRef(e?.id);
+        return id === null ? [] : [{ id, filename: String(e.filename ?? ''), mime: String(e.mime ?? '') }];
+    });
+}
+
+function parseCover(v: any): string | undefined {
+    if (v === undefined) return undefined;
+    const id = mediaIdFromRef(v);
+    return id === null ? '' : String(id);
+}
+
+/** Every media id a property holds (evidence and cover). */
+function propertyMediaIds(item: PropertyItem | undefined): number[] {
+    if (!item) return [];
+    const ids = new Set((item.evidence ?? []).map((e) => e.id));
+    const cover = mediaIdFromRef(item.thumbnail);
+    if (cover !== null) ids.add(cover);
+    return [...ids];
 }
 
 const propertyMapper = (item: any) => {
@@ -47,7 +69,8 @@ const propertyMapper = (item: any) => {
             ? item.purchaseDate.slice(0, 10)
             : item.purchaseDate,
         // Wire is JSON text (sync.svelte.ts stringifies on write); keep an array locally
-        evidence: parseEvidence(item.evidence)
+        evidence: parseEvidence(item.evidence),
+        thumbnail: parseCover(item.thumbnail)
     };
 };
 
@@ -79,7 +102,13 @@ export const propertyStore = {
     },
 
     deleteItem: (id: string) => {
-        return propertySync.delete(id);
+        const mediaIds = propertyMediaIds(propertySync.items.find((i) => String(i.id) === String(id)));
+        // The files go once the record is really gone, including after Try Again on a failed remove.
+        return propertySync.delete(id, mediaIds.length === 0 ? undefined : async () => {
+            for (const m of mediaIds) {
+                await deleteMedia(m).catch((e) => console.warn('[property] evidence removal paused', m, e));
+            }
+        });
     },
 
     getItem: (id: string) => {

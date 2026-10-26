@@ -90,7 +90,7 @@
 
     function handleSetCover(item: GalleryItem, e: Event) {
         e.stopPropagation();
-        dispatch("setCover", item.url);
+        dispatch("setCover", item.id);
     }
 </script>
 
