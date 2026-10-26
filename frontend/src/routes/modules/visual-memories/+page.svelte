@@ -26,6 +26,8 @@
         syncAllMemories,
         type ExternalArchive,
     } from "$lib/stores/visualMemoryStore.svelte";
+    import { uploadMedia, updateMediaMetadata, isValidMediaType } from "$lib/services/mediaService";
+    import { notifications } from "$lib/stores/notificationStore";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
     import * as registryRaw from "$lib/data/registry.json";
 
@@ -122,33 +124,55 @@
 
     // --- Gallery Functions ---
 
-    function handleFileUpload(e: Event) {
+    let uploadingCount = $state(0);
+
+    // Each file goes to the media API; the record keeps only its download_url.
+    async function saveOne(file: File) {
+        let media;
+        try {
+            media = await uploadMedia(file, "visual_memories");
+        } catch (err: any) {
+            notifications.showError({
+                message: err?.message || "Saving this file paused. It is still here, ready to try again.",
+                code: "UPLOAD_ERROR",
+                technicalDetails: String(err),
+            } as any);
+            return;
+        }
+        // addVisualMemory shows its own gentle message (with retry) when the record save pauses
+        const record = await addVisualMemory({
+            url: media.download_url,
+            name: file.name.replace(/\.[^.]+$/, "").replace(/-|_/g, " "),
+            type: file.type.startsWith("image/") ? "photo" : "video",
+            tags: [],
+            is_favorite: false,
+            size: file.size,
+        }).catch(() => null);
+        if (record?.id != null) {
+            await updateMediaMetadata(media.id, undefined, String(record.id)).catch((e) =>
+                console.warn("[visual-memories] reference_id link paused", e),
+            );
+        }
+    }
+
+    async function handleFileUpload(e: Event) {
         const input = e.target as HTMLInputElement;
         if (!input.files || input.files.length === 0) return;
-
-        Array.from(input.files).forEach((file) => {
-            if (
-                !file.type.startsWith("image/") &&
-                !file.type.startsWith("video/")
-            )
-                return;
-
-            const reader = new FileReader();
-            reader.onload = (loadEvent) => {
-                const result = loadEvent.target?.result as string;
-                addVisualMemory({
-                    url: result,
-                    name: file.name.split(".")[0].replace(/-|_/g, " "),
-                    type: file.type.startsWith("image/") ? "photo" : "video",
-                    tags: "",
-                    is_favorite: false,
-                    size: file.size,
-                });
-            };
-            reader.readAsDataURL(file);
-        });
-
+        const files = Array.from(input.files).filter(
+            (file) =>
+                (file.type.startsWith("image/") || file.type.startsWith("video/")) &&
+                isValidMediaType(file),
+        );
         input.value = ""; // Clear input
+
+        uploadingCount += files.length;
+        for (const file of files) {
+            try {
+                await saveOne(file);
+            } finally {
+                uploadingCount -= 1;
+            }
+        }
     }
 
     function triggerUpload() {
@@ -345,7 +369,11 @@
                     onclick={triggerUpload}
                     class="flex items-center gap-2 px-4 py-2 bg-[#4A7C74] text-white rounded-lg font-bold text-sm hover:bg-[#3b635d] transition-colors shadow-sm"
                 >
-                    <Plus size={16} /> Add Memories
+                    {#if uploadingCount > 0}
+                        <Loader2 size={16} class="animate-spin" /> Saving your memories…
+                    {:else}
+                        <Plus size={16} /> Add Memories
+                    {/if}
                 </button>
             {/if}
         </div>
@@ -395,7 +423,7 @@
                         bind:selectedIds
                         {isSelectionMode}
                         onToggleFavorite={(id) =>
-                            toggleVisualFavorite(id)}
+                            toggleVisualFavorite(Number(id))}
                     />
                 {/if}
             </div>
