@@ -4,8 +4,6 @@
     import { navGroups, catalogCategories, type NavItem } from "$lib/config/navigation";
     import { dict, userRole } from "$lib/stores/conciergeStore.svelte";
     import { auth } from "$lib/stores/auth";
-    import { API_BASE_URL } from "$lib/config";
-    import { get } from "svelte/store";
     import {
         RefreshCw,
         Database,
@@ -53,7 +51,6 @@
 
         // Register every module's own store so a direct load counts them all.
         await Promise.allSettled(OWNING_STORES.map((load) => load()));
-        countComponentKeys();
     });
 
     // Stores behind the module cards; loading one registers (and syncs) its managers.
@@ -83,34 +80,11 @@
         () => import("$lib/stores/funeralStore.svelte"),
         () => import("$lib/stores/scenarioStore.svelte"),
         () => import("$lib/stores/activityLog.svelte"),
+        () => import("$lib/stores/documentStore.svelte"),
+        () => import("$lib/stores/vendorStore.svelte"),
+        () => import("$lib/stores/homeAccessStore.svelte"),
+        () => import("$lib/stores/utilityStore.svelte"),
     ];
-
-    // Keys a page component registers (with its own mapper). Until that page has been opened,
-    // the card reads the saved count straight from the same endpoint instead.
-    const COMPONENT_KEYS: Record<string, string> = {
-        "docs_legal-vault": "/api/data/vault_documents",
-        vendors: "/api/data/vendors",
-        home_access: "/api/data/home_access",
-        utilities: "/api/data/utilities",
-    };
-    let componentCounts = $state<Record<string, number>>({});
-
-    async function countComponentKeys() {
-        const token = get(auth).token;
-        if (!token) return;
-        await Promise.allSettled(
-            Object.entries(COMPONENT_KEYS)
-                .filter(([key]) => !syncRegistry[key])
-                .map(async ([key, path]) => {
-                    const res = await fetch(`${API_BASE_URL}${path}`, {
-                        headers: { Authorization: `Bearer ${token}` },
-                    });
-                    if (!res.ok) return;
-                    const body = await res.json();
-                    if (Array.isArray(body)) componentCounts[key] = body.length;
-                }),
-        );
-    }
 
     function refreshTestRegistry() {
         if (testDataFactory) {
@@ -217,6 +191,11 @@
         return saved ? [d] : [];
     }
 
+    // Home Manual rows carry no name: utilities are named by provider, home access by location.
+    function rowName(item: any) {
+        return item.name || item.title || item.provider || item.service_type || item.location || "Untitled";
+    }
+
     // Helper: isTestRow
     function isTestRow(moduleKey: string, id: string | number) {
         return testRegistry[moduleKey]?.includes(String(id));
@@ -229,7 +208,7 @@
         financial: ["financial_assets"],
         insurance: ["insurance_policies"],
         contacts: ["family_members", "family_relationships"],
-        documents: ["docs_legal-vault"],
+        documents: ["documents"],
         medical: ["medical_profile", "medical_directives"],
         "home-manual": ["vendors", "home_access", "utilities"],
         pulse: ["pulse_settings"],
@@ -283,7 +262,7 @@
 
     function cardCount(card: ModuleCard) {
         return card.keys.reduce(
-            (n, k) => n + (syncRegistry[k] ? rowsOf(syncRegistry[k]).length : (componentCounts[k] ?? 0)),
+            (n, k) => n + rowsOf(syncRegistry[k]).length,
             0,
         );
     }
@@ -308,10 +287,11 @@
         };
     }
 
-    // Registered stores no card owns (pulse_status is the server's own check-in state).
+    // Registered stores no card owns (pulse_status is the server's own check-in state; the
+    // Document Vault page's docs_* managers read the same /api/data/documents rows as "documents").
     let otherModules = $derived.by(() => {
         const owned = new Set([...Object.values(moduleKeys).flat(), "pulse_status"]);
-        return Object.entries(syncRegistry).filter(([key]) => !owned.has(key));
+        return Object.entries(syncRegistry).filter(([key]) => !owned.has(key) && !key.startsWith("docs_"));
     });
 </script>
 
@@ -640,7 +620,7 @@
                                     ></td
                                 >
                                 <td class="p-4 font-medium text-slate-900"
-                                    >{item.name || item.title || "Untitled"}</td
+                                    >{rowName(item)}</td
                                 >
                                 <td class="p-4">
                                     {#if isTest}
@@ -670,9 +650,7 @@
                                         >{item.type || "Generic"}</td
                                     >
                                     <td class="p-4 text-slate-400"
-                                        >{item.name ||
-                                            item.title ||
-                                            "Untitled"}</td
+                                        >{rowName(item)}</td
                                     >
                                     <td class="p-4 text-slate-400">Unknown</td>
                                     <td
