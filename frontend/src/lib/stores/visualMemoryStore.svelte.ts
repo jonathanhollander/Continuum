@@ -115,7 +115,7 @@ export const addMemory = (
         tags: Array.isArray(memory.tags) ? memory.tags.join(',') : memory.tags,
         is_favorite: memory.is_favorite ?? false
     };
-    return visualManager.create(payload as any, false, false, onRetry);
+    return visualManager.create(payload, false, false, onRetry);
 };
 
 /** The media id behind a record's url; null for old `data:` records and other urls. */
@@ -140,9 +140,9 @@ export const updateMemory = async (id: number, updates: Partial<VisualMemory>, a
     const payload = { ...item, ...updates };
     // Convention: Always send tags as string to backend
     if (Array.isArray(payload.tags)) {
-        (payload as any).tags = payload.tags.join(',');
+        (payload as { tags: string }).tags = payload.tags.join(',');
     }
-    const saved = await visualManager.update(id, payload as any);
+    const saved = await visualManager.update(id, payload as VisualMemory);
     if (affirm) affirmMemories();
     return saved;
 };

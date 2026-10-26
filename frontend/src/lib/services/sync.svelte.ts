@@ -324,7 +324,7 @@ export class SyncManager<T extends { id: number | string }> {
 
     /** POST one new item with the given token; returns it as the server stored it. */
     private async post(data: Partial<T>, token: string | null) {
-        const payloadRaw = this.mapper ? this.mapper(data as any) : data;
+        const payloadRaw = this.mapper ? this.mapper(data) : data;
         const payload = toWire(payloadRaw);
 
         // The server assigns these on every create (every model's id is a server default or autoincrement;
@@ -350,7 +350,7 @@ export class SyncManager<T extends { id: number | string }> {
                 const errorJson = JSON.parse(errorBody);
                 errorDetail = errorJson.detail || errorJson.message || errorJson.error?.message || errorBody;
             } catch { errorDetail = errorBody || errorDetail; }
-            const error = new Error("Failed to save") as any;
+            const error = new Error("Failed to save") as Error & { technicalDetails?: string };
             error.technicalDetails = `${errorDetail}\n\nEndpoint: POST ${this.apiBase}/${this.endpoint}`;
             throw error;
         }
@@ -391,7 +391,7 @@ export class SyncManager<T extends { id: number | string }> {
                 message: 'We couldn\'t save that just yet. Your words are still here \u2014 try again when you\'re ready.',
                 code: 'DATABASE_ERROR',
                 technicalDetails: e.technicalDetails || e.message || String(e)
-            } as any, () => { (onRetry ? onRetry() : this.create(data, skipLocal)).catch(() => {}); });
+            }, () => { (onRetry ? onRetry() : this.create(data, skipLocal)).catch(() => {}); });
             throw e;
         }
     }
@@ -417,7 +417,7 @@ export class SyncManager<T extends { id: number | string }> {
                 message: 'We couldn\'t find that item to save. It may have been moved \u2014 please refresh and try again when you\'re ready.',
                 code: 'NOT_FOUND',
                 technicalDetails: `update: no item with id ${id} in ${this.key}`
-            } as any);
+            });
             throw new Error(`Item ${id} not found`);
         }
 
@@ -479,7 +479,7 @@ export class SyncManager<T extends { id: number | string }> {
                     const errorJson = JSON.parse(errorBody);
                     errorDetail = errorJson.detail || errorJson.message || errorJson.error?.message || errorBody;
                 } catch { errorDetail = errorBody || errorDetail; }
-                const error = new Error("Failed to update remote") as any;
+                const error = new Error("Failed to update remote") as Error & { technicalDetails?: string };
                 error.technicalDetails = `${errorDetail}\n\nEndpoint: PUT ${this.apiBase}/${this.endpoint}/${id}`;
                 throw error;
             }
@@ -533,7 +533,7 @@ export class SyncManager<T extends { id: number | string }> {
                 message: 'We couldn\'t save that just yet. Your words are still here \u2014 try again when you\'re ready.',
                 code: 'DATABASE_ERROR',
                 technicalDetails: e.technicalDetails || e.message || String(e)
-            } as any, () => { this.update(id, updates, affirm).catch(() => {}); });
+            }, () => { this.update(id, updates, affirm).catch(() => {}); });
             throw e;
         }
     }
@@ -569,7 +569,7 @@ export class SyncManager<T extends { id: number | string }> {
                     const errorJson = JSON.parse(errorBody);
                     errorDetail = errorJson.detail || errorJson.message || errorJson.error?.message || errorBody;
                 } catch { errorDetail = errorBody || errorDetail; }
-                const error = new Error("Delete failed remote") as any;
+                const error = new Error("Delete failed remote") as Error & { technicalDetails?: string };
                 error.technicalDetails = `${errorDetail}\n\nEndpoint: DELETE ${this.apiBase}/${this.endpoint}/${id}`;
                 throw error;
             }
@@ -603,7 +603,7 @@ export class SyncManager<T extends { id: number | string }> {
                 message: 'We couldn\'t remove this just yet. It is still safely in your list \u2014 try again when you\'re ready.',
                 code: 'DATABASE_ERROR',
                 technicalDetails: e.technicalDetails || e.message || String(e)
-            } as any, () => { this.delete(id, onRemoved).catch(() => {}); });
+            }, () => { this.delete(id, onRemoved).catch(() => {}); });
             return;
         }
         // Outside the try: a failing follow-up must never roll back a record the server removed.
@@ -1023,12 +1023,12 @@ export class SingletonSyncManager<T extends object> {
             setStored(this.key, original);
             this.notify();
             this.status = "error";
-            this.error = (e as any)?.message || "Failed to save";
+            this.error = (e as { message?: string } | null)?.message || "Failed to save";
             if (quiet) throw e; // background upload: console only, like a quiet create
             notifications.showError({
                 message: 'We couldn\'t save that just yet. Your words are still here \u2014 try again when you\'re ready.',
                 code: 'DATABASE_ERROR',
-                technicalDetails: (e as any)?.message || String(e)
+                technicalDetails: (e as { message?: string } | null)?.message || String(e)
             }, () => { this.update(newData).catch(() => {}); });
             throw e;
         }
@@ -1059,12 +1059,12 @@ export class SingletonSyncManager<T extends object> {
             const rolled = (this.mapper ? this.mapper(record.current) : { ...(original || {}), ...record.current }) as T;
             this.updateLocal(rolled);
             this.status = "error";
-            this.error = (e as any)?.message || "Failed to save";
+            this.error = (e as { message?: string } | null)?.message || "Failed to save";
             if (quiet) throw e;
             notifications.showError({
                 message: 'We couldn\'t save that just yet. Your words are still here \u2014 try again when you\'re ready.',
                 code: 'DATABASE_ERROR',
-                technicalDetails: (e as any)?.message || String(e)
+                technicalDetails: (e as { message?: string } | null)?.message || String(e)
             }, () => { this.update(newData).catch(() => {}); });
             throw e;
         }
@@ -1181,7 +1181,7 @@ export function syncAll({ everything = false }: { everything?: boolean } = {}) {
         const run = ++_sessionRun;
         const started = Date.now();
         const account = storageAccount();
-        const managers = Object.values(getRegistry()) as any[];
+        const managers = Object.values(getRegistry());
         managers.forEach(m => { if (m.loadedFor !== account) m.reset(false); });
         const now = managers.filter(m => everything || _shown.has(m) || m.status === 'syncing');
         managers.forEach(m => { if (!now.includes(m)) _later.add(m); });
@@ -1192,7 +1192,7 @@ export function syncAll({ everything = false }: { everything?: boolean } = {}) {
             while (run === _sessionRun && _later.size > 0) {
                 await whenIdle();
                 if (run !== _sessionRun) break;
-                const m = _later.values().next().value as any;
+                const m = _later.values().next().value;
                 if (!m) break;
                 _later.delete(m);
                 if (!(m.lastSync && m.lastSync.getTime() >= started)) await m.sync().catch(() => {});
@@ -1210,7 +1210,7 @@ export function syncAll({ everything = false }: { everything?: boolean } = {}) {
 if (browser) {
     activeAccountId.subscribe(id => {
         if (!id) return;
-        (Object.values(getRegistry()) as any[]).forEach(m => {
+        Object.values(getRegistry()).forEach(m => {
             if (m.loadedFor !== null && m.loadedFor !== id) m.reset(false);
         });
     });
@@ -1221,5 +1221,5 @@ export function clearAll() {
     _sessionActive = false;
     _sessionRun++;
     _later.clear();
-    (Object.values(getRegistry()) as any[]).forEach(m => m.reset(true));
+    Object.values(getRegistry()).forEach(m => m.reset(true));
 }
