@@ -146,14 +146,6 @@ export const navGroups: NavGroup[] = [
                 allowedRoles: ["Owner", "Executor", "Family"],
                 tooltip: "The milestones of your life"
             },
-            {
-                label: "Family Hub",
-                key: "family-hub",
-                href: "/modules/family-hub",
-                icon: Users,
-                allowedRoles: ["Owner", "Executor", "Family"],
-                tooltip: "Your family network and connections"
-            },
         ],
     },
     {
@@ -288,6 +280,14 @@ export const navGroups: NavGroup[] = [
                 tooltip: "Key contacts, advisors, and family members"
             },
             {
+                label: "Family Hub",
+                key: "family-hub",
+                href: "/modules/family-hub",
+                icon: Users,
+                allowedRoles: ["Owner", "Executor", "Family"],
+                tooltip: "Your family network and connections"
+            },
+            {
                 label: "Wellness Check-in",
                 key: "pulse",
                 isPreview: true,
@@ -329,6 +329,14 @@ export const navGroups: NavGroup[] = [
                 icon: Calendar,
                 allowedRoles: ["Owner", "Executor", "Family"],
                 tooltip: "Important dates and milestones"
+            },
+            {
+                label: "Executor Guide",
+                key: "executor",
+                href: "/modules/executor-toolkit",
+                icon: Briefcase,
+                allowedRoles: ["Owner", "Executor"],
+                tooltip: "Step-by-step help for the person settling the estate"
             },
             {
                 label: "Complete Record",
