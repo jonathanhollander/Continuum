@@ -79,7 +79,8 @@
 
     // Redirect if already logged in
     onMount(() => {
-        if ($auth.user) {
+        const signedInEmail = $auth.user?.email?.trim().toLowerCase();
+        if (signedInEmail && (!email.trim() || signedInEmail === email.trim().toLowerCase())) {
             goto(safeRedirect || "/dashboard");
         }
     });
