@@ -173,11 +173,11 @@
             <Sparkles size={16} />
         </button>
 
-        <!-- AI Drawer -->
+        <!-- AI Drawer: in the flow, so the content below moves down rather than being covered -->
         {#if isDrawerOpen}
             <div
                 transition:slide
-                class="absolute top-full left-0 right-0 z-20 mt-2 bg-card rounded-2xl shadow-xl border border-border overflow-hidden"
+                class="relative z-20 mt-2 bg-card rounded-2xl shadow-xl border border-border overflow-hidden"
             >
                 {#if suggestion}
                     <!-- Review State -->

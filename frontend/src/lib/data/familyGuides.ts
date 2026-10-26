@@ -32,7 +32,7 @@ export const conversationGuides: Guide[] = [
             },
             {
                 title: "If They Seem Uncomfortable",
-                content: "It's normal for loved ones to resist these conversations. They may change the subject, make jokes, or say \"Let's not talk about that.\" Respond with patience:\n\n\"I understand this is hard. It's hard for me too. But I love you, and that's why I want to have this conversation.\"\n\n\"We don't have to figure everything out today. I just wanted to start the conversation.\"\n\n\"I'm not trying to be morbid. I'm trying to take care of you.\""
+                content: "It's normal for loved ones to resist these conversations. They may change the subject, make jokes, or say \"Let's not talk about that.\" Respond with patience:\n\n\"I understand this is hard. It's hard for me too. But I love you, and that's why I want to have this conversation.\"\n\n\"We can take this one step at a time. I just wanted to start the conversation.\"\n\n\"I'm not trying to be morbid. I'm trying to take care of you.\""
             },
             {
                 title: "Keeping It Going",
@@ -107,7 +107,7 @@ export const conversationGuides: Guide[] = [
             },
             {
                 title: "Being Present Without Fixing",
-                content: "Your instinct may be to solve, research, or encourage. But sometimes the most loving thing is simply to witness their pain without trying to fix it.\n\n\"I can't imagine how hard this is. I'm so sorry.\"\n\n\"You don't have to be brave with me.\"\n\n\"I'm here to listen if you want to talk. Or we can just sit together.\""
+                content: "Your instinct may be to solve, research, or encourage. But sometimes the most loving thing is simply to witness their pain without trying to fix it.\n\n\"I can't imagine how hard this is. I'm so sorry.\"\n\n\"You can be just as you are with me.\"\n\n\"I'm here to listen if you want to talk. Or we can just sit together.\""
             },
             {
                 title: "Practical Support That Helps",
@@ -221,7 +221,7 @@ export const familyGuides: Guide[] = [
                 content: "Family members grieve differently. Some want to talk constantly; others need silence. Some become caregivers; others withdraw. Try to:\n\n- Accept different coping styles without judgment\n- Communicate needs clearly: \"I need some time alone\" or \"I need to talk\"\n- Divide responsibilities fairly\n- Seek outside support (friends, counselors, support groups)\n- Care for your own health so you can be present"
             }
         ],
-        closingNote: "This is sacred time. It's painful and precious and unfair and holy. Be gentle with yourself and each other. You are doing something incredibly hard, and you don't have to do it perfectly."
+        closingNote: "This is sacred time. It's painful and precious and unfair and holy. Be gentle with yourself and each other. You are doing something incredibly hard, and doing it with love is enough."
     },
     {
         id: "talk-5",
