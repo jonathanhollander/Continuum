@@ -44,7 +44,7 @@
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
 
     let showAddForm = $state(false);
-    let viewMode = $state<ViewMode>('card');
+    let viewMode = $derived<ViewMode>(userPreferencesStore.getViewMode('pets'));
     let parsedCustomAttributes = $state<Record<string, any>>({});
     let isLoading = $state(true);
     /** The document attached in the form, and the one the pet held when the form opened. */
@@ -231,7 +231,7 @@
     whyMatters="A documented plan places your pets with someone who knows their needs, fears, and routines. Creating this plan ensures they'll be loved and cared for by someone you trust."
 >
     <div class="flex items-center gap-4">
-        <DataViewToggle module="pets" onchange={(mode) => viewMode = mode} />
+        <DataViewToggle module="pets" />
         <button
             class="bg-primary text-primary-foreground px-6 py-2 rounded-xl font-bold hover:opacity-90 transition-colors flex items-center gap-2 shadow-lg shadow-primary/20"
             onclick={() => (showAddForm = !showAddForm)}

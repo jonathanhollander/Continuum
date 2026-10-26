@@ -20,7 +20,7 @@
 {#if variant === "icon-only"}
     <button
         onclick={handleClick}
-        class="p-2 text-zinc-500 hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors"
+        class="p-2 text-muted-foreground hover:text-primary-hover hover:bg-primary-soft rounded-lg transition-colors"
         title="Take a mindful break"
         aria-label="Take a mindful break"
     >
@@ -29,7 +29,7 @@
 {:else if variant === "primary"}
     <button
         onclick={handleClick}
-        class="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg transition-colors font-medium"
+        class="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-primary-foreground rounded-lg transition-colors font-medium"
     >
         <Pause class="w-4 h-4" />
         Take a break
@@ -38,7 +38,7 @@
     <!-- subtle variant (default) -->
     <button
         onclick={handleClick}
-        class="flex items-center gap-2 px-3 py-1.5 text-sm text-zinc-600 dark:text-zinc-400 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors"
+        class="flex items-center gap-2 px-3 py-1.5 text-sm text-muted-foreground hover:text-primary-hover hover:bg-primary-soft rounded-lg transition-colors"
     >
         <Pause class="w-4 h-4" />
         <span class="hidden sm:inline">Take a break</span>

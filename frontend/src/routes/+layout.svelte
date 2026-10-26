@@ -399,7 +399,7 @@
 			{:else}
 				<!-- Focus Mode: The Architect -->
 				<div
-					class="hidden lg:block h-screen sticky top-0 z-50 shadow-2xl"
+					class="hidden lg:block h-screen sticky top-0 z-30 shadow-2xl"
 				>
 					<TheArchitect
 						title={$compassStore.title}
@@ -428,7 +428,7 @@
 						<button aria-label="Menu"
 							class="p-2 -ml-2 rounded-lg {isDarkHeader
 								? 'text-slate-300 hover:bg-white/10'
-								: 'text-slate-600 hover:bg-slate-100'}"
+								: 'text-muted-foreground hover:bg-muted'}"
 							onclick={toggleSidebar}
 						>
 							<Menu class="w-6 h-6" />
@@ -436,7 +436,7 @@
 						<span
 							class="font-semibold {isDarkHeader
 								? 'text-white'
-								: 'text-slate-900'}">Continuum</span
+								: 'text-foreground'}">Continuum</span
 						>
 					</div>
 
@@ -444,7 +444,7 @@
 						href="/settings"
 						class="p-2 rounded-lg {isDarkHeader
 							? 'text-slate-300 hover:bg-white/10'
-							: 'text-slate-600 hover:bg-slate-100'}"
+							: 'text-muted-foreground hover:bg-muted'}"
 					>
 						<Settings class="w-5 h-5" />
 					</a>
@@ -465,21 +465,21 @@
 						>
 							<span
 								class="uppercase tracking-wider font-semibold text-xs {isDarkHeader
-									? 'text-slate-500'
-									: 'text-slate-500'}"
+									? 'text-slate-400'
+									: 'text-muted-foreground'}"
 								>{$dict.groupOverview || "Estate Overview"}</span
 							>
 							<ChevronRight
 								size={14}
 								class={isDarkHeader
-									? "text-slate-600"
-									: "text-slate-400"}
+									? "text-slate-500"
+									: "text-muted-foreground"}
 							/>
 							<span
 								data-testid="breadcrumb-title"
 								class="font-serif font-medium text-lg {isDarkHeader
 									? 'text-white'
-									: 'text-slate-800'}"
+									: 'text-foreground'}"
 							>
 								{breadcrumbTitle}
 							</span>
@@ -497,18 +497,10 @@
 							<div
 								class="flex items-center gap-1.5 px-2 py-1 rounded-lg border {isDarkHeader
 									? 'bg-white/10 border-white/20'
-									: 'bg-slate-100 border-slate-200'}"
+									: 'bg-muted border-border'}"
 							>
 								<div
-									class="w-3 h-3 rounded-full shrink-0 border border-white/30"
-									style="background-color: {{
-										teal: '#4A7C74',
-										indigo: '#6366f1',
-										emerald: '#10b981',
-										rose: '#f43f5e',
-										amber: '#f59e0b',
-										carbon: '#0f172a',
-									}[$accessibilityStore.color]}"
+									class="w-3 h-3 rounded-full shrink-0 border border-white/30 bg-primary"
 								></div>
 								<select
 									aria-label="Accent Color"
@@ -519,7 +511,7 @@
 										)}
 									class="bg-transparent text-[10px] font-bold uppercase tracking-tight outline-none cursor-pointer transition-colors border-none p-0 pr-1 focus:ring-0 min-w-0 {isDarkHeader
 										? 'text-slate-300 hover:text-white'
-										: 'text-slate-600 hover:text-slate-900'}"
+										: 'text-muted-foreground hover:text-foreground'}"
 								>
 									<option value="teal">🟢 Teal</option>
 									<option value="indigo">🔵 Indigo</option>
@@ -534,13 +526,13 @@
 							<div
 								class="flex items-center gap-1.5 px-2 py-1 rounded-lg border max-w-[100px] {isDarkHeader
 									? 'bg-white/10 border-white/20'
-									: 'bg-slate-100 border-slate-200'}"
+									: 'bg-muted border-border'}"
 							>
 								<Globe
 									size={14}
 									class="{isDarkHeader
 										? 'text-slate-400'
-										: 'text-slate-400'} shrink-0"
+										: 'text-muted-foreground'} shrink-0"
 								/>
 								<select
 									aria-label={$dict.labelLanguages}
@@ -551,7 +543,7 @@
 										)}
 									class="bg-transparent text-[10px] font-bold uppercase tracking-tight outline-none cursor-pointer transition-colors border-none p-0 pr-1 focus:ring-0 min-w-0 {isDarkHeader
 										? 'text-slate-300 hover:text-white'
-										: 'text-slate-600 hover:text-slate-900'}"
+										: 'text-muted-foreground hover:text-foreground'}"
 								>
 									<option value="en">🇺🇸 EN</option>
 									<option value="es">🇪🇸 ES</option>
@@ -567,7 +559,7 @@
 								onclick={() => conciergeEngine.open()}
 								class="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors border {isDarkHeader
 									? 'bg-white/10 text-white hover:bg-white/20 border-white/30'
-									: 'bg-primary/10 text-primary hover:bg-primary/20 border-primary/20'}"
+									: 'bg-primary-soft text-primary-hover hover:bg-primary/15 border-primary/20'}"
 								title="Open AI Concierge"
 							>
 								<Sparkles size={18} />
@@ -590,12 +582,12 @@
 					>
 						<div class="flex items-center gap-3">
 							<div
-								class="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-400"
+								class="text-[10px] font-bold uppercase tracking-[0.2em] text-gold"
 							>
 								Construction Active
 							</div>
 							<div
-								class="h-1 w-1 rounded-full bg-indigo-500 animate-pulse"
+								class="h-1 w-1 rounded-full bg-gold animate-pulse"
 							></div>
 						</div>
 						<GodModeToggle />

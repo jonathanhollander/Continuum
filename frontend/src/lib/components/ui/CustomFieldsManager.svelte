@@ -68,7 +68,7 @@
                 <label
                     id={`${uid}-label-${def.id}`}
                     for={def.field_type === "boolean" ? undefined : `${uid}-field-${def.id}`}
-                    class="text-[11px] font-bold text-slate-600 uppercase tracking-wider pl-1"
+                    class="text-[11px] font-bold text-muted-foreground uppercase tracking-wider pl-1"
                 >
                     {def.name}
                 </label>
@@ -78,7 +78,7 @@
                         id={`${uid}-field-${def.id}`}
                         type="date"
                         bind:value={data[def.name]}
-                        class="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:bg-white rounded-xl p-2.5 text-sm font-medium outline-none transition-all"
+                        class="w-full bg-muted text-foreground border border-border focus:border-primary focus:bg-card rounded-xl p-2.5 text-sm font-medium outline-none transition-all"
                     />
                 {:else if def.field_type === "boolean"}
                     <div class="flex items-center gap-2 mt-1" role="group" aria-labelledby={`${uid}-label-${def.id}`}>
@@ -86,16 +86,16 @@
                             class="px-4 py-2 rounded-lg text-xs font-bold border transition-all {data[
                                 def.name
                             ] === true
-                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-md'
-                                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}"
+                                ? 'bg-primary text-primary-foreground border-primary shadow-md'
+                                : 'bg-card border-border text-muted-foreground hover:bg-muted'}"
                             onclick={() => (data[def.name] = true)}>Yes</button
                         >
                         <button
                             class="px-4 py-2 rounded-lg text-xs font-bold border transition-all {data[
                                 def.name
                             ] === false
-                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-md'
-                                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}"
+                                ? 'bg-primary text-primary-foreground border-primary shadow-md'
+                                : 'bg-card border-border text-muted-foreground hover:bg-muted'}"
                             onclick={() => (data[def.name] = false)}>No</button
                         >
                     </div>
@@ -104,7 +104,7 @@
                         id={`${uid}-field-${def.id}`}
                         bind:value={data[def.name]}
                         placeholder={`Enter ${def.name}...`}
-                        class="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:bg-white rounded-xl p-3 text-sm font-medium outline-none transition-all min-h-[80px] resize-none"
+                        class="w-full bg-muted text-foreground border border-border focus:border-primary focus:bg-card rounded-xl p-3 text-sm font-medium outline-none transition-all min-h-[80px] resize-none"
                     ></textarea>
                 {:else if def.field_type === "number"}
                     <input
@@ -112,7 +112,7 @@
                         type="number"
                         bind:value={data[def.name]}
                         placeholder="0.00"
-                        class="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:bg-white rounded-xl p-2.5 text-sm font-medium outline-none transition-all"
+                        class="w-full bg-muted text-foreground border border-border focus:border-primary focus:bg-card rounded-xl p-2.5 text-sm font-medium outline-none transition-all"
                     />
                 {:else}
                     <input
@@ -120,7 +120,7 @@
                         type="text"
                         bind:value={data[def.name]}
                         placeholder={`Enter ${def.name}...`}
-                        class="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:bg-white rounded-xl p-2.5 text-sm font-medium outline-none transition-all"
+                        class="w-full bg-muted text-foreground border border-border focus:border-primary focus:bg-card rounded-xl p-2.5 text-sm font-medium outline-none transition-all"
                     />
                 {/if}
             </div>
@@ -131,12 +131,12 @@
     {#if !readOnly}
         <div class="pt-2">
             {#if definitions.length === 0 && !isManaging}
-                <p class="text-xs text-slate-400 italic mb-3">Add custom fields to track additional information.</p>
+                <p class="text-xs text-muted-foreground italic mb-3">Add custom fields to track additional information.</p>
             {/if}
 
             <button
                 onclick={() => (isManaging = !isManaging)}
-                class="text-xs text-indigo-600 font-bold hover:text-indigo-800 flex items-center gap-1 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors"
+                class="text-xs text-primary-hover font-bold hover:text-foreground flex items-center gap-1 bg-primary-soft px-3 py-1.5 rounded-lg transition-colors"
             >
                 {#if isManaging}
                     Done
@@ -151,9 +151,9 @@
     {#if isManaging}
         <div
             transition:slide
-            class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 space-y-3"
+            class="bg-primary-soft p-4 rounded-xl border border-primary/20 space-y-3"
         >
-            <h5 class="text-xs font-bold text-indigo-800">Create New Field</h5>
+            <h5 class="text-xs font-bold text-primary-hover">Create New Field</h5>
             <div class="flex flex-col gap-3">
                 <!-- Focus moves to this field because the person just chose to add something here. -->
                 <!-- svelte-ignore a11y_autofocus -->
@@ -162,13 +162,13 @@
                     bind:value={newFieldName}
                     aria-label="Field Name"
                     placeholder="Field Name (e.g. Warranty Date)"
-                    class="w-full px-3 py-2 rounded-lg border border-indigo-200 text-sm focus:border-indigo-500 outline-none"
+                    class="w-full px-3 py-2 rounded-lg border border-primary/30 bg-card text-foreground text-sm focus:border-primary outline-none"
                     autofocus
                 />
                 <select
                     aria-label="Field Type"
                     bind:value={newFieldType}
-                    class="w-full px-3 py-2 rounded-lg border border-indigo-200 text-sm focus:border-indigo-500 outline-none bg-white"
+                    class="w-full px-3 py-2 rounded-lg border border-primary/30 text-foreground text-sm focus:border-primary outline-none bg-card"
                 >
                     {#each fieldTypes as type}
                         <option value={type.value}>{type.label}</option>
@@ -177,14 +177,14 @@
                 <div class="flex justify-end gap-2">
                     <button
                         onclick={() => (isManaging = false)}
-                        class="px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-700"
+                        class="px-3 py-1.5 text-xs font-bold text-muted-foreground hover:text-foreground"
                     >
                         Maybe later
                     </button>
                     <button
                         onclick={addField}
                         disabled={!newFieldName}
-                        class="px-4 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-500 disabled:opacity-50 shadow-sm"
+                        class="px-4 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-bold hover:bg-primary-hover disabled:opacity-50 shadow-sm"
                     >
                         Create Field
                     </button>
@@ -193,27 +193,27 @@
 
             <!-- List of existing definitions to allow deletion -->
             {#if definitions.length > 0}
-                <div class="border-t border-indigo-200/50 pt-3 mt-2">
+                <div class="border-t border-primary/20 pt-3 mt-2">
                     <p
-                        class="text-[10px] uppercase font-bold text-indigo-400 mb-2 block"
+                        class="text-[10px] uppercase font-bold text-primary-hover mb-2 block"
                     >
                         Existing Fields
                     </p>
                     <div class="space-y-1">
                         {#each definitions as def}
                             <div
-                                class="flex items-center justify-between text-xs bg-white/50 p-2 rounded-lg"
+                                class="flex items-center justify-between text-xs bg-card p-2 rounded-lg"
                             >
-                                <span class="font-medium text-slate-700"
+                                <span class="font-medium text-foreground"
                                     >{def.name}
-                                    <span class="text-slate-400 font-normal"
+                                    <span class="text-muted-foreground font-normal"
                                         >({def.field_type})</span
                                     ></span
                                 >
                                 <button aria-label={`Remove ${def.name}`}
                                     onclick={() =>
                                         removeDefinition(def.id!, def.name)}
-                                    class="text-red-400 hover:text-red-600"
+                                    class="text-muted-foreground hover:text-foreground"
                                 >
                                     <Trash2 size={12} />
                                 </button>

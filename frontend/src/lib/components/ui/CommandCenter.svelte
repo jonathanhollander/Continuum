@@ -148,30 +148,30 @@
 <!-- Clicking the dimmed area closes the dialog; Escape does the same through focusTrap. -->
 <!-- svelte-ignore a11y_interactive_supports_focus, a11y_click_events_have_key_events -->
 <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => onclose() }}
-    class="fixed inset-0 z-[200] flex items-start justify-center pt-24 px-4 bg-slate-900/40 backdrop-blur-sm"
+    class="fixed inset-0 z-[200] flex items-start justify-center pt-24 px-4 bg-slate-900/60 backdrop-blur-sm"
     onclick={(e) => { if (e.target === e.currentTarget) onclose(); }}
     transition:fade={{ duration: 200 }}
 >
     <!-- Arrow keys and Enter for the results list are handled here; the dialog itself closes with Escape. -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
-        class="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200"
+        class="w-full max-w-2xl bg-card rounded-2xl shadow-2xl overflow-hidden border border-border"
         transition:scale={{ start: 0.95, easing: quintOut }}
         onkeydown={handleKeydown}
     >
         <!-- Search Header -->
         <div
-            class="px-6 py-4 flex items-center gap-4 border-b border-slate-100"
+            class="px-6 py-4 flex items-center gap-4 border-b border-border"
         >
-            <Search class="text-slate-400" size={20} />
+            <Search class="text-muted-foreground" size={20} />
             <input
                 bind:this={inputElement}
                 bind:value={query}
                 placeholder="Find what you're looking for..."
-                class="flex-1 bg-transparent border-none outline-none text-lg font-medium text-slate-800 placeholder:text-slate-300"
+                class="flex-1 bg-transparent border-none outline-none text-lg font-medium text-foreground placeholder:text-muted-foreground"
             />
             <div
-                class="flex items-center gap-1 px-2 py-1 bg-slate-100 rounded-md border border-slate-200 text-[10px] font-bold text-slate-400 uppercase"
+                class="flex items-center gap-1 px-2 py-1 bg-muted rounded-md border border-border text-[10px] font-bold text-muted-foreground uppercase"
             >
                 Esc
             </div>
@@ -181,35 +181,35 @@
         <div class="max-h-[400px] overflow-y-auto p-2 custom-scrollbar">
             {#if filteredItems.length > 0}
                 <div
-                    class="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest"
+                    class="px-3 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest"
                 >
                     Where would you like to go?
                 </div>
                 {#each filteredItems as item, i}
                     {@const Icon = item.icon}
                     <button
-                        class="w-full flex items-center gap-4 px-4 py-3 rounded-2xl transition-all text-left
+                        class="w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all text-left
                         {i === selectedIndex
-                            ? 'bg-indigo-50 text-indigo-700'
-                            : 'text-slate-600 hover:bg-slate-50'}"
+                            ? 'bg-primary-soft text-primary-hover'
+                            : 'text-foreground hover:bg-background'}"
                         onclick={() => navigate(item.href)}
                         onmouseenter={() => (selectedIndex = i)}
                     >
                         <div
                             class="p-2 rounded-xl {i === selectedIndex
-                                ? 'bg-white shadow-sm'
-                                : 'bg-slate-100 text-slate-500'}"
+                                ? 'bg-card shadow-sm'
+                                : 'bg-muted text-muted-foreground'}"
                         >
                             <Icon size={18} />
                         </div>
                         <span class="flex-1 min-w-0">
                             <span class="block font-bold">{item.label}</span>
                             {#if item.type !== "navigation" && item.description}
-                                <span class="block text-xs font-normal text-slate-500 truncate">{item.description}</span>
+                                <span class="block text-xs font-normal text-muted-foreground truncate">{item.description}</span>
                             {/if}
                         </span>
                         {#if item.type !== "navigation"}
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">{item.type}</span>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{item.type}</span>
                         {/if}
                         {#if i === selectedIndex}
                             <ArrowRight size={14} class="opacity-50" />
@@ -218,9 +218,9 @@
                 {/each}
             {:else}
                 <div
-                    class="flex flex-col items-center justify-center py-12 text-slate-400 space-y-4"
+                    class="flex flex-col items-center justify-center py-12 text-muted-foreground space-y-4"
                 >
-                    <div class="p-4 bg-slate-50 rounded-full">
+                    <div class="p-4 bg-background rounded-full">
                         <Command size={32} />
                     </div>
                     <div class="text-center">
@@ -234,18 +234,18 @@
 
         <!-- Footer -->
         <div
-            class="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider"
+            class="p-4 bg-background border-t border-border flex items-center justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-wider"
         >
             <div class="flex items-center gap-4">
                 <span class="flex items-center gap-1"
                     ><span
-                        class="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-slate-500"
+                        class="px-1.5 py-0.5 bg-card border border-border rounded text-muted-foreground"
                         >↑↓</span
                     > Navigate</span
                 >
                 <span class="flex items-center gap-1"
                     ><span
-                        class="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-slate-500"
+                        class="px-1.5 py-0.5 bg-card border border-border rounded text-muted-foreground"
                         >Enter</span
                     > Select</span
                 >

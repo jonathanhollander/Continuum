@@ -43,19 +43,19 @@
     }
 </script>
 
-<div class="bg-gray-50 rounded-xl p-8 border border-gray-200">
+<div class="bg-card rounded-xl p-8 border border-border">
     <div
-        class="flex items-center gap-2 mb-6 text-gray-600 text-xs font-bold uppercase tracking-widest"
+        class="flex items-center gap-2 mb-6 text-muted-foreground text-xs font-bold uppercase tracking-widest"
     >
         <Lock size={12} />
         <span>Developer Settings</span>
     </div>
 
-    <h3 class="text-xl font-bold text-[#304743] mb-6">Webhook Configuration</h3>
+    <h3 class="text-xl font-bold text-foreground mb-6">Webhook Configuration</h3>
 
     <div class="space-y-6 max-w-2xl">
         <label class="block">
-            <span class="text-sm font-bold text-gray-700 block mb-2"
+            <span class="text-sm font-bold text-foreground block mb-2"
                 >Tasks Webhook URL</span
             >
             <input
@@ -63,15 +63,15 @@
                 bind:value={taskWebhook}
                 oninput={() => (edited = true)}
                 placeholder="https://api.pipedream.com/..."
-                class="w-full font-mono text-sm text-gray-900 bg-white px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#4A7C74]/20 focus:outline-none"
+                class="w-full font-mono text-sm text-foreground bg-background placeholder:text-muted-foreground px-4 py-3 rounded-lg border border-border focus:border-primary focus:ring-2 focus:ring-primary/30 focus:outline-none"
             />
-            <p class="mt-2 text-xs text-gray-500">
+            <p class="mt-2 text-xs text-muted-foreground">
                 Triggers when executor tasks are updated
             </p>
         </label>
 
         <label class="block">
-            <span class="text-sm font-bold text-gray-700 block mb-2"
+            <span class="text-sm font-bold text-foreground block mb-2"
                 >System Events Webhook URL</span
             >
             <input
@@ -79,9 +79,9 @@
                 bind:value={systemWebhook}
                 oninput={() => (edited = true)}
                 placeholder="https://hooks.slack.com/..."
-                class="w-full font-mono text-sm text-gray-900 bg-white px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#4A7C74]/20 focus:outline-none"
+                class="w-full font-mono text-sm text-foreground bg-background placeholder:text-muted-foreground px-4 py-3 rounded-lg border border-border focus:border-primary focus:ring-2 focus:ring-primary/30 focus:outline-none"
             />
-            <p class="mt-2 text-xs text-gray-500">
+            <p class="mt-2 text-xs text-muted-foreground">
                 Global firehose for all estate changes
             </p>
         </label>
@@ -89,7 +89,7 @@
         <button
             onclick={save}
             disabled={saving}
-            class="flex items-center gap-2 px-6 py-2 bg-[#304743] text-white rounded-lg font-bold hover:bg-[#2A3F3B] transition-colors disabled:opacity-60"
+            class="flex items-center gap-2 px-6 py-2 bg-primary text-primary-foreground rounded-lg font-bold hover:bg-primary-hover transition-colors disabled:opacity-60"
         >
             <Save size={18} />
             {isSaved ? "Saved!" : "Save Config"}

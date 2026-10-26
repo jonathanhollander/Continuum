@@ -58,7 +58,7 @@
     }
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
 
-    let viewMode = $state<ViewMode>('card');
+    let viewMode = $derived<ViewMode>(userPreferencesStore.getViewMode('home-manual'));
 
     // One sync manager per endpoint: the stores own the keys (vendors, home_access, utilities)
     // and the mappers, so records keep their server ids across reloads.
@@ -489,7 +489,7 @@
                 Utilities & Shutoffs
             </button>
         </div>
-        <DataViewToggle module="home-manual" onchange={(mode) => viewMode = mode} />
+        <DataViewToggle module="home-manual" />
     </div>
 
     <!-- Tab Content -->
