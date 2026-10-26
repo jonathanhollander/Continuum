@@ -28,9 +28,11 @@
     let {
         view,
         fetchBlob,
+        refreshView,
     }: {
         view: RecipientView;
         fetchBlob: (a: SnapshotAttachment) => Promise<Blob>;
+        refreshView: () => Promise<RecipientView>;
     } = $props();
 
     const snapshot = $derived(view.snapshot);
@@ -60,6 +62,7 @@
     function showFiles(got: Map<string, Blob>) {
         if (gone) return;
         for (const [key, blob] of got) {
+            if (!packet.attachments.some((a) => a.key === key)) continue;
             files.set(key, blob);
             failed.delete(key);
             if (!urls.has(key)) urls.set(key, URL.createObjectURL(blob));
@@ -232,12 +235,21 @@
         downloadNote = null;
         try {
             await Promise.all(asked.values());
-            const blob = await buildDownloadCopy(snapshot, (m) => (downloadNote = m), files, fetchBlob, owner);
+            const fresh = await refreshView();
+            await tick();
+            if (owner) assertCurrentSession(owner);
+            if (gone) return;
+            const freshPacket = buildPacket(fresh.snapshot, 'full');
+            const allowed = new Set(freshPacket.attachments.map((a) => a.key));
+            for (const key of files.keys()) if (!allowed.has(key)) files.delete(key);
+            for (const [key, url] of urls) if (!allowed.has(key)) { URL.revokeObjectURL(url); urls.delete(key); }
+            for (const key of failed) if (!allowed.has(key)) failed.delete(key);
+            const blob = await buildDownloadCopy(fresh.snapshot, (m) => (downloadNote = m), files, fetchBlob, owner);
             if (owner) assertCurrentSession(owner);
             if (gone) return;
             const safe = (s: string) => s.replace(/[^\w\- ]+/g, "").trim() || "Continuum";
-            saveBlob(blob, `${safe(packet.ownerName)} - for ${safe(recipient.name)}.zip`);
-            downloadNote = downloadCopyStatus(fileCoverage(snapshot, packet, files));
+            saveBlob(blob, `${safe(freshPacket.ownerName)} - for ${safe(fresh.recipient.name)}.zip`);
+            downloadNote = downloadCopyStatus(fileCoverage(fresh.snapshot, freshPacket, files));
         } catch (e) {
             downloadNote = e instanceof SessionChangedError ? "The account changed. Open the packet from the account you want to use."
                 : "Everything here stays open to read. You can save a copy again whenever you're ready.";
@@ -434,7 +446,7 @@
         <section id="record" class="bg-white rounded-2xl border border-slate-200 p-8 space-y-5" data-testid="recipient-record">
             <h2 class="font-serif text-3xl text-primary-deep">The full record</h2>
             <p class="text-slate-600 leading-relaxed">
-                Everything {ownerName} recorded, in one place: accounts, property, insurance, documents, wishes and more.
+                The records shared with you, in one place: accounts, property, insurance, documents, financial history, wishes and more.
                 The copy holds the recorded details and the files gathered for it, with a file list.
             </p>
             <div class="flex flex-wrap gap-3">

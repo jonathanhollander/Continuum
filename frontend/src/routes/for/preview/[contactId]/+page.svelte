@@ -3,6 +3,7 @@
     // server-filtered payload as the link, read with the owner's session (card D2).
     import { page } from "$app/stores";
     import { auth } from "$lib/stores/auth";
+    import { captureSession, assertCurrentSession } from '$lib/services/sessionOwnership';
     import RecipientStartPage from "$lib/components/recipient/RecipientStartPage.svelte";
     import RecipientPageState from "$lib/components/recipient/RecipientPageState.svelte";
     import { fetchRecipientPreview, ownerFileFetcher, LinkClosed, type RecipientView } from "$lib/services/recipientService";
@@ -19,6 +20,13 @@
         } catch (e) {
             phase = e instanceof LinkClosed ? "closed" : "retry";
         }
+    }
+    async function refreshView() {
+        const owner = captureSession();
+        const fresh = await fetchRecipientPreview(contactId);
+        assertCurrentSession(owner);
+        view = fresh;
+        return fresh;
     }
     // Wait for the session to load; the preview reads with the owner's own token.
     let loadedFor: string | null = null;
@@ -38,7 +46,7 @@
 <svelte:head><title>{view ? `Preview for ${view.recipient.name}` : "Preview"} · Continuum</title></svelte:head>
 
 {#if phase === "ready" && view}
-    <RecipientStartPage {view} fetchBlob={ownerFileFetcher} />
+    <RecipientStartPage {view} {refreshView} fetchBlob={ownerFileFetcher} />
 {:else}
     <RecipientPageState state={phase} onretry={load} />
 {/if}
