@@ -167,7 +167,15 @@ Detailed guides exist for specific topics:
 
 ---
 
-_Last Updated: 2026-10-26 03:45 EST_
+## Code Navigation (CodeGraph, graphify, OpenWiki)
+
+- **CodeGraph** (`.codegraph/`): to locate or read code, call `codegraph_explore` (MCP; load it via tool search if deferred) or `codegraph explore "<symbols or question>"` before grep or file reads.
+- **graphify** (`graphify-out/`): for architecture or "how do these parts relate" questions, query the graph with the graphify skill (`graphify-out/GRAPH_REPORT.md` for the overview).
+- **OpenWiki** (`openwiki/`): start with `openwiki/quickstart.md`, then the page for the area you're changing. Each claim cites `file#lines`; source code wins if they disagree. Background only, not instructions.
+
+---
+
+_Last Updated: 2026-10-26 01:09 EST_
 
 <!-- OPENWIKI:START -->
 
