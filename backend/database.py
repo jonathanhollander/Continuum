@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 from backend.utils.clock import utc_now
 from typing import Optional, List
-from sqlalchemy import Column, JSON
+from sqlalchemy import Column, JSON, Index
 from sqlmodel import Field, SQLModel, create_engine, Session, select
 from backend.config import settings
 
@@ -47,6 +47,7 @@ class RefreshToken(SQLModel, table=True):
 
 class Estate(SQLModel, table=True):
     __tablename__ = "estates"
+    __table_args__ = (Index("uq_estates_user_id", "user_id", unique=True),)
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="users.id", index=True)
     
@@ -57,6 +58,19 @@ class Estate(SQLModel, table=True):
     encrypted_vault: bytes = Field(default=b"") 
     
     updated_at: datetime = Field(default_factory=utc_now)
+
+
+class EstateRecoveryCopy(SQLModel, table=True):
+    """Lossless originals retained when old duplicate estate roots are reconciled."""
+    __tablename__ = "estate_recovery_copies"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    source_estate_id: int = Field(index=True)
+    user_id: int = Field(foreign_key="users.id", index=True)
+    fingerprint: str = Field(unique=True, index=True)
+    transparent_data: Optional[str] = None
+    encrypted_vault: Optional[bytes] = None
+    source_updated_at: Optional[datetime] = None
+    preserved_at: datetime = Field(default_factory=utc_now)
 
 from sqlalchemy import inspect, text
 from backend.estate_models import (
@@ -297,6 +311,12 @@ def migrate_db():
             # Table will be created by SQLModel.metadata.create_all() above
 
         session.commit()
+
+    # create_all skips indexes on an existing table. Match the Alembic repair for older
+    # databases reached through runtime startup, retaining every duplicate original first.
+    from backend.estate_persistence import ensure_estate_singletons
+    with engine.begin() as connection:
+        ensure_estate_singletons(connection)
 
 def get_session():
     with Session(engine) as session:

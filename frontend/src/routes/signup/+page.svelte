@@ -2,7 +2,8 @@
     import { onMount } from "svelte";
     import { goto } from "$app/navigation";
     import { page } from "$app/stores";
-    import { auth } from "$lib/stores/auth";
+    import { auth, storeTokens } from "$lib/stores/auth";
+    import { beginSession, captureSession, isCurrentSession, type SessionOwnership } from "$lib/services/sessionOwnership";
     import { API_BASE_URL } from "$lib/config";
     import { apiPost } from "$lib/api/client";
     import { notifications } from "$lib/stores/notificationStore";
@@ -25,6 +26,7 @@
     let userId: number | null = null;
     let lastOptions: any = null;
     let passkeyFailed = false;
+    let signupOwner: SessionOwnership | null = null;
     const PASSKEY_WAIT_MS = 12000;
 
     function waitForPasskey(options: any) {
@@ -44,8 +46,9 @@
     // Retry function for passkey registration
     function retryPasskeyRegistration() {
         if (lastOptions && userId) {
+            if (!signupOwner || !isCurrentSession(signupOwner, true)) return;
             passkeyFailed = false;
-            handlePasskeyRegistration(lastOptions);
+            handlePasskeyRegistration(lastOptions, signupOwner);
         } else {
             // Restart from email step
             step = "email";
@@ -90,6 +93,8 @@
             return;
         }
 
+        const owner = beginSession();
+        signupOwner = owner;
         isLoading = true;
         alreadyHere = false;
 
@@ -98,6 +103,7 @@
             const result = await apiPost("/api/auth/passkey/register/start", {
                 email,
             });
+            if (!isCurrentSession(owner, true)) return;
 
             userId = result.user_id;
 
@@ -125,8 +131,9 @@
             step = "passkey";
 
             // Automatically start passkey registration
-            await handlePasskeyRegistration(result.options);
+            await handlePasskeyRegistration(result.options, owner);
         } catch (e: any) {
+            if (!isCurrentSession(owner, true)) return;
             console.error("Account creation failed:", e);
             // Show error notification to user
             if (e.message?.includes("already registered") || e.message?.includes("already exists")) {
@@ -149,7 +156,8 @@
         goto(`/login?${params}`);
     }
 
-    async function handlePasskeyRegistration(options: any) {
+    async function handlePasskeyRegistration(options: any, owner = signupOwner) {
+        if (!owner || !isCurrentSession(owner, true)) return;
         isLoading = true;
         passkeyFailed = false;
 
@@ -157,12 +165,14 @@
             // Step 2: Show browser passkey creation prompt
             // Note: v11+ API requires { optionsJSON: options } format
             const credential = await waitForPasskey(options);
+            if (!isCurrentSession(owner, true)) return;
 
             // Step 3: Finish registration and get JWT
             const result = await apiPost("/api/auth/passkey/register/finish", {
                 user_id: userId,
                 credential,
             });
+            if (!isCurrentSession(owner, true)) return;
 
             // Check for warnings
             if (result.warnings && result.warnings.length > 0) {
@@ -174,15 +184,9 @@
                 });
             }
 
-            // Store token
-            if (typeof localStorage !== "undefined") {
-                localStorage.setItem(
-                    "continuum_auth_token",
-                    result.access_token,
-                );
-                if (result.refresh_token)
-                    localStorage.setItem("continuum_refresh_token", result.refresh_token);
-            }
+            if (!storeTokens(result.access_token, result.refresh_token, owner)) return;
+            owner = captureSession();
+            signupOwner = owner;
 
             notifications.showSuccess(
                 "Your account is ready! Let's get you set up...",
@@ -193,10 +197,12 @@
             step = "complete";
             // A path chosen on /start (?redirect=) continues there once signed in
             setTimeout(async () => {
+                if (!isCurrentSession(owner!, true)) return;
                 await auth.init();
-                goto(safeRedirect || "/onboarding");
+                if (isCurrentSession(owner!, true) && isCurrentSession(captureSession())) goto(safeRedirect || "/onboarding");
             }, 2000);
         } catch (e: any) {
+            if (!isCurrentSession(owner, true)) return;
             console.warn("Passkey registration did not finish:", e?.name);
             // Stay on the passkey step and offer the way forward
             passkeyFailed = true;

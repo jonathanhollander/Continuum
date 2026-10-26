@@ -12,6 +12,8 @@ from pydantic import BaseModel
 from sqlmodel import Session
 from backend.config import settings
 from backend.database import engine, create_db_and_tables, get_session, User, Estate
+from backend.estate_persistence import estate_for_write, merge_profile, profile_of, recovery_summary
+from backend.utils.clock import utc_now
 from backend.security import verify_registration, get_authentication_options, verify_authentication
 from backend.auth import create_access_token, get_current_user, ACCESS_TOKEN_EXPIRE_MINUTES
 from backend.pulse_scheduler import start_scheduler, stop_scheduler
@@ -396,25 +398,18 @@ async def health_check(session: Session = Depends(get_session)):
 
 @app.get("/api/estate")
 def get_estate(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
-    estate = session.exec(select(Estate).where(Estate.user_id == user.id)).first()
-    if not estate:
-        # Create empty estate for new user
-        estate = Estate(user_id=user.id)
-        session.add(estate)
-        session.commit()
-        session.refresh(estate)
+    estate = estate_for_write(session, user.id)
+    session.commit()
+    session.refresh(estate)
     return estate
 
 @app.post("/api/estate")
 def save_estate(estate_data: EstateDataPayload, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     """Save estate data with Pydantic validation (P1-High Security)."""
-    estate = session.exec(select(Estate).where(Estate.user_id == user.id)).first()
-    if not estate:
-        estate = Estate(user_id=user.id)
-        session.add(estate)
-
+    estate = estate_for_write(session, user.id)
     estate.transparent_data = estate_data.transparent_data
     estate.encrypted_vault = estate_data.encrypted_vault
+    estate.updated_at = utc_now()
     session.commit()
     return {"status": "saved"}
 
@@ -423,15 +418,12 @@ def get_estate_profile(user: User = Depends(get_current_user), session: Session 
     estate = session.exec(select(Estate).where(Estate.user_id == user.id)).first()
     if not estate:
         return {}
-    try:
-        td = json.loads(estate.transparent_data or "{}")
-        # Handle cases where td is the profile itself or contains estate_profile
-        if isinstance(td, dict) and "estate_profile" in td:
-            td = td["estate_profile"]
-        return td if isinstance(td, dict) else {}  # the UI always receives an object
-    except Exception as e:
-        logger.debug(f"Failed to parse estate profile: {e}")
-        return {}
+    return profile_of(estate)
+
+@app.get("/api/estate/recovery")
+def get_estate_recovery(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    """Preserved original profiles and source-linked alternatives for this owner only."""
+    return recovery_summary(session, user.id)
 
 @app.post("/api/estate/profile")
 def save_estate_profile(body: Dict[str, Any] = Body(...), user: User = Depends(get_current_user), session: Session = Depends(get_session)):
@@ -439,31 +431,7 @@ def save_estate_profile(body: Dict[str, Any] = Body(...), user: User = Depends(g
     A key posted as null is removed from the profile."""
     updates = body["data"] if set(body) == {"data"} and isinstance(body["data"], dict) else body
     updates = EstateProfilePayload(data=updates).data  # size validation
-    estate = session.exec(select(Estate).where(Estate.user_id == user.id)).first()
-    if not estate:
-        estate = Estate(user_id=user.id)
-        session.add(estate)
-
-    try:
-        td = json.loads(estate.transparent_data or "{}")
-    except Exception as e:
-        logger.debug(f"Transparent data parse failure in save_profile: {e}")
-        td = {}
-    if not isinstance(td, dict):
-        td = {}
-
-    # An older row keeps the profile at the top level (GET reads it there); carry those keys over.
-    current = td.get("estate_profile") if "estate_profile" in td else td
-    merged = dict(current) if isinstance(current, dict) else {}
-    for k, v in updates.items():
-        if v is None:
-            merged.pop(k, None)
-        else:
-            merged[k] = v
-    td["estate_profile"] = merged
-    estate.transparent_data = json.dumps(td)
-    session.commit()
-    return td["estate_profile"]
+    return merge_profile(session, user.id, updates)
 
 
 # --- SPA Static File Serving ---

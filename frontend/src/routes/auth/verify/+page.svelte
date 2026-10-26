@@ -4,6 +4,7 @@
     import { page } from "$app/stores";
     import { API_BASE_URL } from "$lib/config";
     import { auth, storeTokens } from "$lib/stores/auth";
+    import { beginSession, captureSession, isCurrentSession } from "$lib/services/sessionOwnership";
     import { Shield, CheckCircle2, Loader2 } from "lucide-svelte";
     import { fade, fly } from "svelte/transition";
 
@@ -11,6 +12,7 @@
     let error = "";
 
     onMount(async () => {
+        let owner = captureSession();
         const token = $page.url.searchParams.get("token");
 
         if (!token) {
@@ -18,6 +20,7 @@
             error = "This link has been used or has rested. A new one is a tap away whenever you're ready.";
             return;
         }
+        owner = beginSession();
 
         try {
             const res = await fetch(
@@ -33,8 +36,10 @@
                 throw new Error("Verification failed");
             }
 
-            storeTokens(access_token, refresh_token);
+            if (!storeTokens(access_token, refresh_token, owner)) return;
+            owner = captureSession();
             await auth.init();
+            if (!isCurrentSession(owner, true) || !isCurrentSession(captureSession())) return;
 
             status = "success";
 
@@ -45,9 +50,10 @@
                     ? dest
                     : "/dashboard";
             setTimeout(() => {
-                goto(target);
+                if (isCurrentSession(owner, true)) goto(target);
             }, 2000);
         } catch (e: any) {
+            if (!isCurrentSession(owner, true)) return;
             console.error("Magic link verification failed:", e);
             status = "error";
             error =

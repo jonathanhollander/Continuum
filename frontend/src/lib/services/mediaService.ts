@@ -18,6 +18,7 @@
 
 import { API_BASE_URL } from '$lib/config';
 import { mediaStorage } from './indexedDB';
+import { assertCurrentSession, captureSession, isCurrentSession, sessionToken } from './sessionOwnership';
 
 export interface MediaFile {
     id: number;
@@ -157,6 +158,8 @@ export async function uploadMediaDirect(
     description?: string,
     onProgress?: (progress: UploadProgress) => void
 ): Promise<MediaUploadResponse> {
+    const owner = captureSession();
+    assertCurrentSession(owner);
     const formData = new FormData();
     formData.append('file', file);
 
@@ -166,14 +169,22 @@ export async function uploadMediaDirect(
     const url = `${API_BASE}/upload?${params}`;
 
     const csrf = await csrfToken();
-    let result = await sendUpload(url, formData, authToken(), csrf, onProgress);
+    assertCurrentSession(owner);
+    const progress = onProgress ? (value: UploadProgress) => {
+        if (isCurrentSession(owner)) onProgress(value);
+    } : undefined;
+    let result = await sendUpload(url, formData, sessionToken(owner), csrf, progress);
+    assertCurrentSession(owner);
 
     // Expired session: refresh once and retry (same rule as the fetch wrapper)
     if (result.status === 401) {
         const { refreshSession } = await import('$lib/stores/auth');
-        const refreshed = await refreshSession();
+        assertCurrentSession(owner);
+        const refreshed = await refreshSession(owner);
+        assertCurrentSession(owner);
         if (refreshed.ok) {
-            result = await sendUpload(url, formData, refreshed.token, csrf, onProgress);
+            result = await sendUpload(url, formData, refreshed.token, csrf, progress);
+            assertCurrentSession(owner);
         }
     }
 
@@ -225,6 +236,8 @@ export async function uploadMedia(
     description?: string,
     onProgress?: (progress: UploadProgress) => void
 ): Promise<MediaUploadResponse> {
+    const owner = captureSession();
+    assertCurrentSession(owner);
     const localKey = `pending:${module}:${referenceId ?? ''}:${Date.now()}`;
     let keptLocally = false;
     try {
@@ -234,15 +247,20 @@ export async function uploadMedia(
         console.warn('[media] Could not keep a local copy before upload', e);
     }
 
+    assertCurrentSession(owner);
     const response = await uploadMediaDirect(file, module, referenceId, description, onProgress);
+    assertCurrentSession(owner);
 
     if (keptLocally) {
-        if (await verifyMediaRetrieval(response.id, file.size)) {
+        const retrieved = await verifyMediaRetrieval(response.id, file.size);
+        assertCurrentSession(owner);
+        if (retrieved) {
             await mediaStorage.delete(localKey).catch(() => undefined);
         } else {
             console.warn(`[media] Kept local copy ${localKey}; server copy ${response.id} did not read back yet`);
         }
     }
+    assertCurrentSession(owner);
     return response;
 }
 
