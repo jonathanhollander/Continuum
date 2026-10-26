@@ -19,6 +19,7 @@
         Download,
         Pencil,
         Sparkles,
+        Loader2,
     } from "lucide-svelte";
     import JargonSlayer from "$lib/components/modules/legal-documents/JargonSlayer.svelte";
     import { slide, scale, fade, fly } from "svelte/transition";
@@ -99,6 +100,10 @@
 
     let docSync = $state<SyncManager<Doc> | null>(null);
     let docs = $derived(docSync?.items || []);
+    // A gentle cue until the first server answer, unless this device already holds documents.
+    let isLoading = $derived(
+        !docSync || (docSync.lastSync === null && docSync.status !== "error" && docs.length === 0),
+    );
 
     $effect(() => {
         if (module?.id) {
@@ -337,7 +342,9 @@
                 </div>
                 <div>
                     <h4 class="font-serif font-bold text-xl text-[#304743]">
-                        {#if docs.length === 0}
+                        {#if isLoading}
+                            Gathering your documents…
+                        {:else if docs.length === 0}
                             Let's secure your first document.
                         {:else if needsReview > 0}
                             {needsReview} items need your attention.
@@ -348,7 +355,9 @@
                     <p
                         class="text-sm text-muted-foreground mt-1 max-w-lg leading-relaxed"
                     >
-                        {#if docs.length === 0}
+                        {#if isLoading}
+                            One moment while everything you have saved comes into view.
+                        {:else if docs.length === 0}
                             Uploading your Will or Trust is one of the most
                             meaningful steps you can take today. I can help you
                             file it correctly.
@@ -361,7 +370,7 @@
                         {/if}
                     </p>
 
-                    {#if docs.length === 0}
+                    {#if !isLoading && docs.length === 0}
                         <button
                             onclick={startWizard}
                             class="mt-4 text-sm font-bold text-[#4A7C74] hover:underline flex items-center gap-1"
@@ -761,7 +770,12 @@
                     </div>
                 </div>
             {/each}
-            {#if docs.length === 0}
+            {#if isLoading}
+                <div class="flex flex-col items-center justify-center gap-3 py-12" role="status" data-testid="documents-loading">
+                    <Loader2 size={28} class="animate-spin text-[#4A7C74]" />
+                    <span class="sr-only">Gathering your documents…</span>
+                </div>
+            {:else if docs.length === 0}
                 <GhostRow type="Document" onclick={startWizard} />
                 <GhostRow type="Document" onclick={startWizard} />
                 <GhostRow type="Document" onclick={startWizard} />
@@ -854,7 +868,12 @@
                     {/each}
                 </tbody>
             </table>
-            {#if docs.length === 0}
+            {#if isLoading}
+                <div class="flex flex-col items-center justify-center gap-3 py-12" role="status" data-testid="documents-loading">
+                    <Loader2 size={28} class="animate-spin text-[#4A7C74]" />
+                    <span class="sr-only">Gathering your documents…</span>
+                </div>
+            {:else if docs.length === 0}
                 <div class="p-8 text-center text-slate-500">
                     <GhostRow type="Document" onclick={startWizard} />
                     <GhostRow type="Document" onclick={startWizard} />

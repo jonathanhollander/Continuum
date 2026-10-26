@@ -6,6 +6,7 @@
         type TimeCapsuleMessage,
         type ReleaseTrigger,
         isCapsuleReleased,
+        timeCapsuleSync,
     } from "$lib/stores/timeCapsuleStore.svelte";
     import {
         Lock,
@@ -44,11 +45,12 @@
     import { getSmartSamples } from "$lib/data/smartSamples";
 
     let viewMode = $state<ViewMode>('card');
-    let isLoading = $state(true);
+    // A gentle cue until the first server answer, unless this device already holds capsules.
+    let firstSyncPending = $derived(timeCapsuleSync.lastSync === null && timeCapsuleSync.status !== "error");
+    let isLoading = $derived(firstSyncPending && timeCapsuleSync.items.length === 0);
 
-    onMount(async () => {
-        await timeCapsuleStore.sync?.();
-        isLoading = false;
+    onMount(() => {
+        timeCapsuleStore.sync().catch(() => {});
     });
 
     let showAddModal = $state(false);
@@ -189,8 +191,15 @@
         return COMMON_MILESTONES.find((m) => m.id === id)?.label || id;
     }
 
+    /** "2030-01-01" -> "January 1, 2030" in the reader's locale, read as a local day (no time-zone shift). */
     function formatDate(iso: string) {
-        return new Date(iso).toLocaleDateString();
+        const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso ?? "");
+        if (!m) return iso;
+        return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])).toLocaleDateString(undefined, {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+        });
     }
 </script>
 
@@ -214,8 +223,9 @@
 </LivingBlueprintHeader>
 
 {#if isLoading}
-    <div class="flex items-center justify-center py-12">
-        <Loader2 class="w-8 h-8 animate-spin text-primary" />
+    <div class="flex flex-col items-center justify-center gap-3 py-16" role="status" data-testid="capsules-loading">
+        <Loader2 class="w-8 h-8 animate-spin text-indigo-500" />
+        <p class="text-sm text-slate-500">Gathering your messages…</p>
     </div>
 {:else}
 <div
@@ -326,8 +336,9 @@
                         {:else}
                             <Calendar size={16} />
                             <span
-                                class="text-xs font-bold uppercase tracking-wider"
-                                >{msg.triggerValue}</span
+                                class="text-xs font-bold tracking-wide"
+                                data-testid="capsule-date"
+                                >{formatDate(msg.triggerValue)}</span
                             >
                         {/if}
                     </div>
@@ -461,7 +472,7 @@
                             <td class="px-4 py-3 text-slate-600">{msg.recipient}</td>
                             <td class="px-4 py-3">
                                 <span class="text-xs font-medium text-amber-600">
-                                    {msg.triggerType === 'milestone' ? getMilestoneLabel(msg.triggerValue) : msg.triggerValue}
+                                    {msg.triggerType === 'milestone' ? getMilestoneLabel(msg.triggerValue) : formatDate(msg.triggerValue)}
                                 </span>
                             </td>
                             <td class="px-4 py-3">
