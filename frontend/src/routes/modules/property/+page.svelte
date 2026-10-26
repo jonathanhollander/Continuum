@@ -36,8 +36,8 @@
         Loader2,
     } from "lucide-svelte";
     import EvidenceGalleryUploader from "$lib/components/ui/EvidenceGalleryUploader.svelte";
-    import { blobUrlFor } from "$lib/components/ui/MediaView.svelte";
-    import { deleteMedia, mediaIdFromRef, updateMediaMetadata } from "$lib/services/mediaService";
+    import { blobUrlFor, cachedBlobUrl } from "$lib/components/ui/MediaView.svelte";
+    import { deleteMedia, downloadMedia, mediaIdFromRef, updateMediaMetadata } from "$lib/services/mediaService";
     import UniversalUploader from "$lib/components/ui/UniversalUploader.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
@@ -180,6 +180,23 @@
             return matchesSearch && matchesFilter;
         }),
     );
+
+    // Download: save every evidence file of each asset shown (cached copies are reused).
+    let shownEvidence = $derived(filteredItems.flatMap((i) => i.evidence ?? []));
+    let downloadingEvidence = $state(false);
+    async function downloadShownEvidence() {
+        if (downloadingEvidence) return;
+        downloadingEvidence = true;
+        try {
+            for (const e of shownEvidence) {
+                await downloadMedia(e.id, e.filename, cachedBlobUrl(e.id)).catch((err) =>
+                    console.warn("[property] evidence download paused", e.id, err),
+                );
+            }
+        } finally {
+            downloadingEvidence = false;
+        }
+    }
 
     let totalValuation = $derived(propertyStore.getTotalValuation());
     let typeCounts = $derived(
@@ -595,8 +612,10 @@
                 >Inventory: {plural(filteredItems.length, "Asset")}</span
             >
             <button
-                class="p-3 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-primary transition-colors shadow-sm"
+                class="p-3 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-primary transition-colors shadow-sm disabled:opacity-40 disabled:hover:text-slate-500"
                 aria-label="Download"
+                disabled={shownEvidence.length === 0 || downloadingEvidence}
+                onclick={downloadShownEvidence}
             >
                 <Download size={18} />
             </button>

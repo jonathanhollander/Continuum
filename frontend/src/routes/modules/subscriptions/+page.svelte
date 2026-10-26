@@ -51,6 +51,18 @@
     const subscriptionSync = subscriptionsSync as unknown as SyncManager<Subscription>;
     let subscriptions = $derived(subscriptionSync.items);
     let isLoading = $state(true);
+
+    // Filter: narrow the list to one cancellation difficulty (the words each row already shows).
+    let showDifficultyFilter = $state(false);
+    let difficultyFilter = $state<Subscription["difficulty"] | null>(null);
+    const difficultyOrder: Subscription["difficulty"][] = ["Easy", "Medium", "Hard"];
+    let difficultyChoices = $derived(
+        difficultyOrder.filter((d) => subscriptions.some((s) => s.difficulty === d)),
+    );
+    let shownSubscriptions = $derived(
+        difficultyFilter && difficultyChoices.includes(difficultyFilter)
+            ? subscriptions.filter((s) => s.difficulty === difficultyFilter) : subscriptions,
+    );
     let viewMode = $state<ViewMode>('card');
 
     onMount(async () => {
@@ -389,13 +401,36 @@
                         >{subscriptions.length}</span
                     >
                 </h2>
-                <button aria-label="Filter" class="text-slate-400 hover:text-slate-600">
-                    <Filter class="w-4 h-4" />
-                </button>
+                <div class="flex items-center gap-2">
+                    {#if showDifficultyFilter}
+                        {#each difficultyChoices as diff (diff)}
+                            <button
+                                onclick={() => (difficultyFilter = difficultyFilter === diff ? null : diff)}
+                                aria-pressed={difficultyFilter === diff}
+                                class="px-2.5 py-1 rounded-full text-xs font-bold border transition-colors {difficultyFilter === diff
+                                    ? 'bg-primary text-white border-primary'
+                                    : 'bg-white text-slate-500 border-slate-200 hover:text-slate-700'}"
+                            >
+                                {diff}
+                            </button>
+                        {/each}
+                    {/if}
+                    <button
+                        aria-label="Filter"
+                        aria-expanded={showDifficultyFilter}
+                        onclick={() => {
+                            showDifficultyFilter = !showDifficultyFilter;
+                            if (!showDifficultyFilter) difficultyFilter = null;
+                        }}
+                        class="{showDifficultyFilter || difficultyFilter ? 'text-primary' : 'text-slate-400'} hover:text-slate-600"
+                    >
+                        <Filter class="w-4 h-4" />
+                    </button>
+                </div>
             </div>
 
             {#if viewMode === 'card'}
-                {#each subscriptions as sub (sub.id)}
+                {#each shownSubscriptions as sub (sub.id)}
                     <div class="relative group">
                         <SubscriptionRow
                             {sub}
@@ -437,7 +472,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
-                            {#each subscriptions as sub (sub.id)}
+                            {#each shownSubscriptions as sub (sub.id)}
                                 <tr class="hover:bg-slate-50 transition-colors group">
                                     <td class="px-4 py-3">
                                         <div class="flex items-center gap-3">

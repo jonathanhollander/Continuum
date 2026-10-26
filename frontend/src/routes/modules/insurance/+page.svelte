@@ -56,6 +56,7 @@
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import { plural } from "$lib/utils/plural";
+    import { downloadMedia, mediaIdFromRef } from "$lib/services/mediaService";
 
     let showAddModal = $state(false);
     let viewMode = $state<ViewMode>('card');
@@ -194,6 +195,25 @@
             return matchesSearch && matchesFilter;
         }),
     );
+
+    // Download: save the stored policy document of each policy shown.
+    let shownDocumentIds = $derived(
+        filteredPolicies
+            .map((p) => mediaIdFromRef(p.policyDocuments))
+            .filter((id): id is number => id !== null),
+    );
+    let downloadingDocuments = $state(false);
+    async function downloadShownDocuments() {
+        if (downloadingDocuments) return;
+        downloadingDocuments = true;
+        try {
+            for (const id of shownDocumentIds) {
+                await downloadMedia(id).catch((e) => console.warn("[insurance] policy document download paused", id, e));
+            }
+        } finally {
+            downloadingDocuments = false;
+        }
+    }
 
     const stats = $derived(insuranceStore.getTotalPremiums());
     // Share of the key details recorded across every policy (0 with none)
@@ -569,8 +589,10 @@
                 >Showing {plural(filteredPolicies.length, "Policy", "Policies")}</span
             >
             <button
-                class="p-3 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-primary transition-colors shadow-sm"
+                class="p-3 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-primary transition-colors shadow-sm disabled:opacity-40 disabled:hover:text-slate-500"
                 aria-label="Download"
+                disabled={shownDocumentIds.length === 0 || downloadingDocuments}
+                onclick={downloadShownDocuments}
             >
                 <Download size={18} />
             </button>
