@@ -262,7 +262,9 @@ def _log_estate_action(session: Session, request: Request, action: str, user: Us
     )
 
 @router.post("/{data_type}", summary="Create estate item")
-@limiter.limit("30/minute")
+# 600/minute per client IP (slowapi key_func=get_remote_address): a first upload of
+# a few hundred local items (SyncManager.migrateUp, one POST each) completes.
+@limiter.limit("600/minute")
 def create_item(
     request: Request,
     data_type: str,
@@ -329,7 +331,9 @@ def create_item(
         raise HTTPException(status_code=400, detail=f"Could not create item: {str(e)}")
 
 @router.put("/{data_type}/{item_id}", summary="Update estate item")
-@limiter.limit("30/minute")
+# 600/minute per client IP (slowapi key_func=get_remote_address): a first upload of
+# a few hundred local items (SyncManager.migrateUp, one POST each) completes.
+@limiter.limit("600/minute")
 def update_item(
     request: Request,
     data_type: str,
@@ -395,7 +399,9 @@ def update_item(
         raise HTTPException(status_code=400, detail="Could not update item")
 
 @router.delete("/{data_type}/{item_id}")
-@limiter.limit("30/minute")
+# 600/minute per client IP (slowapi key_func=get_remote_address): a first upload of
+# a few hundred local items (SyncManager.migrateUp, one POST each) completes.
+@limiter.limit("600/minute")
 def delete_item(request: Request, data_type: str, item_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     """
     Delete an estate item with audit logging.
