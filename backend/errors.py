@@ -11,6 +11,7 @@ from fastapi import HTTPException, status
 from typing import Optional, Dict, Any
 import traceback
 from datetime import datetime
+from backend.utils.clock import utc_now
 
 from backend.config import settings
 
@@ -31,7 +32,7 @@ class ErrorResponse:
         self.status_code = status_code
         self.error_code = error_code  # For frontend error mapping
         self.details = details or {}
-        self.timestamp = datetime.utcnow().isoformat()
+        self.timestamp = utc_now().isoformat()
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dict for JSON response."""

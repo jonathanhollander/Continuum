@@ -1,5 +1,6 @@
 import os
 from datetime import datetime, timedelta, timezone
+from backend.utils.clock import utc_now
 from typing import Optional
 import jwt
 import bcrypt
@@ -44,10 +45,6 @@ from backend.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-
-def _utcnow_naive() -> datetime:
-    """Current UTC time without tzinfo, matching the naive-UTC DateTime columns (refresh_tokens.expires_at)."""
-    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 def get_password_hash(password: str) -> str:
     """Hash a password with SHA-256 pre-hashing for storing."""
@@ -137,7 +134,7 @@ def create_refresh_token(user_id: int, session: Session, device_info: Optional[s
     token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
 
     # Calculate expiration
-    expires_at = _utcnow_naive() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    expires_at = utc_now() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
 
     # Store in database
     refresh_token = RefreshToken(
@@ -168,7 +165,7 @@ def verify_refresh_token(raw_token: str, session: Session) -> Optional[User]:
         select(RefreshToken).where(
             RefreshToken.token_hash == token_hash,
             RefreshToken.revoked == False,
-            RefreshToken.expires_at > _utcnow_naive()
+            RefreshToken.expires_at > utc_now()
         )
     ).first()
 
@@ -245,7 +242,7 @@ def rotate_refresh_token(old_token: str, session: Session, device_info: Optional
         select(RefreshToken).where(
             RefreshToken.token_hash == token_hash,
             RefreshToken.revoked == False,
-            RefreshToken.expires_at > _utcnow_naive()
+            RefreshToken.expires_at > utc_now()
         )
     ).first()
 

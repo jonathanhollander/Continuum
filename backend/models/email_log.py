@@ -4,6 +4,7 @@ Tracks all emails sent through the system for audit and troubleshooting.
 """
 from sqlmodel import SQLModel, Field
 from datetime import datetime
+from backend.utils.clock import utc_now
 from typing import Optional
 
 
@@ -38,7 +39,7 @@ class EmailLog(SQLModel, table=True):
     provider_message_id: Optional[str] = Field(default=None)
     error_message: Optional[str] = Field(default=None)
     sent_at: Optional[datetime] = Field(default=None)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
 
     class Config:
         json_schema_extra = {

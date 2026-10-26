@@ -1,5 +1,6 @@
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime
+from backend.utils.clock import utc_now
 from sqlmodel import Session, select
 from backend.database import engine
 from backend.config import settings
@@ -25,7 +26,7 @@ def escalate_expired_safety_timers(session: Session):
     expired = session.exec(
         select(PulseSafetyTimer).where(
             PulseSafetyTimer.is_active == True,
-            PulseSafetyTimer.expires_at < datetime.utcnow()
+            PulseSafetyTimer.expires_at < utc_now()
         )
     ).all()
     for timer in expired:
@@ -34,7 +35,7 @@ def escalate_expired_safety_timers(session: Session):
             if trigger_safety_timer_alert(session, timer):
                 timer.is_active = False
                 session.add(PulseEscalationLog(user_id=timer.user_id, tier_number=SAFETY_TIMER_LOG_TIER,
-                                               triggered_at=datetime.utcnow()))
+                                               triggered_at=utc_now()))
                 session.add(timer)
                 session.commit()
                 logger.info(f"Safety timer {timer.id} closed")

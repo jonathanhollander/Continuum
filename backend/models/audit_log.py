@@ -2,6 +2,7 @@
 Audit Log Model for tracking sensitive operations
 """
 from datetime import datetime
+from backend.utils.clock import utc_now
 from typing import Optional
 from sqlmodel import Field, SQLModel
 
@@ -39,7 +40,7 @@ class AuditLog(SQLModel, table=True):
     error_message: Optional[str] = None
 
     # When it happened
-    timestamp: datetime = Field(default_factory=datetime.utcnow, index=True)
+    timestamp: datetime = Field(default_factory=utc_now, index=True)
 
     class Config:
         json_schema_extra = {

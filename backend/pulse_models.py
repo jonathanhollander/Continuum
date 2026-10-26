@@ -1,5 +1,6 @@
 from typing import Optional
 from datetime import datetime
+from backend.utils.clock import utc_now
 from sqlmodel import Field, SQLModel
 
 class PulseSettings(SQLModel, table=True):
@@ -58,7 +59,7 @@ class PulseCheckin(SQLModel, table=True):
     __tablename__ = "pulse_checkins"
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="users.id")
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=utc_now)
     method: str # "manual", "biometric", "email_link"
     
     # Rich Logging
@@ -71,7 +72,7 @@ class PulseEscalationLog(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="users.id")
     tier_number: int
-    triggered_at: datetime = Field(default_factory=datetime.utcnow)
+    triggered_at: datetime = Field(default_factory=utc_now)
     medical_safe_pass_triggered: bool = Field(default=False)
 class PulseEscalationTier(SQLModel, table=True):
     __tablename__ = "pulse_escalation_tiers"
@@ -135,7 +136,7 @@ class PulseSafetyTimer(SQLModel, table=True):
     __tablename__ = "pulse_safety_timers"
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="users.id")
-    started_at: datetime = Field(default_factory=datetime.utcnow)
+    started_at: datetime = Field(default_factory=utc_now)
     expires_at: datetime
     purpose: Optional[str] = Field(default="Walking home") # e.g. "Walking home", "Home alone"
     is_active: bool = Field(default=True)
@@ -147,7 +148,7 @@ class PulseMessage(SQLModel, table=True):
     contact_id: int = Field(foreign_key="pulse_contacts.id")
     direction: str # 'user_to_contact' or 'contact_to_user'
     message: str
-    sent_at: datetime = Field(default_factory=datetime.utcnow)
+    sent_at: datetime = Field(default_factory=utc_now)
     read_at: Optional[datetime] = Field(default=None)
 
 class PulseCredential(SQLModel, table=True):
@@ -156,7 +157,7 @@ class PulseCredential(SQLModel, table=True):
     user_id: int = Field(foreign_key="users.id")
     public_key: str  # COSE Key (base64url)
     sign_count: int = Field(default=0)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
     transports: Optional[str] = Field(default=None)  # JSON list: ["internal"], ["hybrid"], etc.
     aaguid: Optional[str] = Field(default=None)  # Authenticator type identifier (Google, Apple, etc.)
     # Known AAGUIDs:

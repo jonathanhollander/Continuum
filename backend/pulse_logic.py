@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from backend.utils.clock import utc_now
 from typing import List, Optional
 from sqlmodel import Session, select, col
 from backend.pulse_models import (
@@ -87,7 +88,7 @@ def process_user_pulse(session: Session, settings: PulseSettings):
     soft_deadline = last_checkin_time + frequency_delta
     hard_deadline = soft_deadline + grace_delta
 
-    now = datetime.utcnow()
+    now = utc_now()
 
     # Inside the window, or in the grace period (overdue but not escalating)
     if now < hard_deadline:
@@ -166,7 +167,7 @@ def trigger_escalation(session: Session, user_id: int, tier_number: int, referen
     log_entry = PulseEscalationLog(
         user_id=user_id,
         tier_number=tier_number,
-        triggered_at=datetime.utcnow()
+        triggered_at=utc_now()
     )
     session.add(log_entry)
     # Committed before any send, so a DB error inside a send can't roll it back
@@ -302,7 +303,7 @@ def tier_alert_context(session: Session, contact: PulseContact, tier_number: int
             context.update({
                 "last_checkin_date": last_checkin.timestamp.strftime("%B %d, %Y at %I:%M %p UTC"),
                 "expected_checkin_date": "See Guardian Portal for details",
-                "escalation_date": datetime.utcnow().strftime("%B %d, %Y at %I:%M %p UTC")
+                "escalation_date": utc_now().strftime("%B %d, %Y at %I:%M %p UTC")
             })
     return context
 

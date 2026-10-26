@@ -3,6 +3,7 @@ import uuid
 from sqlalchemy import Index
 from sqlmodel import Field, SQLModel
 from datetime import datetime
+from backend.utils.clock import utc_now
 
 # --- CUSTOM FIELDS SCHEMA ---
 class UserCustomFieldDefinition(SQLModel, table=True):
@@ -15,7 +16,7 @@ class UserCustomFieldDefinition(SQLModel, table=True):
     field_type: str = "text" # text, date, number, boolean, select
     options: Optional[str] = None # JSON string for select options
     order: int = 0
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
 
 # --- ASSETS & FINANCE ---
 class Asset(SQLModel, table=True):
@@ -84,7 +85,7 @@ class Heirloom(SQLModel, table=True):
     value: Optional[str] = None # Keeping as string to match legacy frontend 'valuation' mix-up, or maybe float? Plan said value (optional).
     location: Optional[str] = None
     custom_attributes: Optional[str] = Field(default="{}")
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
 
 
 class FinancialAccount(SQLModel, table=True):
@@ -213,7 +214,7 @@ class JournalEntry(SQLModel, table=True):
     content: str
     tags: Optional[str] = None
     custom_attributes: Optional[str] = Field(default="{}")
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
 
 # --- LOGISTICS ---
 class Subscription(SQLModel, table=True):

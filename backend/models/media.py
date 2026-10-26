@@ -5,6 +5,7 @@ Handles metadata for uploaded media files (photos, videos, audio)
 from typing import Optional
 from sqlmodel import Field, SQLModel
 from datetime import datetime
+from backend.utils.clock import utc_now
 
 
 class MediaFile(SQLModel, table=True):
@@ -38,8 +39,8 @@ class MediaFile(SQLModel, table=True):
     duration: Optional[float] = None  # For videos/audio in seconds
 
     # Timestamps
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
 
     # Soft delete support
     deleted_at: Optional[datetime] = None

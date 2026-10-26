@@ -18,6 +18,7 @@ from backend.models.media import MediaFile, MediaFileResponse, MediaUploadRespon
 from backend.utils.file_storage import storage
 from backend.config import settings
 from backend.utils.audit import log_audit, log_deletion
+from backend.utils.clock import utc_now
 from fastapi import Request
 
 logger = logging.getLogger(__name__)
@@ -308,8 +309,7 @@ def delete_media(
     )
 
     # Soft delete (Mark as deleted in DB)
-    from datetime import datetime
-    media.deleted_at = datetime.utcnow()
+    media.deleted_at = utc_now()
 
     session.add(media)
     session.commit()
@@ -338,8 +338,7 @@ def update_media_metadata(
     if reference_id is not None:
         media.reference_id = reference_id
 
-    from datetime import datetime
-    media.updated_at = datetime.utcnow()
+    media.updated_at = utc_now()
 
     session.add(media)
     session.commit()
