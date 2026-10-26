@@ -443,7 +443,8 @@ export class SyncManager<T extends { id: number | string }> {
         }
     }
 
-    async delete(id: number | string) {
+    // onRemoved: runs once the server no longer has the record (first try, a 404, or Try Again).
+    async delete(id: number | string, onRemoved?: () => Promise<unknown> | void) {
         // Optimistic
         const original = this.items;
         this.status = "syncing";
@@ -491,7 +492,12 @@ export class SyncManager<T extends { id: number | string }> {
                 message: 'We couldn\'t remove this just yet. It is still safely in your list \u2014 try again when you\'re ready.',
                 code: 'DATABASE_ERROR',
                 technicalDetails: e.technicalDetails || e.message || String(e)
-            } as any, () => { this.delete(id).catch(() => {}); });
+            } as any, () => { this.delete(id, onRemoved).catch(() => {}); });
+            return;
+        }
+        // Outside the try: a failing follow-up must never roll back a record the server removed.
+        if (onRemoved) {
+            try { await onRemoved(); } catch (e) { console.warn('[sync] follow-up after remove paused', id, e); }
         }
     }
 

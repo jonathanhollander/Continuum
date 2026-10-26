@@ -119,13 +119,11 @@ export const memoryMediaId = (url: string | null | undefined): number | null =>
 /** Remove the record, then the stored file behind it (only once the record is gone). */
 export const removeMemory = async (id: number) => {
     const item = visualManager.items.find(m => String(m.id) === String(id));
-    await visualManager.delete(id);
-    // delete() rolls back and shows its own message when the server keeps the record
-    if (visualManager.items.some(m => String(m.id) === String(id))) return;
     const mediaId = memoryMediaId(item?.url);
-    if (mediaId !== null) {
+    // The media goes once the record is really gone, including after Try Again on a failed remove.
+    await visualManager.delete(id, mediaId === null ? undefined : async () => {
         await deleteMedia(mediaId).catch((e) => console.warn('[visual-memories] media removal paused', mediaId, e));
-    }
+    });
 };
 
 export const updateMemory = (id: number, updates: Partial<VisualMemory>) => {
