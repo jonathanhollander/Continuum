@@ -10,7 +10,6 @@
     } from "$lib/stores/acceptanceStore.svelte";
     import {
         ShieldCheck,
-        Clock,
         Filter,
         Search,
         ChevronDown,
@@ -195,9 +194,9 @@
                 >
             </div>
             <div>
-                <h3 class="font-bold text-foreground mb-1">Task Inventory</h3>
+                <h3 class="font-bold text-foreground mb-1">Your checks</h3>
                 <p class="text-sm text-muted-foreground">
-                    Compliance checkpoints verified
+                    Ticked so far
                 </p>
             </div>
         </div>
@@ -304,14 +303,6 @@
                                     >
                                         {task.check}
                                     </p>
-                                    <div class="flex items-center gap-4 pt-2">
-                                        <div
-                                            class="flex items-center gap-1 text-[10px] font-bold text-muted-foreground uppercase"
-                                        >
-                                            <Clock size={12} />
-                                            {task.estTime} min
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
 
