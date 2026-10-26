@@ -414,6 +414,17 @@ class DigitalGuardianData(SQLModel, table=True):
     setup_status: str = Field(default="{}")  # JSON {step: bool}
     fire_drill: str = Field(default="{}")  # JSON {step: bool}
 
+# --- EXECUTOR STEPS (CU-015) ---
+class ExecutorStep(SQLModel, table=True):
+    """Executor Toolkit progress: a row per checklist step (step_id from executorTasks); the newest row per step wins."""
+    __tablename__ = "executor_steps"
+    __table_args__ = (Index("ix_executor_steps_user_id_step_id", "user_id", "step_id"),)
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="users.id", index=True)
+    step_id: str
+    done: bool = Field(default=False)
+    note: Optional[str] = Field(default="")
+
 # --- ADVANCED ASSETS ---
 class AdvancedAssetData(SQLModel, table=True):
     """Model for complex asset details like maintenance logs and claims."""
