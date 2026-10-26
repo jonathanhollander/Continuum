@@ -69,14 +69,26 @@
     };
 
     let searchQuery = $state("");
-    let isLoading = $state(true);
+    // A gentle cue until the first server answer, unless this device already holds letters.
+    let firstSyncPending = $derived(letterSync.lastSync === null && letterSync.status !== "error");
+    let isLoading = $derived(firstSyncPending && savedLetters.length === 0);
+    // Header summary, in the same words as the letter cards ("Ready to read" / "On hold").
+    // Local plural until the shared helper (card X58) reaches main.
+    const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+    let heldCount = $derived(savedLetters.filter((l) => l.isLocked).length);
+    let readyCount = $derived(savedLetters.length - heldCount);
+    let letterStates = $derived(
+        [readyCount > 0 ? `${readyCount} ready to read` : "", heldCount > 0 ? `${heldCount} on hold` : ""]
+            .filter(Boolean)
+            .join(" · "),
+    );
     // Cards or table for "Your letters"; DataViewToggle stores the choice per module.
     let viewMode = $derived<ViewMode>(userPreferencesStore.getViewMode('letters'));
     let customAttributes = $state<Record<string, any>>({});
 
-    onMount(async () => {
-        await Promise.all([letterSync.init(), contactSync.init()]);
-        isLoading = false;
+    onMount(() => {
+        letterSync.init().catch(() => {});
+        contactSync.init().catch(() => {});
     });
     let filterCategory = $state("All");
 
@@ -430,28 +442,36 @@
                 <p
                     class="text-[10px] font-black uppercase tracking-widest text-stone-400"
                 >
-                    Vault Status
+                    Your letters
                 </p>
-                <p class="text-sm font-bold text-slate-700">
-                    {savedLetters.length} Drafts Saved
-                </p>
+                {#if isLoading}
+                    <p class="text-sm font-bold text-slate-500" data-testid="letters-count">Gathering your letters…</p>
+                {:else if savedLetters.length > 0}
+                    <p class="text-sm font-bold text-slate-700" data-testid="letters-count">
+                        {plural(savedLetters.length, "letter", "letters")}
+                    </p>
+                    <p class="text-xs text-slate-500" data-testid="letters-states">{letterStates}</p>
+                {:else}
+                    <p class="text-sm font-bold text-slate-700" data-testid="letters-count">Ready when you are</p>
+                {/if}
             </div>
-            <button
-                onclick={() => {
-                    if (savedLetters.length > 0)
-                        viewLetter(savedLetters[0]);
-                }}
-                class="p-2 bg-stone-100 hover:bg-[#4A7C74] hover:text-white rounded-xl transition-all"
-            >
-                <ArrowRight size={18} />
-            </button>
+            {#if savedLetters.length > 0}
+                <button
+                    onclick={() => viewLetter(savedLetters[0])}
+                    aria-label="Continue writing your letter"
+                    class="p-2 bg-stone-100 hover:bg-[#4A7C74] hover:text-white rounded-xl transition-all"
+                >
+                    <ArrowRight size={18} />
+                </button>
+            {/if}
         </div>
     </div>
 </LivingBlueprintHeader>
 
 {#if isLoading}
-    <div class="flex items-center justify-center py-12">
+    <div class="flex flex-col items-center justify-center gap-3 py-16" role="status" data-testid="letters-loading">
         <Loader2 class="w-8 h-8 animate-spin text-primary" />
+        <p class="text-sm text-slate-500">Gathering your letters…</p>
     </div>
 {:else}
 <div
@@ -634,16 +654,16 @@
                                     · Saved with your chosen milestone
                                 </p>
                             {/if}
-                            <div class="flex items-center gap-3 mt-auto pt-2">
+                            <div class="flex items-center gap-1 mt-auto pt-2" data-testid="saved-letter-actions">
                                 <button
                                     onclick={() => viewLetter(letter)}
-                                    class="px-4 py-2 rounded-xl bg-[#4A7C74] text-white text-sm font-bold hover:opacity-90"
+                                    class="shrink-0 whitespace-nowrap px-4 py-2 rounded-xl bg-[#4A7C74] text-white text-sm font-bold hover:opacity-90"
                                 >
                                     Continue writing
                                 </button>
                                 <button
                                     onclick={() => deleteLetter(letter.id, letter.recipientName || letter.title)}
-                                    class="px-4 py-2 rounded-xl text-sm font-bold text-slate-500 hover:text-slate-900"
+                                    class="shrink-0 whitespace-nowrap px-3 py-2 rounded-xl text-sm font-bold text-slate-500 hover:text-slate-900"
                                 >
                                     Remove this letter
                                 </button>
@@ -1012,7 +1032,7 @@
                             <div class="space-y-2">
                                 <label
                                     for="letter-recipient"
-                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+                                    class="block text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
                                     >Who this letter is for</label
                                 >
                                 <select
