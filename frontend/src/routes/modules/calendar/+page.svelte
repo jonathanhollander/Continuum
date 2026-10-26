@@ -277,8 +277,7 @@
         <Loader2 class="w-8 h-8 animate-spin text-primary" />
     </div>
 {:else}
-<div class="max-w-4xl mx-auto p-8 animate-in fade-in duration-500">
-    <!-- Header -->
+    <!-- Header sits outside the content wrapper so its title lines up with sibling module pages -->
     <LivingBlueprintHeader
         title="Event Calendar"
         subtitle="Afterlife Calendar"
@@ -297,6 +296,7 @@
         </div>
     </LivingBlueprintHeader>
 
+<div class="p-8 max-w-[1400px] mx-auto animate-in fade-in duration-500">
 
     {#if events.length === 0}
         <EmptyState
@@ -344,7 +344,7 @@
                     class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-all group relative overflow-hidden"
                 >
                     <!-- Type Badge -->
-                    <div class="absolute top-0 right-0 p-4 opacity-10">
+                    <div class="absolute top-14 right-0 p-4 opacity-10 pointer-events-none" aria-hidden="true">
                         <svelte:component
                             this={eventTypeIcons[evt.type]}
                             size={120}
@@ -533,7 +533,7 @@
                 <div
                     class="p-6 border-b border-gray-100 flex justify-between items-center bg-[#304743] text-white"
                 >
-                    <h3 id="calendar-dialog-title" class="font-serif font-bold text-2xl">
+                    <h3 id="calendar-dialog-title" class="font-serif font-bold text-2xl text-white!">
                         {editingId ? "Edit Event" : "Add Significant Date"}
                     </h3>
                     <button
@@ -618,11 +618,13 @@
                         class="bg-amber-50 p-4 rounded-xl border border-amber-100"
                     >
                         <label
+                            for="event-wish"
                             class="block text-xs font-bold uppercase text-amber-600 mb-2 flex items-center gap-2"
                         >
                             <Sparkles size={14} /> My Wish for this Day
                         </label>
                         <textarea
+                            id="event-wish"
                             bind:value={newEvent.wish}
                             rows="2"
                             placeholder="e.g. Go to our favorite diner and order the pancakes."
@@ -637,7 +639,7 @@
                     <div class="border-t border-gray-100 pt-4">
                         <div class="flex items-center gap-2 mb-4">
                             <Mail class="text-[#304743]" size={18} />
-                            <h4 class="font-bold text-gray-900">
+                            <h4 id="event-message-heading" class="font-bold text-gray-900">
                                 Future Message
                             </h4>
                         </div>
@@ -648,19 +650,34 @@
                         </p>
 
                         <div class="space-y-3">
-                            <input
-                                type="text"
-                                bind:value={formRecipient}
-                                placeholder="Recipient (Email)"
-                                class="w-full px-4 py-2 rounded-xl border border-gray-200 text-sm"
-                            />
-                            <input
-                                type="text"
-                                bind:value={formSubject}
-                                placeholder="Subject Line"
-                                class="w-full px-4 py-2 rounded-xl border border-gray-200 text-sm"
-                            />
+                            <div>
+                                <label
+                                    for="event-recipient"
+                                    class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                                    >Recipient (Email)</label
+                                >
+                                <input
+                                    id="event-recipient"
+                                    type="text"
+                                    bind:value={formRecipient}
+                                    class="w-full px-4 py-2 rounded-xl border border-gray-200 text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label
+                                    for="event-subject"
+                                    class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                                    >Subject Line</label
+                                >
+                                <input
+                                    id="event-subject"
+                                    type="text"
+                                    bind:value={formSubject}
+                                    class="w-full px-4 py-2 rounded-xl border border-gray-200 text-sm"
+                                />
+                            </div>
                             <textarea
+                                aria-labelledby="event-message-heading"
                                 bind:value={formBody}
                                 rows="4"
                                 placeholder="Dear..."
