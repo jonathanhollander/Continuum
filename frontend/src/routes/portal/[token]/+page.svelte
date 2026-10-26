@@ -63,10 +63,16 @@
         // Optimistically update UI
         data.user_status = "active";
         data.last_checkin = new Date().toISOString();
-        setTimeout(() => (actionMessage = ""), 5000);
+      } else {
+        actionMessage =
+          "We couldn't record that just now. This link may have expired; please try again in a little while.";
       }
+      setTimeout(() => (actionMessage = ""), 5000);
     } catch (e) {
       console.error(e);
+      actionMessage =
+        "We couldn't record that just now. Please try again in a little while.";
+      setTimeout(() => (actionMessage = ""), 5000);
     } finally {
       actionLoading = false;
     }

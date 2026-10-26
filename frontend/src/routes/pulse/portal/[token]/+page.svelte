@@ -24,6 +24,7 @@
         error: null as string | null,
         data: null as any,
         hugSent: false,
+        hugError: false,
         vaultItems: [] as any[],
     });
 
@@ -44,10 +45,10 @@
             if (res.ok) {
                 state.data = await res.json();
 
-                // If not active, try to fetch vault (simulated disclosure)
-                if (state.data.user_status !== "active") {
+                // Vault opens only once escalation reaches this guardian's tier
+                if (state.data.show_sensitive) {
                     const vRes = await fetch(
-                        `${baseUrl}/api/pulse/vault?user_id=${state.data.user_id}`,
+                        `${baseUrl}/api/pulse/portal/${token}/vault`,
                     );
                     if (vRes.ok) state.vaultItems = await vRes.json();
                 }
@@ -62,16 +63,16 @@
     async function sendHug() {
         const token = $page.params.token;
         const baseUrl = API_BASE_URL;
-        await fetch(`${baseUrl}/api/pulse/messages`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                user_id: state.data.user_id,
-                contact_id: state.data.contact_id,
-                message: "I am thinking of you! Sending a virtual hug.",
-            }),
-        });
-        state.hugSent = true;
+        state.hugError = false;
+        try {
+            const res = await fetch(`${baseUrl}/api/pulse/nudge/${token}`, {
+                method: "POST",
+            });
+            if (res.ok) state.hugSent = true;
+            else state.hugError = true;
+        } catch (e) {
+            state.hugError = true;
+        }
     }
 </script>
 
@@ -175,6 +176,12 @@
                             />
                             {state.hugSent ? "Hug Received" : "Send a Hug"}
                         </button>
+                        {#if state.hugError}
+                            <p class="text-xs text-amber-300 text-center max-w-[16rem]">
+                                We couldn't send your hug just now. This link may
+                                have expired; please try again in a little while.
+                            </p>
+                        {/if}
                         <a
                             href="/pulse/respond/{$page.params.token}"
                             class="bg-slate-800 hover:bg-slate-700 text-white font-bold px-8 py-4 rounded-2xl transition-all text-center border border-slate-700"

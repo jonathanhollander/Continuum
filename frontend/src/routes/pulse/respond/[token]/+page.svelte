@@ -74,7 +74,7 @@
                     Pulse Alert Response
                 </h1>
                 <p class="text-slate-400 text-sm">
-                    Action needed for {state.data?.user_name || "User"}
+                    Checking in on {state.data?.user_name || "your loved one"}
                 </p>
             </div>
 
@@ -128,14 +128,15 @@
                             <Clock class="w-10 h-10 text-amber-400 shrink-0" />
                             <div>
                                 <h3 class="font-medium text-amber-200">
-                                    Missed Pulse Update
+                                    {state.data.user_status === "active"
+                                        ? "Checked in recently"
+                                        : "Hasn't checked in for a little while"}
                                 </h3>
                                 <p
                                     class="text-sm text-amber-200/70 mt-1 leading-relaxed"
                                 >
                                     {#if state.data.last_checkin}
-                                        {state.data.user_name} missed their scheduled
-                                        check-in {new Date(
+                                        {state.data.user_name}'s last check-in was {new Date(
                                             state.data.last_checkin,
                                         ).toLocaleDateString()} at {new Date(
                                             state.data.last_checkin,
