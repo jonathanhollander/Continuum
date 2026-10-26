@@ -23,8 +23,7 @@
             : "";
     let isLoading = false;
     let step: "email" | "passkey" | "complete" = "email";
-    let userId: number | null = null;
-    let lastOptions: any = null;
+    let pendingRegistration: { id: string; userId: number; email: string } | null = null;
     let passkeyFailed = false;
     let signupOwner: SessionOwnership | null = null;
     const PASSKEY_WAIT_MS = 12000;
@@ -44,14 +43,29 @@
     }
 
     // Retry function for passkey registration
-    function retryPasskeyRegistration() {
-        if (lastOptions && userId) {
-            if (!signupOwner || !isCurrentSession(signupOwner, true)) return;
-            passkeyFailed = false;
-            handlePasskeyRegistration(lastOptions, signupOwner);
-        } else {
-            // Restart from email step
+    async function retryPasskeyRegistration() {
+        const owner = signupOwner;
+        const pending = pendingRegistration;
+        if (isLoading || !owner || !isCurrentSession(owner, true)) return;
+        if (!pending) {
             step = "email";
+            return;
+        }
+        isLoading = true;
+        passkeyFailed = false;
+        try {
+            const result = await apiPost("/api/auth/passkey/register/start", {
+                email: pending.email,
+                registration_id: pending.id,
+            });
+            if (!isCurrentSession(owner, true) || pendingRegistration !== pending) return;
+            await handlePasskeyRegistration(result.options, owner, pending);
+        } catch (e: any) {
+            if (!isCurrentSession(owner, true) || pendingRegistration !== pending) return;
+            passkeyFailed = true;
+            notifications.showError(e);
+        } finally {
+            if (isCurrentSession(owner, true)) isLoading = false;
         }
     }
 
@@ -86,6 +100,7 @@
     });
 
     async function handleEmailSubmit() {
+        if (isLoading) return;
         if (!email) {
             notifications.showError({
                 message: "Your email address will help us begin.",
@@ -95,18 +110,25 @@
         }
 
         const owner = beginSession();
+        const submittedEmail = email;
         signupOwner = owner;
+        pendingRegistration = null;
         isLoading = true;
         alreadyHere = false;
 
         try {
             // Step 1: Create account and start passkey registration
             const result = await apiPost("/api/auth/passkey/register/start", {
-                email,
+                email: submittedEmail,
             });
             if (!isCurrentSession(owner, true)) return;
 
-            userId = result.user_id;
+            const pending = {
+                id: result.registration_id,
+                userId: result.user_id,
+                email: submittedEmail,
+            };
+            pendingRegistration = pending;
 
             // Check for warnings (e.g., email send failures)
             if (result.warnings && result.warnings.length > 0) {
@@ -125,14 +147,11 @@
                 });
             }
 
-            // Store options for retry
-            lastOptions = result.options;
-
             // Move to passkey step
             step = "passkey";
 
             // Automatically start passkey registration
-            await handlePasskeyRegistration(result.options, owner);
+            await handlePasskeyRegistration(result.options, owner, pending);
         } catch (e: any) {
             if (!isCurrentSession(owner, true)) return;
             console.error("Account creation failed:", e);
@@ -157,8 +176,8 @@
         goto(`/login?${params}`);
     }
 
-    async function handlePasskeyRegistration(options: any, owner = signupOwner) {
-        if (!owner || !isCurrentSession(owner, true)) return;
+    async function handlePasskeyRegistration(options: any, owner = signupOwner, pending = pendingRegistration) {
+        if (!owner || !pending || !isCurrentSession(owner, true) || pendingRegistration !== pending) return;
         isLoading = true;
         passkeyFailed = false;
 
@@ -166,14 +185,15 @@
             // Step 2: Show browser passkey creation prompt
             // Note: v11+ API requires { optionsJSON: options } format
             const credential = await waitForPasskey(options);
-            if (!isCurrentSession(owner, true)) return;
+            if (!isCurrentSession(owner, true) || pendingRegistration !== pending) return;
 
             // Step 3: Finish registration and get JWT
             const result = await apiPost("/api/auth/passkey/register/finish", {
-                user_id: userId,
+                user_id: pending.userId,
+                registration_id: pending.id,
                 credential,
             });
-            if (!isCurrentSession(owner, true)) return;
+            if (!isCurrentSession(owner, true) || pendingRegistration !== pending) return;
 
             // Check for warnings
             if (result.warnings && result.warnings.length > 0) {
@@ -188,6 +208,7 @@
             if (!storeTokens(result.access_token, result.refresh_token, owner)) return;
             owner = captureSession();
             signupOwner = owner;
+            pendingRegistration = null;
 
             notifications.showSuccess(
                 "Your account is ready! Let's get you set up...",

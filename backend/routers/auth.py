@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from backend.limiter import limiter
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session, select
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import List, Optional, Dict, Any
 from datetime import timedelta
 from backend.database import User, get_session
@@ -29,6 +29,7 @@ from backend.utils.audit import log_auth_success, log_auth_failure
 from backend.utils.logger import get_logger
 from backend.challenge_store import challenge_store
 import secrets
+import hashlib
 import base64
 import json
 from webauthn import options_to_json
@@ -53,6 +54,7 @@ class SignupRequest(BaseModel):
 
 class PasskeySignupRequest(BaseModel):
     email: EmailStr
+    registration_id: Optional[str] = Field(default=None, min_length=32, max_length=128)
 
 class WarningMessage(BaseModel):
     code: str
@@ -107,6 +109,7 @@ from pydantic import field_validator
 class PasskeyRegisterFinishPayload(BaseModel):
     """Validated model for completing passkey registration."""
     user_id: int
+    registration_id: str = Field(min_length=32, max_length=128)
     credential: Dict[str, Any]
 
     @field_validator("credential")
@@ -277,6 +280,28 @@ def get_current_user_info(current_user: User = Depends(get_current_user)):
 
 # WebAuthn/Passkey Authentication
 
+def _registration_key(registration_id: str, challenge: bool = False) -> str:
+    # The cache logs keys at debug level; keep the browser's opaque proof out of them.
+    digest = hashlib.sha256(registration_id.encode()).hexdigest()
+    return f"registration_{'challenge' if challenge else 'pending'}:{digest}"
+
+
+def _pending_registration_user(
+    session: Session, registration_id: str, *, email: Optional[str] = None, user_id: Optional[int] = None
+) -> User:
+    pending = challenge_store.get(_registration_key(registration_id))
+    if not pending or (email is not None and pending.get("email") != email) or (user_id is not None and pending.get("user_id") != user_id):
+        raise HTTPException(status_code=400, detail="That passkey step paused. Start it again whenever you're ready.")
+    # Serialize completion/refresh for this pending account. An established account
+    # always uses its existing sign-in path, even if an earlier attempt is still cached.
+    user = session.exec(select(User).where(User.id == pending["user_id"]).with_for_update()).first()
+    if not user or user.email != pending["email"] or user.hashed_password or user.public_key or session.exec(
+        select(PulseCredential.id).where(PulseCredential.user_id == user.id).limit(1)
+    ).first() is not None:
+        raise HTTPException(status_code=400, detail="This email is already registered. Signing in will take you there.")
+    return user
+
+
 @router.post("/passkey/register/start", summary="Start Passkey registration", description="Initiates the WebAuthn registration process by creating a user and returning registration options/challenge.")
 @limiter.limit("10/minute")
 def passkey_register_start(request: Request, signup_data: PasskeySignupRequest, session: Session = Depends(get_session)):
@@ -284,38 +309,44 @@ def passkey_register_start(request: Request, signup_data: PasskeySignupRequest, 
     Start passkey registration flow (Step 1 of 2).
     Creates user account and initiates WebAuthn registration.
     """
-    # Check if user already exists
-    existing_user = session.exec(select(User).where(User.email == signup_data.email)).first()
-    if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="This email is already registered. Signing in will take you there."
+    registration_id = signup_data.registration_id
+    if registration_id:
+        new_user = _pending_registration_user(session, registration_id, email=signup_data.email)
+    else:
+        existing_user = session.exec(select(User).where(User.email == signup_data.email)).first()
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This email is already registered. Signing in will take you there."
+            )
+        new_user = User(
+            email=signup_data.email,
+            external_id=f"user-{signup_data.email}",
+            hashed_password=None,
+            public_key=""
         )
-
-    # Create new user (without password)
-    # Note: public_key is set to empty string as placeholder - will be stored in PulseCredential after registration
-    new_user = User(
-        email=signup_data.email,
-        external_id=f"user-{signup_data.email}",
-        hashed_password=None,  # Passkey-only user
-        public_key=""  # Placeholder - actual key stored in PulseCredential table
-    )
-
-    session.add(new_user)
-    session.commit()
-    session.refresh(new_user)
+        session.add(new_user)
+        session.flush()
+        registration_id = secrets.token_urlsafe(32)
+        # Ownership outlives the five-minute WebAuthn challenge, without becoming a
+        # sign-in token or permission to enroll an already established account.
+        challenge_store.set(_registration_key(registration_id), {
+            "user_id": new_user.id, "email": new_user.email
+        }, expire_seconds=3600)
 
     # Generate WebAuthn registration options
     options = get_registration_options(str(new_user.id), new_user.email)
 
-    # Store challenge temporarily (uses Redis in production, in-memory in development)
-    challenge_store.set(str(new_user.id), {
+    # Every Retry gets a fresh, single-use challenge for this same pending attempt.
+    challenge_store.set(_registration_key(registration_id, challenge=True), {
         "challenge": options.challenge,
         "type": "registration"
     }, expire_seconds=300)
+    session.commit()
 
     return {
         "user_id": new_user.id,
+        "registration_id": registration_id,
         "options": json.loads(options_to_json(options))
     }
 
@@ -331,7 +362,8 @@ def passkey_register_finish(request: Request, payload: PasskeyRegisterFinishPayl
     user_id = payload.user_id
     credential_response = payload.credential
 
-    challenge_data = challenge_store.pop(str(user_id))
+    _pending_registration_user(session, payload.registration_id, user_id=user_id)
+    challenge_data = challenge_store.pop(_registration_key(payload.registration_id, challenge=True))
     if not challenge_data or challenge_data.get("type") != "registration":
         raise HTTPException(status_code=400, detail="That passkey step paused. Start it again whenever you're ready.")
 
@@ -374,8 +406,7 @@ def passkey_register_finish(request: Request, payload: PasskeyRegisterFinishPayl
         # Check if credential already exists
         existing = session.get(PulseCredential, cred_id_b64)
         if existing:
-            session.delete(existing)
-            session.commit()
+            raise HTTPException(status_code=400, detail="Let's try your passkey again, or sign in another way.")
 
         new_cred = PulseCredential(
             id=cred_id_b64,
@@ -387,6 +418,7 @@ def passkey_register_finish(request: Request, payload: PasskeyRegisterFinishPayl
         )
         session.add(new_cred)
         session.commit()
+        challenge_store.delete(_registration_key(payload.registration_id))
 
         logger.info(f"Passkey registered for user {user_id}: aaguid={aaguid_str}, transports={transports_json}")
 
@@ -405,6 +437,7 @@ def passkey_register_finish(request: Request, payload: PasskeyRegisterFinishPayl
         }
 
     except Exception as e:
+        session.rollback()
         logger.error(
             "WebAuthn registration verification failed",
             extra={"context": {

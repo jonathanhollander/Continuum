@@ -1225,6 +1225,7 @@ export class SingletonSyncManager<T extends object> {
         const raw = getStored<T>(key, {} as T);
         this.data = mapper ? mapper(raw as Record<string, unknown>) : raw;
         this.loadedFor = storageAccount();
+        this.standaloneBase = this.data;
     }
 
     /**
@@ -1241,6 +1242,21 @@ export class SingletonSyncManager<T extends object> {
     loadedFor: string | null = null;
 
     private generation = 0;
+    // Standalone APIs scope the record by account (profiles only namespace cache).
+    // Another account proceeds independently; returning accounts wait on their own request.
+    private writeTails = new Map<string, Promise<void>>();
+    private confirmedBases = new Map<string, T>();
+    private pendingWrites = new Map<number, Partial<T>>();
+    private writeSequence = 0;
+    private baseRevision = 0;
+    private standaloneBase: T | null = null;
+    private applyStandalone() {
+        let visible = { ...(this.standaloneBase || {}) } as T;
+        for (const patch of this.pendingWrites.values()) visible = { ...visible, ...patch };
+        this.data = visible;
+        setStored(this.key, visible);
+        this.notify();
+    }
     private activeWrites = new Map<string, { owner: OperationOwner; key: string; data: Partial<T>; quiet: boolean }>();
     private operationNotices = new Set<string>();
     private recoveryNotices = new Set<string>();
@@ -1290,6 +1306,8 @@ export class SingletonSyncManager<T extends object> {
     reset(clear = false) {
         this.activeWrites.forEach(write => this.remember(write));
         this.activeWrites.clear();
+        this.pendingWrites.clear();
+        this.baseRevision++;
         this.operationNotices.forEach(id => notifications.dismiss(id));
         this.operationNotices.clear();
         this.recoveryNotices.clear();
@@ -1301,6 +1319,7 @@ export class SingletonSyncManager<T extends object> {
         this.loadedFor = clear ? null : storageAccount();
         const raw = clear ? ({} as T) : getStored<T>(this.key, {} as T);
         this.data = this.mapper ? this.mapper(raw as Record<string, unknown>) : raw;
+        this.standaloneBase = this.data;
         this.status = "idle";
         this.error = null;
         this.lastSync = null;
@@ -1330,6 +1349,7 @@ export class SingletonSyncManager<T extends object> {
         this.status = "syncing";
         this.error = null;
         const token = sessionToken(owner.session);
+        const revision = this.baseRevision;
         let answered = false; // the server returned the record (a later failure is an upload's)
         try {
             if (!token) { this.status = "idle"; return; }
@@ -1346,20 +1366,29 @@ export class SingletonSyncManager<T extends object> {
             // (quietly: background bookkeeping, no affirmation).
             const isRemoteEmpty = !remoteDataRaw || Object.keys(remoteDataRaw).length === 0; // raw: a mapper may add defaults
 
-            if (isRemoteEmpty && this.hasLocalData()) {
+            if (revision !== this.baseRevision) {
+                // A write answered after this read began; its newer confirmed base wins.
+                this.offerRecovery(owner);
+                return;
+            }
+            const namespace = owner.account;
+            const retained = storedFor<unknown[]>(this.recoveryKey, [], owner).length > 0;
+            if (isRemoteEmpty && this.hasLocalData() && this.pendingWrites.size === 0 && !this.writeTails.has(namespace) && !retained) {
                 console.log(`[Sync:${this.key}] Migrating local singleton to cloud...`);
-                const saved = convertKeys(await sharedUpload(url, token, this.wirePayload(this.data!), owner), toCamel);
+                await this.update(this.data!, true);
                 if (!current()) return;
-                this.updateLocal(this.mapper ? this.mapper(saved) : saved as unknown as T);
             } else {
-                this.updateLocal(remoteData);
+                this.confirmedBases.set(owner.account, remoteData);
+                this.standaloneBase = remoteData;
+                this.baseRevision++;
+                this.applyStandalone();
             }
 
-            this.status = "synced";
+            this.status = this.pendingWrites.size ? "syncing" : "synced";
             this.lastSync = new Date();
             this.offerRecovery(owner);
         } catch (e: unknown) {
-            if (!current()) return;
+            if (!current() || revision !== this.baseRevision) return;
             console.error(`[Sync:${this.key}] Error:`, e);
             this.status = "error";
             this.error = errMessage(e) ?? null;
@@ -1421,53 +1450,68 @@ export class SingletonSyncManager<T extends object> {
         if (!current()) throw ACCOUNT_CHANGED;
         newData = cloneData(newData);
         const operation = { owner, key: recoveryId || crypto.randomUUID(), data: newData, quiet };
-        if (!this.record) {
-            if (this.released(owner, operation.key)) throw identifiedFailure(new Error('This earlier draft was superseded'), operation.key);
-            this.activeWrites.set(operation.key, operation);
-        }
-        let confirmed: T | undefined;
         const original = this.data;
+        if (this.record) {
+            this.status = "syncing";
+            this.error = null;
+            this.data = { ...(this.data || {} as T), ...newData } as T;
+            setStored(this.key, this.data);
+            this.notify();
+            return this.updateShared(newData, original, quiet, owner, generation);
+        }
+        if (this.released(owner, operation.key)) throw identifiedFailure(new Error('This earlier draft was superseded'), operation.key);
+        this.activeWrites.set(operation.key, operation);
+        const sequence = ++this.writeSequence;
+        this.pendingWrites.set(sequence, newData);
         this.status = "syncing";
         this.error = null;
-        this.data = { ...(this.data || {} as T), ...newData } as T;
-        setStored(this.key, this.data);
-        this.notify();
+        this.applyStandalone();
 
-        if (this.record) return this.updateShared(newData, original, quiet, owner, generation);
-
+        const namespace = owner.account;
+        const before = this.writeTails.get(namespace) || Promise.resolve();
+        let settled!: () => void;
+        const tail = new Promise<void>(resolve => { settled = resolve; });
+        this.writeTails.set(namespace, tail);
+        let confirmed: T | undefined;
         try {
+            await before;
+            if (!current()) throw ACCOUNT_CHANGED;
+            if (this.released(owner, operation.key)) throw identifiedFailure(new Error('This earlier draft was superseded'), operation.key);
             const token = sessionToken(owner.session);
-            const payload = this.wirePayload(this.data);
-
+            // Earlier responses and later optimistic patches never become this save's
+            // input accidentally. Only the confirmed base plus this explicit patch goes out.
+            const payload = this.wirePayload({ ...(this.confirmedBases.get(owner.account) || this.standaloneBase || {}), ...newData } as T);
             const res = await writeFetch(`${BASE_URL}${this.apiBase}/${this.endpoint}`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
                 body: JSON.stringify(payload)
             });
-
             if (!res.ok) throw new Error("Update failed");
-            const raw = await res.json();
-            const savedRaw = convertKeys(raw, toCamel);
+            const savedRaw = convertKeys(await res.json(), toCamel);
             const saved = this.mapper ? this.mapper(savedRaw) : savedRaw as unknown as T;
             confirmed = saved;
+            this.confirmedBases.set(owner.account, saved);
             if (!current()) {
-                saveFor(this.key, saved, owner);
+                if (sameNamespace(owner) && isCurrentSession(captureSession())) {
+                    // The same account returned while its old request was settling.
+                    // Its new writes wait on this tail and retain their optimistic fields.
+                    this.standaloneBase = saved;
+                    this.baseRevision++;
+                    this.applyStandalone();
+                } else saveFor(this.key, saved, owner);
                 this.forget(owner, operation.key);
                 throw ACCOUNT_CHANGED;
             }
-
-            this.updateLocal(saved);
-            this.status = "synced";
+            this.pendingWrites.delete(sequence);
+            this.standaloneBase = saved;
+            this.baseRevision++;
+            this.applyStandalone();
+            this.status = this.pendingWrites.size ? "syncing" : "synced";
+            this.error = null;
             this.lastSync = new Date();
-
-            // Affirm only a save the person made.
-            if (this.affirmationContext && !quiet) {
+            if (this.affirmationContext && !quiet && !this.released(owner, operation.key)) {
                 notifications.showAffirmation(this.affirmationContext, 'update');
             }
-
             this.forget(owner, operation.key);
             return saved;
         } catch (e) {
@@ -1475,22 +1519,22 @@ export class SingletonSyncManager<T extends object> {
                 if (!confirmed) this.remember(operation);
                 throw identifiedFailure(ACCOUNT_CHANGED, operation.key);
             }
-            // Releasing an in-flight draft also retires its failure notice; it must
-            // not restore the old draft after a newer editor intent supersedes it.
+            this.pendingWrites.delete(sequence);
+            this.applyStandalone();
+            this.status = this.pendingWrites.size ? "syncing" : this.released(owner, operation.key) ? "idle" : "error";
+            this.error = this.pendingWrites.size || this.released(owner, operation.key) ? null : errMessage(e) || "Failed to save";
             if (this.released(owner, operation.key)) throw identifiedFailure(e, operation.key);
-            console.error(`[Sync:${this.key}] Update failed, rolling back`, e);
-            this.data = original;
-            setStored(this.key, original);
-            this.notify();
-            this.status = "error";
-            this.error = (e as { message?: string } | null)?.message || "Failed to save";
-            if (quiet) { this.activeWrites.delete(operation.key); throw identifiedFailure(e, operation.key); } // Existing autosave rollback policy.
+            console.error(`[Sync:${this.key}] Update failed, retaining newer changes`, e);
+            if (quiet) { this.activeWrites.delete(operation.key); throw identifiedFailure(e, operation.key); }
             this.trackNotice(operation.key, notifications.showError({
                 message: 'Your draft is kept. We can save it again whenever you\'re ready.',
                 code: 'DATABASE_ERROR',
-                technicalDetails: (e as { message?: string } | null)?.message || String(e)
+                technicalDetails: errMessage(e) || String(e)
             }, () => { if (current() && !this.released(owner, operation.key)) this.update(newData, quiet, operation.key).catch(() => {}); }));
             throw identifiedFailure(e, operation.key);
+        } finally {
+            settled();
+            if (this.writeTails.get(namespace) === tail) this.writeTails.delete(namespace);
         }
     }
 
@@ -1532,6 +1576,7 @@ export class SingletonSyncManager<T extends object> {
 
     /** Set the device copy only (no server call). */
     updateLocal(data: T) {
+        if (!this.record) { this.standaloneBase = data; this.baseRevision++; }
         this.data = data;
         setStored(this.key, data);
         this.notify();
