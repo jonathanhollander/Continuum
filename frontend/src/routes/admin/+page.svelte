@@ -5,9 +5,9 @@
     import { ShieldCheck } from "lucide-svelte";
 </script>
 
-<div class="min-h-screen bg-stone-50 pb-20">
+<div class="min-h-screen pb-20">
     <!-- Header -->
-    <div class="bg-[#304743] text-white pt-20 pb-32 relative overflow-hidden">
+    <div class="bg-primary-deep text-white pt-20 pb-32 relative overflow-hidden">
         <div class="absolute top-0 right-0 p-8 opacity-10">
             <ShieldCheck size={300} />
         </div>
@@ -15,7 +15,7 @@
             <h1 class="text-5xl font-serif font-bold mb-4">
                 Estate Readiness Hub
             </h1>
-            <p class="text-emerald-100 text-lg max-w-2xl">
+            <p class="text-white/80 text-lg max-w-2xl">
                 Estate readiness overview
             </p>
         </div>

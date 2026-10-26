@@ -54,7 +54,7 @@
                 <h3
                     class="text-lg font-bold text-white mb-6 flex items-center gap-2"
                 >
-                    <Palette size={18} class="text-purple-400" />
+                    <Palette size={18} class="text-primary" />
                     Visual Integrity Checklist
                 </h3>
 
@@ -63,7 +63,7 @@
                         <div
                             class="flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-all
                             {check.checked
-                                ? 'bg-emerald-500/5 border-emerald-500/20'
+                                ? 'bg-success/10 border-success/30'
                                 : 'bg-slate-950 border-slate-800 hover:border-slate-700'}"
                             role="button"
                             tabindex="0"
@@ -77,11 +77,11 @@
                         >
                             <span
                                 class={check.checked
-                                    ? "text-emerald-400"
+                                    ? "text-success"
                                     : "text-slate-400"}>{check.label}</span
                             >
                             {#if check.checked}
-                                <Check size={18} class="text-emerald-400" />
+                                <Check size={18} class="text-success" />
                             {/if}
                         </div>
                     {/each}
@@ -94,11 +94,11 @@
             <div
                 class="bg-slate-900 border border-slate-800 rounded-xl p-6 flex flex-col items-center justify-center min-h-[300px]"
             >
-                <div class="flex items-end gap-4 text-slate-600 mb-4">
+                <div class="flex items-end gap-4 text-muted-foreground mb-4">
                     <Monitor size={64} />
                     <Smartphone size={32} />
                 </div>
-                <p class="text-center text-slate-500 text-sm">
+                <p class="text-center text-muted-foreground text-sm">
                     Open this dashboard on different<br />devices to test
                     responsiveness live.
                 </p>
@@ -110,15 +110,15 @@
                 </h4>
                 <div class="flex gap-2">
                     <div
-                        class="w-8 h-8 rounded bg-[#4A7C74] ring-1 ring-white/10"
+                        class="w-8 h-8 rounded bg-primary ring-1 ring-white/10"
                         title="Primary"
                     ></div>
                     <div
-                        class="w-8 h-8 rounded bg-[#527B84] ring-1 ring-white/10"
+                        class="w-8 h-8 rounded bg-secondary ring-1 ring-white/10"
                         title="Secondary"
                     ></div>
                     <div
-                        class="w-8 h-8 rounded bg-[#90CDF4] ring-1 ring-white/10"
+                        class="w-8 h-8 rounded bg-accent ring-1 ring-white/10"
                         title="Accent"
                     ></div>
                 </div>
