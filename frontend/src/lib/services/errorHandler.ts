@@ -285,8 +285,10 @@ export async function apiFetch<T = any>(
     });
 
     if (!result.ok) {
-        // Throw with ErrorDetails so calling code can handle it
-        throw result.error;
+        // Throw an Error carrying the gentle message so handleFetchError keeps it
+        const gentleError = new Error(result.error.message);
+        Object.assign(gentleError, { gentle: true, code: result.error.code, details: result.error.details, errorDetails: result.error });
+        throw gentleError;
     }
 
     // Handle empty responses (204 No Content, 404, etc.)

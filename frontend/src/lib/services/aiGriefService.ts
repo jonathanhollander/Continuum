@@ -1,6 +1,6 @@
 import { contextStore } from '../stores/contextStore.svelte';
 
-import { callAiProxy } from './aiConciergeService';
+import { callAiProxy, AI_UNAVAILABLE } from './aiConciergeService';
 
 export interface GriefAIResponse {
     content: string;
@@ -75,7 +75,9 @@ Example: { "message": "The silence they leave behind can be so loud... it's okay
         console.error('Grief AI Error:', error);
         return {
             failed: true,
-            content: "I'm still here with you. My words aren't flowing as smoothly right now, but you're not alone. Take a gentle breath, and know that the resources in the sidebar are always available."
+            content: error instanceof Error && ((error as any).gentle || error.message === AI_UNAVAILABLE)
+                ? error.message
+                : "I'm still here with you. My words aren't flowing as smoothly right now, but you're not alone. Take a gentle breath, and know that the resources in the sidebar are always available."
         };
     }
 }
