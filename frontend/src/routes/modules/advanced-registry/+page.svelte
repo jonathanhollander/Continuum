@@ -160,7 +160,7 @@
 >
     <!-- Header -->
     <LivingBlueprintHeader
-        title="Advanced Registry Hub"
+        title="Complete Record"
         subtitle="Precision tracking for assets, maintenance, and digital legacies"
         tier="protection"
         detailedDescription="The Advanced Registry brings together all detailed records about your assets—purchase history, maintenance logs, insurance claims, and digital account management. This comprehensive documentation helps your family understand not just what you own, but its complete history."

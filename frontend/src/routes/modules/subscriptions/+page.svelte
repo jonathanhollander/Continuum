@@ -402,7 +402,7 @@
                             onGenerateLetter={() => openLetterModal(sub)}
                         />
                         <div
-                            class="absolute top-3 right-2 flex gap-1 bg-white/50 backdrop-blur-sm rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                            class="absolute top-3 right-2 flex gap-1 bg-white/50 backdrop-blur-sm rounded-full p-1"
                         >
                             <button
                                 onclick={() => editSubscription(sub)}
@@ -492,16 +492,6 @@
                 </div>
             {/if}
 
-            <!-- Empty State Helper -->
-            <button
-                class="w-full border-2 border-dashed border-slate-200 rounded-xl p-4 flex items-center justify-center text-slate-400 hover:border-slate-300 hover:bg-slate-50 transition-all group"
-                onclick={() => (showAddForm = true)}
-            >
-                <Plus
-                    class="w-4 h-4 mr-2 group-hover:scale-110 transition-transform"
-                />
-                Tracking {subscriptions.length} services... Share another?
-            </button>
         </div>
     {/if}
 

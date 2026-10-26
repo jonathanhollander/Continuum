@@ -89,7 +89,7 @@
                 </div>
                 <div>
                     <h1 class="font-serif font-bold text-3xl text-slate-900">
-                        Builder's Console
+                        Builder Tools
                     </h1>
                     <p class="text-slate-500 font-medium">
                         Compliance & Verification Command Center

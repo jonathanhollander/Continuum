@@ -1,9 +1,10 @@
 <script lang="ts">
-    import { Phone } from "lucide-svelte";
+    import { Phone, Pencil } from "lucide-svelte";
 
-    let { contact, updateStatus } = $props<{
+    let { contact, updateStatus, onEdit } = $props<{
         contact: any;
         updateStatus: (id: number | string, status: string) => void;
+        onEdit?: (contact: any) => void;
     }>();
 
     const statuses = [
@@ -45,6 +46,14 @@
     </div>
 
     <div class="flex items-center gap-2 w-full md:w-auto overflow-x-auto">
+        {#if onEdit}
+            <button
+                onclick={() => onEdit(contact)}
+                class="px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 text-slate-600 hover:border-primary hover:text-primary transition-all whitespace-nowrap flex items-center gap-1"
+            >
+                <Pencil size={12} /> Update details
+            </button>
+        {/if}
         {#each statuses as status}
             <button
                 onclick={() => updateStatus(contact.id, status)}

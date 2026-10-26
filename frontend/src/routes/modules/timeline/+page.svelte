@@ -2,7 +2,6 @@
     import { readCustom } from "$lib/utils/customFields";
     import { fade, fly, slide, scale } from "svelte/transition";
     import {
-        Calendar,
         Baby,
         GraduationCap,
         Heart,
@@ -386,34 +385,10 @@
         </div>
     {/if}
 
-    <!-- Header -->
-    <div
-        class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6"
-    >
-        <div>
-            <div
-                class="inline-flex items-center justify-center p-3 bg-purple-100 text-purple-700 rounded-full mb-4"
-            >
-                <Calendar size={32} />
-            </div>
-            <h1 class="font-serif font-bold text-4xl text-[#304743] mb-2">
-                The Life Timeline
-            </h1>
-            <p class="text-lg text-muted-foreground">
-                Your story isn't just a list of assets. It's a series of
-                moments.
-            </p>
-        </div>
-
+    <!-- View switch (the page header above holds the title and Add Event) -->
+    <div class="flex justify-end mb-12">
         <div class="flex flex-col items-end gap-4">
             <div class="flex gap-4">
-                <button
-                    class="px-4 py-2 rounded-lg text-sm font-bold bg-[#4A7C74] text-white shadow-md flex items-center gap-2 hover:bg-[#3b635d]"
-                    onclick={() => (showAddModal = true)}
-                >
-                    <Plus size={16} /> Add Event
-                </button>
-
                 <div
                     class="flex items-center gap-2 bg-white p-1 rounded-xl border border-gray-100 shadow-sm"
                 >
@@ -511,13 +486,14 @@
                         onclick={() => editEvent(trophy)}
                     >
                         <div
-                            class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2"
+                            class="absolute top-4 right-4 flex gap-2"
                         >
                             <button
                                 onclick={(e) => {
                                     e.stopPropagation();
                                     editEvent(trophy);
                                 }}
+                                aria-label="Edit Event"
                                 class="p-2 bg-amber-50 text-amber-600 rounded-full hover:bg-amber-100"
                             >
                                 <Pencil size={14} />
@@ -825,13 +801,14 @@
                                 </div>
                                 <!-- Actions -->
                                 <div
-                                    class="absolute -top-3 -right-3 flex gap-1 z-20 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    class="absolute -top-3 -right-3 flex gap-1 z-20"
                                 >
                                     <button
                                         onclick={(e) => {
                                             e.stopPropagation();
                                             editEvent(event);
                                         }}
+                                        aria-label="Edit Event"
                                         class="bg-blue-100 text-blue-500 p-1 rounded-full hover:scale-110 shadow-sm"
                                         title="Edit Event"
                                     >

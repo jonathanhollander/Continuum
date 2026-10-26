@@ -192,7 +192,7 @@
                         class="h-32 bg-gradient-to-br from-orange-100 to-amber-50 relative p-6 group"
                     >
                         <div
-                            class="absolute top-4 left-4 flex gap-2 z-20 opacity-0 group-hover:opacity-100 transition-all"
+                            class="absolute top-4 left-4 flex gap-2 z-20"
                         >
                             <button
                                 onclick={(e) => {

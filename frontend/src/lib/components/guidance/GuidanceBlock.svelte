@@ -2,10 +2,13 @@
     import { slide, fly } from "svelte/transition";
     import { ChevronDown } from "lucide-svelte";
 
+    // Optional page guidance (card E3, CU-019): one collapsed "Why this matters"
+    // disclosure holding the description and the reason, so the form comes first.
     export let detailedDescription: string | undefined = undefined;
     export let whyMatters: string | undefined = undefined;
 
-    let showWhyMatters = false;
+    let open = false;
+    const bodyId = `guidance-${Math.random().toString(36).slice(2, 9)}`;
 </script>
 
 {#if detailedDescription || whyMatters}
@@ -13,38 +16,39 @@
         <div
             class="bg-primary/5 rounded-xl border border-primary/10 overflow-hidden backdrop-blur-sm"
         >
-            {#if detailedDescription}
+            <button
+                type="button"
+                data-testid="guidance-toggle"
+                aria-expanded={open}
+                aria-controls={bodyId}
+                class="w-full px-6 py-3 flex items-center justify-between text-sm font-medium text-primary hover:bg-primary/5 transition-colors text-left"
+                on:click={() => (open = !open)}
+            >
+                <span class="uppercase tracking-widest text-xs opacity-70"
+                    >Why this matters</span
+                >
+                <span
+                    class="transform transition-transform duration-300"
+                    class:rotate-180={open}
+                >
+                    <ChevronDown size={16} />
+                </span>
+            </button>
+
+            {#if open}
                 <div
-                    class="px-6 py-4 text-muted-foreground/80 leading-relaxed border-b border-primary/5 last:border-0"
+                    id={bodyId}
+                    data-testid="guidance-body"
+                    transition:slide
+                    class="px-6 pb-5 pt-3 space-y-3 text-muted-foreground/80 leading-relaxed border-t border-primary/10"
                 >
-                    {@html detailedDescription}
+                    {#if detailedDescription}
+                        <p>{@html detailedDescription}</p>
+                    {/if}
+                    {#if whyMatters}
+                        <p>{@html whyMatters}</p>
+                    {/if}
                 </div>
-            {/if}
-
-            {#if whyMatters}
-                <button
-                    class="w-full px-6 py-3 flex items-center justify-between text-sm font-medium text-primary hover:bg-primary/5 transition-colors text-left"
-                    on:click={() => (showWhyMatters = !showWhyMatters)}
-                >
-                    <span class="uppercase tracking-widest text-xs opacity-70"
-                        >Why this matters</span
-                    >
-                    <span
-                        class="transform transition-transform duration-300"
-                        class:rotate-180={showWhyMatters}
-                    >
-                        <ChevronDown size={16} />
-                    </span>
-                </button>
-
-                {#if showWhyMatters}
-                    <div
-                        transition:slide
-                        class="px-6 pb-5 pt-1 text-muted-foreground/80 leading-relaxed bg-primary/5 border-t border-primary/10"
-                    >
-                        {@html whyMatters}
-                    </div>
-                {/if}
             {/if}
         </div>
     </div>
