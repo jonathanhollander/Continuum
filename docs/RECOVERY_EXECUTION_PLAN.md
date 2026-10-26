@@ -303,6 +303,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | U18 | Legacy journal: header add on every tab, tab colour, search names (U0a-28) | `ui-standards-enforcer` / `general-purpose` | `routes/modules/legacy-journal/+page.svelte` | "Share a memory" stays on Ethical Will, Life Lessons and Accomplishments but always makes a Reflection; Accomplishments active tab orange; long titles run into the edit icon; searches unlabelled (:279 and the wisdom/accomplishment searches). Fix: Header add matches the open tab (or shows on Reflections only); one active-tab style; titles wrap clear of icons; searches named | Each tab: header add creates that tab's item; before/after 1440×900; 0 errors |
 | U19 | Video Start before the camera is ready (C5 seed) | `ui-standards-enforcer` / `general-purpose` | `lib/components/media/VideoRecorder.svelte` | `media/VideoRecorder.svelte:175-178` Start enabled with no stream; a click does nothing; "Camera Error" h3 (:149) dark on the `bg-slate-900/90` overlay (global h colour, U0a addendum). Fix: Start disabled until the stream is ready (existing wording) | 4 s camera delay: Start disabled then works; 0 errors |
 | U20 | Heirloom search filters nothing; uploader and custom fields unnamed (U12) | Heirlooms search box (now named) does not filter the list; the `VisionUploader` file input and `CustomFieldsManager` fields have no accessible names (shared components) | `routes/modules/heirlooms/+page.svelte` (search), `lib/components/VisionUploader.svelte` and `CustomFieldsManager.svelte` (names only; find their paths) | Search filters by item, story and recipient; uploader input and custom fields named with existing visible labels | Search narrows the list and clears; every page using the two components shows 0 unnamed fields; 0 errors |
+| U21 | Family Hub: "5 Videos Available" with no videos; edit panel hides a node (U5) | Learning Center badge counts the 5 entries in `EducationalResources.svelte`, which are scripts with no video links; the map's edit panel overlays the right-hand node | `lib/components/family/EducationalResources.svelte` (find path), the badge line in `family-hub/+page.svelte`, panel placement in `FamilyTreeGraph.svelte` | Badge says what is there (existing wording) or is left out; panel sits beside the map or the map shifts so every node stays visible | 1440×900 before/after; 0 errors |
 
  (decision 12; parallel track, approved by orchestrator diff review)
 
@@ -701,7 +702,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | U2 | ▶ | | |
 | U3 | ☑ | 2a5d5f6 | `/pulse` → `/modules/pulse` (307 in `+page.ts` `load`, query kept; old daisyUI page emptied); `/pulse/respond|portal|verify/[token]` untouched; nothing linked to bare `/pulse` (emails use `/portal/{token}`). Back does not loop; 0 errors |
 | U4 | ▶ | | |
-| U5 | ▶ | | |
+| U5 | ☑ | c3dfb19 | Family Hub: fake collection counts removed; Our Journey = 3 latest timeline events; blueprint counts contacts and reads `estateExecutorName`; stray `...` gone; Learning Center heading white; slideshow only with photos (no `alert()`); unknown memory types show title/text/date; no stock Unsplash default. `FamilyTreeGraph` rewritten in runes: members on an ellipse (overlapping pairs 16 → 0), dead physics and "Shake Graph" removed, empty map 600 → 135 px with Add Member, add panel empty placeholders, edits on a copy, Save fits. 0 errors. Findings → U21 |
 | U6 | ▶ | | |
 | U7 | ☑ | 57cb390 | `GriefSupportBanner` title, message and button use theme tokens (`text-foreground`, `/75`, `bg-card border-border`), so light and `theme-dark` both read: light title 1.14 → 10.7–11.1:1, button 1.13 → 14.4:1, message 2.1 → 5.6:1 on executor-toolkit, letters, medical, funeral; dark unchanged or better; button still opens grief support; 0 errors |
 | U8 | ▶ | | |
@@ -715,8 +716,9 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | U16 | ▶ | | |
 | U17 | ▶ | | |
 | U18 | ▶ | | |
-| U19 | ☐ (queued: 20-agent limit) | | |
-| U20 | ☐ (queued: 20-agent limit) | | |
+| U19 | ▶ | | |
+| U20 | ▶ | | |
+| U21 | ☐ (queued: 20-agent limit) | | |
 | G0 | ☐ (after Wave U) | | |
 | T0 | ☐ (after Wave U, with G0) | | |
 | V0 | ☐ (after Wave U, with G0 and T0) | | |
