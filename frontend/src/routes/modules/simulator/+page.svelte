@@ -75,14 +75,14 @@
                 check: "Digital ID Backup",
                 status: hasIDs,
                 msg: hasIDs
-                    ? "Passport/ID copies found in Vault."
+                    ? "A copy of your passport or ID saved in your Vault."
                     : "A copy of your passport or ID in the Vault keeps you covered.",
             });
             checks.push({
                 check: "Card List",
                 status: hasCards,
                 msg: hasCards
-                    ? "Financial accounts listed."
+                    ? "Your accounts and cards saved in Financial Accounts."
                     : "Listing your cards in Financial Accounts makes them quick to replace.",
             });
             overallStatus = hasIDs && hasCards ? "pass" : "fail";
@@ -90,8 +90,9 @@
 
         if (id === "medical") {
             // A directive from the Medical page, or a vault document named as one
+            const hasDirective = directives.length > 0;
             const hasHealth =
-                directives.length > 0 ||
+                hasDirective ||
                 docs.some((d) =>
                     named(d, /health|living will|advance directive|medical directive/),
                 );
@@ -101,7 +102,9 @@
                 check: "Medical Directive",
                 status: hasHealth,
                 msg: hasHealth
-                    ? "Healthcare Directive found."
+                    ? hasDirective
+                        ? "Healthcare directive saved in Health & Medical."
+                        : "Healthcare directive saved in your Vault."
                     : "A healthcare directive lets your doctors follow your wishes.",
             });
             checks.push({
