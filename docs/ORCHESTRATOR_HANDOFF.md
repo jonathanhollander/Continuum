@@ -1,33 +1,35 @@
 # Orchestrator Handoff — RECOVERY_EXECUTION_PLAN
 
-**Last Updated:** 2026-10-26 14:45 EST
+**Last Updated:** 2026-10-26 14:50 EST
 
 This document is for an agent taking over as orchestrator of `docs/RECOVERY_EXECUTION_PLAN.md` (the plan, the only task board). Read this file, then the plan's "Owner decisions", "Orchestration loop", "Section status" and "Card status" sections. Source code and git win over anything written here.
 
 ---
 
-## 1. Where things stand (2026-10-26 14:45 EST)
+## 1. Where things stand (2026-10-26 14:50 EST)
 
 **Done (✅ in Section status):** Waves A, B, C, D, E, U, G, T, V; O1/O2 for every wave and for the release; R0; **Release** (browser test `docs/reviews/2026-10-26-release/BROWSER-TEST.md`; its defects X292 uploads → Railway volume, X293 Full Record edit, X294 timeline heading all fixed and verified live).
 
-**Only Wave X remains open.** Everything is merged and pushed; local main = origin/main; no uncommitted work. Every X card is ☑ except:
+**Only Wave X remains open.** Everything is merged and pushed; local main = origin/main.
+
+> **LOOPS PAUSED by the owner (2026-10-26 14:50 EST): "pause all loops until i tell you to start them again".** The 10-minute plan-completion cron (`522facdb`) was deleted. Do **not** create a new loop/cron until the owner says to start again. The loop prompt to recreate it (CronCreate, every 10 minutes) is in §9.
 
 | Card | State | What finishes it |
 |---|---|---|
-| **X302** | ☑ verified live: `POST /api/auth/passkey/login/start` 500 → 200 (deploy 9a8d252). | Owner retries the passkey sign-in; if it fails at the finish step, read `railway logs` for `passkey_login_finish`. |
-| **X5** | ◐ Code ready on `card/X5` (`6258dee`, worktree `.worktrees/X5`): removes the jh@continuum.estate password bypass (backend login + login-page magic-link branch, `backend/verify_auth.py`, CLAUDE.md dev-login line). **Merge held** until the owner has signed in once with a real password or passkey (plan rule). Production users: jh@continuum.estate (id 39) has no password and no passkey → after merge it can sign in only by email link; continuum@sincuerda.com (id 38) has 1 passkey. | Owner confirms a successful passkey sign-in → `git merge card/X5`, remove worktree/branch, push, wait for deploy, verify live: `jh@continuum.estate` + password `x` → 401. Then dispatch **X301**. |
-| **X301** | ☐ after X5 merge | Smoke-test fallback to the bypass (`scripts/smoke_test.py:434`) removed; untrack `backend/logs/continuum.log.1`. |
+| **X302** | ☑ verified live: passkey sign-in start 500 → 200; owner then signed in with a passkey (audit `auth_passkey` continuum@sincuerda.com 18:36 UTC). | — |
+| **X5** | ☑ merged `0e5e34c` after the owner's passkey sign-in. Bypass removed (backend login, login-page magic-link branch, `backend/verify_auth.py`, CLAUDE.md line). Deploy of `0e5e34c` was in progress at handoff. | Confirm live: wait for `SUCCESS 0e5e34c` (§5), then `curl -s -X POST https://continuum.estate/api/auth/token -H 'Content-Type: application/x-www-form-urlencoded' -d 'username=jh%40continuum.estate&password=x' -o /dev/null -w "%{http_code}"` → 401. Record the result in the X5 row. |
+| **X301** | ▶ agent dispatched (worktree `.worktrees/X301`, branch `card/X301`, port 35777): remove the smoke test's jh@ fallback (`scripts/smoke_test.py:434`), `git rm --cached backend/logs/continuum.log.1`, `backend/logs/` in .gitignore. | When `git log main..card/X301` shows a commit: review the diff, merge, remove worktree/branch, tick, push. If no commit and the previous session is gone, re-dispatch into the same worktree. |
 | **X6** | Owner | Owner rotates the OpenRouter key. Report only. |
 | **X141** | Owner | Owner runs `railway config apply` (plan row has the CLI workaround). Branch `card/X141` 1955d51 not merged. |
 | **X154** | Owner decision | Recommend yes (plan row). |
 
-**After X5 merges, live proof scripts can no longer sign in** (they use the jh@ bypass). Live verification then needs a real test account the owner provides; do not create credentials yourself.
+**Live sign-in for proofs is gone** (X5). The `$S/pw/*live.mjs` scripts and `rllib.mjs` sign in as jh@ with password `x` and now get 401. Live verification needs a test account the owner provides; do not create credentials yourself. Read-only checks (`curl` on public endpoints, `railway logs`, DB `SELECT`s via the Postgres service's `DATABASE_PUBLIC_URL`) still work.
 
-**When X302, X5 and X301 are ☑:** mark Wave X ✅ (owner items reported, not waited on), verify against `git log` and live `/api/health` (`environment: production`), delete the loop cron if you own one (the previous session's cron is `522facdb`; it only exists in that session), and send the owner the final report with the open owner items (§8).
+**When X301 is ☑:** mark Wave X ✅ (owner items reported, not waited on), verify against `git log` and live `/api/health` (`environment: production`), and send the owner the final report with the open owner items (§8).
 
 ## 2. Agents in flight
 
-None. (X5's agent finished; its branch is waiting for the owner.)
+- X301 (see above). Nothing else.
 
 ## 3. Production facts learned this session
 
@@ -125,3 +127,15 @@ Claude-Session: https://claude.ai/code/session_01JobVAvsGwJBD2HfmWKyCVM
 - **Also open in the plan:** E8, X138, X146, MAX_UPLOAD_SIZE, C5, D2 — read their rows.
 - **Leftover "before" worktrees for the owner to remove** (`rm` refused): `.worktrees/` G4-before, O1-GTV, V1-C1-before, V1-C4-before, V1-P6a/b/c/g-before, V1-P7-before, X215/X218/X230/X233/X234/X253-before, and six detached worktrees under `$S/` (`git worktree list` shows them). `git worktree remove --force <path>` for each, then `git worktree prune`.
 - Already done, for the report: Help "Pro Directory" tab removed (X250); children's grief guide lines rewritten positive; treasure-hunt fee warning softened.
+
+## 9. Loop prompt (paused — recreate only when the owner says to start again)
+
+CronCreate, every 10 minutes, recurring, with this prompt verbatim:
+
+```
+Plan-completion loop (owner request 2026-10-26). You are the orchestrator for docs/RECOVERY_EXECUTION_PLAN.md in /Users/jonathanhollander/AI Code/Continuum. Goal: Waves A–E complete, Wave X (out-of-build bugs, decision 12) complete, Wave U (final UI/UX review + improvements, decision 13, after A–E and X), O1/O2 per wave, R0, then Release — fastest correct route, no added gates or stoppages, ponytail style, follow the plan's Orchestration loop and owner decisions exactly.
+1. Read the Card status and Section status tables in the plan.
+2. If every row (A–E, X cards, U0 and U cards, O1/O2 per wave, O1/O2 release, R0, Release) is ☑ and every section ✅ (X6 is an owner step: report it rather than wait on it): verify that against git log and the live site's /api/health, then delete this cron job (CronList → CronDelete) and report completion. Stop.
+3. Otherwise advance ALL tracks: review the diffs (git diff main...card/<id>) of any agent that reported done and isn't reviewed yet; merge, clean up the worktree and branch, and tick the card; then dispatch the next build cards the wave order allows, any Wave X card whose owned files are not owned by a card in flight (as many X agents as needed), and — once A–E and X are all ☑ — U0 then the U cards. Each card gets its own .worktrees/<card-id> worktree and the brief template. Turn every new finding from agent reports into a card in the same turn (build path → the owning B–E card or a new one; out-of-build → X; UI/UX polish → E or U). Don't redispatch a card that's already ▶ and still running. Don't re-check finished cards without new evidence.
+4. If nothing can advance because agents are still running, do nothing and end the turn silently.
+```
