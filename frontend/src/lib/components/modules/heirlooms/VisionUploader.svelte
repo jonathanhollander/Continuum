@@ -54,6 +54,7 @@
     export function replaceWithAddress(address: string) {
         sequence++;
         selectedFile = null;
+        if (fileInput) fileInput.value = "";
         uploading = false;
         uploadFailed = false;
         message = null;
