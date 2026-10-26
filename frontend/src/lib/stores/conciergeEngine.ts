@@ -6,18 +6,19 @@ import { goto } from '$app/navigation';
 import { browser } from '$app/environment';
 import { navGroups } from '../config/navigation';
 
+// Keyed by the navigation label (navigation.ts), which setContext uses as the context name.
 const PIVOT_GREETINGS: Record<string, string> = {
-    'Real Estate': "We've moved to your properties. Taking care of your home—the place where so many memories are made—is a beautiful way to protect your legacy. Where shall we start?",
+    'Property & Real Estate': "We've moved to your properties. Taking care of your home—the place where so many memories are made—is a beautiful way to protect your legacy. Where shall we start?",
     'Financial Accounts': "Securing your financial resources is a vital act of protection for those you love. Which account shall we document first to ensure they're provided for?",
-    'Document Vault': "Your digital life is part of your story. Let's make sure your family has the keys they'll need. Do you have a password manager we should record the location of?",
-    'Health & Medical': "These decisions are about your dignity and care. It takes courage to think through these. Have you designated a healthcare proxy yet?",
+    'Document Vault': "Legal foundations bring such peace of mind to a family. Do you have a copy of your Will or Trust ready to secure here?",
+    'Health & Medical': "These decisions are about your dignity and care. It takes courage to think through these. Have you designated a healthcare proxy?",
     'Family & Contacts': "Legacy is, above all, about the people we love. Who is the first person you'd like to include in your circle of trust?",
-    'Legacy Letters': "Your voice is a gift that will last forever. These letters will mean so much. Who would you like to speak to first?",
-    'Life Timeline': "Every life is a profound story. Which milestone should we honor first on your timeline?",
-    'Insurance Portfolio': "Insurance is a safety net you've built for your family's future. Do you have any active policies we should record to ensure they're never lost?",
-    'Digital Guardian': "The Pulse system is like a steady hand, making sure you're okay. Who would you trust most to respond if you're ever unable to check in?",
-    'Heirloom Registry': "Objects carry the stories of our lives. What's a cherished heirloom you'd like to protect today?",
-    'Legal Documents': "Legal foundations bring such peace of mind to a family. Do you have a copy of your Will or Trust ready to secure here?"
+    'Legacy Correspondence': "Your voice is a gift that will last forever. These letters will mean so much. Who would you like to speak to first?",
+    'The Life Timeline': "Every life is a profound story. Which milestone should we honor first on your timeline?",
+    'Insurance Portfolio': "Insurance is a safety net you've built for your family's future. Do you have any active policies we should record so they're always easy to find?",
+    'Digital Guardian': "Your digital life is part of your story. Let's make sure your family has the keys they'll need. Do you have a password manager we should record the location of?",
+    'Wellness Check-in': "The Pulse system is like a steady hand, making sure you're okay. Who would you trust most to respond first when a check-in needs attention?",
+    'Heirlooms & Treasures': "Objects carry the stories of our lives. What's a cherished heirloom you'd like to protect today?"
 };
 
 export interface Message {
@@ -132,17 +133,17 @@ function createConciergeEngine() {
 
         // Proactive Contextual Greetings
         const contextGreetings: Record<string, string> = {
-            'Real Estate': "I'm here to help you catalog your assets. Your home is the foundation of so much family history—where shall we begin?",
+            'Property & Real Estate': "I'm here to help you catalog your assets. Your home is the foundation of so much family history—where shall we begin?",
             'Financial Accounts': "Let's secure your financial legacy. Thinking ahead about these resources is such a kind thing to do for your family. Which account is most important to record first?",
-            'Document Vault': "Your digital legacy is vital. Let's ensure your loved ones aren't locked out of the accounts that matter. Do you have a list of priority digital accounts to secure?",
-            'Health & Medical': "Medical clarity ensures your wishes are honored with dignity. Have you designated a healthcare proxy or created a living will yet?",
+            'Document Vault': "Building a solid legal foundation is an act of great care. Do you have a copy of your Will or Trust ready to upload?",
+            'Health & Medical': "Medical clarity ensures your wishes are honored with dignity. Have you designated a healthcare proxy or created a living will?",
             'Family & Contacts': "Legacy is all about the people you care for. Who is the first person you'd like to include in your circle of trust?",
-            'Legacy Letters': "Your voice is a treasure for those you leave behind. Who would you like to write your first legacy letter to?",
-            'Life Timeline': "Your life is a story worth telling. What is a major life milestone we should honor first on your timeline?",
+            'Legacy Correspondence': "Your voice is a treasure for those you leave behind. Who would you like to write your first legacy letter to?",
+            'The Life Timeline': "Your life is a story worth telling. What is a major life milestone we should honor first on your timeline?",
             'Insurance Portfolio': "Protection brings peace of mind. Do you have any active life or property insurance policies we should track to make sure your family is secure?",
-            'Digital Guardian': "The Pulse system is here to watch over you. Who should be your primary responder, the person you trust most to check in if we don't hear from you?",
-            'Heirloom Registry': "Every object has a story and a connection. What's a meaningful heirloom you'd like to register today?",
-            'Legal Documents': "Building a solid legal foundation is an act of great care. Do you have a copy of your Will or Trust ready to upload?"
+            'Digital Guardian': "Your digital legacy is vital. Let's make sure your loved ones can reach the accounts that matter. Do you have a list of priority digital accounts to secure?",
+            'Wellness Check-in': "The Pulse system is here to watch over you. Who should be your primary responder, the person you trust most to check in on you?",
+            'Heirlooms & Treasures': "Every object has a story and a connection. What's a meaningful heirloom you'd like to register today?"
         };
 
         let prefix = "";
