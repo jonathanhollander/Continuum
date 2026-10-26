@@ -32,9 +32,10 @@ class Asset(SQLModel, table=True):
     custom_attributes: Optional[str] = Field(default="{}")
     valuation: Optional[float] = None
     location: Optional[str] = None
-    purchaseDate: Optional[datetime] = None
+    purchaseDate: Optional[str] = None  # YYYY-MM-DD text; update_item setattr cannot coerce str to datetime
     maintenanceSchedule: Optional[str] = None # JSON string
     thumbnail: Optional[str] = None
+    evidence: Optional[str] = None  # JSON text: property evidence list (UI keeps an array)
 
     beneficiary_id: Optional[int] = None
     
@@ -60,6 +61,9 @@ class Asset(SQLModel, table=True):
     image: Optional[str] = None
     is_closed: bool = Field(default=False)
     closure_date: Optional[str] = None
+    # Digital asset fields sent by digital-guardian
+    preference: Optional[str] = None
+    description: Optional[str] = None
 
 # --- HEIRLOOMS ---
 class Heirloom(SQLModel, table=True):
@@ -104,7 +108,7 @@ class FinancialAccount(SQLModel, table=True):
     closure_date: Optional[str] = None
     valueHistory: Optional[str] = None  # JSON string of array
     closureNotes: Optional[str] = None
-    customAttributes: Optional[str] = None  # Alias for custom_attributes (camelCase)
+    documents: Optional[str] = None  # uploaded statement reference (AssetManager)
 
 # --- HOME MANUAL ---
 class Vendor(SQLModel, table=True):

@@ -124,7 +124,21 @@ def convert_keys(obj, conv):
         return obj
     out = {}
     for k, v in obj.items():
-        out[conv(k)] = convert_keys(v, conv)
+        out[conv(k)] = v if k in ("custom_attributes", "customAttributes") else convert_keys(v, conv)
+    return out
+
+
+# sync.svelte.ts CAMEL_WIRE_KEYS / JSON_TEXT_WIRE_KEYS / toWire (B1)
+CAMEL_WIRE_KEYS = {"ownershipDetails", "purchaseDate", "maintenanceSchedule", "accountNumber",
+                   "ownershipPercentage", "loginUrl", "beneficiaryEmail", "valueHistory", "closureNotes",
+                   "paymentMethod", "cancellationInstructions", "nextBilling"}
+
+
+def to_wire(obj):
+    out = convert_keys(obj, lambda k: k if k in CAMEL_WIRE_KEYS else to_snake(k))
+    for k in ("valueHistory", "maintenanceSchedule", "evidence"):
+        if isinstance(out.get(k), (list, dict)):
+            out[k] = js_json(out[k])
     return out
 
 
@@ -144,10 +158,15 @@ def js_json(x):
 # ---------------------------------------------------------------------------
 # Store mappers (ported 1:1)
 # ---------------------------------------------------------------------------
-def financial_asset_mapper(item):  # financialAssetsStore.svelte.ts:47-57
+def financial_asset_mapper(item):  # financialAssetsStore.svelte.ts parseHistory + mapper (B1)
     if not truthy(item):
         return item
     vh = g(item, "valueHistory")
+    if isinstance(vh, str) and vh:
+        try:
+            vh = json.loads(vh)
+        except ValueError:
+            pass
     return {**item,
             "is_closed": nn(g(item, "is_closed"), g(item, "isClosed"), False),
             "closure_date": nn(g(item, "closure_date"), g(item, "closureDate")),
@@ -165,10 +184,33 @@ def digital_asset_mapper(item):  # digitalAssetsStore.svelte.ts:54-65
     if not truthy(item):
         return item
     return {**item,
+            "name": js_or(js_or(js_or(g(item, "name"), g(item, "platform")), g(item, "description")),
+                          "Digital account"),  # B1: Asset.name is required
             "isClosed": nn(g(item, "is_closed"), g(item, "isClosed")),
             "closureDate": nn(g(item, "closure_date"), g(item, "closureDate")),
             "is_closed": nn(g(item, "isClosed"), g(item, "is_closed")),
             "closure_date": nn(g(item, "closureDate"), g(item, "closure_date"))}
+
+
+def parse_evidence(v):  # propertyStore.svelte.ts parseEvidence (B1)
+    if isinstance(v, list) or nullish(v):
+        return UNDEF if nullish(v) else v
+    if isinstance(v, str) and v:
+        try:
+            p = json.loads(v)
+            if isinstance(p, list):
+                return p
+        except ValueError:
+            pass
+    return []
+
+
+def property_mapper(item):  # propertyStore.svelte.ts propertyMapper (B1)
+    if not truthy(item):
+        return item
+    pd = g(item, "purchaseDate")
+    return {**item, "purchaseDate": pd[:10] if isinstance(pd, str) and pd else pd,
+            "evidence": parse_evidence(g(item, "evidence"))}
 
 
 def heirloom_mapper(item):  # heirloomStore.svelte.ts:47-56
@@ -336,7 +378,7 @@ class Sync:
         return self.mapper(x) if self.mapper else x
 
     def create(self, data):
-        payload = convert_keys(self._map(data), to_snake)
+        payload = to_wire(self._map(data))
         if isinstance(payload.get("id"), str) and len(payload["id"]) > 10:
             del payload["id"]
         payload = strip_undef(payload)
@@ -346,7 +388,7 @@ class Sync:
 
     def update(self, local_item, updates):
         updated = {**local_item, **updates}
-        payload = convert_keys(self._map(updated), to_snake)
+        payload = to_wire(self._map(updated))
         for k in ("id", "user_id", "created_at", "updated_at"):
             payload.pop(k, None)
         payload = strip_undef(payload)
@@ -455,7 +497,7 @@ def run(c):
         "beneficiaries": "Synthetic Son", "notes": "Joint with spouse",
         "loginUrl": "https://bank.example.test", "beneficiaryEmail": "son@example.test",
         "image": "", "is_closed": False, "closure_date": "",
-        "valueHistory": "[10000,12500]", "customAttributes": "{}"},
+        "closureNotes": "", "documents": "", "valueHistory": "[10000,12500]", "customAttributes": "{}"},
         note="closureNotes ('Transfer Instructions') and documents (uploader) are not in the UI create object at all")
     if local:
         a = local
@@ -483,7 +525,7 @@ def run(c):
         note="no debt/liability type exists in the UI; value is counted as an asset")
 
     # 2. Property (property/+page.svelte:67-78, 194-245; propertyStore.addItem adds a UUID id).
-    prop = Sync(c, "properties")
+    prop = Sync(c, "properties", property_mapper)
     prop_created, _ = check_create("property", "CU-001", prop, {
         "name": "Synthetic House", "type": "Real Estate", "location": "1 Example Lane",
         "valuation": 350000, "status": "Owned", "ownershipDetails": "Joint with spouse",
