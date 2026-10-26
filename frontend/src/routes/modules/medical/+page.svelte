@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { directiveSync } from "$lib/stores/medicalStore.svelte";
+    import { directiveSync, profileSync } from "$lib/stores/medicalStore.svelte";
     import { formSaveAttempt } from "$lib/utils/formSaveAttempt";
     import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { readCustom } from "$lib/utils/customFields";
@@ -66,6 +66,8 @@
     });
 
     let showProfileEdit = $state(false);
+    let savingProfile = $state(false);
+    const profileFailures = new WeakMap<object, string>();
     let tempProfile = $state({
         organDonor: medicalStore.profile.organDonor,
         bloodType: medicalStore.profile.bloodType,
@@ -94,20 +96,34 @@
     }
 
     async function saveProfile() {
+        if (savingProfile) return;
+        const form = tempProfile;
+        const fields = JSON.stringify(form);
+        const submitted = { ...form };
+        const ownerName = estateProfile.current.ownerName || "User";
+        savingProfile = true;
         try {
-            await medicalStore.updateProfile(tempProfile);
-        } catch {
-            return; // the manager already showed the one gentle message
+            const superseded = profileFailures.get(form);
+            if (superseded) profileSync.releaseRecovery(superseded);
+            await medicalStore.updateProfile(submitted);
+            profileFailures.delete(form);
+            // New typing, or a newly opened editor, still belongs to the person editing.
+            if (tempProfile === form && JSON.stringify(form) === fields) showProfileEdit = false;
+            activityLog.logEvent({
+                module: "Health & Medical",
+                action: "UPDATE",
+                entityType: "Medical Profile",
+                entityId: "profile",
+                entityName: "Health Data",
+                userContext: ownerName,
+            });
+        } catch (error) {
+            const recoveryId = (error as { recoveryId?: string } | null)?.recoveryId;
+            if (recoveryId) profileFailures.set(form, recoveryId);
+            // The manager keeps the submitted draft and shows its gentle retry message.
+        } finally {
+            savingProfile = false;
         }
-        showProfileEdit = false;
-        activityLog.logEvent({
-            module: "Health & Medical",
-            action: "UPDATE",
-            entityType: "Medical Profile",
-            entityId: "profile",
-            entityName: "Health Data",
-            userContext: estateProfile.current.ownerName || "User",
-        });
     }
 
     const saveAttempt = formSaveAttempt(directiveSync);
@@ -418,6 +434,8 @@
                             <div class="flex gap-2">
                                 <button
                                     onclick={saveProfile}
+                                    disabled={savingProfile}
+                                    aria-busy={savingProfile}
                                     class="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-xl font-bold text-sm"
                                     >Save my updates</button
                                 >
