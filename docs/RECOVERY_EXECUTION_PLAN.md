@@ -303,8 +303,8 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | B0 | ☑ | 6f14c65 | Fresh DB, re-run, and simulated production schema: every model column present; second upgrade a no-op; smoke run: 0 "no column named" errors (5 PASS, 12 FAIL left for B1–C10). Also added 6 models missing from `alembic/env.py` |
 | B0.1 | ☑ | 480ac85 | Simulated production DB with a row: `institution`, `account_type` now nullable, row intact, NULL insert succeeds; re-run no-op; fresh DB fine. PostgreSQL path is a plain `DROP NOT NULL`, not run locally |
 | B0.2 | ☑ | c78a6b5 | Simulated production DB, 3 synthetic legacy rows: name/type/value filled (0 kept as 0), a pre-set name not overwritten, legacy columns unchanged; fresh DB fine. `account_number_encrypted` deliberately not copied |
-| B1 | ◐ (sent back: frontend never built or type-checked) | 86b9f9d | Smoke run 3 on a fresh DB: financial create/edit, debt, property, subscription, digital asset, heirloom PASS |
-| B2 | ☐ | | |
+| B1 | ☑ | 86b9f9d | Smoke run on a fresh DB: financial create/edit, debt, property, subscription, digital asset, heirloom PASS; build passes; svelte-check 288 = baseline, no new errors in its files. Browser save not done (no browser tool): covered by R0 |
+| B2 | ▶ | | |
 | B3 | ☐ | | |
 | B4 | ☐ | | |
 | B5 | ☐ | | |
@@ -341,7 +341,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X15 | ▶ | | |
 | X16 | ☑ | 10b25d0 | Fresh DB: GET prefs 200 `{}`, PATCH 200, GET returns the saved value (also fixed: PATCH mutated the JSON in place so it never saved). Production column is `json`, model `JSON`: same type; not run on the simulated schema |
 | X17 | ▶ | | |
-| X13 | ☐ (after B1: shares `estate_models.py`) | | |
+| X13 | ▶ | | |
 | X11 | ☑ | 1007f48 | `/api-guide` 200 html; `/api`, `/api/nope` 404 JSON; `/modules/x` 200; traversal no leak |
 | X5 | ☐ | | |
 | X6 | ☐ (owner) | | |
