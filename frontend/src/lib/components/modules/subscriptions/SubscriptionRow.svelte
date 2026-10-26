@@ -12,9 +12,8 @@
 
     let {
         sub,
-        onCancel,
         onGenerateLetter,
-    }: { sub: Record<string, any>; onCancel?: () => void; onGenerateLetter: () => void } = $props();
+    }: { sub: Record<string, any>; onGenerateLetter: () => void } = $props();
 
     let expanded = $state(false);
 
@@ -40,8 +39,10 @@
     class="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
 >
     <!-- Main Row -->
-    <div
-        class="p-4 flex items-center justify-between cursor-pointer"
+    <button
+        type="button"
+        class="w-full text-left p-4 flex items-center justify-between cursor-pointer focus-visible:outline-2 focus-visible:outline-primary"
+        aria-expanded={expanded}
         onclick={() => (expanded = !expanded)}
     >
         <div class="flex items-center gap-4">
@@ -88,7 +89,7 @@
                 </span>
             {/if}
         </div>
-    </div>
+    </button>
 
     <!-- Cancellation Guide (Expanded) -->
     {#if expanded}
