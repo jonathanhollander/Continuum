@@ -28,9 +28,9 @@
     let listError = $state("");
 
     const tierLabels: Record<string, string> = {
-        tier_1_escalation: "Tier 1 (Immediate Partners)",
+        tier_1_escalation: "Tier 1 (closest partners)",
         tier_2_escalation: "Tier 2 (Family)",
-        tier_3_escalation: "Tier 3 (Local/Emergency)",
+        tier_3_escalation: "Tier 3 (nearby help)",
     };
     function tierLabel(condition: string): string {
         return tierLabels[condition] ?? condition.replaceAll("_", " ");
@@ -97,7 +97,7 @@
     }
 
     async function deleteItem(id: number) {
-        if (!(await askConfirm("Remove these instructions from the vault? This action is permanent.")))
+        if (!(await askConfirm("Remove these instructions from your vault? You can add them again whenever you like.")))
             return;
         listError = "";
         try {
@@ -146,16 +146,16 @@
             </div>
             <div class="space-y-2 text-center md:text-left">
                 <h2 class="text-xl font-medium text-white">
-                    Digital Dead-Drop Protocols
+                    Notes for your guardians
                 </h2>
                 <p class="text-slate-400 text-sm leading-relaxed max-w-xl">
                     Store sensitive instructions like <span
                         class="text-indigo-300">gate codes</span
                     >, <span class="text-indigo-300">home keys</span>, and
                     <span class="text-indigo-300">pet care steps</span>. They
-                    stay private, and are shared only with the guardians you
-                    choose, when the time comes: once an escalation reaches the
-                    tier you set for each item.
+                    stay private until the time comes: once an escalation
+                    reaches the tier you set for an item, every guardian the
+                    escalation has reached can read it.
                 </p>
             </div>
         </div>
@@ -177,7 +177,7 @@
                     onclick={cancelEdit}
                     class="ml-auto text-xs text-slate-400 hover:text-slate-200 underline"
                 >
-                    Stop editing
+                    Set this aside
                 </button>
             {/if}
         </div>
@@ -193,18 +193,18 @@
                 />
             </div>
             <div class="space-y-2">
-                <label for="vault-item-unlock" class="text-xs text-slate-500 ml-1">Unlock At</label>
+                <label for="vault-item-unlock" class="text-xs text-slate-500 ml-1">Share with</label>
                 <select
                     id="vault-item-unlock"
                     bind:value={newItem.unlock_condition}
                     class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:border-indigo-500/50 outline-none"
                 >
                     <option value="tier_1_escalation"
-                        >Tier 1 (Immediate Partners)</option
+                        >Tier 1 (closest partners)</option
                     >
                     <option value="tier_2_escalation">Tier 2 (Family)</option>
                     <option value="tier_3_escalation"
-                        >Tier 3 (Local/Emergency)</option
+                        >Tier 3 (nearby help)</option
                     >
                 </select>
             </div>
@@ -215,7 +215,7 @@
             <textarea
                 id="vault-item-content"
                 bind:value={newItem.content}
-                placeholder="The instructions to reveal..."
+                placeholder="What they should know..."
                 rows="3"
                 class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:border-indigo-500/50 outline-none font-mono"
             ></textarea>
@@ -375,18 +375,18 @@
                 </div>
 
                 <h3 class="font-serif font-bold text-2xl text-slate-200 mb-4">
-                    Secrets that reveal themselves when needed
+                    Notes kept ready for when they are needed
                 </h3>
 
                 <div class="mb-6 bg-slate-800/50 rounded-xl p-5 border border-slate-700 text-left">
                     <p class="text-slate-300 leading-relaxed">
                         <strong class="text-indigo-300">Some information is best kept for when it's truly needed.</strong>
                         Gate codes, safe combinations, pet feeding instructions, or where you keep the spare key—these are things your trusted contacts
-                        only need access to in an emergency.
+                        will be glad to have if something happens.
                     </p>
                     <p class="text-slate-400 mt-3 leading-relaxed">
-                        The Pulse Vault keeps these private, and shares them only with the guardians you choose, when the time comes:
-                        once an escalation reaches the tier you set. It's peace of mind that the people you trust will have what they need.
+                        The Pulse Vault keeps these private until the time comes: once an escalation reaches the tier you set,
+                        every guardian it has reached can read them. It's peace of mind that the people you trust will have what they need.
                     </p>
                 </div>
 
@@ -395,7 +395,7 @@
                 </p>
 
                 <p class="text-xs text-slate-600 mt-4">
-                    Add protocols using the form above. They'll appear here once saved.
+                    Notes you save in the form above will appear here.
                 </p>
             </div>
         {/if}

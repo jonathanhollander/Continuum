@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { Clock, Smartphone, Globe, Mail } from "lucide-svelte";
+    import { Clock, Smartphone, Mail, HeartHandshake } from "lucide-svelte";
     import { fade } from "svelte/transition";
     import { apiGet } from "$lib/api/client";
 
@@ -8,10 +8,35 @@
     let loading = $state(true);
     let filterMethod = $state("all");
 
-    // Reactive derived helper (simple filter)
+    // Stored methods (routers/pulse.py): manual (dashboard tap), magic_link (email link),
+    // guardian_snooze / guardian_confirmation (a guardian checked on the owner).
+    const filters = [
+        { id: "all", label: "All", methods: [] as string[] },
+        { id: "manual", label: "Manual", methods: ["manual", "biometric"] },
+        { id: "email", label: "Email link", methods: ["magic_link", "email_link"] },
+        { id: "guardian", label: "Guardian", methods: ["guardian_snooze", "guardian_confirmation"] },
+    ];
     function getFilteredHistory() {
-        if (filterMethod === "all") return history;
-        return history.filter((h) => h.method === filterMethod);
+        const f = filters.find((x) => x.id === filterMethod);
+        if (!f || f.id === "all") return history;
+        return history.filter((h) => f.methods.includes(h.method));
+    }
+
+    const isGuardian = (method: string) => method?.startsWith("guardian_");
+    // "Marked OK by Gil" / "Confirmed by Gil" -> "Gil"
+    const guardianName = (note: string | null) =>
+        (note ?? "").split(" by ").slice(1).join(" by ") || "A guardian";
+
+    function getLabel(checkin: any) {
+        if (isGuardian(checkin.method)) return `${guardianName(checkin.note)} checked on you`;
+        if (checkin.method === "magic_link") return "You checked in from your email link";
+        return "You checked in";
+    }
+    // Notes the owner wrote; the app's own markers are left out
+    function getNote(checkin: any) {
+        if (isGuardian(checkin.method)) return null;
+        const note = (checkin.note ?? "").trim();
+        return note && note !== "Manual Dashboard Tap" && note !== "One-Click Link" ? note : null;
     }
 
     onMount(async () => {
@@ -28,12 +53,14 @@
         switch (method) {
             case "manual":
                 return Smartphone;
-            case "web":
-                return Globe;
             case "biometric":
-                return Smartphone; // Use smartphone for bio too for now
-            case "email":
+                return Smartphone;
+            case "magic_link":
+            case "email_link":
                 return Mail;
+            case "guardian_snooze":
+            case "guardian_confirmation":
+                return HeartHandshake;
             default:
                 return Clock;
         }
@@ -49,7 +76,7 @@
         <a
             href="/modules/pulse"
             class="text-sm text-teal-400 hover:text-teal-300 transition-colors"
-            >Back to Dashboard</a
+            >Back to Wellness Check-in</a
         >
     </div>
 
@@ -59,45 +86,20 @@
     >
         <span
             class="text-xs text-slate-500 font-bold uppercase tracking-widest"
-            >Filter By:</span
+            >Show:</span
         >
 
-        <button
-            onclick={() => (filterMethod = "all")}
-            class="px-3 py-1 rounded-full text-xs font-medium transition-colors {filterMethod ===
-            'all'
-                ? 'bg-teal-500 text-white'
-                : 'bg-slate-800 text-slate-400 hover:text-white'}"
-        >
-            All
-        </button>
-        <button
-            onclick={() => (filterMethod = "manual")}
-            class="px-3 py-1 rounded-full text-xs font-medium transition-colors {filterMethod ===
-            'manual'
-                ? 'bg-teal-500 text-white'
-                : 'bg-slate-800 text-slate-400 hover:text-white'}"
-        >
-            Manual
-        </button>
-        <button
-            onclick={() => (filterMethod = "web")}
-            class="px-3 py-1 rounded-full text-xs font-medium transition-colors {filterMethod ===
-            'web'
-                ? 'bg-teal-500 text-white'
-                : 'bg-slate-800 text-slate-400 hover:text-white'}"
-        >
-            Web
-        </button>
-        <button
-            onclick={() => (filterMethod = "email")}
-            class="px-3 py-1 rounded-full text-xs font-medium transition-colors {filterMethod ===
-            'email'
-                ? 'bg-teal-500 text-white'
-                : 'bg-slate-800 text-slate-400 hover:text-white'}"
-        >
-            Email
-        </button>
+        {#each filters as f (f.id)}
+            <button
+                onclick={() => (filterMethod = f.id)}
+                class="px-3 py-1 rounded-full text-xs font-medium transition-colors {filterMethod ===
+                f.id
+                    ? 'bg-teal-500 text-white'
+                    : 'bg-slate-800 text-slate-400 hover:text-white'}"
+            >
+                {f.label}
+            </button>
+        {/each}
     </div>
 
     {#if loading}
@@ -118,7 +120,11 @@
                 >
                     <div class="flex items-center gap-4">
                         <div
-                            class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400"
+                            class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center {isGuardian(
+                                checkin.method,
+                            )
+                                ? 'text-teal-400'
+                                : 'text-slate-400'}"
                         >
                             <Icon
                                 class="w-5 h-5"
@@ -126,10 +132,13 @@
                         </div>
                         <div>
                             <div class="text-slate-200 font-medium">
-                                {checkin.note
-                                    ? `Note: ${checkin.note}`
-                                    : "Routine Check-in"}
+                                {getLabel(checkin)}
                             </div>
+                            {#if getNote(checkin)}
+                                <div class="text-sm text-slate-400">
+                                    Note: {getNote(checkin)}
+                                </div>
+                            {/if}
                             <div class="text-xs text-slate-500 font-mono">
                                 {new Date(checkin.timestamp).toLocaleString(
                                     undefined,
@@ -141,7 +150,7 @@
                     <div
                         class="text-xs font-bold text-teal-500 uppercase tracking-wider bg-teal-500/10 px-3 py-1 rounded-full border border-teal-500/20"
                     >
-                        Verified
+                        Received
                     </div>
                 </div>
             {/each}
@@ -151,7 +160,7 @@
             class="text-center py-12 text-slate-500 bg-slate-900/30 rounded-2xl border border-slate-800/50 dashed"
         >
             <Clock class="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p>No check-in history found.</p>
+            <p>Your check-ins will gather here.</p>
         </div>
     {/if}
 </div>

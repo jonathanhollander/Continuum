@@ -3,11 +3,10 @@
     import LivingMesh from "$lib/components/pulse/LivingMesh.svelte";
     import { pulse } from "$lib/stores/pulse.svelte";
 
-    // Map store status to LivingMesh props
+    // /api/pulse/status sends active | grace | disabled | not_configured (routers/pulse.py get_status)
     function getMeshStatus(status: string) {
-        if (status === "grace_period") return "grace";
-        if (status === "active" || status === "disabled") return status; // disabled handled by mesh
-        return "alert";
+        if (status === "active" || status === "grace") return status;
+        return "disabled"; // off, or not set up yet
     }
 </script>
 
