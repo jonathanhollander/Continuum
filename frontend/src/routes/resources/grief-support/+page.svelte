@@ -309,7 +309,7 @@
                                 <button
                                     onclick={() =>
                                         handleResourceClick(resource)}
-                                    class="text-left w-full"
+                                    class="grid text-left w-full"
                                 >
                                     <GriefResourceCard
                                         {...resource}
@@ -329,9 +329,7 @@
                         <!-- Local Search Discovery -->
                         <div
                             in:fly={{ y: 20, delay: 500, duration: 600 }}
-                            class="p-8 rounded-2xl bg-gradient-to-br from-indigo-500/10 to-rose-500/10 backdrop-blur-xl border border-white/10 flex flex-col items-start text-left group transition-all duration-500 {showDiscovery
-                                ? 'md:col-span-2 lg:col-span-3'
-                                : ''}"
+                            class="p-8 rounded-2xl bg-gradient-to-br from-indigo-500/10 to-rose-500/10 backdrop-blur-xl border border-white/10 flex flex-col items-start text-left group transition-all duration-500 md:col-span-2 lg:col-span-3"
                         >
                             <div
                                 class="flex items-start justify-between w-full mb-6"
