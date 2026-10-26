@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Body
 from backend.limiter import limiter
 from sqlmodel import Session, select, func, and_, or_
-from sqlalchemy import Integer
+from sqlalchemy import Integer, DateTime
+from datetime import datetime
 from typing import List, Any, Dict, Optional
 from pydantic import BaseModel, field_validator, model_validator
 import json
@@ -390,6 +391,10 @@ def update_item(
 
             if key == "category" and model is Asset:
                 continue  # asset membership is set on create only
+            col = model.__table__.columns.get(key)
+            if col is not None and isinstance(col.type, DateTime) and isinstance(value, str):
+                # setattr skips validation; SQLite's DateTime column refuses ISO text ("2027-03-10").
+                value = datetime.fromisoformat(value) if value else None
             if hasattr(db_item, key):
                 setattr(db_item, key, value)
 

@@ -19,8 +19,12 @@ export interface InsurancePolicy {
     custom_attributes?: string;
 }
 
+// The server keeps expiration_date as a datetime ("2027-03-10T00:00:00"); the form's date input reads "2027-03-10".
+const toDateInput = (v: unknown) => (typeof v === 'string' ? v.slice(0, 10) : '');
+
 const insuranceMapper = (item: any) => {
     if (!item) return item;
+    const expiration = item.expirationDate ?? item.expiration_date;
     return {
         ...item,
         // Remote -> Local
@@ -33,7 +37,7 @@ const insuranceMapper = (item: any) => {
         agentContact: item.agent_contact ?? item.agentContact ?? '',
         claimsProcedure: item.claims_procedure ?? item.claimsProcedure ?? '',
         policyDocuments: item.policy_documents ?? item.policyDocuments ?? '',
-        expirationDate: item.expiration_date ?? item.expirationDate,
+        expirationDate: toDateInput(item.expiration_date ?? item.expirationDate),
         // Local -> Remote
         policy_name: item.policyName ?? item.policy_name,
         insurance_type: item.insuranceType ?? item.insurance_type,
@@ -44,7 +48,8 @@ const insuranceMapper = (item: any) => {
         agent_contact: item.agentContact ?? item.agent_contact,
         claims_procedure: item.claimsProcedure ?? item.claims_procedure,
         policy_documents: item.policyDocuments ?? item.policy_documents,
-        expiration_date: item.expirationDate ?? item.expiration_date
+        // An empty date input goes over the wire as null (the column is a nullable datetime).
+        expiration_date: toDateInput(expiration) || null
     };
 };
 
