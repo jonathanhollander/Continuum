@@ -12,6 +12,7 @@
         Shield,
         Trash2,
         Loader2,
+        Pencil,
     } from "lucide-svelte";
     import Modal from "$lib/components/ui/Modal.svelte";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
@@ -57,6 +58,8 @@
     let contacts = $derived(familyStore.members);
 
     let showAddModal = $state(false);
+    // Set while the modal is updating an existing contact; null when it is adding one.
+    let editingId = $state<string | number | null>(null);
     let showAffirmation = $state(false);
 
 
@@ -112,7 +115,10 @@
         const notes = data.notes || data.Notes;
 
         if (name || relation || phone) {
-            if (!showAddModal) showAddModal = true;
+            if (!showAddModal) {
+                editingId = null;
+                showAddModal = true;
+            }
             newContact = {
                 ...newContact,
                 name: name || newContact.name,
@@ -166,6 +172,56 @@
         showAffirmation = true;
     }
 
+    function openAdd() {
+        editingId = null;
+        newContact = { role: "Family", notes: "", relation: "" };
+        parsedCustomAttributes = {};
+        showAddModal = true;
+    }
+
+    function openEdit(contact: FamilyMember) {
+        editingId = contact.id;
+        newContact = {
+            name: contact.name,
+            role: contact.role,
+            relation: contact.relation,
+            phone: contact.phone,
+            email: contact.email,
+            notes: contact.notes,
+            tier: contact.tier || "1_Immediate",
+        };
+        try {
+            parsedCustomAttributes = contact.custom_attributes ? JSON.parse(contact.custom_attributes) : {};
+        } catch {
+            parsedCustomAttributes = {};
+        }
+        showAddModal = true;
+    }
+
+    async function saveEdit() {
+        if (editingId === null || !newContact.name?.trim()) return;
+        // The store saves optimistically; on failure it rolls back and shows a gentle
+        // message with Try Again, and the form stays open with the draft.
+        try {
+            await familyStore.updateMember(editingId, {
+                name: newContact.name.trim(),
+                role: newContact.role || "Other",
+                relation: newContact.relation || "",
+                phone: newContact.phone || "",
+                email: newContact.email || "",
+                notes: newContact.notes || "",
+                tier: newContact.tier || "1_Immediate",
+                custom_attributes: JSON.stringify(parsedCustomAttributes),
+            });
+        } catch {
+            return;
+        }
+        showAddModal = false;
+        editingId = null;
+        newContact = { role: "Family", notes: "", relation: "" };
+        parsedCustomAttributes = {};
+    }
+
     async function deleteContact(id: number | string) {
         if (
             !confirm(
@@ -210,7 +266,7 @@
     <div class="flex justify-end items-center gap-4 mb-8">
         <DataViewToggle module="contacts" onchange={(mode) => viewMode = mode} />
         <button
-            onclick={() => (showAddModal = true)}
+            onclick={openAdd}
             class="px-5 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
         >
             <Plus size={18} />
@@ -324,7 +380,7 @@
                 icon={Users}
                 iconClass="text-primary"
                 ctaLabel={getActionLabel("add")}
-                onAction={() => (showAddModal = true)}
+                onAction={openAdd}
             />
         {:else if activeTab === "call-list"}
             <div in:fade class="space-y-8 max-w-4xl mx-auto">
@@ -424,6 +480,7 @@
                         >
                             <button
                                 onclick={() => deleteContact(contact.id)}
+                                aria-label="Remove {contact.name}"
                                 class="absolute top-4 right-4 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                             >
                                 <Trash2 size={16} />
@@ -474,6 +531,13 @@
                                     class="text-xs font-bold px-2 py-1 rounded bg-slate-100 text-slate-500"
                                     >{contact.tier?.split("_")[1] || "Unassigned"}</span
                                 >
+                                <button
+                                    onclick={() => openEdit(contact)}
+                                    aria-label="Update details for {contact.name}"
+                                    class="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
+                                >
+                                    <Pencil size={14} /> Update details
+                                </button>
                             </div>
                         </div>
                     {/each}
@@ -513,9 +577,17 @@
                                             {contact.tier?.split("_")[1] || "Unassigned"}
                                         </span>
                                     </td>
-                                    <td class="px-4 py-3 text-right">
+                                    <td class="px-4 py-3 text-right whitespace-nowrap">
+                                        <button
+                                            onclick={() => openEdit(contact)}
+                                            aria-label="Update details for {contact.name}"
+                                            class="text-slate-400 hover:text-primary mr-3"
+                                        >
+                                            <Pencil size={16} />
+                                        </button>
                                         <button
                                             onclick={() => deleteContact(contact.id)}
+                                            aria-label="Remove {contact.name}"
                                             class="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                                         >
                                             <Trash2 size={16} />
@@ -533,8 +605,10 @@
     <!-- Add Modal -->
     <Modal
         bind:open={showAddModal}
-        title="Who should we include?"
-        description="This person matters to you. By adding them here, you're ensuring they'll be included when the time comes—whether that means being notified, consulted, or simply remembered."
+        title={editingId !== null ? "Update their details" : "Who should we include?"}
+        description={editingId !== null
+            ? "Keep their details current so the right people are reached in the right way."
+            : "This person matters to you. By adding them here, you're ensuring they'll be included when the time comes—whether that means being notified, consulted, or simply remembered."}
         maxWidth="max-w-lg"
     >
         <div class="space-y-4">
@@ -674,10 +748,10 @@
                     Not right now
                 </button>
                 <button
-                    onclick={addContact}
+                    onclick={editingId !== null ? saveEdit : addContact}
                     class="px-6 py-2.5 rounded-xl font-semibold bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 transition-all"
                 >
-                    Include this person
+                    {editingId !== null ? "Save these details" : "Include this person"}
                 </button>
             </div>
         </div>
