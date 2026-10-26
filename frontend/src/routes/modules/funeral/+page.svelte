@@ -57,50 +57,15 @@
     let wishes = $derived($funeralStore!.wishes);
     let budgetItems = $derived($funeralStore!.budget);
 
-    // Quick Edit Helpers for Wishes
-    function editWish(field: keyof FuneralWishes, label: string) {
-        if (field === "music" || field === "colors") return;
-        const current = $funeralStore!.wishes[field];
-        const val = prompt(`Update ${label}:`, String(current));
-        if (val !== null) {
-            funeralStore.update((data) => ({
-                ...data,
-                wishes: {
-                    ...(typeof data.wishes === "string" ? JSON.parse(data.wishes || "{}") : data.wishes),
-                    [field]: val,
-                },
-            }));
-        }
-    }
-
-    function addSong() {
-        const song = prompt("Enter song name (Artist - Title):");
-        if (song) {
-            funeralStore.update((data) => ({
-                ...data,
-                wishes: { ...data.wishes, music: [...data.wishes.music, song] },
-            }));
-        }
-    }
-
-    function removeSong(index: number) {
-        funeralStore.update((data) => ({
-            ...data,
-            wishes: {
-                ...data.wishes,
-                music: data.wishes.music.filter((_, i) => i !== index),
-            },
-        }));
-    }
-
-    function saveExpense() {
+    async function saveExpense() {
         if (!newExpense.name) return;
 
         const customAttrsString = JSON.stringify(parsedCustomAttributes);
 
         if (newExpense.id) {
-            // Edit Mode
-            funeralStore.update((data) => ({
+            // Edit Mode: the item's industry average stays as it was.
+            try {
+                await funeralStore.update((data) => ({
                 ...data,
                 budget: data.budget.map((item) =>
                     item.id === newExpense.id
@@ -108,12 +73,14 @@
                               ...item,
                               ...newExpense,
                               cost: Number(newExpense.cost),
-                              estimated: Number(newExpense.cost),
                               custom_attributes: customAttrsString,
                           } as FuneralBudgetItem)
                         : item,
                 ),
-            }));
+                }));
+            } catch {
+                return; // the manager already showed the one gentle message; the form stays open
+            }
 
             // Log UPDATE
             activityLog.logEvent({
@@ -128,7 +95,8 @@
         } else {
             // Create Mode
             const newId = crypto.randomUUID();
-            funeralStore.update((data) => ({
+            try {
+                await funeralStore.update((data) => ({
                 ...data,
                 budget: [
                     ...data.budget,
@@ -136,11 +104,14 @@
                         id: newId,
                         name: newExpense.name || "Expense",
                         cost: Number(newExpense.cost),
-                        estimated: Number(newExpense.cost),
+                        estimated: industryAverage(newExpense.name) ?? 0,
                         custom_attributes: customAttrsString,
                     },
                 ],
-            }));
+                }));
+            } catch {
+                return;
+            }
 
             // Log CREATE
             activityLog.logEvent({
@@ -169,42 +140,50 @@
 
     async function removeExpense(id: string) {
         if (!(await askConfirm("Remove this expense? You can add it back later."))) return;
-        funeralStore.update((data) => ({
-            ...data,
-            budget: data.budget.filter((i) => i.id !== id),
-        }));
+        await funeralStore
+            .update((data) => ({
+                ...data,
+                budget: data.budget.filter((i) => i.id !== id),
+            }))
+            .catch(() => {}); // the manager already showed the one gentle message
     }
 
-    function updateMood(mood: string) {
-        funeralStore.update((data) => ({
-            ...data,
-            wishes: { ...data.wishes, mood },
-        }));
-    }
-
-    // Reactive Updates
-    let totalBudget = $derived(
-        $funeralStore!.budget.reduce((acc, item) => acc + item.cost, 0),
-    );
-    let totalEstimated = $derived(
-        $funeralStore!.budget.reduce(
-            (acc, item) => acc + (item.estimated || item.cost),
-            0,
-        ),
-    );
-    let variance = $derived(totalEstimated - totalBudget);
-
+    // 2021 NFDA national averages. `aliases` are names these items were saved under before.
     const standardItems = [
             { name: "Basic Services Fees", cost: 2300, estimated: 2300 },
-            { name: "Embalming & Prep", cost: 775, estimated: 775 },
+            { name: "Embalming and preparation", cost: 775, estimated: 775, aliases: ["Embalming & Prep"] },
             { name: "Viewing / Visitation", cost: 450, estimated: 450 },
             { name: "Funeral Ceremony", cost: 515, estimated: 515 },
             { name: "Hearse", cost: 350, estimated: 350 },
-            { name: "Transfer of Remains", cost: 350, estimated: 350 },
+            { name: "Transport of your loved one", cost: 350, estimated: 350, aliases: ["Transfer of Remains"] },
             { name: "Casket (Metal)", cost: 2500, estimated: 2500 },
             { name: "Vault", cost: 1572, estimated: 1572 },
             { name: "Memorial Printed Package", cost: 183, estimated: 183 },
     ];
+
+    const findStandard = (name?: string) => {
+        const n = (name || "").trim().toLowerCase();
+        return standardItems.find(
+            (s) => s.name.toLowerCase() === n || s.aliases?.some((a) => a.toLowerCase() === n),
+        );
+    };
+    // The national average comes from this table, never from the person's own cost
+    // (rows saved earlier carry estimated = cost, so the stored value can't be trusted).
+    const industryAverage = (name?: string) => findStandard(name)?.estimated;
+
+    // Reactive Updates
+    let totalBudget = $derived(
+        $funeralStore!.budget.reduce((acc, item) => acc + Number(item.cost || 0), 0),
+    );
+    // Compare only the items that have a national average, against their own costs.
+    let comparedItems = $derived(budgetItems.filter((i) => industryAverage(i.name) !== undefined));
+    let totalEstimated = $derived(
+        comparedItems.reduce((acc, item) => acc + (industryAverage(item.name) ?? 0), 0),
+    );
+    let comparedCost = $derived(comparedItems.reduce((acc, item) => acc + Number(item.cost || 0), 0));
+    let variance = $derived(totalEstimated - comparedCost);
+    // Auto-Fill adds only the common costs the budget doesn't hold yet.
+    let missingStandard = $derived(standardItems.filter((s) => !budgetItems.some((i) => findStandard(i.name) === s)));
 
     async function prefillEstimates() {
         if (
@@ -215,13 +194,15 @@
         )
             return;
 
+        const toAdd = missingStandard;
+        if (toAdd.length === 0) return;
         // One save for the whole set: one POST, one affirmation (was one per item).
         funeralStore
             .update((data) => ({
                 ...data,
                 budget: [
                     ...data.budget,
-                    ...standardItems.map((std) => ({
+                    ...toAdd.map((std) => ({
                         id: crypto.randomUUID(),
                         name: std.name,
                         cost: std.cost,
@@ -361,7 +342,7 @@
         {/if}
 
         {#if activeTab === "wishes"}
-            <FuneralWizard />
+            <FuneralWizard onOpenBudget={() => (activeTab = "budget")} />
         {/if}
         {#if activeTab === "budget"}
             <!-- BUDGET TAB -->
@@ -373,7 +354,7 @@
                         icon={DollarSign}
                         ctaLabel="Auto-Fill Common Costs"
                         onAction={prefillEstimates}
-                        skipMessage="Come back to this when you're ready. There's no rush."
+                        skipMessage="Come back to this whenever you're ready."
                     />
 
                     <!-- Example costs (the same standard estimates Auto-Fill adds) -->
@@ -417,6 +398,7 @@
                             </div>
                         </div>
 
+                        {#if comparedItems.length > 0}
                         <div
                             class="p-6 rounded-2xl bg-white border border-stone-200 shadow-sm"
                         >
@@ -428,6 +410,11 @@
                             <div class="text-2xl font-bold text-stone-700">
                                 ${totalEstimated.toLocaleString()}
                             </div>
+                            {#if comparedItems.length < budgetItems.length}
+                                <div class="text-xs text-stone-400 mt-1">
+                                    Across the {comparedItems.length} common costs
+                                </div>
+                            {/if}
                         </div>
 
                         <div
@@ -439,7 +426,9 @@
                                 Saving vs. Avg
                             </div>
                             <p class="text-sm opacity-90 leading-relaxed">
-                                {#if variance >= 0}
+                                {#if variance === 0}
+                                    Your plan matches the national average.
+                                {:else if variance > 0}
                                     You are projected to save <span
                                         class="font-bold underline"
                                         >${variance.toLocaleString()}</span
@@ -450,10 +439,11 @@
                                         >${Math.abs(
                                             variance,
                                         ).toLocaleString()}</span
-                                    > over the national average.
+                                    > above the national average.
                                 {/if}
                             </p>
                         </div>
+                        {/if}
                     </div>
 
                     <!-- Budget Table -->
@@ -469,12 +459,14 @@
                                 <DollarSign size={18} /> Financial Stewardship
                             </h3>
                             <div class="flex gap-2">
+                                {#if missingStandard.length > 0}
                                 <button
                                     onclick={prefillEstimates}
                                     class="text-xs font-bold text-stone-500 hover:text-[#4A7C74] px-3 py-1.5 rounded-lg hover:bg-stone-50 transition-colors"
                                 >
                                     Auto-Fill Common Costs
                                 </button>
+                                {/if}
                                 <button
                                     onclick={() => {
                                         newExpense = { name: "", cost: 0 };
@@ -496,9 +488,11 @@
                                         <div class="font-bold text-stone-800">
                                             {item.name}
                                         </div>
-                                        <div class="text-xs text-stone-400">
-                                            Estimated: ${item.estimated?.toLocaleString()}
-                                        </div>
+                                        {#if industryAverage(item.name) !== undefined}
+                                            <div class="text-xs text-stone-400">
+                                                Industry avg.: ${industryAverage(item.name)?.toLocaleString()}
+                                            </div>
+                                        {/if}
                                     </div>
                                     <div class="flex items-center gap-6">
                                         <div class="font-bold text-stone-700">
@@ -547,7 +541,7 @@
                         <div class="flex-1 pr-4">
                             <h3 class="font-serif font-bold text-xl text-white">
                                 {newExpense.id
-                                    ? "Update This Detail"
+                                    ? "Refine this detail"
                                     : "Plan Ahead"}
                             </h3>
                             <p
@@ -600,7 +594,7 @@
                             disabled={!newExpense.name}
                             class="w-full py-4 bg-[#4A7C74] hover:bg-[#3b635d] text-white font-bold rounded-xl shadow-lg shadow-[#4A7C74]/20 transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Save Expense
+                            Save this detail
                         </button>
                     </div>
                 </div>

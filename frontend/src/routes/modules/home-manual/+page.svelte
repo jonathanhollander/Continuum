@@ -20,6 +20,8 @@
         Shield,
         Save,
         Loader2,
+        Mail,
+        Globe,
     } from "lucide-svelte";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
@@ -43,6 +45,12 @@
             case "wi-fi": return Wifi;
             default: return Plug;
         }
+    }
+    /** A vendor website as a link: http(s) kept, a bare domain given https, anything else left unlinked. */
+    function siteHref(v: string) {
+        const s = v.trim();
+        if (/^https?:\/\//i.test(s)) return s;
+        return /^[\w.-]+\.[a-z]{2,}(\/\S*)?$/i.test(s) ? `https://${s}` : undefined;
     }
     function utilityLabel(t: string | null | undefined) {
         const v = (t || "").trim();
@@ -82,20 +90,27 @@
     const saveClass = "px-6 py-2.5 rounded-xl font-semibold bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap";
 
     // Form States
-    let vendorForm = $state({ category: "", name: "", phone: "" });
+    let vendorForm = $state({ category: "", name: "", phone: "", email: "", website: "", notes: "" });
     let codeForm = $state({ location: "", code: "", instructions: "" });
     let utilityForm = $state({ service_type: "", provider: "", location: "" });
 
     // Handlers
     function openVendorModal() {
         editingVendorId = null;
-        vendorForm = { category: "", name: "", phone: "" };
+        vendorForm = { category: "", name: "", phone: "", email: "", website: "", notes: "" };
         showVendorModal = true;
     }
 
     function editVendor(vendor: Vendor) {
         editingVendorId = vendor.id ?? null;
-        vendorForm = { category: vendor.category, name: vendor.name, phone: vendor.phone || "" };
+        vendorForm = {
+            category: vendor.category,
+            name: vendor.name,
+            phone: vendor.phone || "",
+            email: vendor.email || "",
+            website: vendor.website || "",
+            notes: vendor.notes || "",
+        };
         showVendorModal = true;
     }
 
@@ -117,10 +132,17 @@
             category: vendorForm.category,
             name: vendorForm.name,
             phone: vendorForm.phone,
+            email: vendorForm.email,
+            website: vendorForm.website,
+            notes: vendorForm.notes,
         };
-        if (editingVendorId != null) await vendorSync.update(editingVendorId, fields);
-        else await vendorSync.create(fields);
-        showVendorModal = false;
+        try {
+            if (editingVendorId != null) await vendorSync.update(editingVendorId, fields);
+            else await vendorSync.create(fields);
+            showVendorModal = false;
+        } catch {
+            // The manager already showed the one gentle message; the form stays open with the draft.
+        }
     }
 
     async function deleteVendor(id: number | undefined) {
@@ -162,9 +184,13 @@
             code_encrypted: codeForm.code,
             instructions: codeForm.instructions,
         };
-        if (editingCodeId != null) await accessSync.update(editingCodeId, fields);
-        else await accessSync.create(fields);
-        showCodeModal = false;
+        try {
+            if (editingCodeId != null) await accessSync.update(editingCodeId, fields);
+            else await accessSync.create(fields);
+            showCodeModal = false;
+        } catch {
+            // The manager already showed the one gentle message; the form stays open with the draft.
+        }
     }
 
     async function deleteCode(id: number | undefined) {
@@ -203,12 +229,16 @@
         if (!utilityForm.service_type) return;
         const fields = {
             service_type: utilityForm.service_type,
-            provider: utilityForm.provider || "Unknown",
+            provider: utilityForm.provider || "",
             location: utilityForm.location,
         };
-        if (editingUtilityId != null) await utilitySync.update(editingUtilityId, fields);
-        else await utilitySync.create(fields);
-        showUtilityModal = false;
+        try {
+            if (editingUtilityId != null) await utilitySync.update(editingUtilityId, fields);
+            else await utilitySync.create(fields);
+            showUtilityModal = false;
+        } catch {
+            // The manager already showed the one gentle message; the form stays open with the draft.
+        }
     }
 
     async function deleteUtility(id: number | undefined) {
@@ -258,10 +288,44 @@
                 class={inputClass}
             />
         </div>
+
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label for="vendor-email" class={labelClass}>Email</label>
+                <input
+                    id="vendor-email"
+                    type="email"
+                    bind:value={vendorForm.email}
+                    placeholder="e.g. office@joesplumbing.com"
+                    class={inputClass}
+                />
+            </div>
+            <div>
+                <label for="vendor-website" class={labelClass}>Website</label>
+                <input
+                    id="vendor-website"
+                    type="url"
+                    bind:value={vendorForm.website}
+                    placeholder="e.g. joesplumbing.com"
+                    class={inputClass}
+                />
+            </div>
+        </div>
+
+        <div>
+            <label for="vendor-notes" class={labelClass}>Notes</label>
+            <textarea
+                id="vendor-notes"
+                bind:value={vendorForm.notes}
+                rows="3"
+                placeholder="e.g. Ask for Sam; he knows the house"
+                class="{inputClass} resize-none"
+            ></textarea>
+        </div>
     </div>
 
     <div class={footerClass}>
-        <button onclick={() => (showVendorModal = false)} class={cancelClass}>Not right now</button>
+        <button onclick={() => (showVendorModal = false)} class={cancelClass}>Maybe later</button>
         <button
             onclick={saveVendor}
             disabled={!vendorForm.category || !vendorForm.name || saving}
@@ -311,7 +375,7 @@
     </div>
 
     <div class={footerClass}>
-        <button onclick={() => (showCodeModal = false)} class={cancelClass}>Not right now</button>
+        <button onclick={() => (showCodeModal = false)} class={cancelClass}>Maybe later</button>
         <button
             onclick={saveCode}
             disabled={!codeForm.location || saving}
@@ -362,7 +426,7 @@
     </div>
 
     <div class={footerClass}>
-        <button onclick={() => (showUtilityModal = false)} class={cancelClass}>Not right now</button>
+        <button onclick={() => (showUtilityModal = false)} class={cancelClass}>Maybe later</button>
         <button
             onclick={saveUtility}
             disabled={!utilityForm.service_type || saving}
@@ -379,8 +443,8 @@
     <LivingBlueprintHeader
         title="The Home Operating Manual"
         subtitle="The instruction manual for your physical house"
-        detailedDescription="Document your trusted vendors, access codes, and utility shutoff locations. Don't leave your family guessing how to turn off the water or who to call when something breaks."
-        whyMatters="In a crisis, your family needs immediate access to critical home information. Without these details, simple tasks become overwhelming challenges during an already difficult time."
+        detailedDescription="Document your trusted vendors, access codes, and utility shutoff locations. Give your family a clear guide to turning off the water and who to call when something breaks."
+        whyMatters="These details make everyday tasks gentler for your family during a difficult time."
     />
 
     <!-- AI Concierge Drafting Assistant -->
@@ -435,7 +499,7 @@
                 {#if vendorSync.items.length === 0}
                     <EmptyState
                         title="The people who keep your home running"
-                        whyMatters="<strong>When something breaks, your family won't know who to call.</strong> The plumber you trust, the electrician who knows your wiring, the HVAC tech who's serviced your system for years—these relationships took time to build.<br/><br/>Documenting your trusted vendors means your family won't have to start from scratch during a crisis. They'll have the direct numbers, the names to ask for, and the context of your history with each provider."
+                        whyMatters="<strong>When something breaks, your family will know exactly who to call.</strong> The plumber you trust, the electrician who knows your wiring, the HVAC tech who's serviced your system for years—these relationships took time to build.<br/><br/>Documenting your trusted vendors gives your family a head start. They'll have the direct numbers, the names to ask for, and the context of your history with each provider."
                         encouragement="Start with whoever you'd call in an emergency—plumber, electrician, or handyman."
                         icon={Phone}
                         iconClass="text-primary"
@@ -457,7 +521,10 @@
                                         vendorForm = {
                                             category: sample.category,
                                             name: sample.name,
-                                            phone: sample.phone
+                                            phone: sample.phone,
+                                            email: "",
+                                            website: "",
+                                            notes: ""
                                         };
                                         showVendorModal = true;
                                     }}
@@ -473,7 +540,7 @@
                     <div class="space-y-6">
                         <div class="flex justify-between items-center">
                             <h2 class="font-bold text-slate-700 text-lg">
-                                Who To Call
+                                Who to turn to
                             </h2>
                             <button
                                 onclick={openVendorModal}
@@ -523,12 +590,28 @@
                                         </h3>
                                         <div class="mb-4"></div>
 
-                                        <div
-                                            class="flex items-center gap-2 text-slate-600 font-mono bg-slate-50 p-2 rounded-lg mb-3"
-                                        >
-                                            <Phone size={14} />
-                                            {vendor.phone}
-                                        </div>
+                                        {#if vendor.phone}
+                                            <div
+                                                class="flex items-center gap-2 text-slate-600 font-mono bg-slate-50 p-2 rounded-lg mb-3"
+                                            >
+                                                <Phone size={14} />
+                                                {vendor.phone}
+                                            </div>
+                                        {/if}
+
+                                        {#if vendor.email}
+                                            <a href="mailto:{vendor.email}" class="flex items-center gap-2 text-sm text-slate-600 hover:text-primary break-all mb-2">
+                                                <Mail size={14} class="shrink-0" />
+                                                {vendor.email}
+                                            </a>
+                                        {/if}
+
+                                        {#if vendor.website}
+                                            <a href={siteHref(vendor.website)} target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 text-sm text-slate-600 hover:text-primary break-all mb-3">
+                                                <Globe size={14} class="shrink-0" />
+                                                {vendor.website}
+                                            </a>
+                                        {/if}
 
                                         {#if vendor.notes}
                                             <p
@@ -605,8 +688,8 @@
                 {#if accessSync.items.length === 0}
                     <EmptyState
                         title="Keys to your kingdom"
-                        whyMatters="<strong>Alarm codes, garage door combinations, WiFi passwords, safe combinations—these are the invisible barriers that could lock your family out of their own home.</strong><br/><br/>Documenting access codes ensures your family can enter the house, disable alarms without triggering a police response, and access secured areas. It's one less thing for them to figure out during an already overwhelming time."
-                        encouragement="Start with your most critical code—the alarm system or front door."
+                        whyMatters="<strong>Alarm codes, garage door combinations, WiFi passwords, safe combinations—these details open the door for your family and let them settle in with ease.</strong><br/><br/>Documenting access codes gives your family a calm way into the house, past the alarm, and into secured areas."
+                        encouragement="Start with the code you use most, the alarm or front door."
                         icon={Key}
                         iconClass="text-primary"
                         ctaLabel="Share your first code"
@@ -712,8 +795,8 @@
             <div in:fade class="h-full">
                 {#if utilitySync.items.length === 0}
                     <EmptyState
-                        title="When seconds matter"
-                        whyMatters="<strong>A burst pipe at 2am. A gas leak. A tripped breaker during a storm.</strong> In emergencies, knowing exactly where to find the water shutoff, gas valve, or electrical panel can prevent thousands in damage—or even save lives.<br/><br/>Documenting these critical locations means your family won't be searching frantically in a crisis. They'll know exactly where to go and what to do."
+                        title="Where to find the shutoffs"
+                        whyMatters="Knowing where the water main, gas valve, and electrical panel are keeps your family calm and safe.<br/><br/>They'll know exactly where to go and what to do."
                         encouragement="Start with your water main shutoff—it's the most common emergency need."
                         icon={Droplets}
                         iconClass="text-primary"
@@ -752,7 +835,7 @@
                     <div class="space-y-6">
                         <div class="flex justify-between items-center">
                             <h2 class="font-bold text-slate-700 text-lg">
-                                Critical Shutoffs
+                                Important Shutoffs
                             </h2>
                             <button
                                 onclick={openUtilityModal}
@@ -797,9 +880,11 @@
                                             >
                                                 {utilityLabel(item.service_type)} Shutoff
                                             </h3>
-                                            <p class="text-slate-500 text-sm">
-                                                Provider: {item.provider}
-                                            </p>
+                                            {#if item.provider}
+                                                <p class="text-slate-500 text-sm">
+                                                    Provider: {item.provider}
+                                                </p>
+                                            {/if}
                                         </div>
 
                                         {#if item.location}

@@ -60,12 +60,12 @@
         type: "dog",
         name: "",
         breed: "",
-        guardian:
-            $estateProfile.spouseName || $estateProfile.executorName || "",
+        guardian: "",
         vetName: "",
         vetPhone: "",
         foodInstructions: "",
         medicalNeeds: "",
+        microchipNumber: "",
         notes: "",
     });
 
@@ -145,6 +145,7 @@
             vetPhone: pet.vetPhone || "",
             foodInstructions: pet.foodInstructions || "",
             medicalNeeds: pet.medicalNeeds || "",
+            microchipNumber: pet.microchipNumber || "",
             notes: pet.notes || "",
         };
         // Custom field values for editing; the document is edited by the uploader
@@ -174,7 +175,7 @@
                 : { id, mime_type: file?.mime_type ?? "", filename: file?.filename ?? "", file_size: file?.file_size ?? 0 };
     }
 
-    /** The modal closes through ×, Escape, the backdrop or "Not right now"; each one drops the draft. */
+    /** The modal closes through ×, Escape, the backdrop or "Maybe later"; each one drops the draft. */
     function setFormOpen(open: boolean) {
         if (open) showAddForm = true;
         else if (showAddForm) closeAndReset();
@@ -188,14 +189,12 @@
             type: "dog",
             name: "",
             breed: "",
-            guardian:
-                $estateProfile.spouseName ||
-                $estateProfile.executorName ||
-                "",
+            guardian: "",
             vetName: "",
             vetPhone: "",
             foodInstructions: "",
             medicalNeeds: "",
+            microchipNumber: "",
             notes: "",
         };
         parsedCustomAttributes = {};
@@ -204,6 +203,14 @@
     function closeAndReset() {
         showAddForm = false;
         resetForm();
+    }
+
+    /** The pet's own custom field values worth showing (filled in; the care document is shown on its own). */
+    function shownCustom(pet: PetEntry): [string, string][] {
+        const { [PET_MEDIA_KEY]: _media, ...values } = readCustom(pet);
+        return Object.entries(values)
+            .filter(([, v]) => v !== "" && v !== null && v !== undefined && v !== false)
+            .map(([k, v]) => [k, v === true ? "Yes" : String(v)]);
     }
 
     async function removePet(id: number) {
@@ -220,8 +227,8 @@
 <LivingBlueprintHeader
     title="Pet Care"
     subtitle="Your companions deserve a plan for their future care"
-    detailedDescription="Your pets depend on you completely. This plan ensures they'll be loved and cared for by someone you trust, no matter what happens. It's one of the kindest things you can do for them—and for the person who steps in to help."
-    whyMatters="Without a documented plan, your pets could end up in a shelter or with someone who doesn't know their needs, fears, or routines. Creating this plan ensures they'll be loved and cared for by someone you trust."
+    detailedDescription="Your pets depend on you completely. This plan ensures they'll be loved and cared for by someone you trust, for the rest of their life. It's one of the kindest things you can do for them—and for the person who steps in to help."
+    whyMatters="A documented plan places your pets with someone who knows their needs, fears, and routines. Creating this plan ensures they'll be loved and cared for by someone you trust."
 >
     <div class="flex items-center gap-4">
         <DataViewToggle module="pets" onchange={(mode) => viewMode = mode} />
@@ -298,6 +305,7 @@
 
                     <!-- Pet Details -->
                     <div class="p-6 space-y-4">
+                        {#if pet.guardian}
                         <div
                             class="flex items-start gap-3 p-3 bg-red-50 rounded-xl"
                         >
@@ -312,8 +320,11 @@
                                 </div>
                             </div>
                         </div>
+                        {/if}
 
+                        {#if pet.vetName || pet.vetPhone || pet.foodInstructions}
                         <div class="grid grid-cols-2 gap-4">
+                            {#if pet.vetName || pet.vetPhone}
                             <div class="flex items-start gap-2">
                                 <Phone
                                     class="text-gray-400 mt-1 shrink-0"
@@ -325,11 +336,14 @@
                                         >Vet Contact</span
                                     >
                                     <div class="text-sm font-medium text-gray-700">
-                                        {pet.vetName} <br />
+                                        {pet.vetName}
+                                        {#if pet.vetName && pet.vetPhone}<br />{/if}
                                         {pet.vetPhone}
                                     </div>
                                 </div>
                             </div>
+                            {/if}
+                            {#if pet.foodInstructions}
                             <div class="flex items-start gap-2">
                                 <Utensils
                                     class="text-gray-400 mt-1 shrink-0"
@@ -345,7 +359,9 @@
                                     </div>
                                 </div>
                             </div>
+                            {/if}
                         </div>
+                        {/if}
 
                         {#if pet.medicalNeeds}
                             <div
@@ -365,6 +381,29 @@
                                     </div>
                                 </div>
                             </div>
+                        {/if}
+
+                        {#if pet.microchipNumber || shownCustom(pet).length}
+                            <dl class="grid grid-cols-2 gap-x-4 gap-y-2 pt-2 border-t border-gray-100 text-sm">
+                                {#if pet.microchipNumber}
+                                    <div>
+                                        <dt class="text-xs font-bold uppercase text-gray-400">Microchip Number</dt>
+                                        <dd class="font-medium text-gray-700 font-mono break-all">{pet.microchipNumber}</dd>
+                                    </div>
+                                {/if}
+                                {#each shownCustom(pet) as [label, value] (label)}
+                                    <div>
+                                        <dt class="text-xs font-bold uppercase text-gray-400 break-words">{label}</dt>
+                                        <dd class="font-medium text-gray-700 break-words">{value}</dd>
+                                    </div>
+                                {/each}
+                            </dl>
+                        {/if}
+
+                        {#if pet.notes}
+                            <p class="text-sm text-gray-600 italic whitespace-pre-line pt-2 border-t border-gray-100">
+                                {pet.notes}
+                            </p>
                         {/if}
 
                         {#if petMedia(pet)}
@@ -387,11 +426,11 @@
                 <div class="col-span-full">
                     <EmptyState
                         title="Your companions deserve a plan too"
-                        whyMatters="Your pets depend on you completely for their care, comfort, and survival. <strong>Without a documented plan, they could end up in a shelter</strong> or with someone who doesn't know their needs, fears, or routines. <br/><br/>Creating this plan ensures they'll be loved and cared for by someone you trust—someone who knows their favorite toy, their medical needs, and the way they like to be held. It's one of the most loving things you can do for them."
+                        whyMatters="<strong>A documented plan places your pets with someone who knows their needs, fears, and routines.</strong><br/><br/>Creating this plan ensures they'll be loved and cared for by someone you trust—someone who knows their favorite toy, their medical needs, and the way they like to be held. It's one of the most loving things you can do for them."
                         encouragement="When you're ready, take a moment to think about who would give them the life they deserve."
                         icon={Dog}
                         iconClass="text-primary"
-                        ctaLabel="Protect your companion"
+                        ctaLabel="Share your companion's story"
                         onAction={() => (showAddForm = true)}
                     />
                 </div>
@@ -402,11 +441,11 @@
         {#if petStore.items.length === 0}
             <EmptyState
                 title="Your companions deserve a plan too"
-                whyMatters="Your pets depend on you completely for their care, comfort, and survival. <strong>Without a documented plan, they could end up in a shelter</strong> or with someone who doesn't know their needs, fears, or routines. <br/><br/>Creating this plan ensures they'll be loved and cared for by someone you trust—someone who knows their favorite toy, their medical needs, and the way they like to be held. It's one of the most loving things you can do for them."
+                whyMatters="<strong>A documented plan places your pets with someone who knows their needs, fears, and routines.</strong><br/><br/>Creating this plan ensures they'll be loved and cared for by someone you trust—someone who knows their favorite toy, their medical needs, and the way they like to be held. It's one of the most loving things you can do for them."
                 encouragement="When you're ready, take a moment to think about who would give them the life they deserve."
                 icon={Dog}
                 iconClass="text-primary"
-                ctaLabel="Protect your companion"
+                ctaLabel="Share your companion's story"
                 onAction={() => (showAddForm = true)}
             />
         {:else}
@@ -468,10 +507,10 @@
     <!-- Add Pet Modal -->
     <Modal
         bind:open={() => showAddForm, setFormOpen}
-        title={newPet.id ? "Update Their Care Plan" : "Protect Your Companion"}
+        title={newPet.id ? "Update Their Care Plan" : "Share your companion's story"}
         description={newPet.id
             ? "Keep their information current so their next caregiver has everything they need."
-            : "Your pet depends on you completely. This information ensures they'll be cared for by someone who truly understands them—their routines, their quirks, and their needs."}
+            : "Your pet will be cared for by someone who truly understands them—their routines, their quirks, and their needs."}
         maxWidth="max-w-lg"
     >
         <div class="space-y-4">
@@ -515,6 +554,19 @@
                         placeholder="e.g. Golden Retriever"
                     />
                 </div>
+            </div>
+
+            <div>
+                <label for="pet-microchip"
+                    class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1 mb-1.5"
+                    >Microchip Number</label
+                >
+                <input id="pet-microchip"
+                    type="text"
+                    bind:value={newPet.microchipNumber}
+                    class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-mono"
+                    placeholder="e.g. 985112003456789"
+                />
             </div>
 
             <div>
@@ -623,7 +675,7 @@
             <button
                 onclick={closeAndReset}
                 class="px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-200 transition-colors"
-                >Not right now</button
+                >Maybe later</button
             >
             <button
                 onclick={savePet}

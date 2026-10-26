@@ -20,16 +20,18 @@
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import HeirloomCard from "$lib/components/modules/heirlooms/HeirloomCard.svelte";
     import VisionUploader from "$lib/components/modules/heirlooms/VisionUploader.svelte";
+    import HeirloomImage from "$lib/components/modules/heirlooms/HeirloomImage.svelte";
+    import { mediaIdFromRef } from "$lib/services/mediaService";
+    import { contactSync } from "$lib/stores/familyStore.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
-    import { onMount } from "svelte";
+    import { onMount, tick } from "svelte";
     import {
         heirloomSync,
         heirloomStore,
         type Heirloom,
     } from "$lib/stores/heirloomStore.svelte";
-    import { qrStore } from "$lib/stores/qrStore";
+    import { qrStore, assetQrImage } from "$lib/stores/qrStore";
     import { activityLog } from "$lib/stores/activityLog.svelte";
-    import { notifications } from "$lib/stores/notificationStore";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import { getSmartSamples } from "$lib/data/smartSamples";
@@ -60,6 +62,17 @@
 
     // Derived items from SyncManager
     let items = $derived(heirloomSync.items);
+
+    // People from Contacts; choosing one fills "Who Should Have This?" with their name.
+    let contacts = $derived(contactSync.items);
+    let recipientContactId = $state("");
+    function chooseRecipient(id: string) {
+        const person = contacts.find((c) => String(c.id) === id);
+        if (person) newHeirloom.recipient = person.name;
+    }
+
+    // A scanned label opens /modules/heirlooms?id=N: that story is opened and brought into view.
+    let focusId = $state<string | null>(null);
 
     // The search box narrows the list by item, story or recipient; empty shows all.
     let searchQuery = $state("");
@@ -99,48 +112,24 @@
         },
     ];
 
+    // Each "yes" opens the add form with only the name filled; the person writes who it is for
+    // and its story. After one is saved, the next named item opens.
+    let wizardQueue = $state<string[]>([]);
+
     function handleWizardComplete(answers: Record<string, any>) {
-        if (answers.intro === false) {
-            showWizard = false;
-            return;
-        }
-
-        const wanted: [string, string][] = [];
-        if (answers.watch) wanted.push(["Vintage Watch", "Grandson"]);
-        if (answers.jewelry) wanted.push(["Wedding Ring", "Spouse / Eldest Child"]);
-        if (answers.furniture) wanted.push(["Antique Desk", "Home Office"]);
-
         showWizard = false;
-        if (wanted.length > 0) saveWizardItems(wanted);
-    }
+        if (answers.intro === false) return;
 
-    // One wizard run is one save: the creates run quietly, then one affirmation when all land,
-    // or one gentle message whose Try Again re-sends only the items still waiting.
-    async function saveWizardItems(wanted: [string, string][]) {
-        const results = await Promise.allSettled(
-            wanted.map(([name, recipient]) =>
-                heirloomSync.create(
-                    { name, recipient, story: "Family heirloom passed down...", image: "" },
-                    false,
-                    true,
-                ),
-            ),
-        );
-        const waiting = wanted.filter((_, i) => results[i].status === "rejected");
-        if (waiting.length === 0) {
-            notifications.showAffirmation("heirlooms", "create");
-            return;
+        const wanted: string[] = [];
+        if (answers.watch) wanted.push("Vintage Watch");
+        if (answers.jewelry) wanted.push("Wedding Ring");
+        if (answers.furniture) wanted.push("Antique Desk");
+
+        if (wanted.length > 0) {
+            const [first, ...rest] = wanted;
+            openAddForm(first);
+            wizardQueue = rest;
         }
-        const reason = results.find((r) => r.status === "rejected") as PromiseRejectedResult;
-        notifications.showError(
-            {
-                message:
-                    "Your answers are safe here. We can save them again whenever you're ready.",
-                code: "DATABASE_ERROR",
-                technicalDetails: reason.reason?.technicalDetails || reason.reason?.message || String(reason.reason),
-            } as any,
-            () => saveWizardItems(waiting),
-        );
     }
 
     onMount(async () => {
@@ -156,19 +145,35 @@
             }
         }
         isLoading = false;
+
+        const id = new URLSearchParams(window.location.search).get("id");
+        if (id && heirloomSync.items.some((h) => String(h.id) === id)) {
+            focusId = id;
+            await tick();
+            document.getElementById(`heirloom-${id}`)?.scrollIntoView({ block: "center" });
+        }
     });
 
     let showAddForm = $state(false);
 
-    function openAddForm() {
+    function openAddForm(name = "") {
+        wizardQueue = [];
         isEditing = false;
         editingId = null;
-        newHeirloom = { name: "", recipient: "", story: "", image: "", ownershipDetails: "" };
+        newHeirloom = { name, recipient: "", story: "", image: "", ownershipDetails: "" };
+        recipientContactId = "";
         parsedCustomAttributes = {};
         showAddForm = true;
     }
 
+    function closeForm() {
+        wizardQueue = [];
+        showAddForm = false;
+    }
+
     function openEditForm(item: Heirloom) {
+        wizardQueue = [];
+        recipientContactId = "";
         isEditing = true;
         editingId = item.id;
         newHeirloom = {
@@ -218,7 +223,7 @@
 
         try {
             await heirloomSync.create({
-                name: newHeirloom.name || "Unknown Treasure",
+                name: newHeirloom.name || "Untitled treasure",
                 recipient: newHeirloom.recipient || "",
                 story: newHeirloom.story || "",
                 image: newHeirloom.image || "",
@@ -232,12 +237,19 @@
         showAddForm = false;
         newHeirloom = { name: "", recipient: "", story: "", image: "", ownershipDetails: "" };
         parsedCustomAttributes = {};
+
+        if (wizardQueue.length > 0) {
+            const [next, ...rest] = wizardQueue;
+            await tick();
+            openAddForm(next);
+            wizardQueue = rest;
+        }
     }
 
     async function removeHeirloom(id: string | number) {
         if (
             !(await askConfirm(
-                "Remove this heirloom? Your story will be preserved in the activity log.",
+                "Remove this heirloom?",
             ))
         )
             return;
@@ -257,9 +269,8 @@
         qrTarget = item;
         showQrModal = true;
 
-        // Generate URL for display
-        const deepLink = `${window.location.origin}/modules/heirlooms?id=${item.id}`;
-        qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(deepLink)}`;
+        // The same address the QR Center label uses: this heirloom's own story.
+        qrUrl = assetQrImage("Heirloom", item.id, 300);
 
         qrStore.generateAssetQR({
             id: crypto.randomUUID(),
@@ -306,7 +317,7 @@
     title="Heirlooms & Treasures"
     subtitle="Objects carry stories that deserve to be told"
     detailedDescription="When you document the history and meaning behind your treasured possessions, you're ensuring these stories survive—transforming objects into heirlooms that connect generations."
-    whyMatters="Objects without stories become 'stuff' that gets donated or thrown away. That watch your grandfather wore every day? Without its story documented, it loses its meaning. You're preserving the emotional value that makes these items irreplaceable."
+    whyMatters="Every object holds a story. That watch your grandfather wore every day, your wedding dress, the painting your mother loved. When you record their stories, you keep the emotional value that makes them irreplaceable, and your family will carry those stories forward."
 >
     <div class="flex items-center gap-3">
         <DataViewToggle module="heirlooms" onchange={(mode) => viewMode = mode} />
@@ -319,7 +330,7 @@
         </button>
         <button
             class="flex items-center gap-2 bg-primary text-primary-foreground shadow-primary/20 hover:opacity-90 disabled:opacity-50 transition-all font-bold px-6 py-2 rounded-xl"
-            onclick={openAddForm}
+            onclick={() => openAddForm()}
         >
             <Plus size={20} /> Share a story or object
         </button>
@@ -364,12 +375,12 @@
     {#if items.length === 0}
         <EmptyState
             title="Your treasures deserve their stories"
-            whyMatters="<strong>Objects without stories become 'stuff' that gets donated or thrown away.</strong> That watch your grandfather wore every day? Your wedding dress? The painting your mother loved? Without their stories documented, they lose their meaning.<br/><br/>When you catalog heirlooms here, you're not just making a list—you're preserving the emotional value that makes these items irreplaceable. You're ensuring their stories survive even when you can't tell them anymore."
+            whyMatters="Every object holds a story. That watch your grandfather wore every day, your wedding dress, the painting your mother loved. When you record their stories, you keep the emotional value that makes them irreplaceable, and your family will carry those stories forward."
             encouragement="Start with one meaningful object. Take a photo, write why it matters. The rest will follow naturally."
             icon={Gift}
             iconClass="text-amber-500"
             ctaLabel="Preserve your first treasure"
-            onAction={openAddForm}
+            onAction={() => openAddForm()}
         />
         <!-- Hidden Ghost Rows for reference -->
         <div
@@ -405,9 +416,15 @@
                 class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
             >
                 {#each filteredItems as heirloom (heirloom.id)}
-                    <div in:fade={{ duration: 400 }} class="relative group">
+                    <div
+                        in:fade={{ duration: 400 }}
+                        class="relative group"
+                        id="heirloom-{heirloom.id}"
+                        data-focused={focusId === String(heirloom.id)}
+                    >
                         <HeirloomCard
                             {heirloom}
+                            focused={focusId === String(heirloom.id)}
                             onPrintQr={() => openQrModal(heirloom)}
                         />
                         <button
@@ -432,7 +449,7 @@
                 <!-- Add New Placeholder -->
                 <button
                     class="border-2 border-dashed border-stone-200 rounded-2xl flex flex-col items-center justify-center text-stone-400 hover:border-[#4A7C74] hover:text-[#4A7C74] hover:bg-[#4A7C74]/5 transition-all min-h-[350px] group"
-                    onclick={openAddForm}
+                    onclick={() => openAddForm()}
                 >
                     <div
                         class="w-16 h-16 rounded-full bg-stone-100 group-hover:bg-[#4A7C74]/10 flex items-center justify-center mb-4 transition-colors"
@@ -451,6 +468,7 @@
                             <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Item</th>
                             <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Recipient</th>
                             <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Story</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Provenance</th>
                             <th class="px-4 py-3 text-right text-xs font-bold uppercase text-slate-500">Actions</th>
                         </tr>
                     </thead>
@@ -460,7 +478,7 @@
                                 <td class="px-4 py-3">
                                     <div class="flex items-center gap-3">
                                         {#if heirloom.image}
-                                            <img src={heirloom.image} alt={heirloom.name} class="w-10 h-10 rounded-lg object-cover" />
+                                            <HeirloomImage src={heirloom.image} alt={heirloom.name} class="w-10 h-10 rounded-lg object-cover" />
                                         {:else}
                                             <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center text-amber-600">
                                                 <Gift size={18} />
@@ -471,6 +489,7 @@
                                 </td>
                                 <td class="px-4 py-3 text-sm text-slate-600">{heirloom.recipient || '-'}</td>
                                 <td class="px-4 py-3 text-sm text-slate-600 max-w-xs truncate">{heirloom.story || '-'}</td>
+                                <td class="px-4 py-3 text-sm text-slate-600 max-w-xs truncate">{heirloom.ownershipDetails || '-'}</td>
                                 <td class="px-4 py-3 text-right">
                                     <div class="flex items-center justify-end gap-2 transition-opacity">
                                         <button
@@ -602,6 +621,24 @@
                     class="block text-xs font-bold uppercase text-slate-500 mb-1"
                     >Who Should Have This?</label
                 >
+                {#if contacts.length > 0}
+                    <select
+                        id="heirloom-recipient-contact"
+                        aria-label="Choose someone from your contacts"
+                        bind:value={recipientContactId}
+                        onchange={() => chooseRecipient(recipientContactId)}
+                        class="w-full mb-2 px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                    >
+                        <option value="">Choose someone from your contacts</option>
+                        {#each contacts as contact (contact.id)}
+                            <option value={String(contact.id)}
+                                >{contact.name}{contact.relation
+                                    ? ` (${contact.relation})`
+                                    : ""}</option
+                            >
+                        {/each}
+                    </select>
+                {/if}
                 <input
                     id="heirloom-recipient"
                     type="text"
@@ -634,8 +671,8 @@
                     bind:imageUrl={newHeirloom.image}
                     bind:provenance={newHeirloom.ownershipDetails}
                 />
-                <!-- A photo read from a file is kept as a data URL; any typed address stays editable here. -->
-                {#if !newHeirloom.image?.startsWith("data:")}
+                <!-- A chosen photo is saved to the media store (older records may hold a data URL); a typed address stays editable here. -->
+                {#if !newHeirloom.image?.startsWith("data:") && mediaIdFromRef(newHeirloom.image) === null}
                     <div class="mt-2 text-center">
                         <span class="text-xs text-stone-400">or</span>
                     </div>
@@ -669,9 +706,9 @@
         <!-- Sticky so the save stays in view while the form scrolls inside the modal. -->
         <div class="sticky -bottom-6 z-10 -mx-6 -mb-6 px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 mt-6">
             <button
-                onclick={() => (showAddForm = false)}
+                onclick={closeForm}
                 class="px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-200 transition-colors"
-                >Not right now</button
+                >Maybe later</button
             >
             <button
                 onclick={saveHeirloom}

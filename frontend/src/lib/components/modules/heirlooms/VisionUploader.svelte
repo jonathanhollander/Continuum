@@ -1,6 +1,8 @@
 <script lang="ts">
     import { ImagePlus, Upload } from "lucide-svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
+    import HeirloomImage from "./HeirloomImage.svelte";
+    import { uploadMedia, isValidMediaType } from "$lib/services/mediaService";
 
     // Both are bound by the page so the photo and the Provenance text are saved with the heirloom.
     let {
@@ -10,6 +12,12 @@
 
     let fileInput: HTMLInputElement;
     let isDragging = $state(false);
+    // The photo goes to the media store; the record keeps only its address ("/api/media/N/download").
+    let uploading = $state(false);
+    let message = $state<string | null>(null);
+    let localPreview = $state<string | null>(null);
+    let previewFor = $state<string | null>(null); // the saved address the local preview shows
+    let showLocal = $derived(!!localPreview && (uploading || (!!imageUrl && imageUrl === previewFor)));
 
     function handleDragOver(e: DragEvent) {
         e.preventDefault();
@@ -28,15 +36,24 @@
         }
     }
 
-    function handleFile(file: File) {
-        if (!file.type.startsWith("image/")) return;
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            imageUrl = e.target?.result as string;
-        };
-        reader.readAsDataURL(file);
+    async function handleFile(file: File) {
+        if (!file.type.startsWith("image/") || !isValidMediaType(file)) return;
+        if (localPreview) URL.revokeObjectURL(localPreview);
+        localPreview = URL.createObjectURL(file);
+        previewFor = null;
+        message = null;
+        uploading = true;
+        try {
+            const media = await uploadMedia(file, "heirlooms");
+            imageUrl = media.download_url;
+            previewFor = media.download_url;
+        } catch (err: any) {
+            message = err?.message || "Saving this photo paused. It is still here, ready to try again.";
+        } finally {
+            uploading = false;
+        }
     }
+
 
     function triggerUpload() {
         fileInput.click();
@@ -65,21 +82,30 @@
                 e.currentTarget.files && handleFile(e.currentTarget.files[0])}
         />
 
-        {#if imageUrl}
+        {#if imageUrl || showLocal}
             <div
                 class="relative aspect-video w-full max-w-sm mx-auto rounded-lg overflow-hidden shadow-sm"
             >
-                <img
-                    src={imageUrl}
-                    alt="Uploaded heirloom"
-                    class="w-full h-full object-cover"
-                />
+                {#if showLocal && localPreview}
+                    <img
+                        src={localPreview}
+                        alt="Uploaded heirloom"
+                        class="w-full h-full object-cover"
+                    />
+                {:else}
+                    <HeirloomImage
+                        src={imageUrl}
+                        alt="Uploaded heirloom"
+                        class="w-full h-full object-cover"
+                    />
+                {/if}
 
                 <button
                     type="button"
                     onclick={triggerUpload}
                     class="absolute top-2 right-2 p-2 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors"
-                    title="Change Image"
+                    title="Choose a different photo"
+                    aria-label="Choose a different photo"
                 >
                     <Upload size={14} />
                 </button>
@@ -107,11 +133,17 @@
                     Add a photo
                 </h3>
                 <p class="text-xs text-slate-400">
-                    Drag photo here or click to upload
+                    Add a photo by dropping it here or choosing one
                 </p>
             </div>
         {/if}
     </div>
+
+    {#if uploading}
+        <p class="text-xs text-slate-500 text-center" aria-live="polite">Saving your photo…</p>
+    {:else if message}
+        <p class="text-xs text-slate-600 text-center" aria-live="polite">{message}</p>
+    {/if}
 
     <!-- Provenance / Story Field with SmartTextarea -->
     <div class="pt-4">

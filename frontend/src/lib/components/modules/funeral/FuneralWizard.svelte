@@ -24,12 +24,16 @@
     } from "$lib/stores/funeralStore.svelte";
     import {
         FUNERAL_TRADITIONS,
+        RENAMED_RITUALS,
         type TraditionConfig,
     } from "$lib/data/funeralTraditions";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
     import RefreshControl from "$lib/components/ui/RefreshControl.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import { REFLECTION_POOLS } from "$lib/data/reflectionPools"; // NEW IMPORT
+
+    // The page opens its budget tab from the last step.
+    export let onOpenBudget: (() => void) | undefined = undefined;
 
     // Steps
     const STEPS = [
@@ -130,11 +134,20 @@
         edit((w) => ({ ...w, disposition: type }));
     }
 
+    // A ritual saved under its old name counts as the renamed one.
+    function sameRitual(saved: string, ritual: string) {
+        return saved === ritual || RENAMED_RITUALS[saved] === ritual;
+    }
+
+    function hasRitual(w: FuneralWishes, ritual: string) {
+        return (w.ceremonyDetails?.rituals || []).some((r) => sameRitual(r, ritual));
+    }
+
     function toggleRitual(ritual: string) {
         edit((w) => {
             const current = w.ceremonyDetails?.rituals || [];
-            const rituals = current.includes(ritual)
-                ? current.filter((r) => r !== ritual)
+            const rituals = hasRitual(w, ritual)
+                ? current.filter((r) => !sameRitual(r, ritual))
                 : [...current, ritual];
             return { ...w, ceremonyDetails: { ...w.ceremonyDetails, rituals } };
         });
@@ -167,6 +180,15 @@
             direction = -1;
             currentStep--;
         }
+    }
+
+    // "+ Add Song": an in-page field in place of the browser prompt.
+    let newSong = "";
+    function addSong() {
+        const song = newSong.trim();
+        if (!song) return;
+        updateField(["music"], [...(wishes.music || []), song]);
+        newSong = "";
     }
 
     function isForbidden(action: string) {
@@ -238,8 +260,8 @@
                             Faith & Foundation
                         </h2>
                         <p class="text-stone-500">
-                            Select the tradition that best honors your life and
-                            values.
+                            Choose the tradition that feels closest to your life
+                            and values.
                         </p>
                     </div>
 
@@ -251,7 +273,7 @@
                                 on:click={() => setTradition(tradition.key)}
                                 class="p-4 rounded-xl border-2 text-left transition-all hover:scale-[1.02]
                                 {wishes.religiousTradition === tradition.key
-                                    ? 'border-[#4A7C74] bg-[#4A7C74]/5 shadow-mdring-1 ring-[#4A7C74]'
+                                    ? 'border-[#4A7C74] bg-[#4A7C74]/5 shadow-md ring-1 ring-[#4A7C74]'
                                     : 'border-stone-100 hover:border-[#4A7C74]/30 bg-white'}"
                             >
                                 <div class="font-bold text-stone-800 mb-1">
@@ -267,6 +289,14 @@
                             </button>
                         {/each}
                     </div>
+
+                    <a
+                        href="/modules/funeral/traditions/{activeTradition.key}"
+                        class="inline-flex items-center gap-2 text-sm font-bold text-[#4A7C74] hover:text-[#304743] transition-colors"
+                    >
+                        <BookOpen size={16} /> Learn about {activeTradition.name} traditions
+                        <ArrowRight size={14} />
+                    </a>
 
                     <div class="flex justify-end mb-1">
                         <RefreshControl
@@ -295,8 +325,7 @@
                             The Farewell
                         </h2>
                         <p class="text-stone-500">
-                            Decisions regarding the preparation and resting
-                            place of the body.
+                            Your wishes for your final resting place.
                         </p>
                     </div>
 
@@ -353,11 +382,11 @@
                                 <div
                                     class="text-xs font-bold text-red-500 bg-red-50 px-2 py-1 rounded inline-block mb-2"
                                 >
-                                    Typically Forbidden in {activeTradition.name}
+                                    Many {activeTradition.name} families choose burial.
                                 </div>
                             {/if}
                             <p class="text-sm text-stone-600">
-                                Process of reducing the body to ashes/fragments.
+                                A gentle return to ashes, held in an urn or scattered.
                             </p>
                         </button>
                     </div>
@@ -374,9 +403,7 @@
                                 {#if !["Embalming"].some((x) => x === option && isForbidden("embalming"))}
                                     <button
                                         class="px-4 py-2 rounded-lg border text-sm font-bold transition-all
-                                        {wishes.ceremonyDetails?.rituals?.includes(
-                                            option,
-                                        )
+                                        {hasRitual(wishes, option)
                                             ? 'bg-[#4A7C74] text-white border-[#4A7C74]'
                                             : 'bg-white border-stone-200 text-stone-500 hover:border-[#4A7C74]'}"
                                         on:click={() => toggleRitual(option)}
@@ -457,9 +484,7 @@
                                 >
                                     <div
                                         class="w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors
-                                        {wishes.ceremonyDetails?.rituals?.includes(
-                                            ritual,
-                                        )
+                                        {hasRitual(wishes, ritual)
                                             ? 'bg-[#4A7C74] border-[#4A7C74] text-white'
                                             : 'border-stone-300 text-transparent group-hover:border-[#4A7C74]'}"
                                     >
@@ -536,19 +561,30 @@
                                         >
                                     </div>
                                 {/each}
-                                <button
-                                    class="text-xs font-bold text-[#4A7C74] uppercase tracking-wide mt-2"
-                                    on:click={() => {
-                                        const s = prompt(
-                                            "Add Song (Artist - Title):",
-                                        );
-                                        if (s)
-                                            updateField(
-                                                ["music"],
-                                                [...(wishes.music || []), s],
-                                            );
-                                    }}>+ Add Song</button
+                                <label
+                                    for="funeral-wizard-song"
+                                    class="sr-only">Share a song (Artist - Title)</label
                                 >
+                                <div class="flex gap-2 mt-2">
+                                    <input
+                                        id="funeral-wizard-song"
+                                        type="text"
+                                        bind:value={newSong}
+                                        on:keydown={(e) => {
+                                            if (e.key === "Enter") {
+                                                e.preventDefault();
+                                                addSong();
+                                            }
+                                        }}
+                                        placeholder="Share a song (Artist - Title)"
+                                        class="flex-1 min-w-0 text-sm p-2 bg-stone-50 border border-stone-200 rounded-lg outline-none focus:ring-1 focus:ring-[#4A7C74]"
+                                    />
+                                    <button
+                                        class="text-xs font-bold text-[#4A7C74] uppercase tracking-wide px-2 disabled:opacity-40"
+                                        disabled={!newSong.trim()}
+                                        on:click={addSong}>+ Add Song</button
+                                    >
+                                </div>
                             </div>
                         </div>
 
@@ -623,6 +659,31 @@
                             />
                         </div>
                     </div>
+
+                    <div
+                        data-testid="funeral-onward"
+                        class="bg-[#FBF9EB] rounded-2xl p-6 border border-[#4A7C74]/10 space-y-4"
+                    >
+                        <p class="font-serif text-lg text-[#304743] flex items-center gap-2">
+                            <Check size={18} /> Your wishes are saved as you go.
+                        </p>
+                        <div class="flex flex-wrap gap-3">
+                            {#if onOpenBudget}
+                                <button
+                                    on:click={onOpenBudget}
+                                    class="px-5 py-2.5 bg-[#304743] hover:bg-[#2A3F3B] text-white rounded-xl font-bold text-sm flex items-center gap-2 transition-colors"
+                                >
+                                    Continue to Financial Care <ArrowRight size={16} />
+                                </button>
+                            {/if}
+                            <a
+                                href="/modules/letters"
+                                class="px-5 py-2.5 bg-white border border-stone-200 hover:border-[#4A7C74] text-[#304743] rounded-xl font-bold text-sm flex items-center gap-2 transition-colors"
+                            >
+                                Continue to Letters to Loved Ones <ArrowRight size={16} />
+                            </a>
+                        </div>
+                    </div>
                 </div>
             {/if}
         </div>
@@ -645,7 +706,7 @@
                 on:click={nextStep}
                 class="px-8 py-3 bg-[#304743] hover:bg-[#2A3F3B] text-white rounded-xl font-bold shadow-lg shadow-[#304743]/20 flex items-center gap-2 transition-all hover:-translate-y-0.5"
             >
-                Next Step <ArrowRight size={18} />
+                Continue <ArrowRight size={18} />
             </button>
         {/if}
     </div>
