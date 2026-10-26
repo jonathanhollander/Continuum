@@ -480,6 +480,7 @@
                 <!-- Language selector -->
                 <div class="relative">
                     <button
+                        aria-label="Language"
                         onclick={() => (langMenuOpen = !langMenuOpen)}
                         class="flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm group"
                     >
