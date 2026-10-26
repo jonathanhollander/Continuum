@@ -2,7 +2,7 @@
 
 Last Updated: 2026-10-26 18:11 EDT  
 Stable backend source: `0d47a81bb32aa9683e584dda588977bfa5ebafd6` (X340/X366 merged); X367 supplement: `e8e357640c0759ae8169ea5477ebbed5da5a84c0`.  
-Status: local inventory and measurements complete; private PostgreSQL stopped. Production five-slowest-GET evidence is owned separately by root and remains open. This report does not close that production requirement.
+Status: local inventory and measurements complete; private PostgreSQL stopped. Root production observations are appended below, with their narrower sampling and timing boundary.
 
 ## Result and coverage
 
@@ -265,4 +265,21 @@ Full evidence: `/private/tmp/continuum-o1-release-x7j7nlgm`. Key files are `meas
 
 Complete preparation failures remain: the first proof command had an indentation error before requests; timing dispatch stopped before an editable HomeAccess field, then before ExternalArchive's platform field. These were harness selection gaps. Another optional fixture incorrectly expected 409 from ordinary media DELETE; source tracing established that the actual lifecycle query is `only_if_unused=true`, which returns 200/removed:false on a reference. That synthetic dataset was reseeded and the correct two lifecycle outcomes were measured. No bad sample became a successful row; completed rows were retained across resumes. The final process printed source-integrity success and 7,080 complete requests, then an obsolete duplicate dispatch stub raised. That post-run stub was removed; offline completeness/hash validation passed without rerunning any completed measurement. Logs `measure-01.log` through `measure-05.log`, `failure-*.json`, and `fixture-dispatch-preflight.log` preserve the full history.
 
-Limits: controller timing uses local PostgreSQL on one machine with fsync disabled for this disposable cluster, an in-process client and no provider transport. It proves the stated synthetic workload and source identity, not a production service-level objective, concurrent load, network latency, real attachment size or email fanout/provider success. Owner check-in here follows the seeded locally unconfirmed alert history; accepted-provider all-clear fanout is not exercised as a provider workload. Production's five slowest GET table remains separate and open. The local supplement and shutdown are complete; production evidence remains outside this report.
+Limits: controller timing uses local PostgreSQL on one machine with fsync disabled for this disposable cluster, an in-process client and no provider transport. It proves the stated synthetic workload and source identity, not a production service-level objective, concurrent load, network latency, real attachment size or email fanout/provider success. Owner check-in here follows the seeded locally unconfirmed alert history; accepted-provider all-clear fanout is not exercised as a provider workload. The local supplement and shutdown are complete. Root's separate production observation table follows; it does not turn controller timings into production or network guarantees.
+
+
+## Root production observations — released correction cut
+
+Railway deployment `fcc43b09-6a3d-49b3-be13-99ff6a08bb43` reported SUCCESS for `4468a90de202fccc6794d807fbb71b2e150567e2`, whose frontend/backend trees match the measured feature cut. Root used the existing signed-in Chrome session for read-only page visits, without extracting credentials or changing records. Five core pages were revisited in one bounded observation pass; 19 visits completed before the browser control detached at the PDF preview, and the remaining transparency visit completed after rebinding the same tab. Initial unsettled navigation frames were not counted as rendered-page proof.
+
+The table ranks the **five slowest observed paths among 38 observed API paths**, using 426 successful GET log entries from the exact deployment between 22:24:30 and 22:29:29 UTC. Railway `totalDuration` is edge/upstream duration in milliseconds, **not browser round-trip latency**. Samples are naturally uneven; p95 uses the nearest-rank observation and is the maximum for these small samples. No production SQL query count was collected. This is not an exhaustive ranking of every possible authenticated/recipient GET or a 20-sample benchmark of each production path.
+
+| Observed GET path | Samples | p50 ms | p95 ms | SQL | Read reporting target | Cause / smallest fix |
+|---|---:|---:|---:|---|---|---|
+| `/api/data/timeline_events` | 6 | 171 | 365 | Unmeasured | Above 150 ms | Page-load/burst observation; root cause unmeasured, no speculative fix selected. |
+| `/api/data/advanced_assets` | 6 | 173.5 | 364 | Unmeasured | Above 150 ms | Page-load/burst observation; root cause unmeasured, no speculative fix selected. |
+| `/api/data/calendar_events` | 6 | 134 | 363 | Unmeasured | Above 150 ms | Page-load/burst observation; root cause unmeasured, no speculative fix selected. |
+| `/api/data/pets` | 8 | 100.5 | 354 | Unmeasured | Above 150 ms | Page-load/burst observation; root cause unmeasured, no speculative fix selected. |
+| `/api/medical/directives` | 9 | 81 | 349 | Unmeasured | Above 150 ms | Page-load/burst observation; root cause unmeasured, no speculative fix selected. |
+
+These observations include concurrent page initialization and a bounded repeated-navigation burst after deployment. They establish actual response durations in that window, not a steady-state service objective or an application regression. The local PostgreSQL controller table above is the controlled source/SQL comparison. Raw sanitized timing rows and summary are outside Git in `/private/tmp/continuum-release-2026-10-26/production-http-observations.json` and `production-get-summary.json`; client IPs, credentials, tokens and response records were omitted. Performance targets remain report-only under the canonical plan.
