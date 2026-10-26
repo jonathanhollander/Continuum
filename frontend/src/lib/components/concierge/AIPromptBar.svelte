@@ -3,27 +3,9 @@
     import { Sparkles, ArrowRight, Loader2, Copy } from "lucide-svelte";
     import { logInteraction } from "$lib/stores/conciergeStore.svelte";
     import { aiConciergeService } from "$lib/services/aiConciergeService";
+    import type { AIModuleVariant } from "$lib/services/aiCapabilities";
 
-    export let context:
-        | "obituary"
-        | "letters"
-        | "executor"
-        | "heirlooms"
-        | "legal_explainer"
-        | "contacts"
-        | "medical"
-        | "pets"
-        | "property"
-        | "insurance"
-        | "digital-guardian"
-        | "visual-memories"
-        | "financial"
-        | "activity-log"
-        | "subscriptions"
-        | "advanced-registry"
-        | "qr-codes"
-        | "home-manual"
-        | "calendar" = "obituary";
+    export let context: AIModuleVariant = "obituary";
     // A page's own chips replace the context defaults below.
     export let prompts: string[] = [];
     // Page-specific ideas; three are shown at a time and can be reshuffled.
@@ -153,7 +135,7 @@
 
         try {
             // chat() never throws; on failure it sets `failed` and returns a gentle notice.
-            const response = await aiConciergeService.chat(text, [], context);
+            const response = await aiConciergeService.modulePrompt(text, context);
             isNotice = response.failed === true;
             result = isNotice
                 ? response.content

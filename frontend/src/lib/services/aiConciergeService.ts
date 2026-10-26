@@ -5,6 +5,7 @@ import { apiFetch } from '../api/client';
 import { parseApiError } from './errorHandler';
 import { createRedactionSession } from '../utils/sanitize';
 import { captureSession, assertCurrentSession, sessionToken } from './sessionOwnership';
+import { aiCapability, type AICapability, type AIModuleVariant } from './aiCapabilities';
 
 export const AI_UNAVAILABLE = "AI help is resting right now. Everything else is here for you, and you can come back whenever you're ready.";
 
@@ -16,8 +17,9 @@ export const AI_UNAVAILABLE = "AI help is resting right now. Everything else is 
  */
 export async function callAiProxy(
     messages: Array<{ role: string; content: string }>,
-    options: { preserveSensitiveValues?: boolean } = {}
+    options: AICapability & { preserveSensitiveValues?: boolean }
 ): Promise<string> {
+    const capability = aiCapability(options);
     const owner = captureSession();
     assertCurrentSession(owner);
     const redactions = createRedactionSession(messages.map((m) => m.content));
@@ -38,7 +40,7 @@ export async function callAiProxy(
         method: 'POST',
         headers,
         body: JSON.stringify({
-            model: 'google/gemini-2.0-flash-001',
+            ...capability,
             messages: outgoing
         })
     });
@@ -86,7 +88,10 @@ export interface AIContext {
     emotionalState?: 'calm' | 'overwhelmed' | 'uncertain';
 }
 
-async function chat(content: string, history: any[], contextName: string = 'Continuum Dashboard', context?: AIContext): Promise<AIResponse> {
+type ConciergeCapability = Extract<AICapability, { purpose: 'concierge.chat' | 'concierge.module_prompt' }>;
+
+async function chat(content: string, history: any[], contextName: string = 'Continuum Dashboard', context?: AIContext,
+    capability: ConciergeCapability = { purpose: 'concierge.chat' }): Promise<AIResponse> {
     // Detect role if not explicitly provided
     const userRole = context?.userRole || detectUserRole();
 
@@ -180,7 +185,7 @@ Example: { "message": "Sarah recorded as daughter—what a beautiful gift to hav
                         role: "user",
                         content
                     }
-        ]);
+        ], capability);
 
         // Attempt to parse JSON if AI returned it
         try {
@@ -220,5 +225,7 @@ export function detectUserRole(): 'owner' | 'executor' | 'family' {
 
 export const aiConciergeService = {
     chat,
+    modulePrompt: (content: string, variant: AIModuleVariant) =>
+        chat(content, [], variant, undefined, { purpose: 'concierge.module_prompt', variant }),
     detectUserRole
 };
