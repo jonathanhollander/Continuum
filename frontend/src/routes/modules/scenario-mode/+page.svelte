@@ -13,8 +13,7 @@
         Wallet,
         Cloud,
     } from "lucide-svelte";
-    import { estateAnalytics } from "$lib/stores/analyticsStore";
-    import { estateProfile } from "$lib/stores/estateStore.svelte";
+    import { estateAnalytics, estateExecutorName } from "$lib/stores/analyticsStore";
 
     const scenarios = [
         {
@@ -45,7 +44,7 @@
     // Readiness logic for scenarios
     // Readiness logic for scenarios
     let readiness = $derived({
-        hasExecutor: !!$estateProfile.executorName,
+        hasExecutor: !!$estateExecutorName,
         hasProxy: $estateAnalytics.pillars.legal.metrics.hasMedicalProxy,
         hasLivingWill: $estateAnalytics.pillars.legal.metrics.hasLivingWill,
         hasHeirlooms: $estateAnalytics.pillars.legacy.metrics.heirloomCount > 0,
@@ -169,7 +168,7 @@
                                         <p
                                             class="text-xs text-green-700 font-medium"
                                         >
-                                            {$estateProfile.executorName} knows their
+                                            {$estateExecutorName} knows their
                                             role.
                                         </p>
                                     </div>

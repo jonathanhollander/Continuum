@@ -22,6 +22,7 @@
     } from "lucide-svelte";
     import { onMount } from "svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
+    import { estateExecutorName } from "$lib/stores/analyticsStore";
     import { getStored, setStored } from "$lib/stores/persistence";
     import { digitalGuardianSync, type GuardianChecks } from "$lib/stores/digitalGuardianStore.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
@@ -400,7 +401,7 @@
                     >Primary Digital Successor</span
                 >
                 <div class="text-xl font-bold text-slate-800">
-                    {$estateProfile.executorName || "None Designated"}
+                    {$estateExecutorName || "None Designated"}
                 </div>
                 <p class="text-xs text-slate-500 mt-1">
                     Synced from your Lead Executor designation.

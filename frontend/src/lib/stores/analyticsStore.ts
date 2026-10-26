@@ -23,6 +23,19 @@ const pillarScore = (scores: Record<string, number> | undefined, ids: readonly s
 
 const named = (v: any) => { const t = String(v ?? '').trim(); return t !== '' && t !== 'None'; };
 
+// The executor is named on the profile, or is a contact with the Executor role
+export const findExecutorName = (profile: any, members: any[] | undefined): string => {
+    const own = String(profile?.executorName ?? '').trim();
+    if (own) return own;
+    const m = (members || []).find((c: any) =>
+        c && (c.isExecutor === true || String(c.role ?? '').toLowerCase() === 'executor'));
+    return m ? String(m.name ?? '').trim() : '';
+};
+
+// The executor's name for any page (profile first, then the Executor contact)
+export const estateExecutorName = derived([estateProfile, familyStore], ([$profile, $familyRaw]) =>
+    findExecutorName($profile, ($familyRaw as typeof familyStore)?.members));
+
 export const estateAnalytics = derived(
     [estateProfile, petStore, medicalStore, advancedAssetStore, digitalAssetsStore, estateAudit, heirloomStore, funeralStore, pulse, financialAssetsStore, familyStore, insuranceStore],
     ([$profile, $pets, $medicalRaw, $advanced, $digital, $audit, $heirlooms, $funeral, $pulse, $accounts, $familyRaw, $policies]) => {
@@ -32,8 +45,8 @@ export const estateAnalytics = derived(
 
         // --- 1. Legal Readiness ---
         // The executor is named on the profile, or is a contact with the Executor role
-        const hasExecutor = !!$profile?.executorName || ($family?.members || []).some((m: any) =>
-            m && (m.isExecutor === true || String(m.role ?? '').toLowerCase() === 'executor'));
+        const executorName = findExecutorName($profile, $family?.members);
+        const hasExecutor = !!executorName;
         const hasMedicalProxy = ($medical?.directives || []).some((d: any) => d.type === 'healthcare_proxy');
         const hasLivingWill = ($medical?.directives || []).some((d: any) => d.type === 'living_will');
 
@@ -71,6 +84,7 @@ export const estateAnalytics = derived(
                     score: legalScore,
                     metrics: {
                         hasExecutor,
+                        executorName,
                         hasMedicalProxy,
                         hasLivingWill
                     }

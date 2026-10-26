@@ -29,6 +29,7 @@
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
     import { onMount } from "svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
+    import { estateExecutorName } from "$lib/stores/analyticsStore";
     import { activityLog } from "$lib/stores/activityLog.svelte";
     import { UserCircle, MapPin as MapPinIcon, Cross } from "lucide-svelte";
     import { funeralStore, type FuneralWishes, type FuneralBudgetItem } from "$lib/stores/funeralStore.svelte";
@@ -328,7 +329,7 @@
                         Chief Coordinator
                     </p>
                     <p class="font-bold text-slate-700">
-                        {$estateProfile.executorName || "None Designated"}
+                        {$estateExecutorName || "None Designated"}
                     </p>
                 </div>
                 <div class="p-3 bg-white rounded-xl shadow-sm text-primary">
