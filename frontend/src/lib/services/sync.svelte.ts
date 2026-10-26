@@ -777,6 +777,9 @@ class SharedRecord {
 
     constructor(private url: string) {}
 
+    /** This record's place in the shared load notice. */
+    private get noticeKey() { return `record:${this.url}`; }
+
     attach(slice: ProfileSlice) { this.slices.add(slice); }
 
     /** The server record with every save not yet confirmed laid over it. */
@@ -793,6 +796,7 @@ class SharedRecord {
         this.epoch++;
         this.synced = false;
         this.inflight = null;
+        loadAnswered(this.noticeKey);
         this.server = {};
         this.queue.splice(0).forEach(b => b.waiters.forEach(w => w.reject(ACCOUNT_CHANGED)));
         this.loadedFor = account;
@@ -823,11 +827,14 @@ class SharedRecord {
         const token = get(auth).token;
         if (!token) { this.slices.forEach(s => { s.status = "idle"; }); return; }
         this.slices.forEach(s => { s.status = "syncing"; s.error = null; });
+        let answered = false; // the server returned the record (a later failure is an upload's)
         try {
             const res = await fetch(this.url, { headers: { 'Authorization': `Bearer ${token}` } });
             if (!res.ok) throw new Error("Failed to fetch remote data");
             const raw = await res.json();
             if (epoch !== this.epoch || get(auth).token !== token) return; // account changed mid-flight
+            answered = true;
+            loadAnswered(this.noticeKey);
             this.server = convertKeys(raw, toCamel) || {};
 
             // First load of an empty account: every store's own device data goes up in one POST
@@ -847,6 +854,11 @@ class SharedRecord {
         } catch (e: unknown) {
             if (e === ACCOUNT_CHANGED || epoch !== this.epoch) return;
             this.slices.forEach(s => s.syncFailed(e));
+            // The first read of the record did not answer: each store keeps its device copy, and the
+            // shared notice (one for every store) offers to load it again.
+            if (!answered && get(auth).token === token) {
+                loadFailed(this.noticeKey, () => { this.sync().catch(() => {}); }, errTechnical(e));
+            }
         }
     }
 
@@ -884,6 +896,10 @@ class SharedRecord {
             .finally(() => this.pump());
     }
 }
+
+/** Singleton stores whose page reports its own failed load (pulse settings: a page notice with its
+ *  own Try Again), so the shared notice leaves them out and that page shows one notice. */
+const OWN_LOAD_NOTICE = new Set(['pulse_settings']);
 
 const _sharedRecords = new Map<string, SharedRecord>();
 function sharedRecord(url: string) {
@@ -948,6 +964,7 @@ export class SingletonSyncManager<T extends object> {
     /** Account change: see SyncManager.reset. */
     reset(clear = false) {
         this.inflight = null;
+        loadAnswered(this.noticeKey);
         this.record?.reset(clear);
         this.loadedFor = clear ? null : storageAccount();
         const raw = clear ? ({} as T) : getStored<T>(this.key, {} as T);
@@ -962,6 +979,9 @@ export class SingletonSyncManager<T extends object> {
         await this.sync();
     }
 
+    /** This store's place in the shared load notice (prefixed: list stores use their bare key). */
+    private get noticeKey() { return `one:${this.key}`; }
+
     sync(): Promise<void> {
         if (this.record) return this.record.syncSlice(this);
         if (this.inflight) return this.inflight;
@@ -973,13 +993,16 @@ export class SingletonSyncManager<T extends object> {
     private async runSync() {
         this.status = "syncing";
         this.error = null;
+        const token = get(auth).token;
+        let answered = false; // the server returned the record (a later failure is an upload's)
         try {
-            const token = get(auth).token;
             if (!token) { this.status = "idle"; return; }
 
             const url = `${BASE_URL}${this.apiBase}/${this.endpoint}`;
             const raw = await sharedGet(url, token);
             if (get(auth).token !== token) return; // account changed mid-flight
+            answered = true;
+            loadAnswered(this.noticeKey);
             const remoteDataRaw = convertKeys(raw, toCamel);
             const remoteData = this.mapper ? this.mapper(remoteDataRaw) : remoteDataRaw as unknown as T;
 
@@ -1002,6 +1025,11 @@ export class SingletonSyncManager<T extends object> {
             console.error(`[Sync:${this.key}] Error:`, e);
             this.status = "error";
             this.error = errMessage(e) ?? null;
+            // First read failed: the shared notice offers to load it again (see SyncManager.runSync),
+            // unless this store's page shows its own notice for it.
+            if (!answered && !this.#lastSync && token && get(auth).token === token && !OWN_LOAD_NOTICE.has(this.key)) {
+                loadFailed(this.noticeKey, () => { this.sync().catch(() => {}); }, errTechnical(e));
+            }
         }
     }
 
