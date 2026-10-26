@@ -75,7 +75,7 @@ def get_medical_directives(user: User = Depends(get_current_user), session: Sess
     return session.exec(statement).all()
 
 @router.post("/directives", response_model=MedicalDirective)
-@limiter.limit("20/minute")
+@limiter.limit("600/minute")  # authenticated owner route, same level as /api/data/*
 def create_medical_directive(request: Request, directive: MedicalDirective, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     _check_directive({"type": getattr(directive, "type", None), "title": getattr(directive, "title", None)})
     directive = validated_new(MedicalDirective, directive, user.id)
@@ -97,7 +97,7 @@ def create_medical_directive(request: Request, directive: MedicalDirective, user
     return directive
 
 @router.put("/directives/{directive_id}", response_model=MedicalDirective)
-@limiter.limit("20/minute")
+@limiter.limit("600/minute")  # authenticated owner route, same level as /api/data/*
 def update_medical_directive(request: Request, directive_id: int, updated: MedicalDirective, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     directive = session.get(MedicalDirective, directive_id)
     if not directive or directive.user_id != user.id:
