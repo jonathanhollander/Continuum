@@ -143,31 +143,43 @@
         };
     }
 
-    // Text reveal animation - word by word
-    function textReveal(node: HTMLElement, options: { delay?: number } = {}) {
+    // Text reveal animation - word by word.
+    // The heading text comes in as a parameter so a language switch rebuilds
+    // the words (the action replaces the node's children, so Svelte's own
+    // text node is detached). Each word is an inline-block span; the space
+    // between words stays a plain text node so it renders.
+    function textReveal(
+        node: HTMLElement,
+        options: { text?: string; delay?: number } = {},
+    ) {
         if (prefersReducedMotion) return { destroy: () => {} };
 
-        const text = node.textContent || "";
-        const words = text.split(" ");
-        node.innerHTML = "";
+        let shown = false;
         node.style.opacity = "1";
 
-        words.forEach((word, i) => {
-            const span = document.createElement("span");
-            span.textContent = word + " ";
-            span.style.opacity = "0";
-            span.style.transform = "translateY(20px)";
-            span.style.display = "inline-block";
-            span.style.transition = `opacity 0.5s ease ${(options.delay || 0) + i * 0.05}s, transform 0.5s ease ${(options.delay || 0) + i * 0.05}s`;
-            node.appendChild(span);
-        });
+        function build(opts: { text?: string; delay?: number }) {
+            const text = (opts.text ?? node.textContent ?? "").trim();
+            const words = text.split(/\s+/).filter(Boolean);
+            node.replaceChildren();
+            words.forEach((word, i) => {
+                if (i > 0) node.appendChild(document.createTextNode(" "));
+                const span = document.createElement("span");
+                span.textContent = word;
+                span.style.display = "inline-block";
+                span.style.transition = `opacity 0.5s ease ${(opts.delay || 0) + i * 0.05}s, transform 0.5s ease ${(opts.delay || 0) + i * 0.05}s`;
+                span.style.opacity = shown ? "1" : "0";
+                span.style.transform = shown ? "translateY(0)" : "translateY(20px)";
+                node.appendChild(span);
+            });
+        }
+        build(options);
 
         const observer = new IntersectionObserver(
             (entries) => {
                 entries.forEach((entry) => {
                     if (entry.isIntersecting) {
-                        const spans = node.querySelectorAll("span");
-                        spans.forEach((span) => {
+                        shown = true;
+                        node.querySelectorAll("span").forEach((span) => {
                             (span as HTMLElement).style.opacity = "1";
                             (span as HTMLElement).style.transform =
                                 "translateY(0)";
@@ -178,7 +190,10 @@
             { threshold: 0.5 },
         );
         observer.observe(node);
-        return { destroy: () => observer.disconnect() };
+        return {
+            update: (opts: { text?: string; delay?: number }) => build(opts),
+            destroy: () => observer.disconnect(),
+        };
     }
 
     onMount(() => {
@@ -636,7 +651,7 @@
             <div class="max-w-2xl mx-auto reveal-section" use:reveal>
                 <h2
                     class="text-2xl md:text-3xl font-serif text-white/80 text-center mb-10"
-                    use:textReveal
+                    use:textReveal={{ text: $m2t.kitchenTitle }}
                 >
                     {$m2t.kitchenTitle}
                 </h2>
@@ -663,7 +678,7 @@
             >
                 <h2
                     class="text-3xl md:text-4xl font-serif text-white/90 mb-8 leading-relaxed"
-                    use:textReveal
+                    use:textReveal={{ text: $m2t.weightTitle }}
                 >
                     {$m2t.weightTitle}
                 </h2>
@@ -698,7 +713,7 @@
                 </div>
                 <h2
                     class="text-3xl md:text-4xl font-serif text-white/90 mb-8"
-                    use:textReveal
+                    use:textReveal={{ text: $m2t.guideTitle }}
                 >
                     {$m2t.guideTitle}
                 </h2>
@@ -734,7 +749,7 @@
                     </div>
                     <h2
                         class="text-3xl md:text-4xl font-serif text-white/90 mb-8"
-                        use:textReveal
+                        use:textReveal={{ text: $m2t.pulseTitle }}
                     >
                         {$m2t.pulseTitle}
                     </h2>
@@ -1359,6 +1374,13 @@
         to {
             transform: rotate(0deg);
             opacity: 1;
+        }
+    }
+
+    /* Globe in the language button (lucide child, group-hover variant) */
+    @media (prefers-reduced-motion: no-preference) {
+        :global(.group:hover .group-hover\:animate-spin-slow) {
+            animation: spinSlow 10s linear infinite;
         }
     }
 
