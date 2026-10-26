@@ -119,8 +119,8 @@
 
     // /api/pulse/status: the highest tier alerted since the owner's own last check-in, and when
     const tierContacted = $derived.by(() => {
-        const s = pulseStatus.current as any;
-        return s?.escalationTier ? { tier: s.escalationTier as number, at: s.escalationAt as string | null } : null;
+        const s = pulseStatus.current;
+        return s?.escalationTier ? { tier: s.escalationTier, at: s.escalationAt ?? null } : null;
     });
 
     const statusLabels: Record<string, string> = {
