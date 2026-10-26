@@ -80,7 +80,8 @@
     }
 
     /* --- Theme: Color Accents (light) ---
-       Every accent has a paired foreground, hover and soft tint that pass 4.5:1. */
+       Every accent has a paired foreground, hover and soft tint that pass 4.5:1.
+       Deep surfaces stay dark in both modes for the shell's white text. */
     body.theme-color-teal {
         --color-primary-on-dark: #7FB5AB;
         --color-primary-hover-on-dark: #9CC9C0;
@@ -88,6 +89,7 @@
         --color-primary: #4A7C74;
         --color-primary-foreground: #ffffff;
         --color-primary-hover: #3B635D;
+        --color-primary-deep: #304743;
         --color-primary-soft: #E8F0EE;
     }
 
@@ -98,6 +100,7 @@
         --color-primary: #4F46E5;
         --color-primary-foreground: #ffffff;
         --color-primary-hover: #4338CA;
+        --color-primary-deep: #312E81;
         --color-primary-soft: #EEF2FF;
     }
 
@@ -108,6 +111,7 @@
         --color-primary: #047857;
         --color-primary-foreground: #ffffff;
         --color-primary-hover: #065F46;
+        --color-primary-deep: #064032;
         --color-primary-soft: #ECFDF5;
     }
 
@@ -118,6 +122,7 @@
         --color-primary: #E11D48;
         --color-primary-foreground: #ffffff;
         --color-primary-hover: #BE123C;
+        --color-primary-deep: #70102F;
         --color-primary-soft: #FFF1F2;
     }
 
@@ -128,6 +133,7 @@
         --color-primary: #B45309;
         --color-primary-foreground: #ffffff;
         --color-primary-hover: #92400E;
+        --color-primary-deep: #5C2A0B;
         --color-primary-soft: #FFFBEB;
     }
 
@@ -138,6 +144,7 @@
         --color-primary: #0f172a;
         --color-primary-foreground: #ffffff;
         --color-primary-hover: #020617;
+        --color-primary-deep: #0F172A;
         --color-primary-soft: #F1F5F9;
     }
 
@@ -272,6 +279,7 @@
         --color-primary: #000000;
         --color-primary-foreground: #ffffff;
         --color-primary-hover: #000000;
+        --color-primary-deep: #000000;
         --color-background: #ffffff;
         --color-surface: #ffffff;
         --color-border: #000000;
