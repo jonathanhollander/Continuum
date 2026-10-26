@@ -55,6 +55,7 @@
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import { plural } from "$lib/utils/plural";
+    import { formatMoney } from "$lib/utils/money";
     import { downloadMedia, mediaIdFromRef } from "$lib/services/mediaService";
 
     let showAddModal = $state(false);
@@ -62,6 +63,11 @@
     let isEditing = $state(false);
     let searchQuery = $state("");
     let filterType = $state("All");
+    let openClaims = $state<Record<string, boolean>>({});
+    const cap = (v: unknown) => {
+        const t = String(v ?? "").trim();
+        return t.charAt(0).toUpperCase() + t.slice(1).toLowerCase();
+    };
     let showWizard = $state(false);
     let parsedCustomAttributes = $state<Record<string, any>>({});
     let isLoading = $state(true);
@@ -453,26 +459,6 @@
         </div>
     {/if}
 
-    <!-- Filter Controls -->
-    <div class="flex flex-wrap items-center gap-3">
-        <div
-            class="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm"
-        >
-            {#each types as type}
-                <button
-                    onclick={() => (filterType = type)}
-                    class="px-4 py-2 rounded-xl text-xs font-bold tracking-wider transition-all {filterType ===
-                    type
-                        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
-                        : 'text-slate-500 hover:text-primary hover:bg-slate-50'}"
-                >
-                    {type}
-                </button>
-            {/each}
-        </div>
-    </div>
-
-
     <!-- AI Prompt Bar -->
     <div class="max-w-3xl mx-auto mb-8">
         <AIPromptBar context="insurance" />
@@ -594,6 +580,21 @@
                 class="w-full px-4 py-3 pl-12 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
             />
         </div>
+        <div
+            class="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm"
+        >
+            {#each types as type}
+                <button
+                    onclick={() => (filterType = type)}
+                    class="px-4 py-2 rounded-xl text-xs font-bold tracking-wider transition-all {filterType ===
+                    type
+                        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                        : 'text-slate-500 hover:text-primary hover:bg-slate-50'}"
+                >
+                    {type}
+                </button>
+            {/each}
+        </div>
         <div class="flex items-center gap-2">
             <span
                 class="text-xs font-bold text-slate-400 uppercase tracking-widest"
@@ -687,7 +688,7 @@
                             <p
                                 class="text-sm font-semibold text-slate-700"
                             >
-                                ${policy.premiumAmount}
+                                {formatMoney(policy.premiumAmount)}
                             </p>
                         </div>
                         <div
@@ -701,7 +702,7 @@
                             <p
                                 class="text-sm font-semibold text-slate-700"
                             >
-                                {policy.premiumFrequency}
+                                {cap(policy.premiumFrequency)}
                             </p>
                         </div>
                         <div
@@ -774,28 +775,25 @@
                     </div>
                 </div>
 
-                <!-- Card Footer / Claims Procedure CTA -->
+                <!-- Card Footer / Claims Procedure -->
+                {#if policy.claimsProcedure}
                 <div class="mt-auto p-3">
-                    <div
-                        class="bg-primary rounded-xl p-4 text-white flex items-center justify-between group/footer hover:bg-slate-900 transition-colors duration-300 cursor-pointer"
+                    <button
+                        type="button"
+                        onclick={() => (openClaims[String(policy.id)] = !openClaims[String(policy.id)])}
+                        aria-expanded={!!openClaims[String(policy.id)]}
+                        class="w-full text-left bg-primary rounded-xl p-4 text-primary-foreground flex items-center justify-between group/footer hover:bg-slate-900 hover:text-white transition-colors duration-300"
                     >
-                        <div>
-                            <p
-                                class="text-[10px] font-semibold uppercase tracking-wide opacity-70 mb-1"
-                            >
-                                Claims Procedure
-                            </p>
-                            <h4 class="font-semibold text-sm">
-                                Access Support Guides
-                            </h4>
-                        </div>
-                        <div
-                            class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center group-hover/footer:translate-x-1 transition-transform"
-                        >
+                        <span class="font-semibold text-sm">Claims Procedure</span>
+                        <span class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center group-hover/footer:translate-x-1 transition-transform">
                             <ArrowRight size={18} />
-                        </div>
-                    </div>
+                        </span>
+                    </button>
+                    {#if openClaims[String(policy.id)]}
+                        <p class="mt-3 px-2 text-sm text-slate-700 whitespace-pre-line">{policy.claimsProcedure}</p>
+                    {/if}
                 </div>
+                {/if}
             </div>
         {:else}
             <!-- Empty State for Insurance -->
@@ -890,10 +888,10 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-4 py-3 text-sm text-slate-600">{policy.insuranceType}</td>
+                                <td class="px-4 py-3 text-sm text-slate-600">{cap(policy.insuranceType)}</td>
                                 <td class="px-4 py-3 text-sm text-slate-600">{policy.insurer}</td>
                                 <td class="px-4 py-3 text-sm text-slate-600">
-                                    ${policy.premiumAmount}/{policy.premiumFrequency?.slice(0, 3) || 'mo'}
+                                    {formatMoney(policy.premiumAmount)} {cap(policy.premiumFrequency || "Monthly")}
                                 </td>
                                 <td class="px-4 py-3 text-sm text-slate-600 max-w-[150px] truncate">
                                     {policy.beneficiaries || '-'}
