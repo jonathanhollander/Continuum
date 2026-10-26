@@ -129,7 +129,10 @@ csp = (
     .script_src("'self'", *_inline_script_sources())
     .style_src("'self'", "'unsafe-inline'", "https://fonts.googleapis.com")
     .font_src("'self'", "https://fonts.gstatic.com")
-    .img_src("'self'", "data:", "https:")
+    # blob: so stored photos, recordings and videos (fetched with the auth header
+    # by mediaService, then shown from an object URL) can display and play.
+    .img_src("'self'", "data:", "https:", "blob:")
+    .media_src("'self'", "blob:")
     # The export preview shows the generated PDF in an iframe from a blob: URL.
     .frame_src("'self'", "blob:")
     .connect_src(*_connect_sources())

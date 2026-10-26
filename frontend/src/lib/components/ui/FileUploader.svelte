@@ -1,14 +1,30 @@
 <script lang="ts">
-    import { Upload, X, Image as ImageIcon, CircleCheck } from "lucide-svelte";
+    /**
+     * Two ways to keep a file:
+     * - with `module`: the original file (PDF, image, audio, video) goes to the
+     *   server through mediaService; `imageUrl` becomes its download_url
+     *   ("/api/media/12/download") and `mediaId` its id. Shown with MediaView.
+     * - without `module`: an image is compressed into a data URL (older callers).
+     */
+    import { Upload, X, CircleCheck } from "lucide-svelte";
+    import UniversalUploader from "./UniversalUploader.svelte";
 
     let {
         imageUrl = $bindable(""),
+        mediaId = $bindable(null),
         label = "Upload Image",
+        module = undefined,
+        referenceId = undefined,
+        mode = "any",
         onchange,
     } = $props<{
         imageUrl?: string;
+        mediaId?: number | null;
         label?: string;
-        onchange?: (url: string) => void;
+        module?: string;
+        referenceId?: string;
+        mode?: "image" | "document" | "any";
+        onchange?: (url: string, id?: number) => void;
     }>();
 
     let dragging = $state(false);
@@ -42,13 +58,13 @@
 
     function processFile(file: File) {
         if (!file.type.startsWith("image/")) {
-            error = "Please upload an image file (JPG, PNG).";
+            error = "This space keeps images (JPG, PNG).";
             return;
         }
 
         // 5MB Initial Check
         if (file.size > 5 * 1024 * 1024) {
-            error = "File is too large (Max 5MB).";
+            error = "This space holds images up to 5 MB. A smaller copy will fit.";
             return;
         }
 
@@ -100,6 +116,17 @@
     }
 </script>
 
+{#if module}
+    <UniversalUploader
+        {label}
+        {module}
+        {referenceId}
+        {mode}
+        bind:value={imageUrl}
+        bind:mediaId
+        {onchange}
+    />
+{:else}
 <div class="space-y-2">
     <label class="block text-xs font-bold uppercase text-gray-500 mb-1"
         >{label}</label
@@ -186,3 +213,4 @@
         </div>
     {/if}
 </div>
+{/if}

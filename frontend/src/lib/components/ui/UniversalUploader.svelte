@@ -14,7 +14,9 @@
         type MediaUploadResponse,
         formatFileSize,
         isValidMediaType,
+        ACCEPT_ATTRIBUTE,
     } from "$lib/services/mediaService";
+    import MediaView from "./MediaView.svelte";
 
     let {
         value = $bindable(""), // url
@@ -42,11 +44,8 @@
     let fileInput: HTMLInputElement | undefined = $state();
     let uploadProgress = $state(0);
 
-    // Derived file type from value/url if available
-    let isImage = $derived(
-        value &&
-            (value.match(/\.(jpeg|jpg|gif|png|webp|heic)$/i) ||
-                mode === "image"),
+    let acceptAttr = $derived(
+        mode === "image" ? "image/*" : mode === "document" ? ".pdf,.txt,.csv" : ACCEPT_ATTRIBUTE,
     );
 
     function handleDragOver(e: DragEvent) {
@@ -87,13 +86,13 @@
         // Expanded Validation using mediaService
         if (!isValidMediaType(file)) {
             error =
-                "File type not supported. Please upload PDF, Text, CSV, or standard Images/Media. Word documents (.doc/.docx) are not accepted for security.";
+                "This space keeps PDF, text and CSV files, images, audio and video.";
             return;
         }
 
         // 10MB Check (matching backend)
         if (file.size > 10 * 1024 * 1024) {
-            error = "File is too large (Max 10MB).";
+            error = "This space holds files up to 10 MB. A smaller copy will fit.";
             return;
         }
 
@@ -128,7 +127,7 @@
             if (onchange) onchange(value, mediaId);
         } catch (err: any) {
             console.error("Upload failed", err);
-            error = err.message || "Upload failed. Please try again.";
+            error = err.message || "Saving this file paused. It is ready to try again.";
         } finally {
             processing = false;
             uploadProgress = 0;
@@ -154,73 +153,32 @@
         <div
             class="relative rounded-xl overflow-hidden bg-white border border-gray-200 group transition-all hover:shadow-md"
         >
-            {#if isImage}
-                <div class="h-48 w-full bg-gray-100 relative">
-                    <img
-                        src={value}
-                        alt="Uploaded file"
-                        class="w-full h-full object-cover"
-                    />
-                    <!-- Checkmark Badge -->
-                    <div
-                        class="absolute top-2 right-2 bg-green-500 text-white rounded-full p-1 shadow-sm z-10"
-                    >
-                        <CircleCheck size={16} />
-                    </div>
-                </div>
-            {:else}
-                <div class="flex items-center gap-4 p-4">
-                    <div class="bg-indigo-50 text-indigo-600 p-3 rounded-lg">
-                        <FileText size={32} />
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-gray-900 truncate">
-                            {value.split("/").pop()?.split("?")[0] ||
-                                "Document"}
-                        </p>
-                        <a
-                            href={value}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="text-xs text-indigo-600 hover:text-indigo-800 hover:underline"
-                        >
-                            View Document
-                        </a>
-                    </div>
-                    <div class="text-green-500">
-                        <CircleCheck size={20} />
-                    </div>
-                </div>
-            {/if}
+            <MediaView src={mediaId ?? value} />
 
             <!-- Overlay Actions -->
-            <div
-                class={isImage
-                    ? "absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2"
-                    : "bg-gray-50 p-2 flex justify-end gap-2 border-t border-gray-100"}
-            >
-                {#if isImage}
-                    <button
-                        onclick={clearFile}
-                        class="bg-white text-rose-600 px-4 py-2 rounded-lg font-bold text-sm shadow-lg hover:bg-rose-50 flex items-center gap-2"
-                    >
-                        <Trash2 size={16} /> Remove
-                    </button>
-                {:else}
-                    <button
-                        onclick={() => fileInput?.click()}
-                        class="text-gray-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-200 flex items-center gap-2"
-                    >
-                        <RefreshCw size={14} /> Replace
-                    </button>
-                    <button
-                        onclick={clearFile}
-                        class="text-rose-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-white hover:shadow-sm border border-transparent hover:border-rose-100 flex items-center gap-2"
-                    >
-                        <Trash2 size={14} /> Remove
-                    </button>
-                {/if}
+            <div class="bg-gray-50 p-2 flex justify-end gap-2 border-t border-gray-100">
+                <button
+                    type="button"
+                    onclick={() => fileInput?.click()}
+                    class="text-gray-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-200 flex items-center gap-2"
+                >
+                    <RefreshCw size={14} /> Replace
+                </button>
+                <button
+                    type="button"
+                    onclick={clearFile}
+                    class="text-rose-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-white hover:shadow-sm border border-transparent hover:border-rose-100 flex items-center gap-2"
+                >
+                    <Trash2 size={14} /> Remove
+                </button>
             </div>
+            <input
+                type="file"
+                bind:this={fileInput}
+                onchange={handleFileSelect}
+                accept={acceptAttr}
+                class="hidden"
+            />
         </div>
     {:else}
         <div
@@ -241,11 +199,7 @@
                 type="file"
                 bind:this={fileInput}
                 onchange={handleFileSelect}
-                accept={mode === "image"
-                    ? "image/*"
-                    : mode === "document"
-                      ? ".pdf,.txt,.csv"
-                      : ".pdf,.txt,.csv,image/*,.mp4,.mp3"}
+                accept={acceptAttr}
                 class="hidden"
             />
 
@@ -281,7 +235,7 @@
                         {#if mode === "document"}
                             <FileText size={24} />
                         {:else if mode === "image"}
-                            <Image size={24} />
+                            <ImageIcon size={24} />
                         {:else}
                             <Upload size={24} />
                         {/if}
@@ -299,7 +253,7 @@
                                 ? "JPG, PNG"
                                 : mode === "document"
                                   ? "PDF, Text"
-                                  : "PDF, JPG, PNG"} (Max 10MB)
+                                  : "PDF, images, audio, video"} (up to 10 MB)
                         </p>
                     </div>
                 {/if}
