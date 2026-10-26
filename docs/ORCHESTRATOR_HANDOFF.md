@@ -1,18 +1,20 @@
 # Active recovery implementation handoff
 
-**Last Updated:** 2026-10-26 16:22 EDT
+**Last Updated:** 2026-10-26 17:10 EDT
 
 The canonical task board remains [RECOVERY_EXECUTION_PLAN.md](RECOVERY_EXECUTION_PLAN.md). This handoff supersedes the earlier orchestrator snapshot; its operational history remains in Git.
 
-## Active checkpoint — 2026-10-26 16:22 EDT
+## Active checkpoint — 2026-10-26 17:10 EDT
 
-The owner authorized implementation and scoped subagents under the canonical plan. The review-only snapshot below is historical. Main now contains reviewed local corrections for X303/X304/X312/X313/X317/X318/X326/X329/X337/X339/X342/X345/X351/X353/X358/X359. X338 component is merged pending X315 parent wording; X307 and X325 were returned for narrowly identified followups, then reviewed and merged; X306 and X343 are also merged. X360/X361 register newly confirmed email-outcome and storage-bootstrap gaps. Other active cards and exact acceptance evidence are in the plan; never redispatch reopened historical parent rows independently.
+The owner authorized implementation and scoped subagents under the canonical plan. **44 of 60 corrective cards X303–X362 are reviewed and merged locally.** Exact commits, proof qualifications and completion status are in the plan. Active implementation: X305, X320, X324, X332, X340, X341, X347, X348, X357 and X361. Pending dependency-ordered followups: X330/X331 after handover coverage, X333 after remaining form guards, X349/X350 after Pulse work, and X355 after scenario-source guards. Never redispatch reopened historical parent rows independently.
 
-Local main is intentionally ahead of origin. Pushing main automatically deploys; decision 3 calls for a consolidated release after the coding/proof pass. Do not represent these local changes as deployed. Preserve the existing configured production secrets and session. The owner says the Chrome Continuum session is signed in for final live verification; no password bypass or invented credentials. The owner also says old data is unnecessary: skip historical conversion/backfill, preserve existing records, and continue current/future field/file/save integrity fixes.
+The owner clarified X320: executor-note sharing must be a saved user choice, with executors only as the default and an option for all recipients. Shared readers and new downloads follow that choice; the owner’s full copy includes the notes. X320 is in final composed proof and root review remains required.
 
-Focused proofs used disposable synthetic databases/outboxes or intercepted APIs, with complete logs in private temporary paths documented by card reports. O1's first-batch isolated PostgreSQL measurements are in [O1-BATCH1](reviews/2026-10-26-implementation/O1-BATCH1.md); they do not establish production latency. Final composed browser acceptance, integrated check/build, release backup/new migrations, consolidated push and actual Railway deployment-identity verification remain open.
+Local main is intentionally ahead of origin. Pushing main automatically deploys; decision 3 calls for a consolidated release after the coding/proof pass. These local changes are not deployed. Preserve the existing configured production secrets and session. The owner says the Chrome Continuum session is signed in for final live verification; no password bypass or invented credentials. The owner also says old data is unnecessary: skip historical conversion/backfill, preserve existing records, and continue current/future field/file/save integrity fixes.
 
-Seven earlier completed-card checkouts and ten newly merged checkouts were removed after merged/clean/ignored-file inspection; branches/stashes retained. Current implementation cleanup has recovered approximately 1.05 GB in checkout/cache space. Active nested worktrees remain. No production records, mail or scheduler was used for these proofs, and no scheduled automation was restarted.
+Focused proofs use disposable synthetic databases/outboxes or intercepted APIs, with complete logs in private temporary paths documented by card reports. First-batch oversight is recorded in [O1-BATCH1](reviews/2026-10-26-implementation/O1-BATCH1.md) and [O2-BATCH1](reviews/2026-10-26-implementation/O2-BATCH1.md); their source cutoffs are explicit and do not establish final release or production acceptance. Main through `e462c10` passes the combined frontend check (0 errors, 0 warnings) and production build. Later corrective changes still require integrated verification. Final composed owner/recipient acceptance, remaining-wave oversight, release backup/new migrations, consolidated push and actual Railway deployment-identity verification remain open.
+
+Completed nested checkouts are removed after merged/clean/ignored-file inspection, with branches and both central stashes retained. The latest cleanup removed 16 checkouts and reclaimed 1,087,774,720 bytes; this implementation’s cumulative checkout/cache recovery is approximately 2.68 GB. Active worktrees remain. No production records, real mail or scheduler were used for these proofs, and no scheduled automation was restarted.
 
 ## Current source-review status
 
@@ -22,7 +24,7 @@ The completed review examined source snapshot `8751f22` and changed documentatio
 
 ## Earlier recovery closure, before this review
 
-Before the later source review, Waves A–E, U, G, T and V, O1/O2 oversight, R0 and the release had been recorded complete. That earlier closure audit checked status rows and release-fix commits. A recount of data rows (excluding the header and separator) confirms **494 marked status rows** at source snapshot `8751f22`, **549** after the 55 review follow-ups, and **553** after X358–X361 were added. The earlier 496/551 bookkeeping totals included two non-data rows; status IDs remain unique. The earlier closure left two owner-only cards, X6 and X141, after the owner's X154 decision was implemented. The current reopened state is in the execution plan and source review linked above.
+Before the later source review, Waves A–E, U, G, T and V, O1/O2 oversight, R0 and the release had been recorded complete. That earlier closure audit checked status rows and release-fix commits. A recount of data rows (excluding the header and separator) confirms **494 marked status rows** at source snapshot `8751f22`, **549** after the 55 review follow-ups, and **554** after X358–X362 were added. The earlier 496/551 bookkeeping totals included two non-data rows; status IDs remain unique. The earlier closure left two owner-only cards, X6 and X141, after the owner's X154 decision was implemented. The current reopened state is in the execution plan and source review linked above.
 
 **X154:** the owner approved matching Pulse alerts to the displayed “When should they know?” tier. Commit `8c73c54` aligns initial alerts, retries, custom delays, portal tier labels and guardian access. An explicit own Pulse tier wins; otherwise First Call / Same Day / Extended map to tiers 1 / 2 / 3 and Kept private is excluded. Persistent guardian links are issued for eligible new contacts and existing contacts missing a link. Five backend files, no migration or frontend change.
 

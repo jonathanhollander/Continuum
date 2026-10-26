@@ -14,6 +14,9 @@
         Cloud,
     } from "lucide-svelte";
     import { estateAnalytics, estateExecutorName } from "$lib/stores/analyticsStore";
+    import { auditReadiness } from "$lib/utils/auditReadiness.svelte";
+    import AuditSourceStatus from "$lib/components/AuditSourceStatus.svelte";
+    let auditSources = $derived(auditReadiness());
 
     const scenarios = [
         {
@@ -112,9 +115,11 @@
             >
                 Current Rating
             </div>
-            <div class="text-2xl font-black">{readiness.score}% READY</div>
+            {#if auditSources.canScore}<div class="text-2xl font-black">{readiness.score}% READY</div>{/if}
         </div>
     </header>
+
+    <AuditSourceStatus state={auditSources} />
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <!-- Scenario Selector -->

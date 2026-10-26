@@ -8,8 +8,11 @@
         ArrowRight,
     } from "lucide-svelte";
     import { registerProfileSlice } from "$lib/services/sync.svelte";
+    import { captureSession, isCurrentSession, type SessionOwnership } from "$lib/services/sessionOwnership";
 
     export let module: any;
+    // The route keys this component by ID; asynchronous work keeps that mounted identity.
+    const moduleId: string = module.id;
 
     // Every module's ticked steps, kept on this account's profile record (/api/estate/profile) as
     // one JSON text, so a nested module id is never case-converted on the way.
@@ -26,7 +29,7 @@
     const readAll = (): Ticks => {
         try {
             const all = JSON.parse(checklists.data?.moduleChecklists || "{}");
-            return all && typeof all === "object" ? all : {};
+            return all && typeof all === "object" && !Array.isArray(all) ? all : {};
         } catch {
             return {};
         }
@@ -34,6 +37,9 @@
 
     let completedSteps: Record<string, boolean> = {};
     let touched = false;
+    let active = false;
+    let canEdit = false;
+    let editSession: SessionOwnership | null = null;
 
     // Each step opens the module where that part of the plan lives. A tick is kept by the
     // step's page, so the list can change order without moving anyone's ticks.
@@ -56,41 +62,65 @@
     };
     $: steps = STEPS[module.role] || STEPS.owner;
 
-    const legacyKey = () => `continuum_module_${module.id}`;
+    const legacyKey = `continuum_module_${moduleId}`;
 
     onMount(() => {
-        completedSteps = readAll()[module.id] || {};
+        active = true;
+        const owner = captureSession();
+        // A shared read may finish after authentication or after another hub was visited.
+        const unsubscribe = checklists.subscribe(() => {
+            if (editSession && !isCurrentSession(editSession)) {
+                touched = false;
+                editSession = null;
+            }
+            if (active && !touched) completedSteps = { ...(readAll()[moduleId] || {}) };
+            // applyRemote notifies subscribers before setting its final status.
+            queueMicrotask(() => { if (active) canEdit = checklists.status === "synced"; });
+        });
         checklists
             .sync()
             .then(async () => {
+                if (!active || !isCurrentSession(owner)) return;
                 const all = readAll();
-                const server = all[module.id] || {};
+                const server = all[moduleId] || {};
                 // Ticks from before the move to the account: carried over once, then cleared here.
                 let legacy: Record<string, boolean> = {};
                 try {
-                    legacy = JSON.parse(localStorage.getItem(legacyKey()) || "{}") || {};
+                    legacy = JSON.parse(localStorage.getItem(legacyKey) || "{}") || {};
                 } catch {
                     legacy = {};
                 }
                 const merged = { ...legacy, ...server };
                 if (Object.keys(legacy).length > 0) {
-                    all[module.id] = merged;
+                    all[moduleId] = merged;
                     await checklists.update({ moduleChecklists: JSON.stringify(all) });
                 }
-                localStorage.removeItem(legacyKey());
-                if (!touched) completedSteps = merged;
+                if (!isCurrentSession(owner)) return;
+                localStorage.removeItem(legacyKey);
+                if (active && !touched) completedSteps = merged;
             })
             .catch(() => {});
+        return () => {
+            active = false;
+            unsubscribe();
+        };
     });
 
     async function toggleStep(key: string) {
+        const owner = captureSession();
+        // Wait for the complete shared map before replacing this hub's JSON entry.
+        if (!active || checklists.status !== "synced" || !isCurrentSession(owner)) return;
+        canEdit = false;
         touched = true;
-        completedSteps[key] = !completedSteps[key];
-        completedSteps = completedSteps;
+        editSession = owner;
+        completedSteps = { ...completedSteps, [key]: !completedSteps[key] };
         const all = readAll();
-        all[module.id] = { ...completedSteps };
+        all[moduleId] = { ...completedSteps };
         try {
             await checklists.update({ moduleChecklists: JSON.stringify(all) });
+            if (!active || !isCurrentSession(owner)) return;
+            touched = false;
+            completedSteps = { ...(readAll()[moduleId] || {}) };
         } catch {
             // The store has already shown its gentle retry message; the tick stays on screen.
         }
@@ -182,6 +212,7 @@
                             <button
                                 type="button"
                                 aria-pressed={done}
+                                disabled={!canEdit}
                                 class="flex flex-1 items-start gap-4 p-4 text-left group"
                                 on:click={() => toggleStep(step.href)}
                             >

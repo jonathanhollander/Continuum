@@ -5,6 +5,8 @@
     import SyncBadge from "$lib/components/ui/SyncBadge.svelte";
     import { auth } from "$lib/stores/auth";
     import { estateAudit } from "$lib/stores/auditStore.svelte";
+    import { auditReadiness } from "$lib/utils/auditReadiness.svelte";
+    import AuditSourceStatus from "$lib/components/AuditSourceStatus.svelte";
     import { familyStore } from "$lib/stores/familyStore.svelte";
     import { digitalAssetsStore } from "$lib/stores/digitalAssetsStore.svelte";
     import { insuranceStore } from "$lib/stores/insuranceStore.svelte";
@@ -311,16 +313,14 @@
     // A tile shows a gentle cue, not 0, until its store's first server answer
     // (unless this device already holds those records), as the letters page does.
     const awaitingFirstSync = (m: { lastSync: Date | null; status: string; items: unknown[] }) =>
-        m.lastSync === null && m.status !== "error" && m.items.length === 0;
+        m.lastSync === null && m.items.length === 0;
     let contactsLoading = $derived(awaitingFirstSync(contactSync));
     let policiesLoading = $derived(awaitingFirstSync(insuranceSync));
     let accountsLoading = $derived(awaitingFirstSync(financialAssetsSync));
     let medicalLoading = $derived(awaitingFirstSync(directiveSync));
     // The audit's 0% means nothing is recorded only once every store it reads has answered.
-    let auditLoading = $derived(
-        contactsLoading || policiesLoading || accountsLoading || medicalLoading ||
-            awaitingFirstSync(digitalAssetsSync),
-    );
+    let auditSources = $derived(auditReadiness());
+    let auditLoading = $derived(!auditSources.confirmed);
 
     // A store's first load sets the same "syncing" status as a save, so a card shows no badge
     // until each store its badge reads (syncStatusStore's moduleSyncKeys) has answered.
@@ -393,7 +393,7 @@
 
     // Check for onboarding redirect
     $effect(() => {
-        if (estateAudit.percentage === 0 && browser && !loading && !auditLoading) {
+        if (estateAudit.percentage === 0 && browser && !loading && auditSources.confirmed) {
             const skipped =
                 localStorage.getItem("continuum_setup_skipped") === "true";
             if (
@@ -426,7 +426,8 @@
                 <div
                     class="font-mono text-sm text-muted-foreground uppercase tracking-[0.2em] mb-2"
                 >
-                    {greeting}<span class="animate-pulse">_</span>
+                    {#if auditLoading}{$dict.dashGathering}
+                    {:else}{greeting}<span class="animate-pulse">_</span>{/if}
                 </div>
                 <h1 class="font-serif text-3xl font-bold tracking-tight text-foreground">{$dict.dashboard}</h1>
                 {#if totalValue > 0}
@@ -435,6 +436,8 @@
                     </div>
                 {/if}
             </div>
+
+            <AuditSourceStatus state={auditSources} />
 
             <!-- Compact Progress Stats -->
             {#if !loading}
