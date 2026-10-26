@@ -508,7 +508,7 @@
                 <div class="flex items-center gap-2">
                     {#if showDifficultyFilter}
                         {#each difficultyChoices as diff (diff)}
-                            <button
+                            <button type="button"
                                 onclick={() => (difficultyFilter = difficultyFilter === diff ? null : diff)}
                                 aria-pressed={difficultyFilter === diff}
                                 class="px-2.5 py-1 rounded-full text-xs font-bold border transition-colors {difficultyFilter === diff
@@ -725,7 +725,7 @@
                             aria-labelledby="subscription-difficulty-label"
                         >
                             {#each ["Easy", "Medium", "Hard"] as diff}
-                                <button
+                                <button type="button"
                                     aria-pressed={newSub.difficulty === diff}
                                     class="px-4 py-2 rounded-lg border text-sm font-bold transition-all {newSub.difficulty ===
                                     diff

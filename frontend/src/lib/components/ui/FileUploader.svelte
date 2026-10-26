@@ -209,6 +209,7 @@
 
             {#if error}
                 <div
+                    role="alert"
                     class="absolute bottom-2 left-0 right-0 text-center text-xs font-bold text-red-500"
                 >
                     {error}
