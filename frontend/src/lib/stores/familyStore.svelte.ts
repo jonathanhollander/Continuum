@@ -72,12 +72,16 @@ const contactMapper = (item: any) => {
         isBeneficiary: item.is_beneficiary ?? item.isBeneficiary ?? false,
         isEmergencyContact: item.is_emergency_contact ?? item.isEmergencyContact ?? false,
         tierId: item.tier_id ?? item.tierId ?? null,
+        // Call-list tier is stored as call_tier; the UI calls it `tier`. A local edit to `tier` wins.
+        tier: item.tier ?? item.callTier ?? item.call_tier ?? undefined,
+        notificationStatus: item.notificationStatus ?? item.notification_status ?? undefined,
 
         // Local -> Remote
         ['is_executor']: item.isExecutor ?? item.is_executor,
         ['is_beneficiary']: item.isBeneficiary ?? item.is_beneficiary,
         ['is_emergency_contact']: item.isEmergencyContact ?? item.is_emergency_contact,
-        ['tier_id']: item.tierId ?? item.tier_id
+        ['tier_id']: item.tierId ?? item.tier_id,
+        ['callTier']: item.tier ?? item.callTier ?? item.call_tier
     };
 };
 

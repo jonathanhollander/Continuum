@@ -1,13 +1,64 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
-from sqlmodel import Session, select
-from typing import List
+from pydantic import StringConstraints
+from sqlmodel import Session, SQLModel, select
+from typing import Annotated, List, Literal, Optional
 from backend.database import get_session, User
 from backend.auth import get_current_user
-from backend.pulse_models import PulseContact
+from backend.pulse_models import PulseContact, PulseEscalationTier
 from backend.estate_models import ContactRelationship
 from backend.utils.audit import log_audit, log_deletion
 
 router = APIRouter(prefix="/api/contacts", tags=["contacts"])
+
+ContactName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+CallTier = Literal["1_Immediate", "2_SameDay", "3_Service", "4_DNR"]
+NotificationStatus = Literal["Pending", "Called", "LeftMsg", "Notified", "Unreachable"]
+
+
+class ContactUpdate(SQLModel):
+    """Fields the owner may set on a contact. id, user_id and portal tokens stay server-side;
+    unknown keys from the client (camelCase UI helpers) are ignored."""
+    name: Optional[ContactName] = None
+    role: Optional[str] = None
+    relation: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    notes: Optional[str] = None
+    avatar: Optional[str] = None
+    is_executor: Optional[bool] = None
+    is_beneficiary: Optional[bool] = None
+    is_emergency_contact: Optional[bool] = None
+    custom_attributes: Optional[str] = None
+    tier_id: Optional[int] = None
+    priority: Optional[int] = None
+    can_view_history: Optional[bool] = None
+    individual_delay_hours: Optional[int] = None
+    notify_on_safety_timer: Optional[bool] = None
+    call_tier: Optional[CallTier] = None
+    notification_status: Optional[NotificationStatus] = None
+
+
+class ContactCreate(ContactUpdate):
+    name: ContactName
+
+
+def _apply(contact: PulseContact, data: dict, user: User, session: Session) -> None:
+    """Copy validated fields onto the row. A tier_id must be one of this user's Pulse tiers
+    (0 or null means none); otherwise the insert would 500 on the foreign key."""
+    if "tier_id" in data:
+        if not data["tier_id"]:
+            data["tier_id"] = None
+        else:
+            tier = session.get(PulseEscalationTier, data["tier_id"])
+            if not tier or tier.user_id != user.id:
+                raise HTTPException(status_code=422, detail="Choose one of your own notification tiers.")
+    # Columns with a default: an explicit null keeps the row's value instead of breaking NOT NULL.
+    for key, val in data.items():
+        if val is None and key in ("name", "role", "is_executor", "is_beneficiary",
+                                   "is_emergency_contact", "priority", "can_view_history",
+                                   "notify_on_safety_timer"):
+            continue
+        setattr(contact, key, val)
 
 @router.get("", response_model=List[PulseContact])
 @router.get("/", response_model=List[PulseContact])
@@ -18,12 +69,10 @@ def get_contacts(user: User = Depends(get_current_user), session: Session = Depe
 
 @router.post("", response_model=PulseContact)
 @router.post("/", response_model=PulseContact)
-def create_contact(request: Request, contact: PulseContact, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+def create_contact(request: Request, body: ContactCreate, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     """Create a new global contact."""
-    contact.user_id = user.id
-    # Default to no tier if not provided
-    if contact.tier_id == 0:
-        contact.tier_id = None
+    contact = PulseContact(user_id=user.id, name=body.name)
+    _apply(contact, body.model_dump(exclude_unset=True), user, session)
 
     session.add(contact)
     session.commit()
@@ -39,19 +88,19 @@ def create_contact(request: Request, contact: PulseContact, user: User = Depends
         resource_type="contact",
         resource_id=str(contact.id)
     )
+    # log_audit commits, which expires the instance; reload it so the response carries the row.
+    session.refresh(contact)
     return contact
 
 @router.put("/{contact_id}", response_model=PulseContact)
-def update_contact(contact_id: int, updated: PulseContact, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
-    """Update a contact."""
+def update_contact(contact_id: int, updated: ContactUpdate, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    """Update a contact. Only the fields sent are changed."""
     contact = session.get(PulseContact, contact_id)
     if not contact or contact.user_id != user.id:
         raise HTTPException(status_code=404, detail="Contact not found")
-    
-    data = updated.dict(exclude_unset=True)
-    for key, val in data.items():
-        if key != "id": setattr(contact, key, val)
-    
+
+    _apply(contact, updated.model_dump(exclude_unset=True), user, session)
+
     session.add(contact)
     session.commit()
     session.refresh(contact)
