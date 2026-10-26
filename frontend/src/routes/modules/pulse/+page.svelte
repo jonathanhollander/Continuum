@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { pulse, pulseStatus } from "$lib/stores/pulse.svelte";
+    import { pulse, pulseStatus, type PulseAlertState } from "$lib/stores/pulse.svelte";
     import { estateAudit } from "$lib/stores/auditStore.svelte";
     import { auditReadiness } from "$lib/utils/auditReadiness.svelte";
     import AuditSourceStatus from "$lib/components/AuditSourceStatus.svelte";
@@ -120,11 +120,19 @@
 
     let now = $state(Date.now());
 
-    // /api/pulse/status: the highest tier alerted since the owner's own last check-in, and when
-    const tierContacted = $derived.by(() => {
+    // Global stage progression is separate from each guardian's recorded email outcome.
+    const tierReached = $derived.by(() => {
         const s = pulseStatus.current;
         return s?.escalationTier ? { tier: s.escalationTier, at: s.escalationAt ?? null } : null;
     });
+    const tierActivity = $derived(pulseStatus.current?.tierActivity ?? []);
+    const outcomeLabels: Record<PulseAlertState, string> = {
+        provider_accepted: "Email provider accepted for sending",
+        saved_local: "Prepared in the local outbox",
+        failed: "Delivery needs attention",
+        awaiting_attempt: "Awaiting an alert attempt",
+        recorded: "Saved alert records",
+    };
 
     const statusLabels: Record<string, string> = {
         active: "Heartbeat Active",
@@ -257,11 +265,12 @@
                     ).toLocaleString()}.
                 </p>
             {/if}
-            {#if tierContacted}
-                <p class="text-warning text-sm max-w-sm mx-auto" data-testid="pulse-tier-contacted">
-                    Tier {tierContacted.tier} was contacted{tierContacted.at
-                        ? ` on ${new Date(tierContacted.at).toLocaleString()}`
-                        : ""}; your check-in lets them know you're well.
+            {#if tierReached}
+                <p class="text-warning text-sm max-w-sm mx-auto" data-testid="pulse-stage-reached">
+                    Tier {tierReached.tier} reached{tierReached.at
+                        ? ` on ${new Date(tierReached.at).toLocaleString()}`
+                        : ""}.
+                    <a href="#pulse-alert-activity" class="text-primary hover:underline">View alert activity</a>
                 </p>
             {/if}
             <div class="flex items-center justify-center gap-6 pt-4 text-sm">
@@ -278,6 +287,66 @@
             </div>
         </div>
     </div>
+
+    {#if tierActivity.length > 0}
+        <section id="pulse-alert-activity" aria-labelledby="alert-activity-title" class="space-y-4 scroll-mt-24" data-testid="pulse-tier-activity">
+            <div>
+                <h2 id="alert-activity-title" class="font-serif text-2xl text-foreground">Alert activity</h2>
+                <p class="text-sm text-muted-foreground mt-2">Stages and saved email attempts since your last check-in. Open a stage to see the people and their records.</p>
+            </div>
+            {#each tierActivity as stage (stage.tierNumber)}
+                <details open={stage.tierNumber === tierReached?.tier} class="rounded-2xl border border-border bg-background/40 p-5" data-stage-number={stage.tierNumber}>
+                    <summary class="cursor-pointer text-foreground">
+                        <span class="font-medium">{stage.reachedAt ? `Tier ${stage.tierNumber} reached` : `Personal Tier ${stage.tierNumber} alerts`}</span>
+                        {#if stage.reachedAt}<span class="text-xs text-muted-foreground ml-2">{new Date(stage.reachedAt).toLocaleString()}</span>{/if}
+                        <span class="mt-3 flex flex-wrap gap-2 text-xs">
+                            {#each stage.outcomes.filter((outcome) => outcome.count > 0) as outcome}
+                                <span class="rounded-lg border border-border bg-card px-2.5 py-1.5" data-outcome-count={outcome.state}>{outcome.count} {outcome.count === 1 ? "person" : "people"} · {outcomeLabels[outcome.state]}</span>
+                            {/each}
+                        </span>
+                    </summary>
+                    <div class="mt-5 space-y-5">
+                        {#each stage.outcomes.filter((outcome) => outcome.count > 0) as outcome}
+                            <div class="space-y-2" data-outcome={outcome.state}>
+                                <h3 class="text-sm font-medium text-foreground">{outcomeLabels[outcome.state]}</h3>
+                                <ul class="space-y-3">
+                                    {#each stage.contacts.filter((contact) => contact.state === outcome.state) as contact (contact.contactId)}
+                                        <li class="rounded-lg border border-border bg-card p-4 text-sm" data-contact-id={contact.contactId}>
+                                            <div class="flex flex-wrap items-baseline justify-between gap-2">
+                                                <span class="font-medium text-foreground">{contact.contactName}</span>
+                                                <span class="text-xs text-muted-foreground" data-recorded-attempts>{contact.attempts} {contact.attempts === 1 ? "recorded attempt" : "recorded attempts"}</span>
+                                            </div>
+                                            {#if contact.state === "failed"}
+                                                <p class="mt-2 text-xs text-muted-foreground">{contact.retryAvailable ? "Retry available on the saved alert schedule." : "A call or message can help you reach them directly."}</p>
+                                            {/if}
+                                            {#if contact.sourceMessages.length > 0}
+                                                <details class="mt-3">
+                                                    <summary class="cursor-pointer text-xs text-primary">Saved message records</summary>
+                                                    <ul class="mt-3 space-y-3">
+                                                        {#each contact.sourceMessages as source (source.id)}
+                                                            <li class="border-t border-border pt-3 space-y-1" data-source-message-id={source.id}>
+                                                                <p class="text-xs text-foreground">{source.message.replace(/^\[System Alert Tier \d+\] /, "")}</p>
+                                                                <a href={`/modules/pulse/messages?contact_id=${contact.contactId}&message_id=${source.id}#pulse-message-${source.id}`} class="text-xs text-primary hover:underline">Saved message #{source.id} · {new Date(source.sentAt).toLocaleString()}</a>
+                                                            </li>
+                                                        {/each}
+                                                    </ul>
+                                                </details>
+                                            {:else}
+                                                <a href="/modules/pulse/escalation" class="mt-2 inline-block text-xs text-primary hover:underline">Saved alert schedule</a>
+                                            {/if}
+                                        </li>
+                                    {/each}
+                                </ul>
+                            </div>
+                        {/each}
+                        {#if stage.contacts.length === 0}
+                            <p class="text-sm text-muted-foreground">Choose the people for this stage on your <a href="/modules/pulse/escalation" class="text-primary hover:underline">Escalation Plan</a>.</p>
+                        {/if}
+                    </div>
+                </details>
+            {/each}
+        </section>
+    {/if}
 
     <!-- QUICK ACTIONS MESH -->
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
