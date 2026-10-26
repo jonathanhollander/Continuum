@@ -14,6 +14,7 @@
         Trash2,
         Loader2,
         Pencil,
+        Link2,
     } from "lucide-svelte";
     import Modal from "$lib/components/ui/Modal.svelte";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
@@ -68,13 +69,14 @@
         notes: "",
         relation: "",
         tier: "1_Immediate",
+        isExecutor: false,
     });
     let newContact = $state<Partial<FamilyMember>>(blankContact());
 
     const ROLE_OPTIONS = ["Family", "Friend", "Medical", "Legal", "Financial", "Other", "Pet"];
 
     const TIER_OPTIONS = [
-        { value: "1_Immediate", label: "First Call", hint: "Among the very first to be called, directly." },
+        { value: "1_Immediate", label: "First Call", hint: "Hears from you or your family first, in person." },
         { value: "2_SameDay", label: "Same Day", hint: "Close enough to be told directly." },
         { value: "3_Service", label: "Extended Circle", hint: "Can learn through the announcement." },
         { value: "4_DNR", label: "Kept private", hint: "Stays in your directory, off the call list." },
@@ -177,7 +179,7 @@
             phone: newContact.phone,
             email: newContact.email,
             notes: newContact.notes,
-            isExecutor: false,
+            isExecutor: !!newContact.isExecutor,
             isBeneficiary: false,
             isEmergencyContact: false,
             tierId: null, // Pulse escalation tier: set on the Pulse page
@@ -218,6 +220,7 @@
             notes: contact.notes,
             // A contact without a call-list tier stays that way unless one is chosen here.
             tier: contact.tier ?? "",
+            isExecutor: !!contact.isExecutor,
         };
         parsedCustomAttributes = readCustom(contact);
         showAddModal = true;
@@ -247,6 +250,7 @@
                 notes: newContact.notes || "",
                 // An explicit tier wins in contactMapper; "" clears it (call_tier null).
                 tier: newContact.tier || "",
+                isExecutor: !!newContact.isExecutor,
                 custom_attributes: JSON.stringify(parsedCustomAttributes),
             } as Partial<FamilyMember>);
         } catch {
@@ -257,6 +261,17 @@
         newContact = blankContact();
         parsedCustomAttributes = {};
     }
+
+    // The start page is saved by its own panel inside the edit modal (/api/recipient), so the
+    // directory's "Start page" marker is refreshed from the server once that modal closes.
+    let editedInModal = false;
+    $effect(() => {
+        if (showAddModal) editedInModal = editingId !== null;
+        else if (editedInModal) {
+            editedInModal = false;
+            familyStore.sync().catch(() => undefined);
+        }
+    });
 
     async function deleteContact(id: number | string) {
         if (
@@ -288,7 +303,7 @@
               ? "Family and friends connected to the estate"
               : module.title}
         detailedDescription="This is more than a contact list—it's your circle of trust. Identify who should be notified and who can help with specific aspects of your estate, from lawyers to close friends."
-        whyMatters="In a crisis, your family needs to know exactly who to turn to. Having updated contact information for your support network removes the panic of 'who do I call?'"
+        whyMatters="In a crisis, your family needs to know exactly who to turn to. Having updated contact information for your support network gives your family a clear place to turn"
     />
 {/if}
 
@@ -335,7 +350,7 @@
         >
             <div>
                 <div class="text-xs font-bold uppercase text-rose-400">
-                    Pending Immediate
+                    Still to reach
                 </div>
                 <div class="text-2xl font-bold text-rose-700">
                     {tier1.filter(
@@ -394,15 +409,15 @@
         {#if contacts.length === 0}
             <EmptyState
                 title={contextStore.isExecutor
-                    ? "Contact Directory Empty"
+                    ? "Your contact directory is ready for its first person"
                     : contextStore.isFamily
-                      ? "No Contacts Yet"
+                      ? "Contacts will gather here"
                       : "Your circle of trust"}
                 whyMatters={contextStore.isExecutor
-                    ? "<strong>Contact information is essential for estate administration.</strong> If no contacts were recorded, you may need to gather this information from other sources such as phone records, address books, or family members.<br/><br/>Building this directory will help ensure all necessary parties are properly notified and consulted."
+                    ? "<strong>Contact information is essential for estate administration.</strong> Phone records, address books and family members are good places to find contact details, when you feel ready.<br/><br/>Gathering these details helps each person hear in the right way."
                     : contextStore.isFamily
-                      ? "<strong>Contact information will be helpful for coordinating with family and friends.</strong> This directory will be populated as information becomes available.<br/><br/>If you have contact details to contribute, you can add them here."
-                      : "<strong>These are the people who should be notified, who can help, who need to know.</strong> Without this list, your family won't know who your lawyer is, who has your keys, or who should be at your bedside.<br/><br/>Creating this directory is a gift to whoever handles your affairs—they won't have to search through old emails or guess who matters to you. Each person you add here removes one more burden from their shoulders."}
+                      ? "<strong>Contact information will be helpful for coordinating with family and friends.</strong> Contacts gather here as details are shared.<br/><br/>If you have contact details to contribute, you can add them here."
+                      : "<strong>These are the people who should be notified, who can help, who need to know.</strong> With this list, your family knows who your lawyer is, who has your keys, and who should be at your bedside.<br/><br/>Creating this directory is a gift to whoever handles your affairs—they can reach the right people without searching old emails. Each person you add here removes one more burden from their shoulders."}
                 encouragement={contextStore.isExecutor
                     ? "Begin gathering contact information at your own pace."
                     : contextStore.isFamily
@@ -420,9 +435,9 @@
                 >
                     <Shield class="shrink-0" size={20} />
                     <p>
-                        <strong>Caller Strategy:</strong> This specific order is
-                        designed to prevent bad news from spreading via social media
-                        before key people are informed directly.
+                        <strong>Caller Strategy:</strong> A gentle order: the people
+                        closest to your loved one hear directly, before the news
+                        travels further.
                     </p>
                 </div>
 
@@ -437,7 +452,7 @@
                         </h2>
                         <span
                             class="text-xs bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full"
-                            >Call Now</span
+                            >First to call</span
                         >
                     </div>
 
@@ -512,6 +527,12 @@
                                         {contact.role}
                                         {#if contact.relation}• {contact.relation}{/if}
                                     </div>
+                                    {#if (contact as any).isRecipient}
+                                        <span
+                                            class="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary"
+                                            data-testid="start-page-badge"
+                                        ><Link2 size={11} /> Start page</span>
+                                    {/if}
                                 </div>
                             </div>
 
@@ -579,6 +600,12 @@
                                                 <User size={16} />
                                             </div>
                                             <span class="font-medium text-slate-800">{contact.name}</span>
+                                            {#if (contact as any).isRecipient}
+                                                <span
+                                                    class="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary"
+                                                    data-testid="start-page-badge"
+                                                ><Link2 size={11} /> Start page</span>
+                                            {/if}
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 text-sm text-slate-600">
@@ -624,7 +651,7 @@
         title={editingId !== null ? "Update their details" : "Who should we include?"}
         description={editingId !== null
             ? "Keep their details current so the right people are reached in the right way."
-            : "This person matters to you. By adding them here, you're ensuring they'll be included when the time comes—whether that means being notified, consulted, or simply remembered."}
+            : "This person matters to you. By adding them here, you're ensuring they'll be included when the time comes—whether that means being notified, consulted, or gently remembered."}
         maxWidth="max-w-lg"
     >
         <div class="space-y-4">
@@ -749,7 +776,7 @@
                 <SmartTextarea
                     bind:value={newContact.notes}
                     context="contact"
-                    placeholder="Private notes for the caller (e.g. 'Be gentle, they are fragile')"
+                    placeholder="e.g. 'Speak gently; they love hearing your voice'"
                     label="Caller Notes"
                     minHeight="100px"
                 />
@@ -763,6 +790,20 @@
                 />
             </div>
 
+            <!-- The executor flag the recipient start page and the packet read (Family Hub's wording). -->
+            <label
+                class="flex items-center gap-3 px-4 py-3 rounded-xl border border-slate-200 bg-white cursor-pointer hover:bg-slate-50 transition-all"
+            >
+                <input
+                    type="checkbox"
+                    bind:checked={newContact.isExecutor}
+                    class="w-4 h-4 rounded accent-primary"
+                    data-testid="contact-executor"
+                />
+                <span class="text-sm font-medium text-slate-800">Designated Executor</span>
+                <Shield size={14} class="ml-auto text-slate-400" />
+            </label>
+
             <RecipientLinkPanel contactId={editingId} name={newContact.name} />
 
             <!-- Footer buttons: sticky to the bottom of the dialog's scroll area so they stay in view (-bottom-6 cancels the scroll area's p-6). -->
@@ -771,7 +812,7 @@
                     onclick={() => (showAddModal = false)}
                     class="px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-200 transition-colors"
                 >
-                    Not right now
+                    Maybe later
                 </button>
                 <button
                     onclick={editingId !== null ? saveEdit : addContact}
