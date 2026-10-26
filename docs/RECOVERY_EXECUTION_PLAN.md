@@ -1,6 +1,6 @@
 # Continuum — Recovery Execution Plan (subagent-run)
 
-**Last Updated:** 2026-10-26 15:32 EDT
+**Last Updated:** 2026-10-26 15:39 EDT
 
 The how and the order for [PROJECT_RECOVERY_PLAN.md](PROJECT_RECOVERY_PLAN.md) (phases A–F).
 Issue IDs (CU-0xx) and their evidence are in
@@ -12,6 +12,8 @@ board, and it is the live checklist** (decision 9).
 **Current source-review status (2026-10-26):** the [code/plan cross-check](reviews/2026-10-26-plan-crosscheck/REVIEW.md) found **55 follow-up cards (X303–X357: 27 P1, 28 P2)**. These comprise 54 implementation corrections and one full-copy scope reconciliation. Nine area reviewers and an independent validator reviewed source `8751f22`; no application fix or deployment was performed. Affected completion marks below are reopened on the new evidence; prior proof remains recorded.
 
 **Review reconciliation rule:** reopened historical rows identify unmet acceptance and link to the concrete X303–X357 work that owns its correction. Do not redispatch the historical row alongside its linked follow-ups. Restore its completed mark only after the linked acceptance is verified. X6/X141 and the documented owner deferrals remain separate. This review authorizes documentation, not automatic implementation or recurring loops.
+
+**Implementation restart (2026-10-26 15:39 EDT):** owner authorized orchestration of X303–X357 under the existing workflow. Review-only limits above describe the completed audit and are superseded for these cards. Coding agents use separate nested worktrees; orchestrator owns diff review, integration and status. Historical reopened rows are not redispatched. Local main collects reviewed commits for the final release: pushes are consolidated because pushing main auto-deploys, preserving decision 3's single-release coding pass. No recurring loop is restarted. X320 will preserve practical user-authored handover information rather than narrowing the promised copy. X6/X141 and explicit owner holds remain separate.
 
 ## Owner decisions (2026-10-26, confirmed)
 
@@ -821,21 +823,21 @@ Report: files changed, proof output (the one run), any test written (with its ap
 
 | Card | Status | Commit | Proof / current evidence |
 |---|---|---|---|
-| X303 | ☐ | source review 8751f22 | [CONTRACTS F1](reviews/2026-10-26-plan-crosscheck/CONTRACTS.md); P1; implementation not started. |
+| X303 | ▶ | codex/X303 | Dispatched in .worktrees/X303; isolated proof, no push/deploy; orchestrator review pending. |
 | X304 | ☐ | source review 8751f22 | [CONTRACTS F1](reviews/2026-10-26-plan-crosscheck/CONTRACTS.md); P1; implementation not started. |
 | X305 | ☐ | source review 8751f22 | [CONTRACTS F1](reviews/2026-10-26-plan-crosscheck/CONTRACTS.md); P1; implementation not started. |
 | X306 | ☐ | source review 8751f22 | [SHELL F5](reviews/2026-10-26-plan-crosscheck/SHELL.md); P2; implementation not started. |
-| X307 | ☐ | source review 8751f22 | [TOOLS F2](reviews/2026-10-26-plan-crosscheck/TOOLS.md); P1; implementation not started. |
+| X307 | ▶ | codex/X307 | Dispatched in .worktrees/X307; isolated proof, no push/deploy; orchestrator review pending. |
 | X308 | ☐ | source review 8751f22 | [MEDIA F2](reviews/2026-10-26-plan-crosscheck/MEDIA.md); P1; implementation not started. |
 | X309 | ☐ | source review 8751f22 | [MEDIA F1](reviews/2026-10-26-plan-crosscheck/MEDIA.md); P1; implementation not started. |
 | X310 | ☐ | source review 8751f22 | [CONTRACTS F2](reviews/2026-10-26-plan-crosscheck/CONTRACTS.md); P1; implementation not started. |
 | X311 | ☐ | source review 8751f22 | [CONTRACTS F3](reviews/2026-10-26-plan-crosscheck/CONTRACTS.md); P2; implementation not started. |
-| X312 | ☐ | source review 8751f22 | [SCHEMA F1,F2](reviews/2026-10-26-plan-crosscheck/SCHEMA.md); P1; implementation not started. |
-| X313 | ☐ | source review 8751f22 | [SCHEMA F3](reviews/2026-10-26-plan-crosscheck/SCHEMA.md); P1; implementation not started. |
+| X312 | ▶ | codex/X312 | Dispatched in .worktrees/X312; isolated proof, no push/deploy; orchestrator review pending. |
+| X313 | ▶ | codex/X313 | Dispatched in .worktrees/X313; isolated proof, no push/deploy; orchestrator review pending. |
 | X314 | ☐ | source review 8751f22 | [FINANCES F1](reviews/2026-10-26-plan-crosscheck/FINANCES.md); P1; implementation not started. |
-| X315 | ☐ | source review 8751f22 | [LEGACY F1,F2; MEDIA F3](reviews/2026-10-26-plan-crosscheck/LEGACY.md); P1; implementation not started. |
+| X315 | ▶ | codex/X315 | Dispatched in .worktrees/X315; isolated proof, no push/deploy; orchestrator review pending. |
 | X316 | ☐ | source review 8751f22 | [LEGACY F4](reviews/2026-10-26-plan-crosscheck/LEGACY.md); P1; implementation not started. |
-| X317 | ☐ | source review 8751f22 | [HANDOVER F1; LEGACY F3](reviews/2026-10-26-plan-crosscheck/HANDOVER.md); P1; implementation not started. |
+| X317 | ▶ | codex/X317 | Dispatched in .worktrees/X317; isolated proof, no push/deploy; orchestrator review pending. |
 | X318 | ☐ | source review 8751f22 | [HANDOVER F2](reviews/2026-10-26-plan-crosscheck/HANDOVER.md); P1; implementation not started. |
 | X319 | ☐ | source review 8751f22 | [HANDOVER F3](reviews/2026-10-26-plan-crosscheck/HANDOVER.md); P1; implementation not started. |
 | X320 | ☐ (scope reconciliation) | source review 8751f22 | [HANDOVER G1](reviews/2026-10-26-plan-crosscheck/HANDOVER.md); P1; implementation not started. |
@@ -843,8 +845,8 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X322 | ☐ | source review 8751f22 | [HANDOVER F5](reviews/2026-10-26-plan-crosscheck/HANDOVER.md); P2; implementation not started. |
 | X323 | ☐ | source review 8751f22 | [HANDOVER F7](reviews/2026-10-26-plan-crosscheck/HANDOVER.md); P2; implementation not started. |
 | X324 | ☐ | source review 8751f22 | [HANDOVER F6](reviews/2026-10-26-plan-crosscheck/HANDOVER.md); P2; implementation not started. |
-| X325 | ☐ | source review 8751f22 | [SHELL F2](reviews/2026-10-26-plan-crosscheck/SHELL.md); P1; implementation not started. |
-| X326 | ☐ | source review 8751f22 | [SHELL F3](reviews/2026-10-26-plan-crosscheck/SHELL.md); P1; implementation not started. |
+| X325 | ▶ | codex/X325 | Dispatched in .worktrees/X325; isolated proof, no push/deploy; orchestrator review pending. |
+| X326 | ▶ | codex/X326 | Dispatched in .worktrees/X326; isolated proof, no push/deploy; orchestrator review pending. |
 | X327 | ☐ | source review 8751f22 | [SHELL F1](reviews/2026-10-26-plan-crosscheck/SHELL.md); P1; implementation not started. |
 | X328 | ☐ | source review 8751f22 | [SHELL F4](reviews/2026-10-26-plan-crosscheck/SHELL.md); P2; implementation not started. |
 | X329 | ☐ | source review 8751f22 | [FINANCES F2](reviews/2026-10-26-plan-crosscheck/FINANCES.md); P1; implementation not started. |
@@ -869,9 +871,9 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X348 | ☐ | source review 8751f22 | [PULSE F7](reviews/2026-10-26-plan-crosscheck/PULSE.md); P2; implementation not started. |
 | X349 | ☐ | source review 8751f22 | [PULSE F8](reviews/2026-10-26-plan-crosscheck/PULSE.md); P2; implementation not started. |
 | X350 | ☐ | source review 8751f22 | [PULSE additional owner-page error paths](reviews/2026-10-26-plan-crosscheck/PULSE.md); P2; implementation not started. |
-| X351 | ☐ | source review 8751f22 | [TOOLS F1](reviews/2026-10-26-plan-crosscheck/TOOLS.md); P1; implementation not started. |
+| X351 | ▶ | codex/X351 | Dispatched in .worktrees/X351; isolated proof, no push/deploy; orchestrator review pending. |
 | X352 | ☐ | source review 8751f22 | [TOOLS F3](reviews/2026-10-26-plan-crosscheck/TOOLS.md); P2; implementation not started. |
-| X353 | ☐ | source review 8751f22 | [TOOLS F4](reviews/2026-10-26-plan-crosscheck/TOOLS.md); P2; implementation not started. |
+| X353 | ▶ | codex/X353 | Dispatched in .worktrees/X353; isolated proof, no push/deploy; orchestrator review pending. |
 | X354 | ☐ | source review 8751f22 | [TOOLS F5](reviews/2026-10-26-plan-crosscheck/TOOLS.md); P2; implementation not started. |
 | X355 | ☐ | source review 8751f22 | [TOOLS F6](reviews/2026-10-26-plan-crosscheck/TOOLS.md); P2; implementation not started. |
 | X356 | ☐ | source review 8751f22 | [TOOLS F7](reviews/2026-10-26-plan-crosscheck/TOOLS.md); P2; implementation not started. |
