@@ -290,7 +290,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | E7 | ☐ | | |
 | E8 | ☐ | | |
 | X1 | ▶ | | |
-| X2 | ▶ | | |
+| X2 | ☑ | 91321f9 | `git ls-files` lists no .db; `*.db` ignored; local copies kept on disk. Old copy in `34780fe` (branch `origin/stash-backup/2026-01-26-34780fe`) holds 1 non-dev user row, empty password: owner decision |
 | X3 | ☐ | | |
 | X4 | ☐ | | |
 | X5 | ☐ | | |
