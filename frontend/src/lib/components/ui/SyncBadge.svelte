@@ -2,7 +2,9 @@
     /**
      * SyncBadge - Displays sync status with compassionate, non-anxiety-inducing colors and labels.
      *
-     * Colors intentionally avoid harsh red - using muted amber/orange for attention states.
+     * Colours come from the app.css status tokens: success (kept safe), info (saving) and the
+     * gentle warning for "needs attention". "On this device" and "Ready" share the quiet slate
+     * of the label, which reads on the dark dashboard in both themes.
      * Labels use positive, supportive language appropriate for end-of-life planning context.
      */
 
@@ -16,27 +18,27 @@
         pulseClass?: string;
     }> = {
         safe: {
-            color: "bg-emerald-400",
-            bgColor: "bg-emerald-400/20",
+            color: "bg-success",
+            bgColor: "bg-success/20",
             label: "Kept safe",
             tooltip: "Your thoughts are safely saved"
         },
         saving: {
-            color: "bg-amber-400",
-            bgColor: "bg-amber-400/20",
+            color: "bg-info",
+            bgColor: "bg-info/20",
             label: "Saving...",
             tooltip: "We're keeping this safe for you...",
             pulseClass: "animate-pulse"
         },
         local: {
-            color: "bg-sky-400",
-            bgColor: "bg-sky-400/20",
+            color: "bg-slate-400",
+            bgColor: "bg-slate-400/20",
             label: "On this device",
             tooltip: "Stored here - we'll save to your account when ready"
         },
         "attention-needed": {
-            color: "bg-orange-400",
-            bgColor: "bg-orange-400/20",
+            color: "bg-warning",
+            bgColor: "bg-warning/20",
             label: "Needs attention",
             tooltip: "Saving is taking a moment. Your words are still here, and we'll try again."
         },
@@ -71,7 +73,7 @@
 >
     <span
         class="rounded-full {config.color} {sizeClasses} {config.pulseClass || ''} shadow-sm"
-        style="box-shadow: 0 0 4px {status === 'safe' ? 'rgb(52 211 153 / 0.4)' : status === 'saving' ? 'rgb(251 191 36 / 0.4)' : 'transparent'};"
+        style="box-shadow: 0 0 4px {status === 'safe' ? 'color-mix(in srgb, var(--color-success) 40%, transparent)' : status === 'saving' ? 'color-mix(in srgb, var(--color-info) 40%, transparent)' : 'transparent'};"
         title={config.tooltip}
     ></span>
 

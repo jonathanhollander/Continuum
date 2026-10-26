@@ -10,7 +10,7 @@
 </script>
 
 <div
-    class="relative group rounded-2xl p-[1px] bg-gradient-to-br from-white/20 via-white/5 to-transparent backdrop-blur-md overflow-hidden transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_0_50px_-10px_rgba(99,102,241,0.3)]"
+    class="relative group rounded-2xl p-[1px] bg-gradient-to-br from-white/20 via-white/5 to-transparent backdrop-blur-md overflow-hidden transition-all duration-500 hover:scale-[1.02] hover:shadow-lg"
     in:fly={{ y: 20, duration: 1000, delay: 500 }}
 >
     <!-- Inner Glass -->
@@ -21,8 +21,8 @@
         <div
             class="px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase border border-white/10 flex items-center gap-2
             {type === 'critical'
-                ? 'bg-rose-500/20 text-rose-300 shadow-[0_0_15px_rgba(244,63,94,0.3)]'
-                : 'bg-indigo-500/20 text-indigo-300 shadow-[0_0_15px_rgba(99,102,241,0.3)]'}"
+                ? 'bg-gold text-slate-950'
+                : 'bg-primary-deep text-white'}"
         >
             <Sparkles size={10} />
             {type === "critical" ? "Worth a look" : "Insight"}
@@ -45,7 +45,7 @@
         <!-- Action Button -->
         <a
             href={actionLink}
-            class="mt-4 px-8 py-3 rounded-xl bg-white text-slate-950 font-bold flex items-center gap-2 group-hover:bg-indigo-50 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+            class="mt-4 px-8 py-3 rounded-xl bg-white text-slate-950 font-bold flex items-center gap-2 group-hover:bg-slate-100 transition-colors shadow-sm"
         >
             {actionLabel}
             <ArrowRight

@@ -549,7 +549,7 @@
                 <button aria-label="Voice input" aria-pressed={$conciergeEngine.isListening}
                     onclick={toggleVoice}
                     class="p-4 rounded-2xl transition-all shadow-lg {$conciergeEngine.isListening
-                        ? 'bg-rose-500 text-white animate-pulse shadow-rose-500/20'
+                        ? 'bg-primary text-primary-foreground animate-pulse shadow-primary/20'
                         : 'bg-slate-800 text-indigo-400 hover:bg-slate-700 shadow-black/20'}"
                 >
                     {#if $conciergeEngine.isListening}

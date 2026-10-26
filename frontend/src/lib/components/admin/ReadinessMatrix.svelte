@@ -5,7 +5,7 @@
         type ModuleStatus,
     } from "$lib/utils/readiness";
     import { plural } from "$lib/utils/plural";
-    import { CircleCheck, CircleAlert, TriangleAlert } from "lucide-svelte";
+    import { CircleCheck, CircleDotDashed, CircleDashed } from "lucide-svelte";
 
     let modules: ModuleStatus[] = [];
     let overallHealth = 0;
@@ -21,21 +21,21 @@
     });
 </script>
 
-<div class="bg-white rounded-2xl border border-stone-200 shadow-sm p-8">
+<div class="bg-card rounded-2xl border border-border shadow-sm p-8">
     <div class="flex items-center justify-between mb-8">
         <div>
-            <h2 class="text-2xl font-bold text-[#304743]">
+            <h2 class="text-2xl font-bold text-foreground">
                 Estate Readiness Matrix
             </h2>
-            <p class="text-stone-500">
+            <p class="text-muted-foreground">
                 System functionality and data population status.
             </p>
         </div>
         <div class="text-right">
-            <div class="text-xs uppercase font-bold text-stone-400">
+            <div class="text-xs uppercase font-bold text-muted-foreground">
                 Total Completion
             </div>
-            <div class="text-3xl font-mono font-bold text-[#4A7C74]">
+            <div class="text-3xl font-mono font-bold text-primary">
                 {overallHealth}%
             </div>
         </div>
@@ -46,33 +46,31 @@
             <div
                 class="p-4 rounded-xl border flex items-center justify-between transition-all hover:shadow-md
                 {mod.health === 'healthy'
-                    ? 'bg-emerald-50 border-emerald-100'
+                    ? 'bg-primary-soft border-primary/20'
                     : mod.health === 'partial'
-                      ? 'bg-amber-50 border-amber-100'
-                      : 'bg-rose-50 border-rose-100'}"
+                      ? 'bg-warning-soft border-warning/20'
+                      : 'bg-muted border-border'}"
             >
                 <div class="flex items-center gap-3">
                     {#if mod.health === "healthy"}
-                        <div
-                            class="p-2 bg-emerald-100 text-emerald-700 rounded-lg"
-                        >
+                        <div class="p-2 bg-card text-success rounded-lg">
                             <CircleCheck size={20} />
                         </div>
                     {:else if mod.health === "partial"}
-                        <div class="p-2 bg-amber-100 text-amber-700 rounded-lg">
-                            <TriangleAlert size={20} />
+                        <div class="p-2 bg-card text-warning rounded-lg">
+                            <CircleDotDashed size={20} />
                         </div>
                     {:else}
-                        <div class="p-2 bg-rose-100 text-rose-700 rounded-lg">
-                            <CircleAlert size={20} />
+                        <div class="p-2 bg-card text-muted-foreground rounded-lg">
+                            <CircleDashed size={20} />
                         </div>
                     {/if}
 
                     <div>
-                        <div class="font-bold text-sm text-[#304743]">
+                        <div class="font-bold text-sm text-foreground">
                             {mod.name}
                         </div>
-                        <div class="text-xs text-stone-500">
+                        <div class="text-xs text-muted-foreground">
                             {#if mod.hasData}
                                 {plural(mod.itemCount, "item")} saved
                             {:else}
@@ -84,7 +82,7 @@
 
                 <a
                     href={mod.path}
-                    class="text-xs font-bold underline opacity-50 hover:opacity-100"
+                    class="text-xs font-bold underline text-primary-hover hover:text-foreground"
                 >
                     Visit
                 </a>
