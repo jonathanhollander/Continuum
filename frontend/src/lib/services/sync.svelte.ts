@@ -19,6 +19,14 @@ const VERBATIM_VALUE_KEYS = new Set([
     'wishes', 'budget', 'transactions', 'maintenance', 'claims',
 ]);
 
+/** The message of a caught value, when it carries one. */
+const errMessage = (e: unknown): string | undefined =>
+    e instanceof Error ? e.message : (typeof e === 'object' && e !== null && typeof (e as { message?: unknown }).message === 'string' ? (e as { message: string }).message : undefined);
+const errTechnical = (e: unknown): string => {
+    const t = typeof e === 'object' && e !== null ? (e as { technicalDetails?: unknown }).technicalDetails : undefined;
+    return (typeof t === 'string' && t) || errMessage(e) || String(e);
+};
+
 const convertKeys = (obj: any, converter: (s: string) => string): any => {
     if (obj === null || typeof obj !== 'object' || obj instanceof Date || obj instanceof Blob) return obj;
     if (Array.isArray(obj)) return obj.map(i => convertKeys(i, converter));
@@ -266,10 +274,10 @@ export class SyncManager<T extends { id: number | string }> {
 
             this.status = "synced";
             this.lastSync = new Date();
-        } catch (e: any) {
+        } catch (e: unknown) {
             console.error(`[Sync:${this.key}] Error:`, e);
             this.status = "error";
-            this.error = e.message;
+            this.error = errMessage(e) ?? null;
         }
     }
 
@@ -382,15 +390,15 @@ export class SyncManager<T extends { id: number | string }> {
             }
             if (!quiet && !skipLocal) { this.status = "synced"; this.lastSync = new Date(); }
             return newItem;
-        } catch (e: any) {
+        } catch (e: unknown) {
             console.error("Create failed", e);
             if (quiet) throw e;
-            if (!skipLocal) { this.status = "error"; this.error = e?.message || "Failed to save"; }
+            if (!skipLocal) { this.status = "error"; this.error = errMessage(e) || "Failed to save"; }
             // One gentle message. Nothing was added locally, so the caller's draft is untouched.
             notifications.showError({
                 message: 'We couldn\'t save that just yet. Your words are still here \u2014 try again when you\'re ready.',
                 code: 'DATABASE_ERROR',
-                technicalDetails: e.technicalDetails || e.message || String(e)
+                technicalDetails: errTechnical(e)
             }, () => { (onRetry ? onRetry() : this.create(data, skipLocal)).catch(() => {}); });
             throw e;
         }
@@ -507,7 +515,7 @@ export class SyncManager<T extends { id: number | string }> {
             }
 
             return remoteItem;
-        } catch (e: any) {
+        } catch (e: unknown) {
             console.error("Update failed, rolling back", e);
             // A newer update to this row is still open: it carries the whole row, so its answer
             // decides. Otherwise every field these updates touched goes back to the server's
@@ -526,13 +534,13 @@ export class SyncManager<T extends { id: number | string }> {
                 });
             }
             this.status = "error";
-            this.error = e?.message || "Failed to save";
+            this.error = errMessage(e) || "Failed to save";
             // Rollback restores the saved record; the caller's form still holds the typed draft,
             // and Try Again re-applies exactly those edits.
             notifications.showError({
                 message: 'We couldn\'t save that just yet. Your words are still here \u2014 try again when you\'re ready.',
                 code: 'DATABASE_ERROR',
-                technicalDetails: e.technicalDetails || e.message || String(e)
+                technicalDetails: errTechnical(e)
             }, () => { this.update(id, updates, affirm).catch(() => {}); });
             throw e;
         }
@@ -583,7 +591,7 @@ export class SyncManager<T extends { id: number | string }> {
             }
             this.status = "synced";
             this.lastSync = new Date();
-        } catch (e: any) {
+        } catch (e: unknown) {
             // Rollback
             console.error("Delete failed, rolling back", e);
             // Put back only the removed record, at its place (the end if the list is now shorter),
@@ -598,11 +606,11 @@ export class SyncManager<T extends { id: number | string }> {
                 this.notify();
             }
             this.status = "error";
-            this.error = e?.message || "Failed to remove";
+            this.error = errMessage(e) || "Failed to remove";
             notifications.showError({
                 message: 'We couldn\'t remove this just yet. It is still safely in your list \u2014 try again when you\'re ready.',
                 code: 'DATABASE_ERROR',
-                technicalDetails: e.technicalDetails || e.message || String(e)
+                technicalDetails: errTechnical(e)
             }, () => { this.delete(id, onRemoved).catch(() => {}); });
             return;
         }
@@ -784,7 +792,7 @@ class SharedRecord {
             this.synced = true;
             const current = this.current;
             this.slices.forEach(s => s.applyRemote(current));
-        } catch (e: any) {
+        } catch (e: unknown) {
             if (e === ACCOUNT_CHANGED || epoch !== this.epoch) return;
             this.slices.forEach(s => s.syncFailed(e));
         }
@@ -938,10 +946,10 @@ export class SingletonSyncManager<T extends object> {
 
             this.status = "synced";
             this.lastSync = new Date();
-        } catch (e: any) {
+        } catch (e: unknown) {
             console.error(`[Sync:${this.key}] Error:`, e);
             this.status = "error";
-            this.error = e.message;
+            this.error = errMessage(e) ?? null;
         }
     }
 
@@ -972,10 +980,10 @@ export class SingletonSyncManager<T extends object> {
         this.lastSync = new Date();
     }
 
-    syncFailed(e: any) {
+    syncFailed(e: unknown) {
         console.error(`[Sync:${this.key}] Error:`, e);
         this.status = "error";
-        this.error = e?.message || String(e);
+        this.error = errMessage(e) || String(e);
     }
 
     // quiet: a background write — no affirmation, failures go to the console only.
@@ -1150,7 +1158,7 @@ export function registerProfileSlice<T extends object>(key: string, mapper: (dat
 // follow a moment after those have answered, one at a time while the browser is idle, and any of
 // them is fetched at once when something starts showing it.
 const _shown = new WeakSet<object>();
-const _later = new Set<{ sync(): Promise<void> }>();
+const _later = new Set<{ sync(): Promise<void>; lastSync?: Date | null }>();
 let _sessionRun = 0;
 /** How long the page's own stores have the network to themselves before the rest begin. */
 const REST_AFTER_MS = 2000;

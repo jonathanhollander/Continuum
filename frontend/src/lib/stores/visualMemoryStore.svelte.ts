@@ -187,6 +187,6 @@ export const updateFamilyMemory = (id: number, updates: Partial<FamilyMemory>) =
         message: 'We couldn\'t find that memory to save. It may have been moved \u2014 please refresh and try again when you\'re ready.',
         code: 'NOT_FOUND',
         technicalDetails: `updateFamilyMemory: no item with id ${id}`
-    } as any);
+    });
     throw new Error(`Memory ${id} not found`);
 };
