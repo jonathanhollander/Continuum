@@ -51,12 +51,19 @@
         }
     }
 
-    // Saves the whole settings row. `undo` puts back the change the caller just made when
-    // the save fails, so the page never shows a setting the server did not keep.
+    // Saves only the choices this page edits; the rest of the row (check-in token, safety timer,
+    // message, schedule) stays as the server has it, even if it changed since the page loaded.
+    // `undo` puts back the change the caller just made when the save fails, so the page never
+    // shows a setting the server did not keep.
     async function saveSettings(undo?: () => void) {
         saving = true;
         try {
-            await apiPost("/api/pulse/settings", settings);
+            await apiPost("/api/pulse/settings", {
+                enabled: settings.enabled,
+                ghost_mode_until: settings.ghost_mode_until,
+                biometric_extension_enabled: settings.biometric_extension_enabled,
+                location_vault_enabled: settings.location_vault_enabled,
+            });
             pulse.showEnabled(settings.enabled);
             pulse.init();
         } catch (e) {
