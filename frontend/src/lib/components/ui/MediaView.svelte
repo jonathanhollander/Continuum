@@ -1,21 +1,78 @@
+<script module lang="ts">
+    import { get } from "svelte/store";
+    import { fetchMediaBlob } from "$lib/services/mediaService";
+    import { auth } from "$lib/stores/auth";
+    import { activeAccountId } from "$lib/stores/keyringStore";
+
+    /**
+     * One object URL per media id for the page's life, shared by every MediaView,
+     * so the same file shown twice is fetched once. Emptied (and revoked) when the
+     * signed-in account changes or signs out, so one account never sees another's file.
+     */
+    const blobUrls = new Map<number, Promise<string>>();
+
+    function blobUrlFor(id: number): Promise<string> {
+        let url = blobUrls.get(id);
+        if (!url) {
+            url = fetchMediaBlob(id).then((blob) => URL.createObjectURL(blob));
+            url.catch(() => blobUrls.delete(id));
+            blobUrls.set(id, url);
+        }
+        return url;
+    }
+
+    function forgetBlobUrls() {
+        for (const url of blobUrls.values()) {
+            url.then((u) => URL.revokeObjectURL(u), () => undefined);
+        }
+        blobUrls.clear();
+    }
+
+    if (typeof window !== "undefined") {
+        let account = get(activeAccountId);
+        activeAccountId.subscribe((id) => {
+            if (id !== account) forgetBlobUrls();
+            account = id;
+        });
+        let signedIn = get(auth).isAuthenticated;
+        auth.subscribe((s) => {
+            if (signedIn && !s.isAuthenticated) forgetBlobUrls();
+            signedIn = s.isAuthenticated;
+        });
+    }
+</script>
+
 <script lang="ts">
     /**
      * Shows one stored file: image, audio or video plays inline; any file can be
      * saved. `src` is a media id or its download_url ("/api/media/12/download").
      * Data URLs and other plain URLs are shown as images.
+     *
+     * Pass `record` (the media row or upload response) or `mimeType` when the
+     * caller already has it: the file is then fetched directly, with no metadata
+     * request first.
      */
-    import { onDestroy } from "svelte";
     import { FileText, Download } from "lucide-svelte";
     import {
         mediaIdFromRef,
         getMedia,
-        fetchMediaBlob,
         downloadMedia,
         formatFileSize,
+        type MediaFile,
         type MediaRef,
     } from "$lib/services/mediaService";
 
-    let { src, class: className = "" } = $props<{ src: MediaRef; class?: string }>();
+    let {
+        src,
+        record = undefined,
+        mimeType = undefined,
+        class: className = "",
+    } = $props<{
+        src: MediaRef;
+        record?: Partial<MediaFile> | null;
+        mimeType?: string | null;
+        class?: string;
+    }>();
 
     let objectUrl = $state<string | null>(null);
     let mime = $state("");
@@ -25,25 +82,38 @@
     let message = $state<string | null>(null);
 
     let mediaId = $derived(mediaIdFromRef(src));
+    let knownMime = $derived(mimeType || record?.mime_type || "");
+
+    const playable = (type: string) => /^(image|audio|video)\//.test(type);
 
     $effect(() => {
         const id = mediaId;
+        const typeGiven = knownMime;
+        const given = record;
         message = null;
-        if (id === null) return;
+        objectUrl = null;
+        mime = typeGiven;
+        filename = given?.filename ?? "";
+        size = given?.file_size ?? 0;
+        if (id === null) {
+            loading = false;
+            return;
+        }
         let cancelled = false;
         loading = true;
         (async () => {
             try {
-                const meta = await getMedia(id);
-                if (cancelled) return;
-                mime = meta.mime_type;
-                filename = meta.filename;
-                size = meta.file_size;
-                if (/^(image|audio|video)\//.test(mime)) {
-                    const blob = await fetchMediaBlob(id);
+                if (!typeGiven) {
+                    const meta = await getMedia(id);
                     if (cancelled) return;
-                    if (objectUrl) URL.revokeObjectURL(objectUrl);
-                    objectUrl = URL.createObjectURL(blob);
+                    mime = meta.mime_type;
+                    filename = meta.filename;
+                    size = meta.file_size;
+                }
+                if (playable(mime)) {
+                    const url = await blobUrlFor(id);
+                    if (cancelled) return;
+                    objectUrl = url;
                 }
             } catch (e: any) {
                 if (!cancelled) message = e?.message || "This file is taking a moment to open.";
@@ -54,10 +124,6 @@
         return () => {
             cancelled = true;
         };
-    });
-
-    onDestroy(() => {
-        if (objectUrl) URL.revokeObjectURL(objectUrl);
     });
 
     async function save() {
