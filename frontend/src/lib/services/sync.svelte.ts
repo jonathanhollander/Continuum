@@ -168,7 +168,10 @@ export class SyncManager<T extends { id: number | string }> {
     }
 
     // CRUD
-    async create(data: Partial<T>, skipLocal = false) {
+    // quiet: background bookkeeping (activity log). Failures are logged to the console only,
+    // never shown to the user, and never change this manager's status.
+    async create(data: Partial<T>, skipLocal = false, quiet = false) {
+        if (!quiet && !skipLocal) { this.status = "syncing"; this.error = null; }
         try {
             const payloadRaw = this.mapper ? this.mapper(data as any) : data;
             const payload = toWire(payloadRaw);
@@ -214,14 +217,18 @@ export class SyncManager<T extends { id: number | string }> {
                     notifications.showAffirmation(this.affirmationContext);
                 }
             }
+            if (!quiet && !skipLocal) { this.status = "synced"; this.lastSync = new Date(); }
             return newItem;
         } catch (e: any) {
             console.error("Create failed", e);
-            // Show detailed error notification
+            if (quiet) throw e;
+            if (!skipLocal) { this.status = "error"; this.error = e?.message || "Failed to save"; }
+            // One gentle message. Nothing was added locally, so the caller's draft is untouched.
             notifications.showError({
-                message: 'We couldn\'t save your new item. Please try again.',
+                message: 'We couldn\'t save that just yet. Your words are still here \u2014 try again when you\'re ready.',
+                code: 'DATABASE_ERROR',
                 technicalDetails: e.technicalDetails || e.message || String(e)
-            });
+            } as any, () => { this.create(data, skipLocal).catch(() => {}); });
             throw e;
         }
     }
@@ -243,6 +250,8 @@ export class SyncManager<T extends { id: number | string }> {
         const index = this.items.findIndex(i => String(i.id) === String(id));
         if (index === -1) return;
 
+        this.status = "syncing";
+        this.error = null;
         const currentItem = this.items[index];
         const updatedItem = { ...currentItem, ...updates };
         this.items[index] = updatedItem;
@@ -289,6 +298,9 @@ export class SyncManager<T extends { id: number | string }> {
             this.items[index] = remoteItem;
             this.items = [...this.items];
             setStored(this.key, this.items);
+            this.notify();
+            this.status = "synced";
+            this.lastSync = new Date();
 
             // Show affirmation if context is set
             if (this.affirmationContext) {
@@ -301,11 +313,15 @@ export class SyncManager<T extends { id: number | string }> {
             this.items = original;
             setStored(this.key, this.items);
             this.notify();
-            // Show detailed error notification
+            this.status = "error";
+            this.error = e?.message || "Failed to save";
+            // Rollback restores the saved record; the caller's form still holds the typed draft,
+            // and Try Again re-applies exactly those edits.
             notifications.showError({
-                message: 'We couldn\'t save your changes. Please try again, or check your connection.',
+                message: 'We couldn\'t save that just yet. Your words are still here \u2014 try again when you\'re ready.',
+                code: 'DATABASE_ERROR',
                 technicalDetails: e.technicalDetails || e.message || String(e)
-            });
+            } as any, () => { this.update(id, updates).catch(() => {}); });
             throw e;
         }
     }
@@ -313,8 +329,11 @@ export class SyncManager<T extends { id: number | string }> {
     async delete(id: number | string) {
         // Optimistic
         const original = this.items;
-        this.items = this.items.filter(i => i.id !== id);
+        this.status = "syncing";
+        this.error = null;
+        this.items = this.items.filter(i => String(i.id) !== String(id));
         setStored(this.key, this.items);
+        this.notify();
 
         try {
             const token = get(auth).token;
@@ -333,17 +352,21 @@ export class SyncManager<T extends { id: number | string }> {
                 error.technicalDetails = `${errorDetail}\n\nEndpoint: DELETE ${this.apiBase}/${this.endpoint}/${id}`;
                 throw error;
             }
+            this.status = "synced";
+            this.lastSync = new Date();
         } catch (e: any) {
             // Rollback
             console.error("Delete failed, rolling back", e);
             this.items = original;
             setStored(this.key, this.items);
+            this.notify();
             this.status = "error";
-            // Show detailed error notification
+            this.error = e?.message || "Failed to remove";
             notifications.showError({
-                message: 'We couldn\'t remove this item. Please try again.',
+                message: 'We couldn\'t remove this just yet. It is still safely in your list \u2014 try again when you\'re ready.',
+                code: 'DATABASE_ERROR',
                 technicalDetails: e.technicalDetails || e.message || String(e)
-            });
+            } as any, () => { this.delete(id).catch(() => {}); });
         }
     }
 
@@ -456,6 +479,8 @@ export class SingletonSyncManager<T extends object> {
 
     async update(newData: Partial<T>) {
         const original = this.data;
+        this.status = "syncing";
+        this.error = null;
         this.data = { ...(this.data || {} as T), ...newData } as T;
         setStored(this.key, this.data);
         this.notify();
@@ -484,6 +509,8 @@ export class SingletonSyncManager<T extends object> {
             const saved = this.mapper ? this.mapper(savedRaw) : savedRaw;
 
             this.updateLocal(saved);
+            this.status = "synced";
+            this.lastSync = new Date();
 
             // Show affirmation if context is set
             if (this.affirmationContext) {
@@ -496,6 +523,13 @@ export class SingletonSyncManager<T extends object> {
             this.data = original;
             setStored(this.key, original);
             this.notify();
+            this.status = "error";
+            this.error = (e as any)?.message || "Failed to save";
+            notifications.showError({
+                message: 'We couldn\'t save that just yet. Your words are still here \u2014 try again when you\'re ready.',
+                code: 'DATABASE_ERROR',
+                technicalDetails: (e as any)?.message || String(e)
+            } as any, () => { this.update(newData).catch(() => {}); });
             throw e;
         }
     }

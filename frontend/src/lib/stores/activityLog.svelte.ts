@@ -56,14 +56,15 @@ export const activityLog = {
      * Log a new activity event
      */
     logEvent(entry: Omit<ActivityLogEntry, 'id' | 'timestamp'>): void {
-        const newEntry: ActivityLogEntry = {
+        // The server generates the id. Failures are bookkeeping only: console, never the user.
+        const newEntry = {
             ...entry,
-            id: crypto.randomUUID(),
+            entityId: String(entry.entityId ?? ''),
             timestamp: new Date().toISOString(),
         };
-
-        // SyncManager create will handle the API call
-        manager.create(newEntry);
+        manager.create(newEntry as any, false, true).catch((e) => {
+            console.warn('[ActivityLog] Could not record this activity (the save itself is unaffected):', e);
+        });
     },
 
     /**
