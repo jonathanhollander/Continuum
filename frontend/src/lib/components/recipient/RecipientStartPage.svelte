@@ -5,7 +5,7 @@
     // through the given fetcher, and the download copy is D1's zip built from the same files.
     import { onDestroy } from "svelte";
     import { slide } from "svelte/transition";
-    import { SvelteMap } from "svelte/reactivity";
+    import { SvelteMap, SvelteSet } from "svelte/reactivity";
     import { Archive, Loader2, Phone, Mail, ChevronDown } from "lucide-svelte";
     import {
         buildPacket,
@@ -124,6 +124,22 @@
     ]);
 
     const letters = $derived(rows("letters"));
+    // Letters show their title and opening; each opens in full on a click (card U8), so a long
+    // shelf of letters stays a calm list and only the open ones are laid out (and fetch files).
+    const openLetters = new SvelteSet<string>();
+    const OPENING = 240;
+    const opening = (text: any) => {
+        const t = String(text ?? "").replace(/\s+/g, " ").trim();
+        if (t.length <= OPENING) return null;
+        const cut = t.slice(0, OPENING);
+        const sp = cut.lastIndexOf(" ");
+        return `${(sp > OPENING / 2 ? cut.slice(0, sp) : cut).replace(/[\s,;:.]+$/, "")}…`;
+    };
+    const toggleLetter = (id: any) => {
+        const k = String(id);
+        if (openLetters.has(k)) openLetters.delete(k);
+        else openLetters.add(k);
+    };
     const capsules = $derived(rows("time_capsule"));
     const memories = $derived(
         [...rows("visual_memories").map((r) => ({ section: "visual_memories", r, title: r.name, text: r.description })),
@@ -318,13 +334,27 @@
                 <h2 class="font-serif text-3xl text-[#304743] mb-6">{letters.length === 1 ? "A letter for you" : "Letters for you"}</h2>
                 <div class="space-y-6">
                     {#each letters as l (l.id)}
+                        {@const short = opening(l.content)}
+                        {@const open = !short || openLetters.has(String(l.id))}
                         <article class="bg-white rounded-2xl border border-stone-200 p-8 shadow-sm" data-letter={l.id}>
                             <h3 class="font-serif text-2xl text-stone-800">{l.title}</h3>
                             <p class="text-sm text-stone-500 mt-1">
                                 {[l.date ? `Written ${fmtDate(l.date)}` : "", l.triggerMilestone ? `For ${l.triggerMilestone}` : l.triggerDate ? `For ${fmtDate(l.triggerDate)}` : ""].filter(Boolean).join(" · ")}
                             </p>
-                            <p class="font-serif text-lg leading-relaxed whitespace-pre-wrap mt-6" data-testid="letter-content">{l.content}</p>
-                            {@render media(filesFor("letters", l.id))}
+                            {#if open}
+                                <p class="font-serif text-lg leading-relaxed whitespace-pre-wrap mt-6" data-testid="letter-content">{l.content}</p>
+                                {@render media(filesFor("letters", l.id))}
+                            {:else}
+                                <p class="font-serif text-lg leading-relaxed text-stone-600 mt-6" data-testid="letter-opening">{short}</p>
+                            {/if}
+                            {#if short}
+                                <button
+                                    onclick={() => toggleLetter(l.id)}
+                                    aria-expanded={open}
+                                    class="mt-4 text-sm font-semibold text-[#304743] underline underline-offset-4 hover:opacity-80"
+                                    data-testid="letter-toggle"
+                                >{open ? "Fold the letter away" : "Read the letter"}</button>
+                            {/if}
                         </article>
                     {/each}
                 </div>

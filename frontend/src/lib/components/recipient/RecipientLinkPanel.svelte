@@ -54,7 +54,10 @@
 
     const toggle = (on: boolean) =>
         run("flag", () => updateRecipient(id!, { is_recipient: on }), on ? `${who} now has a start page of their own.` : `${who}'s start page is put away.`);
-    const saveNote = () => run("note", () => updateRecipient(id!, { note }), "Your note is saved.");
+    // The note shows its own saved state (card U8), so the modal's footer only closes; it also
+    // saves when the field is left, so a note typed before closing the modal is kept.
+    const saveNote = () => run("note", () => updateRecipient(id!, { note }), "");
+    const noteChanged = $derived(!!link && note !== link.note);
     const make = () => run("create", () => createLink(id!), "Their link is ready to share.");
     const close = () => run("revoke", () => revokeLink(id!), "The link is closed. A fresh one is a click away.");
 
@@ -93,17 +96,26 @@
                 <textarea
                     id="recipient-note"
                     bind:value={note}
+                    onblur={() => {
+                        if (noteChanged && busy === null) saveNote();
+                    }}
                     rows="3"
                     placeholder="The first words they'll read on their page"
                     class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm focus:border-primary outline-none"
                     data-testid="recipient-note-input"
                 ></textarea>
-                <button
-                    onclick={saveNote}
-                    disabled={busy !== null || note === link.note}
-                    class="px-4 py-2 rounded-xl text-sm font-semibold border border-primary/30 text-primary hover:bg-primary/5 disabled:opacity-50"
-                    data-testid="recipient-note-save"
-                >Save this note</button>
+                {#if noteChanged}
+                    <button
+                        onclick={saveNote}
+                        disabled={busy !== null}
+                        class="px-4 py-2 rounded-xl text-sm font-semibold border border-primary/30 text-primary hover:bg-primary/5 disabled:opacity-50"
+                        data-testid="recipient-note-save"
+                    >Save this note</button>
+                {:else if link.note}
+                    <p class="inline-flex items-center gap-1.5 text-xs text-slate-600" data-testid="recipient-note-saved">
+                        <Check class="w-4 h-4 text-[#4A7C74]" /> Your note is saved.
+                    </p>
+                {/if}
             </div>
 
             {#if link.path}
