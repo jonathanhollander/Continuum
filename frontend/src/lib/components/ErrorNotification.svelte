@@ -10,19 +10,29 @@
 
 	let { notification, onDismiss, onRetry }: Props = $props();
 	let showDetails = $state(false);
-	let copied = $state(false);
 
-	// Auto-dismiss after 15 seconds (longer when has details)
-	let autoDismissTimer: number | undefined;
+	// Stays until dismissed. When a save inside a dialog did not go through,
+	// bring focus back to the dialog's save button so keyboard users stay in place.
+	// The save button stays disabled while the save is still wrapping up, so try for a moment.
 	$effect(() => {
-		const timeout = notification.technicalDetails ? 15000 : 10000;
-		autoDismissTimer = window.setTimeout(() => {
-			onDismiss();
-		}, timeout);
-
-		return () => {
-			if (autoDismissTimer) clearTimeout(autoDismissTimer);
-		};
+		let tries = 0;
+		const timer = window.setInterval(() => {
+			tries += 1;
+			const dialog = document.querySelector('[aria-modal="true"]');
+			if (!dialog || dialog.contains(document.activeElement) || tries > 30) {
+				clearInterval(timer);
+				return;
+			}
+			const buttons = Array.from(dialog.querySelectorAll('button:not([disabled])')) as HTMLButtonElement[];
+			const save =
+				dialog.querySelector<HTMLButtonElement>('button[type="submit"]:not([disabled])') ??
+				buttons.reverse().find((b) => b.classList.contains('bg-primary'));
+			if (save) {
+				save.focus();
+				clearInterval(timer);
+			}
+		}, 100);
+		return () => clearInterval(timer);
 	});
 
 	// Icon based on error code
@@ -35,16 +45,6 @@
 		return '⚠️';
 	};
 
-	async function copyError() {
-		const errorText = `Error: ${notification.title}\nMessage: ${notification.message}\nTime: ${notification.timestamp.toISOString()}\n\nTechnical Details:\n${notification.technicalDetails || 'No additional details'}`;
-		try {
-			await navigator.clipboard.writeText(errorText);
-			copied = true;
-			setTimeout(() => copied = false, 2000);
-		} catch (err) {
-			console.error('Failed to copy:', err);
-		}
-	}
 </script>
 
 <div
@@ -76,9 +76,6 @@
 			{#if notification.canRetry && onRetry}
 				<button class="retry-button" onclick={onRetry}>Try Again</button>
 			{/if}
-			<button class="copy-button" onclick={copyError}>
-				{copied ? 'Copied!' : 'Copy Error'}
-			</button>
 			<button class="dismiss-button" onclick={onDismiss}>Dismiss</button>
 		</div>
 	</div>
@@ -100,6 +97,8 @@
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 		max-width: 450px;
 		width: 100%;
+		box-sizing: border-box;
+		padding-right: 52px;
 		position: relative;
 	}
 
@@ -169,8 +168,7 @@
 	}
 
 	.retry-button,
-	.dismiss-button,
-	.copy-button {
+	.dismiss-button {
 		padding: 6px 12px;
 		border-radius: 6px;
 		font-size: 13px;
@@ -187,15 +185,6 @@
 
 	.retry-button:hover {
 		background: #2c5aa0;
-	}
-
-	.copy-button {
-		background: #805ad5;
-		color: white;
-	}
-
-	.copy-button:hover {
-		background: #6b46c1;
 	}
 
 	.dismiss-button {
