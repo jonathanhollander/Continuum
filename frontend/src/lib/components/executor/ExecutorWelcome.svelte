@@ -9,8 +9,8 @@
     import { Heart, Clock, Shield, CheckCircle } from 'lucide-svelte';
     import { fade, fly } from 'svelte/transition';
     import { contextStore } from "$lib/stores/contextStore.svelte";
-    import { apiFetch } from "$lib/api/client";
     import { logger } from "$lib/utils/logger";
+    import { captureSession, isCurrentSession } from "$lib/services/sessionOwnership";
 
     interface Props {
         onComplete?: () => void;
@@ -19,7 +19,9 @@
     let { onComplete = () => {} }: Props = $props();
 
     let step = $state(0);
-    let deceasedName = $state('');
+    let deceasedName = $state(contextStore.deceasedName || '');
+    let saving = $state(false);
+    let saveError = $state(false);
 
     const steps = [
         {
@@ -44,40 +46,24 @@
         }
     }
 
-    // The name and the grieving context are kept with the account (users.deceased_name and
-    // users.emotional_context), so they are still there after a reload or on another device.
-    async function saveToAccount(name: string) {
+    async function handleComplete() {
+        if (saving) return;
+        const owner = captureSession();
+        saving = true;
+        saveError = false;
         try {
-            const res = await apiFetch('/api/auth/onboarding', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ emotional_context: 'grieving', ...(name ? { deceased_name: name } : {}) })
-            });
-            if (!res.ok) throw new Error(`status ${res.status}`);
+            await contextStore.saveExecutorWelcome(deceasedName);
+            if (isCurrentSession(owner)) onComplete();
         } catch (e) {
             logger.error('[ExecutorWelcome] Saving the welcome details failed', e);
+            if (isCurrentSession(owner)) saveError = true;
+        } finally {
+            saving = false;
         }
-    }
-
-    function handleComplete() {
-        // Save deceased name if provided
-        const name = deceasedName.trim();
-        if (name) {
-            contextStore.setDeceasedName(name);
-        }
-        contextStore.setEmotionalContext('grieving');
-        void saveToAccount(name);
-
-        // Mark welcome as seen
-        if (typeof localStorage !== 'undefined') {
-            localStorage.setItem('continuum_executor_welcome_seen', 'true');
-        }
-
-        onComplete();
     }
 </script>
 
-<div role="dialog" aria-modal="true" use:focusTrap class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4" in:fade>
+<div role="dialog" aria-modal="true" aria-labelledby="executor-welcome-title" aria-busy={saving} use:focusTrap class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4" in:fade>
     <div
         class="surface-dark max-w-2xl w-full bg-background text-foreground rounded-2xl border border-border shadow-2xl overflow-hidden"
         in:fly={{ y: 20, duration: 500 }}
@@ -89,7 +75,7 @@
                     <Heart size={32} class="text-primary" />
                 </div>
 
-                <h1 class="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
+                <h1 id="executor-welcome-title" class="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
                     We're here to help
                 </h1>
 
@@ -128,7 +114,7 @@
                     <Clock size={32} class="text-primary" />
                 </div>
 
-                <h1 class="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
+                <h1 id="executor-welcome-title" class="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
                     Take your time
                 </h1>
 
@@ -187,7 +173,7 @@
                     <Shield size={32} class="text-primary" />
                 </div>
 
-                <h1 class="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
+                <h1 id="executor-welcome-title" class="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
                     One last thing
                 </h1>
 
@@ -205,6 +191,7 @@
                         id="deceased-name"
                         type="text"
                         bind:value={deceasedName}
+                        disabled={saving}
                         placeholder="e.g., John Smith"
                         class="w-full px-4 py-3 bg-card border border-border rounded-xl
                                text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary
@@ -215,16 +202,21 @@
                     </p>
                 </div>
 
+                {#if saveError}
+                    <p class="mb-4 text-sm text-warning" role="alert">Your draft is kept. We can save it again whenever you're ready.</p>
+                {/if}
                 <div class="flex flex-col sm:flex-row gap-3">
                     <button
                         onclick={handleComplete}
+                        disabled={saving}
                         class="px-6 py-3 bg-primary text-primary-foreground rounded-xl font-semibold
-                               hover:bg-primary-hover transition-colors"
+                               hover:bg-primary-hover transition-colors disabled:opacity-60"
                     >
-                        Begin when you're ready
+                        {saving ? 'Saving...' : saveError ? 'Try Again' : "Begin when you're ready"}
                     </button>
                     <button
                         onclick={() => step--}
+                        disabled={saving}
                         class="px-6 py-3 text-muted-foreground hover:text-foreground transition-colors"
                     >
                         Back

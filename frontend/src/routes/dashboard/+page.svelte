@@ -68,6 +68,25 @@
 
     // Executor mode welcome state
     let showExecutorWelcome = $state(false);
+    let welcomeAccount: number | null = null;
+
+    $effect(() => {
+        const state = $auth;
+        if (!state.user) {
+            welcomeAccount = null;
+            showExecutorWelcome = false;
+            return;
+        }
+        if (state.loading) return;
+        if (!contextStore.isExecutor) {
+            welcomeAccount = null;
+            showExecutorWelcome = false;
+            return;
+        }
+        if (welcomeAccount === state.user.id) return;
+        welcomeAccount = state.user.id;
+        showExecutorWelcome = !contextStore.hasSeenExecutorWelcome;
+    });
 
     // Loading state
     let loading = $state(true);
@@ -357,16 +376,6 @@
     onMount(() => {
         estateAudit.runAudit();
 
-        // Check if executor and first time
-        if (browser && contextStore.isExecutor) {
-            const hasSeenWelcome = localStorage.getItem(
-                "continuum_executor_welcome_seen",
-            );
-            if (!hasSeenWelcome) {
-                showExecutorWelcome = true;
-            }
-        }
-
         // The rest of the page waits for the greeting only when the greeting can be typed now;
         // otherwise its tiles show their own cue meanwhile.
         if (auditLoading) loading = false;
@@ -413,7 +422,9 @@
 <div class="min-h-screen text-foreground font-sans selection:bg-primary/30">
     <!-- Executor Welcome Modal -->
     {#if showExecutorWelcome}
+        {#key $auth.user?.id}
         <ExecutorWelcome onComplete={() => (showExecutorWelcome = false)} />
+        {/key}
     {/if}
 
     <main class="relative container mx-auto px-6 py-8 max-w-6xl">
