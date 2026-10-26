@@ -152,6 +152,7 @@
 			$page.url.pathname.startsWith("/auth/") ||
 			$page.url.pathname.startsWith("/pulse/respond/") ||
 			$page.url.pathname.startsWith("/pulse/verify/") ||
+			$page.url.pathname.startsWith("/pulse/portal/") ||
 			// Guardian alert emails link here (backend/pulse_logic.py); trailing slash keeps "/portalX" protected
 			$page.url.pathname.startsWith("/portal/"),
 	);
