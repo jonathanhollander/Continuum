@@ -3,10 +3,12 @@ import { browser } from '$app/environment';
 
 export const ssr = false;
 
-export async function load() {
+export function load() {
     if (browser) {
-        // Initialize authentication state from stored token
-        await auth.init();
+        // Start checking the stored token without waiting on it (card X245): the layout
+        // renders at once and shows its loading screen while $auth.loading is true.
+        // The layout's onMount init joins this same /api/auth/me request.
+        void auth.init();
     }
 
     return {};
