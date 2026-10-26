@@ -429,7 +429,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X74 | ▶ | | |
 | X75 | ▶ | | |
 | X76 | ☐ (after X54: same file) | | |
-| X77 | ▶ | | |
+| X77 | ☑ | eb055b8 | No `custom_attributes` column on Vendor/HomeAccess/Utility, so the custom-fields control is left out of all three home-manual forms (26 lines deleted). 1440×900: 0 "Add Field" in all six create/edit modals; create, edit, reload, second context every value; 0 page errors. Adding custom fields here needs a migration (owner's call) |
 | X51 | ☑ | 6a3faba | 1440×900: property, heirlooms and financial wizards show real words and finishing saves their records (3, 3, 4 rows); financial last step pointed at itself and looped (fixed in the component); EN→ES→EN leaves the six profile fields identical (`/api/estate/profile` already merges); 0 page errors |
 | X60 | ▶ | | |
 | X38 | ☑ | 6210bb6 | 1440×900: Mark Done + drill step 1 → reload keeps both, 0 error strips, 0 page errors, 0 requests to missing endpoints; values in account/profile-namespaced localStorage (same keys and shape). Generic `/api/data` needs a typed table and int ids, so device-only for now (→ X42) |
