@@ -53,10 +53,20 @@ def checkin(request: Request, method: str = "manual", note: str = None, user: Us
     from backend.pulse_logic import GUARDIAN_CHECKIN_METHODS
     if method in GUARDIAN_CHECKIN_METHODS:  # the owner's own check-in is never a guardian action
         method = "manual"
-    checkin = PulseCheckin(user_id=user.id, method=method, note=note)
+    return _record_owner_checkin(session, user.id, method, note)
+
+
+def _record_owner_checkin(session: Session, user_id: int, method: str, note: str = None) -> dict:
+    """The owner's own check-in. If it closes an outage in which guardians were alerted, each
+    of them gets a short all-clear email (pulse_logic.send_all_clear)."""
+    from backend.pulse_logic import owner_last_checkin, send_all_clear
+    previous = owner_last_checkin(session, user_id)
+    checkin = PulseCheckin(user_id=user_id, method=method, note=note)
     session.add(checkin)
     session.commit()
-    return {"status": "success", "timestamp": checkin.timestamp}
+    session.refresh(checkin)
+    send_all_clear(session, user_id, previous.timestamp if previous else datetime.min)
+    return {"status": "success", "timestamp": _utc_iso(checkin.timestamp)}
 
 @router.get("/status", summary="Get current Pulse status", description="Returns if Pulse is active, grace period status, and the next expected nudge time.")
 def get_status(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
@@ -194,7 +204,8 @@ def update_settings(request: Request, new_settings: PulseSettings, user: User = 
 @router.get("/history")
 def get_history(limit: int = 10, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     statement = select(PulseCheckin).where(PulseCheckin.user_id == user.id).order_by(PulseCheckin.timestamp.desc()).limit(limit)
-    return session.exec(statement).all()
+    # Stored times are naive UTC; send them with "Z" (as /status does) so the browser reads UTC
+    return [{**c.model_dump(), "timestamp": _utc_iso(c.timestamp)} for c in session.exec(statement).all()]
 
 @router.get("/contacts")
 def get_contacts(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
@@ -217,7 +228,7 @@ def create_contact(body: ContactCreate, user: User = Depends(get_current_user), 
 def update_contact(contact_id: int, updated: ContactUpdate, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     contact = session.get(PulseContact, contact_id)
     if not contact or contact.user_id != user.id:
-        raise HTTPException(status_code=404, detail="Contact not found")
+        raise HTTPException(status_code=404, detail="That contact may have been moved.")
 
     apply_contact_fields(contact, updated.model_dump(exclude_unset=True), user, session)
 
@@ -230,7 +241,7 @@ def update_contact(contact_id: int, updated: ContactUpdate, user: User = Depends
 def delete_contact(contact_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     contact = session.get(PulseContact, contact_id)
     if not contact or contact.user_id != user.id:
-        raise HTTPException(status_code=404, detail="Contact not found")
+        raise HTTPException(status_code=404, detail="That contact may have been moved.")
     session.delete(contact)
     session.commit()
     return {"status": "deleted"}
@@ -254,11 +265,6 @@ def _owner_last_checkin(session: Session, user_id: int):
     return owner_last_checkin(session, user_id)
 
 
-def _this_outage_escalation(session: Session, user_id: int, last_checkin):
-    from backend.pulse_logic import current_escalation
-    return current_escalation(session, user_id, last_checkin.timestamp if last_checkin else datetime.min)
-
-
 def _utc_iso(ts: datetime):
     """Stored times are naive UTC; send them as aware ISO with "Z" so browsers read them as UTC."""
     if ts is None:
@@ -274,22 +280,19 @@ def get_portal_view(request: Request, token: str, session: Session = Depends(get
     statement = select(PulseContact).where(PulseContact.portal_token == token)
     contact = session.exec(statement).first()
     if not contact:
-        raise HTTPException(status_code=404, detail="Invalid portal token")
+        raise HTTPException(status_code=404, detail="This link has rested. The person who shared it can send a fresh one.")
     if contact.portal_token_expires and contact.portal_token_expires < utc_now():
-        raise HTTPException(status_code=401, detail="Token expired")
+        raise HTTPException(status_code=401, detail="This link has rested. The person who shared it can send a fresh one.")
 
     # 2. Get User Status
     user_id = contact.user_id
-    user = session.get(User, user_id)
     last_checkin = _owner_last_checkin(session, user_id)
     
-    # Check active escalation for sensitive data: only this outage counts (rows after the last
-    # check-in, as pulse_logic.process_user_pulse does), so a check-in closes access again.
-    # Tier-0 rows are safety-timer alerts, not welfare tiers; they must not mask the tier already reached.
-    last_escalation = _this_outage_escalation(session, user_id, last_checkin)
-    
+    # Sensitive data opens only in this outage (rows after the owner's last check-in), once it
+    # has reached this guardian's tier or they were sent their own tier alert (pulse_logic.contact_reach)
+    from backend.pulse_logic import contact_reach, owner_display_name, owner_notes
     tier = session.get(PulseEscalationTier, contact.tier_id) if contact.tier_id else None
-    show_sensitive = bool(last_escalation and tier and last_escalation.tier_number >= tier.tier_number)
+    show_sensitive = contact_reach(session, contact) is not None
 
     # "active" while the owner is inside their own check-in window (same soft deadline as
     # pulse_logic.process_user_pulse: last check-in + frequency_days); past it, "grace"
@@ -302,14 +305,16 @@ def get_portal_view(request: Request, token: str, session: Session = Depends(get
     return {
         "contact_name": contact.name,
         "contact_tier": tier.tier_number if tier else None,
-        "user_name": user.email.split('@')[0].capitalize() if user else "Estate Owner",
+        "user_name": owner_display_name(session, user_id),
         "user_status": user_status,
         "last_checkin": _utc_iso(last_checkin.timestamp) if last_checkin else None,
         "show_sensitive": show_sensitive,
         "sensitive_data": {
              "medical_proxy": "Active" if show_sensitive else "Locked",
              "safe_pass": show_sensitive
-        }
+        },
+        # The owner's own notes to this guardian (Messages page), always shown to them
+        "notes": [{"message": n.message, "sent_at": _utc_iso(n.sent_at)} for n in owner_notes(session, contact)],
     }
 
 @router.get("/portal/{token}/vault")
@@ -317,18 +322,19 @@ def get_portal_view(request: Request, token: str, session: Session = Depends(get
 def get_portal_vault(request: Request, token: str, session: Session = Depends(get_session)):
     contact = session.exec(select(PulseContact).where(PulseContact.portal_token == token)).first()
     if not contact:
-        raise HTTPException(status_code=404, detail="Invalid portal token")
+        raise HTTPException(status_code=404, detail="This link has rested. The person who shared it can send a fresh one.")
     if contact.portal_token_expires and contact.portal_token_expires < utc_now():
-        raise HTTPException(status_code=401, detail="Token expired")
+        raise HTTPException(status_code=401, detail="This link has rested. The person who shared it can send a fresh one.")
 
-    # Same rule as the portal view: only once this outage's escalation (rows after the owner's
-    # last check-in) has reached this guardian's tier. Tier-0 safety-timer rows don't count.
-    last_checkin = _owner_last_checkin(session, contact.user_id)
-    last_escalation = _this_outage_escalation(session, contact.user_id, last_checkin)
-    tier = session.get(PulseEscalationTier, contact.tier_id) if contact.tier_id else None
-    if not (last_escalation and tier and last_escalation.tier_number >= tier.tier_number):
+    # The owner's "Automatic Release" switch (location_vault_enabled) decides whether notes are
+    # released at all; then the same rule as the portal view (pulse_logic.contact_reach).
+    from backend.pulse_logic import contact_reach
+    pulse_settings = session.get(PulseSettings, contact.user_id)
+    if not (pulse_settings and pulse_settings.location_vault_enabled):
         return []
-    reached = last_escalation.tier_number
+    reached = contact_reach(session, contact)
+    if reached is None:
+        return []
 
     def unlock_tier(condition: str):
         # The vault page stores "tier_<N>_escalation"; anything unreadable stays locked
@@ -346,9 +352,9 @@ def get_portal_vault(request: Request, token: str, session: Session = Depends(ge
 @limiter.limit("10/minute")  # P1-High: Rate limit public portal actions
 def guardian_respond(request: Request, token: str, action: str, session: Session = Depends(get_session)):
     contact = session.exec(select(PulseContact).where(PulseContact.portal_token == token)).first()
-    if not contact: raise HTTPException(status_code=404, detail="Invalid token")
+    if not contact: raise HTTPException(status_code=404, detail="This link has rested. The person who shared it can send a fresh one.")
     if contact.portal_token_expires and contact.portal_token_expires < utc_now():
-        raise HTTPException(status_code=401, detail="Token expired")
+        raise HTTPException(status_code=401, detail="This link has rested. The person who shared it can send a fresh one.")
         
     if action == "snooze":
         # Pauses new alerts (pulse_logic.alerts_paused_until); the owner's own clock, escalation
@@ -365,13 +371,14 @@ def guardian_respond(request: Request, token: str, action: str, session: Session
 @router.get("/messages")
 def get_messages(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     statement = select(PulseMessage).where(PulseMessage.user_id == user.id).order_by(PulseMessage.sent_at.desc())
-    return session.exec(statement).all()
+    return [{**m.model_dump(), "sent_at": _utc_iso(m.sent_at), "read_at": _utc_iso(m.read_at)}
+            for m in session.exec(statement).all()]
 
 @router.post("/messages")
 def send_message(contact_id: int, message: str, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     contact = session.get(PulseContact, contact_id)
     if not contact or contact.user_id != user.id:
-        raise HTTPException(status_code=404, detail="Contact not found")
+        raise HTTPException(status_code=404, detail="That contact may have been moved.")
         
     msg = PulseMessage(user_id=user.id, contact_id=contact_id, direction="user_to_contact", message=message)
     session.add(msg)
@@ -412,7 +419,7 @@ def add_vault_item(data: VaultItemIn, user: User = Depends(get_current_user), se
 def delete_vault_item(item_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     item = session.get(PulseVault, item_id)
     if not item or item.user_id != user.id:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(status_code=404, detail="That note may have been moved.")
     session.delete(item)
     session.commit()
     return {"status": "deleted"}
@@ -421,7 +428,7 @@ def delete_vault_item(item_id: int, user: User = Depends(get_current_user), sess
 def update_vault_item(item_id: int, data: VaultItemIn, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     item = session.get(PulseVault, item_id)
     if not item or item.user_id != user.id:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(status_code=404, detail="That note may have been moved.")
 
     item.name = data.name
     item.encrypted_content = data.content.encode("utf-8")  # plain UTF-8, not encrypted
@@ -437,9 +444,9 @@ def update_vault_item(item_id: int, data: VaultItemIn, user: User = Depends(get_
 def send_nudge(request: Request, token: str, session: Session = Depends(get_session)):
     contact = session.exec(select(PulseContact).where(PulseContact.portal_token == token)).first()
     if not contact:
-        raise HTTPException(status_code=404, detail="Invalid token")
+        raise HTTPException(status_code=404, detail="This link has rested. The person who shared it can send a fresh one.")
     if contact.portal_token_expires and contact.portal_token_expires < utc_now():
-        raise HTTPException(status_code=401, detail="Token expired")
+        raise HTTPException(status_code=401, detail="This link has rested. The person who shared it can send a fresh one.")
 
     logger.info(
         "Pulse nudge sent to user",
@@ -454,7 +461,7 @@ def send_nudge(request: Request, token: str, session: Session = Depends(get_sess
         user_id=contact.user_id,
         contact_id=contact.id,
         direction="contact_to_user",
-        message="Thinking of you! Just sending a quick nudge."
+        message="Thinking of you."
     )
     session.add(msg)
     session.commit()
@@ -466,9 +473,9 @@ def send_nudge(request: Request, token: str, session: Session = Depends(get_sess
 def confirm_contact(request: Request, token: str, session: Session = Depends(get_session)):
     contact = session.exec(select(PulseContact).where(PulseContact.portal_token == token)).first()
     if not contact:
-        raise HTTPException(status_code=404, detail="Invalid token")
+        raise HTTPException(status_code=404, detail="This link has rested. The person who shared it can send a fresh one.")
     if contact.portal_token_expires and contact.portal_token_expires < utc_now():
-        raise HTTPException(status_code=401, detail="Token expired")
+        raise HTTPException(status_code=401, detail="This link has rested. The person who shared it can send a fresh one.")
 
     # A guardian action, like a snooze: pauses new alerts, never the owner's own check-in
     checkin = PulseCheckin(
@@ -518,16 +525,29 @@ def cancel_safety_timer(user: User = Depends(get_current_user), session: Session
 
 # --- Magic Link ---
 
-@router.get("/verify/{token}")
-@limiter.limit("10/minute")  # P1-High: Rate limit magic link verification
-def verify_checkin_token(request: Request, token: str, session: Session = Depends(get_session)):
+_VERIFY_RESTED = "This link has rested. You can check in from your Wellness Check-in page any time."
+
+def _verify_settings(session: Session, token: str) -> PulseSettings:
     settings = session.exec(select(PulseSettings).where(PulseSettings.checkin_token == token)).first()
-    if not settings: raise HTTPException(status_code=404, detail="Invalid token")
-        
-    checkin_rec = PulseCheckin(user_id=settings.user_id, method="magic_link", note="One-Click Link")
-    session.add(checkin_rec)
-    session.commit()
-    return {"status": "success", "user_id": settings.user_id}
+    if not settings:
+        raise HTTPException(status_code=404, detail=_VERIFY_RESTED)
+    return settings
+
+@router.get("/verify/{token}", summary="Read the owner's one-click check-in link (records nothing)")
+@limiter.limit("10/minute")  # P1-High: Rate limit magic link verification
+def read_checkin_token(request: Request, token: str, session: Session = Depends(get_session)):
+    # Read-only: mail scanners pre-open links, so opening the page must never check the owner in
+    from backend.pulse_logic import owner_display_name
+    settings = _verify_settings(session, token)
+    return {"status": "ready", "user_name": owner_display_name(session, settings.user_id, fallback=""),
+            "frequency_days": settings.frequency_days}
+
+@router.post("/verify/{token}", summary="Record the owner's one-click check-in")
+@limiter.limit("10/minute")
+def verify_checkin_token(request: Request, token: str, session: Session = Depends(get_session)):
+    settings = _verify_settings(session, token)
+    result = _record_owner_checkin(session, settings.user_id, "magic_link", "One-Click Link")
+    return {**result, "frequency_days": settings.frequency_days}
 
 @router.get("/tiers")
 def get_tiers(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
@@ -552,7 +572,7 @@ def get_tiers(user: User = Depends(get_current_user), session: Session = Depends
 def update_tier(tier_id: int, updated: PulseEscalationTier, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     tier = session.get(PulseEscalationTier, tier_id)
     if not tier or tier.user_id != user.id:
-        raise HTTPException(status_code=404, detail="Tier not found")
+        raise HTTPException(status_code=404, detail="That tier may have been moved.")
     
     tier.delay_hours = updated.delay_hours
     tier.notification_method = updated.notification_method
@@ -585,7 +605,7 @@ def register_webauthn_finish(payload: WebAuthnCredentialPayload, user: User = De
     """
     challenge = challenge_store.pop(f"pulse_webauthn:{user.id}")
     if not challenge:
-        raise HTTPException(status_code=400, detail="Challenge expired or not found")
+        raise HTTPException(status_code=400, detail="That passkey step paused. Start it again whenever you're ready.")
 
     try:
         # Verify the registration - convert Pydantic model to dict for library
@@ -628,4 +648,4 @@ def register_webauthn_finish(payload: WebAuthnCredentialPayload, user: User = De
             }},
             exc_info=True
         )
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail="Let's try setting up your device again in a moment.")
