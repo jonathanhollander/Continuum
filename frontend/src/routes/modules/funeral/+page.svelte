@@ -58,13 +58,13 @@
         isLoading = false;
     });
 
-    let wishes = $derived($funeralStore.wishes);
-    let budgetItems = $derived($funeralStore.budget);
+    let wishes = $derived($funeralStore!.wishes);
+    let budgetItems = $derived($funeralStore!.budget);
 
     // Quick Edit Helpers for Wishes
     function editWish(field: keyof FuneralWishes, label: string) {
         if (field === "music" || field === "colors") return;
-        const current = $funeralStore.wishes[field];
+        const current = $funeralStore!.wishes[field];
         const val = prompt(`Update ${label}:`, String(current));
         if (val !== null) {
             funeralStore.update((data) => ({
@@ -188,10 +188,10 @@
 
     // Reactive Updates
     let totalBudget = $derived(
-        $funeralStore.budget.reduce((acc, item) => acc + item.cost, 0),
+        $funeralStore!.budget.reduce((acc, item) => acc + item.cost, 0),
     );
     let totalEstimated = $derived(
-        $funeralStore.budget.reduce(
+        $funeralStore!.budget.reduce(
             (acc, item) => acc + (item.estimated || item.cost),
             0,
         ),
@@ -243,9 +243,10 @@
 {:else}
 {#if module}
     <LivingBlueprintHeader
-        title={module.title}
-        subtitle={module.description}
+        title="Final Wishes"
+        subtitle={module.title}
         tier={module.role === "owner" ? "preparation" : "executor"}
+        detailedDescription={module.description}
     />
 {/if}
 
@@ -388,13 +389,13 @@
                                         showAddExpense = true;
                                     }}
                                 >
-                                    <svelte:fragment slot="icon">
+                                    {#snippet icon()}
                                         {#if sample.type === 'music'}
                                             <Music size={20} class="text-slate-400" />
                                         {:else}
                                             <Flower size={20} class="text-slate-400" />
                                         {/if}
-                                    </svelte:fragment>
+                                    {/snippet}
                                 </GhostRow>
                             {/each}
                         </div>
@@ -480,9 +481,9 @@
                                         newExpense = { name: "", cost: 0 };
                                         showAddExpense = true;
                                     }}
-                                    class="bg-[#4A7C74] hover:bg-[#3b635d] text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow-sm transition-all"
+                                    class="bg-[#4A7C74] hover:bg-[#3b635d] text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow-sm transition-all flex items-center gap-1"
                                 >
-                                    + Add Item
+                                    <Plus size={14} /> Add Item
                                 </button>
                             </div>
                         </div>
@@ -504,12 +505,11 @@
                                         <div class="font-bold text-stone-700">
                                             ${item.cost.toLocaleString()}
                                         </div>
-                                        <div
-                                            class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                                        >
+                                        <div class="flex gap-2">
                                             <button
                                                 onclick={() =>
                                                     editExpense(item)}
+                                                aria-label="Edit these details"
                                                 class="p-2 text-stone-400 hover:text-[#4A7C74] bg-white border border-stone-200 rounded-full shadow-sm"
                                             >
                                                 <Pencil size={14} />
@@ -517,6 +517,7 @@
                                             <button
                                                 onclick={() =>
                                                     removeExpense(item.id)}
+                                                aria-label="Remove this item"
                                                 class="p-2 text-stone-400 hover:text-red-500 bg-white border border-stone-200 rounded-full shadow-sm"
                                             >
                                                 <Trash2 size={14} />

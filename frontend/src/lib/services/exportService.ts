@@ -16,7 +16,9 @@ import { get } from 'svelte/store';
 import { API_BASE_URL } from '$lib/config';
 import { auth } from '$lib/stores/auth';
 import { estateTotals, isDebt } from '$lib/stores/financialAssetsStore.svelte';
+import { formatMoney } from '$lib/utils/money';
 import { fetchMediaBlob } from '$lib/services/mediaService';
+import { dateWords } from '$lib/utils/dateWords';
 
 export type ExportScope = 'full' | 'insurance' | 'medical';
 
@@ -86,14 +88,7 @@ export async function fetchSnapshot(): Promise<Snapshot> {
 // Packet (the one readable model every output renders)
 // ---------------------------------------------------------------------------
 
-// Cents rounded half-up in decimal (3050.275 -> 3050.28), not on the binary float.
-const toCents = (v: any) => {
-    const n = Number((Number(v) || 0).toFixed(8)); // drop float noise first (6250.275 - 3200)
-    const r = Number(`${Math.round(Number(`${Math.abs(n)}e2`))}e-2`) * Math.sign(n);
-    return Number.isFinite(r) ? r : Math.round(n * 100) / 100;
-};
-const money = (v: any) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(toCents(v));
+const money = formatMoney;
 
 const has = (v: any) => v !== null && v !== undefined && v !== '' && !(typeof v === 'number' && Number.isNaN(v));
 
@@ -108,18 +103,6 @@ function humanize(key: string): string {
         .toLowerCase()
         .trim();
     return words.charAt(0).toUpperCase() + words.slice(1);
-}
-
-// Dates read in words, as the modules show them: "2030-01-01" -> "January 1, 2030".
-const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?$/;
-function dateWords(v: any): string {
-    const raw = String(v ?? '');
-    const s = raw.trim();
-    const m = ISO_DATE.exec(s);
-    if (!m) return raw; // anything else is kept exactly as written
-    // A plain date is a calendar day, read without a time zone shift.
-    const d = s.length === 10 ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : new Date(s);
-    return Number.isNaN(d.getTime()) ? s : d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
 // Stored values such as "active" or "needs_review" read as words: "Active", "Needs review".

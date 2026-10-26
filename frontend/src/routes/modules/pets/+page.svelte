@@ -15,6 +15,7 @@
         Pencil,
         X,
         Loader2,
+        Download,
     } from "lucide-svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
     import UniversalUploader from "$lib/components/ui/UniversalUploader.svelte";
@@ -25,7 +26,15 @@
     import Modal from "$lib/components/ui/Modal.svelte";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
-    import { petStore, type PetEntry } from "$lib/stores/petStore.svelte";
+    import {
+        petStore,
+        petMedia,
+        PET_MEDIA_KEY,
+        type PetEntry,
+        type PetMedia,
+    } from "$lib/stores/petStore.svelte";
+    import { cachedBlobUrl } from "$lib/components/ui/MediaView.svelte";
+    import { deleteMedia, downloadMedia, updateMediaMetadata } from "$lib/services/mediaService";
     import { onMount } from "svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { activityLog } from "$lib/stores/activityLog.svelte";
@@ -37,6 +46,10 @@
     let viewMode = $state<ViewMode>('card');
     let parsedCustomAttributes = $state<Record<string, any>>({});
     let isLoading = $state(true);
+    /** The document attached in the form, and the one the pet held when the form opened. */
+    let formMedia = $state<PetMedia | null>(null);
+    let savedMedia: PetMedia | null = null;
+    let formMediaUrl = $derived(formMedia ? `/api/media/${formMedia.id}/download` : "");
 
     onMount(async () => {
         await petStore.sync?.();
@@ -47,22 +60,28 @@
         name: "",
         breed: "",
         guardian:
-            $estateProfile.spouse_name || $estateProfile.executor_name || "",
+            $estateProfile.spouseName || $estateProfile.executorName || "",
         vetName: "",
         vetPhone: "",
         foodInstructions: "",
         medicalNeeds: "",
-        documents: "",
         notes: "",
     });
 
     async function savePet() {
         if (!newPet.name) return;
 
-        // Serialize custom attributes
+        const { [PET_MEDIA_KEY]: _ignored, ...customValues } = parsedCustomAttributes;
+        const attached = formMedia;
+        const replaced = savedMedia && savedMedia.id !== attached?.id ? savedMedia : null;
+        const customJson = JSON.stringify(
+            attached ? { ...customValues, [PET_MEDIA_KEY]: attached } : customValues,
+        );
         const petData = {
             ...newPet,
-            custom_attributes: JSON.stringify(parsedCustomAttributes)
+            // Both spellings: the record holds the server's camel-cased copy too.
+            custom_attributes: customJson,
+            customAttributes: customJson,
         };
 
         try {
@@ -78,6 +97,9 @@
             });
         } else {
             const created = await petStore.addPet(petData as Omit<PetEntry, "id">, savePet);
+            if (attached) {
+                updateMediaMetadata(attached.id, undefined, String(created.id)).catch(() => undefined);
+            }
             activityLog.logEvent({
                 module: "Pet Care",
                 action: "CREATE",
@@ -88,6 +110,11 @@
             });
         }
 
+        // The pet now holds the new document; the one it replaced goes.
+        if (replaced) {
+            deleteMedia(replaced.id).catch((e) => console.warn("[pets] file removal paused", replaced.id, e));
+        }
+        savedMedia = attached;
         closeAndReset(); // the store shows the one affirmation
         } catch {
             // The manager already showed the one gentle message; the form stays open with the draft.
@@ -101,32 +128,61 @@
             name: pet.name || "",
             breed: pet.breed || "",
             guardian: pet.guardian || "",
-            vetName: pet.vetName || pet.vet_name || "",
-            vetPhone: pet.vetPhone || pet.vet_phone || "",
-            foodInstructions: pet.foodInstructions || pet.food_instructions || "",
-            medicalNeeds: pet.medicalNeeds || pet.medical_needs || "",
-            documents: pet.documents || "",
+            vetName: pet.vetName || "",
+            vetPhone: pet.vetPhone || "",
+            foodInstructions: pet.foodInstructions || "",
+            medicalNeeds: pet.medicalNeeds || "",
             notes: pet.notes || "",
         };
-        // Parse custom attributes for editing
-        parsedCustomAttributes = readCustom(pet);
+        // Custom field values for editing; the document is edited by the uploader
+        const { [PET_MEDIA_KEY]: _media, ...customValues } = readCustom(pet);
+        parsedCustomAttributes = customValues;
+        formMedia = savedMedia = petMedia(pet) ?? null;
         showAddForm = true;
     }
 
+    /** A document attached in this form but never saved on the pet. */
+    function dropUnsavedFile() {
+        if (formMedia && formMedia.id !== savedMedia?.id) {
+            const id = formMedia.id;
+            deleteMedia(id).catch((e) => console.warn("[pets] file removal paused", id, e));
+        }
+    }
+
+    function onFileChange(
+        _url: string,
+        id?: number,
+        file?: { filename: string; mime_type: string; file_size: number },
+    ) {
+        dropUnsavedFile();
+        formMedia =
+            id === undefined
+                ? null
+                : { id, mime_type: file?.mime_type ?? "", filename: file?.filename ?? "", file_size: file?.file_size ?? 0 };
+    }
+
+    /** The modal closes through ×, Escape, the backdrop or "Not right now"; each one drops the draft. */
+    function setFormOpen(open: boolean) {
+        if (open) showAddForm = true;
+        else if (showAddForm) closeAndReset();
+    }
+
     function resetForm() {
+        dropUnsavedFile();
+        formMedia = null;
+        savedMedia = null;
         newPet = {
             type: "dog",
             name: "",
             breed: "",
             guardian:
-                $estateProfile.spouse_name ||
-                $estateProfile.executor_name ||
+                $estateProfile.spouseName ||
+                $estateProfile.executorName ||
                 "",
             vetName: "",
             vetPhone: "",
             foodInstructions: "",
             medicalNeeds: "",
-            documents: "",
             notes: "",
         };
         parsedCustomAttributes = {};
@@ -192,7 +248,7 @@
                         class="h-32 bg-gradient-to-br from-orange-100 to-amber-50 relative p-6 group"
                     >
                         <div
-                            class="absolute top-4 left-4 flex gap-2 z-20 opacity-0 group-hover:opacity-100 transition-all"
+                            class="absolute top-4 left-4 flex gap-2 z-20"
                         >
                             <button
                                 onclick={(e) => {
@@ -279,7 +335,7 @@
                             </div>
                         </div>
 
-                        {#if pet.medical_needs}
+                        {#if pet.medicalNeeds}
                             <div
                                 class="flex items-start gap-2 pt-2 border-t border-gray-100"
                             >
@@ -297,6 +353,18 @@
                                     </div>
                                 </div>
                             </div>
+                        {/if}
+
+                        {#if petMedia(pet)}
+                            {@const media = petMedia(pet)!}
+                            <button
+                                type="button"
+                                onclick={() => downloadMedia(media.id, media.filename || undefined, cachedBlobUrl(media.id)).catch((e) => console.warn("[pets] file save paused", media.id, e))}
+                                class="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+                            >
+                                <Download size={14} />
+                                {media.filename}
+                            </button>
                         {/if}
                     </div>
                 </div>
@@ -387,13 +455,12 @@
 
     <!-- Add Pet Modal -->
     <Modal
-        bind:open={showAddForm}
+        bind:open={() => showAddForm, setFormOpen}
         title={newPet.id ? "Update Their Care Plan" : "Protect Your Companion"}
         description={newPet.id
             ? "Keep their information current so their next caregiver has everything they need."
             : "Your pet depends on you completely. This information ensures they'll be cared for by someone who truly understands them—their routines, their quirks, and their needs."}
         maxWidth="max-w-lg"
-        on:close={() => resetForm()}
     >
         <div class="space-y-4">
             <div>
@@ -510,10 +577,13 @@
 
             <div class="pt-2 border-t border-slate-100">
                 <UniversalUploader
-                    bind:value={newPet.documents}
+                    value={formMediaUrl}
+                    mediaId={formMedia?.id ?? null}
                     label="Care Records & Photos"
                     mode="any"
                     module="pets"
+                    referenceId={newPet.id ? String(newPet.id) : undefined}
+                    onchange={onFileChange}
                 />
             </div>
 
@@ -539,7 +609,7 @@
         <!-- Footer buttons -->
         <div class="-mx-6 -mb-6 px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 mt-6">
             <button
-                onclick={() => (showAddForm = false)}
+                onclick={closeAndReset}
                 class="px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-200 transition-colors"
                 >Not right now</button
             >

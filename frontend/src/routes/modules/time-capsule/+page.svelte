@@ -284,7 +284,7 @@
                     >
                         <Lock size={20} />
                     </div>
-                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div class="flex items-center gap-1">
                         <button
                             on:click={() => openEdit(msg)}
                             aria-label="Edit this capsule"
@@ -460,9 +460,9 @@
                                     openNew();
                                 }}
                             >
-                                <svelte:fragment slot="icon">
+                                {#snippet icon()}
                                     <Lock size={20} class="text-slate-400" />
-                                </svelte:fragment>
+                                {/snippet}
                             </GhostRow>
                         {/each}
                     </div>

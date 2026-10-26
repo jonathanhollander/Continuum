@@ -221,9 +221,8 @@
                 phone: newContact.phone || "",
                 email: newContact.email || "",
                 notes: newContact.notes || "",
-                tier: newContact.tier || undefined,
-                // The store maps `tier ?? callTier` to call_tier, so clearing needs callTier too.
-                callTier: newContact.tier || null,
+                // An explicit tier wins in contactMapper; "" clears it (call_tier null).
+                tier: newContact.tier || "",
                 custom_attributes: JSON.stringify(parsedCustomAttributes),
             } as Partial<FamilyMember>);
         } catch {
@@ -258,12 +257,12 @@
 
 {#if module}
     <LivingBlueprintHeader
-        title={module.title}
+        title="Family & Contacts"
         subtitle={contextStore.isExecutor
             ? "Important contacts and relationships to notify or consult"
             : contextStore.isFamily
               ? "Family and friends connected to the estate"
-              : module.description}
+              : module.title}
         tier={module.role === "owner" ? "preparation" : "executor"}
         detailedDescription="This is more than a contact list—it's your circle of trust. Identify who should be notified and who can help with specific aspects of your estate, from lawyers to close friends."
         whyMatters="In a crisis, your family needs to know exactly who to turn to. Having updated contact information for your support network removes the panic of 'who do I call?'"
@@ -424,7 +423,7 @@
                     </div>
 
                     {#each tier1 as contact}
-                        <ContactRow {contact} {updateStatus} />
+                        <ContactRow {contact} {updateStatus} onEdit={openEdit} />
                     {/each}
                 </div>
 
@@ -440,7 +439,7 @@
                     </div>
 
                     {#each tier2 as contact}
-                        <ContactRow {contact} {updateStatus} />
+                        <ContactRow {contact} {updateStatus} onEdit={openEdit} />
                     {/each}
                 </div>
                 <!-- TIER 3 -->
@@ -454,7 +453,7 @@
                         </h2>
                     </div>
                     {#each tier3 as contact}
-                        <ContactRow {contact} {updateStatus} />
+                        <ContactRow {contact} {updateStatus} onEdit={openEdit} />
                     {/each}
                 </div>
             </div>

@@ -30,7 +30,6 @@
     import { activityLog } from "$lib/stores/activityLog.svelte";
     import { notifications } from "$lib/stores/notificationStore";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
-    import EvidenceGalleryUploader from "$lib/components/ui/EvidenceGalleryUploader.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import { REFLECTION_POOLS } from "$lib/data/reflectionPools";
@@ -287,14 +286,9 @@
         try {
             await heirloomSync.create({
                 name: newHeirloom.name || "Unknown Treasure",
-                recipient: newHeirloom.recipient || "Undecided",
+                recipient: newHeirloom.recipient || "",
                 story: newHeirloom.story || "",
-                image:
-                    newHeirloom.image ||
-                    getsuggestedImage(
-                        newHeirloom.name || "",
-                        newHeirloom.story || "",
-                    ),
+                image: newHeirloom.image || "",
                 ownershipDetails: newHeirloom.ownershipDetails || "",
                 custom_attributes: JSON.stringify(parsedCustomAttributes),
             }, false, false, saveHeirloom);
@@ -386,7 +380,7 @@
         <DataViewToggle module="heirlooms" onchange={(mode) => viewMode = mode} />
         <button
             onclick={() => (showWizard = true)}
-            class="px-5 py-3 bg-primary text-primary-foreground rounded-2xl font-bold shadow-lg hover:opacity-90 transition-all flex items-center gap-2"
+            class="flex items-center gap-2 px-5 py-3 border border-primary/20 text-primary font-bold rounded-2xl hover:bg-primary/5 transition-colors"
         >
             <Sparkles size={18} />
             Start Concierge
@@ -464,9 +458,9 @@
                         showAddForm = true;
                     }}
                 >
-                    <svelte:fragment slot="icon">
+                    {#snippet icon()}
                         <Gift size={20} class="text-slate-400" />
-                    </svelte:fragment>
+                    {/snippet}
                 </GhostRow>
             {/each}
         </div>
@@ -484,7 +478,7 @@
                         />
                         <button
                             onclick={() => openEditForm(heirloom)}
-                            class="absolute top-2 right-12 p-2 bg-white/90 text-primary rounded-full shadow-md opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all hover:bg-primary/10"
+                            class="absolute top-2 right-12 p-2 bg-white/90 text-primary rounded-full shadow-md transition-all hover:bg-primary/10"
                             title="Edit these details"
                             aria-label="Edit these details"
                         >
@@ -492,8 +486,9 @@
                         </button>
                         <button
                             onclick={() => removeHeirloom(heirloom.id)}
-                            class="absolute top-2 right-2 p-2 bg-white/90 text-primary rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all hover:bg-primary/10"
+                            class="absolute top-2 right-2 p-2 bg-white/90 text-primary rounded-full shadow-md transition-all hover:bg-primary/10"
                             title="Remove"
+                            aria-label="Remove this item"
                         >
                             <X size={16} />
                         </button>
@@ -601,11 +596,13 @@
                         >
                             {qrTarget.name}
                         </h2>
-                        <p
-                            class="text-xs text-stone-500 uppercase tracking-wide font-bold mb-4"
-                        >
-                            For {qrTarget.recipient}
-                        </p>
+                        {#if qrTarget.recipient}
+                            <p
+                                class="text-xs text-stone-500 uppercase tracking-wide font-bold mb-4"
+                            >
+                                For {qrTarget.recipient}
+                            </p>
+                        {/if}
 
                         <div
                             class="bg-white p-2 rounded-lg inline-block shadow-sm mb-4 print:shadow-none"

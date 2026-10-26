@@ -300,7 +300,6 @@
             "Executor Name": $estateProfile.executorName,
             Spouse: $estateProfile.spouseName,
             "Primary Beneficiary": $estateProfile.primaryBeneficiary,
-            Relationship: "Executor",
             SSN: $estateProfile.last4SSN,
             "Social Security Number": $estateProfile.last4SSN,
             "Last 4 digits of SSN": $estateProfile.last4SSN,

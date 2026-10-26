@@ -616,10 +616,11 @@
                             </div>
                         </div>
                         <div
-                            class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0"
+                            class="flex items-center gap-1"
                         >
                             <button
                                 onclick={() => editPolicy(policy)}
+                                aria-label="Edit these details"
                                 class="p-2 bg-slate-50 hover:bg-primary/5 text-slate-400 hover:text-primary rounded-xl transition-all"
                             >
                                 <Pencil size={16} />
@@ -630,6 +631,7 @@
                                         String(policy.id),
                                         policy.policyName,
                                     )}
+                                aria-label="Remove this item"
                                 class="p-2 bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-xl transition-all"
                             >
                                 <Trash2 size={16} />
@@ -801,10 +803,10 @@
                                     showAddModal = true;
                                 }}
                             >
-                                <svelte:fragment slot="icon">
+                                {#snippet icon()}
                                     {@const Icon = typeIcons[sample.insuranceType] || Shield}
                                     <Icon size={20} class="text-slate-400" />
-                                </svelte:fragment>
+                                {/snippet}
                             </GhostRow>
                         {/each}
                     </div>

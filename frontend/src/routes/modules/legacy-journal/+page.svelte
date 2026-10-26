@@ -177,8 +177,8 @@
 
 <!-- Page Header -->
 <LivingBlueprintHeader
-    title="Your Story, Your Legacy"
-    subtitle="Capture the memories, values, and wisdom that make you who you are"
+    title="Legacy Journal"
+    subtitle="Your Story, Your Legacy"
     tier="family"
     detailedDescription="Your life is filled with stories worth telling - moments of joy, lessons learned, values discovered. This journal is your space to preserve those treasures for the people who matter most."
     whyMatters="The stories we carry shape generations. Without a place to write them down, precious memories fade and wisdom goes unshared. Your words here become a lasting gift - a window into your heart that your loved ones can return to again and again."
@@ -270,13 +270,6 @@
                         </div>
                         <div class="flex items-center gap-3">
                             <DataViewToggle module="legacy-journal" onchange={(mode) => viewMode = mode} />
-                            <button
-                                onclick={openAddModal}
-                                class="px-5 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
-                            >
-                                <Plus size={18} />
-                                Write a reflection
-                            </button>
                         </div>
                     </div>
 
@@ -365,12 +358,13 @@
                                             {/if}
                                         </div>
 
-                                        <!-- Hover actions -->
-                                        <div class="absolute top-4 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <!-- Card actions -->
+                                        <div class="absolute top-4 right-4 flex gap-1">
                                             <button
                                                 onclick={() => openEditModal(entry)}
                                                 class="p-2 bg-white/90 text-slate-500 hover:text-primary rounded-full shadow-sm transition-colors"
                                                 title="Edit"
+                                                aria-label="Edit these details"
                                             >
                                                 <Edit3 size={14} />
                                             </button>

@@ -638,7 +638,7 @@
                             </div>
                         </div>
                         <div
-                            class="flex items-center gap-1 opacity-10 md:opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0 bg-white/50 backdrop-blur rounded-2xl p-1"
+                            class="flex items-center gap-1 bg-white/50 backdrop-blur rounded-2xl p-1"
                         >
                             <button
                                 onclick={() => generateQR(item)}
@@ -649,12 +649,14 @@
                             </button>
                             <button
                                 onclick={() => editItem(item)}
+                                aria-label="Edit these details"
                                 class="p-3 bg-slate-50 hover:bg-primary/10 text-slate-400 hover:text-primary rounded-2xl transition-all"
                             >
                                 <Edit2 size={18} />
                             </button>
                             <button
                                 onclick={() => deleteItem(item.id, item.name)}
+                                aria-label="Remove this item"
                                 class="p-3 bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-2xl transition-all"
                             >
                                 <Trash2 size={18} />
@@ -779,9 +781,9 @@
                                 showAddModal = true;
                             }}
                         >
-                            <svelte:fragment slot="icon">
+                            {#snippet icon()}
                                 <Building size={20} class="text-slate-400" />
-                            </svelte:fragment>
+                            {/snippet}
                         </GhostRow>
                     {/each}
 
@@ -817,9 +819,9 @@
                         showAddModal = true;
                     }}
                 >
-                    <svelte:fragment slot="icon">
+                    {#snippet icon()}
                         <Building size={20} class="text-slate-400" />
-                    </svelte:fragment>
+                    {/snippet}
                 </GhostRow>
             {/each}
         {:else}
@@ -864,6 +866,7 @@
                                         </button>
                                         <button
                                             onclick={() => editItem(item)}
+                                            aria-label="Edit these details"
                                             class="p-1.5 text-slate-400 hover:text-primary transition-colors"
                                         >
                                             <Edit2 size={14} />

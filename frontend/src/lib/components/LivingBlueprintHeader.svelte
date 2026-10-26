@@ -1,24 +1,19 @@
 <script lang="ts">
     import { cn } from "$lib/utils";
     import { onMount } from "svelte";
-    import { fade, fly, slide } from "svelte/transition";
+    import { fly } from "svelte/transition";
     import GuidanceBlock from "$lib/components/guidance/GuidanceBlock.svelte";
 
     export let title: string;
     export let subtitle: string | undefined = undefined;
-    export let tier:
-        | "preparation"
-        | "executor"
-        | "financial"
-        | "legal"
-        | "family" = "preparation";
+    // Kept so existing pages compile; the header shows no tier label (card E3:
+    // the raw tier id rendered as a literal "financial Module" eyebrow).
+    export let tier: string = "preparation";
     export let detailedDescription: string | undefined = undefined;
     export let whyMatters: string | undefined = undefined;
 
     let className: string | undefined = undefined;
     export { className as class };
-
-    let showWhyMatters = false;
 
     let mounted = false;
 
@@ -29,7 +24,7 @@
 
 <header
     class={cn(
-        "relative overflow-hidden bg-background text-foreground border-b border-border py-24",
+        "relative overflow-hidden bg-background text-foreground border-b border-border py-12",
         "before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_center,var(--color-primary)_0%,transparent_70%)] before:opacity-5",
         className,
     )}
@@ -61,14 +56,6 @@
         <div class="max-w-3xl space-y-4">
             {#if mounted}
                 <div in:fly={{ y: 20, duration: 800 }}>
-                    <!-- Tier Indicator (Blueprint Style) -->
-                    <div
-                        class="font-blueprint text-xs tracking-[0.2em] uppercase text-muted-foreground mb-4 flex items-center gap-2"
-                    >
-                        <span class="w-8 h-[1px] bg-border"></span>
-                        {tier} Module
-                    </div>
-
                     <!-- Main Title (Monument Serif) -->
                     <h1
                         class="font-serif text-5xl md:text-6xl font-bold tracking-tight text-primary"

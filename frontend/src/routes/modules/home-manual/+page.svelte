@@ -499,9 +499,9 @@
                                         showVendorModal = true;
                                     }}
                                 >
-                                    <svelte:fragment slot="icon">
+                                    {#snippet icon()}
                                         <Phone size={20} class="text-slate-400" />
-                                    </svelte:fragment>
+                                    {/snippet}
                                 </GhostRow>
                             {/each}
                         </div>
@@ -535,7 +535,7 @@
                                                 class="px-2 py-1 bg-primary/10 text-primary text-[10px] font-bold uppercase rounded-md tracking-wider"
                                                 >{vendor.category}</span
                                             >
-                                            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div class="flex items-center gap-2">
                                                 <button
                                                     onclick={() => editVendor(vendor)}
                                                     aria-label="Update {vendor.name}"
@@ -669,9 +669,9 @@
                                         showCodeModal = true;
                                     }}
                                 >
-                                    <svelte:fragment slot="icon">
+                                    {#snippet icon()}
                                         <Key size={20} class="text-slate-400" />
-                                    </svelte:fragment>
+                                    {/snippet}
                                 </GhostRow>
                             {/each}
                         </div>
@@ -777,7 +777,7 @@
                                         showUtilityModal = true;
                                     }}
                                 >
-                                    <svelte:fragment slot="icon">
+                                    {#snippet icon()}
                                         {#if sample.service_type === 'Water'}
                                             <Droplets size={20} class="text-slate-400" />
                                         {:else if sample.service_type === 'Gas'}
@@ -785,7 +785,7 @@
                                         {:else}
                                             <Zap size={20} class="text-slate-400" />
                                         {/if}
-                                    </svelte:fragment>
+                                    {/snippet}
                                 </GhostRow>
                             {/each}
                         </div>
@@ -809,7 +809,7 @@
                                 <div
                                     class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-6 items-start relative group"
                                 >
-                                    <div class="absolute top-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div class="absolute top-4 right-4 flex items-center gap-2">
                                         <button
                                             onclick={() => editUtility(item)}
                                             aria-label="Update {item.service_type} shutoff"

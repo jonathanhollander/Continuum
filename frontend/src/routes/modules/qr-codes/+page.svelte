@@ -45,7 +45,6 @@
     let isLoading = $state(true);
 
     onMount(async () => {
-        await qrStore.sync?.();
         isLoading = false;
     });
 

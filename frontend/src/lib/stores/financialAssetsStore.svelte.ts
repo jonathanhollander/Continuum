@@ -1,5 +1,6 @@
 import { registerSync } from "$lib/services/sync.svelte";
 import { oneSpelling } from "$lib/utils/oneSpelling";
+import { toCents, fromCents } from "$lib/utils/money";
 
 export type AssetType = 'Property' | 'Financial' | 'Business' | 'Vehicle' | 'Digital' | 'Debt' | 'Other';
 
@@ -17,15 +18,16 @@ export function ownedValue(a: { value?: any; ownershipPercentage?: any }): numbe
     return (Number(a.value) || 0) * share;
 }
 
-/** The one estate total: open assets minus open debts. */
+/** The one estate total: open assets minus open debts, each row's share taken to the cent (half-up) and summed in whole cents. */
 export function estateTotals(items: any[]): { assets: number; debts: number; net: number } {
-    let assets = 0, debts = 0;
+    let assets = 0, debts = 0; // whole cents
     for (const a of items) {
         if (!a || a.is_closed) continue;
-        if (isDebt(a)) debts += Math.abs(ownedValue(a)); // an amount owed, however it was typed
-        else assets += ownedValue(a);
+        const cents = toCents(ownedValue(a));
+        if (isDebt(a)) debts += Math.abs(cents); // an amount owed, however it was typed
+        else assets += cents;
     }
-    return { assets, debts, net: assets - debts };
+    return { assets: fromCents(assets), debts: fromCents(debts), net: fromCents(assets - debts) };
 }
 
 export interface FinancialAsset {

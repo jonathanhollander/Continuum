@@ -1,10 +1,10 @@
 import { redirect } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
+import type { PageLoad } from './$types';
 
 /**
  * Redirect executor-guide to executor-toolkit.
  * This consolidates the executor guidance features into a single location.
  */
-export const load: PageServerLoad = () => {
+export const load: PageLoad = () => {
     throw redirect(301, '/modules/executor-toolkit');
 };

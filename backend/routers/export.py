@@ -198,7 +198,6 @@ def build_snapshot(session: Session, user_id: int,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "owner": {
             "display_name": (user.display_name if user else None) or None,
-            "email": user.email if user else None,
             **profile,
         },
         "sections": sections,

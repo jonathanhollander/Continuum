@@ -53,7 +53,7 @@
     let viewMode = $state<"dashboard" | "concierge">("dashboard");
 
     interface Memory {
-        id: number;
+        id?: number;
         type: MemoryType;
         title: string;
         date?: string;
@@ -222,7 +222,8 @@
         };
     }
 
-    function deleteMemory(id: number) {
+    function deleteMemory(id: number | undefined) {
+        if (id === undefined) return;
         if (
             !confirm(
                 "Remove this memory? It will be preserved in your activity log.",
@@ -652,17 +653,19 @@
                                         class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group relative"
                                         in:fade
                                     >
-                                        <!-- Delete Button (Hover) -->
+                                        <!-- Card actions -->
                                         <button
                                             onclick={() => editMemory(memory)}
-                                            class="absolute top-2 right-10 p-1.5 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-blue-100 text-blue-500"
+                                            aria-label="Edit Memory"
+                                            class="absolute top-2 right-10 p-1.5 bg-white/80 rounded-full z-10 hover:bg-blue-100 text-blue-500"
                                             title="Edit Memory"
                                         >
                                             <Pencil size={14} />
                                         </button>
                                         <button
                                             onclick={() => deleteMemory(memory.id)}
-                                            class="absolute top-2 right-2 p-1.5 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-red-100 text-red-500"
+                                            aria-label="Remove this item"
+                                            class="absolute top-2 right-2 p-1.5 bg-white/80 rounded-full z-10 hover:bg-red-100 text-red-500"
                                             title="Delete Memory"
                                         >
                                             <X size={14} />

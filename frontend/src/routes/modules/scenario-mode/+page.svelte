@@ -68,7 +68,7 @@
                 >
                     <Siren size={32} />
                 </div>
-                Scenario Mode: The Fire Drill
+                Future Scenarios
             </h1>
             <p class="text-gray-500 mt-2 text-lg">
                 Stress-test your estate's readiness for real-world scenarios.
