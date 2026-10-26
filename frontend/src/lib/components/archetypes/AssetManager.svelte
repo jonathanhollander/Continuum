@@ -21,6 +21,8 @@
         HeartHandshake,
         Sparkles,
         Pencil,
+        X,
+        Archive,
     } from "lucide-svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import UniversalUploader from "$lib/components/ui/UniversalUploader.svelte";
@@ -445,36 +447,13 @@
         const address =
             $estateProfile.legalAddress ||
             $estateProfile.legalCityState ||
-            "Home Address";
+            "";
         const starterItems = [
-            {
-                name: "Primary Residence",
-                type: "Property",
-                value: 0,
-                location: address,
-                notes: "Deed location pending",
-            },
-            {
-                name: "Main Checking Account",
-                type: "Financial",
-                value: 0,
-                location: "Bank Name",
-                accountNumber: "Last 4",
-            },
-            {
-                name: "Life Insurance Policy",
-                type: "Financial",
-                value: 0,
-                location: "Provider Name",
-                notes: "Policy # needed",
-            },
-            {
-                name: "Primary Vehicle",
-                type: "Vehicle",
-                value: 0,
-                location: "Garage",
-                notes: "Title location pending",
-            },
+            // Only what is known: the rest stays blank until the person fills it in.
+            { name: "Primary Residence", type: "Property", location: address },
+            { name: "Main Checking Account", type: "Financial", location: "" },
+            { name: "Life Insurance Policy", type: "Financial", location: "" },
+            { name: "Primary Vehicle", type: "Vehicle", location: "" },
         ];
 
         // Create all in parallel
@@ -483,12 +462,12 @@
                 assetSync.create({
                     name: item.name,
                     type: item.type as AssetType,
-                    value: 0,
+                    value: null, // blank until the person adds one, so the audit asks for it
                     location: item.location,
-                    accountNumber: item.accountNumber || "",
+                    accountNumber: "",
                     ownershipPercentage: 100,
                     beneficiaries: $estateProfile.primaryBeneficiary || "",
-                    notes: item.notes || "",
+                    notes: "",
                     valueHistory: [],
                     loginUrl: "",
                     beneficiaryEmail: "",
@@ -582,15 +561,18 @@
                     onclick={() => (showAddForm = true)}
                     class="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 transition-all flex items-center gap-2 shadow-lg shadow-primary/20"
                 >
-                    <Plus size={16} /> Add Asset
+                    <Plus size={16} /> Share an asset
                 </button>
             {/if}
-            <button
-                onclick={exportToCSV}
-                class="px-4 py-2 rounded-lg bg-gray-100 text-gray-600 text-sm font-bold hover:bg-gray-200 transition-colors flex items-center gap-2"
-            >
-                <TrendingUp size={16} /> Export CSV
-            </button>
+            {#if $userRole !== "Family"}
+                <!-- The file holds every value and account number, which Family view masks. -->
+                <button
+                    onclick={exportToCSV}
+                    class="px-4 py-2 rounded-lg bg-gray-100 text-gray-600 text-sm font-bold hover:bg-gray-200 transition-colors flex items-center gap-2"
+                >
+                    <TrendingUp size={16} /> Save a copy as a spreadsheet
+                </button>
+            {/if}
         </div>
     </div>
     <!-- Role-Based Context Banner -->
@@ -605,8 +587,7 @@
                     Executor View Active
                 </h4>
                 <p class="text-blue-700 text-xs mt-1">
-                    You have full access to view and manage assets. Ensure all
-                    valuations are up to date for probate filing.
+                    You can view and update everything here, whenever the time is right.
                 </p>
             </div>
         </div>
@@ -657,11 +638,7 @@
                             onclick={resetForm}
                             class="w-14 h-14 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:rotate-90 transition-all duration-500"
                         >
-                            <Trash2
-                                size={24}
-                                strokeWidth={3}
-                                class="rotate-45"
-                            />
+                            <X size={24} strokeWidth={3} />
                         </button>
                     </div>
 
@@ -812,7 +789,7 @@
                                 <span
                                     class="w-6 h-[2px] bg-[#4A7C74] rounded-full"
                                 ></span>
-                                Verification
+                                Supporting documents
                             </h3>
 
                             <div class="space-y-6">
@@ -878,6 +855,28 @@
                                 placeholder="Instructions for the Executor on how to find/close/transfer this..."
                                 class="w-full bg-slate-50 border-2 border-transparent focus:border-[#4A7C74] focus:bg-white rounded-2xl p-6 text-sm font-medium outline-none transition-all min-h-[120px] resize-none leading-relaxed"
                             ></textarea>
+                            <!-- A closed account stays on record and leaves the estate total. -->
+                            <div class="mt-6 flex flex-wrap items-center gap-6">
+                                <label class="flex items-center gap-3 text-sm font-bold text-slate-700 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        data-testid="asset-closed"
+                                        bind:checked={newAsset.is_closed}
+                                        class="w-5 h-5 accent-[#4A7C74]"
+                                    />
+                                    This account has been closed
+                                </label>
+                                {#if newAsset.is_closed}
+                                    <label class="flex items-center gap-3 text-sm font-bold text-slate-700">
+                                        Date closed
+                                        <input
+                                            type="date"
+                                            bind:value={newAsset.closure_date}
+                                            class="bg-slate-50 border-2 border-transparent focus:border-[#4A7C74] focus:bg-white rounded-xl px-3 py-2 text-sm font-medium outline-none"
+                                        />
+                                    </label>
+                                {/if}
+                            </div>
                         </section>
 
                         <!-- Group 4: Notes -->
@@ -907,7 +906,7 @@
                             onclick={resetForm}
                             class="px-8 py-4 rounded-2xl font-bold text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-all"
                         >
-                            Cancel
+                            Maybe later
                         </button>
                         <button
                             onclick={saveAsset}
@@ -916,7 +915,7 @@
                             class="px-10 py-4 rounded-2xl bg-[#4A7C74] hover:bg-[#3b635d] text-white font-black shadow-xl shadow-[#4A7C74]/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-3 disabled:opacity-50"
                         >
                             <Sparkles size={18} />
-                            {saving ? "Saving..." : newAsset.id ? "Update Asset" : "Add to Inventory"}
+                            {saving ? "Saving..." : newAsset.id ? "Save my changes" : "Save this asset"}
                         </button>
                     </div>
                 </div>
@@ -937,24 +936,26 @@
                 transition:scale={{ duration: 300 }}
                 class="group bg-white rounded-xl p-6 pb-14 shadow-sm hover:shadow-md transition-all border border-transparent hover:border-[#4A7C74]/20 relative overflow-hidden"
             >
+                {#if $userRole !== "Family"}
                 <div
                     class="absolute bottom-3 right-3 flex gap-1 z-20"
                 >
                     <button
                         onclick={() => editAsset(asset)}
                         class="p-2 bg-white/80 rounded-full text-blue-400 hover:text-blue-600 hover:bg-blue-50"
-                        title="Edit Asset"
+                        title="Edit these details"
                     >
                         <Pencil size={16} />
                     </button>
                     <button
                         onclick={() => removeAsset(asset.id)}
                         class="p-2 bg-white/80 rounded-full text-red-400 hover:text-red-600 hover:bg-red-50"
-                        title="Delete Asset"
+                        title="Remove this item"
                     >
                         <Trash2 size={16} />
                     </button>
                 </div>
+                {/if}
 
                 <!-- Background Gradient Decoration -->
                 <div
@@ -1009,12 +1010,50 @@
                     <h3 class="font-bold text-lg leading-tight">
                         {asset.name}
                     </h3>
+                    {#if asset.is_closed}
+                        <span
+                            data-testid="closed-badge"
+                            class="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[11px] font-bold"
+                        >
+                            <Archive size={12} /> Closed{asset.closure_date ? ` ${asset.closure_date}` : ""}
+                        </span>
+                    {/if}
                     {#if asset.location}
                         <p class="text-sm text-muted-foreground mt-1">
                             {asset.location}
                         </p>
                     {/if}
                 </div>
+
+                <!-- Saved details, shown when they exist -->
+                {#if asset.beneficiaries || asset.closureNotes || ($userRole !== "Family" && (asset.accountNumber || asset.loginUrl))}
+                    <dl class="mt-4 pt-4 border-t border-slate-50 space-y-2 relative z-10 text-[11px]" data-testid="asset-details">
+                        {#if asset.beneficiaries}
+                            <div class="flex justify-between gap-3">
+                                <dt class="text-slate-400 font-black uppercase tracking-widest shrink-0">Beneficiary</dt>
+                                <dd class="text-slate-600 font-bold text-right break-words">{asset.beneficiaries}</dd>
+                            </div>
+                        {/if}
+                        {#if $userRole !== "Family" && asset.accountNumber}
+                            <div class="flex justify-between gap-3">
+                                <dt class="text-slate-400 font-black uppercase tracking-widest shrink-0">Account Number</dt>
+                                <dd class="text-slate-600 font-bold text-right break-all">{asset.accountNumber}</dd>
+                            </div>
+                        {/if}
+                        {#if $userRole !== "Family" && asset.loginUrl}
+                            <div class="flex justify-between gap-3">
+                                <dt class="text-slate-400 font-black uppercase tracking-widest shrink-0">Login URL</dt>
+                                <dd class="text-slate-600 font-bold text-right break-all">{asset.loginUrl}</dd>
+                            </div>
+                        {/if}
+                        {#if asset.closureNotes}
+                            <div>
+                                <dt class="text-slate-400 font-black uppercase tracking-widest">Transfer Instructions</dt>
+                                <dd class="text-slate-600 font-medium mt-1 whitespace-pre-line">{asset.closureNotes}</dd>
+                            </div>
+                        {/if}
+                    </dl>
+                {/if}
 
                 <!-- Custom Fields Display -->
                 {#if asset.customAttributes && asset.customAttributes !== "{}"}
@@ -1067,7 +1106,7 @@
             >
                 <Sparkles size={20} />
                 <p class="text-sm font-medium">
-                    Concierge Mode: Showing examples based on your region.
+                    Here are a few examples to help you begin.
                 </p>
             </div>
 
@@ -1138,6 +1177,9 @@
                                     <Icon size={16} />
                                 </div>
                                 <span class="font-medium text-slate-800">{asset.name}</span>
+                                {#if asset.is_closed}
+                                    <span data-testid="closed-badge" class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[11px] font-bold">Closed</span>
+                                {/if}
                             </div>
                         </td>
                         <td class="px-4 py-3">
@@ -1157,22 +1199,24 @@
                             {/if}
                         </td>
                         <td class="px-4 py-3 text-right">
+                            {#if $userRole !== "Family"}
                             <div class="flex items-center justify-end gap-1">
                                 <button
                                     onclick={() => editAsset(asset)}
                                     class="p-1 hover:bg-slate-100 text-slate-400 hover:text-[#4A7C74] rounded transition-colors"
-                                    title="Edit"
+                                    title="Edit these details"
                                 >
                                     <Pencil size={14} />
                                 </button>
                                 <button
                                     onclick={() => removeAsset(asset.id)}
                                     class="p-1 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded transition-colors"
-                                    title="Delete"
+                                    title="Remove this item"
                                 >
                                     <Trash2 size={14} />
                                 </button>
                             </div>
+                            {/if}
                         </td>
                     </tr>
                 {/each}
