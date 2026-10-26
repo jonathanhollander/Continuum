@@ -500,7 +500,6 @@
 <LivingBlueprintHeader
     title="Property & Real Estate"
     subtitle="Your home, your vehicles, the possessions that matter"
-    tier="preparation"
     detailedDescription="These are the physical things you've built, bought, and cared for. Documenting them now means your family won't have to search for deeds, titles, or proof of ownership during an already difficult time."
     whyMatters="Without clear records of what you own and where the documents are, your family could face legal complications, miss valuable assets, or struggle to prove ownership when they need access most."
 >

@@ -194,7 +194,6 @@
 <LivingBlueprintHeader
     title="Legacy Journal"
     subtitle="Your Story, Your Legacy"
-    tier="family"
     detailedDescription="Your life is filled with stories worth telling - moments of joy, lessons learned, values discovered. This journal is your space to preserve those treasures for the people who matter most."
     whyMatters="The stories we carry shape generations. Without a place to write them down, precious memories fade and wisdom goes unshared. Your words here become a lasting gift - a window into your heart that your loved ones can return to again and again."
 >

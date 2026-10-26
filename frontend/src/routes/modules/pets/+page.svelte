@@ -220,7 +220,6 @@
 <LivingBlueprintHeader
     title="Pet Care"
     subtitle="Your companions deserve a plan for their future care"
-    tier="preparation"
     detailedDescription="Your pets depend on you completely. This plan ensures they'll be loved and cared for by someone you trust, no matter what happens. It's one of the kindest things you can do for them—and for the person who steps in to help."
     whyMatters="Without a documented plan, your pets could end up in a shelter or with someone who doesn't know their needs, fears, or routines. Creating this plan ensures they'll be loved and cared for by someone you trust."
 >

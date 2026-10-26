@@ -10,7 +10,6 @@
     <LivingBlueprintHeader
         title="Document Vault"
         subtitle="The secure home for your legal life"
-        tier="legal"
         detailedDescription="A central, secure home for the documents that define your legal and personal wishes. From wills to trusts, ensure the blueprints of your legacy are accessible."
         whyMatters="Searching for a will or trust document can delay estate settlement by months. Centralizing them here provides your family with a clear roadmap when they need it most."
     />

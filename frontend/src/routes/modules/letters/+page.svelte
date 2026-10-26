@@ -459,7 +459,6 @@
 <LivingBlueprintHeader
     title="Legacy Correspondence"
     subtitle="Preserve your words for the people you love"
-    tier="legacy"
     detailedDescription="Write letters for the people you love—ethical wills sharing your values, heartfelt messages to loved ones, or formal notifications to institutions."
     whyMatters="The words you write today will comfort, guide, and inspire your loved ones when you're no longer here to say them yourself. These letters become your voice across time, offering presence at moments you can't physically attend."
 >

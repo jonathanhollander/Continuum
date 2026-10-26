@@ -166,7 +166,6 @@
     <LivingBlueprintHeader
         title="Important Dates"
         subtitle="Transforming sensitive dates into intentional moments of connection"
-        tier="legacy"
         detailedDescription="Create meaningful rituals for birthdays, anniversaries, and remembrance days. Guide your family on how to observe these dates with intention, healing, and legacy."
         whyMatters="Without guidance on how to observe significant dates, your family may struggle with overwhelming emotions and uncertain rituals. Creating rituals transforms grief into intentional remembrance."
     >

@@ -223,7 +223,6 @@
 <LivingBlueprintHeader
         title="The Life Timeline"
         subtitle="Your story isn't just a list of assets. It's a series of moments."
-        tier="legacy"
         detailedDescription="Document the milestones, accomplishments, and meaningful moments that shaped your life. Create a visual narrative that helps your family understand who you were and what mattered to you."
         whyMatters="Your life story deserves to be told. Without these memories preserved, the context of your journey may be lost. Your timeline becomes a gift of understanding for future generations."
     >

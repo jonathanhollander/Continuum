@@ -285,7 +285,6 @@
     <LivingBlueprintHeader
         title="Event Calendar"
         subtitle="Afterlife Calendar"
-        tier="legacy"
         detailedDescription="Ensure your birthday, holidays, and anniversaries are celebrated exactly how you want them to be. Create meaningful rituals and messages for the dates that matter most."
         whyMatters="Without your guidance, special dates become painful reminders instead of opportunities for connection. By documenting your wishes, you transform grief into intentional remembrance."
     >

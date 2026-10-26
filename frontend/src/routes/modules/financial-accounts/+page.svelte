@@ -141,7 +141,6 @@
 <LivingBlueprintHeader
         title={$t("assets")}
         subtitle="Manage bank accounts, investments, and liabilities"
-        tier="financial"
         detailedDescription="Gathering your financial accounts in one place isn't just about numbers—it's about ensuring your family isn't left searching for resources they might desperately need. This clarity provides immediate stability during a time of uncertainty."
         whyMatters="Unclaimed assets and lost accounts are a common burden for grieving families. By documenting these now, you ensure resources go to supporting your loved ones rather than being lost to bureaucracy."
     >
