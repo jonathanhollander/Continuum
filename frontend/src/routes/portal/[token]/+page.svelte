@@ -13,6 +13,8 @@
   // The owner's Pulse vault notes: the API opens them once escalation reaches this guardian
   // and the owner's Automatic Release is on (one portal: /pulse/portal forwards here)
   let vaultItems: { name: string; content: string }[] = $state([]);
+  let vaultLoading = $state(false);
+  let vaultError: string | null = $state(null);
 
   let actionLoading = $state(false);
   let actionMessage = $state("");
@@ -27,15 +29,34 @@
     return new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(ts) ? ts : ts + "Z");
   }
 
+  async function loadVault() {
+    if (vaultLoading || !data?.show_sensitive) return;
+    vaultLoading = true;
+    vaultError = null;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/pulse/portal/${token}/vault`);
+      if (!res.ok) throw new Error("Shared notes need another read.");
+      const items = await res.json();
+      if (!Array.isArray(items) || items.some((item) =>
+        typeof item?.name !== "string" || typeof item?.content !== "string"
+      )) throw new Error("Shared notes need another read.");
+      vaultItems = items;
+    } catch {
+      vaultError = "You can try loading shared notes again whenever you're ready.";
+    } finally {
+      vaultLoading = false;
+    }
+  }
+
   onMount(async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/api/pulse/portal/${token}`);
       if (res.ok) {
         data = await res.json();
-        if (data.show_sensitive) {
-          const vRes = await fetch(`${API_BASE_URL}/api/pulse/portal/${token}/vault`);
-          if (vRes.ok) vaultItems = await vRes.json();
-        }
+        // The portal is useful as soon as its status/messages arrive. A separate notes
+        // read can wait or be retried without hiding that already-loaded content.
+        loading = false;
+        if (data.show_sensitive) await loadVault();
       } else {
         error =
           "This link may have expired or been replaced. The person who shared it can send you a new one.";
@@ -197,8 +218,13 @@
         </div>
 
         <!-- Notes from the owner's Pulse vault (opened by the API when the time comes) -->
-        <div class="w-full bg-slate-700/50 p-4 rounded-xl text-left">
-          <p class="text-xs text-muted-foreground uppercase tracking-widest mb-2 font-bold">
+        <div
+          class="w-full bg-slate-700/50 p-4 rounded-xl text-left"
+          role="region"
+          aria-labelledby="vault-notes-title"
+          aria-busy={vaultLoading}
+        >
+          <p id="vault-notes-title" class="text-xs text-muted-foreground uppercase tracking-widest mb-2 font-bold">
             Notes {data.user_name} shared with you
           </p>
           {#if vaultItems.length > 0}
@@ -210,7 +236,21 @@
                 </li>
               {/each}
             </ul>
-          {:else}
+          {/if}
+          {#if vaultLoading}
+            <p class="text-sm text-slate-300" role="status">Opening shared notes…</p>
+          {/if}
+          {#if vaultError}
+            <div class="space-y-3" role="status">
+              <p class="text-sm text-slate-300">{vaultError}</p>
+              <button
+                onclick={loadVault}
+                disabled={vaultLoading}
+                class="rounded-lg border border-primary/40 px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              >Try again</button>
+            </div>
+          {/if}
+          {#if vaultItems.length === 0 && !vaultLoading && !vaultError}
             <p class="text-sm text-slate-300">
               Notes from {data.user_name} will appear here when they are needed. You are welcome to simply be present for now.
             </p>

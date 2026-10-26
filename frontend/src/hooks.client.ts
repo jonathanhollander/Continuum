@@ -94,7 +94,10 @@ if (typeof window !== 'undefined' && !(window.fetch as { __csrfWrapped?: boolean
 		if (!sent?.startsWith('Bearer ') || !origins.has(url.origin)) return csrfFetch(input, init);
 
 		const owner = captureSession();
-		const allowTransition = url.pathname.startsWith('/api/auth/');
+		// Credential challenges and /me are handled by their initiating auth flow. Other
+		// authenticated auth APIs (preferences/onboarding) refresh like ordinary records.
+		const allowTransition = (url.pathname === '/api/auth/me' && !owner.ready)
+			|| /^\/api\/auth\/(?:token|signup|refresh|passkey|magic-link)(?:\/|$)/.test(url.pathname);
 		assertCurrentSession(owner, allowTransition);
 		if (!ownsSessionToken(owner, sent.slice(7), allowTransition)) throw new SessionChangedError();
 		// A caller may still hold the token that this same session refreshed earlier.
@@ -113,10 +116,11 @@ if (typeof window !== 'undefined' && !(window.fetch as { __csrfWrapped?: boolean
 			const refreshed = await refreshSession(owner);
 			assertCurrentSession(owner);
 			if (!refreshed.ok) {
-				if (refreshed.definite) {
-					auth.logout();
-					if (!window.location.pathname.startsWith('/login')) window.location.href = '/login';
+				if (!refreshed.definite) {
+					throw Object.assign(new Error("We can try again whenever you're ready."), { code: 'SERVICE_UNAVAILABLE' });
 				}
+				auth.logout();
+				if (!window.location.pathname.startsWith('/login')) window.location.href = '/login';
 				return res;
 			}
 			token = refreshed.token;

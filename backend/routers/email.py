@@ -15,6 +15,7 @@ from backend.auth import get_current_user
 from backend.models.email_log import EmailLog
 from backend.utils.logger import get_logger
 from backend.config import settings
+from backend.utils.clock import utc_now
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/api/emails", tags=["emails"])
@@ -197,7 +198,7 @@ def resend_email(
         )
         return {
             "status": "already_sent",
-            "message": "This email has already reached them."
+            "message": "An email provider has already accepted this email for sending."
         }
 
     # Attempt resend: rebuild the payload from the log row (send_email takes only payload=).
@@ -254,23 +255,28 @@ def resend_email(
         )
         return gentle_failure
 
-    if result.status == "failed":
+    if result.delivery_state == "failed":
         logger.error(
             f"Resend of email {email_log_id} failed: {result.error}",
             extra={"context": {"email_log_id": email_log_id, "error": result.error}}
         )
         return gentle_failure
 
-    # The resend wrote its own log row; mark the original so it isn't offered again.
-    email_log.status = "resent"
+    # Preparation in the local outbox remains available for an explicit later resend.
+    # Only external provider acceptance marks the original as resent.
+    email_log.status = "resent" if result.provider_accepted else "saved_local"
+    email_log.provider = result.provider
+    email_log.provider_message_id = result.message_id
+    email_log.sent_at = utc_now() if result.provider_accepted else None
     session.add(email_log)
     if tier_contact is not None:
         # Same Pulse message row as send_notification: the owner's messages page shows it and
-        # pulse_logic.retry_failed_tier_sends sees a delivered alert, so it sends nothing more.
-        from backend.pulse_logic import tier_sent_text
+        # retry decisions and guardian access use the same explicit outcome as normal sends.
+        from backend.pulse_logic import tier_result_text
         from backend.pulse_models import PulseMessage
         session.add(PulseMessage(user_id=tier_contact.user_id, contact_id=tier_contact.id,
-                                 direction="user_to_contact", message=tier_sent_text(tier_number)))
+                                 direction="user_to_contact",
+                                 message=tier_result_text(result, tier_number, tier_contact.name)))
     session.commit()
 
     logger.info(
@@ -278,7 +284,9 @@ def resend_email(
         extra={"context": {"email_log_id": email_log_id, "status": result.status,
                            "message_id": result.message_id}}
     )
-    return {"status": "resent", "message": "This email is on its way again."}
+    if result.provider_accepted:
+        return {"status": "resent", "message": "An email provider accepted this email for sending."}
+    return {"status": "saved_local", "message": "This email is prepared in the local outbox."}
 
 
 # Postmark webhook models

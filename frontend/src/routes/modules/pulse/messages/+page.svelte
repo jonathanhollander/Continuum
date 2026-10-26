@@ -109,6 +109,12 @@
     function stripAlertPrefix(text: string) {
         const timer = text.match(/^\[Safety timer \d+\] (.*?)( \(attempt \d+\))?$/);
         if (timer) {
+            if (timer[1] === "prepared in local outbox") {
+                return "Safety timer alert prepared in the local outbox.";
+            }
+            if (timer[1] === "alert accepted by email provider") {
+                return "An email provider accepted the safety timer alert for sending.";
+            }
             return timer[1] === "alert sent"
                 ? "Safety timer alert sent"
                 : "Safety timer alert paused on its way; a call or message may reach them sooner.";

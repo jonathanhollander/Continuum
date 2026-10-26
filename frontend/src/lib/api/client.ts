@@ -3,10 +3,10 @@
  *
  * Provides fetch wrappers that automatically include JWT authentication headers.
  * All API requests should use these utilities to ensure proper authentication.
+ * The owner-bound fetch hook handles session refresh and definitive sign-out;
+ * these wrappers preserve HTTP errors for the initiating caller to handle.
  */
 
-import { get } from 'svelte/store';
-import { auth } from '$lib/stores/auth';
 import { API_BASE_URL, DEFAULT_TIMEOUT } from '$lib/config';
 import { browser } from '$app/environment';
 import { parseApiError } from '$lib/services/errorHandler';
@@ -38,15 +38,6 @@ export async function apiGet<T = any>(endpoint: string): Promise<T> {
         headers: getAuthHeaders()
     });
 
-    if (response.status === 401) {
-        // Token expired or invalid - logout user
-        auth.logout();
-        if (browser) {
-            window.location.href = '/login';
-        }
-        throw new Error('Authentication required');
-    }
-
     if (!response.ok) {
         const errorDetails = await parseApiError(response);
         const error = new Error(errorDetails.message);
@@ -67,14 +58,6 @@ export async function apiPost<T = any>(endpoint: string, data?: any): Promise<T>
         headers: getAuthHeaders(),
         body: data ? JSON.stringify(data) : undefined
     });
-
-    if (response.status === 401) {
-        auth.logout();
-        if (browser) {
-            window.location.href = '/login';
-        }
-        throw new Error('Authentication required');
-    }
 
     if (!response.ok) {
         const errorDetails = await parseApiError(response);
@@ -97,14 +80,6 @@ export async function apiPut<T = any>(endpoint: string, data?: any): Promise<T> 
         body: data ? JSON.stringify(data) : undefined
     });
 
-    if (response.status === 401) {
-        auth.logout();
-        if (browser) {
-            window.location.href = '/login';
-        }
-        throw new Error('Authentication required');
-    }
-
     if (!response.ok) {
         const errorDetails = await parseApiError(response);
         const error = new Error(errorDetails.message);
@@ -124,14 +99,6 @@ export async function apiDelete<T = any>(endpoint: string): Promise<T> {
         method: 'DELETE',
         headers: getAuthHeaders()
     });
-
-    if (response.status === 401) {
-        auth.logout();
-        if (browser) {
-            window.location.href = '/login';
-        }
-        throw new Error('Authentication required');
-    }
 
     if (!response.ok) {
         const errorDetails = await parseApiError(response);
@@ -162,14 +129,6 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}): Pro
             headers,
             signal: controller.signal
         });
-
-        if (response.status === 401) {
-            auth.logout();
-            if (browser) {
-                window.location.href = '/login';
-            }
-            throw new Error('Authentication required');
-        }
 
         return response;
     } finally {

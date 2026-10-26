@@ -1,7 +1,7 @@
 import secrets
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from pydantic import StringConstraints
-from sqlmodel import Session, SQLModel, select
+from sqlmodel import Session, SQLModel, select, or_
 from typing import Annotated, List, Literal, Optional
 from backend.database import get_session, User
 from backend.auth import get_current_user
@@ -118,24 +118,33 @@ def update_contact(contact_id: int, updated: ContactUpdate, user: User = Depends
 
 @router.delete("/{contact_id}")
 def delete_contact(request: Request, contact_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
-    """Delete a contact."""
+    """Remove the contact and its graph links in the same transaction."""
     contact = session.get(PulseContact, contact_id)
     if not contact or contact.user_id != user.id:
         raise HTTPException(status_code=404, detail="That contact may have been moved.")
 
-    # P1-High: Audit logging for contact deletion
-    log_deletion(
-        session=session,
-        request=request,
-        user_id=user.id,
-        user_email=user.email,
-        resource_type="contact",
-        resource_id=contact_id,
-        commit=False,  # written by the delete's own commit (X279)
-    )
+    try:
+        relationships = session.exec(select(ContactRelationship).where(
+            ContactRelationship.user_id == user.id,
+            or_(ContactRelationship.source_id == str(contact_id),
+                ContactRelationship.target_id == str(contact_id)),
+        )).all()
+        for relationship in relationships:
+            log_deletion(
+                session=session, request=request, user_id=user.id, user_email=user.email,
+                resource_type="contact_relationship", resource_id=relationship.id, commit=False,
+            )
+            session.delete(relationship)
 
-    session.delete(contact)
-    session.commit()
+        log_deletion(
+            session=session, request=request, user_id=user.id, user_email=user.email,
+            resource_type="contact", resource_id=contact_id, commit=False,
+        )
+        session.delete(contact)
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
     return {"status": "deleted"}
 
 # --- Relationships ---

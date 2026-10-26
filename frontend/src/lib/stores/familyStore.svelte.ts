@@ -1,5 +1,6 @@
 import { registerSync } from "$lib/services/sync.svelte";
 import { oneSpelling } from "$lib/utils/oneSpelling";
+import { captureSession, isCurrentSession } from "$lib/services/sessionOwnership";
 
 export type FamilyRole =
     | 'Family'
@@ -110,10 +111,19 @@ export const familyStore = {
     addMember: (member: Omit<FamilyMember, 'id'>) => contactSync.create({ ...member, id: crypto.randomUUID() }),
     updateMember: (id: string | number, updates: Partial<FamilyMember>) => contactSync.update(id, updates),
     removeMember: (id: string | number) => {
-        contactSync.delete(id);
-        // Also cleanup relationships locally
-        const rels = relationshipSync.items.filter(r => r.sourceId === String(id) || r.targetId === String(id));
-        rels.forEach(r => relationshipSync.delete(r.id));
+        const owner = captureSession();
+        const belongsToContact = (r: Relationship) => r.sourceId === String(id) || r.targetId === String(id);
+        const relatedIds = relationshipSync.items.filter(belongsToContact).map(r => r.id);
+        return contactSync.delete(id, async () => {
+            if (!isCurrentSession(owner)) return;
+            // The API removed these links atomically with the contact. Mirror that confirmed
+            // result locally, including any links loaded while the delete was in flight.
+            relationshipSync.confirmRemoved([
+                ...relatedIds,
+                ...relationshipSync.items.filter(belongsToContact).map(r => r.id),
+            ], owner);
+            await relationshipSync.sync();
+        });
     },
 
     addRelationship: (sourceId: string | number, targetId: string | number, type: Relationship['type']) => {
