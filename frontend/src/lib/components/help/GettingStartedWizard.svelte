@@ -5,11 +5,9 @@
         Settings,
         Shield,
         Users,
-        Save,
     } from "lucide-svelte";
 
-    let currentStep = 1;
-    let completedSteps = [0]; // Step 0 is 'Start'
+    let currentStep = $state(1);
 
     const steps = [
         {
@@ -33,11 +31,16 @@
         { id: 4, title: "Complete", icon: Check, desc: "You're ready to go!" },
     ];
 
+    // Each document opens the module where it is saved.
+    const documents = [
+        { name: "Last Will & Testament", href: "/modules/legal-documents" },
+        { name: "Power of Attorney", href: "/modules/legal-documents" },
+        { name: "Advance Healthcare Directive", href: "/modules/legal-documents" },
+        { name: "Life Insurance Policies", href: "/modules/insurance" },
+    ];
+
     function nextStep() {
-        if (currentStep < 4) {
-            completedSteps = [...completedSteps, currentStep];
-            currentStep++;
-        }
+        if (currentStep < 4) currentStep++;
     }
 </script>
 
@@ -58,7 +61,7 @@
                         ? 'bg-primary border-primary text-primary-foreground'
                         : 'bg-card border-border text-muted-foreground'}"
                 >
-                    <svelte:component this={step.icon} size={18} />
+                    <step.icon size={18} />
                 </div>
                 <span
                     class="mt-2 text-xs font-bold uppercase tracking-wide {currentStep >=
@@ -82,11 +85,9 @@
                 This helps us show the tools that fit you.
             </p>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <button
-                    class="p-6 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all text-left group"
-                >
+                <div class="p-6 rounded-xl border-2 border-border text-left">
                     <div
-                        class="w-12 h-12 rounded-full bg-info/10 text-info flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"
+                        class="w-12 h-12 rounded-full bg-info/10 text-info flex items-center justify-center mb-4"
                     >
                         <span class="text-xl font-bold">1</span>
                     </div>
@@ -94,30 +95,21 @@
                     <p class="text-xs text-muted-foreground">
                         Single home, simple accounts, straightforward trusts.
                     </p>
-                </button>
-                <button
-                    class="p-6 rounded-xl border-2 border-primary bg-primary/5 text-left relative overflow-hidden"
-                >
-                    <div
-                        class="absolute top-3 right-3 text-xs font-bold text-primary bg-card px-2 py-1 rounded-full shadow-sm"
-                    >
-                        Rec
-                    </div>
+                </div>
+                <div class="p-6 rounded-xl border-2 border-border text-left">
                     <div
                         class="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center mb-4"
                     >
                         <span class="text-xl font-bold">2</span>
                     </div>
-                    <h3 class="font-bold text-primary-deep dark:text-primary-hover mb-2">Standard</h3>
+                    <h3 class="font-bold text-foreground mb-2">Standard</h3>
                     <p class="text-xs text-muted-foreground">
                         Home + investments, life insurance, retirement accounts.
                     </p>
-                </button>
-                <button
-                    class="p-6 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all text-left group"
-                >
+                </div>
+                <div class="p-6 rounded-xl border-2 border-border text-left">
                     <div
-                        class="w-12 h-12 rounded-full bg-gold/15 text-gold-text flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"
+                        class="w-12 h-12 rounded-full bg-gold/15 text-gold-text flex items-center justify-center mb-4"
                     >
                         <span class="text-xl font-bold">3</span>
                     </div>
@@ -126,8 +118,12 @@
                         Business interests, multiple properties, advanced tax
                         planning.
                     </p>
-                </button>
+                </div>
             </div>
+            <a href="/modules/builders-console" data-testid="wizard-link" class="inline-flex items-center gap-2 mt-8 px-6 py-3 rounded-xl border-2 border-primary text-primary-deep dark:text-primary-hover font-bold hover:bg-primary/5 transition-colors">
+                Choose your level in Builder Tools
+                <ArrowRight size={16} />
+            </a>
         {:else if currentStep === 2}
             <h2 class="text-3xl font-serif text-primary-deep dark:text-primary-hover mb-4">
                 Who is your Executor?
@@ -135,42 +131,14 @@
             <p class="text-muted-foreground mb-8">
                 We'll set up a special dashboard just for them.
             </p>
-            <div class="flex flex-col gap-4 max-w-md mx-auto text-left">
-                <label class="block">
-                    <span class="text-sm font-bold text-foreground"
-                        >Full Name</span
-                    >
-                    <input
-                        type="text"
-                        placeholder="e.g. Jane Doe"
-                        class="mt-1 w-full px-4 py-3 rounded-lg border border-border bg-card text-foreground focus:ring-2 focus:ring-primary/20 focus:outline-none"
-                    />
-                </label>
-                <label class="block">
-                    <span class="text-sm font-bold text-foreground"
-                        >Email (for notifications)</span
-                    >
-                    <input
-                        type="email"
-                        placeholder="jane@example.com"
-                        class="mt-1 w-full px-4 py-3 rounded-lg border border-border bg-card text-foreground focus:ring-2 focus:ring-primary/20 focus:outline-none"
-                    />
-                </label>
-                <label class="block">
-                    <span class="text-sm font-bold text-foreground"
-                        >Relationship</span
-                    >
-                    <select
-                        class="mt-1 w-full px-4 py-3 rounded-lg border border-border bg-card text-foreground focus:ring-2 focus:ring-primary/20 focus:outline-none"
-                    >
-                        <option>Spouse / Partner</option>
-                        <option>Child</option>
-                        <option>Sibling</option>
-                        <option>Professional / Attorney</option>
-                        <option>Friend</option>
-                    </select>
-                </label>
-            </div>
+            <p class="text-foreground max-w-md mx-auto">
+                In Family &amp; Contacts, add them and mark them as your
+                <strong>Designated Executor</strong>.
+            </p>
+            <a href="/modules/contacts" data-testid="wizard-link" class="inline-flex items-center gap-2 mt-8 px-6 py-3 rounded-xl border-2 border-primary text-primary-deep dark:text-primary-hover font-bold hover:bg-primary/5 transition-colors">
+                Open Family &amp; Contacts
+                <ArrowRight size={16} />
+            </a>
         {:else if currentStep === 3}
             <h2 class="text-3xl font-serif text-primary-deep dark:text-primary-hover mb-4">
                 Where are your documents?
@@ -179,16 +147,15 @@
                 Do you know where these documents are kept?
             </p>
             <div class="space-y-3 max-w-md mx-auto text-left">
-                {#each ["Last Will & Testament", "Power of Attorney", "Advance Healthcare Directive", "Life Insurance Policies"] as doc}
-                    <label
-                        class="flex items-center gap-4 p-4 rounded-xl border border-border hover:bg-muted cursor-pointer transition-colors"
+                {#each documents as doc (doc.name)}
+                    <a
+                        href={doc.href}
+                        data-testid="wizard-link"
+                        class="flex items-center gap-4 p-4 rounded-xl border border-border hover:bg-muted transition-colors"
                     >
-                        <input
-                            type="checkbox"
-                            class="w-5 h-5 rounded border-border text-primary focus:ring-primary"
-                        />
-                        <span class="text-foreground font-medium">{doc}</span>
-                    </label>
+                        <span class="text-foreground font-medium">{doc.name}</span>
+                        <ArrowRight size={16} class="ml-auto text-muted-foreground" />
+                    </a>
                 {/each}
             </div>
         {:else}
@@ -199,18 +166,19 @@
                     <Check size={40} />
                 </div>
                 <h2 class="text-3xl font-serif text-primary-deep dark:text-primary-hover mb-4">
-                    You're All Set!
+                    You're ready to go!
                 </h2>
                 <p class="text-muted-foreground text-lg mb-8 max-w-md mx-auto">
-                    We've configured your dashboard for a <strong
-                        >Standard Estate</strong
-                    >. Your Executor dashboard is ready to share.
+                    Your dashboard brings every part of your plan together in
+                    one place.
                 </p>
-                <button
-                    class="px-8 py-3 bg-primary-deep text-white rounded-xl font-bold hover:bg-primary-deep/90 transition-colors shadow-lg shadow-primary-deep/20"
+                <a
+                    href="/dashboard"
+                    data-testid="wizard-finish"
+                    class="inline-block px-8 py-3 bg-primary-deep text-white rounded-xl font-bold hover:bg-primary-deep/90 transition-colors shadow-lg shadow-primary-deep/20"
                 >
                     Go to Dashboard
-                </button>
+                </a>
             </div>
         {/if}
     </div>
@@ -219,7 +187,7 @@
     {#if currentStep < 4}
         <div class="border-t border-border mt-12 pt-6 flex justify-end">
             <button
-                on:click={nextStep}
+                onclick={nextStep}
                 class="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-bold hover:bg-primary-hover transition-all shadow-lg shadow-primary/20 hover:shadow-xl hover:translate-y-[-1px]"
             >
                 Next Step
