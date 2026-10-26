@@ -64,6 +64,11 @@ export const pulse = {
     get enabled() { return settingsSync.data?.enabled ?? false; },
     get contacts() { return []; }, // Contacts are managed separately via PulseContact API
     init: () => statusSync.sync(),
+    /** Show the server's on/off on this device only (no save): the settings page has just
+     *  read or saved it, so writing it back would be a second save the person never made. */
+    showEnabled(enabled: boolean) {
+        settingsSync.updateLocal({ ...(settingsSync.data || {}), enabled } as PulseSettings);
+    },
     checkin: (note?: string) => pulseStore.checkin(note),
     // Svelte store-compatible update method
     update(fn: (current: { enabled: boolean; contacts: any[]; status: string }) => { enabled?: boolean; contacts?: any[]; status?: string }) {
