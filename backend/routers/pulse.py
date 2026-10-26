@@ -96,8 +96,12 @@ def get_status(user: User = Depends(get_current_user), session: Session = Depend
 def get_settings(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     # A read never writes: with no saved row, return the defaults unsaved. The row (and its
     # check-in token) is created when the person saves their settings.
-    settings = session.get(PulseSettings, user.id)
-    return settings or PulseSettings(user_id=user.id)
+    settings = session.get(PulseSettings, user.id) or PulseSettings(user_id=user.id)
+    data = settings.model_dump()
+    # Stored times are naive UTC; send them with "Z" (as /status does) so the browser reads UTC, not local.
+    for key in _SETTINGS_DATETIME_FIELDS:
+        data[key] = _utc_iso(data.get(key))
+    return data
 
 _SETTINGS_DATETIME_FIELDS = ("ghost_mode_until", "safety_timer_active_until", "last_known_location_time")
 
@@ -120,6 +124,46 @@ def _parse_settings_datetime(value):
     return parsed
 
 
+_SETTINGS_BOOL_FIELDS = (
+    "enabled", "elderly_mode", "notify_contacts_on_checkin", "send_weekly_summary",
+    "pet_protocol_enabled", "legacy_heartbeat_enabled", "medical_safe_pass_enabled",
+    "location_vault_enabled", "biometric_extension_enabled",
+)
+# field -> (lowest, highest, gentle message)
+_SETTINGS_INT_FIELDS = {
+    "frequency_days": (1, 365, "Choose how often we check in as a whole number of days, from 1 to 365."),
+    "grace_period_hours": (0, 720, "Choose the grace period as a whole number of hours, from 0 to 720 (30 days)."),
+    "biometric_extension_hours": (1, 168, "Choose the biometric extension as a whole number of hours, from 1 to 168 (7 days)."),
+}
+_SETTINGS_TEXT_FIELDS = {"custom_message": 2000, "pet_details": 2000}
+_SETTINGS_COORD_FIELDS = {"last_known_location_lat": 90, "last_known_location_lon": 180}
+
+
+def _check_settings_fields(data: dict) -> None:
+    """PulseSettings is a table model, so FastAPI passes body values through unvalidated.
+    Check each non-date field sent by type and range; anything off is a 422 with a gentle message."""
+    for key in _SETTINGS_BOOL_FIELDS:
+        if key in data and not isinstance(data[key], bool):
+            raise HTTPException(status_code=422, detail="One of your Pulse choices needs another look. Turn it on or off again whenever you're ready.")
+    for key, (low, high, message) in _SETTINGS_INT_FIELDS.items():
+        if key not in data:
+            continue
+        val = data[key]
+        if isinstance(val, float) and val.is_integer():
+            val = int(val)
+        if isinstance(val, bool) or not isinstance(val, int) or not low <= val <= high:
+            raise HTTPException(status_code=422, detail=message)
+        data[key] = val
+    for key, limit in _SETTINGS_TEXT_FIELDS.items():
+        val = data.get(key)
+        if val is not None and (not isinstance(val, str) or len(val) > limit):
+            raise HTTPException(status_code=422, detail=f"That note needs another look. A few words up to {limit} characters works well.")
+    for key, limit in _SETTINGS_COORD_FIELDS.items():
+        val = data.get(key)
+        if val is not None and (isinstance(val, bool) or not isinstance(val, (int, float)) or not -limit <= val <= limit):
+            raise HTTPException(status_code=422, detail="That location needs another look. We'll keep your last saved place until it's ready.")
+
+
 @router.post("/settings", summary="Update Pulse settings", description="Saves the user's Pulse configuration, creating the row on first save. The check-in token is issued by the server on first save and kept.")
 @limiter.limit("10/minute")
 def update_settings(request: Request, new_settings: PulseSettings, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
@@ -131,6 +175,7 @@ def update_settings(request: Request, new_settings: PulseSettings, user: User = 
     settings_data = new_settings.dict(exclude_unset=True)
     settings_data.pop("user_id", None)  # the row always belongs to the signed-in person
     settings_data.pop("checkin_token", None)  # server-issued, kept once made
+    _check_settings_fields(settings_data)
     # PulseSettings is a table model, so the body is not validated: its DateTime fields arrive as
     # the raw JSON value (an ISO string from the browser). Parse them here to naive UTC, the form
     # every stored time and utc_now() comparison uses; null clears the field.
