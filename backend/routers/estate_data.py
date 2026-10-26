@@ -11,7 +11,7 @@ from backend.estate_models import (
     Document, Letter, JournalEntry, Subscription, CalendarEvent,
     InsurancePolicy, MedicalDirective, Pet, ContactRelationship,
     MedicalProfile, LifeEvent, TimeCapsuleMessage, FuneralData,
-    AdvancedAssetData, UserCustomFieldDefinition
+    AdvancedAssetData, DigitalGuardianData, UserCustomFieldDefinition
 )
 from backend.models.activity_models import ActivityLogEntry
 from backend.models.qr_models import QRAccessPack, QRAssetLabel
@@ -128,6 +128,7 @@ MODEL_MAP = {
     "time_capsule": TimeCapsuleMessage,
     "funeral_data": FuneralData,
     "advanced_assets": AdvancedAssetData,
+    "digital_guardian": DigitalGuardianData,
     "activity_log": ActivityLogEntry,
     "qr_packs": QRAccessPack,
     "qr_labels": QRAssetLabel,
@@ -136,8 +137,8 @@ MODEL_MAP = {
 }
 
 # CU-011: one row per user (user_id is unique); GET returns that row as an object, POST upserts it.
-SINGLETON_TYPES = {"funeral_data", "advanced_assets"}
-SINGLETON_JSON_FIELDS = {"wishes", "budget", "transactions", "maintenance", "claims"}  # stored as JSON text
+SINGLETON_TYPES = {"funeral_data", "advanced_assets", "digital_guardian"}
+SINGLETON_JSON_FIELDS = {"wishes", "budget", "transactions", "maintenance", "claims", "setup_status", "fire_drill"}  # stored as JSON text
 
 # CU-004: these data types share the Asset table; each owns the rows whose `category` equals it.
 ASSET_CATEGORIES = {"properties", "digital_assets", "heirlooms"}
