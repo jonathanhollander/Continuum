@@ -156,7 +156,7 @@ def trigger_escalation(session: Session, user_id: int, tier_number: int, referen
         try:
             send_notification(session, contact, tier_number)
         except Exception:
-            logger.error(f"Tier {tier_number} alert to contact {contact.id} failed; not retrying this tier",
+            logger.error(f"Tier {tier_number} alert to contact {contact.id} failed",
                          exc_info=True)
 
     session.commit()
@@ -245,7 +245,7 @@ def trigger_safety_timer_alert(session: Session, timer) -> bool:
         session.commit()
     return done
 
-from backend.services.email_service import email_service, EmailPayload
+from backend.services.email_service import email_service, EmailPayload, EmailResult
 from backend.config import settings
 from backend.database import User
 import os
@@ -292,17 +292,27 @@ def send_notification(session: Session, contact: PulseContact, tier_number: int)
                 "escalation_date": datetime.utcnow().strftime("%B %d, %Y at %I:%M %p UTC")
             })
 
-    # Send email using new service with templates and logging
-    result = email_service.send_pulse_alert(
-        to_email=contact.email,
-        recipient_name=contact.name,
-        tier_number=tier_number,
-        user_id=contact.user_id,
-        user_name=user_name,
-        portal_url=portal_url,
-        additional_context=additional_context,
-        db_session=session
-    )
+    # Send email using new service with templates and logging.
+    # A raising sender is treated as a failed result, so the failed row is written and
+    # retry_failed_tier_sends can pick it up (it never sees a tier with no rows).
+    try:
+        result = email_service.send_pulse_alert(
+            to_email=contact.email,
+            recipient_name=contact.name,
+            tier_number=tier_number,
+            user_id=contact.user_id,
+            user_name=user_name,
+            portal_url=portal_url,
+            additional_context=additional_context,
+            db_session=session
+        )
+    except Exception as e:
+        logger.error(f"Tier {tier_number} alert to contact {contact.id} raised "
+                     f"{type(e).__name__}: {e}", exc_info=True)
+        if not session.is_active:  # a DB error left the transaction unusable
+            session.rollback()
+        result = EmailResult(status="failed", provider=email_service.provider,
+                             error=f"{type(e).__name__}: {e}")
 
     # Log communication in pulse system
     log_msg = PulseMessage(

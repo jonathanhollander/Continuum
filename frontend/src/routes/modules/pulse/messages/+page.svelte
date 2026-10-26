@@ -57,6 +57,32 @@
             );
     }
 
+    // Repeated identical system-alert rows (a tier retried up to 3 times) show as one line
+    // with an attempt count; the latest row of each group keeps its place and time.
+    function getThreadForContact(contactId: number | null) {
+        const msgs = getMessagesForContact(contactId);
+        const counts = new Map<string, number>();
+        for (const m of msgs) {
+            if (m.message.startsWith("[System Alert")) {
+                counts.set(m.message, (counts.get(m.message) ?? 0) + 1);
+            }
+        }
+        const seen = new Map<string, number>();
+        return msgs
+            .filter((m) => {
+                if (!m.message.startsWith("[System Alert")) return true;
+                const n = (seen.get(m.message) ?? 0) + 1;
+                seen.set(m.message, n);
+                return n === counts.get(m.message);
+            })
+            .map((m) => ({
+                ...m,
+                attempts: m.message.startsWith("[System Alert")
+                    ? (counts.get(m.message) ?? 1)
+                    : 1,
+            }));
+    }
+
     function getLatestMessageTime(contactId: number) {
         const msgs = getMessagesForContact(contactId);
         return msgs.length > 0 ? msgs[msgs.length - 1].sent_at : null;
@@ -190,7 +216,7 @@
                     class="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col-reverse"
                 >
                     <!-- Flex-col-reverse keeps scroll at bottom usually, but map order matters. Let's stick to standard order. -->
-                    {#each getMessagesForContact(newMessage.contact_id) as msg}
+                    {#each getThreadForContact(newMessage.contact_id) as msg}
                         <div
                             class="flex gap-3 max-w-[80%] {msg.direction ===
                             'user_to_contact'
@@ -229,6 +255,13 @@
                                     .replace("[System Alert Tier 2] ", "")
                                     .replace("[System Alert Tier 3] ", "")
                                     .replace("[System Alert Tier 4] ", "")}
+                                {#if msg.attempts > 1}
+                                    <span
+                                        class="block mt-1 text-[11px] not-italic text-amber-300/80"
+                                        data-testid="alert-attempts"
+                                        >{msg.attempts} attempts</span
+                                    >
+                                {/if}
                                 <div
                                     class="mt-1 text-[10px] opacity-50 {msg.message.startsWith(
                                         '[System Alert',

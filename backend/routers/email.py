@@ -200,48 +200,46 @@ def resend_email(
             "message": "This email was already sent successfully"
         }
 
-    # Attempt resend
-    from backend.services.email_service import email_service
+    # Attempt resend: rebuild the payload from the log row (send_email takes only payload=).
+    from backend.services.email_service import email_service, EmailResult
 
+    gentle_failure = {
+        "status": "failed",  # machine value; the message is what people read
+        "message": "We'll keep this message here so it can be sent again later."
+    }
     try:
-        result = email_service.send_email(
+        payload = email_service._build_payload(
             to_email=email_log.recipient_email,
-            recipient_name=email_log.recipient_name or email_log.recipient_email.split('@')[0].title(),
+            recipient_name=email_log.recipient_name or (email_log.recipient_email or "").split('@')[0].title() or "Friend",
             subject=email_log.subject,
             template_name=email_log.template_name or "welcome",
             template_context={},
-            user_id=email_log.user_id,
-            db_session=session
+            user_id=email_log.user_id
         )
-
-        logger.info(
-            f"Email {email_log_id} resent successfully",
-            extra={"context": {
-                "email_log_id": email_log_id,
-                "result": result
-            }}
-        )
-
-        return {
-            "status": "resent",
-            "message": "Email resent successfully",
-            "result": result
-        }
-
+        result = payload if isinstance(payload, EmailResult) else \
+            email_service.send_email(payload=payload, db_session=session)
     except Exception as e:
         logger.error(
-            f"Failed to resend email {email_log_id}",
-            extra={"context": {
-                "email_log_id": email_log_id,
-                "error": str(e),
-                "error_type": type(e).__name__
-            }},
+            f"Resend of email {email_log_id} raised",
+            extra={"context": {"email_log_id": email_log_id, "error": str(e),
+                               "error_type": type(e).__name__}},
             exc_info=True
         )
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to resend email: {str(e)}"
+        return gentle_failure
+
+    if result.status == "failed":
+        logger.error(
+            f"Resend of email {email_log_id} failed: {result.error}",
+            extra={"context": {"email_log_id": email_log_id, "error": result.error}}
         )
+        return gentle_failure
+
+    logger.info(
+        f"Email {email_log_id} resent",
+        extra={"context": {"email_log_id": email_log_id, "status": result.status,
+                           "message_id": result.message_id}}
+    )
+    return {"status": "resent", "message": "This email is on its way again."}
 
 
 # Postmark webhook models
