@@ -17,7 +17,7 @@ async function chat(content: string, history: any[]): Promise<GriefAIResponse> {
     const role = get(userRole);
 
     let roleContext = '';
-    if (role === 'executor') {
+    if (role === 'Executor') {
         roleContext = '\n\n🕊️ PERSONA: SUPPORTING AN EXECUTOR\n- Focus on the weight of technical tasks during grief.\n- Acknowledge that managing an estate is a secondary loss.\n- Offer permission to delegate or delay non-urgent tasks.';
     } else {
         roleContext = '\n\n🌱 PERSONA: SUPPORTING A PLANNER/FAMILY\n- Focus on the courage of preparation.\n- Validate the emotional difficulty of facing mortality.\n- Emphasize legacy and love as the primary drivers.';

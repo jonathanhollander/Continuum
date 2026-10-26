@@ -47,7 +47,7 @@
         name: "",
         breed: "",
         guardian:
-            $estateProfile.spouse_name || $estateProfile.executor_name || "",
+            $estateProfile.spouseName || $estateProfile.executorName || "",
         vetName: "",
         vetPhone: "",
         foodInstructions: "",
@@ -101,10 +101,10 @@
             name: pet.name || "",
             breed: pet.breed || "",
             guardian: pet.guardian || "",
-            vetName: pet.vetName || pet.vet_name || "",
-            vetPhone: pet.vetPhone || pet.vet_phone || "",
-            foodInstructions: pet.foodInstructions || pet.food_instructions || "",
-            medicalNeeds: pet.medicalNeeds || pet.medical_needs || "",
+            vetName: pet.vetName || "",
+            vetPhone: pet.vetPhone || "",
+            foodInstructions: pet.foodInstructions || "",
+            medicalNeeds: pet.medicalNeeds || "",
             documents: pet.documents || "",
             notes: pet.notes || "",
         };
@@ -119,8 +119,8 @@
             name: "",
             breed: "",
             guardian:
-                $estateProfile.spouse_name ||
-                $estateProfile.executor_name ||
+                $estateProfile.spouseName ||
+                $estateProfile.executorName ||
                 "",
             vetName: "",
             vetPhone: "",
@@ -279,7 +279,7 @@
                             </div>
                         </div>
 
-                        {#if pet.medical_needs}
+                        {#if pet.medicalNeeds}
                             <div
                                 class="flex items-start gap-2 pt-2 border-t border-gray-100"
                             >

@@ -53,7 +53,7 @@
     let viewMode = $state<"dashboard" | "concierge">("dashboard");
 
     interface Memory {
-        id: number;
+        id?: number;
         type: MemoryType;
         title: string;
         date?: string;
@@ -222,7 +222,8 @@
         };
     }
 
-    function deleteMemory(id: number) {
+    function deleteMemory(id: number | undefined) {
+        if (id === undefined) return;
         if (
             !confirm(
                 "Remove this memory? It will be preserved in your activity log.",

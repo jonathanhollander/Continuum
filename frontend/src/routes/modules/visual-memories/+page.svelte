@@ -83,11 +83,13 @@
     function openArchiveModal(archive: ExternalArchive | null = null) {
         editingArchive = archive;
         if (archive) {
+            // A saved archive comes back camelCased by SyncManager; one still being saved keeps the
+            // snake_case it was created with, so both spellings occur.
+            const a = archive as ExternalArchive & { locationDetails?: string; accessUrl?: string };
             archiveForm = {
-                platform: archive.platform,
-                locationDetails:
-                    archive.location_details || archive.locationDetails || "",
-                accessUrl: archive.access_url || archive.accessUrl || "",
+                platform: a.platform,
+                locationDetails: a.location_details || a.locationDetails || "",
+                accessUrl: a.access_url || a.accessUrl || "",
             };
         } else {
             archiveForm = { platform: "", locationDetails: "", accessUrl: "" };

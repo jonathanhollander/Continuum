@@ -801,10 +801,10 @@
                                     showAddModal = true;
                                 }}
                             >
-                                <svelte:fragment slot="icon">
+                                {#snippet icon()}
                                     {@const Icon = typeIcons[sample.insuranceType] || Shield}
                                     <Icon size={20} class="text-slate-400" />
-                                </svelte:fragment>
+                                {/snippet}
                             </GhostRow>
                         {/each}
                     </div>
