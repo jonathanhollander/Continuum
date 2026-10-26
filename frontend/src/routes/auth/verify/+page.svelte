@@ -15,7 +15,7 @@
 
         if (!token) {
             status = "error";
-            error = "No verification token found";
+            error = "This link may have been used already or expired. You can request a new one whenever you're ready.";
             return;
         }
 

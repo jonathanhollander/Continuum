@@ -73,6 +73,13 @@ board, and it is the live checklist** (decision 9).
     - **Same rules:** desktop only, ponytail, no tests, no feature removal, no gates. Gaps that need a new feature are listed for the owner, not built.
     - **Every push to `main` auto-deploys** (Railway is linked to the repo) and **deploys don't run migrations**: after merging a migration, run `alembic upgrade head` against production. 2026-10-26: production upgraded 817c6b026811 → e8b3d6a1c9f2 (backup `scratchpad/prod_backup_2026-10-26.dump`, 45 tables); `calendar_events.date` is now text, `assets.category` exists.
 
+17. **Tone review of every page, Wave T** (owner, 2026-10-26: "there has been a great deal of time spent on tone and sensitivity to this project and a full review of all user pages must be done before testing to understand the tone is implemented as intended ON EACH AND EVERY PAGE").
+    - **What tone means here** (`docs/TONE_GUIDE.md`, with `CONTEXT_AWARE_MESSAGING.md`, `EMPTY_STATE_GUIDE.md`, `UI_CONSISTENCY_STANDARDS.md` §3.6, §5.2 and §14): patient not urgent, inviting not demanding, supportive not clinical, present not dismissive. Three principles: invitation over instruction, acknowledgment over efficiency, presence over false positivity. Concretely: no imperative or demanding button text ("Submit", "Delete", "must", "required"); no speed or ease talk ("quick", "just 5 minutes", "easy", "simple"); no forced cheer ("Great job!", "Don't worry!"); errors acknowledge, reassure and give a path forward with no "error", "failed" or "invalid"; empty states invite and say why the space matters; loading feels like presence; success affirms without celebrating; labels say why; the "Words to avoid" table; and language fits the reader's role and perspective — the planner ("your wishes", honor the courage), the person handling things after a death (grief-aware, never "complete by"), family and the designated recipient (gentle, room for mixed feelings), a Pulse guardian (calm, never alarming), an advisor (respectful, plain). Honest beats soothing: copy never claims something the product does not do (X32–X37 found several).
+    - **When:** with Wave G, after Wave U, before R0 and the release browser test.
+    - **Review (T0):** read-only `emotional-tone-compliance` agents, split by area, read every user-facing string on every route in the inventory — headings, body, buttons, labels, placeholders, helper text, empty/loading/success/error states, confirm dialogs, toasts, AI prompt and fallback text, the backend messages users see (`errors.py`, router `detail`s that reach the screen) and every email template — as each role that reaches the page. Output per page: each line that misses the guide, the role it fails for, file:line, and the suggested wording.
+    - **Fix:** T findings join that page's G card (one agent per page, so each file is touched once); pages with only tone findings get their own T card. Same method: own worktree, diff review, merge, O1/O2 on the wave.
+    - **Same rules:** no tests, no feature removal, no gates; wording changes only where the guide is missed.
+
 ## Test register (decision 11)
 
 Every written test is listed here: approved before it is written, and completed after. There are no other tests.
@@ -131,7 +138,7 @@ Every written test is listed here: approved before it is written, and completed 
 
 **Final UI/UX pass (decision 13):** when Waves A–E and X are all ☑, run U0, then dispatch the U cards in parallel (by owned files), review and merge them as usual, then run O1/O2 on Wave U.
 
-**Role-based page gap review (decision 16):** when Wave U is ☑, run G0, then dispatch the G cards in parallel (by owned files), review and merge them as usual, then run O1/O2 on Wave G. Then R0.
+**Role-based page gap review and tone review (decisions 16, 17):** when Wave U is ☑, run G0 and T0 in parallel, then dispatch the G and T cards in parallel (by owned files), review and merge them as usual, then run O1/O2 on Wave G. Then R0.
 
 **Rehearsal (end of the coding pass, still local):**
 8. **R0:** a validation subagent runs the full completion test (owner context and recipient context) against the merged `main`, built and served locally on synthetic data.
@@ -315,11 +322,13 @@ Report: files changed, proof output (the one run), any test written (with its ap
 
 ---
 
-## Wave G — Role-based page gap review (decision 16; after U, before R0)
+## Wave G and T — Role-based page gap review and tone review (decisions 16, 17; after U, before R0)
 
 | ID | Card | Agent | Owns | Change | Acceptance |
 |---|---|---|---|---|---|
 | G0 | Gap review by role | Read-only `general-purpose` agents split by area (legacy and letters; finances and estate; family, contacts and recipient; Pulse and guardian pages; dashboard, navigation, settings, onboarding and marketing) | Nothing (report only) | For every route: who the page is for, what each role needs to do there, and each gap (missing step, confusing or untrue copy, dead end, data that does not load or save, missing link onward), with file:line. Gaps already covered by a card are skipped | A gap list for every route in the inventory, every role that reaches it covered |
+| T0 | Tone review of every page (decision 17) | Read-only `emotional-tone-compliance` agents split by the same areas as G0, plus one for email templates and backend user-facing messages | Nothing (report only) | Every user-facing string on every route, read as each role that reaches it, against `docs/TONE_GUIDE.md` and the related guides; each miss with role, file:line and suggested wording | Every route and every email template covered |
+| T1… | Tone fixes for pages with no G card | `button-language-audit` / `general-purpose` | That page's files | The suggested wording, adjusted for truth and fit | Diff review: every listed line fixed or answered |
 | G1… | One card per proven gap (or per page when gaps share a file) | `general-purpose` / `ui-standards-enforcer` | That page's route, component and store files | The smallest change that closes the gap | Diff review; one targeted proof per card as usual (the full browser test stays in Release) |
 
 ## Section status (marked by the orchestrator, decision 9)
@@ -336,6 +345,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | Release — deploy + full browser test | ☐ | | |
 | Wave U — Final UI/UX pass | ☐ | | |
 | Wave G — Role-based page gap review | ☐ | | |
+| Wave T — Tone review of every page | ☐ | | |
 | Wave X — Out-of-build bugs | ▶ | | |
 
 ## Card status (marked by the orchestrator, decision 9)
@@ -363,7 +373,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X37 | ▶ | | |
 | X38 | ☑ | 6210bb6 | 1440×900: Mark Done + drill step 1 → reload keeps both, 0 error strips, 0 page errors, 0 requests to missing endpoints; values in account/profile-namespaced localStorage (same keys and shape). Generic `/api/data` needs a typed table and int ids, so device-only for now (→ X42) |
 | X42 | ▶ | | |
-| X39 | ▶ | | |
+| X39 | ☑ | c06a63d + no-token line | 1440×900: used magic link → "This link may have been used already or expired. You can request a new one whenever you're ready.", no raw text, Try Again → /login, 0 page errors. Orchestrator gave the no-token case the same sentence |
 | X30 | ☑ | 10d72b3 | 1440×900: magic link from outbox → /dashboard → /onboarding signed in, no reload; `/api/**` blocked + reload → stays, tokens kept; bad access+refresh tokens → /login. Verify uses `storeTokens` + `auth.init`; `offline` flag keeps the session while the server is unreachable. Findings (minor, left): verify does not guard a missing `access_token`; `refreshSession` treats 400/422 as definite logout |
 | C6 | ☐ | | |
 | C2 | ☐ | | |
@@ -427,6 +437,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X10 | ☑ | c2e8ad1 | Echo off: 503 path p50 2.6 ms, p95 4.1 ms; O1's 473 ms was echo-logging overhead. One shared httpx client |
 | U0 | ☐ | | |
 | G0 | ☐ (after Wave U) | | |
+| T0 | ☐ (after Wave U, with G0) | | |
 | O1 — per wave (A–E) | ▶ (A done: login p95 133, /me 4.8, refresh 19.2, ai/chat 503 path 473 → X10) | | |
 | O2 — per wave (A–E) | ▶ (A done: X1 pages render the gentle message, no layout break; findings → X15, X16, X17, E9, E10) | | |
 | O1 — release table | ☐ | | |
