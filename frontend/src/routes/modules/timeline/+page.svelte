@@ -44,6 +44,8 @@
     onMount(async () => {
         await timelineStore.sync?.();
         isLoading = false;
+        await userPreferencesStore.init();
+        viewMode = userPreferencesStore.getViewMode('timeline');
     });
 
     // --- State & Types ---
@@ -54,12 +56,16 @@
     );
 
     let showMemento = $state(false);
-    let birthYear = $state(1990);
     let currentYear = new Date().getFullYear();
-    let lifeExpectancy = $state(85);
 
     // Use store directly
     let lifeEvents = $derived(timelineStore.items);
+
+    // The track starts at the earliest event (1990 until the first event exists)
+    let eventYears = $derived(
+        lifeEvents.map((e) => Number(e.year)).filter((y) => Number.isFinite(y)),
+    );
+    let birthYear = $derived(eventYears.length > 0 ? Math.min(...eventYears) : 1990);
 
     let showAddModal = $state(false);
     let newEvent: Partial<LifeEvent> = $state({
@@ -118,22 +124,36 @@
     }
 
     // Memento Mori Calculation
-    let weeksLived = (currentYear - birthYear) * 52;
+    let weeksLived = $derived(Math.max(0, (currentYear - birthYear) * 52));
 
     // Dynamic Grid Sizing: Furthest event OR Current Year + 3
     let maxEventYear = $derived(
-        lifeEvents.length > 0
-            ? Math.max(...lifeEvents.map((e) => e.year))
-            : currentYear,
+        eventYears.length > 0 ? Math.max(...eventYears) : currentYear,
     );
     let endYear = $derived(Math.max(maxEventYear, currentYear + 3));
     let totalWeeks = $derived((endYear - birthYear) * 52);
 
     // Zoom State
-    let pixelsPerYear = 20;
+    let pixelsPerYear = $state(20);
+    // Room either side so the first and last labels sit fully on the track
+    const TRACK_PAD = 80;
+    let trackWidth = $derived(TRACK_PAD * 2 + (endYear - birthYear) * pixelsPerYear);
 
     function getPosition(year: number) {
-        return (year - birthYear) * pixelsPerYear;
+        return TRACK_PAD + (year - birthYear) * pixelsPerYear;
+    }
+
+    // One colour per event type, shared by the dots and the legend
+    const TYPE_STYLES: { type: LifeEvent["type"]; label: string; dot: string }[] = [
+        { type: "milestone", label: "Milestone", dot: "bg-purple-500" },
+        { type: "education", label: "Education", dot: "bg-blue-500" },
+        { type: "work", label: "Work", dot: "bg-emerald-500" },
+        { type: "relationship", label: "Relationship", dot: "bg-rose-500" },
+        { type: "accomplishment", label: "Accomplishment", dot: "bg-amber-500" },
+    ];
+    function dotClass(type: string) {
+        if (type === "future") return "bg-gray-400";
+        return TYPE_STYLES.find((t) => t.type === type)?.dot ?? "bg-purple-500";
     }
 
     // Reactively calculate Memento Mori Grid Data
@@ -199,14 +219,7 @@
     }
 </script>
 
-{#if isLoading}
-    <div class="flex items-center justify-center py-12">
-        <Loader2 class="w-8 h-8 animate-spin text-primary" />
-    </div>
-{:else}
-<div class="max-w-6xl mx-auto p-8 animate-in fade-in duration-500">
-    <!-- Header -->
-    <LivingBlueprintHeader
+<LivingBlueprintHeader
         title="The Life Timeline"
         subtitle="Your story isn't just a list of assets. It's a series of moments."
         tier="legacy"
@@ -224,6 +237,12 @@
         </div>
     </LivingBlueprintHeader>
 
+{#if isLoading}
+    <div class="flex items-center justify-center py-12">
+        <Loader2 class="w-8 h-8 animate-spin text-primary" />
+    </div>
+{:else}
+<div class="max-w-6xl mx-auto p-8 animate-in fade-in duration-500">
 
     <!-- Add Modal -->
     {#if showAddModal}
@@ -248,10 +267,11 @@
                 </div>
                 <div class="p-6 space-y-4">
                     <div class="space-y-1">
-                        <label class="text-xs font-bold uppercase text-gray-400"
+                        <label for="timeline-label" class="text-xs font-bold uppercase text-gray-400"
                             >Label</label
                         >
                         <input
+                            id="timeline-label"
                             bind:value={newEvent.label}
                             class="w-full p-2 rounded-lg border focus:ring-2 ring-[#4A7C74] outline-none"
                             placeholder="e.g. Started Business"
@@ -271,10 +291,12 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1">
                             <label
+                                for="timeline-date"
                                 class="text-xs font-bold uppercase text-gray-400"
                                 >Date</label
                             >
                             <input
+                                id="timeline-date"
                                 type="date"
                                 value={newEvent.date ||
                                     (newEvent.year
@@ -294,10 +316,12 @@
                         </div>
                         <div class="space-y-1">
                             <label
+                                for="timeline-type"
                                 class="text-xs font-bold uppercase text-gray-400"
                                 >Type</label
                             >
                             <select
+                                id="timeline-type"
                                 bind:value={newEvent.type}
                                 class="w-full p-2 rounded-lg border focus:ring-2 ring-[#4A7C74] outline-none bg-white"
                             >
@@ -316,10 +340,11 @@
                     </div>
 
                     <div class="space-y-1">
-                        <label class="text-xs font-bold uppercase text-gray-400"
+                        <label for="timeline-contact" class="text-xs font-bold uppercase text-gray-400"
                             >Designated Contact</label
                         >
                         <select
+                            id="timeline-contact"
                             bind:value={newEvent.assignedContactId}
                             class="w-full p-2 rounded-lg border focus:ring-2 ring-[#4A7C74] outline-none bg-white text-sm"
                         >
@@ -338,10 +363,12 @@
                         >
                             <div class="space-y-1">
                                 <label
+                                    for="timeline-category"
                                     class="text-xs font-bold uppercase text-gray-400"
                                     >Category</label
                                 >
                                 <select
+                                    id="timeline-category"
                                     bind:value={newEvent.category}
                                     class="w-full p-2 rounded-lg border focus:ring-2 ring-amber-400 outline-none bg-white"
                                 >
@@ -505,7 +532,7 @@
                             <div
                                 class="px-3 py-1 bg-amber-50 text-amber-700 text-[10px] font-black uppercase tracking-tighter rounded-full border border-amber-100"
                             >
-                                {trophy.category || "General"}
+                                {trophy.category || "Personal"}
                             </div>
                             <div
                                 class="text-xs font-bold text-stone-400 capitalize"
@@ -702,6 +729,56 @@
                 </div>
             {/if}
         </div>
+    {:else if viewMode === 'table' && lifeEvents.length > 0}
+        <!-- Table View -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <table class="w-full">
+                <thead class="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Year</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Label</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Type</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Details</th>
+                        <th class="px-4 py-3 text-right text-xs font-bold uppercase text-slate-500">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {#each [...lifeEvents].sort((a, b) => a.year - b.year) as event (event.id)}
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="px-4 py-3 text-sm font-bold text-slate-600">{event.year}</td>
+                            <td class="px-4 py-3 font-medium text-slate-800">{event.label}</td>
+                            <td class="px-4 py-3 text-sm text-slate-600">
+                                <span class="inline-flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full {dotClass(event.type)}"></span>
+                                    {TYPE_STYLES.find((t) => t.type === event.type)?.label ?? "Future Plan"}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-slate-600 max-w-xs truncate">{event.description || ''}</td>
+                            <td class="px-4 py-3 text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    <button
+                                        onclick={() => editEvent(event)}
+                                        class="p-1.5 text-slate-400 hover:text-primary transition-colors"
+                                        title="Edit Event"
+                                        aria-label="Edit Event"
+                                    >
+                                        <Pencil size={14} />
+                                    </button>
+                                    <button
+                                        onclick={() => removeEvent(event.id)}
+                                        class="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
+                                        title="Delete Event"
+                                        aria-label="Delete Event"
+                                    >
+                                        <Trash2 size={14} />
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    {/each}
+                </tbody>
+            </table>
+        </div>
     {:else}
         <!-- Timeline View -->
         <div
@@ -729,19 +806,13 @@
                     >
                 </div>
 
-                <div class="flex gap-4 text-sm text-gray-400">
-                    <div class="flex items-center gap-2">
-                        <div class="w-2 h-2 rounded-full bg-purple-500"></div>
-                        <span>Milestone</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <div class="w-2 h-2 rounded-full bg-blue-500"></div>
-                        <span>Education</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
-                        <span>Work</span>
-                    </div>
+                <div class="flex flex-wrap justify-end gap-4 text-sm text-gray-400">
+                    {#each TYPE_STYLES as t (t.type)}
+                        <div class="flex items-center gap-2">
+                            <div class="w-2 h-2 rounded-full {t.dot}"></div>
+                            <span>{t.label}</span>
+                        </div>
+                    {/each}
                 </div>
             </div>
 
@@ -756,14 +827,13 @@
                 <!-- Events -->
                 <div
                     class="relative h-64 transition-all duration-300"
-                    style="width: {(lifeExpectancy + 10) * pixelsPerYear}px"
+                    style="width: {trackWidth}px"
                 >
                     <!-- events logic -->
                     {#each lifeEvents as event, i (event.id)}
                         <div
                             class="absolute top-1/2 -translate-y-1/2 flex flex-col items-center group cursor-pointer w-12 -ml-6 z-10 hover:z-50 transition-all duration-200"
-                            style="left: {(event.year - birthYear) *
-                                pixelsPerYear}px"
+                            style="left: {getPosition(event.year)}px"
                             in:fly={{ y: 20, delay: i * 50 }}
                         >
                             <!-- Top Label (Alternating) -->
@@ -794,7 +864,7 @@
                                     class="relative z-10 w-12 h-12 rounded-full border-4 border-white shadow-lg flex items-center justify-center transition-transform group-hover:scale-110
                                 {event.year > currentYear
                                         ? 'bg-gray-100 text-gray-400 border-dashed border-gray-300'
-                                        : 'bg-[#304743] text-white'}"
+                                        : `${dotClass(event.type)} text-white`}"
                                 >
                                     <svelte:component
                                         this={getIcon(event.type)}
