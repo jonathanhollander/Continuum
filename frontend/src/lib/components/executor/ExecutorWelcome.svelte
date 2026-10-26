@@ -6,7 +6,7 @@
      * Gentle, compassionate first-time experience for executors
      */
 
-    import { Heart, Clock, Shield, CheckCircle } from 'lucide-svelte';
+    import { Heart, Clock, Shield, CheckCircle, X } from 'lucide-svelte';
     import { fade, fly } from 'svelte/transition';
     import { contextStore } from "$lib/stores/contextStore.svelte";
     import { logger } from "$lib/utils/logger";
@@ -46,6 +46,10 @@
         }
     }
 
+    function dismiss() {
+        if (!saving) onComplete();
+    }
+
     async function handleComplete() {
         if (saving) return;
         const owner = captureSession();
@@ -63,11 +67,15 @@
     }
 </script>
 
-<div role="dialog" aria-modal="true" aria-labelledby="executor-welcome-title" aria-busy={saving} use:focusTrap class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4" in:fade>
+<div role="dialog" aria-modal="true" aria-labelledby="executor-welcome-title" aria-busy={saving} use:focusTrap={{ onEscape: dismiss }} class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4" in:fade>
     <div
-        class="surface-dark max-w-2xl w-full bg-background text-foreground rounded-2xl border border-border shadow-2xl overflow-hidden"
+        class="surface-dark relative max-w-2xl w-full bg-background text-foreground rounded-2xl border border-border shadow-2xl overflow-hidden"
         in:fly={{ y: 20, duration: 500 }}
     >
+        <button type="button" aria-label="Close" onclick={dismiss} disabled={saving}
+            class="absolute top-4 right-4 p-2 rounded-lg text-muted-foreground hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-60">
+            <X size={20} />
+        </button>
         {#if step === 0}
             <!-- Step 1: Welcome -->
             <div class="p-8 md:p-12" in:fade>
@@ -100,7 +108,7 @@
                     </button>
                     <!-- Closes for now; the welcome returns on the next visit to the dashboard -->
                     <button
-                        onclick={() => onComplete()}
+                        onclick={dismiss}
                         class="px-6 py-3 text-muted-foreground hover:text-foreground transition-colors"
                     >
                         Come back to this later
