@@ -1,6 +1,6 @@
 # Continuum — Project Recovery Plan
 
-**Last Updated:** 2026-10-26 01:25 EST
+**Last Updated:** 2026-10-26 01:50 EST
 
 **Revised 2026-10-26** after the features/usability review (`docs/reviews/2026-10-25-features-usability/REVIEW.md`): the order is now built around the handover, not the existing navigation.
 
@@ -29,9 +29,13 @@ labelled or moved lower in the navigation, never removed.
 | Unmerged work | 15 remote branches, 4 of them `stash-backup/*` | `git branch -r` |
 | Open GitHub issues | 26 | `gh issue list` |
 
-What was **not** measured: a click-through of each page in a real browser. Browser
-automation was refused in this session ("Claude Code is running in don't ask mode"),
-so Phase 1 starts with that click-through.
+What was **not** measured in this first pass: a browser click-through. Browser automation
+was refused in that session ("Claude Code is running in don't ask mode"). Afterwards, the
+separate features/usability review
+(`docs/reviews/2026-10-25-features-usability/REVIEW.md`) ran a local browser walkthrough.
+It covered login, onboarding, contacts, financial entry, dashboard, binder and documents,
+plus 29 isolated API probes. Its findings (CU-001–CU-025) drive Phases B–E. Pages it did
+not exercise are covered by the full browser test in the release pass.
 
 ---
 
