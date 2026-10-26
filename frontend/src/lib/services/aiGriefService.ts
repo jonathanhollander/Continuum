@@ -4,6 +4,8 @@ import { callAiProxy } from './aiConciergeService';
 
 export interface GriefAIResponse {
     content: string;
+    /** True when the companion couldn't be reached; `content` then holds a gentle notice, not a reply. */
+    failed?: boolean;
     suggestedResources?: string[];
     suggestAction?: 'discovery' | 'hotline' | 'break';
 }
@@ -71,7 +73,10 @@ Example: { "message": "The silence they leave behind can be so loud... it's okay
         }
     } catch (error) {
         console.error('Grief AI Error:', error);
-        return { content: "I'm still here with you. My words aren't flowing as smoothly right now, but you're not alone. Take a gentle breath, and know that the resources in the sidebar are always available." };
+        return {
+            failed: true,
+            content: "I'm still here with you. My words aren't flowing as smoothly right now, but you're not alone. Take a gentle breath, and know that the resources in the sidebar are always available."
+        };
     }
 }
 

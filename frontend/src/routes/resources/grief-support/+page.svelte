@@ -138,6 +138,13 @@
         chatError = "";
         try {
             const response = await aiGriefService.chat(userMsg, chatHistory);
+            if (response.failed) {
+                // Keep the thread and the draft intact so Try again resends it once.
+                chatHistory = chatHistory.slice(0, -1);
+                chatInput = userMsg;
+                chatError = response.content;
+                return;
+            }
             chatHistory = [
                 ...chatHistory,
                 { role: "assistant", content: response.content },
@@ -168,7 +175,9 @@
             searchResults = response.results;
         } catch (e) {
             searchResults = [];
-            discoveryError = handleFetchError(e).message;
+            discoveryError = e instanceof Error && !(e instanceof TypeError)
+                ? e.message
+                : handleFetchError(e).message;
         } finally {
             isSearching = false;
         }
