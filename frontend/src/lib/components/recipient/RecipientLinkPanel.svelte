@@ -26,6 +26,8 @@
     // An earlier visit to this contact must not settle into a newly opened panel.
     let generation = 0;
     const isCurrent = (contact: string | null, version: number) => id === contact && generation === version;
+    let operationSeq = 0;
+    let requestedNote: { contact: string; version: number; draft: string } | null = null;
 
     $effect(() => {
         const current = id;
@@ -51,8 +53,12 @@
     async function run(kind: string, task: (contact: string) => Promise<RecipientLinkState>, done: string) {
         const current = id;
         const version = generation;
-        if (!current || busy !== null) return;
+        if (!current || (kind !== "note" && busy !== null)) return;
         const draft = note;
+        if (kind === "note" && requestedNote?.contact === current && requestedNote.version === version && requestedNote.draft === draft) return;
+        const noteRequest = kind === "note" ? { contact: current, version, draft } : null;
+        if (noteRequest) requestedNote = noteRequest;
+        const operation = ++operationSeq;
         // Flag/link operations save their own fields, so an already-edited note stays a draft.
         const keepDraft = kind !== "note" && note !== link?.note;
         busy = kind;
@@ -63,18 +69,20 @@
             link = saved;
             // A response confirms the submitted words, never words typed while it was pending.
             if (!keepDraft && note === draft) note = saved.note;
-            message = done;
+            if (operation === operationSeq) message = done;
         } catch {
-            if (isCurrent(current, version)) message = "Your sharing settings are just as they were. You can try again whenever you're ready.";
+            if (isCurrent(current, version) && operation === operationSeq) message = "Your sharing settings are just as they were. You can try again whenever you're ready.";
         } finally {
-            if (isCurrent(current, version)) busy = null;
+            if (requestedNote === noteRequest) requestedNote = null;
+            if (isCurrent(current, version) && operation === operationSeq) busy = null;
         }
     }
 
     const toggle = (on: boolean) =>
         run("flag", (contact) => updateRecipient(contact, { is_recipient: on }), on ? `${who} now has a start page of their own.` : `${who}'s start page is put away.`);
     // The note shows its own saved state (card U8), so the modal's footer only closes; it also
-    // saves when the field is left, so a note typed before closing the modal is kept.
+    // saves when the field is left, even while another change is pending. The service captures
+    // the contact, words and session now and serializes that request after the earlier mutation.
     function saveNote() {
         const draft = note;
         return run("note", (contact) => updateRecipient(contact, { note: draft }), "");
@@ -122,7 +130,7 @@
                     id="recipient-note"
                     bind:value={note}
                     onblur={() => {
-                        if (noteChanged && busy === null) saveNote();
+                        if (noteChanged) saveNote();
                     }}
                     rows="3"
                     placeholder="The first words they'll read on their page"
