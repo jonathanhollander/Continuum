@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Body
 from backend.limiter import limiter
 from sqlmodel import Session, select, func, and_, or_
-from sqlalchemy import Integer, DateTime
+from sqlalchemy import Integer, DateTime, update
 from datetime import datetime
 from typing import List, Any, Dict, Optional
 from pydantic import BaseModel, field_validator, model_validator
@@ -390,8 +390,24 @@ def update_item(
         if model is Asset and not _in_category(session, data_type, db_item):
             raise HTTPException(status_code=404, detail="That item may have been moved.")
 
-        # Support both raw body and wrapped { data: {...} } format for backwards compatibility
-        if "data" in body and isinstance(body["data"], dict) and len(body) == 1:
+        # Receipt recovery updates one current history list, only if its raw GET value
+        # is still unchanged. Other writes keep their existing raw/wrapped contract.
+        expected = None
+        if "if_unchanged" in body:
+            allowed = {"transactions", "maintenance", "claims"}
+            data = body.get("data")
+            expected = body["if_unchanged"]
+            if (data_type != "advanced_assets" or set(body) != {"data", "if_unchanged"}
+                    or not isinstance(data, dict) or not isinstance(expected, dict)
+                    or len(data) != 1 or set(data) != set(expected) or not set(data) <= allowed
+                    or any(value is not None and not isinstance(value, str) for value in expected.values())):
+                raise ValueError("Invalid conditional history update")
+            value = next(iter(data.values()))
+            parsed = json.loads(value) if isinstance(value, str) else value
+            if not isinstance(parsed, list):
+                raise ValueError("History updates require a list")
+            updates = data
+        elif "data" in body and isinstance(body["data"], dict) and len(body) == 1:
             updates = body["data"]
         else:
             updates = body
@@ -405,6 +421,21 @@ def update_item(
         _canonicalize(model, updates)
         if data_type in SINGLETON_TYPES:
             _encode_singleton_json(updates)
+
+        if expected is not None:
+            field, previous = next(iter(expected.items()))
+            column = getattr(model, field)
+            result = session.execute(update(model).where(
+                model.id == db_item.id, model.user_id == user.id,
+                column.is_(None) if previous is None else column == previous,
+            ).values(**updates).execution_options(synchronize_session=False))
+            if result.rowcount != 1:
+                session.rollback()
+                raise HTTPException(status_code=409, detail="This list changed. Your browser original is kept for another try.")
+            _log_estate_action(session, request, "update", user, data_type, item_id)
+            session.commit()
+            session.refresh(db_item)
+            return db_item
 
         for key, value in updates.items():
             if key == "custom_attributes" and isinstance(value, dict):

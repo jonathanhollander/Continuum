@@ -14,7 +14,7 @@ export interface PendingMediaSummary { id: string; filename: string; area: strin
 const areas: Record<string, string> = {
     heirlooms: 'heirlooms', properties: 'properties', visual_memories: 'visual-memories',
     time_capsules: 'time-capsule', documents: 'legal-documents', financial: 'financial-accounts',
-    insurance: 'insurance', pets: 'pets', medical_directives: 'medical'
+    insurance: 'insurance', pets: 'pets', medical_directives: 'medical', advanced_assets: 'advanced-registry', family_memories: 'family-hub'
 };
 function fileInfo(id: string, blob: Blob) {
     const [, module, referenceId] = id.split(':');
@@ -64,6 +64,47 @@ function collectionPath(section: string): string {
 }
 const rowId = (section: string, row: Record<string, unknown>) => section === 'medical_profiles' ? 'profile' : String(row.id);
 const snapshot = (owner: MediaOwner): Promise<Snapshot> => request('/api/export/snapshot', owner);
+const advancedLists: Record<string, string> = {
+    asset_transactions: 'transactions', maintenance_logs: 'maintenance', insurance_claims: 'claims',
+};
+type MediaParent = { section: string; id: string };
+
+/** Snapshot history rows live inside one raw singleton, rather than collection APIs. */
+async function repairAdvancedParents(parents: MediaParent[], ids: Set<number>, target: PendingMediaUpload, owner: MediaOwner): Promise<void> {
+    const history = parents.filter(parent => advancedLists[parent.section]);
+    if (!history.length) return;
+    const saved = await request('/api/data/advanced_assets', owner);
+    if (saved?.id == null) throw new Error('The saved record changed. Your browser copy is ready to save separately.');
+    for (const [section, field] of Object.entries(advancedLists)) {
+        const required = history.filter(parent => parent.section === section);
+        if (!required.length) continue;
+        const raw = saved[field];
+        let rows: unknown;
+        try { rows = typeof raw === 'string' ? JSON.parse(raw) : null; } catch { rows = null; }
+        if (!Array.isArray(rows)) throw new Error('The saved record changed. Your browser copy is ready to save separately.');
+        const objectRow = (row: unknown): row is Record<string, unknown> => !!row && typeof row === 'object' && !Array.isArray(row);
+        // Match export's fallback identity without inserting synthetic ids into saved rows.
+        const idOf = (row: Record<string, unknown>, index: number) => row.id == null || row.id === ''
+            ? `${saved.id}:${field}:${index}` : String(row.id);
+        for (const parent of required) {
+            const row = rows.find((row, index) => objectRow(row) && idOf(row, index) === parent.id);
+            if (!objectRow(row) || ![...mediaReferences(section, row).ids].some(mid => ids.has(mid))) {
+                throw new Error('The saved record changed. Your browser copy is ready to save separately.');
+            }
+        }
+        let changed = false;
+        const next = rows.map(row => {
+            if (!objectRow(row)) return row;
+            const { updates } = mediaReferences(section, row, { ids, target });
+            if (!Object.keys(updates).length) return row;
+            changed = true;
+            return { ...row, ...updates };
+        });
+        if (changed) await request(`/api/data/advanced_assets/${encodeURIComponent(saved.id)}`, owner, {
+            data: { [field]: JSON.stringify(next) }, if_unchanged: { [field]: raw },
+        });
+    }
+}
 async function exactCopy(id: number, original: Blob, owner: MediaOwner): Promise<boolean> {
     const verified = await verifyMediaRetrieval(id, original, owner.session);
     requireMediaOwner(owner);
@@ -95,7 +136,9 @@ async function recoverFile(id: string, owner: MediaOwner): Promise<void> {
         sourceIds.add(target.id);
         if (!(await exactCopy(target.id, pending.blob, owner))) throw new Error('The browser original is kept while its account copy waits to read back.');
     }
+    await repairAdvancedParents(parents, sourceIds, target, owner);
     for (const parent of parents) {
+        if (advancedLists[parent.section]) continue;
         const path = collectionPath(parent.section);
         const collection = await request(path, owner);
         const rows = Array.isArray(collection) ? collection : [collection];
