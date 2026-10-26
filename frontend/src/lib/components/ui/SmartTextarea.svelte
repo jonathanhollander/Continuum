@@ -8,11 +8,12 @@
         Lightbulb,
     } from "lucide-svelte";
     import {
-        draftFromBullets,
-        softenTone,
+        aiDraftText,
+        aiSoftenText,
         type WriterContext,
         CONTEXT_SUGGESTIONS,
     } from "$lib/services/writerService";
+    import { AI_UNAVAILABLE } from "$lib/services/aiConciergeService";
     import { fade, slide } from "svelte/transition";
 
     let {
@@ -50,8 +51,9 @@
     let mode = $state<"polish" | "draft">("polish");
     let isProcessing = $state(false);
 
-    // Suggestion State
+    // The AI's version waits here until the person chooses it; the field changes only then.
     let suggestion = $state<string | null>(null);
+    let notice = $state("");
 
     // Inputs
     let bullets = $state(["", "", ""]);
@@ -64,18 +66,23 @@
     );
 
     async function handleGenerate() {
-        if (mode === "draft" && bullets.every((b) => !b)) return;
-        if (mode === "polish" && !value) return;
+        if (isProcessing) return;
+        if (mode === "draft" && bullets.every((b) => !b.trim())) return;
+        if (mode === "polish" && !value?.trim()) return;
 
         isProcessing = true;
+        notice = "";
+        suggestion = null;
         try {
-            if (mode === "draft") {
-                suggestion = await draftFromBullets(bullets, context);
-            } else {
-                suggestion = await softenTone(value, context);
-            }
+            const result =
+                mode === "draft"
+                    ? await aiDraftText(bullets, context)
+                    : await aiSoftenText(value, sentimentValue, context);
+            if (result) suggestion = result;
+            else notice = AI_UNAVAILABLE;
         } catch (e) {
             console.error(e);
+            notice = (e as any)?.gentle && e instanceof Error && e.message ? e.message : AI_UNAVAILABLE;
         } finally {
             isProcessing = false;
         }
@@ -108,6 +115,7 @@
     function closeDrawer() {
         isDrawerOpen = false;
         suggestion = null;
+        notice = "";
         bullets = ["", "", ""];
         sentimentValue = 50;
     }
@@ -158,7 +166,7 @@
             type="button"
             aria-label="Writing help"
             onclick={() => (isDrawerOpen = !isDrawerOpen)}
-            class="absolute top-3 right-3 z-20 p-2 bg-white/80 backdrop-blur shadow-sm border border-slate-100 rounded-xl text-[#4A7C74] hover:scale-110 active:scale-95 transition-all opacity-0 group-hover:opacity-100 {isDrawerOpen
+            class="absolute top-3 right-3 z-20 p-2 bg-white/80 backdrop-blur shadow-sm border border-slate-100 rounded-xl text-[#4A7C74] hover:scale-110 active:scale-95 transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 {isDrawerOpen
                 ? '!opacity-100 bg-[#4A7C74] !text-white'
                 : ''}"
         >
@@ -177,11 +185,12 @@
                         <div
                             class="flex items-center gap-2 mb-4 text-[#4A7C74] font-bold text-xs uppercase tracking-widest"
                         >
-                            <Sparkles size={14} /> AI Suggestion
+                            <Sparkles size={14} /> A version for you to consider
                         </div>
 
                         <div
-                            class="p-4 bg-white border border-slate-200 rounded-xl text-sm leading-relaxed text-slate-700 italic mb-6 shadow-sm"
+                            class="max-h-64 overflow-y-auto whitespace-pre-wrap p-4 bg-white border border-slate-200 rounded-xl text-sm leading-relaxed text-slate-700 italic mb-6 shadow-sm"
+                            data-testid="writer-suggestion"
                         >
                             {suggestion}
                         </div>
@@ -190,23 +199,24 @@
                             <button
                                 type="button"
                                 onclick={() => (suggestion = null)}
-                                class="flex-1 py-2 px-4 bg-white border border-slate-200 rounded-lg text-slate-500 font-bold text-xs hover:bg-slate-50 flex items-center justify-center gap-2"
+                                class="flex-1 py-2 px-2 whitespace-nowrap bg-white border border-slate-200 rounded-lg text-slate-500 font-bold text-xs hover:bg-slate-50 flex items-center justify-center gap-2"
                             >
-                                <X size={14} /> Discard
+                                <X size={14} /> Keep my words
                             </button>
                             <button
                                 type="button"
                                 onclick={handleGenerate}
-                                class="flex-1 py-2 px-4 bg-white border border-slate-200 rounded-lg text-[#4A7C74] font-bold text-xs hover:bg-slate-50 flex items-center justify-center gap-2"
+                                disabled={isProcessing}
+                                class="flex-1 py-2 px-2 whitespace-nowrap bg-white border border-slate-200 rounded-lg text-[#4A7C74] font-bold text-xs hover:bg-slate-50 flex items-center justify-center gap-2"
                             >
                                 <RefreshCw size={14} /> Try Again
                             </button>
                             <button
                                 type="button"
                                 onclick={acceptSuggestion}
-                                class="flex-1 py-2 px-4 bg-[#4A7C74] text-white rounded-lg font-bold text-xs hover:bg-[#3b635d] flex items-center justify-center gap-2 shadow-sm"
+                                class="flex-1 py-2 px-2 whitespace-nowrap bg-[#4A7C74] text-white rounded-lg font-bold text-xs hover:bg-[#3b635d] flex items-center justify-center gap-2 shadow-sm"
                             >
-                                <Check size={14} /> Insert
+                                <Check size={14} /> Use this version
                             </button>
                         </div>
                     </div>
@@ -295,6 +305,9 @@
                                         {/if}
                                     </button>
                                 </div>
+                            {/if}
+                            {#if notice}
+                                <p class="mt-4 text-xs text-slate-500" role="status">{notice}</p>
                             {/if}
                         </div>
                     </div>
