@@ -221,6 +221,7 @@ def _messages_by_contact(session: Session, contact_ids: list, *conditions) -> di
     return grouped
 
 TIER_FAIL_TEXT = "This alert is waiting to be sent again to"  # owner-facing; the technical reason is logged only
+TIER_CAPPED_TEXT = "This alert needs attention."
 LEGACY_TIER_FAIL_TEXT = "We couldn't deliver this alert to"  # rows written before G2
 TIER_LOCAL_TEXT = "This alert is prepared in the local outbox."
 TIER_ACCEPTED_TEXT = "An email provider accepted this alert for sending."
@@ -242,16 +243,18 @@ def is_tier_accepted(message: str, tier_number: int) -> bool:
     return message in tier_accepted_texts(tier_number) or message.startswith(
         f"{tier_prefix(tier_number)}Escalation notification sent")
 
-def tier_result_text(result: "EmailResult", tier_number: int, contact_name: str) -> str:
+def tier_result_text(result: "EmailResult", tier_number: int, contact_name: str, attempt_number: int = 1) -> str:
     if result.provider_accepted:
         return tier_sent_text(tier_number)
     if result.delivery_state == "saved_local":
         return f"{tier_prefix(tier_number)}{TIER_LOCAL_TEXT}"
+    if attempt_number >= TIER_MAX_ATTEMPTS:
+        return f"{tier_prefix(tier_number)}{TIER_CAPPED_TEXT} A call or message can help you reach {contact_name} directly."
     return f"{tier_prefix(tier_number)}{TIER_FAIL_TEXT} {contact_name}."
 
 def is_tier_fail(message: str, tier_number: int) -> bool:
     p = tier_prefix(tier_number)
-    return message.startswith(p + TIER_FAIL_TEXT) or message.startswith(p + LEGACY_TIER_FAIL_TEXT)
+    return message.startswith((p + TIER_FAIL_TEXT, p + LEGACY_TIER_FAIL_TEXT, p + TIER_CAPPED_TEXT))
 
 def retry_failed_tier_sends(session: Session, user_id: int, since: datetime):
     """Finish failed sends for every tier reached in this outage, independently of progression.
@@ -273,7 +276,7 @@ def retry_failed_tier_sends(session: Session, user_id: int, since: datetime):
         if fails == len(msgs) and 0 < fails < TIER_MAX_ATTEMPTS:
             logger.warning(f"Retrying Tier {tier_number} alert to contact {contact.id} "
                            f"(attempt {fails + 1}/{TIER_MAX_ATTEMPTS})")
-            send_notification(session, contact, tier_number)
+            send_notification(session, contact, tier_number, attempt_number=fails + 1)
     session.commit()
 
 SAFETY_TIMER_LOG_TIER = 0  # PulseEscalationLog.tier_number marker for safety-timer alerts (no schema change)
@@ -380,7 +383,7 @@ def tier_alert_context(session: Session, contact: PulseContact, tier_number: int
             })
     return context
 
-def send_notification(session: Session, contact: PulseContact, tier_number: int):
+def send_notification(session: Session, contact: PulseContact, tier_number: int, attempt_number: int = 1):
     """
     Send escalation notification to guardian contact.
     Uses new template-based email service with proper delivery tracking.
@@ -425,7 +428,7 @@ def send_notification(session: Session, contact: PulseContact, tier_number: int)
         user_id=contact.user_id,
         contact_id=contact.id,
         direction="user_to_contact",  # System acting on behalf of user
-        message=tier_result_text(result, tier_number, contact.name)
+        message=tier_result_text(result, tier_number, contact.name, attempt_number)
     )
     if result.delivery_state == "failed":
         logger.error(f"Tier {tier_number} alert to contact {contact.id} failed: {result.error}")
@@ -560,7 +563,7 @@ def send_individual_alerts(session: Session, user_id: int, since: datetime,
         fails = sum(1 for m in msgs if is_tier_fail(m, n))
         if fails < len(msgs) or fails >= TIER_MAX_ATTEMPTS:
             continue  # accepted/prepared already, or out of failed attempts
-        send_notification(session, contact, n)
+        send_notification(session, contact, n, attempt_number=fails + 1)
 
 
 def contact_reach(session: Session, contact: PulseContact) -> Optional[int]:

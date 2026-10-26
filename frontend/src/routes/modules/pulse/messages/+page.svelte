@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onMount, tick } from "svelte";
     import { apiGet, apiPost } from "$lib/api/client";
     import { MessageSquare, Send, User, Reply, Inbox } from "lucide-svelte";
     import { slide, fade } from "svelte/transition";
@@ -9,6 +9,7 @@
     let tiers = $state<any[]>([]);
     let loading = $state(true);
     let composerOpen = $state(false);
+    let sourceMessageId = $state<number | null>(null);
 
     let newMessage = $state({
         contact_id: null as number | null,
@@ -17,6 +18,17 @@
 
     onMount(async () => {
         await refreshData();
+        const query = new URLSearchParams(window.location.search);
+        const contactId = Number(query.get("contact_id"));
+        const messageId = Number(query.get("message_id"));
+        if (messages.some((message) => message.id === messageId && message.contact_id === contactId)) {
+            newMessage.contact_id = contactId;
+            sourceMessageId = messageId;
+            await tick();
+            const source = document.getElementById(`pulse-message-${messageId}`);
+            source?.scrollIntoView({ block: "center" });
+            source?.focus({ preventScroll: true });
+        }
     });
 
     async function refreshData() {
@@ -76,6 +88,9 @@
     // count; the latest row of each group keeps its place and time.
     function getThreadForContact(contactId: number | null) {
         const msgs = getMessagesForContact(contactId);
+        if (sourceMessageId !== null) {
+            return msgs.map((message) => ({ ...message, system: isSystem(message.message), attempts: 1 }));
+        }
         const counts = new Map<string, number>();
         for (const m of msgs) {
             if (isSystem(m.message)) {
@@ -181,6 +196,7 @@
                             ? 'bg-primary/10 border-l-2 border-l-primary'
                             : ''}"
                         onclick={() => {
+                            sourceMessageId = null;
                             newMessage.contact_id = contact.id;
                             composerOpen = true; // Always show composer in thread view
                         }}
@@ -242,7 +258,7 @@
                     class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950/50"
                 >
                     <div class="font-medium text-foreground">
-                        {activeContact?.name}
+                        {activeContact?.name ?? "Saved contact"}
                     </div>
                     {#if activeTier}
                         <span
@@ -259,6 +275,8 @@
                     <!-- Flex-col-reverse keeps scroll at bottom usually, but map order matters. Let's stick to standard order. -->
                     {#each getThreadForContact(newMessage.contact_id) as msg}
                         <div
+                            id={`pulse-message-${msg.id}`}
+                            tabindex="-1"
                             class="flex gap-3 max-w-[80%] {msg.direction ===
                             'user_to_contact'
                                 ? 'ml-auto flex-row-reverse'
@@ -294,9 +312,10 @@
                                     <span
                                         class="block mt-1 text-[11px] not-italic text-warning/90"
                                         data-testid="alert-attempts"
-                                        >Sent {msg.attempts} times</span
+                                        >{msg.attempts} recorded attempts</span
                                     >
                                 {/if}
+                                {#if sourceMessageId === msg.id}<span class="block mt-2 text-xs not-italic text-primary">Saved message #{msg.id}</span>{/if}
                                 <div
                                     class="mt-1 text-[10px] opacity-50 {msg.system
                                         ? 'text-center'

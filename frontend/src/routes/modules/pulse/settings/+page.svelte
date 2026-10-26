@@ -30,9 +30,17 @@
     // would post all six of them over the person's saved choices, so the controls wait for it.
     let loaded = $state(false);
 
+    let now = $state(Date.now());
+    // The scheduler pauses only while the saved UTC time is in the future.
+    const restIsActive = (until: string | null, at = Date.now()) =>
+        until !== null && Date.parse(until) > at;
+    const resting = $derived(restIsActive(settings.ghost_mode_until, now));
+
     onMount(() => {
         loadSettings();
         loadTiers();
+        const clock = setInterval(() => { now = Date.now(); }, 1000);
+        return () => clearInterval(clock);
     });
 
     const settingsNotice = "Your saved check-in choices are still on your account. Let's try loading them again.";
@@ -90,7 +98,8 @@
 
     function toggleGhostMode() {
         const before = settings.ghost_mode_until;
-        if (settings.ghost_mode_until) {
+        now = Date.now();
+        if (restIsActive(before, now)) {
             settings.ghost_mode_until = null;
         } else {
             const date = new Date();
@@ -255,7 +264,7 @@
             >
                 <div class="flex items-center gap-2 mb-4 relative z-10">
                     <Ghost
-                        class="w-5 h-5 {settings.ghost_mode_until
+                        class="w-5 h-5 {resting
                             ? 'text-purple-400'
                             : 'text-muted-foreground'}"
                     />
@@ -266,10 +275,10 @@
                 <p
                     class="text-sm text-muted-foreground mb-6 relative z-10 leading-relaxed"
                 >
-                    Rest for 7 days. Your circle is told you are resting, and
-                    alerts wait until you return.
+                    Pause wellness check-in reminders and escalation alerts for 7 days.
+                    Your existing check-in timing applies when rest ends.
                 </p>
-                {#if settings.ghost_mode_until}
+                {#if resting}
                     <div
                         class="absolute inset-x-0 bottom-0 h-1 bg-purple-500/30"
                     ></div>
@@ -277,20 +286,20 @@
                         class="text-[10px] text-purple-300 font-mono mb-3 relative z-10 tracking-widest uppercase"
                     >
                         Active until: {new Date(
-                            settings.ghost_mode_until,
-                        ).toLocaleDateString()}
+                            settings.ghost_mode_until!,
+                        ).toLocaleString()}
                     </p>
                 {/if}
                 <button
                     onclick={toggleGhostMode}
                     disabled={!loaded}
-                    class="w-full py-2.5 rounded-xl border transition-all text-sm font-bold relative z-10 {settings.ghost_mode_until
+                    class="w-full py-2.5 rounded-xl border transition-all text-sm font-bold relative z-10 {resting
                         ? 'bg-purple-900/30 border-purple-500/50 text-purple-200 scale-[0.98]'
                         : 'bg-card border-border text-slate-300 hover:bg-slate-700 hover:border-slate-600'}"
                 >
                     {!loaded
                         ? "Rest Mode"
-                        : settings.ghost_mode_until
+                        : resting
                           ? "Return from rest"
                           : "Rest for 7 days"}
                 </button>
