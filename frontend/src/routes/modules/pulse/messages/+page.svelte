@@ -6,6 +6,7 @@
 
     let messages = $state<any[]>([]);
     let contacts = $state<any[]>([]);
+    let tiers = $state<any[]>([]);
     let loading = $state(true);
     let composerOpen = $state(false);
 
@@ -24,6 +25,10 @@
                 apiGet("/api/pulse/messages"),
                 apiGet("/api/pulse/contacts"),
             ]);
+            // Only fetch tiers when a contact has one (GET /tiers seeds defaults when empty).
+            if (contacts.some((c) => c.tier_id)) {
+                tiers = await apiGet("/api/pulse/tiers");
+            }
         } catch (e) {
             console.error(e);
         } finally {
@@ -88,13 +93,21 @@
         return msgs.length > 0 ? msgs[msgs.length - 1].sent_at : null;
     }
 
+    function stripAlertPrefix(text: string) {
+        return text.replace(/^\[System Alert Tier \d+\] /, "");
+    }
+
+    function tierNumberFor(contact: any) {
+        return tiers.find((t) => t.id === contact?.tier_id)?.tier_number;
+    }
+
     function getLastMessagePreview(contactId: number) {
         const msgs = getMessagesForContact(contactId);
         if (msgs.length === 0) return "";
         const last = msgs[msgs.length - 1];
         return (
             (last.direction === "contact_to_user" ? "Them: " : "You: ") +
-            last.message
+            stripAlertPrefix(last.message)
         );
     }
 </script>
@@ -199,6 +212,7 @@
                 {@const activeContact = contacts.find(
                     (c) => c.id === newMessage.contact_id,
                 )}
+                {@const activeTier = tierNumberFor(activeContact)}
                 <!-- Thread Header -->
                 <div
                     class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950/50"
@@ -206,9 +220,12 @@
                     <div class="font-medium text-slate-200">
                         {activeContact?.name}
                     </div>
-                    <span class="text-xs text-slate-500"
-                        >Tier {activeContact?.tier_id}</span
-                    >
+                    {#if activeTier}
+                        <span
+                            class="text-xs text-slate-500"
+                            data-testid="thread-tier">Tier {activeTier}</span
+                        >
+                    {/if}
                 </div>
 
                 <!-- Messages Area -->
@@ -250,11 +267,7 @@
                                         >Automated System Log</span
                                     >
                                 {/if}
-                                {msg.message
-                                    .replace("[System Alert Tier 1] ", "")
-                                    .replace("[System Alert Tier 2] ", "")
-                                    .replace("[System Alert Tier 3] ", "")
-                                    .replace("[System Alert Tier 4] ", "")}
+                                {stripAlertPrefix(msg.message)}
                                 {#if msg.attempts > 1}
                                     <span
                                         class="block mt-1 text-[11px] not-italic text-amber-300/80"

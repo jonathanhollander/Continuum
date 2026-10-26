@@ -28,7 +28,7 @@ class EmailStatusResponse(BaseModel):
     recipient_name: Optional[str]
     subject: str
     template_name: Optional[str]
-    status: str  # pending, sent, failed, saved_local
+    status: str  # pending, sent, failed, saved_local, resent
     provider: str  # postmark, smtp, local
     provider_message_id: Optional[str]
     error_message: Optional[str]
@@ -190,7 +190,7 @@ def resend_email(
             detail="Email log not found"
         )
 
-    if email_log.status == "sent":
+    if email_log.status in ("sent", "resent"):
         logger.info(
             f"Attempted to resend already-sent email {email_log_id}",
             extra={"context": {"email_log_id": email_log_id}}
@@ -201,24 +201,49 @@ def resend_email(
         }
 
     # Attempt resend: rebuild the payload from the log row (send_email takes only payload=).
+    # EmailLog keeps no template context, so only templates whose context can be rebuilt
+    # from stored data are resent; the rest get a gentle pointer instead.
     from backend.services.email_service import email_service, EmailResult
 
     gentle_failure = {
         "status": "failed",  # machine value; the message is what people read
         "message": "We'll keep this message here so it can be sent again later."
     }
+    template_name = email_log.template_name or ""
+    if template_name == "magic_link":
+        return {"status": "request_new",
+                "message": "A fresh sign-in link is ready to request from the sign-in page."}
     try:
+        if template_name == "welcome":
+            context = {"dashboard_url": f"{settings.get_frontend_url()}/dashboard"}
+        elif template_name.startswith("pulse_escalation_tier") and template_name[-1:].isdigit():
+            from backend.pulse_logic import tier_alert_context
+            from backend.pulse_models import PulseContact
+            contact = session.exec(select(PulseContact).where(
+                PulseContact.user_id == email_log.user_id,
+                PulseContact.email == email_log.recipient_email
+            ).order_by(PulseContact.id)).first()
+            if not contact:
+                return {"status": "send_fresh",
+                        "message": "This alert is best sent fresh from the Pulse page."}
+            context = tier_alert_context(session, contact, int(template_name[-1]))
+        else:
+            # e.g. pulse_safety_timer: the timer it belonged to is unrecorded
+            return {"status": "send_fresh",
+                    "message": "This message is best sent fresh from the page it came from."}
+
         payload = email_service._build_payload(
             to_email=email_log.recipient_email,
             recipient_name=email_log.recipient_name or (email_log.recipient_email or "").split('@')[0].title() or "Friend",
             subject=email_log.subject,
-            template_name=email_log.template_name or "welcome",
-            template_context={},
+            template_name=template_name,
+            template_context=context,
             user_id=email_log.user_id
         )
         result = payload if isinstance(payload, EmailResult) else \
             email_service.send_email(payload=payload, db_session=session)
     except Exception as e:
+        session.rollback()
         logger.error(
             f"Resend of email {email_log_id} raised",
             extra={"context": {"email_log_id": email_log_id, "error": str(e),
@@ -233,6 +258,11 @@ def resend_email(
             extra={"context": {"email_log_id": email_log_id, "error": result.error}}
         )
         return gentle_failure
+
+    # The resend wrote its own log row; mark the original so it isn't offered again.
+    email_log.status = "resent"
+    session.add(email_log)
+    session.commit()
 
     logger.info(
         f"Email {email_log_id} resent",
