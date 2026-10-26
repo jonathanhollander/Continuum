@@ -127,6 +127,8 @@ class Settings(BaseSettings):
     GITHUB_TOKEN: Optional[str] = None
     OPENROUTER_API_KEY: Optional[str] = None
     VITE_OPENROUTER_API_KEY: Optional[str] = None  # legacy name; used if OPENROUTER_API_KEY is unset
+    BIFROST_BASE_URL: Optional[str] = None
+    BIFROST_VIRTUAL_KEY: Optional[str] = None
     TAVILY_API_KEY: Optional[str] = None
 
     # Railway Specific
