@@ -249,10 +249,12 @@ export class SyncManager<T extends { id: number | string }> {
         const payloadRaw = this.mapper ? this.mapper(data as any) : data;
         const payload = toWire(payloadRaw);
 
-        // Clean ID for creation
-        if (payload.id && typeof payload.id === 'string' && payload.id.length > 10) {
-            delete payload.id;
-        }
+        // The server assigns these on every create (every model's id is a server default or autoincrement;
+        // /api/data rejects them as protected). The caller keeps the returned record, with the server's id.
+        delete payload.id;
+        delete payload.user_id;
+        delete payload.created_at;
+        delete payload.updated_at;
 
         const res = await fetch(`${BASE_URL}${this.apiBase}/${this.endpoint}`, {
             method: "POST",
