@@ -20,6 +20,8 @@ interface AuthState {
     isAuthenticated: boolean;
     loading: boolean;
     error: string | null;
+    /** True when tokens exist but the server could not be reached */
+    offline?: boolean;
 }
 
 const token = browser ? localStorage.getItem('continuum_auth_token') : null;
@@ -113,7 +115,7 @@ function createAuthStore() {
                         });
                     } else if (!refreshed.definite) {
                         // Could not reach the server: keep the tokens for the next try
-                        update(s => ({ ...s, loading: false, error: 'Could not reach the server' }));
+                        update(s => ({ ...s, token, isAuthenticated: true, offline: true, loading: false, error: 'Could not reach the server' }));
                         return;
                     }
                 }
@@ -127,19 +129,19 @@ function createAuthStore() {
                     if (user.onboarding_completed) {
                         preferenceStore.setOnboardingComplete(true);
                     }
-                    update(s => ({ ...s, token, user, isAuthenticated: true, loading: false }));
+                    update(s => ({ ...s, token, user, isAuthenticated: true, offline: false, loading: false }));
                 } else if (res.status === 401) {
                     // Definitely signed out (refresh also refused)
                     clearTokens();
-                    update(s => ({ ...s, token: null, user: null, isAuthenticated: false, loading: false }));
+                    update(s => ({ ...s, token: null, user: null, isAuthenticated: false, offline: false, loading: false }));
                 } else {
                     // Server trouble (5xx etc.): keep tokens
-                    update(s => ({ ...s, loading: false, error: 'Could not reach the server' }));
+                    update(s => ({ ...s, token, isAuthenticated: true, offline: true, loading: false, error: 'Could not reach the server' }));
                 }
             } catch (e) {
                 // Network failure: keep the tokens so a reload once back online still works
                 console.error("Auth init failed", e);
-                update(s => ({ ...s, loading: false, error: 'Failed to initialize authentication' }));
+                update(s => ({ ...s, token, isAuthenticated: true, offline: true, loading: false, error: 'Failed to initialize authentication' }));
             }
         },
 

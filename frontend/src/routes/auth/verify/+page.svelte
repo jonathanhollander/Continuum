@@ -3,6 +3,7 @@
     import { goto } from "$app/navigation";
     import { page } from "$app/stores";
     import { API_BASE_URL } from "$lib/config";
+    import { auth, storeTokens } from "$lib/stores/auth";
     import { Shield, CheckCircle2, AlertCircle, Loader2 } from "lucide-svelte";
     import { fade, fly } from "svelte/transition";
 
@@ -29,11 +30,8 @@
 
             const { access_token, refresh_token } = await res.json();
 
-            // Store token
-            if (typeof localStorage !== "undefined") {
-                localStorage.setItem("continuum_auth_token", access_token);
-                if (refresh_token) localStorage.setItem("continuum_refresh_token", refresh_token);
-            }
+            storeTokens(access_token, refresh_token);
+            await auth.init();
 
             status = "success";
 

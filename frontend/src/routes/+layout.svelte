@@ -278,7 +278,7 @@
 			const isPublicRoute =
 				isWizardRoute || isMarketingRoute || isAuthRoute;
 
-			if (!isPublicRoute && !$auth.user && !$auth.token) {
+			if (!isPublicRoute && !$auth.user && !$auth.token && !$auth.offline) {
 				console.log(
 					"[Layout] Unauthorized access to protected route, redirecting to login...",
 				);
