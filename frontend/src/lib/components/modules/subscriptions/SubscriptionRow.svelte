@@ -51,10 +51,12 @@
             <div>
                 <h3 class="font-bold text-slate-800">{sub.name}</h3>
                 <div class="flex items-center gap-2 text-xs text-slate-500">
-                    <CreditCard class="w-3 h-3" />
-                    <span>{sub.paymentMethod}</span>
+                    {#if sub.paymentMethod}
+                        <CreditCard class="w-3 h-3" />
+                        <span>{sub.paymentMethod}</span>
+                    {/if}
                     {#if nextDate}
-                        <span>•</span>
+                        {#if sub.paymentMethod}<span>•</span>{/if}
                         <Calendar class="w-3 h-3" />
                         <span>Next: {nextDate}</span>
                     {/if}
@@ -72,13 +74,15 @@
                 </div>
             </div>
 
-            <span
-                class="px-2.5 py-1 rounded-full text-xs font-bold {difficultyColors[
-                    sub.difficulty
-                ] || 'bg-slate-100 text-slate-600'}"
-            >
-                {sub.difficulty} Cancel
-            </span>
+            {#if sub.difficulty}
+                <span
+                    class="px-2.5 py-1 rounded-full text-xs font-bold {difficultyColors[
+                        sub.difficulty
+                    ] || 'bg-slate-100 text-slate-600'}"
+                >
+                    {sub.difficulty} Cancel
+                </span>
+            {/if}
         </div>
     </div>
 
