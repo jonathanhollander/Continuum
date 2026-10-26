@@ -122,7 +122,7 @@
         return {
             name,
             type,
-            value: 0,
+            value: null, // blank until the person adds one, so the audit asks for it
             location: "TBD",
             notes: note,
             valueHistory: [],
