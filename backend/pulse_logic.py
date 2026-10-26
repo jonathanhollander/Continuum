@@ -196,6 +196,19 @@ def trigger_escalation(session: Session, user_id: int, tier_number: int, referen
 
     session.commit()
 
+def _messages_by_contact(session: Session, contact_ids: list, *conditions) -> dict:
+    """PulseMessage texts for these contacts, matching `conditions`, grouped by contact_id
+    in id order. One IN query in place of one query per contact."""
+    grouped: dict = {}
+    if not contact_ids:
+        return grouped
+    for contact_id, message in session.exec(
+            select(PulseMessage.contact_id, PulseMessage.message)
+            .where(col(PulseMessage.contact_id).in_(contact_ids), *conditions)
+            .order_by(PulseMessage.id)).all():
+        grouped.setdefault(contact_id, []).append(message)
+    return grouped
+
 TIER_FAIL_TEXT = "We couldn't deliver this alert to"  # owner-facing; the technical reason is logged only
 TIER_MAX_ATTEMPTS = 3
 
@@ -207,15 +220,18 @@ def retry_failed_tier_sends(session: Session, log: PulseEscalationLog):
     """Re-send the current tier to contacts whose only attempts since it triggered failed,
     up to TIER_MAX_ATTEMPTS each (same pattern as safety timers). Does not touch tier timing."""
     prefix = f"[System Alert Tier {log.tier_number}] "
-    for contact in session.exec(select(PulseContact).where(
+    contacts = session.exec(select(PulseContact).where(
             PulseContact.user_id == log.user_id,
             PulseContact.tier_id == select(PulseEscalationTier.id).where(
                 PulseEscalationTier.user_id == log.user_id,
                 PulseEscalationTier.tier_number == log.tier_number
-            ).order_by(PulseEscalationTier.id).limit(1).scalar_subquery())).all():
-        msgs = session.exec(select(PulseMessage.message).where(
-            PulseMessage.contact_id == contact.id, PulseMessage.sent_at >= log.triggered_at,
-            col(PulseMessage.message).startswith(prefix))).all()
+            ).order_by(PulseEscalationTier.id).limit(1).scalar_subquery())).all()
+    # One query for every contact's tier rows (a send only adds rows for its own contact)
+    by_contact = _messages_by_contact(session, [c.id for c in contacts],
+                                      PulseMessage.sent_at >= log.triggered_at,
+                                      col(PulseMessage.message).startswith(prefix))
+    for contact in contacts:
+        msgs = by_contact.get(contact.id, [])
         fails = sum(1 for m in msgs if m.startswith(prefix + TIER_FAIL_TEXT))
         if fails == len(msgs) and 0 < fails < TIER_MAX_ATTEMPTS:
             logger.warning(f"Retrying Tier {log.tier_number} alert to contact {contact.id} "
@@ -240,12 +256,13 @@ def trigger_safety_timer_alert(session: Session, timer) -> bool:
         )
     ).all()
     sent_msg, fail_msg = _timer_marker(timer.id, "alert sent"), _timer_marker(timer.id, "send failed")
+    # One query for every contact's rows for this timer (a send only adds rows for its own contact)
+    by_contact = _messages_by_contact(session, [c.id for c in contacts],
+                                      PulseMessage.user_id == timer.user_id,
+                                      col(PulseMessage.message).startswith(_timer_marker(timer.id, "")))
     done = True
     for contact in contacts:
-        msgs = session.exec(select(PulseMessage.message).where(
-            PulseMessage.user_id == timer.user_id, PulseMessage.contact_id == contact.id,
-            col(PulseMessage.message).startswith(_timer_marker(timer.id, ""))
-        )).all()
+        msgs = by_contact.get(contact.id, [])
         if any(m.startswith(sent_msg) for m in msgs):
             continue
         fails = sum(1 for m in msgs if m.startswith(fail_msg))
