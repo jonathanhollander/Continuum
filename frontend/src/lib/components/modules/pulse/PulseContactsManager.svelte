@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
+    import { focusTrap } from "$lib/actions/focusTrap";
     import {
         Users,
         Plus,
@@ -248,6 +249,7 @@
                                 <div class="flex items-center gap-2">
                                     <input
                                         type="number"
+                                        aria-label="hours"
                                         class="w-12 bg-slate-900 border border-teal-500/50 rounded px-1 py-0.5 text-xs text-white"
                                         bind:value={tier.delay_hours}
                                     />
@@ -256,21 +258,21 @@
                                     >
                                     <button
                                         onclick={() => updateTier(tier)}
+                                        aria-label="Save"
                                         class="text-emerald-400 hover:text-emerald-300"
                                     >
                                         <Check class="w-3 h-3" />
                                     </button>
                                 </div>
                             {:else if viewMode !== "contacts"}
-                                <span
-                                    class="text-[10px] text-slate-500 uppercase tracking-widest bg-slate-900/50 px-2 py-0.5 rounded border border-slate-700 flex items-center gap-2 group/edit cursor-pointer hover:border-teal-500/30 transition-colors"
+                                <button
+                                    type="button"
+                                    class="text-[10px] text-slate-500 uppercase tracking-widest bg-slate-900/50 px-2 py-0.5 rounded border border-slate-700 flex items-center gap-2 cursor-pointer hover:border-teal-500/30 transition-colors"
                                     onclick={() => (editingTierId = tier.id)}
                                 >
                                     +{tier.delay_hours}h default
-                                    <Pencil
-                                        class="w-2 h-2 opacity-0 group-hover/edit:opacity-100 transition-opacity"
-                                    />
-                                </span>
+                                    <Pencil class="w-2 h-2" />
+                                </button>
                             {:else}
                                 <span
                                     class="text-[10px] text-slate-500 uppercase tracking-widest bg-slate-900/50 px-2 py-0.5 rounded border border-slate-700"
@@ -318,6 +320,7 @@
                                     <button
                                         onclick={() =>
                                             deleteContact(contact.id)}
+                                        aria-label="Remove {contact.name}"
                                         class="text-slate-600 hover:text-rose-400 transition-colors"
                                     >
                                         <Trash2 class="w-4 h-4" />
@@ -341,6 +344,7 @@
                                             >
                                                 <input
                                                     type="number"
+                                                    aria-label="Custom Delay (h)"
                                                     bind:value={
                                                         contact.individual_delay_hours
                                                     }
@@ -399,6 +403,10 @@
     <!-- ADD GUARDIAN MODAL -->
     {#if showAddGuardianModal}
         <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="guardian-dialog-title"
+            use:focusTrap={{ onEscape: () => (showAddGuardianModal = false) }}
             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
             transition:fade
         >
@@ -408,8 +416,8 @@
                 <div
                     class="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-950/50"
                 >
-                    <h3 class="font-bold text-slate-200">Select Guardian</h3>
-                    <button onclick={() => (showAddGuardianModal = false)}>
+                    <h3 id="guardian-dialog-title" class="font-bold text-slate-200">Select Guardian</h3>
+                    <button onclick={() => (showAddGuardianModal = false)} aria-label="Close">
                         <X class="w-5 h-5 text-slate-500 hover:text-white" />
                     </button>
                 </div>
@@ -450,7 +458,7 @@
                                         name="guardian"
                                         value={contact.id}
                                         bind:group={selectedContactId}
-                                        class="hidden"
+                                        class="sr-only"
                                     />
                                     <div
                                         class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-300"

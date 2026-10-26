@@ -392,7 +392,7 @@
                     <button
                         on:click={() => openEdit(msg)}
                         aria-label="Edit this capsule"
-                        class="p-2 text-slate-300 hover:text-emerald-700 transition-colors opacity-0 group-hover:opacity-100"
+                        class="p-2 text-slate-300 hover:text-emerald-700 transition-colors"
                     >
                         <Pencil size={16} />
                     </button>
@@ -512,13 +512,13 @@
                                 <button
                                     on:click={() => openEdit(msg)}
                                     aria-label="Edit this capsule"
-                                    class="opacity-0 group-hover:opacity-100 p-1 text-slate-300 hover:text-indigo-600 transition-all"
+                                    class="p-1 text-slate-300 hover:text-indigo-600 transition-all"
                                 >
                                     <Pencil size={16} />
                                 </button>
                                 <button aria-label="Remove this item"
                                     on:click={() => timeCapsuleStore.removeMessage(msg.id)}
-                                    class="opacity-0 group-hover:opacity-100 p-1 text-slate-300 hover:text-rose-500 transition-all"
+                                    class="p-1 text-slate-300 hover:text-rose-500 transition-all"
                                 >
                                     <Trash2 size={16} />
                                 </button>

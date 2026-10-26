@@ -120,7 +120,7 @@
 >
     <!-- Header Section -->
     <LivingBlueprintHeader
-        title="QR Access Center"
+        title="QR Access Codes"
         subtitle="Bridge the gap between physical reality and digital security"
         tier="protection"
         detailedDescription="Generate encrypted access keys and asset labels that connect your physical belongings to digital documentation. Create QR codes for your Red Binder that give your executor instant access to critical information."
@@ -460,7 +460,7 @@
                                             </button>
                                             <button aria-label="Remove this item"
                                                 onclick={() => deleteAssetQR(label.assetId, label.assetName)}
-                                                class="p-1 text-slate-300 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100"
+                                                class="p-1 text-slate-300 hover:text-rose-500 transition-colors"
                                             >
                                                 <Trash2 size={16} />
                                             </button>

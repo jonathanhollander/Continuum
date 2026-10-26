@@ -757,7 +757,7 @@
                                                     <td class="px-4 py-3 text-slate-600 text-sm">{memory.date || '-'}</td>
                                                     <td class="px-4 py-3 text-slate-500 text-sm">{memory.author || '-'}</td>
                                                     <td class="px-4 py-3 text-right">
-                                                        <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <div class="flex items-center justify-end gap-1 transition-opacity">
                                                             <button aria-label="Edit these details"
                                                                 onclick={() => editMemory(memory)}
                                                                 class="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-blue-500"

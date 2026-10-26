@@ -239,12 +239,14 @@
 
                         <!-- Actions -->
                         <div
-                            class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2"
+                            class="absolute top-2 right-2 transition-opacity flex gap-2"
                         >
                             <button
                                 class="p-2 bg-white/80 backdrop-blur rounded-full hover:bg-white text-slate-500 hover:text-red-500 transition-colors"
                                 onclick={(e) =>
                                     toggleFavorite(String(memory.id), e)}
+                                aria-label="Favorite"
+                                aria-pressed={!!(memory.is_favorite || (memory as any).isFavorite)}
                             >
                                 <Heart
                                     size={14}
@@ -291,6 +293,7 @@
                 class="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/40 text-white hover:bg-black/60 disabled:opacity-30 backdrop-blur transition-all"
                 onclick={prevImage}
                 disabled={activeIndex === 0}
+                aria-label="Previous"
             >
                 <ChevronLeft size={24} />
             </button>
@@ -299,6 +302,7 @@
                 class="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/40 text-white hover:bg-black/60 disabled:opacity-30 backdrop-blur transition-all"
                 onclick={nextImage}
                 disabled={activeIndex === memories.length - 1}
+                aria-label="Next"
             >
                 <ChevronRight size={24} />
             </button>
@@ -330,6 +334,8 @@
                         class="p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors mb-1"
                         onclick={() =>
                             onToggleFavorite?.(String(memories[activeIndex].id))}
+                        aria-label="Favorite"
+                        aria-pressed={!!(memories[activeIndex].is_favorite || (memories[activeIndex] as any).isFavorite)}
                     >
                         <Heart
                             size={20}
@@ -352,6 +358,8 @@
                                 ? 'border-white opacity-100 scale-105'
                                 : 'border-transparent opacity-50 hover:opacity-80'}"
                             onclick={() => (activeIndex = i)}
+                            aria-label={mem.name}
+                            aria-current={i === activeIndex}
                         >
                             {#if mem.type === "video"}
                                 <video src={srcOf(mem)} muted preload="metadata" onloadedmetadata={showFirstFrame} class="w-full h-full object-cover"></video>
@@ -371,6 +379,7 @@
             <button
                 class="absolute top-4 right-4 p-2 bg-black/20 hover:bg-black/40 rounded-full text-white backdrop-blur transition-colors"
                 onclick={() => (viewMode = "grid")}
+                aria-label="Close"
             >
                 <X size={20} />
             </button>

@@ -107,7 +107,7 @@
                 <Settings2 size={18} />
                 Estate Complexity:
                 <span class="text-indigo-600 capitalize"
-                    >{$estateComplexity.level}</span
+                    >{($estateComplexity?.level ?? "moderate")}</span
                 >
             </button>
         </div>
@@ -137,7 +137,7 @@
                                 acceptanceStore.setComplexity(
                                     level as EstateComplexity,
                                 )}
-                            class="p-4 rounded-xl border-2 transition-all text-left space-y-2 {$estateComplexity.level ===
+                            class="p-4 rounded-xl border-2 transition-all text-left space-y-2 {($estateComplexity?.level ?? 'moderate') ===
                             level
                                 ? 'bg-white/10 border-white'
                                 : 'bg-transparent border-white/20 hover:border-white/40'}"
@@ -145,7 +145,7 @@
                             <div class="flex items-center justify-between">
                                 <span class="font-bold capitalize">{level}</span
                                 >
-                                {#if $estateComplexity.level === level}
+                                {#if ($estateComplexity?.level ?? "moderate") === level}
                                     <CircleCheck
                                         size={16}
                                         class="text-emerald-400"
@@ -385,7 +385,7 @@
         </div>
         <div class="flex-1 text-center md:text-left">
             <h4 class="font-bold text-slate-900">
-                Why use the Builder's Console?
+                Why use Builder Tools?
             </h4>
             <p class="text-slate-600 text-sm mt-1">
                 This console ensures the plan you've built is actually ready for

@@ -11,6 +11,7 @@
         Flame,
     } from "lucide-svelte";
     import { createEventDispatcher } from "svelte";
+    import { focusTrap } from "$lib/actions/focusTrap";
 
     const dispatch = createEventDispatcher();
 
@@ -99,6 +100,10 @@
 </script>
 
 <div
+    role="dialog"
+    aria-modal="true"
+    aria-label="The Fire Drill"
+    use:focusTrap={{ onEscape: close }}
     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md"
     transition:fade
 >
@@ -109,6 +114,7 @@
         <!-- Close Button -->
         <button
             on:click={close}
+            aria-label="Close"
             class="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors"
         >
             <X size={20} />

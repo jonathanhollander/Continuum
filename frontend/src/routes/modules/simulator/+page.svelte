@@ -153,7 +153,7 @@
     <div class="mb-12 flex items-center justify-between">
         <div>
             <h1 class="font-serif font-bold text-4xl text-[#304743] mb-2">
-                Scenario Simulator
+                Practice Run
             </h1>
             <p class="text-lg text-muted-foreground">
                 Stress-test your estate plan against real-world events.

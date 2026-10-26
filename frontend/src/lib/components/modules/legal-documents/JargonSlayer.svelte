@@ -9,6 +9,7 @@
     import { EXAMPLE_WILL, type ExplainedTerm } from "$lib/services/legalService";
     import { fade, slide, scale } from "svelte/transition";
     import { cubicOut } from "svelte/easing";
+    import { focusTrap } from "$lib/actions/focusTrap";
 
     let { onclose }: { onclose: () => void } = $props();
 
@@ -40,30 +41,21 @@
             selectedTerm = null;
         }
     }
-
-    function handleKeydown(e: KeyboardEvent) {
-        if (e.key === "Escape") {
-            onclose();
-        }
-    }
 </script>
-
-<svelte:window onkeydown={handleKeydown} />
 
 <div
     class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
     role="dialog"
     aria-modal="true"
+    aria-labelledby="jargon-dialog-title"
+    use:focusTrap={{ onEscape: onclose }}
 >
     <!-- Backdrop -->
     <div
         class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
         transition:fade={{ duration: 200 }}
         onclick={onclose}
-        onkeydown={(e) => e.key === "Enter" && onclose()}
-        role="button"
-        tabindex="0"
-        aria-label="Close modal"
+        role="presentation"
     ></div>
 
     <!-- Panel -->
@@ -92,6 +84,7 @@
                             <BookOpenText size={14} /> Example
                         </div>
                         <h3
+                            id="jargon-dialog-title"
                             class="text-2xl font-bold font-serif text-slate-900"
                         >
                             An example will, explained

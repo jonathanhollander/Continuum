@@ -188,7 +188,7 @@
                 <div class="p-2.5 bg-indigo-100 rounded-xl text-indigo-700">
                     <History class="w-8 h-8" />
                 </div>
-                Activity Log
+                Activity History
             </h1>
             <p class="text-slate-500 mt-2 text-lg">
                 Complete audit trail of all changes across your estate plan.

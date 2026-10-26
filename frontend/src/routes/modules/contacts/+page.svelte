@@ -472,7 +472,7 @@
                             <button
                                 onclick={() => deleteContact(contact.id)}
                                 aria-label="Remove {contact.name}"
-                                class="absolute top-4 right-4 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                class="absolute top-4 right-4 text-slate-300 hover:text-red-500 transition-opacity"
                             >
                                 <Trash2 size={16} />
                             </button>
@@ -579,7 +579,7 @@
                                         <button
                                             onclick={() => deleteContact(contact.id)}
                                             aria-label="Remove {contact.name}"
-                                            class="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            class="text-slate-300 hover:text-red-500 transition-opacity"
                                         >
                                             <Trash2 size={16} />
                                         </button>

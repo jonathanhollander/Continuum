@@ -1,5 +1,6 @@
 <script lang="ts">
     import { fade, scale } from "svelte/transition";
+    import { focusTrap } from "$lib/actions/focusTrap";
     import { Plus, Search, X } from "lucide-svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
@@ -93,6 +94,10 @@
     <!-- Add Modal -->
     {#if showAddModal}
         <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="life-lesson-dialog-title"
+            use:focusTrap={{ onEscape: () => (showAddModal = false) }}
             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
             transition:fade
         >
@@ -103,10 +108,10 @@
                 <div
                     class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50"
                 >
-                    <h3 class="font-serif font-bold text-xl text-[#304743]">
+                    <h3 id="life-lesson-dialog-title" class="font-serif font-bold text-xl text-[#304743]">
                         {editingId !== undefined ? "Refine this lesson" : "Share Wisdom"}
                     </h3>
-                    <button onclick={() => (showAddModal = false)}
+                    <button onclick={() => (showAddModal = false)} aria-label="Close"
                         ><X
                             size={20}
                             class="text-gray-400 hover:text-gray-600"
@@ -251,7 +256,8 @@
                             e.stopPropagation();
                             removeLesson(lesson.id);
                         }}
-                        class="absolute top-2 right-2 p-1.5 bg-gray-50 rounded-full text-gray-300 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all"
+                        aria-label="Remove this item"
+                        class="absolute top-2 right-2 p-1.5 bg-gray-50 rounded-full text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all"
                     >
                         <X size={14} />
                     </button>

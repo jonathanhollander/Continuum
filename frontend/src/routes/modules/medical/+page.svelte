@@ -235,8 +235,8 @@
 <div class="max-w-5xl mx-auto space-y-8 p-4 md:p-8">
     <!-- Header -->
     <LivingBlueprintHeader
-        title="Your Voice at the End of Life"
-        subtitle="Ensure your values are honored when you can't speak for yourself"
+        title="Health & Medical"
+        subtitle="Your Voice at the End of Life"
         tier="preparation"
         detailedDescription="Your voice in healthcare decisions matters, even when you can't speak for yourself. Document your directives and medical history to guide your advocates."
         whyMatters="Medical uncertainty places a heavy burden on families. Clear directives relieve them of agonizing guessing games and ensure your care aligns with your values."

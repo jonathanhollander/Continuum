@@ -138,6 +138,7 @@
                         min="0"
                         max="100"
                         bind:value={sentimentValue}
+                        aria-label="Tone Softener"
                         class="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-[#4A7C74]"
                     />
                     <div

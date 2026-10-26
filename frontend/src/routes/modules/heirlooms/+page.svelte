@@ -447,7 +447,7 @@
                                 <td class="px-4 py-3 text-sm text-slate-600">{heirloom.recipient || '-'}</td>
                                 <td class="px-4 py-3 text-sm text-slate-600 max-w-xs truncate">{heirloom.story || '-'}</td>
                                 <td class="px-4 py-3 text-right">
-                                    <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div class="flex items-center justify-end gap-2 transition-opacity">
                                         <button
                                             onclick={() => openQrModal(heirloom)}
                                             class="p-1.5 text-slate-400 hover:text-primary transition-colors"
