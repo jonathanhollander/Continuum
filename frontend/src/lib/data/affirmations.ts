@@ -126,11 +126,18 @@ export const affirmations = {
     ],
 } as const;
 
+/** What the save did: a new record ("added" lines) or a change to one ("updated" lines). */
+export type AffirmationKind = 'create' | 'update';
+
 /**
- * Get a random affirmation for a specific module
+ * Get a random affirmation for a specific module.
+ * With a kind, a change never says "added" and a new record never says "updated".
  */
-export function getRandomAffirmation(module: keyof typeof affirmations = 'general'): Affirmation {
-    const moduleAffirmations = affirmations[module] || affirmations.general;
+export function getRandomAffirmation(module: keyof typeof affirmations = 'general', kind?: AffirmationKind): Affirmation {
+    const pool: readonly Affirmation[] = affirmations[module] || affirmations.general;
+    const skip = kind === 'update' ? /\badded\b/i : kind === 'create' ? /\bupdated\b/i : null;
+    const fitting = skip ? pool.filter((a) => !skip.test(a.secondary)) : pool;
+    const moduleAffirmations = fitting.length ? fitting : pool;
     const randomIndex = Math.floor(Math.random() * moduleAffirmations.length);
     return moduleAffirmations[randomIndex];
 }
