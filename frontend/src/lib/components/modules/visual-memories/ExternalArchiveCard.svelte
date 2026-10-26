@@ -53,18 +53,20 @@
 
         <!-- Actions -->
         <div
-            class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+            class="flex gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"
         >
             <button
-                class="p-2 hover:bg-muted rounded-lg text-muted-foreground hover:text-primary transition-colors"
+                class="p-2 hover:bg-muted rounded-lg text-muted-foreground hover:text-primary transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 title="Edit"
+                aria-label="Edit {archive.platform}"
                 onclick={() => onedit?.(archive)}
             >
                 <Edit2 size={16} />
             </button>
             <button
-                class="p-2 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-colors"
+                class="p-2 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 title="Remove"
+                aria-label="Remove {archive.platform}"
                 onclick={() => ondelete?.(archive.id)}
             >
                 <Trash2 size={16} />
