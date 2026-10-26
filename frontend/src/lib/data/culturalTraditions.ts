@@ -61,14 +61,14 @@ export const culturalTraditions: Record<string, TraditionGuide> = {
                 checklist: [
                     "Contact the local Chevra Kadisha",
                     "Suspend daily religious obligations (for immediate mourners)",
-                    "Do not leave the body alone (Shmira)"
+                    "Arrange for someone to stay with the body until burial (Shmira)"
                 ]
             },
             {
                 title: "The Funeral (Levayah)",
                 content: [
                     "The service is simple, emphasizing the reality of death and the soul's return to God.",
-                    "Flowers are traditionally NOT displayed. Instead, visitors may make charitable donations."
+                    "Visitors traditionally honor the person with charitable donations in place of flowers."
                 ]
             },
             {
@@ -90,7 +90,7 @@ export const culturalTraditions: Record<string, TraditionGuide> = {
                 title: "Celebration of Life",
                 content: [
                     "The focus is entirely on the life lived, relationships, and impact on others.",
-                    "There is no set structure—it can be a party, a dinner, a hike, or a formal seated event."
+                    "It can take any shape—a party, a dinner, a hike, or a formal seated event."
                 ],
                 checklist: [
                     "Choose a meaningful venue (park, favorite restaurant, community center)",

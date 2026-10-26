@@ -64,7 +64,7 @@
             goal: "they know their role",
         },
         hasDigital: {
-            label: "Digital Kill Switch Readiness",
+            label: "Digital Accounts Plan",
             goal: "there are instructions for all accounts",
         },
         hasHeirlooms: {
@@ -101,7 +101,7 @@
                 Future Scenarios
             </h1>
             <p class="text-muted-foreground mt-2 text-lg">
-                Stress-test your estate's readiness for real-world scenarios.
+                See how ready your plan is for the moments that matter.
             </p>
         </div>
         <div
@@ -179,7 +179,7 @@
                         <h3
                             class="text-xs font-black uppercase tracking-widest text-muted-foreground mb-6 flex items-center gap-2"
                         >
-                            <Users size={14} /> Chain of Command
+                            <Users size={14} /> Who Steps In
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div
@@ -274,7 +274,7 @@
                                     </div>
                                     <div>
                                         <h4 class="font-bold text-foreground">
-                                            Digital Kill Switch Readiness
+                                            Digital Accounts Plan
                                         </h4>
                                         <p
                                             class="text-sm text-muted-foreground font-medium"
