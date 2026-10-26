@@ -1,22 +1,18 @@
 <script lang="ts">
-    import { pulse } from "$lib/stores/pulse.svelte";
     import { onMount } from "svelte";
     import { page } from "$app/stores";
     import { API_BASE_URL } from "$lib/config";
     import {
         ShieldCheck,
         Clock,
-        MapPin,
         Heart,
         ShieldAlert,
-        MessageSquare,
         Activity,
         Lock,
         Unlock,
-        FileText,
         Cat,
     } from "lucide-svelte";
-    import { fade, slide } from "svelte/transition";
+    import { slide } from "svelte/transition";
     import LivingMesh from "$lib/components/pulse/LivingMesh.svelte";
 
     let state = $state({
@@ -27,6 +23,20 @@
         hugError: false,
         vaultItems: [] as any[],
     });
+
+    // The API sends naive UTC timestamps (no "Z"); read them as UTC, not local time
+    function parseUtc(ts: string): Date {
+        return new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(ts) ? ts : ts + "Z");
+    }
+
+    let lastCheckinText = $derived(
+        state.data?.last_checkin
+            ? parseUtc(state.data.last_checkin).toLocaleString([], {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+              })
+            : null,
+    );
 
     onMount(async () => {
         const token = $page.params.token;
@@ -53,8 +63,12 @@
                     if (vRes.ok) state.vaultItems = await vRes.json();
                 }
             } else {
-                state.error = "Invalid or expired access token.";
+                state.error =
+                    "This link may have expired or been replaced. The person who shared it can send you a new one.";
             }
+        } catch (e) {
+            state.error =
+                "We couldn't reach the page just now. Please try again in a little while.";
         } finally {
             state.loading = false;
         }
@@ -96,7 +110,7 @@
             >
                 <ShieldAlert class="w-16 h-16 text-rose-500 mx-auto mb-4" />
                 <h2 class="text-2xl font-serif text-white mb-2">
-                    Access Denied
+                    This link isn't active
                 </h2>
                 <p class="text-slate-400">{state.error}</p>
             </div>
@@ -109,7 +123,10 @@
                     <!-- Status Ring -->
                     <div class="relative">
                         <div
-                            class="absolute inset-0 bg-teal-500/20 rounded-full blur-2xl animate-pulse"
+                            class="absolute inset-0 {state.data.user_status ===
+                            'active'
+                                ? 'bg-teal-500/20'
+                                : 'bg-amber-500/20'} rounded-full blur-2xl animate-pulse"
                         ></div>
                         <div
                             class="w-32 h-32 md:w-40 md:h-40 border-4 border-slate-800 rounded-full flex items-center justify-center relative z-10"
@@ -128,19 +145,25 @@
 
                     <div class="flex-1 text-center md:text-left space-y-4">
                         <div
-                            class="flex items-center justify-center md:justify-start gap-3"
+                            class="flex flex-wrap items-center justify-center md:justify-start gap-x-3 gap-y-2"
                         >
                             <div
-                                class="px-3 py-1 rounded-full bg-teal-500/20 border border-teal-500/30 text-[10px] uppercase font-bold tracking-[0.2em] text-teal-400"
+                                class="px-3 py-1 rounded-full whitespace-nowrap text-[10px] uppercase font-bold tracking-[0.2em] {state
+                                    .data.user_status === 'active'
+                                    ? 'bg-teal-500/20 border border-teal-500/30 text-teal-400'
+                                    : 'bg-amber-500/20 border border-amber-500/30 text-amber-300'}"
                             >
                                 {state.data.user_status === "active"
-                                    ? "Heartbeat Active"
-                                    : "Seeking Connection"}
+                                    ? "Checked in recently"
+                                    : "Hasn't checked in for a little while"}
                             </div>
                             <div
-                                class="flex items-center gap-2 text-[10px] text-slate-500 uppercase font-bold tracking-widest"
+                                class="flex items-center gap-2 whitespace-nowrap text-[10px] text-slate-500 uppercase font-bold tracking-widest"
                             >
-                                <Activity class="w-3 h-3 text-emerald-500" /> Online
+                                <Activity class="w-3 h-3 text-slate-500" />
+                                {lastCheckinText
+                                    ? `Last check-in ${lastCheckinText}`
+                                    : "No check-ins yet"}
                             </div>
                         </div>
                         <h1 class="text-3xl md:text-4xl font-serif text-white">
@@ -150,14 +173,18 @@
                             class="text-slate-400 text-sm leading-relaxed max-w-md"
                         >
                             {#if state.data.user_status === "active"}
-                                Everything looks normal. A check-in was
-                                successfully recorded earlier today. You can
-                                send a gentle ping to let them know you're
-                                thinking of them.
+                                {state.data.user_name} checked in recently, on
+                                {lastCheckinText}. All is well for now. You can
+                                send a hug to let them know you're thinking of
+                                them.
+                            {:else if lastCheckinText}
+                                {state.data.user_name} hasn't checked in for a
+                                little while. Their last check-in was on
+                                {lastCheckinText}. A hug or a quick hello from
+                                you may help.
                             {:else}
-                                A scheduled check-in was missed. We are
-                                monitoring the situation and notifying the inner
-                                circle in priority order.
+                                {state.data.user_name} hasn't checked in yet. A
+                                hug or a quick hello from you may help.
                             {/if}
                         </p>
                     </div>
@@ -167,14 +194,14 @@
                         <button
                             onclick={sendHug}
                             disabled={state.hugSent}
-                            class="bg-teal-500 hover:bg-teal-400 disabled:bg-slate-800 text-slate-950 font-bold px-8 py-4 rounded-2xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-teal-500/20"
+                            class="bg-teal-500 hover:bg-teal-400 disabled:bg-slate-800 disabled:text-teal-300 text-slate-950 font-bold px-8 py-4 rounded-2xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-teal-500/20"
                         >
                             <Heart
                                 class="w-5 h-5 {state.hugSent
                                     ? 'fill-current'
                                     : ''}"
                             />
-                            {state.hugSent ? "Hug Received" : "Send a Hug"}
+                            {state.hugSent ? "Hug sent" : "Send a Hug"}
                         </button>
                         {#if state.hugError}
                             <p class="text-xs text-amber-300 text-center max-w-[16rem]">
@@ -192,105 +219,33 @@
                 </div>
             </div>
 
-            <!-- CARDS GRID -->
-            <div class="grid md:grid-cols-2 gap-6">
-                <!-- Pulse Heartbeat (Mock Memories) -->
+            <!-- SHARED NOTES: the owner's Pulse vault, opened only once escalation reaches this guardian's tier -->
+            {#if state.vaultItems.length === 0}
                 <div
                     class="bg-slate-900/40 border border-slate-800 rounded-2xl p-8 backdrop-blur-md"
                 >
-                    <div class="flex items-center gap-3 mb-6">
+                    <div class="flex items-center gap-3 mb-4">
                         <div
-                            class="w-10 h-10 rounded-full bg-teal-500/10 flex items-center justify-center text-teal-400"
+                            class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400"
                         >
-                            <Heart class="w-5 h-5" />
+                            <Lock class="w-5 h-5" />
                         </div>
                         <h3 class="font-medium text-slate-100">
-                            Legacy Heartbeat
+                            Notes shared with you
                         </h3>
                     </div>
-                    <div
-                        class="aspect-video bg-slate-950 rounded-2xl overflow-hidden relative mb-4 border border-slate-800"
-                    >
-                        <div
-                            class="absolute inset-0 bg-gradient-to-t from-slate-950/80 to-transparent z-10"
-                        ></div>
-                        <div class="absolute bottom-4 left-4 right-4 z-20">
-                            <p
-                                class="text-[10px] text-teal-300 font-bold uppercase tracking-widest mb-1"
-                            >
-                                Random Memory Share
-                            </p>
-                            <p class="text-xs text-slate-300 italic">
-                                "Remembering the trip to the lake house, summer
-                                2024."
-                            </p>
-                        </div>
-                        <div
-                            class="absolute inset-0 flex items-center justify-center opacity-20"
-                        >
-                            <ShieldCheck class="w-20 h-20" />
-                        </div>
-                    </div>
-                    <p class="text-xs text-slate-500 leading-relaxed">
-                        This memory was automatically shared as part of today's
-                        successful health pulse.
+                    <p class="text-sm text-slate-400 leading-relaxed">
+                        {#if state.data.show_sensitive}
+                            {state.data.user_name} hasn't left any notes here
+                            for you yet.
+                        {:else}
+                            If {state.data.user_name} has left notes for you,
+                            they'll appear here only if they're ever needed.
+                            There's nothing you need to do right now.
+                        {/if}
                     </p>
                 </div>
-
-                <!-- Emergency Docs (Simulated Safe Pass) -->
-                <div
-                    class="bg-slate-900/40 border border-slate-800 rounded-2xl p-8 backdrop-blur-md"
-                >
-                    <div class="flex items-center gap-3 mb-6">
-                        <div
-                            class="w-10 h-10 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-400"
-                        >
-                            <FileText class="w-5 h-5" />
-                        </div>
-                        <h3 class="font-medium text-slate-100">
-                            Safe-Pass Access
-                        </h3>
-                    </div>
-
-                    {#if state.data.user_status === "active"}
-                        <div class="space-y-4">
-                            <div
-                                class="p-4 rounded-2xl border border-dashed border-slate-800 text-center"
-                            >
-                                <Lock
-                                    class="w-8 h-8 text-slate-700 mx-auto mb-2"
-                                />
-                                <p
-                                    class="text-[10px] text-slate-500 uppercase tracking-widest leading-relaxed"
-                                >
-                                    Documents Encrypted.<br />Lock expires
-                                    during Tier 4 escalation.
-                                </p>
-                            </div>
-                            <div class="text-[10px] text-slate-600 italic">
-                                Expected contents: Advance Directives, DNR
-                                Instructions, Physician Info.
-                            </div>
-                        </div>
-                    {:else}
-                        <div class="space-y-3" in:fade>
-                            <button
-                                class="w-full bg-slate-800 p-4 rounded-xl flex items-center justify-between border border-slate-700 group hover:border-teal-500/50 transition-colors"
-                            >
-                                <div class="flex items-center gap-3">
-                                    <FileText class="w-5 h-5 text-teal-400" />
-                                    <span class="text-sm font-medium"
-                                        >Medical Directives.pdf</span
-                                    >
-                                </div>
-                                <Unlock
-                                    class="w-4 h-4 text-slate-600 group-hover:text-teal-400"
-                                />
-                            </button>
-                        </div>
-                    {/if}
-                </div>
-            </div>
+            {/if}
 
             <!-- VAULT DISCLOSURE (Gate codes / Pet care) -->
             {#if state.vaultItems.length > 0}
@@ -305,7 +260,7 @@
                             <Unlock class="w-5 h-5" />
                         </div>
                         <h3 class="font-medium text-slate-100 italic">
-                            Emergency Protocols Unlocked
+                            Notes {state.data.user_name} shared with you
                         </h3>
                     </div>
 
