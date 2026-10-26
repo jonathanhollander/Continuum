@@ -59,24 +59,24 @@
 
         <!-- Panel -->
         <div
-            class="relative w-full {maxWidth} bg-white rounded-2xl shadow-2xl ring-1 ring-slate-900/5 overflow-hidden flex flex-col max-h-[90vh]"
+            class="relative w-full {maxWidth} bg-card rounded-2xl shadow-2xl ring-1 ring-border overflow-hidden flex flex-col max-h-[90vh]"
             transition:scale={{ duration: 250, start: 0.95, easing: cubicOut }}
         >
             <!-- Header -->
             <div
-                class="flex items-start justify-between px-6 py-4 border-b border-slate-100 bg-white sticky top-0 z-10"
+                class="flex items-start justify-between px-6 py-4 border-b border-border bg-card sticky top-0 z-10"
             >
                 <div class="flex-1 pr-4">
                     {#if title}
-                        <h2 id="{uid}-title" class="{description ? 'font-serif font-bold text-xl' : 'text-lg font-semibold'} text-slate-800">{title}</h2>
+                        <h2 id="{uid}-title" class="{description ? 'font-serif font-bold text-xl' : 'text-lg font-semibold'} text-foreground">{title}</h2>
                     {/if}
                     {#if description}
-                        <p id="{uid}-desc" class="text-slate-500 text-sm mt-2 leading-relaxed">{description}</p>
+                        <p id="{uid}-desc" class="text-muted-foreground text-sm mt-2 leading-relaxed">{description}</p>
                     {/if}
                 </div>
                 <button
                     type="button"
-                    class="p-2 -mr-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors flex-shrink-0"
+                    class="p-2 -mr-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-full transition-colors flex-shrink-0"
                     onclick={close}
                     aria-label="Close"
                 >

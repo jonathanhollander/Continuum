@@ -135,7 +135,7 @@
             for={fieldId}
             class={hideLabel
                 ? "sr-only"
-                : "block text-xs font-bold uppercase tracking-widest text-slate-500 ml-1"}
+                : "block text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1"}
             >{label}</label
         >
     {/if}
@@ -150,7 +150,7 @@
             onchange={handleChange}
             class="w-full outline-none resize-none transition-all relative z-10 {minimal
                 ? 'bg-transparent border-none p-0 focus:ring-0 shadow-none'
-                : 'bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-medium focus:ring-2 focus:ring-[#4A7C74]/20 focus:bg-white'}"
+                : 'bg-muted border border-border rounded-2xl p-4 text-sm font-medium focus:ring-2 focus:ring-primary/20 focus:bg-card'}"
             style="min-height: {minHeight}; height: {minimal ? '100%' : 'auto'}"
         ></textarea>
 
@@ -166,8 +166,8 @@
             type="button"
             aria-label="Writing help"
             onclick={() => (isDrawerOpen = !isDrawerOpen)}
-            class="absolute top-3 right-3 z-20 p-2 bg-white/80 backdrop-blur shadow-sm border border-slate-100 rounded-xl text-[#4A7C74] hover:scale-110 active:scale-95 transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 {isDrawerOpen
-                ? '!opacity-100 bg-[#4A7C74] !text-white'
+            class="absolute top-3 right-3 z-20 p-2 bg-card/80 backdrop-blur shadow-sm border border-border rounded-xl text-primary hover:scale-110 active:scale-95 transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 {isDrawerOpen
+                ? '!opacity-100 bg-primary !text-primary-foreground'
                 : ''}"
         >
             <Sparkles size={16} />
@@ -177,19 +177,19 @@
         {#if isDrawerOpen}
             <div
                 transition:slide
-                class="absolute top-full left-0 right-0 z-20 mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden"
+                class="absolute top-full left-0 right-0 z-20 mt-2 bg-card rounded-2xl shadow-xl border border-border overflow-hidden"
             >
                 {#if suggestion}
                     <!-- Review State -->
-                    <div class="p-6 bg-[#FBF9EB]/50">
+                    <div class="p-6 bg-gold/5">
                         <div
-                            class="flex items-center gap-2 mb-4 text-[#4A7C74] font-bold text-xs uppercase tracking-widest"
+                            class="flex items-center gap-2 mb-4 text-primary-hover font-bold text-xs uppercase tracking-widest"
                         >
                             <Sparkles size={14} /> A version for you to consider
                         </div>
 
                         <div
-                            class="max-h-64 overflow-y-auto whitespace-pre-wrap p-4 bg-white border border-slate-200 rounded-xl text-sm leading-relaxed text-slate-700 italic mb-6 shadow-sm"
+                            class="max-h-64 overflow-y-auto whitespace-pre-wrap p-4 bg-card border border-border rounded-xl text-sm leading-relaxed text-foreground italic mb-6 shadow-sm"
                             data-testid="writer-suggestion"
                         >
                             {suggestion}
@@ -199,7 +199,7 @@
                             <button
                                 type="button"
                                 onclick={() => (suggestion = null)}
-                                class="flex-1 py-2 px-2 whitespace-nowrap bg-white border border-slate-200 rounded-lg text-slate-500 font-bold text-xs hover:bg-slate-50 flex items-center justify-center gap-2"
+                                class="flex-1 py-2 px-2 whitespace-nowrap bg-card border border-border rounded-lg text-muted-foreground font-bold text-xs hover:bg-muted flex items-center justify-center gap-2"
                             >
                                 <X size={14} /> Keep my words
                             </button>
@@ -207,14 +207,14 @@
                                 type="button"
                                 onclick={handleGenerate}
                                 disabled={isProcessing}
-                                class="flex-1 py-2 px-2 whitespace-nowrap bg-white border border-slate-200 rounded-lg text-[#4A7C74] font-bold text-xs hover:bg-slate-50 flex items-center justify-center gap-2"
+                                class="flex-1 py-2 px-2 whitespace-nowrap bg-card border border-border rounded-lg text-primary font-bold text-xs hover:bg-muted flex items-center justify-center gap-2"
                             >
                                 <RefreshCw size={14} /> Try Again
                             </button>
                             <button
                                 type="button"
                                 onclick={acceptSuggestion}
-                                class="flex-1 py-2 px-2 whitespace-nowrap bg-[#4A7C74] text-white rounded-lg font-bold text-xs hover:bg-[#3b635d] flex items-center justify-center gap-2 shadow-sm"
+                                class="flex-1 py-2 px-2 whitespace-nowrap bg-primary text-primary-foreground rounded-lg font-bold text-xs hover:bg-primary-hover flex items-center justify-center gap-2 shadow-sm"
                             >
                                 <Check size={14} /> Use this version
                             </button>
@@ -224,13 +224,13 @@
                     <!-- Controls State -->
                     <div>
                         <!-- Tabs -->
-                        <div class="flex border-b border-slate-100">
+                        <div class="flex border-b border-border">
                             <button
                                 type="button"
                                 class="flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors {mode ===
                                 'polish'
-                                    ? 'bg-[#FBF9EB] text-[#4A7C74]'
-                                    : 'text-slate-400 hover:text-slate-600'}"
+                                    ? 'bg-gold/10 text-primary-hover'
+                                    : 'text-muted-foreground hover:text-foreground'}"
                                 onclick={() => (mode = "polish")}
                             >
                                 Polish Tone
@@ -239,19 +239,19 @@
                                 type="button"
                                 class="flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors {mode ===
                                 'draft'
-                                    ? 'bg-[#FBF9EB] text-[#4A7C74]'
-                                    : 'text-slate-400 hover:text-slate-600'}"
+                                    ? 'bg-gold/10 text-primary-hover'
+                                    : 'text-muted-foreground hover:text-foreground'}"
                                 onclick={() => (mode = "draft")}
                             >
                                 Draft from Bullets
                             </button>
                         </div>
 
-                        <div class="p-6 bg-[#FBF9EB]/30">
+                        <div class="p-6 bg-gold/5">
                             {#if mode === "polish"}
                                 <div class="space-y-4">
                                     <div
-                                        class="flex justify-between text-xs font-bold text-slate-400 uppercase"
+                                        class="flex justify-between text-xs font-bold text-muted-foreground uppercase"
                                     >
                                         <span>Professional</span>
                                         <span>Warm & Human</span>
@@ -261,13 +261,13 @@
                                         min="0"
                                         max="100"
                                         bind:value={sentimentValue}
-                                        class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#4A7C74]"
+                                        class="w-full h-2 bg-border rounded-lg appearance-none cursor-pointer accent-primary"
                                     />
                                     <button
                                         type="button"
                                         onclick={handleGenerate}
                                         disabled={!value || isProcessing}
-                                        class="w-full py-2 bg-white border border-slate-200 text-[#4A7C74] rounded-lg font-bold text-xs hover:bg-white/80 disabled:opacity-50 transition-all flex items-center justify-center gap-2 mt-4"
+                                        class="w-full py-2 bg-card border border-border text-primary rounded-lg font-bold text-xs hover:bg-card/80 disabled:opacity-50 transition-all flex items-center justify-center gap-2 mt-4"
                                     >
                                         {#if isProcessing}
                                             <RefreshCw
@@ -285,7 +285,7 @@
                                         <input
                                             type="text"
                                             bind:value={bullets[i]}
-                                            class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-[#4A7C74]"
+                                            class="w-full bg-card border border-border rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-primary"
                                             placeholder="Fact or memory..."
                                         />
                                     {/each}
@@ -293,7 +293,7 @@
                                         type="button"
                                         onclick={handleGenerate}
                                         disabled={isProcessing}
-                                        class="w-full py-2 bg-[#4A7C74] text-white rounded-lg font-bold text-xs hover:bg-[#3b635d] disabled:opacity-50 transition-all flex items-center justify-center gap-2 mt-2"
+                                        class="w-full py-2 bg-primary text-primary-foreground rounded-lg font-bold text-xs hover:bg-primary-hover disabled:opacity-50 transition-all flex items-center justify-center gap-2 mt-2"
                                     >
                                         {#if isProcessing}
                                             <RefreshCw
@@ -307,7 +307,7 @@
                                 </div>
                             {/if}
                             {#if notice}
-                                <p class="mt-4 text-xs text-slate-500" role="status">{notice}</p>
+                                <p class="mt-4 text-xs text-muted-foreground" role="status">{notice}</p>
                             {/if}
                         </div>
                     </div>
@@ -326,7 +326,7 @@
         {#each activeSuggestions as sug}
             <button
                 type="button"
-                class="text-xs font-semibold bg-white border border-slate-200 px-2.5 py-1 rounded-md text-[#3b635d] hover:bg-[#4A7C74] hover:text-white transition-colors flex items-center gap-1"
+                class="text-xs font-semibold bg-card border border-border px-2.5 py-1 rounded-md text-primary-hover hover:bg-primary hover:text-primary-foreground transition-colors flex items-center gap-1"
                 onclick={() => useStarter(sug)}
             >
                 <Lightbulb size={12} aria-hidden="true" />

@@ -72,7 +72,7 @@
 
 <div class="space-y-6">
     <!-- Gentle intro -->
-    <p class="text-sm text-slate-400 italic leading-relaxed">
+    <p class="text-sm text-muted-foreground italic leading-relaxed">
         When you're ready, these small steps may help. Move at your own pace.
     </p>
 
@@ -82,7 +82,7 @@
             class="px-4 py-2 rounded-xl text-sm font-medium transition-all {activePriority ===
             'immediate'
                 ? 'bg-primary/20 text-primary-hover border border-primary/30'
-                : 'bg-white/5 text-muted-foreground hover:text-slate-300'}"
+                : 'bg-white/5 text-muted-foreground hover:text-foreground'}"
         >
             Right now
         </button>
@@ -91,7 +91,7 @@
             class="px-4 py-2 rounded-xl text-sm font-medium transition-all {activePriority ===
             'soon'
                 ? 'bg-primary/20 text-primary-hover border border-primary/30'
-                : 'bg-white/5 text-muted-foreground hover:text-slate-300'}"
+                : 'bg-white/5 text-muted-foreground hover:text-foreground'}"
         >
             In the Coming Days
         </button>
@@ -102,7 +102,7 @@
             <div
                 in:fly={{ y: 20, duration: 500 }}
                 class="p-6 rounded-2xl bg-white/5 border border-white/10 transition-all duration-300 hover:bg-white/10 {item.done
-                    ? 'opacity-50'
+                    ? 'bg-white/[0.02]'
                     : ''}"
             >
                 <div class="flex gap-4">
@@ -121,13 +121,13 @@
 
                     <div>
                         <h4
-                            class="text-lg font-medium text-slate-100 {item.done
-                                ? 'line-through'
-                                : ''}"
+                            class="text-lg font-medium {item.done
+                                ? 'line-through text-muted-foreground'
+                                : 'text-foreground'}"
                         >
                             {item.text}
                         </h4>
-                        <p class="text-sm text-slate-400 mt-1 leading-relaxed">
+                        <p class="text-sm text-muted-foreground mt-1 leading-relaxed">
                             {item.description}
                         </p>
                     </div>

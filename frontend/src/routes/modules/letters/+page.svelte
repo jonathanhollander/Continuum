@@ -1416,7 +1416,7 @@
                         ? "Create my letter"
                         : "Continue when ready"}
                     <div
-                        class="w-10 h-10 rounded-full bg-card/20 flex items-center justify-center group-hover:translate-x-2 transition-transform"
+                        class="w-10 h-10 rounded-full bg-primary-foreground/20 flex items-center justify-center group-hover:translate-x-2 transition-transform"
                     >
                         <ArrowRight size={24} />
                     </div>

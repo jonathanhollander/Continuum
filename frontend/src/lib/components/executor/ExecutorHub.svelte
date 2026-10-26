@@ -162,7 +162,7 @@
             Explore more, whenever you like
         </h3>
         <p class="text-muted-foreground mb-4">
-            Beyond these essentials, there are many other modules available—but only when you're ready.
+            Beyond these essentials, many more modules are here whenever you're ready.
             Rest with what matters most right now.
         </p>
         <a

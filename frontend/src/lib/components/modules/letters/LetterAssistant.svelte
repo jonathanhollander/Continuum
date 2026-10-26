@@ -62,7 +62,7 @@
 >
     <div class="p-6 bg-primary text-primary-foreground flex items-center justify-between">
         <div class="flex items-center gap-3">
-            <div class="p-2 bg-card/20 rounded-xl backdrop-blur-sm">
+            <div class="p-2 bg-primary-foreground/20 rounded-xl backdrop-blur-sm">
                 <Sparkles size={18} />
             </div>
             <h3 class="font-bold font-serif text-lg text-primary-foreground">Gentle Helper</h3>

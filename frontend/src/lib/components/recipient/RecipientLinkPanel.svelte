@@ -74,25 +74,25 @@
 </script>
 
 {#if id && link}
-    <div class="pt-4 mt-4 border-t border-slate-100 space-y-3" data-testid="recipient-panel">
-        <label class="flex items-start gap-3 px-4 py-3 rounded-xl border border-slate-200 bg-white cursor-pointer">
+    <div class="pt-4 mt-4 border-t border-border space-y-3" data-testid="recipient-panel">
+        <label class="flex items-start gap-3 px-4 py-3 rounded-xl border border-border bg-card cursor-pointer">
             <input
                 type="checkbox"
                 checked={link.is_recipient}
                 disabled={busy !== null}
                 onchange={(e) => toggle((e.currentTarget as HTMLInputElement).checked)}
-                class="mt-1 accent-[#4A7C74]"
+                class="mt-1 accent-primary"
                 data-testid="recipient-flag"
             />
-            <span class="text-sm text-slate-700">
+            <span class="text-sm text-foreground">
                 <span class="font-bold">A start page for {who}</span><br />
-                <span class="text-xs text-slate-500">A private page with your note, first steps, the people to call, where the originals are kept, and the letters and messages meant for them.</span>
+                <span class="text-xs text-muted-foreground">A private page with your note, first steps, the people to call, where the originals are kept, and the letters and messages meant for them.</span>
             </span>
         </label>
 
         {#if link.is_recipient}
             <div class="space-y-2">
-                <label for="recipient-note" class="block text-xs font-bold uppercase text-slate-500">A note for {who}</label>
+                <label for="recipient-note" class="block text-xs font-bold uppercase text-muted-foreground">A note for {who}</label>
                 <textarea
                     id="recipient-note"
                     bind:value={note}
@@ -101,7 +101,7 @@
                     }}
                     rows="3"
                     placeholder="The first words they'll read on their page"
-                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm focus:border-primary outline-none"
+                    class="w-full px-4 py-3 rounded-xl border border-border bg-card text-sm focus:border-primary outline-none"
                     data-testid="recipient-note-input"
                 ></textarea>
                 {#if noteChanged}
@@ -112,16 +112,16 @@
                         data-testid="recipient-note-save"
                     >Save this note</button>
                 {:else if link.note}
-                    <p class="inline-flex items-center gap-1.5 text-xs text-slate-600" data-testid="recipient-note-saved">
-                        <Check class="w-4 h-4 text-[#4A7C74]" /> Your note is saved.
+                    <p class="inline-flex items-center gap-1.5 text-xs text-muted-foreground" data-testid="recipient-note-saved">
+                        <Check class="w-4 h-4 text-primary" /> Your note is saved.
                     </p>
                 {/if}
             </div>
 
             {#if link.path}
                 <div class="flex items-center gap-2">
-                    <input readonly aria-label="Link" value={linkUrl(link.path)} class="flex-1 min-w-0 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-600" data-testid="recipient-link" />
-                    <button onclick={copy} class="px-3 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100" title="Copy the link">
+                    <input readonly aria-label="Link" value={linkUrl(link.path)} class="flex-1 min-w-0 px-3 py-2 rounded-xl border border-border bg-muted text-xs text-muted-foreground" data-testid="recipient-link" />
+                    <button onclick={copy} class="px-3 py-2 rounded-xl border border-border text-muted-foreground hover:bg-muted" title="Copy the link">
                         {#if copied}<Check class="w-4 h-4" />{:else}<Copy class="w-4 h-4" />{/if}
                     </button>
                 </div>
@@ -129,19 +129,19 @@
 
             <div class="flex flex-wrap gap-2">
                 {#if link.path}
-                    <button onclick={close} disabled={busy !== null} class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100" data-testid="recipient-revoke">Close this link</button>
+                    <button onclick={close} disabled={busy !== null} class="px-4 py-2 rounded-xl text-sm font-semibold text-muted-foreground hover:bg-muted" data-testid="recipient-revoke">Close this link</button>
                 {:else}
                     <button onclick={make} disabled={busy !== null} class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90" data-testid="recipient-create">
                         {#if busy === "create"}<Loader2 class="w-4 h-4 animate-spin" />{:else}<Link2 class="w-4 h-4" />{/if}
                         Create {who}'s link
                     </button>
                 {/if}
-                <a href={`/for/preview/${id}`} target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border border-slate-200 text-slate-700 hover:bg-slate-100" data-testid="recipient-preview">
+                <a href={`/for/preview/${id}`} target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border border-border text-foreground hover:bg-muted" data-testid="recipient-preview">
                     <Eye class="w-4 h-4" /> Preview their page
                 </a>
             </div>
         {/if}
 
-        {#if message}<p class="text-xs text-slate-600" data-testid="recipient-message">{message}</p>{/if}
+        {#if message}<p class="text-xs text-muted-foreground" data-testid="recipient-message">{message}</p>{/if}
     </div>
 {/if}

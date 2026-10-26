@@ -147,7 +147,7 @@
             <img src={src} alt="Saved file" class="w-full h-full object-cover" />
         {/if}
     {:else if loading}
-        <div class="p-4 text-sm text-gray-500">Opening your file…</div>
+        <div class="p-4 text-sm text-muted-foreground">Opening your file…</div>
     {:else}
         {#if objectUrl && mime.startsWith("image/")}
             <img src={objectUrl} alt={filename} class="w-full h-full object-cover" />
@@ -159,26 +159,26 @@
         {/if}
         <div class="flex items-center gap-3 p-3">
             {#if !objectUrl}
-                <div class="bg-indigo-50 text-indigo-600 p-2 rounded-lg">
+                <div class="bg-primary-soft text-primary-hover p-2 rounded-lg">
                     <FileText size={24} />
                 </div>
             {/if}
             <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-gray-900 truncate">{filename || "Your file"}</p>
+                <p class="text-sm font-medium text-foreground truncate">{filename || "Your file"}</p>
                 {#if size}
-                    <p class="text-xs text-gray-500">{formatFileSize(size)}</p>
+                    <p class="text-xs text-muted-foreground">{formatFileSize(size)}</p>
                 {/if}
             </div>
             <button
                 type="button"
                 onclick={save}
-                class="text-xs text-indigo-600 hover:text-indigo-800 flex items-center gap-1 px-2 py-1 rounded hover:bg-indigo-50"
+                class="text-xs text-primary-hover hover:text-foreground flex items-center gap-1 px-2 py-1 rounded hover:bg-primary-soft"
             >
                 <Download size={14} /> Save a copy
             </button>
         </div>
     {/if}
     {#if message}
-        <p class="px-3 pb-2 text-xs text-gray-600">{message}</p>
+        <p class="px-3 pb-2 text-xs text-muted-foreground">{message}</p>
     {/if}
 </div>

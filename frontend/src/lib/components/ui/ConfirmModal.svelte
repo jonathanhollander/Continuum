@@ -43,14 +43,14 @@
     }
 </script>
 
-<!-- The Modal panel stays light in both themes, so "Maybe later" uses the same slate as the
+<!-- The Modal panel follows the theme (bg-card), so "Maybe later" uses the same muted tokens as the
      Modal's own header; the confirm button follows primary (or danger for a remove). -->
 <Modal bind:open title={question} onClose={() => answer(false)}>
     <div class="flex justify-end gap-3">
         <button
             type="button"
             onclick={() => answer(false)}
-            class="px-5 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
+            class="px-5 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
             >Maybe later</button
         >
         <button

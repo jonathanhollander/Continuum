@@ -276,7 +276,7 @@
                         <input
                             id="timeline-label"
                             bind:value={newEvent.label}
-                            class="w-full p-2 rounded-lg border focus:ring-2 ring-primary outline-none"
+                            class="w-full p-2 rounded-lg border border-border focus:ring-2 ring-primary outline-none bg-card text-foreground"
                             placeholder="e.g. Started Business"
                         />
                     </div>
@@ -314,7 +314,7 @@
                                         ).getFullYear();
                                     }
                                 }}
-                                class="w-full p-2 rounded-lg border focus:ring-2 ring-primary outline-none"
+                                class="w-full p-2 rounded-lg border border-border focus:ring-2 ring-primary outline-none bg-card text-foreground"
                             />
                         </div>
                         <div class="space-y-1">
@@ -326,7 +326,7 @@
                             <select
                                 id="timeline-type"
                                 bind:value={newEvent.type}
-                                class="w-full p-2 rounded-lg border focus:ring-2 ring-primary outline-none bg-card"
+                                class="w-full p-2 rounded-lg border border-border focus:ring-2 ring-primary outline-none bg-card text-foreground"
                             >
                                 <option value="milestone">Milestone</option>
                                 <option value="education">Education</option>
@@ -349,7 +349,7 @@
                         <select
                             id="timeline-contact"
                             bind:value={newEvent.assignedContactId}
-                            class="w-full p-2 rounded-lg border focus:ring-2 ring-primary outline-none bg-card text-sm"
+                            class="w-full p-2 rounded-lg border border-border focus:ring-2 ring-primary outline-none bg-card text-foreground text-sm"
                         >
                             <option value={undefined}>Choose someone from your contacts</option>
                             {#each familyStore.members as member}
@@ -373,7 +373,7 @@
                                 <select
                                     id="timeline-category"
                                     bind:value={newEvent.category}
-                                    class="w-full p-2 rounded-lg border focus:ring-2 ring-primary outline-none bg-card"
+                                    class="w-full p-2 rounded-lg border border-border focus:ring-2 ring-primary outline-none bg-card text-foreground"
                                 >
                                     <option value="Personal">Personal</option>
                                     <option value="Career">Career</option>

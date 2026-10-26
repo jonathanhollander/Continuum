@@ -144,11 +144,11 @@
             {/each}
 
             <div
-                class="p-8 bg-gradient-to-br from-slate-800 to-slate-900 rounded-[40px] text-white"
+                class="surface-dark p-8 bg-gradient-to-br from-card to-background rounded-[40px] text-foreground"
             >
-                <ShieldAlert class="text-gold mb-4" size={32} />
-                <h4 class="font-bold text-lg mb-2 text-white">Proactive Protection</h4>
-                <p class="text-sm text-slate-300 leading-relaxed">
+                <ShieldAlert class="text-gold-text mb-4" size={32} />
+                <h4 class="font-bold text-lg mb-2 text-foreground">Proactive Protection</h4>
+                <p class="text-sm text-muted-foreground leading-relaxed">
                     Running these drills shows which parts of your legacy
                     your loved ones can find and use when they need them
                     most.

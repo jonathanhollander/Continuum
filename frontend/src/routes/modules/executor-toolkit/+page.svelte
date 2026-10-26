@@ -128,7 +128,7 @@
                 <Info class="text-info shrink-0 mt-1" size={20} />
                 <div>
                     <h3 class="font-bold text-foreground">Gentle first steps</h3>
-                    <p class="text-sm text-muted-foreground">
+                    <p class="text-sm text-foreground">
                         These come first because they help most right now.
                     </p>
                 </div>
@@ -143,7 +143,7 @@
                     <h3 class="font-bold text-foreground">
                         Planned Passing Mode Active
                     </h3>
-                    <p class="text-sm text-muted-foreground">
+                    <p class="text-sm text-foreground">
                         Much of the groundwork may already be in place. Look it
                         over when you're ready.
                     </p>
