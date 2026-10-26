@@ -339,6 +339,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | U55 | Shared empty-state guide indigo on every module (U34) | `ui-standards-enforcer` / `general-purpose` | `lib/components/EmptyStateGuide.svelte` (find path), the `.binder-empty` override in `routes/binder/+page.svelte` | `bg-indigo-600` button and indigo "Your Entry Goes Here" — site primary; drop U34's binder-only override | Empty binder and two other modules: primary button; 0 errors |
 | U56 | Shared page header inset 24 px from the page body (U28, U33, U0d-34) | `ui-standards-enforcer` / `general-purpose` | `lib/components/LivingBlueprintHeader.svelte` (find path), and U33's `[&_.container]:px-0` wrapper in home-manual | The header adds its own `container px-6`, so inside padded wrappers its h1 sits at x=344 vs body 320 (advanced-registry, home-manual, others); one fix in the component, drop per-page patches | h1 x equals the body x on advanced-registry, home-manual, financial-accounts, heirlooms; 0 errors |
 | U57 | Property: two document stores, blocking dialogs, raw table cells (U27) | `ui-standards-enforcer` / `general-purpose` | `routes/modules/property/+page.svelte` | The modal's "Ownership Document" field (`documents` → `/api/media/{id}/download`) is separate from the evidence gallery the card footer opens — link both from the card; `generateQR` `alert()` and `deleteItem` `confirm()` → the in-page confirm/notice pattern; table "Status" raw and "-" for empty location — label and leave blank | A record with only an Ownership Document shows a card link to it; remove asks in-page; 0 errors |
+| U58 | Insurance stat cards without cents; clipped search placeholder (U26) | `ui-standards-enforcer` / `general-purpose` | `routes/modules/insurance/+page.svelte` | "Total Premiums" / "Monthly Average" use `toLocaleString` (`$18,024`) — `formatMoney`; search placeholder clips at 1440 now chips share the row — widen or shorten via existing wording | Stats show cents; placeholder fits at 1440×900; 0 errors |
 
  (decision 12; parallel track, approved by orchestrator diff review)
 
@@ -782,7 +783,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | U23 | ☑ | 556e3f2 | Remove from Pulse saves `tierId: null` via `contactSync.update` (person stays in Family & Contacts) and also clears a First Call/Same Day/Extended call tier, else U2's fallback keeps them listed (X154 decides the rule); picker saves through `contactSync.update` (store updates without reload, one failure message); syncs the store first on a direct visit. 0 errors. Findings → X162, X163 |
 | U24 | ☑ | e234173 | Toasts: × clear of text (52 px padding); stack keeps clear of an open dialog (6 px overlap → 20 px clear); error toasts stay until dismissed (still shown at 18.5 s); "Copy Error" left out; after a failed save in a dialog focus returns to its save button (BODY → save). 0 page errors. Finding → X165 |
 | U25 | ☑ | eb3af15 | Financial Accounts edit/delete visible at rest, card actions bottom-right clear of the amount (opacity 0 → 1, focus visible); table actions visible; Guided Setup outline, Add Asset site primary; header out of the wrapper (x 344 → 312). 0 errors. Finding → U52 |
-| U26 | ▶ | | |
+| U26 | ☑ | 1851dcb | Insurance footer a readable button only when the policy has claim steps (opens its `claimsProcedure`); type chips beside the search (562 → 11 px apart); card and table premiums `formatMoney` (`$1440` → `$1,440.00`), type and cycle capitalised. 0 errors. Finding → U58 |
 | U27 | ☑ | c9977b2 | Property footer a readable button only when files exist (opens the edit modal's viewer); assistant and stats below the list (first record y=1133 → 657); tile "Current Status"; first gallery image is the default cover (none → shown after reload). 0 errors. Findings → U57, T0 |
 | U28 | ☑ | 129a2c1 | Complete Record null-safe names (Kill Switch tab: 1 page error → 0, tabs and Add Record keep working); close × icon; footer "Save my thoughts" / "Not right now"; dead Cards/Table toggle left out. Build clean |
 | U29 | ☑ | 71117d0 | Digital Guardian rows/modal show `platform || name` (blank → "Bank"); primary "Add an account" opens the blank edit modal (creates via `addAsset`); wizard pill in the inventory header row; edit modal `role=dialog` + focus trap, Escape closes; grid `items-start` (Google card 426 → 122 px); header aligned with the cards. 0 errors. Finding → X165 |
@@ -812,6 +813,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | U55 | ☐ (queued: 20-agent limit) | | |
 | U56 | ☐ (queued: 20-agent limit) | | |
 | U57 | ☐ (queued: 20-agent limit) | | |
+| U58 | ☐ (queued: 20-agent limit) | | |
 | U42 | ▶ | | |
 | G0 | ☐ (after Wave U) | | |
 | T0 | ☐ (after Wave U, with G0) | | |
