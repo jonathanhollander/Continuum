@@ -45,6 +45,7 @@ const insuranceMapper = (item: any) => {
     return {
         ...out,
         policyName: out.policyName ?? '',
+        insurer: out.insurer ?? '',
         insuranceType: pageSpelling(out.insuranceType ?? 'Other', TYPES),
         policyNumber: out.policyNumber ?? '',
         // A row sent through the API can hold "120"; the totals add it as a number.
@@ -56,6 +57,7 @@ const insuranceMapper = (item: any) => {
         policyDocuments: out.policyDocuments ?? '',
         // An empty date goes over the wire as null (the column is a nullable datetime).
         expirationDate: toDateInput(out.expirationDate) || null,
+        notes: out.notes ?? '',
         ...(out.status != null && { status: pageSpelling(out.status, STATUSES) }),
     };
 };

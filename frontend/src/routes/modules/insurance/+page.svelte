@@ -159,7 +159,7 @@
         );
     }
 
-    // The wizard knows only the kind of cover; the carrier and notes stay blank for the person to fill in.
+    // The wizard knows only the kind of cover; the carrier, beneficiaries and notes stay blank for the person to fill in.
     async function addWizardPolicy(name: string, type: any) {
         const created = await insuranceSync.create({
             id: crypto.randomUUID(),
@@ -169,7 +169,7 @@
             policyNumber: "",
             premiumAmount: 0,
             premiumFrequency: "Monthly",
-            beneficiaries: estateProfile.current.primaryBeneficiary || "",
+            beneficiaries: "",
             agentName: "",
             agentContact: "",
             claimsProcedure: "",
