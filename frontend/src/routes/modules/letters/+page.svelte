@@ -52,24 +52,21 @@
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
 
-    type SavedLetter = {
-        id: string;
-        title: string;
-        content: string;
-        date: string;
-        type: "emotional" | "transactional";
-        triggerDate?: string;
-        triggerMilestone?: string;
-        isLocked?: boolean;
-    };
-
     import GriefSupportBanner from "$lib/components/GriefSupportBanner.svelte";
-    import type { SyncManager } from "$lib/services/sync.svelte";
-    import { lettersSync } from "$lib/stores/letterStore.svelte";
+    import { lettersSync, type Letter } from "$lib/stores/letterStore.svelte";
+    import { contactSync } from "$lib/stores/familyStore.svelte";
 
     // One owner for the letters table: the store's 'letters' manager.
-    const letterSync = lettersSync as unknown as SyncManager<SavedLetter>;
+    const letterSync = lettersSync;
     let savedLetters = $derived(letterSync.items);
+    let contacts = $derived(contactSync.items);
+
+    const MILESTONE_LABELS: Record<string, string> = {
+        grad: "College Graduation",
+        wedding: "Wedding Day",
+        parent: "Becoming a Parent",
+        home: "First Home",
+    };
 
     let searchQuery = $state("");
     let isLoading = $state(true);
@@ -77,7 +74,7 @@
     let customAttributes = $state<Record<string, any>>({});
 
     onMount(async () => {
-        await letterSync.init();
+        await Promise.all([letterSync.init(), contactSync.init()]);
         isLoading = false;
     });
     let filterCategory = $state("All");
@@ -103,23 +100,34 @@
                 : "Ethical Will"
             : selectedTemplate?.title || "Draft Letter";
 
-        try {
-        const newLetter = await letterSync.create({
-            title: `${title} (${new Date().toLocaleDateString()})`,
+        const recipient = contacts.find((c) => String(c.id) === letterRecipientId);
+        const details = {
             content: generatedLetter,
-            date: new Date().toLocaleDateString(),
-            type: emotionalFlow ? "emotional" : "transactional",
-            triggerDate: letterTriggerDate,
-            triggerMilestone: letterTriggerMilestone,
-            isLocked: !!(letterTriggerDate || letterTriggerMilestone),
-        }, false, false, saveToVault);
+            recipientName: recipient?.name ?? "",
+            recipientContactId: recipient ? Number(recipient.id) : null,
+            triggerDate: letterTriggerDate || null,
+            triggerMilestone: letterTriggerMilestone || null,
+            isLocked: letterHold,
+            customAttributes: JSON.stringify(customAttributes ?? {}),
+        };
+
+        try {
+        // Reopened letter: save over it (never a second copy).
+        const saved = editingId !== null
+            ? await letterSync.update(editingId, details)
+            : await letterSync.create({
+                ...details,
+                title: `${title} (${new Date().toLocaleDateString()})`,
+                date: new Date().toLocaleDateString(),
+                type: emotionalFlow ? "emotional" : "transactional",
+            } as Letter, false, false, saveToVault);
 
         activityLog.logEvent({
             module: "Letters",
-            action: "CREATE",
+            action: editingId !== null ? "UPDATE" : "CREATE",
             entityType: "Draft",
-            entityId: newLetter.id,
-            entityName: newLetter.title,
+            entityId: saved.id,
+            entityName: saved.title,
             userContext: $estateProfile.ownerName || "User",
         });
 
@@ -131,15 +139,26 @@
         }
     }
 
+    // Per-letter details; cleared whenever a new letter is started.
+    function clearLetterDetails() {
+        editingId = null;
+        letterRecipientId = "";
+        letterTriggerDate = "";
+        letterTriggerMilestone = "";
+        letterHold = false;
+        customAttributes = {};
+    }
+
     function resetSelection() {
         emotionalFlow = null;
         selectedTemplate = null;
         generatedLetter = "";
         templateVariables = {};
+        clearLetterDetails();
         mode = "menu";
     }
 
-    async function deleteLetter(id: string, name: string) {
+    async function deleteLetter(id: number | string, name: string) {
         if (
             !confirm(
                 `Remove the letter to "${name}"? You can always start over if you feel like it later.`,
@@ -153,20 +172,32 @@
             module: "Letters",
             action: "DELETE",
             entityType: "Draft",
-            entityId: id,
+            entityId: String(id),
             entityName: name,
             userContext: $estateProfile.ownerName || "User",
         });
     }
 
-    function viewLetter(letter: SavedLetter) {
+    function viewLetter(letter: Letter) {
         generatedLetter = letter.content;
+        editingId = letter.id;
+        letterRecipientId = letter.recipientContactId != null
+            ? String(letter.recipientContactId)
+            : String(contacts.find((c) => c.name === letter.recipientName)?.id ?? "");
+        letterTriggerDate = letter.triggerDate ?? "";
+        letterTriggerMilestone = letter.triggerMilestone ?? "";
+        letterHold = !!letter.isLocked;
+        try {
+            customAttributes = JSON.parse(letter.customAttributes || "{}") ?? {};
+        } catch {
+            customAttributes = {};
+        }
         mode = "review";
         if (letter.type === "emotional") {
             emotionalFlow = "ethical_will"; // Placeholder to enable UI
         } else {
             selectedTemplate = {
-                id: letter.id,
+                id: String(letter.id),
                 title: letter.title,
                 subject: `Review: ${letter.title}`,
                 body: letter.content,
@@ -222,11 +253,15 @@
     // Editor Content
     let generatedLetter = $state("");
 
-    // Trigger Settings for current draft
+    // Details of the letter being written or reopened
+    let editingId = $state<number | string | null>(null);
+    let letterRecipientId = $state("");
     let letterTriggerDate = $state("");
     let letterTriggerMilestone = $state("");
+    let letterHold = $state(false);
 
     function startEmotionalFlow(flow: "spouse" | "ethical_will") {
+        clearLetterDetails();
         emotionalFlow = flow;
         mode = "emotional_interview";
         currentPromptIndex = 0;
@@ -235,6 +270,7 @@
     }
 
     function selectTransactional(template: LetterTemplate) {
+        clearLetterDetails();
         selectedTemplate = template;
         const regex = /\[(.*?)\]/g;
         const matches = [...template.body.matchAll(regex)];
@@ -376,9 +412,9 @@
 
 <LivingBlueprintHeader
     title="Legacy Correspondence"
-    subtitle="Automate notifications and preserve emotional legacies"
+    subtitle="Preserve your words for the people you love"
     tier="legacy"
-    detailedDescription="Write letters that will be delivered after you're gone—ethical wills sharing your values, heartfelt messages to loved ones, or formal notifications to institutions."
+    detailedDescription="Write letters for the people you love—ethical wills sharing your values, heartfelt messages to loved ones, or formal notifications to institutions."
     whyMatters="The words you write today will comfort, guide, and inspire your loved ones when you're no longer here to say them yourself. These letters become your voice across time, offering presence at moments you can't physically attend."
 >
     <div class="flex items-center gap-4">
@@ -505,6 +541,71 @@
                 </div>
             </button>
         </div>
+
+        {#if savedLetters.length > 0}
+            <!-- Saved letters: reopen to keep writing -->
+            <div class="space-y-4" data-testid="saved-letters">
+                <h3 class="text-xl font-black text-slate-900 font-serif">
+                    Your letters
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {#each savedLetters as letter (letter.id)}
+                        <div
+                            class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col gap-3"
+                            data-testid="saved-letter"
+                        >
+                            <div class="flex items-start justify-between gap-3">
+                                <h4 class="font-bold text-slate-900 leading-snug">
+                                    {letter.title}
+                                </h4>
+                                {#if letter.isLocked}
+                                    <span
+                                        class="shrink-0 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-stone-100 text-stone-600"
+                                        >On hold</span
+                                    >
+                                {:else}
+                                    <span
+                                        class="shrink-0 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-primary/10 text-primary"
+                                        >Ready to read</span
+                                    >
+                                {/if}
+                            </div>
+                            {#if letter.recipientName}
+                                <p class="text-sm text-slate-600">
+                                    For {letter.recipientName}
+                                </p>
+                            {/if}
+                            {#if letter.triggerDate}
+                                <p class="text-xs text-slate-500">
+                                    {new Date(letter.triggerDate + "T00:00:00").toLocaleDateString()}
+                                    · Saved with your chosen date
+                                </p>
+                            {/if}
+                            {#if letter.triggerMilestone}
+                                <p class="text-xs text-slate-500">
+                                    {MILESTONE_LABELS[letter.triggerMilestone] ?? letter.triggerMilestone}
+                                    · Saved with your chosen milestone
+                                </p>
+                            {/if}
+                            <div class="flex items-center gap-3 mt-auto pt-2">
+                                <button
+                                    onclick={() => viewLetter(letter)}
+                                    class="px-4 py-2 rounded-xl bg-[#4A7C74] text-white text-sm font-bold hover:opacity-90"
+                                >
+                                    Continue writing
+                                </button>
+                                <button
+                                    onclick={() => deleteLetter(letter.id, letter.recipientName || letter.title)}
+                                    class="px-4 py-2 rounded-xl text-sm font-bold text-slate-500 hover:text-slate-900"
+                                >
+                                    Remove this letter
+                                </button>
+                            </div>
+                        </div>
+                    {/each}
+                </div>
+            </div>
+        {/if}
 
         <!-- Category Browser -->
         <div class="space-y-8">
@@ -879,12 +980,68 @@
                     <div
                         class="bg-indigo-50/50 border border-indigo-100 p-8 rounded-2xl space-y-6"
                     >
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label
+                                    for="letter-recipient"
+                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+                                    >Who this letter is for</label
+                                >
+                                <select
+                                    id="letter-recipient"
+                                    bind:value={letterRecipientId}
+                                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                >
+                                    <option value="">Choose someone from your contacts</option>
+                                    {#each contacts as contact (contact.id)}
+                                        <option value={String(contact.id)}
+                                            >{contact.name}{contact.relation
+                                                ? ` (${contact.relation})`
+                                                : ""}</option
+                                        >
+                                    {/each}
+                                </select>
+                                {#if contacts.length === 0}
+                                    <p class="text-[11px] text-slate-500 pl-1">
+                                        People you add in <a
+                                            href="/modules/contacts"
+                                            class="text-primary underline">Contacts</a
+                                        > appear here.
+                                    </p>
+                                {/if}
+                            </div>
+                            <div class="space-y-2">
+                                <span
+                                    class="block text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+                                    >When they can read it</span
+                                >
+                                <label
+                                    class="flex items-start gap-3 px-4 py-3 rounded-xl border border-slate-200 bg-white cursor-pointer"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        bind:checked={letterHold}
+                                        class="mt-1 accent-[#4A7C74]"
+                                        data-testid="letter-hold"
+                                    />
+                                    <span class="text-sm text-slate-700">
+                                        <span class="font-bold">Keep on hold</span><br />
+                                        <span class="text-xs text-slate-500"
+                                            >{letterHold
+                                                ? "This letter stays with you until you release it."
+                                                : "Ready for them to read in their view."}</span
+                                        >
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+
                         <div class="flex items-center gap-3">
                             <History size={20} class="text-primary" />
                             <h4
                                 class="font-bold text-slate-900 uppercase tracking-widest text-xs"
                             >
-                                Future Release Triggers
+                                A date or milestone that matters
                             </h4>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -909,7 +1066,7 @@
                                     class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800 appearance-none"
                                 >
                                     <option value=""
-                                        >No Milestone Trigger</option
+                                        >Choose a milestone, if you like</option
                                     >
                                     <option value="grad"
                                         >College Graduation</option
@@ -925,8 +1082,8 @@
                         <p
                             class="text-[10px] text-primary/60 font-medium italic"
                         >
-                            If set, this letter will remain "Locked" in your
-                            vault until the trigger condition is met.
+                            Saved with your chosen date or milestone, and shown
+                            with the letter.
                         </p>
 
                         <!-- Custom Fields -->

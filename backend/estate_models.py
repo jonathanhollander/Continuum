@@ -181,7 +181,8 @@ class Letter(SQLModel, table=True):
     __tablename__ = "letters"
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="users.id", index=True)
-    recipient_name: Optional[str] = None # Or link to Contact
+    recipient_name: Optional[str] = None  # shown name, copied from the chosen contact
+    recipient_contact_id: Optional[int] = None  # the contacts row (PulseContact.id) it is for
     title: str
     content: str # content or encrypted content
     release_condition: str = "death" # death, specific_date
@@ -191,7 +192,7 @@ class Letter(SQLModel, table=True):
     type: Optional[str] = "transactional"  # "emotional" or "transactional"
     triggerDate: Optional[str] = None  # Specific date for release
     triggerMilestone: Optional[str] = None  # Milestone trigger (grad, wedding, etc.)
-    isLocked: Optional[bool] = False  # Whether letter is locked until trigger
+    isLocked: Optional[bool] = False  # "Hold": the owner keeps it back from the recipient view
     custom_attributes: Optional[str] = Field(default="{}")
 
 class JournalEntry(SQLModel, table=True):
