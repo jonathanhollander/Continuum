@@ -1,8 +1,9 @@
 <script lang="ts">
-    import { onMount, tick } from "svelte";
+    import { onMount, onDestroy, tick } from "svelte";
     import { apiGet, apiPost } from "$lib/api/client";
     import { MessageSquare, Send, User, Reply, Inbox } from "lucide-svelte";
     import { slide, fade } from "svelte/transition";
+    import { captureSession, isCurrentSession, type SessionOwnership } from "$lib/services/sessionOwnership";
 
     let messages = $state<any[]>([]);
     let contacts = $state<any[]>([]);
@@ -10,14 +11,27 @@
     let loading = $state(true);
     let composerOpen = $state(false);
     let sourceMessageId = $state<number | null>(null);
+    let loadError = $state("");
+    let saveError = $state("");
+    let saveNotice = $state("");
+    let sending = $state(false);
+    let readVersion = 0;
+    let saveVersion = 0;
+    let sourcePending = true;
+    let draftOwner: SessionOwnership | null = null;
+    const retryNotice = "You can try loading this view again whenever you're ready.";
+    const notice = $derived(loadError ? `${saveNotice ? `${saveNotice} ` : ""}${loadError}` : saveError || (sending ? "Saving your note…" : saveNotice));
 
     let newMessage = $state({
         contact_id: null as number | null,
         text: "",
     });
 
-    onMount(async () => {
-        await refreshData();
+    onMount(() => { refreshData(); });
+    onDestroy(() => { readVersion++; saveVersion++; });
+    async function openSourceRow(owner: SessionOwnership, version: number) {
+        if (!sourcePending) return;
+        sourcePending = false;
         const query = new URLSearchParams(window.location.search);
         const contactId = Number(query.get("contact_id"));
         const messageId = Number(query.get("message_id"));
@@ -25,41 +39,81 @@
             newMessage.contact_id = contactId;
             sourceMessageId = messageId;
             await tick();
+            if (version !== readVersion || !isCurrentSession(owner)) return;
             const source = document.getElementById(`pulse-message-${messageId}`);
             source?.scrollIntoView({ block: "center" });
             source?.focus({ preventScroll: true });
         }
-    });
+    }
 
-    async function refreshData() {
+    async function refreshData(): Promise<boolean> {
+        const owner = captureSession();
+        const version = ++readVersion;
+        loading = true;
+        loadError = "";
         try {
-            [messages, contacts] = await Promise.all([
+            if (!isCurrentSession(owner)) throw new Error("Session changed");
+            const [savedMessages, savedContacts] = await Promise.all([
                 apiGet("/api/pulse/messages"),
                 apiGet("/api/pulse/contacts"),
             ]);
-            // Only fetch tiers when a contact has one (GET /tiers seeds defaults when empty).
-            if (contacts.some((c) => c.tier_id)) {
-                tiers = await apiGet("/api/pulse/tiers");
-            }
-        } catch (e) {
-            console.error(e);
-        } finally {
+            if (version !== readVersion || !isCurrentSession(owner)) return false;
+            const savedTiers = savedContacts.some((contact: any) => contact.tier_id)
+                ? await apiGet("/api/pulse/tiers") : [];
+            if (version !== readVersion || !isCurrentSession(owner)) return false;
+            messages = savedMessages;
+            contacts = savedContacts;
+            tiers = savedTiers;
             loading = false;
+            await openSourceRow(owner, version);
+            return true;
+        } catch {
+            if (version === readVersion) loadError = retryNotice;
+            return false;
+        } finally {
+            if (version === readVersion) {
+                loading = false;
+                if (!isCurrentSession(owner)) {
+                    messages = []; contacts = []; tiers = [];
+                    newMessage.contact_id = null;
+                    sourceMessageId = null;
+                    loadError = retryNotice;
+                }
+            }
         }
     }
 
     async function sendMessage() {
-        if (!newMessage.contact_id || !newMessage.text) return;
-
+        if (!newMessage.contact_id || !newMessage.text.trim() || sending || loading || loadError) return;
+        const owner = draftOwner ?? captureSession();
+        if (!isCurrentSession(owner)) {
+            saveError = "Your draft stays with the account where you started it.";
+            return;
+        }
+        const contactId = newMessage.contact_id;
+        const text = newMessage.text;
+        const version = ++saveVersion;
+        sending = true;
+        saveError = "";
+        saveNotice = "";
         try {
             await apiPost(
-                `/api/pulse/messages?contact_id=${newMessage.contact_id}&message=${encodeURIComponent(newMessage.text)}`,
+                `/api/pulse/messages?contact_id=${contactId}&message=${encodeURIComponent(text)}`,
             );
-            newMessage.text = "";
+            if (version !== saveVersion || !isCurrentSession(owner)) return;
+            if (newMessage.contact_id === contactId && newMessage.text === text) {
+                newMessage.text = "";
+                draftOwner = null;
+            }
+            saveNotice = "Your note is saved.";
             await refreshData();
-            // Scroll to bottom logic could go here
-        } catch (e) {
-            console.error(e);
+        } catch {
+            if (version === saveVersion && isCurrentSession(owner)) saveError = "Your note stays here. You can try again whenever you're ready.";
+        } finally {
+            if (version === saveVersion) {
+                sending = false;
+                if (!isCurrentSession(owner)) saveError = "Your draft stays with the account where you started it.";
+            }
         }
     }
 
@@ -174,6 +228,20 @@
         >
     </div>
 
+    {#if notice}
+        <div role={loadError || saveError ? "alert" : "status"} class="shrink-0 mb-4 rounded-xl border border-border bg-card p-4 space-y-2" data-testid="message-notice">
+            <p class="text-sm text-foreground">{notice}</p>
+            {#if loadError}
+                <button onclick={() => refreshData()} disabled={loading} class="text-sm text-primary underline disabled:opacity-50">Try again</button>
+            {:else if saveError}
+                <button onclick={sendMessage} disabled={sending} class="text-sm text-primary underline disabled:opacity-50">Try again</button>
+            {/if}
+        </div>
+    {/if}
+
+    {#if loading}
+        <p role="status" class="rounded-xl border border-border bg-background/40 p-8 text-sm text-muted-foreground">Opening your notes…</p>
+    {:else if !loadError}
     <div
         class="flex-1 bg-background/40 border border-slate-800 rounded-2xl overflow-hidden flex shadow-2xl backdrop-blur-sm"
     >
@@ -191,12 +259,15 @@
             <div class="flex-1 overflow-y-auto">
                 {#each contacts as contact}
                     <button
+                        disabled={sending}
                         class="w-full text-left p-4 hover:bg-card/50 transition-colors flex items-center gap-3 border-b border-slate-800/50 {newMessage.contact_id ===
                         contact.id
                             ? 'bg-primary/10 border-l-2 border-l-primary'
                             : ''}"
                         onclick={() => {
                             sourceMessageId = null;
+                            saveError = "";
+                            saveNotice = "";
                             newMessage.contact_id = contact.id;
                             composerOpen = true; // Always show composer in thread view
                         }}
@@ -348,13 +419,21 @@
                     >
                         <input
                             type="text"
+                            aria-label="Note for this person"
                             bind:value={newMessage.text}
+                            disabled={sending}
+                            oninput={(event) => {
+                                if (event.currentTarget.value && !draftOwner) draftOwner = captureSession();
+                                if (!event.currentTarget.value) draftOwner = null;
+                                saveError = "";
+                                saveNotice = "";
+                            }}
                             placeholder="Write a note for them..."
                             class="flex-1 bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors"
                         />
-                        <button aria-label="Send"
+                        <button aria-label={sending ? "Saving note" : "Send"}
                             type="submit"
-                            disabled={!newMessage.text}
+                            disabled={sending || !newMessage.text.trim()}
                             class="bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed text-primary-foreground p-3 rounded-xl transition-all"
                         >
                             <Send class="w-5 h-5" />
@@ -371,4 +450,5 @@
             {/if}
         </div>
     </div>
+    {/if}
 </div>
