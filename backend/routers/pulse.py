@@ -14,6 +14,7 @@ from backend.pulse_models import (
     PulseMessage, PulseEscalationLog, PulseSafetyTimer
 )
 from backend.utils.logger import get_logger
+from backend.routers.contacts import ContactCreate, ContactUpdate, _apply as apply_contact_fields
 from backend.challenge_store import challenge_store
 
 logger = get_logger(__name__)
@@ -128,26 +129,28 @@ def get_contacts(user: User = Depends(get_current_user), session: Session = Depe
     return session.exec(statement).all()
 
 @router.post("/contacts", summary="Create a Guardian contact", description="Adds a new contact who will be notified during Pulse escalation. Generates a unique portal token for them.")
-def create_contact(contact: PulseContact, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
-    contact.user_id = user.id
-    contact.portal_token = secrets.token_urlsafe(32) # Grant portal access immediately
+def create_contact(body: ContactCreate, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    # Validated body (C8 schema): id, user_id and portal tokens are set here, never from the client.
+    # notify_on_safety_timer keeps the column default (enrolled) unless the person chooses otherwise.
+    contact = PulseContact(user_id=user.id, name=body.name,
+                           portal_token=secrets.token_urlsafe(32))  # Grant portal access immediately
+    apply_contact_fields(contact, body.model_dump(exclude_unset=True), user, session)
     session.add(contact)
     session.commit()
     session.refresh(contact)
     return contact
 
 @router.put("/contacts/{contact_id}")
-def update_contact(contact_id: int, updated: PulseContact, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+def update_contact(contact_id: int, updated: ContactUpdate, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     contact = session.get(PulseContact, contact_id)
     if not contact or contact.user_id != user.id:
         raise HTTPException(status_code=404, detail="Contact not found")
-    
-    data = updated.dict(exclude_unset=True)
-    for key, val in data.items():
-        if key != "id": setattr(contact, key, val)
-    
+
+    apply_contact_fields(contact, updated.model_dump(exclude_unset=True), user, session)
+
     session.add(contact)
     session.commit()
+    session.refresh(contact)  # commit expires the instance; return the saved row
     return contact
 
 @router.delete("/contacts/{contact_id}")
