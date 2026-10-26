@@ -4,11 +4,14 @@
     import {
         currentScenario,
         isSimulationActive,
+        scenarioStore,
     } from "$lib/stores/scenarioStore.svelte";
 
     function endSimulation() {
-        isSimulationActive.set(false);
-        currentScenario.set("General");
+        // One write for both fields (two concurrent writes raced).
+        scenarioStore
+            .update({ isSimActive: false, currentScenario: "General" })
+            .catch(() => {}); // the store rolls back and shows the gentle error
     }
 </script>
 

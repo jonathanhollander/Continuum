@@ -2,6 +2,7 @@
     import {
         currentScenario,
         isSimulationActive,
+        scenarioStore,
         SCENARIO_DESCRIPTIONS,
         type Scenario,
     } from "$lib/stores/scenarioStore.svelte";
@@ -10,17 +11,16 @@
     // Explicitly type the keys to match the Scenario type
     const scenarios: Scenario[] = ["General", "Sudden", "Planned"];
 
+    // One write carries both fields: two concurrent writes raced and the
+    // later response could overwrite the other.
     function setScenario(mode: Scenario) {
-        currentScenario.set(mode);
-        if (mode !== "General") {
-            isSimulationActive.set(true);
-        } else {
-            isSimulationActive.set(false);
-        }
+        scenarioStore
+            .update({ currentScenario: mode, isSimActive: mode !== "General" })
+            .catch(() => {}); // the store rolls back and shows the gentle error
     }
 
     function toggleSimulation() {
-        isSimulationActive.update((v) => !v);
+        isSimulationActive.set(!$isSimulationActive).catch(() => {});
     }
 </script>
 

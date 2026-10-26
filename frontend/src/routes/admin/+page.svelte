@@ -29,7 +29,7 @@
     </div>
 
     <!-- Main Content -->
-    <div class="max-w-7xl mx-auto px-6 -mt-20 space-y-8">
+    <div class="max-w-7xl mx-auto px-6 -mt-20 space-y-8 relative">
         <ScenarioMode />
         <ReadinessMatrix />
 
