@@ -24,11 +24,6 @@ export const API_URL = `${API_BASE_URL}/api`;
 export const DEFAULT_TIMEOUT = 30000;
 
 /**
- * OpenRouter API Key (optional - for AI features)
- */
-export const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || '';
-
-/**
  * Environment check helpers
  */
 export const isDevelopment = import.meta.env.DEV;
