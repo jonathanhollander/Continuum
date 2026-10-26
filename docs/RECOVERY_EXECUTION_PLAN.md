@@ -1,6 +1,6 @@
 # Continuum — Recovery Execution Plan (subagent-run)
 
-**Last Updated:** 2026-10-26 03:20 EST
+**Last Updated:** 2026-10-26 03:35 EST
 
 The how and the order for [PROJECT_RECOVERY_PLAN.md](PROJECT_RECOVERY_PLAN.md) (phases A–F).
 Issue IDs (CU-0xx) and their evidence are in
@@ -12,7 +12,7 @@ board, and it is the live checklist** (decision 9).
 ## Owner decisions (2026-10-26, confirmed)
 
 1. **Product:** a product built from Jonathan's needs for himself and his son. Features are generic ("designated recipient"); the son is the first recipient and the acceptance scenario.
-2. **Features and functionality only.** Security and admin (Wave F) are out of scope. Recipient access is the simplest owner-issued link, with no permissions system.
+2. **Features and functionality first.** The build (Waves A–E) is features only; security, admin and other out-of-build bugs go to the separate Wave X track (decision 12). Recipient access is the simplest owner-issued link, with no permissions system.
 3. **Execution model:**
    - Subagents code **all** cards, Waves A–E.
    - The orchestrator reviews **by diff only**.
@@ -49,6 +49,13 @@ board, and it is the live checklist** (decision 9).
     - **Any written test** must be pinpointed at one defect or contract, ponytail-sized, and **approved by the orchestrator before it is written**. The approval carries a full justification: what it checks, why a single manual proof run isn't enough, and when it will be run. It is recorded in the Test register.
     - **After it is written**, its Test register entry is completed with the file, a full explanation of why it was needed, how to run it, and whether to keep or remove it.
     - **Running checks:** each card is verified by **one** targeted run of its proof scenario. No repeated runs until something passes, no whole-suite sweeps, and no re-testing finished cards without new evidence. O1 measures only the endpoints a wave touched. R0 runs once. The release browser test runs once, plus targeted re-checks of fixed defects only.
+
+12. **Out-of-build bugs: a separate subagent track, Wave X** (owner, 2026-10-26: "assign a separate subagent tasked with fixing bugs you feel are outside the build. the subaegnts shouold fix and you approve. Include in loop").
+    - **Intake:** every bug found that is outside the build — the former Wave F items, and any surrounding-code finding that isn't fixed on its card's path and isn't a build card — becomes an X card. Nothing is just "logged".
+    - **Who fixes:** one dedicated subagent per X card, in its own `.worktrees/X<n>`, with the same brief template, ponytail and test rules.
+    - **Who approves:** the orchestrator, by diff review (same as build cards), then merge, clean up, tick.
+    - **When:** X cards run in parallel with the build waves whenever their owned files are not owned by a build card in flight. They ship in the same single release.
+    - **In the loop:** every loop run advances Wave X as well as the build.
 
 ## Test register (decision 11)
 
@@ -102,22 +109,23 @@ Every written test is listed here: approved before it is written, and completed 
 5. Commit with the card ID and push. Then:
    - **Clean up:** `git worktree remove .worktrees/<card-id>`, `git branch -d card/<card-id>`, and `git worktree prune` at the end of each wave.
    - **Mark the card ☑** with its commit and proof, and commit this file.
-6. **Oversight:** at the end of each wave, run O1 and O2 in parallel on the wave's merged diff. Their proven findings become cards in the next wave. Then mark the wave heading **✅**.
+6. **Wave X (decision 12):** on every pass, dispatch any X card whose owned files are free, and review/merge finished ones the same way. Every new out-of-build finding becomes an X card in the same turn.
+7. **Oversight:** at the end of each wave, run O1 and O2 in parallel on the wave's merged diff. Their proven findings become cards in the next wave. Then mark the wave heading **✅**.
 
 **Rehearsal (end of the coding pass, still local):**
-7. **R0:** a validation subagent runs the full completion test (owner context and recipient context) against the merged `main`, built and served locally on synthetic data.
+8. **R0:** a validation subagent runs the full completion test (owner context and recipient context) against the merged `main`, built and served locally on synthetic data.
    - It records each step pass or fail, with evidence.
    - Each failure becomes a card and goes through the same loop.
    - This is the last part of finishing the coding pass, not an approval step. Per-card proofs can pass while the merged app fails, and fixing that locally is cheaper than fixing it after deploy.
 
 **Release pass (once):**
-8. Run `npm run check` and `npm run build`, then `railway up`. Poll `/api/health` until the new version is live, and confirm the pinned versions with `railway ssh -- /opt/venv/bin/pip freeze`.
-9. **Full browser test on production, desktop 1440×900:**
+9. Run `npm run check` and `npm run build`, then `railway up`. Poll `/api/health` until the new version is live, and confirm the pinned versions with `railway ssh -- /opt/venv/bin/pip freeze`.
+10. **Full browser test on production, desktop 1440×900:**
    - the completion test, in owner and recipient contexts;
    - every module: load, save, edit, reload, second-context retrieval;
    - the binder, the PDF and the download copy.
    - O1 produces the full timing table, and O2 screenshots every page.
-10. Each proven defect becomes a card and goes round worktree → code → diff review → merge and clean up → deploy → browser test, until everything is green. Then mark **Release ✅**.
+11. Each proven defect becomes a card and goes round worktree → code → diff review → merge and clean up → deploy → browser test, until everything is green. Then mark **Release ✅**.
 
 ### Oversight agents (decision 8)
 
@@ -218,14 +226,16 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | E7 | Remaining type errors in touched files | — | Files changed in Waves B–E that still have svelte-check errors, excluding files another E card owns | Those files show 0 errors; behaviour fixes are noted per file |
 | E8 | Branch triage | — | Remote branches | Delete merged branches; list the rest with their unique commits |
 
-## Wave F — Security and admin: OUT OF SCOPE (decision 2)
+## Wave X — Out-of-build bugs (decision 12; parallel track, approved by orchestrator diff review)
 
-Listed so nothing is lost:
-- F1 rotate the OpenRouter key (an owner step, recommended anyway);
-- F2 server-side AI proxy;
-- F3 production environment variables;
-- F4 untrack the `.db` files;
-- F5 the bypass, only when asked.
+| ID | Card | Source | Owns | Change | Acceptance |
+|---|---|---|---|---|---|
+| X1 | Server-side AI proxy (was F2) | Live OpenRouter key in production JS | New `backend/routers/ai_proxy.py` + its `include_router` line in `backend/main.py`; `frontend/src/lib/services/{aiConciergeService,aiGriefService}.ts`; `OPENROUTER_API_KEY` in `frontend/src/lib/config.ts`; `backend/config.py` (one setting) | The browser calls `/api/ai/...` with the user's JWT; the backend holds the key and calls OpenRouter | `npm run build` output contains no `sk-or-`; the concierge and grief-support pages get an AI reply locally through the proxy (or a clear "AI isn't available" message when no key is set) |
+| X2 | Untrack committed databases (was F4) | `backend/continuum.db`, `backend/continuum_saas.db`, `dev.db` tracked in a public repo | `.gitignore`; the git index for those files | `git rm --cached`; ignore `*.db` | `git ls-files` lists no `.db`; the files stay on disk; the local backend still starts |
+| X3 | Production settings (was F3) + `_technical` leak (A4 finding 2) | Production reports `environment: development` with the default JWT secret; error responses include `_technical` | `backend/errors.py`; `backend/config.py` (production branch only); Railway variables at release (orchestrator) | Hide `_technical` outside development; list exactly what `ENVIRONMENT=production` changes (RP_ID, ORIGIN, FRONTEND_URL) and fix anything that would break login or passkeys; the orchestrator sets `ENVIRONMENT=production` and a new random `JWT_SECRET_KEY` during the release | Locally with `ENVIRONMENT=production` and the production URLs: login 200, no `_technical` in an error body; after release `/api/health` reports production |
+| X4 | Frontend paths depend on the working directory (A4 finding 1) | `frontend/dist` paths in `backend/main.py` are relative | The static-mount and SPA-fallback lines in `backend/main.py` | Resolve from `Path(__file__).resolve().parent.parent` | The server started from `backend/` still serves the SPA when dist exists |
+| X5 | Remove the `jh@continuum.estate` bypass (was F5) | Passwordless login to production for anyone | The bypass block in `backend/routers/auth.py`; `CLAUDE.md` dev-login line | Delete the bypass | Dispatched **after** the release browser test (which signs in with it); merged once the owner has signed in once with a real password or passkey, so he is never locked out; then a targeted deploy |
+| X6 | Rotate the OpenRouter key (was F1) | The key is public in shipped JS | Owner step at openrouter.ai (Claude may not create or copy API keys) | Create a new key, put it in the Railway variable X1 reads, revoke the old one | Done after X1 is live; the old key returns 401 |
 
 ---
 
@@ -241,7 +251,7 @@ Listed so nothing is lost:
 | O1 / O2 oversight (all waves) | ☐ | | |
 | R0 — Local rehearsal | ☐ | | |
 | Release — deploy + full browser test | ☐ | | |
-| Wave F | out of scope | | |
+| Wave X — Out-of-build bugs | ▶ | | |
 
 ## Card status (marked by the orchestrator, decision 9)
 
@@ -277,6 +287,12 @@ Listed so nothing is lost:
 | E6 | ☐ | | |
 | E7 | ☐ | | |
 | E8 | ☐ | | |
+| X1 | ▶ | | |
+| X2 | ▶ | | |
+| X3 | ☐ | | |
+| X4 | ☐ | | |
+| X5 | ☐ | | |
+| X6 | ☐ (owner) | | |
 | O1 — per wave (A–E) | ☐ | | |
 | O2 — per wave (A–E) | ☐ | | |
 | O1 — release table | ☐ | | |
