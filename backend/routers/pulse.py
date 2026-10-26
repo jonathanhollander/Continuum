@@ -156,7 +156,9 @@ def get_portal_view(request: Request, token: str, session: Session = Depends(get
     contact = session.exec(statement).first()
     if not contact:
         raise HTTPException(status_code=404, detail="Invalid portal token")
-        
+    if contact.portal_token_expires and contact.portal_token_expires < datetime.utcnow():
+        raise HTTPException(status_code=401, detail="Token expired")
+
     # 2. Get User Status
     user_id = contact.user_id
     user = session.get(User, user_id)
@@ -167,16 +169,14 @@ def get_portal_view(request: Request, token: str, session: Session = Depends(get
     escalation_stmt = select(PulseEscalationLog).where(PulseEscalationLog.user_id == user_id).order_by(PulseEscalationLog.id.desc())
     last_escalation = session.exec(escalation_stmt).first()
     
-    show_sensitive = False
-    if last_escalation:
-        tier = session.get(PulseEscalationTier, contact.tier_id)
-        if tier and last_escalation.tier_number >= tier.tier_number:
-            show_sensitive = True
+    tier = session.get(PulseEscalationTier, contact.tier_id) if contact.tier_id else None
+    show_sensitive = bool(last_escalation and tier and last_escalation.tier_number >= tier.tier_number)
 
     return {
         "user_id": user_id,
         "contact_id": contact.id,
         "contact_name": contact.name,
+        "contact_tier": tier.tier_number if tier else None,
         "user_name": user.email.split('@')[0].capitalize() if user else "Estate Owner",
         "user_status": "active" if (last_checkin and last_checkin.timestamp > datetime.utcnow() - timedelta(hours=48)) else "grace",
         "last_checkin": last_checkin.timestamp if last_checkin else None,
@@ -192,6 +192,8 @@ def get_portal_view(request: Request, token: str, session: Session = Depends(get
 def guardian_respond(request: Request, token: str, action: str, session: Session = Depends(get_session)):
     contact = session.exec(select(PulseContact).where(PulseContact.portal_token == token)).first()
     if not contact: raise HTTPException(status_code=404, detail="Invalid token")
+    if contact.portal_token_expires and contact.portal_token_expires < datetime.utcnow():
+        raise HTTPException(status_code=401, detail="Token expired")
         
     if action == "snooze":
         checkin_rec = PulseCheckin(user_id=contact.user_id, method="guardian_snooze", note=f"Snoozed by {contact.name}")
@@ -293,7 +295,9 @@ def confirm_contact(request: Request, token: str, session: Session = Depends(get
     contact = session.exec(select(PulseContact).where(PulseContact.portal_token == token)).first()
     if not contact:
         raise HTTPException(status_code=404, detail="Invalid token")
-    
+    if contact.portal_token_expires and contact.portal_token_expires < datetime.utcnow():
+        raise HTTPException(status_code=401, detail="Token expired")
+
     # Resetting the user's safety timer or logging a 'spoken to' event
     # This effectively acts as a proxy check-in
     checkin = PulseCheckin(

@@ -133,12 +133,16 @@
                                 <p
                                     class="text-sm text-amber-200/70 mt-1 leading-relaxed"
                                 >
-                                    {state.data.user_name} missed their scheduled
-                                    check-in {new Date(
-                                        state.data.last_checkin,
-                                    ).toLocaleDateString()} at {new Date(
-                                        state.data.last_checkin,
-                                    ).toLocaleTimeString()}.
+                                    {#if state.data.last_checkin}
+                                        {state.data.user_name} missed their scheduled
+                                        check-in {new Date(
+                                            state.data.last_checkin,
+                                        ).toLocaleDateString()} at {new Date(
+                                            state.data.last_checkin,
+                                        ).toLocaleTimeString()}.
+                                    {:else}
+                                        {state.data.user_name} hasn't checked in yet.
+                                    {/if}
                                 </p>
                             </div>
                         </div>
