@@ -13,7 +13,7 @@ export type ModuleStatus = {
 // Keys should now be the suffix used in persistence.ts
 // e.g. 'assets' -> continuum_acc_{id}_prof_{pid}_assets
 export const MODULES_CONFIG = [
-    { id: 'assets_assets-main', name: 'Financial Accounts', path: '/financial-accounts' },
+    { id: 'assets_assets-main', name: 'Financial Accounts', path: '/modules/financial-accounts' },
     { id: 'docs_legal-vault', name: 'Legal Documents', path: '/modules/legal-documents' },
     { id: 'insurance_policies', name: 'Insurance', path: '/modules/insurance' },
     { id: 'subscriptions', name: 'Subscriptions', path: '/modules/subscriptions' },

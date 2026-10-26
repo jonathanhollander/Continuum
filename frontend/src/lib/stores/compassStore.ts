@@ -95,7 +95,7 @@ const BRIEFS: Record<string, CompassBrief> = {
             "Do NOT write your master password here in plain text. Use a 'Digital Vault' workflow or a physical piece of paper in a safe."
         ]
     },
-    '/modules/medical-directives': {
+    '/modules/medical': {
         title: "Medical Directives",
         mission: "Speak for yourself when you cannot speaking.",
         emotional_context: "This is the hardest part. No one wants to think about life support. But your family *desperately* wants to know what you would want, so they don't have to guess.",

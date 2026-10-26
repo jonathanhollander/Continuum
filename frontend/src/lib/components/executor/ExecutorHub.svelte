@@ -164,7 +164,7 @@
             Focus on what matters most right now.
         </p>
         <a
-            href="/modules"
+            href="/catalog"
             class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
         >
             View all modules
