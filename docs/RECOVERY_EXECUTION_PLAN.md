@@ -354,6 +354,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | U70 | Tooltips open on hover only (U63) | `ui-standards-enforcer` / `general-purpose` | `lib/components/ui/Tooltip.svelte` | Keyboard focus never shows the bubble — focusin/focusout show and hide it, Escape dismisses | Tab to a sidebar row: bubble shown and described; Escape hides it; 0 errors |
 | U71 | Uploader drop zone name and selected state of button groups (U66) | `ui-standards-enforcer` / `general-purpose` | `lib/components/UniversalUploader.svelte`, `lib/components/FileUploader.svelte` (drop zone only); insurance Status Tracking, property Current Status, subscriptions Difficulty to Cancel button rows (`aria-pressed` only) | Drop zone is named by its own prompt text, not its field label — `aria-describedby` the label; the three button groups never announce the selected option — `aria-pressed` | Accessibility tree: drop zone described by its label; selected option pressed=true; 0 errors |
 | U72 | Remaining browser `confirm()` calls (U65) | `ui-standards-enforcer` / `general-purpose` | the `confirm(` calls only in routes letters, calendar, family-hub, qr-codes, anniversary-manager, home-manual (×3), contacts, legacy-journal, funeral (×2), timeline, insurance, pulse/vault, activity-log, settings/data; `RoleSwitcher.svelte`, `ConciergeSettings.svelte` | Switch each to `await askConfirm(...)`; perspective changes (RoleSwitcher, ConciergeSettings) need a confirm label that fits — add an optional label to `askConfirm` | `grep confirm(` finds 0 browser calls in those files; each clicked remove asks in the page; perspective change confirm reads right; 0 errors |
+| U73 | Tooltip lands offset on a scrolled page (U70) | `ui-debugger` / `general-purpose` | `lib/components/ui/Tooltip.svelte` (`calculatePosition` only) | Adds `window.scrollX/Y` to a `position: fixed` bubble — drop the scroll offset | Dashboard scrolled 600 px: bubble beside its link (within 8 px); unscrolled unchanged; 0 errors |
 
  (decision 12; parallel track, approved by orchestrator diff review)
 
@@ -890,10 +891,11 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | U66 | ☑ | c26505b | Labels linked to controls in FormInput, SmartInput, FileUploader, UniversalUploader and 10 module forms; button rows are named groups; field-less labels became text. Unnamed fields in add forms: pets 1, property 2, insurance 3, subscriptions 1, medical 1 → 0; svelte-check label warnings 60 → 0. 0 page errors. Finding → U71 |
 | U67 | ☑ | 7182103 | pets, subscriptions, family-hub, catalog body `px-8` (body x 312 → 320 = h1); executor guide tabs 706 → 312, task list 480 → 345. 0 page errors. Finding → U69 |
 | U68 | ▶ | | |
-| U69 | ▶ | | |
-| U70 | ▶ | | |
+| U69 | ☑ | ee95271 | Executor toolkit wrapper `px-8` (title and card 312 → 320, = module titles); task list fills its card (row right edge 1113 → 1375, gap 271 → 1 px). 0 errors |
+| U70 | ☑ | f778b1a | Tooltip opens on keyboard focus, closes on focusout and Escape; focused link gets `aria-describedby` (0 → 1 tooltip on tabbing the dashboard). 0 errors. Finding → U73 |
 | U71 | ▶ | | |
 | U72 | ☐ (queued: files in flight — U71 insurance) | | |
+| U73 | ▶ | | |
 | U42 | ☑ | e127714 | Settings left-aligned like the dashboard (heading x 456 → 312); 5 profile inputs labelled (5 → 0 unlabelled); date of death shown to Executor and Family only (Owner 1 → 0). X156 confirm intact. 0 page errors. Finding → U62 |
 | G0 | ☐ (after Wave U) | | |
 | T0 | ☐ (after Wave U, with G0) | | |
