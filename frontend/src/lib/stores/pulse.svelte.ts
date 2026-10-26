@@ -35,7 +35,6 @@ export const pulseStatus = {
 
 export const pulseSettings = {
     get data() { return settingsSync.data; },
-    update: (updates: Partial<PulseSettings>) => settingsSync.update(updates as PulseSettings),
     sync: () => settingsSync.sync()
 };
 
@@ -70,19 +69,6 @@ export const pulse = {
         settingsSync.updateLocal({ ...(settingsSync.data || {}), enabled } as PulseSettings);
     },
     checkin: (note?: string) => pulseStore.checkin(note),
-    // Svelte store-compatible update method
-    update(fn: (current: { enabled: boolean; contacts: any[]; status: string }) => { enabled?: boolean; contacts?: any[]; status?: string }) {
-        const current = {
-            enabled: settingsSync.data?.enabled ?? false,
-            contacts: [],
-            status: statusSync.data?.status || 'disabled'
-        };
-        const updated = fn(current);
-        // Only update settings if enabled changed
-        if (updated.enabled !== undefined && updated.enabled !== current.enabled) {
-            settingsSync.update({ enabled: updated.enabled } as PulseSettings);
-        }
-    },
     // Store compatibility for derived()
     subscribe(run: (value: { enabled: boolean; contacts: any[]; status: string }) => void) {
         const getValue = () => ({
