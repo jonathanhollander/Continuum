@@ -107,9 +107,10 @@ def log_deletion(
     user_id: int,
     user_email: str,
     resource_type: str,
-    resource_id: int
+    resource_id: int,
+    commit: bool = True
 ) -> None:
-    """Log data deletion."""
+    """Log data deletion. commit=False: the caller's commit writes it with the delete."""
     log_audit(
         session=session,
         request=request,
@@ -118,7 +119,8 @@ def log_deletion(
         user_email=user_email,
         resource_type=resource_type,
         resource_id=str(resource_id),
-        success=True
+        success=True,
+        commit=commit
     )
 
 
