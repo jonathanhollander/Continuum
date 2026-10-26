@@ -21,7 +21,7 @@
         onsaved: () => void | Promise<void>;
     } = $props();
 
-    const gentleRetry = "Let's try that once more in a moment.";
+    const gentleRetry = "Your circle is safe in your account. You can try again whenever you're ready.";
 
     // The shared contacts store (SyncManager), so tiers set elsewhere show here at once. Its cached
     // list shows straight away; the sync below refreshes it.

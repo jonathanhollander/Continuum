@@ -41,7 +41,7 @@
     let loading = $state(true);
     let error = $state<string | null>(null);
 
-    const gentleRetry = "Let's try that once more in a moment.";
+    const gentleRetry = "You can try again whenever you're ready.";
 
     onMount(async () => {
         await loadData();

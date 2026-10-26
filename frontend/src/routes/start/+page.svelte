@@ -106,7 +106,7 @@
             <h1
                 class="text-4xl md:text-6xl font-serif font-bold text-foreground leading-tight"
             >
-                Secure your legacy, <br />
+                Your plan, <br />
                 <span class="text-primary">one conversation at a time.</span>
             </h1>
             <p

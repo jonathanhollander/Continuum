@@ -155,7 +155,7 @@ function createConciergeEngine() {
 
         let prefix = "";
         if (!state.hasInteracted) {
-            prefix = "Welcome to Continuum. I'm here to help you secure your legacy. ";
+            prefix = "Welcome to Continuum. I'm here to help you put your plan together. ";
         } else {
             prefix = "Ready to continue. ";
         }
