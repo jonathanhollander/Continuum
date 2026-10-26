@@ -171,7 +171,7 @@ export function getErrorTitle(code?: string): string {
             return 'Take Your Time';
 
         case 'DATABASE_ERROR':
-            return 'Saving is taking a moment';
+            return "Everything you've saved is safe";
 
         default:
             return "We're here to help";
