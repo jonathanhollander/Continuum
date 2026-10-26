@@ -164,38 +164,38 @@
     $: displayAction = actionLabel || "Add First Item";
 </script>
 
-<div class="py-12 px-4 max-w-3xl mx-auto text-center" in:fade>
+<div class="py-12 px-4 max-w-3xl mx-auto text-center bg-card rounded-2xl" in:fade>
     <!-- Header -->
     <div class="mb-8">
         <div
-            class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400"
+            class="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4 text-muted-foreground"
         >
             <svelte:component this={displayIcon} size={32} />
         </div>
-        <h3 class="font-serif font-bold text-2xl text-slate-700 mb-2">
+        <h3 class="font-serif font-bold text-2xl text-foreground mb-2">
             {displayTitle}
         </h3>
-        <p class="text-slate-500 max-w-md mx-auto">{displayDesc}</p>
+        <p class="text-muted-foreground max-w-md mx-auto">{displayDesc}</p>
     </div>
 
     <!-- Ghost Cards -->
     <div
-        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8 opacity-50 pointer-events-none select-none"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8 pointer-events-none select-none"
     >
         {#each config.examples as ex}
             <div
-                class="bg-white p-4 rounded-xl border-2 border-dashed border-slate-200 flex items-center gap-3"
+                class="bg-card p-4 rounded-xl border-2 border-dashed border-border flex items-center gap-3"
             >
                 <div
-                    class="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-300"
+                    class="w-10 h-10 bg-muted rounded-full flex items-center justify-center text-muted-foreground"
                 >
                     <Plus size={16} />
                 </div>
                 <div class="text-left">
-                    <div class="font-bold text-slate-400 text-sm">
+                    <div class="font-bold text-muted-foreground text-sm">
                         {ex.name}
                     </div>
-                    <div class="text-xs text-slate-300 uppercase font-bold">
+                    <div class="text-xs text-muted-foreground uppercase font-bold">
                         {ex.role}
                     </div>
                 </div>
@@ -204,7 +204,7 @@
         <div
             class="bg-primary/5 p-4 rounded-xl border-2 border-primary/20 border-dashed flex items-center justify-center gap-2 animate-pulse"
         >
-            <span class="text-primary/70 text-sm font-bold"
+            <span class="text-primary-hover text-sm font-bold"
                 >Your Entry Goes Here</span
             >
         </div>
@@ -213,7 +213,7 @@
     <!-- CTA -->
     <button
         on:click={onAdd}
-        class="bg-primary text-primary-foreground px-8 py-3 rounded-xl font-bold hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2 mx-auto"
+        class="bg-primary text-primary-foreground px-8 py-3 rounded-xl font-bold hover:bg-primary-hover transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2 mx-auto"
     >
         <Plus size={20} />
         {displayAction}
