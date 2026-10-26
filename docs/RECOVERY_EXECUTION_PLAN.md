@@ -1,6 +1,6 @@
 # Continuum — Recovery Execution Plan (subagent-run)
 
-**Last Updated:** 2026-10-26 05:35 EST
+**Last Updated:** 2026-10-26 07:10 EST
 
 The how and the order for [PROJECT_RECOVERY_PLAN.md](PROJECT_RECOVERY_PLAN.md) (phases A–F).
 Issue IDs (CU-0xx) and their evidence are in
@@ -276,6 +276,10 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X20 | PDF preview frame, HEAD requests, inline-script hash (X18 findings) | No `frame-src`, so the export preview's `blob:` PDF iframe (`export/preview/+page.svelte:138`) falls back to `default-src 'self'` and is refused; SPA routes answer HEAD with 405; `script-src 'unsafe-inline'` could become a hash (one 330-byte inline script; SvelteKit `kit.csp` hash mode writes a meta tag) | The CSP builder and `serve_root`/`serve_spa` in `backend/main.py`; `frontend/svelte.config.js` (`kit.csp` only) | `frame-src 'self' blob:`; SPA routes accept HEAD; replace `'unsafe-inline'` in `script-src` with the build's hash (kit.csp hash mode plus a header computed from `dist/index.html` at startup, or the smaller of the two) only if every page still loads | Export preview shows the PDF; `curl -I /dashboard` 200; dashboard, onboarding, concierge-window and export preview load with 0 CSP errors at 1440×900 |
 | X21 | Journal and heirloom prompt ideas never show (X19 findings) | `legacy-journal/+page.svelte:256` and `heirlooms/+page.svelte:362` pass `promptPool` to `AIPromptBar`, which never renders it; `detectUserRole` calls `.toLowerCase()` on `unknown` (`aiConciergeService.ts:211`) | `AIPromptBar.svelte`, `aiConciergeService.ts` | Render a few prompts from `promptPool` as clickable suggestions (with a gentle "Show other ideas" shuffle) when it is passed; type the role value | 1440×900: the journal and heirloom pages show pool prompts and clicking one fills the input; the contacts page is unchanged; svelte-check one fewer error |
 | X22 | Singleton PUT doesn't encode JSON columns (B3 finding) | `PUT /api/data/{funeral_data,advanced_assets}/{id}` stores objects/lists in JSON text columns without `json.dumps` (`estate_data.py` update_item); no frontend caller today | `update_item` in `backend/routers/estate_data.py` | Encode the same JSON columns POST encodes (shared helper) | curl PUT with an object `wishes` then GET returns it intact |
+| X24 | Sessions end after 15 minutes (OpenWiki finding; CU-017) | The frontend never stores or uses the refresh token, so the user is logged out when the 15-minute access token expires; `auth.init` clears tokens on a network failure | `frontend/src/lib/stores/auth.ts` (token storage and refresh); the fetch wrapper's 401 handling | Store the refresh token at login; on a 401, refresh once and retry the request; keep tokens on a network failure | An access token forced to expire mid-session refreshes silently and the save goes through; a network failure doesn't log the user out |
+| X25 | Guardians can't open the portal link (OpenWiki finding) | Alert emails link to `/portal/{token}` (and `/pulse/portal/...`), but the client login guard only lets `/pulse/respond` and `/pulse/verify` through without a session, so a signed-out guardian lands on `/login` | The public-route list in the client login guard | Add the portal routes the emails actually use (read the email templates) to the public list | Signed out, `/portal/<synthetic token>` renders the portal (or its gentle invalid-link state), not `/login` |
+| X26 | Pulse scheduler ignores its settings (OpenWiki finding; CU-023) | `pulse_scheduler.py` runs hourly regardless of `PULSE_SCHEDULER_ENABLED` / `PULSE_CHECK_INTERVAL_MINUTES`; expired safety timers are never acted on | `backend/pulse_scheduler.py` (and the config fields it should read) | Read both settings; act on expired safety timers through the existing escalation logic. No real messages: locally with synthetic data and email sending off | With the scheduler disabled it doesn't start; with a 1-minute interval an expired synthetic timer escalates once, logged, with no real send |
+| X27 | Unauthenticated Pulse endpoints (OpenWiki finding) | The Postmark bounce webhook has no secret or signature check; `POST /api/pulse/nudge` takes a contact id with no login | The bounce webhook and the nudge route | Webhook: require a shared secret (Postmark basic auth or a token in the URL, from a new Railway variable; skip the check only when the variable is unset locally); nudge: require login and ownership of the contact | Webhook without the secret 401, with it 200; nudge signed out 401, another user's contact 404 |
 | X6 | Rotate the OpenRouter key (was F1) | The key is public in shipped JS | Owner step at openrouter.ai (Claude may not create or copy API keys) | Create a new key, put it in the Railway variable X1 reads, revoke the old one | Done after X1 is live; the old key returns 401 |
 
 ---
@@ -347,6 +351,10 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X19 | ☑ | cba8a86 | 1440×900: a failure shows the notice with 0 copy buttons; a stubbed draft copies with inline "Copied."; a refused clipboard shows the gentle line; no dialogs; svelte-check = baseline |
 | X21 | ▶ | | |
 | X22 | ▶ | | |
+| X24 | ☐ | | |
+| X25 | ☐ | | |
+| X26 | ☐ | | |
+| X27 | ☐ | | |
 | X16 | ☑ | 10b25d0 | Fresh DB: GET prefs 200 `{}`, PATCH 200, GET returns the saved value (also fixed: PATCH mutated the JSON in place so it never saved). Production column is `json`, model `JSON`: same type; not run on the simulated schema |
 | X17 | ☑ | 5b8e66c | Before: 2 CSP errors, 0 font faces; after: no console errors, Inter and EB Garamond loaded; 1440×900 diff 3.02% of pixels, text only (headings now EB Garamond, body Inter) |
 | X18 | ☑ | bb6da02 | Header now has `base-uri 'self'; frame-ancestors 'none'; object-src 'none'`; onboarding and concierge-window load at 1440×900 with 0 CSP console lines (the app never frames itself) |
