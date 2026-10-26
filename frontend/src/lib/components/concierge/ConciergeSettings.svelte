@@ -204,11 +204,12 @@
                 <!-- Names -->
                 <div class="space-y-4">
                     <div class="grid grid-cols-1 gap-1.5">
-                        <label
+                        <label for="cs-owner"
                             class="text-[10px] font-bold text-slate-400 uppercase"
                             >{$dict.labelOwner}</label
                         >
                         <input
+ id="cs-owner"
                             type="text"
                             bind:value={$estateProfile.ownerName}
                             placeholder={$dict.placeholderName}
@@ -216,11 +217,12 @@
                         />
                     </div>
                     <div class="grid grid-cols-1 gap-1.5">
-                        <label
+                        <label for="cs-executor"
                             class="text-[10px] font-bold text-slate-400 uppercase"
                             >{$dict.labelExecutor}</label
                         >
                         <input
+ id="cs-executor"
                             type="text"
                             bind:value={$estateProfile.executorName}
                             placeholder={$dict.placeholderPrimary}
@@ -232,23 +234,27 @@
                 <!-- Vital Info -->
                 <div class="space-y-4">
                     <div class="grid grid-cols-2 gap-4">
-                        <div class="space-y-1.5">
-                            <label
+                        {#if $userRole !== "Owner"}
+<div class="space-y-1.5">
+                            <label for="cs-death"
                                 class="text-[10px] font-bold text-slate-400 uppercase"
                                 >{$dict.labelDeathDate}</label
                             >
                             <input
+ id="cs-death"
                                 type="date"
                                 bind:value={$estateProfile.dateOfDeath}
                                 class="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none shadow-sm"
                             />
                         </div>
+{/if}
                         <div class="space-y-1.5">
-                            <label
+                            <label for="cs-ssn"
                                 class="text-[10px] font-bold text-slate-400 uppercase"
                                 >{$dict.labelSSN}</label
                             >
                             <input
+ id="cs-ssn"
                                 type="text"
                                 maxlength="4"
                                 bind:value={$estateProfile.last4SSN}
@@ -258,11 +264,12 @@
                         </div>
                     </div>
                     <div class="grid grid-cols-1 gap-1.5 pt-0.5">
-                        <label
+                        <label for="cs-residence"
                             class="text-[10px] font-bold text-slate-400 uppercase"
                             >{$dict.labelResidence}</label
                         >
                         <input
+ id="cs-residence"
                             type="text"
                             bind:value={$estateProfile.legalCityState}
                             placeholder={$dict.placeholderCityState}
