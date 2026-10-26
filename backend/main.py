@@ -20,7 +20,7 @@ from backend.pulse_scheduler import start_scheduler, stop_scheduler
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import select
 from datetime import timedelta
-from backend.routers import pulse, contacts, estate_data, medical, memories, auth as auth_router, media, email, support, ai_proxy, export, recipient
+from backend.routers import pulse, contacts, estate_data, medical, memories, auth as auth_router, media, email, support, ai_proxy, export, recipient, admin_users
 
 from backend.errors import ContinuumException, handle_exception
 from slowapi import _rate_limit_exceeded_handler
@@ -170,6 +170,7 @@ referrer = ReferrerPolicy().no_referrer()
 secure_headers = Secure(csp=csp, hsts=hsts, referrer=referrer)
 
 app.include_router(auth_router.router)
+app.include_router(admin_users.router)
 app.include_router(email.router)
 app.include_router(pulse.router)
 app.include_router(contacts.router)

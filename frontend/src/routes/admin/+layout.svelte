@@ -9,12 +9,14 @@
         Palette,
         Zap,
         ArrowLeft,
+        Users,
+        Settings,
     } from "lucide-svelte";
 
     let { children }: { children: Snippet } = $props();
 
     // The app's one admin rule (Settings › Data and the email admin routes use it too)
-    let isAdmin = $derived($auth.user?.id === 1);
+    let isAdmin = $derived($auth.user?.is_admin === true);
 
     // Anyone else goes to their dashboard once sign-in has settled
     $effect(() => {
@@ -22,6 +24,8 @@
     });
 
     const navItems = [
+        { label: "Users", href: "/admin/users", icon: Users },
+        { label: "AI Settings", href: "/admin/ai-settings", icon: Settings },
         {
             label: "Readiness Hub",
             href: "/admin/readiness",

@@ -12,6 +12,7 @@ from datetime import datetime
 from pydantic import BaseModel, EmailStr
 from backend.database import get_session, User
 from backend.auth import get_current_user
+from backend.admin import require_admin
 from backend.models.email_log import EmailLog
 from backend.utils.logger import get_logger
 from backend.config import settings
@@ -68,10 +69,8 @@ def get_email_status(
     """
     query = select(EmailLog)
 
-    # Security: Non-admins can only see their own emails
-    # Note: Add is_admin field to User model for production
-    # For now, assume user_id=1 is admin (dev user)
-    is_admin = current_user.id == 1  # TODO: Replace with proper admin check
+    # Account designations govern the shared admin views too.
+    is_admin = current_user.is_admin
 
     if not is_admin:
         # Regular users can only see their own emails
@@ -141,7 +140,7 @@ def get_email_by_id(
         )
 
     # Security check
-    is_admin = current_user.id == 1  # TODO: Replace with proper admin check
+    is_admin = current_user.is_admin
     if not is_admin and email_log.user_id != current_user.id:
         logger.warning(
             f"Unauthorized access attempt to email log {email_log_id}",
@@ -162,7 +161,7 @@ def get_email_by_id(
 @router.post("/resend/{email_log_id}")
 def resend_email(
     email_log_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_admin),
     session: Session = Depends(get_session)
 ):
     """
@@ -171,18 +170,6 @@ def resend_email(
     Only admins can resend emails.
     This is useful for debugging and recovering from transient failures.
     """
-    is_admin = current_user.id == 1  # TODO: Replace with proper admin check
-
-    if not is_admin:
-        logger.warning(
-            f"Non-admin user attempted to resend email {email_log_id}",
-            extra={"context": {"user_id": current_user.id, "email_log_id": email_log_id}}
-        )
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only admins can resend emails"
-        )
-
     email_log = session.get(EmailLog, email_log_id)
 
     if not email_log:
@@ -454,7 +441,7 @@ async def postmark_bounce_webhook(
 @router.get("/bounces", response_model=List[EmailStatusResponse])
 def get_bounced_emails(
     limit: int = Query(50, ge=1, le=100, description="Maximum number of results"),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_admin),
     session: Session = Depends(get_session)
 ):
     """
@@ -462,14 +449,6 @@ def get_bounced_emails(
 
     Admin only. Useful for monitoring email deliverability.
     """
-    is_admin = current_user.id == 1  # TODO: Replace with proper admin check
-
-    if not is_admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only admins can view bounce reports"
-        )
-
     query = select(EmailLog).where(
         EmailLog.status.in_(["bounced", "spam_complaint", "unsubscribed"])
     ).order_by(EmailLog.created_at.desc()).limit(limit)

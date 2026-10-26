@@ -27,8 +27,8 @@
     const syncRegistry = getRegistry();
 
     // The validation tooling and the cloud comparison are for the admin only: the same rule the
-    // server uses for admin access (backend/routers/email.py, user id 1).
-    let isAdmin = $derived($auth.user?.id === 1);
+    // server uses for administrator access: the saved account designation.
+    let isAdmin = $derived($auth.user?.is_admin === true);
 
     let syncingAll = $state(false);
     let generatingTest = $state(false);
