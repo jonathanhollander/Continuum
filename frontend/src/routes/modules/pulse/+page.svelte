@@ -162,8 +162,14 @@
             <p
                 class="text-slate-400 text-sm max-w-sm mx-auto leading-relaxed italic"
             >
-                Your inner circle is standing by. Next scheduled nudge in {pulse.next_nudge ||
-                    "--:--"}.
+                Your inner circle is standing by. {#if pulse.next_nudge}
+                    Your next gentle nudge is {new Date(
+                        pulse.next_nudge,
+                    ).toLocaleString(undefined, {
+                        weekday: "long",
+                        hour: "numeric",
+                        minute: "2-digit",
+                    })}.{/if}
             </p>
             {#if pulse.guardianCheckin}
                 <p class="text-primary text-sm max-w-sm mx-auto">

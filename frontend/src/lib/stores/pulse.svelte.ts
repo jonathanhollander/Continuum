@@ -1,14 +1,16 @@
 import { registerSingletonSync } from "$lib/services/sync.svelte";
 import { apiGet, apiPost } from '$lib/api/client';
 
+// SyncManager stores keys camelCased (convertKeys in sync.svelte.ts): /api/pulse/status's
+// next_nudge arrives here as nextNudge. Times are UTC ISO with "Z".
 export interface PulseStatus {
     status: 'active' | 'grace' | 'not_configured' | 'disabled';
-    last_checkin: string | null;
-    next_nudge: string | null;
-    // A guardian's "they're OK" since the owner's own last check-in (UTC ISO with "Z")
-    guardian_checkin?: { at: string; by: string } | null;
-    escalation_tier?: number | null;
-    alerts_paused_until?: string | null;
+    lastCheckin: string | null;
+    nextNudge: string | null;
+    // A guardian's "they're OK" since the owner's own last check-in
+    guardianCheckin?: { at: string; by: string } | null;
+    escalationTier?: number | null;
+    alertsPausedUntil?: string | null;
 }
 
 export interface PulseSettings {
@@ -56,9 +58,9 @@ export const pulseStore = {
 // Compatibility export with store interface for derived() compatibility
 export const pulse = {
     get status() { return statusSync.data?.status || 'disabled'; },
-    get next_nudge() { return statusSync.data?.next_nudge || null; },
-    get lastCheckin() { return statusSync.data?.last_checkin || null; },
-    get guardianCheckin() { return statusSync.data?.guardian_checkin || null; },
+    get next_nudge() { return statusSync.data?.nextNudge || null; },
+    get lastCheckin() { return statusSync.data?.lastCheckin || null; },
+    get guardianCheckin() { return statusSync.data?.guardianCheckin || null; },
     get enabled() { return settingsSync.data?.enabled ?? false; },
     get contacts() { return []; }, // Contacts are managed separately via PulseContact API
     init: () => statusSync.sync(),
