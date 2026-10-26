@@ -224,6 +224,7 @@
                 <input
                     type="text"
                     bind:value={searchQuery}
+                    aria-label="Search activities"
                     placeholder="Search activities..."
                     class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />

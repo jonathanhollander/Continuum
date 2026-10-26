@@ -567,6 +567,7 @@
                     <textarea
                         bind:value={input}
                         onkeydown={handleKeydown}
+                        aria-label="Your message to the concierge"
                         placeholder={$conciergeEngine.isListening
                             ? "Listening..."
                             : "Provide your details here..."}
