@@ -19,6 +19,7 @@
         X,
         Loader2,
         Pencil,
+        Plus,
     } from "lucide-svelte";
     import { onMount } from "svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
@@ -308,10 +309,15 @@
     let editingId = $state<string | null>(null);
     let draft = $state({ platform: "", username: "", type: "", description: "" });
 
+    function openNew() {
+        editingId = "new";
+        draft = { platform: "", username: "", type: "", description: "" };
+    }
+
     function openEdit(asset: DigitalAccount) {
         editingId = String(asset.id);
         draft = {
-            platform: asset.platform ?? "",
+            platform: asset.platform || (asset as any).name || "",
             username: asset.username ?? "",
             type: asset.type ?? "",
             description: asset.description ?? "",
@@ -333,6 +339,12 @@
     async function saveEditOnce() {
         if (!editingId) return;
         const id = editingId;
+        if (id === "new") {
+            const d = $state.snapshot(draft);
+            editingId = null;
+            await addAsset(d.platform.trim(), d.username, d.type || "Account");
+            return;
+        }
         const changes = { ...$state.snapshot(draft), name: draft.platform };
         editingId = null;
         try {
@@ -377,6 +389,7 @@
 {:else}
 <div class="max-w-5xl mx-auto p-8 animate-in fade-in duration-500">
     <!-- Header -->
+    <div class="-mx-6">
     <LivingBlueprintHeader
         title="Digital Guardian"
         subtitle="Protect your digital legacy from being locked away forever"
@@ -384,14 +397,6 @@
         detailedDescription="Your physical assets are protected by law. Your digital assets are protected by passwords. Set up legacy contacts, inactive account managers, and document your digital inventory so your family isn't locked out of your photos, emails, and accounts."
         whyMatters="Without these specific setups, your family may lose access to irreplaceable memories, important accounts, and digital assets. Taking action now ensures your digital life can be properly managed."
     />
-
-    <div class="flex justify-end mb-6">
-        <button
-            onclick={() => (showWizard = true)}
-            class="bg-[#304743] text-white px-4 py-2 rounded-full font-bold hover:bg-[#2a3f3b] transition-colors flex items-center gap-2 text-sm"
-        >
-            <Siren size={16} /> Run Discovery Wizard
-        </button>
     </div>
 
     <!-- AI Prompt Bar -->
@@ -609,7 +614,7 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
         <!-- Apple Legacy Contact -->
         <div
             class="bg-white rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow"
@@ -1020,6 +1025,20 @@
                 </p>
             </div>
             <div class="flex items-center gap-3">
+                <button
+                    onclick={() => (showWizard = true)}
+                    class="bg-[#304743] text-white px-4 py-2 rounded-full font-bold hover:bg-[#2a3f3b] transition-colors flex items-center gap-2 text-sm"
+                >
+                    <Siren size={16} /> Run Discovery Wizard
+                </button>
+                <button
+                    onclick={openNew}
+                    data-testid="digital-add"
+                    class="flex items-center gap-2 px-5 py-2 bg-primary text-primary-foreground rounded-xl font-semibold shadow-lg shadow-primary/20 hover:opacity-90 transition-all text-sm"
+                >
+                    <Plus class="w-4 h-4" />
+                    Add an account
+                </button>
                 <DataViewToggle module="digital-guardian" onchange={(mode) => viewMode = mode} />
             </div>
         </div>
@@ -1050,6 +1069,10 @@
 
             {#if editingId}
                 <div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label={editingId === "new" ? "Add an account" : "Edit these details"}
+                    use:focusTrap={{ onEscape: () => (editingId = null) }}
                     class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
                     transition:fade
                 >
@@ -1070,7 +1093,7 @@
                         </button>
                         <div class="p-8 space-y-4">
                             <h3 class="font-serif font-bold text-2xl text-[#304743]">
-                                Edit these details
+                                {editingId === "new" ? "Add an account" : "Edit these details"}
                             </h3>
                             <label class="block text-sm font-bold text-slate-600">
                                 Platform
@@ -1103,7 +1126,7 @@
                                 aria-busy={savingEdit}
                                 class="px-6 py-2.5 rounded-xl font-semibold bg-[#304743] text-white hover:bg-[#2a3f3b] transition-colors disabled:opacity-50"
                             >
-                                {savingEdit ? "Saving..." : "Save my updates"}
+                                {savingEdit ? "Saving..." : editingId === "new" ? "Save my thoughts" : "Save my updates"}
                             </button>
                         </div>
                     </form>
@@ -1145,7 +1168,7 @@
                                 </div>
                                 <div>
                                     <div class="font-bold text-slate-800">
-                                        {asset.platform}
+                                        {asset.platform || (asset as any).name}
                                     </div>
                                     <div
                                         class="text-xs text-slate-500 uppercase tracking-wider"
@@ -1190,7 +1213,7 @@
                             <tbody class="divide-y divide-slate-100">
                                 {#each assets as asset (asset.id)}
                                     <tr class="hover:bg-slate-50 transition-colors">
-                                        <td class="px-4 py-3 font-medium text-slate-800">{asset.platform}</td>
+                                        <td class="px-4 py-3 font-medium text-slate-800">{asset.platform || (asset as any).name}</td>
                                         <td class="px-4 py-3 text-slate-600">{asset.username}</td>
                                         <td class="px-4 py-3">
                                             <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-medium">
