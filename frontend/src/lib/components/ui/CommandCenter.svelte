@@ -1,6 +1,6 @@
 <script lang="ts">
     import { focusTrap } from "$lib/actions/focusTrap";
-    import { onMount, createEventDispatcher } from "svelte";
+    import { onMount } from "svelte";
     import {
         Search,
         X,
@@ -40,7 +40,7 @@
     import { petStore } from "$lib/stores/petStore.svelte";
     import { medicalStore } from "$lib/stores/medicalStore.svelte";
 
-    const dispatch = createEventDispatcher();
+    let { onclose }: { onclose: () => void } = $props();
     let query = $state("");
     let selectedIndex = $state(0);
     let inputElement: HTMLInputElement | undefined = $state();
@@ -196,6 +196,10 @@
     });
 
     function handleKeydown(e: KeyboardEvent) {
+        if ((e.key === "ArrowDown" || e.key === "ArrowUp") && filteredItems.length === 0) {
+            e.preventDefault();
+            return;
+        }
         if (e.key === "ArrowDown") {
             e.preventDefault();
             selectedIndex = (selectedIndex + 1) % filteredItems.length;
@@ -210,19 +214,19 @@
                 navigate(filteredItems[selectedIndex].href);
             }
         } else if (e.key === "Escape") {
-            dispatch("close");
+            onclose();
         }
     }
 
     function navigate(href: string) {
         goto(href);
-        dispatch("close");
+        onclose();
     }
 </script>
 
-<div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => dispatch("close") }}
+<div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => onclose() }}
     class="fixed inset-0 z-[200] flex items-start justify-center pt-24 px-4 bg-slate-900/40 backdrop-blur-sm"
-    onclick={(e) => { if (e.target === e.currentTarget) dispatch("close"); }}
+    onclick={(e) => { if (e.target === e.currentTarget) onclose(); }}
     transition:fade={{ duration: 200 }}
 >
     <div

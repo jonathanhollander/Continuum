@@ -623,7 +623,7 @@
 {/if}
 
 {#if showCommandCenter}
-	<CommandCenter on:close={() => (showCommandCenter = false)} />
+	<CommandCenter onclose={() => (showCommandCenter = false)} />
 {/if}
 
 <ConciergePanel
