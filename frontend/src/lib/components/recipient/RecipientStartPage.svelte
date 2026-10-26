@@ -30,7 +30,9 @@
     const rows = (k: string): any[] => snapshot.sections[k] ?? [];
     const recipient = $derived(view.recipient);
     const firstName = $derived((recipient.name || "").trim().split(/\s+/)[0] || recipient.name);
+    // With no name given, the neutral wording; `OwnerName` opens a sentence (card X144).
     const ownerName = $derived(packet.ownerName || "the person who shared this");
+    const OwnerName = $derived(packet.ownerName || "The person who shared this");
 
     // Files (card X104): each one is fetched when it comes into view (or when the full record or
     // the download copy needs it), once, shown from a blob URL and reused by the download copy.
@@ -154,11 +156,11 @@
             { title: "Take a moment for yourself", body: "There is time. This page stays here for you, and you can come back to it whenever you need." },
         ];
         if (firstCalls.length)
-            out.push({ title: `Let ${names(firstCalls)} know`, body: `${ownerName} asked that they hear first. Their numbers are below.`, href: "#people" });
+            out.push({ title: `Let ${names(firstCalls)} know`, body: `${OwnerName} asked that they hear first. Their numbers are below.`, href: "#people" });
         if (recipient.is_executor)
             out.push({ title: "You are named as executor", body: "The originals of the important papers are listed below, with where each one is kept.", href: "#originals" });
         else if (otherExecutors.length)
-            out.push({ title: `${otherExecutors.join(" and ")} can help with the legal steps`, body: `${ownerName} named them as executor.`, href: "#people" });
+            out.push({ title: `${otherExecutors.join(" and ")} can help with the legal steps`, body: `${OwnerName} named them as executor.`, href: "#people" });
         if (hasWishes)
             out.push({ title: "Their final wishes are written down", body: "You can read them in the full record at the end of this page.", href: "#record" });
         if (pets.length)
@@ -239,7 +241,7 @@
             <h1 class="font-serif text-5xl leading-tight text-[#304743]" data-testid="recipient-owner">From {ownerName}</h1>
             <div class="w-24 h-2 bg-[#D4AF37] rounded-full"></div>
             <p class="text-lg text-stone-600 max-w-2xl leading-relaxed">
-                {ownerName} gathered these things for you, {firstName}. Take whatever you need, in your own time.
+                {OwnerName} gathered these things for you, {firstName}. Take whatever you need, in your own time.
             </p>
         </header>
 
