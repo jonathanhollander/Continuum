@@ -48,6 +48,7 @@
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
     import { focusTrap } from "$lib/actions/focusTrap";
+    import { formSaveAttempt } from "$lib/utils/formSaveAttempt";
     import { formatMoney } from "$lib/utils/money";
 
     // showAddForm is bindable so a page can place Add Asset in its own header (headerAdd=false).
@@ -237,6 +238,8 @@
         return ((last - first) / Math.abs(first)) * 100;
     }
 
+    const saveAttempt = formSaveAttempt(assetSync);
+
     // One save at a time: while it is open the button waits, so a second click sends nothing.
     let saving = $state(false);
     async function saveAsset() {
@@ -251,80 +254,38 @@
 
     async function saveAssetOnce() {
         if (!newAsset.name) return;
-
-        // Serialize Custom Attributes
-        const customAttributesStr = JSON.stringify(parsedCustomAttributes);
-
+        const form = newAsset;
+        const fields = JSON.stringify([form, parsedCustomAttributes]);
+        const ownerName = $estateProfile.ownerName || "User";
+        const value = valueOf(form.value);
+        const history = [...parseHistory(form.valueHistory)];
+        const previousValue = valueOf(assets.find((a) => a.id === form.id)?.value);
+        if (form.id && history.length === 0 && previousValue !== null && previousValue !== value)
+            history.push(previousValue);
+        if (value !== null && (history.length === 0 || history[history.length - 1] !== value)) history.push(value);
+        const payload = {
+            ...form,
+            name: form.name!,
+            type: (form.type as AssetType) || "Other",
+            value,
+            ownershipPercentage: ownershipOf(form.ownershipPercentage),
+            customAttributes: JSON.stringify(parsedCustomAttributes),
+            valueHistory: form.id ? history : value === null ? [] : [value],
+        };
+        const id = form.id;
         try {
-        if (newAsset.id) {
-            // Edit Mode - update via SyncManager
-            const value = valueOf(newAsset.value);
-            // History records real saved values: append only when the value changed; a blank is no value.
-            const previous = assets.find((a) => a.id === newAsset.id);
-            const previousValue = valueOf(previous?.value);
-            const history = [...parseHistory(newAsset.valueHistory)];
-            if (history.length === 0 && previousValue !== null && previousValue !== value)
-                history.push(previousValue);
-            if (value !== null && (history.length === 0 || history[history.length - 1] !== value))
-                history.push(value);
-            const updates = {
-                ...newAsset,
-                value,
-                ownershipPercentage: ownershipOf(newAsset.ownershipPercentage),
-                customAttributes: customAttributesStr,
-                valueHistory: history,
-            };
-
-            await assetSync.update(newAsset.id, updates);
-
-            // Log UPDATE
-            activityLog.logEvent({
-                module: module.name || "Asset Manager",
-                action: "UPDATE",
-                entityType: "Asset",
-                entityId: newAsset.id,
-                entityName: newAsset.name || "Unnamed Asset",
-                changes: [], // Simplified for now
-                userContext: $estateProfile.ownerName || "User",
-            });
-        } else {
-            // Create Mode - create via SyncManager
-            const value = valueOf(newAsset.value);
-            const created = await assetSync.create({
-                name: newAsset.name!,
-                type: (newAsset.type as AssetType) || "Other",
-                value,
-                location: newAsset.location || "",
-                accountNumber: newAsset.accountNumber || "",
-                ownershipPercentage: ownershipOf(newAsset.ownershipPercentage),
-                beneficiaries: newAsset.beneficiaries || "",
-                notes: newAsset.notes || "",
-                loginUrl: newAsset.loginUrl || "",
-                beneficiaryEmail: newAsset.beneficiaryEmail || "",
-                image: newAsset.image || "",
-                is_closed: newAsset.is_closed || false,
-                closure_date: newAsset.closure_date || "",
-                closureNotes: newAsset.closureNotes || "",
-                documents: newAsset.documents || "",
-                valueHistory: value === null ? [] : [value], // the one real value so far
-                customAttributes: customAttributesStr,
-            }, false, false, saveAsset);
-
-            // Log CREATE
-            activityLog.logEvent({
-                module: module.name || "Asset Manager",
-                action: "CREATE",
-                entityType: "Asset",
-                entityId: created.id,
-                entityName: created.name,
-                userContext: $estateProfile.ownerName || "User",
-            });
-        }
-
-        // save(); // SyncManager handles persistence
-        resetForm();
+            await saveAttempt(form, payload, (saved) => {
+                activityLog.logEvent({
+                    module: module.name || "Asset Manager", action: id ? "UPDATE" : "CREATE",
+                    entityType: "Asset", entityId: saved.id, entityName: saved.name,
+                    userContext: ownerName,
+                });
+                if (newAsset !== form) return;
+                if (JSON.stringify([form, parsedCustomAttributes]) === fields) resetForm();
+                else newAsset.id = saved.id;
+            }, id);
         } catch {
-            // The manager already showed the one gentle message; the form stays open with the draft.
+            // The captured attempt stays available through Try Again.
         }
     }
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { formSaveAttempt } from "$lib/utils/formSaveAttempt";
     import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { focusTrap } from "$lib/actions/focusTrap";
     import { readCustom } from "$lib/utils/customFields";
@@ -298,6 +299,8 @@
         parsedCustomAttributes = {};
     }
 
+    const saveAttempt = formSaveAttempt(insuranceSync);
+
     // One save at a time: while it is open the button waits, so a second click sends nothing.
     let saving = $state(false);
     async function handleAddPolicy() {
@@ -312,69 +315,27 @@
 
     async function handleAddPolicyOnce() {
         if (!newPolicy.policyName || !newPolicy.insurer) return;
-
-        // Serialize custom attributes
-        const policyData = {
-            ...newPolicy,
-            custom_attributes: JSON.stringify(parsedCustomAttributes)
-        };
-
+        const form = newPolicy;
+        const fields = JSON.stringify([form, parsedCustomAttributes]);
+        const id = isEditing ? form.id : undefined;
+        const ownerName = estateProfile.current.ownerName || "User";
+        const policyData = { ...form, custom_attributes: JSON.stringify(parsedCustomAttributes) };
+        const oldPolicy = id ? insuranceStore.getPolicy(id) : undefined;
+        const changes = oldPolicy ? (["policyName", "premiumAmount", "status"] as const)
+            .filter((field) => oldPolicy[field] !== form[field])
+            .map((field) => ({ field, oldValue: oldPolicy[field], newValue: form[field] })) : [];
         try {
-        if (isEditing && newPolicy.id) {
-            const oldPolicy = insuranceStore.getPolicy(newPolicy.id);
-            const changes = [];
-
-            if (oldPolicy) {
-                if (oldPolicy.policyName !== newPolicy.policyName)
-                    changes.push({
-                        field: "policyName",
-                        oldValue: oldPolicy.policyName,
-                        newValue: newPolicy.policyName,
-                    });
-                if (oldPolicy.premiumAmount !== newPolicy.premiumAmount)
-                    changes.push({
-                        field: "premiumAmount",
-                        oldValue: oldPolicy.premiumAmount,
-                        newValue: newPolicy.premiumAmount,
-                    });
-                if (oldPolicy.status !== newPolicy.status)
-                    changes.push({
-                        field: "status",
-                        oldValue: oldPolicy.status,
-                        newValue: newPolicy.status,
-                    });
-            }
-
-            await insuranceStore.updatePolicy(newPolicy.id, policyData);
-
-            activityLog.logEvent({
-                module: "Insurance",
-                action: "UPDATE",
-                entityType: "Policy",
-                entityId: String(newPolicy.id),
-                entityName: newPolicy.policyName!,
-                changes,
-                userContext: estateProfile.current.ownerName || "User",
-            });
-        } else {
-            const created = await insuranceStore.addPolicy(
-                policyData as Omit<InsurancePolicy, "id">,
-                handleAddPolicy,
-            );
-
-            activityLog.logEvent({
-                module: "Insurance",
-                action: "CREATE",
-                entityType: "Policy",
-                entityId: String(created!.id!),
-                entityName: created!.policyName,
-                userContext: estateProfile.current.ownerName || "User",
-            });
-        }
-
-        resetForm();
+            await saveAttempt(form, policyData, (saved) => {
+                activityLog.logEvent({
+                    module: "Insurance", action: id ? "UPDATE" : "CREATE", entityType: "Policy",
+                    entityId: String(saved.id), entityName: saved.policyName, changes, userContext: ownerName,
+                });
+                if (newPolicy !== form) return;
+                if (JSON.stringify([form, parsedCustomAttributes]) === fields) resetForm();
+                else { newPolicy.id = saved.id; isEditing = true; }
+            }, id);
         } catch {
-            // The manager already showed the one gentle message; the form stays open with the draft.
+            // The captured attempt stays available through Try Again.
         }
     }
 
