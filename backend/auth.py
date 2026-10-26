@@ -29,8 +29,16 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         # Legacy bcrypt hashes: passlib 1.7.4's bcrypt backend fails to load with
         # bcrypt>=5 (its wrap-bug self-test raises ValueError on a >72-byte secret),
         # so verify these directly. The 64-char hex pre-hash is under bcrypt's 72-byte limit.
-        return bcrypt.checkpw(pre_hashed.encode(), hashed_password.encode())
-    return pwd_context.verify(pre_hashed, hashed_password)
+        try:
+            return bcrypt.checkpw(pre_hashed.encode(), hashed_password.encode())
+        except ValueError:
+            return False  # malformed bcrypt hash
+    try:
+        return pwd_context.verify(pre_hashed, hashed_password)
+    except (ValueError, TypeError):
+        # Unrecognised/non-hash stored value (e.g. "BYPASS_AUTH"): treat as a failed check.
+        # passlib's UnknownHashError subclasses ValueError.
+        return False
 
 from backend.utils.logger import get_logger
 
@@ -75,6 +83,9 @@ def get_current_user(token: str = Depends(oauth2_scheme), session: Session = Dep
         user_id: int = payload.get("sub")
         if user_id is None:
             raise credentials_exception
+        # Access tokens carry no "type" claim; reject typed tokens (e.g. "magic_link").
+        if payload.get("type") not in (None, "access"):
+            raise credentials_exception
     except jwt.PyJWTError:
         raise credentials_exception
         
@@ -90,6 +101,8 @@ def optional_current_user(token: str = Depends(oauth2_scheme), session: Session 
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: int = payload.get("sub")
         if user_id is None:
+            return None
+        if payload.get("type") not in (None, "access"):
             return None
         return session.get(User, user_id)
     except jwt.PyJWTError:
