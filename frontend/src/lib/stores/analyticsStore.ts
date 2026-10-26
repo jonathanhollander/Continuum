@@ -4,7 +4,7 @@ import { petStore } from './petStore.svelte';
 import { medicalStore } from './medicalStore.svelte';
 import { advancedAssetStore } from './advancedAssetStore.svelte';
 import { digitalAssetsStore } from "./digitalAssetsStore.svelte";
-import { estateAudit, AuditStore } from './auditStore.svelte';
+import { estateAudit, AuditStore, hasFuneralWishes } from './auditStore.svelte';
 import { heirloomStore } from './heirloomStore.svelte';
 import { funeralStore } from './funeralStore.svelte';
 import { pulse } from './pulse.svelte';
@@ -13,19 +13,14 @@ import { familyStore } from './familyStore.svelte';
 import { insuranceStore } from './insuranceStore.svelte';
 
 // Each pillar is the share of points its readiness-audit sections earned (the /admin/readiness numbers):
-// Legal = family + medical, Financial = financial + insurance, Legacy = digital.
-const PILLAR_SECTIONS = { legal: ['family', 'medical'], financial: ['financial', 'insurance'], legacy: ['digital'] } as const;
+// Legal = family + medical, Financial = financial + insurance, Legacy = legacy + digital.
+const PILLAR_SECTIONS = { legal: ['family', 'medical'], financial: ['financial', 'insurance'], legacy: ['legacy', 'digital'] } as const;
 const pillarScore = (scores: Record<string, number> | undefined, ids: readonly string[]) => {
     const max = ids.reduce((n, id) => n + (AuditStore.maxScores[id] ?? 0), 0);
     const got = ids.reduce((n, id) => n + (Number(scores?.[id]) || 0), 0);
     return max > 0 ? Math.round((got / max) * 100) : 0;
 };
 
-// A saved wish is any filled value; the untouched default tradition ("secular") is no choice yet
-const filled = (v: any): boolean =>
-    Array.isArray(v) ? v.some(filled)
-        : v && typeof v === 'object' ? Object.values(v).some(filled)
-            : typeof v === 'string' ? v.trim() !== '' : typeof v === 'number' || v === true;
 const named = (v: any) => { const t = String(v ?? '').trim(); return t !== '' && t !== 'None'; };
 
 export const estateAnalytics = derived(
@@ -55,8 +50,7 @@ export const estateAnalytics = derived(
         // --- 3. Legacy Vitality ---
         const heirloomCount = $heirlooms ? $heirlooms.length : 0;
         const wishes = $funeral?.wishes;
-        const wishesDefined = !!wishes && typeof wishes === 'object' && Object.entries(wishes)
-            .some(([k, v]) => !(k === 'religiousTradition' && v === 'secular') && filled(v));
+        const wishesDefined = hasFuneralWishes(wishes);
         const legacyScore = pillarScore($audit?.moduleScores, PILLAR_SECTIONS.legacy);
 
         // --- 4. Operational Wellness (Pulse) ---
