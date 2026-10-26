@@ -18,8 +18,7 @@
         | "digital-guardian"
         | "visual-memories" = "obituary";
     export let prompts: string[] = [];
-    // Accepted so existing callers keep compiling; this bar doesn't show a pool.
-    // svelte-ignore export_let_unused
+    // Page-specific ideas; three are shown at a time and can be reshuffled.
     export let promptPool: string[] = [];
 
     let prompt = "";
@@ -91,6 +90,14 @@
             "Draft notes about my photo collection...",
         ],
     };
+
+    function pickIdeas(pool: string[], current: string[] = []): string[] {
+        const fresh = pool.filter((p) => !current.includes(p));
+        const source = fresh.length >= 3 ? fresh : pool;
+        return [...source].sort(() => Math.random() - 0.5).slice(0, 3);
+    }
+
+    $: poolIdeas = pickIdeas(promptPool);
 
     async function runPrompt(text: string) {
         prompt = text;
@@ -213,6 +220,22 @@
                     {qp}
                 </button>
             {/each}
+            {#each poolIdeas as idea}
+                <button
+                    class="px-3 py-1.5 bg-white text-xs font-medium text-primary-700 rounded-full border border-primary-100 hover:border-primary-300 hover:bg-primary-50 transition-colors"
+                    on:click={() => runPrompt(idea)}
+                >
+                    {idea}
+                </button>
+            {/each}
+            {#if promptPool.length > 3}
+                <button
+                    class="px-3 py-1.5 text-xs text-primary-400 hover:text-primary-600 hover:underline"
+                    on:click={() => (poolIdeas = pickIdeas(promptPool, poolIdeas))}
+                >
+                    Show other ideas
+                </button>
+            {/if}
         </div>
     {/if}
 
