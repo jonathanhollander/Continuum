@@ -741,8 +741,8 @@
                 />
             </div>
 
-            <!-- Footer buttons -->
-            <div class="-mx-6 -mb-6 px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 mt-6">
+            <!-- Footer buttons: sticky to the bottom of the dialog's scroll area so they stay in view (-bottom-6 cancels the scroll area's p-6). -->
+            <div class="sticky -bottom-6 z-10 -mx-6 -mb-6 px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 mt-6">
                 <button
                     onclick={() => (showAddModal = false)}
                     class="px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-200 transition-colors"
