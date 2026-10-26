@@ -261,46 +261,6 @@ export function createErrorNotification(error: ErrorDetails): ErrorNotification 
 }
 
 /**
- * Enhanced fetch wrapper with automatic error handling.
- *
- * @example
- * const data = await apiFetch('/api/contacts', {
- *   method: 'POST',
- *   body: JSON.stringify({ name: 'John' })
- * });
- */
-export async function apiFetch<T = any>(
-    url: string,
-    options?: RequestInit
-): Promise<T> {
-    const result = await handleApiRequest(async () => {
-        const res = await fetch(url, {
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options?.headers
-            }
-        });
-        return res;
-    });
-
-    if (!result.ok) {
-        // Throw an Error carrying the gentle message so handleFetchError keeps it
-        const gentleError = new Error(result.error.message);
-        Object.assign(gentleError, { gentle: true, code: result.error.code, details: result.error.details, errorDetails: result.error });
-        throw gentleError;
-    }
-
-    // Handle empty responses (204 No Content, 404, etc.)
-    const contentType = result.response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-        return null as T;
-    }
-
-    return result.response.json();
-}
-
-/**
  * Log error to monitoring service (placeholder for future integration).
  */
 export function logError(error: ErrorDetails, context?: string) {
