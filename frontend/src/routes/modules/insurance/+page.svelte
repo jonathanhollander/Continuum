@@ -487,7 +487,7 @@
                 Total Premiums
             </p>
             <p class="text-3xl font-black text-slate-900 tracking-tight">
-                ${stats.annual.toLocaleString()}
+                {formatMoney(stats.annual)}
             </p>
         </div>
 
@@ -512,7 +512,7 @@
                 Monthly Average
             </p>
             <p class="text-3xl font-black text-slate-900 tracking-tight">
-                ${Math.round(stats.monthly).toLocaleString()}
+                {formatMoney(stats.monthly)}
             </p>
         </div>
 
@@ -576,7 +576,7 @@
             <input
                 type="text"
                 bind:value={searchQuery}
-                placeholder="Search policy name, carrier, or type..."
+                placeholder="Search by policy, carrier, or type"
                 class="w-full px-4 py-3 pl-12 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
             />
         </div>
