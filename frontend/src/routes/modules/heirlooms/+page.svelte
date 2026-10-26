@@ -48,7 +48,6 @@
     let parsedCustomAttributes = $state<Record<string, any>>({});
     let isEditing = $state(false);
     let editingId = $state<string | number | null>(null);
-    let selectedImage = $state<string | null>(null);
     let showWizard = $state(false);
     let isLoading = $state(true);
 
