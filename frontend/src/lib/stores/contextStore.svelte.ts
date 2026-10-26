@@ -9,6 +9,8 @@
 
 import { auth } from './auth';
 import { get } from 'svelte/store';
+import { apiFetch } from '$lib/api/client';
+import { logger } from '$lib/utils/logger';
 
 type UserRole = 'planning' | 'executor' | 'family' | 'advisor';
 type EmotionalContext = 'healthy' | 'terminal' | 'grieving' | null;
@@ -26,18 +28,60 @@ let contextState = $state<ContextState>({
     deceasedName: null
 });
 
+// The role the server holds for the signed-in account (users.user_role)
+let serverRole: UserRole = 'planning';
+// Bumped on every setRole; a save's reply only applies while it is still the latest choice
+let roleSeq = 0;
+let roleSaving = false;
+let appliedUser: unknown = null;
+
 // Initialize from auth store
 function initializeContext() {
     const authState = get(auth);
     if (authState.user) {
-        contextState.role = (authState.user.user_role as UserRole) || 'planning';
+        serverRole = (authState.user.user_role as UserRole) || 'planning';
+        if (!roleSaving) contextState.role = serverRole;
         contextState.emotionalContext = authState.user.emotional_context as EmotionalContext;
     }
 }
 
-// Call on load
+// Follow the signed-in user: /api/auth/me usually arrives after this module loads
 if (typeof window !== 'undefined') {
-    initializeContext();
+    auth.subscribe((s) => {
+        if (s.user && s.user !== appliedUser) {
+            appliedUser = s.user;
+            initializeContext();
+        } else if (!s.user && appliedUser) {
+            appliedUser = null;
+            serverRole = 'planning';
+            contextState.role = 'planning';
+        }
+    });
+}
+
+// Save the role with the account (one PATCH per change); a failed save returns to the server's role
+async function saveRole(role: UserRole, seq: number) {
+    await auth.init();
+    if (seq !== roleSeq) return;
+    if (!get(auth).user || role === serverRole) {
+        roleSaving = false;
+        return;
+    }
+    try {
+        const res = await apiFetch('/api/auth/preferences', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_role: role })
+        });
+        if (!res.ok) throw new Error(`status ${res.status}`);
+        const user = await res.json();
+        serverRole = (user.user_role as UserRole) || 'planning';
+    } catch (e) {
+        logger.error('[contextStore] Role save failed', e);
+    }
+    if (seq !== roleSeq) return;
+    roleSaving = false;
+    contextState.role = serverRole;
 }
 
 export const contextStore = {
@@ -70,7 +114,10 @@ export const contextStore = {
     },
 
     setRole(role: UserRole) {
+        if (role === contextState.role) return;
         contextState.role = role;
+        roleSaving = true;
+        void saveRole(role, ++roleSeq);
     },
 
     setEmotionalContext(context: EmotionalContext) {
