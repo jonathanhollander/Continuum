@@ -7,10 +7,22 @@
         CircleX,
     } from "lucide-svelte";
     import { slide } from "svelte/transition";
+    import { dateWords } from "$lib/utils/dateWords";
+    import { formatMoney } from "$lib/utils/money";
 
     let { sub, onCancel, onGenerateLetter } = $props();
 
     let expanded = false;
+
+    // The renewal day, only when one is written down (an empty value once read as 12/31/1969).
+    let nextDate = $derived.by(() => {
+        const raw = String(sub.nextBilling || sub.renewal_date || sub.renewalDate || "").trim();
+        if (!raw) return "";
+        const shown = dateWords(raw); // ISO dates in words, without a time zone shift
+        if (shown !== raw) return shown;
+        const d = new Date(raw);
+        return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString();
+    });
 
     // Difficulty colors
     const difficultyColors: Record<string, string> = {
@@ -41,13 +53,11 @@
                 <div class="flex items-center gap-2 text-xs text-slate-500">
                     <CreditCard class="w-3 h-3" />
                     <span>{sub.paymentMethod}</span>
-                    <span>•</span>
-                    <Calendar class="w-3 h-3" />
-                    <span
-                        >Next: {new Date(
-                            sub.nextBilling,
-                        ).toLocaleDateString()}</span
-                    >
+                    {#if nextDate}
+                        <span>•</span>
+                        <Calendar class="w-3 h-3" />
+                        <span>Next: {nextDate}</span>
+                    {/if}
                 </div>
             </div>
         </div>
@@ -55,10 +65,7 @@
         <div class="flex items-center gap-6">
             <div class="text-right hidden sm:block">
                 <div class="font-bold text-slate-800">
-                    {new Intl.NumberFormat("en-US", {
-                        style: "currency",
-                        currency: "USD",
-                    }).format(sub.cost)}
+                    {formatMoney(sub.cost)}
                 </div>
                 <div class="text-xs text-slate-500 uppercase tracking-wide">
                     /{sub.cycle}
