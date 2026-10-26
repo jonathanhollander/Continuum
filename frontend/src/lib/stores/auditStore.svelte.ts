@@ -53,6 +53,11 @@ function calculateAudit(): AuditResult {
                 const n = items.length - withBen;
                 issues.push(`[Assets] Name a beneficiary for ${n} ${n === 1 ? 'account' : 'accounts'}`);
             }
+            // Value is the other half of the score, so a partial score always names its step
+            if (withVal < items.length) {
+                const n = items.length - withVal;
+                issues.push(`[Assets] Add an estimated value for ${n} ${n === 1 ? 'account' : 'accounts'}`);
+            }
         }
     }
 
