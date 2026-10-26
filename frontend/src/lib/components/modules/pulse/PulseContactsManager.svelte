@@ -21,7 +21,20 @@
     } = $props();
 
     let tiers = $state<any[]>([]);
-    let contacts = $state<any[]>([]);
+    // The people come from the shared contacts store (SyncManager), so a tier set on Family &
+    // Contacts or in the picker shows here at once. Each row in the field names this page reads
+    // (pulseTierNumber takes tier_id / call_tier).
+    const contacts = $derived(
+        contactSync.items.map((c: any) => ({
+            id: c.id,
+            name: c.name ?? "",
+            email: c.email,
+            tier_id: c.tierId ?? null,
+            call_tier: c.callTier ?? null,
+            individual_delay_hours: c.individualDelayHours ?? null,
+            notify_on_safety_timer: !!c.notifyOnSafetyTimer,
+        })),
+    );
     let editingTierId = $state<number | null>(null);
     let loading = $state(true);
     let error = $state<string | null>(null);
@@ -36,12 +49,12 @@
         loading = true;
         error = null;
         try {
-            const [tiersData, contactsData] = await Promise.all([
+            const [tiersData] = await Promise.all([
                 apiGet("/api/pulse/tiers"),
-                apiGet("/api/pulse/contacts"),
+                contactSync.sync(),
             ]);
             tiers = tiersData;
-            contacts = contactsData;
+            if (contactSync.status === "error") error = gentleRetry;
         } catch (e: any) {
             console.error(e);
             error = e?.message || gentleRetry;
@@ -60,22 +73,18 @@
         }
     }
 
-    // Send only the fields this page edits, so stored legacy values elsewhere on the row stay untouched.
-    async function updateContact(contact: any) {
+    // Saved through the shared contacts store, which this list reads; on failure it rolls back
+    // and shows its own gentle message.
+    async function updateContact(contactId: number | string, updates: Record<string, unknown>) {
         try {
-            await apiPut(`/api/pulse/contacts/${contact.id}`, {
-                individual_delay_hours:
-                    contact.individual_delay_hours === "" ||
-                    contact.individual_delay_hours == null
-                        ? null
-                        : Number(contact.individual_delay_hours),
-                notify_on_safety_timer: !!contact.notify_on_safety_timer,
-            });
-            contacts = [...contacts];
+            await contactSync.update(contactId, updates);
         } catch (e) {
             console.error(e);
-            alert(gentleRetry);
         }
+    }
+
+    function delayValue(raw: string) {
+        return raw === "" || raw == null ? null : Number(raw);
     }
 
     // Select Guardian dialog; pickerTierId is the tier it opens on.
@@ -101,13 +110,7 @@
             await contactSync.update(contactId, updates);
         } catch (e) {
             console.error(e);
-            return;
         }
-        contacts = contacts.map((c) =>
-            c.id === contactId
-                ? { ...c, tier_id: null, call_tier: "tier" in updates ? null : c.call_tier }
-                : c,
-        );
     }
 
     function getContactsForTier(tierNumber: number) {
@@ -382,11 +385,11 @@
                                             <input
                                                 id="delay-{contact.id}"
                                                 type="number"
-                                                bind:value={
-                                                    contact.individual_delay_hours
-                                                }
-                                                onchange={() =>
-                                                    updateContact(contact)}
+                                                value={contact.individual_delay_hours ?? ""}
+                                                onchange={(e) =>
+                                                    updateContact(contact.id, {
+                                                        individualDelayHours: delayValue(e.currentTarget.value),
+                                                    })}
                                                 placeholder={tier.delay_hours.toString()}
                                                 class="w-16 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-teal-400 focus:outline-none focus:border-teal-500/50"
                                             />
@@ -405,11 +408,10 @@
                                         </div>
                                         <div class="flex items-center gap-2">
                                             <button
-                                                onclick={() => {
-                                                    contact.notify_on_safety_timer =
-                                                        !contact.notify_on_safety_timer;
-                                                    updateContact(contact);
-                                                }}
+                                                onclick={() =>
+                                                    updateContact(contact.id, {
+                                                        notifyOnSafetyTimer: !contact.notify_on_safety_timer,
+                                                    })}
                                                 class="text-[10px] px-2 py-1 rounded border transition-colors {contact.notify_on_safety_timer
                                                     ? 'bg-indigo-500/10 border-indigo-500/50 text-indigo-400'
                                                     : 'bg-slate-800 border-slate-700 text-slate-500'}"
