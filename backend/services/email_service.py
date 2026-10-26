@@ -372,16 +372,16 @@ class EmailService:
         }
 
         tier_subjects = {
-            1: "Continuum Pulse: Standard Welfare Check",
-            2: "Continuum Pulse: Level 2 Escalation",
-            3: "Continuum Pulse: URGENT - Medical/Legal Release",
-            4: "Continuum Pulse: EMERGENCY - Full Vault Access"
+            1: f"A gentle check-in about {user_name}",
+            2: f"Checking in on {user_name}",
+            3: f"{user_name} may need you; their notes are open to you",
+            4: f"{user_name}'s notes are open to you",
         }
 
         payload = self._build_payload(
             to_email=to_email,
             recipient_name=recipient_name,
-            subject=tier_subjects.get(tier_number, f"Continuum Pulse: Tier {tier_number} Alert"),
+            subject=tier_subjects.get(tier_number, f"A note about {user_name}"),
             template_name=f"pulse_escalation_tier{tier_number}",
             template_context=context,
             user_id=user_id

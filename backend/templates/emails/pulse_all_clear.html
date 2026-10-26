@@ -1,0 +1,21 @@
+{% extends "emails/base.html" %}
+
+{% block content %}
+<div class="greeting">Dear {{ recipient_name }},</div>
+
+<h2>{{ user_name }} checked in</h2>
+
+<div class="alert-box info">
+    {{ user_name }} checked in with Continuum and is well.
+</div>
+
+<p>Thank you for looking out for them. Further alerts have stopped, and their notes are closed again until they are needed.</p>
+
+<div class="cta-container">
+    <a href="{{ portal_url }}" class="cta-button">Open Guardian Portal</a>
+</div>
+
+<p style="font-size: 14px; color: #64748b; margin-top: 24px;">
+    Thank you for being part of {{ user_name }}'s trusted circle.
+</p>
+{% endblock %}

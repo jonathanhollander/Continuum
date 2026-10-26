@@ -8,6 +8,9 @@
   let loading = $state(true);
   let error: string | null = $state(null);
   let data: any = $state(null);
+  // The owner's Pulse vault notes: the API opens them once escalation reaches this guardian
+  // and the owner's Automatic Release is on (one portal: /pulse/portal forwards here)
+  let vaultItems: { name: string; content: string }[] = $state([]);
 
   let actionLoading = $state(false);
   let actionMessage = $state("");
@@ -22,11 +25,16 @@
       const res = await fetch(`${API_BASE_URL}/api/pulse/portal/${token}`);
       if (res.ok) {
         data = await res.json();
+        if (data.show_sensitive) {
+          const vRes = await fetch(`${API_BASE_URL}/api/pulse/portal/${token}/vault`);
+          if (vRes.ok) vaultItems = await vRes.json();
+        }
       } else {
-        error = "Access Link Invalid or Expired";
+        error =
+          "This link may have expired or been replaced. The person who shared it can send you a new one.";
       }
     } catch (e) {
-      error = "Connection Failed";
+      error = "Let's try again in a little while.";
     } finally {
       loading = false;
     }
@@ -40,16 +48,14 @@
         method: "POST",
       });
       if (res.ok) {
-        actionMessage = "Message sent! We've notified them you're checking in.";
+        actionMessage = `Thank you. ${data.user_name} will see your note in Continuum.`;
       } else {
-        actionMessage =
-          "We couldn't send your note just now. Please try again in a little while.";
+        actionMessage = "Your note is waiting. Let's try again in a little while.";
       }
       setTimeout(() => (actionMessage = ""), 5000);
     } catch (e) {
       console.error(e);
-      actionMessage =
-        "We couldn't send your note just now. Please try again in a little while.";
+      actionMessage = "Your note is waiting. Let's try again in a little while.";
       setTimeout(() => (actionMessage = ""), 5000);
     } finally {
       actionLoading = false;
@@ -68,13 +74,12 @@
         actionMessage = "Thank you for checking on them. This appears in their check-in history.";
       } else {
         actionMessage =
-          "We couldn't record that just now. This link may have expired; please try again in a little while.";
+          "This link may have expired or been replaced. The person who shared it can send you a new one.";
       }
       setTimeout(() => (actionMessage = ""), 5000);
     } catch (e) {
       console.error(e);
-      actionMessage =
-        "We couldn't record that just now. Please try again in a little while.";
+      actionMessage = "Let's try again in a little while.";
       setTimeout(() => (actionMessage = ""), 5000);
     } finally {
       actionLoading = false;
@@ -93,7 +98,7 @@
     <div
       class="bg-red-900/20 p-8 rounded-2xl border border-red-800 text-center max-w-md"
     >
-      <h1 class="text-2xl font-serif text-red-400 mb-2">Access Denied</h1>
+      <h1 class="text-2xl font-serif text-red-400 mb-2">This link has rested for now</h1>
       <p class="text-slate-400">{error}</p>
     </div>
   {:else}
@@ -106,7 +111,7 @@
         <h1 class="text-xl font-medium text-white">
           {data.user_status === "active"
             ? `${data.user_name} checked in recently`
-            : `${data.user_name} hasn't checked in for a little while`}
+            : `We're waiting to hear from ${data.user_name}`}
         </h1>
         <p class="text-sm text-slate-400 mt-1">
           {data.user_status === "active"
@@ -160,14 +165,65 @@
             <li class="flex items-center gap-2">
               <span class="text-emerald-400">✓</span> Send "Thinking of You" Nudge
             </li>
-            <li class="flex items-center gap-2 opacity-50">
-              <span class="text-slate-600">🔒</span> Emergency Contacts (Locked)
-            </li>
-            <li class="flex items-center gap-2 opacity-50">
-              <span class="text-slate-600">🔒</span> Medical Directives (Locked)
+            <li class="flex items-center gap-2">
+              <span class="text-emerald-400">✓</span> Read notes from {data.user_name}
             </li>
           </ul>
         </div>
+
+        <!-- What you can do (the Tier 2 email's steps), plus the owner's phone when the profile has one -->
+        <div class="w-full bg-slate-700/50 p-4 rounded-xl text-left">
+          <p class="text-xs text-slate-400 uppercase tracking-widest mb-2 font-bold">
+            What you can do
+          </p>
+          <ul class="space-y-2 text-sm text-slate-300 list-disc pl-5">
+            <li>
+              Reach {data.user_name} by phone, text or email{#if data.user_phone}: <a href="tel:{data.user_phone}" class="text-teal-400 hover:underline whitespace-nowrap">{data.user_phone}</a>{/if}
+            </li>
+            <li>Ask mutual friends or family, if that feels right</li>
+            <li>Let us know below once you've spoken with them, which pauses further alerts for a while</li>
+          </ul>
+        </div>
+
+        <!-- Notes from the owner's Pulse vault (opened by the API when the time comes) -->
+        <div class="w-full bg-slate-700/50 p-4 rounded-xl text-left">
+          <p class="text-xs text-slate-400 uppercase tracking-widest mb-2 font-bold">
+            Notes {data.user_name} shared with you
+          </p>
+          {#if vaultItems.length > 0}
+            <ul class="space-y-3">
+              {#each vaultItems as item}
+                <li>
+                  <p class="text-sm font-bold text-slate-200">{item.name}</p>
+                  <p class="text-sm text-slate-300 whitespace-pre-wrap">{item.content}</p>
+                </li>
+              {/each}
+            </ul>
+          {:else}
+            <p class="text-sm text-slate-300">
+              Notes from {data.user_name} will appear here when they are needed. You are welcome to simply be present for now.
+            </p>
+          {/if}
+        </div>
+
+        <!-- The owner's own messages to this guardian (Pulse Messages) -->
+        {#if data.notes?.length > 0}
+          <div class="w-full bg-slate-700/50 p-4 rounded-xl text-left">
+            <p class="text-xs text-slate-400 uppercase tracking-widest mb-2 font-bold">
+              Messages from {data.user_name}
+            </p>
+            <ul class="space-y-3">
+              {#each data.notes as note}
+                <li>
+                  <p class="text-sm text-slate-200 whitespace-pre-wrap">{note.message}</p>
+                  <p class="text-xs text-slate-500 mt-1">
+                    {parseUtc(note.sent_at).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}
+                  </p>
+                </li>
+              {/each}
+            </ul>
+          </div>
+        {/if}
       </div>
 
       <!-- Actions -->
@@ -186,6 +242,12 @@
         >
           {actionLoading ? "Verifying..." : "I've Spoken to Them"}
         </button>
+      </div>
+
+      <div class="px-4 pb-4 bg-slate-900/50 text-center">
+        <a href="/pulse/respond/{token}" class="text-sm text-teal-400 hover:underline">
+          Let them know I've seen this
+        </a>
       </div>
 
       {#if actionMessage}

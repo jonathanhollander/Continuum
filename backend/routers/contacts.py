@@ -1,3 +1,4 @@
+import secrets
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from pydantic import StringConstraints
 from sqlmodel import Session, SQLModel, select
@@ -59,6 +60,10 @@ def _apply(contact: PulseContact, data: dict, user: User, session: Session) -> N
                                    "notify_on_safety_timer"):
             continue
         setattr(contact, key, val)
+    # A guardian (a Pulse tier, or the safety-timer reach-out) needs a portal link for their
+    # alert emails; issue one the first time, keep it after (links already sent stay valid).
+    if not contact.portal_token and (contact.tier_id or contact.notify_on_safety_timer):
+        contact.portal_token = secrets.token_urlsafe(32)
 
 @router.get("", response_model=List[PulseContact])
 @router.get("/", response_model=List[PulseContact])
@@ -99,7 +104,7 @@ def update_contact(contact_id: int, updated: ContactUpdate, user: User = Depends
     """Update a contact. Only the fields sent are changed."""
     contact = session.get(PulseContact, contact_id)
     if not contact or contact.user_id != user.id:
-        raise HTTPException(status_code=404, detail="Contact not found")
+        raise HTTPException(status_code=404, detail="That contact may have been moved.")
 
     _apply(contact, updated.model_dump(exclude_unset=True), user, session)
 
@@ -113,7 +118,7 @@ def delete_contact(request: Request, contact_id: int, user: User = Depends(get_c
     """Delete a contact."""
     contact = session.get(PulseContact, contact_id)
     if not contact or contact.user_id != user.id:
-        raise HTTPException(status_code=404, detail="Contact not found")
+        raise HTTPException(status_code=404, detail="That contact may have been moved.")
 
     # P1-High: Audit logging for contact deletion
     log_deletion(
@@ -147,7 +152,7 @@ def create_relationship(rel: ContactRelationship, user: User = Depends(get_curre
 def delete_relationship(rel_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     rel = session.get(ContactRelationship, rel_id)
     if not rel or rel.user_id != user.id:
-        raise HTTPException(status_code=404, detail="Relationship not found")
+        raise HTTPException(status_code=404, detail="That relationship may have been moved.")
     
     session.delete(rel)
     session.commit()
