@@ -6,7 +6,6 @@
         Shield,
         Briefcase,
         Heart,
-        TriangleAlert,
         CircleCheck,
         ArrowRight,
         TrendingUp,
@@ -82,10 +81,11 @@
                 <div class="flex items-baseline justify-end gap-2">
                     <span
                         class={`text-6xl font-sans font-bold ${getHealthColor(health)}`}
+                        data-testid="analytics-readiness"
                     >
                         {health}
                     </span>
-                    <span class="text-slate-500 text-xl">/ 100</span>
+                    <span class="text-slate-500 text-xl">%</span>
                 </div>
             </div>
         </header>
@@ -206,11 +206,6 @@
                             <span class="text-slate-300"
                                 >Beneficiary Designated</span
                             >
-                        {:else}
-                            <div
-                                class="w-4 h-4 rounded-full border border-slate-700"
-                            ></div>
-                            <span class="text-slate-600">No Beneficiary</span>
                         {/if}
                     </div>
                 </div>
@@ -251,25 +246,20 @@
                         {#if pillars.legacy.metrics.wishesDefined}
                             <CircleCheck size={16} class="text-emerald-400" />
                             <span class="text-slate-300">Wishes Defined</span>
-                        {:else}
-                            <div
-                                class="w-4 h-4 rounded-full border border-slate-700"
-                            ></div>
-                            <span class="text-slate-600">Wishes Undefined</span>
                         {/if}
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Critical Alerts (Gaps) -->
+        <!-- Next steps, written as invitations -->
         {#if gaps.length > 0}
             <div in:slide={{ duration: 400 }}>
                 <h2
                     class="text-xl font-bold text-white mb-6 flex items-center gap-2"
                 >
-                    <TriangleAlert size={20} class="text-yellow-400" />
-                    Critical Attention Needed
+                    <Heart size={20} class="text-indigo-400" />
+                    When you're ready
                 </h2>
                 <div class="space-y-4">
                     {#each gaps as gap}

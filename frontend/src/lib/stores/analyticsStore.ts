@@ -9,14 +9,16 @@ import { heirloomStore } from './heirloomStore.svelte';
 import { funeralStore } from './funeralStore.svelte';
 import { pulse } from './pulse.svelte';
 import { financialAssetsStore, estateTotals, isDebt } from './financialAssetsStore.svelte';
+import { familyStore } from './familyStore.svelte';
 
 export const estateAnalytics = derived(
-    [estateProfile, petStore, medicalStore, advancedAssetStore, digitalAssetsStore, estateAudit, heirloomStore, funeralStore, pulse, financialAssetsStore],
-    ([$profile, $pets, $medical, $advanced, $digital, $audit, $heirlooms, $funeral, $pulse, $accounts]) => {
-
+    [estateProfile, petStore, medicalStore, advancedAssetStore, digitalAssetsStore, estateAudit, heirloomStore, funeralStore, pulse, financialAssetsStore, familyStore],
+    ([$profile, $pets, $medical, $advanced, $digital, $audit, $heirlooms, $funeral, $pulse, $accounts, $family]) => {
 
         // --- 1. Legal Readiness ---
-        const hasExecutor = !!$profile?.executorName;
+        // The executor is named on the profile, or is a contact with the Executor role
+        const hasExecutor = !!$profile?.executorName || ($family?.members || []).some((m: any) =>
+            m && (m.isExecutor === true || String(m.role ?? '').toLowerCase() === 'executor'));
         const hasMedicalProxy = ($medical?.directives || []).some((d: any) => d.type === 'healthcare_proxy');
         const hasLivingWill = ($medical?.directives || []).some((d: any) => d.type === 'living_will');
 
@@ -52,12 +54,9 @@ export const estateAnalytics = derived(
         const pulseEnabled = $pulse?.enabled;
         const hasPulseContacts = ($pulse?.contacts || []).length > 0;
 
-        let operationalScore = 0;
-        if (pulseEnabled) operationalScore += 50;
-        if (hasPulseContacts) operationalScore += 50;
 
-        // --- Overall Pulse ---
-        const overallHealth = Math.round((legalScore + financialScore + legacyScore + operationalScore) / 4);
+        // --- Overall Pulse: the readiness audit, the same number as /admin/readiness and /modules/pulse ---
+        const overallHealth = $audit?.percentage ?? 0;
 
         return {
             overallHealth,
@@ -88,13 +87,13 @@ export const estateAnalytics = derived(
                 }
             },
             gaps: [
-                !hasExecutor && { type: 'legal', message: "No Executor Assigned", link: "/modules/contacts" },
-                !hasMedicalProxy && { type: 'legal', message: "Missing Medical Proxy", link: "/modules/medical" },
-                !hasBeneficiary && { type: 'financial', message: "No Primary Beneficiary", link: "/modules/contacts" },
-                heirloomCount === 0 && { type: 'legacy', message: "No Heirlooms Cataloged", link: "/modules/heirlooms" },
-                !wishesDefined && { type: 'legacy', message: "Funeral Wishes Undefined", link: "/modules/funeral" },
-                !pulseEnabled && { type: 'pulse', message: "Pulse Heartbeat Disabled", link: "/modules/pulse/settings" },
-                !hasPulseContacts && { type: 'pulse', message: "No Pulse Guardians", link: "/modules/pulse/settings" }
+                !hasExecutor && { type: 'legal', message: "Choose who will carry out your wishes", link: "/modules/contacts" },
+                !hasMedicalProxy && { type: 'legal', message: "Choose who speaks for your care", link: "/modules/medical" },
+                !hasBeneficiary && { type: 'financial', message: "Choose who receives your estate", link: "/modules/contacts" },
+                heirloomCount === 0 && { type: 'legacy', message: "Add a treasured heirloom", link: "/modules/heirlooms" },
+                !wishesDefined && { type: 'legacy', message: "Share your funeral wishes", link: "/modules/funeral" },
+                !pulseEnabled && { type: 'pulse', message: "Turn on Pulse check-ins", link: "/modules/pulse/settings" },
+                !hasPulseContacts && { type: 'pulse', message: "Choose your Pulse guardians", link: "/modules/pulse/settings" }
             ].filter(Boolean)
         };
     }
