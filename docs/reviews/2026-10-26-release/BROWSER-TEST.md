@@ -1,6 +1,6 @@
 # Release step 10 — Production browser test
 
-**Last Updated:** 2026-10-26 13:40 EST
+**Last Updated:** 2026-10-26 14:54 EDT
 
 https://continuum.estate, 1440×900, run 2026-10-26 ~12:40–13:20 EDT, signed in as the jh@ test owner. Evidence: `/private/tmp/claude-501/-Users-jonathanhollander-AI-Code-Continuum/798584f5-5f46-497f-a2f2-975a6b8ca86a/scratchpad/release/` (owner.json, edit.json, recip.json, recip-after-redeploys.json, outputs.json, sweep.json, screenshots, binder/PDF/zip); scripts `/private/tmp/claude-501/-Users-jonathanhollander-AI-Code-Continuum/798584f5-5f46-497f-a2f2-975a6b8ca86a/scratchpad/pw/rl*.mjs`. No email sent (addresses release-*@sincuerda.com; no step sends mail). Pulse not enabled; one check-in.
 
@@ -33,3 +33,13 @@ PASS (before redeploys): 34 values and the full edited letter appear in all six 
 ## Cause of the media failure (X292)
 
 Production log: `Failed to initialize S3 storage: Invalid endpoint:`. Railway `AWS_ENDPOINT_URL` is set but empty while `S3_ENABLED=true`; `backend/utils/file_storage.py:92` passes the empty string to boto3, init fails, `HybridStorage` falls back to the container's local disk, which has no volume — every deploy wipes uploads. The three test uploads are gone; their DB rows remain.
+
+## Recorded resolutions after this browser run
+
+The following results were recorded by the prior orchestrator in the canonical [execution plan](../../RECOVERY_EXECUTION_PLAN.md), commits `1bb936a` and `6af8c15`. They describe targeted verification after the original run above; the closure audit has not repeated the full browser test.
+
+- **X292:** `continuum-volume` mounted at `/data`, `UPLOAD_DIR=/data/uploads`, `S3_ENABLED=false`. The recorded `pw/x292vol.mjs` proof uploaded a PDF and photo, verified SHA-256 downloads, redeployed `863d1b0`, and verified the downloads again. The original three lost uploads remain a limitation of the earlier run; these checks used replacement uploads.
+- **X293:** Your Full Record gained “Edit these details”; the recorded live check verified the edit after reload and in a second browser context, with zero console errors.
+- **X294:** Life Timeline now labels editing “Update this event” and creation “New Life Event”; recorded as verified live.
+
+The prior orchestrator marked Release complete in `6af8c15` after these targeted checks. Authenticated verification now requires an owner-provided test account, following removal of the test-owner password bypass in X5.
