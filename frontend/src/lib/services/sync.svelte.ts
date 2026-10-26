@@ -6,7 +6,7 @@ import { activeAccountId } from "$lib/stores/keyringStore";
 import { currentProfileId } from "$lib/stores/profileContext";
 import { get } from "svelte/store";
 import { untrack } from "svelte";
-import { notifications } from "$lib/stores/notificationStore";
+import { notifications, type AffirmationContext } from "$lib/stores/notificationStore";
 
 const toCamel = (str: string) => str.replace(/([-_][a-z])/g, group => group.toUpperCase().replace('-', '').replace('_', ''));
 const toSnake = (str: string) => str.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
@@ -92,7 +92,7 @@ export class SyncManager<T extends { id: number | string }> {
     private mapper?: (local: any) => T;
     private apiBase: string;
     private subscriptions = new Set<(value: T[]) => void>();
-    private affirmationContext?: 'general' | 'documents' | 'wishes' | 'contacts' | 'medical' | 'pets' | 'insurance' | 'funeral' | 'subscriptions' | 'heirlooms' | 'timeline' | 'letters' | 'timeCapsule' | 'pulse';
+    private affirmationContext?: AffirmationContext;
 
     constructor(key: string, endpoint: string, mapper?: (local: any) => T, apiBase: string = "/api/data") {
         this.key = key;
@@ -109,7 +109,7 @@ export class SyncManager<T extends { id: number | string }> {
      * Set the affirmation context for this sync manager.
      * When set, successful create/update operations will show affirmations.
      */
-    setAffirmationContext(context: 'general' | 'documents' | 'wishes' | 'contacts' | 'medical' | 'pets' | 'insurance' | 'funeral' | 'subscriptions' | 'heirlooms' | 'timeline' | 'letters' | 'timeCapsule' | 'pulse') {
+    setAffirmationContext(context: AffirmationContext) {
         this.affirmationContext = context;
         return this;
     }
@@ -847,7 +847,7 @@ export class SingletonSyncManager<T extends object> {
     set lastSync(value: Date | null) { this.#lastSync = value; }
     error = $state<string | null>(null);
     private subscriptions = new Set<(value: T | null) => void>();
-    private affirmationContext?: 'general' | 'documents' | 'wishes' | 'contacts' | 'medical' | 'pets' | 'insurance' | 'funeral' | 'subscriptions' | 'heirlooms' | 'timeline' | 'letters' | 'timeCapsule' | 'pulse';
+    private affirmationContext?: AffirmationContext;
 
     private key: string;
     private endpoint: string;
@@ -876,7 +876,7 @@ export class SingletonSyncManager<T extends object> {
      * Set the affirmation context for this sync manager.
      * When set, successful update operations will show affirmations.
      */
-    setAffirmationContext(context: 'general' | 'documents' | 'wishes' | 'contacts' | 'medical' | 'pets' | 'insurance' | 'funeral' | 'subscriptions' | 'heirlooms' | 'timeline' | 'letters' | 'timeCapsule' | 'pulse') {
+    setAffirmationContext(context: AffirmationContext) {
         this.affirmationContext = context;
         return this;
     }

@@ -130,7 +130,7 @@
         );
         const waiting = wanted.filter((_, i) => results[i].status === "rejected");
         if (waiting.length === 0) {
-            notifications.showAffirmation("general");
+            notifications.showAffirmation("general", "create");
             return;
         }
         const reason = results.find((r) => r.status === "rejected") as PromiseRejectedResult;
