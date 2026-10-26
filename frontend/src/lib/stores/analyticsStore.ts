@@ -11,6 +11,7 @@ import { pulse } from './pulse.svelte';
 import { financialAssetsStore, estateTotals, isDebt } from './financialAssetsStore.svelte';
 import { familyStore } from './familyStore.svelte';
 import { insuranceStore } from './insuranceStore.svelte';
+import { pulseEnrollment } from './pulseEnrollmentStore.svelte';
 
 // Financial and Legacy are the share of points their readiness-audit sections earned (the /admin/readiness numbers):
 // Financial = financial + insurance, Legacy = legacy + digital. Legal is the share of its own checkboxes.
@@ -37,8 +38,8 @@ export const estateExecutorName = derived([estateProfile, familyStore], ([$profi
     findExecutorName($profile, ($familyRaw as typeof familyStore)?.members));
 
 export const estateAnalytics = derived(
-    [estateProfile, petStore, medicalStore, advancedAssetStore, digitalAssetsStore, estateAudit, heirloomStore, funeralStore, pulse, financialAssetsStore, familyStore, insuranceStore],
-    ([$profile, $pets, $medicalRaw, $advanced, $digital, $audit, $heirlooms, $funeral, $pulse, $accounts, $familyRaw, $policies]) => {
+    [estateProfile, petStore, medicalStore, advancedAssetStore, digitalAssetsStore, estateAudit, heirloomStore, funeralStore, pulse, financialAssetsStore, familyStore, insuranceStore, pulseEnrollment],
+    ([$profile, $pets, $medicalRaw, $advanced, $digital, $audit, $heirlooms, $funeral, $pulse, $accounts, $familyRaw, $policies, $guardians]) => {
         // Their subscribe hands over the store itself (members / directives getters)
         const $medical = $medicalRaw as typeof medicalStore;
         const $family = $familyRaw as typeof familyStore;
@@ -73,7 +74,7 @@ export const estateAnalytics = derived(
 
         // --- 4. Operational Wellness (Pulse) ---
         const pulseEnabled = $pulse?.enabled;
-        const hasPulseContacts = ($pulse?.contacts || []).length > 0;
+        const hasPulseContacts = ($guardians.count ?? 0) > 0;
 
 
         // --- Overall Pulse: the readiness audit, the same number as /admin/readiness and /modules/pulse ---
@@ -81,6 +82,7 @@ export const estateAnalytics = derived(
 
         return {
             overallHealth,
+            guardians: $guardians,
             pillars: {
                 legal: {
                     score: legalScore,
@@ -115,7 +117,7 @@ export const estateAnalytics = derived(
                 heirloomCount === 0 && { type: 'legacy', message: "Add a treasured heirloom", link: "/modules/heirlooms" },
                 !wishesDefined && { type: 'legacy', message: "Share your funeral wishes", link: "/modules/funeral" },
                 !pulseEnabled && { type: 'pulse', message: "Turn on Pulse check-ins", link: "/modules/pulse/settings" },
-                !hasPulseContacts && { type: 'pulse', message: "Choose your Pulse guardians", link: "/modules/pulse/settings" }
+                $guardians.loaded && !hasPulseContacts && { type: 'pulse', message: "Choose your Pulse guardians", link: "/modules/pulse/contacts" }
             ].filter(Boolean)
         };
     }
