@@ -522,7 +522,7 @@
                 <!-- Sample Data GhostRows -->
                 <div class="mt-8">
                     <p class="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-4 text-center">Example entries to inspire you</p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 opacity-60">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {#each getSmartSamples($language).timeCapsule || [] as sample}
                             <GhostRow
                                 name={sample.title}
