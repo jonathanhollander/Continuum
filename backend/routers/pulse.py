@@ -282,6 +282,54 @@ def _utc_iso(ts: datetime):
     return ts.isoformat().replace("+00:00", "Z")
 
 
+@router.get("/transparency")
+def get_transparency(contact_id: int | None = None, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    """Owner-only current portal preview; planned/private record names remain in their own block."""
+    from backend.pulse_logic import guardian_link_state, guardian_portal_view, guardian_vault_records, guardian_vault_out
+    from backend.pulse_tiers import pulse_tier_expression
+
+    # One chooser query; build the detailed snapshot only for the selected guardian.
+    rows = session.exec(select(PulseContact, pulse_tier_expression()).where(
+        PulseContact.user_id == user.id).order_by(PulseContact.name, PulseContact.id)).all()
+    rows = [(contact, tier) for contact, tier in rows
+            if contact.portal_token or tier is not None or contact.notify_on_safety_timer]
+    guardians = [{"id": contact.id, "name": contact.name, "tier_number": tier,
+                  "link_state": guardian_link_state(contact)} for contact, tier in rows]
+    selected = next(((contact, tier) for contact, tier in rows if contact.id == contact_id), None) if contact_id is not None else (rows[0] if rows else None)
+    if contact_id is not None and selected is None:
+        raise HTTPException(status_code=404, detail="Choose one of the people in your circle to open their view.")
+    if selected is None:
+        return {"guardians": guardians, "preview": None}
+
+    contact, tier_number = selected
+    link_state = guardian_link_state(contact)
+    view = guardian_portal_view(session, contact) if link_state == "ready" else None
+    opened = guardian_vault_records(session, contact) if view else []
+    opened_ids = {item.id for item in opened}
+    vault = session.exec(select(PulseVault).where(PulseVault.user_id == user.id)).all()
+    pulse_settings = session.get(PulseSettings, user.id) or PulseSettings(user_id=user.id)
+    tiers = session.exec(select(PulseEscalationTier).where(
+        PulseEscalationTier.user_id == user.id).order_by(PulseEscalationTier.tier_number)).all()
+    return {
+        "guardians": guardians,
+        "preview": {
+            "contact_id": contact.id, "contact_name": contact.name, "tier_number": tier_number,
+            "link_state": link_state, "view": view, "vault": guardian_vault_out(opened),
+            "planned": {
+                "release_enabled": pulse_settings.location_vault_enabled,
+                "pulse_enabled": pulse_settings.enabled,
+                "frequency_days": pulse_settings.frequency_days,
+                "grace_period_hours": pulse_settings.grace_period_hours,
+                "personal_wait_hours": max(0, contact.individual_delay_hours) if contact.individual_delay_hours is not None else None,
+                "tier_waits": [{"tier_number": tier.tier_number, "hours": tier.delay_hours}
+                               for tier in tiers if tier_number is not None and tier.tier_number <= tier_number],
+                "private_vault": [{"id": item.id, "name": item.name, "unlock_condition": item.unlock_condition}
+                                  for item in vault if item.id not in opened_ids],
+            },
+        },
+    }
+
+
 @router.get("/portal/{token}")
 @limiter.limit("30/minute")  # P1-High: Rate limit public portal
 def get_portal_view(request: Request, token: str, session: Session = Depends(get_session)):
@@ -293,40 +341,8 @@ def get_portal_view(request: Request, token: str, session: Session = Depends(get
     if contact.portal_token_expires and contact.portal_token_expires < utc_now():
         raise HTTPException(status_code=401, detail="This link has rested. The person who shared it can send a fresh one.")
 
-    # 2. Get User Status
-    user_id = contact.user_id
-    last_checkin = _owner_last_checkin(session, user_id)
-    
-    # Sensitive data opens only in this outage (rows after the owner's last check-in), once it
-    # has reached this guardian's tier or they were sent their own tier alert (pulse_logic.contact_reach)
-    from backend.pulse_logic import contact_reach, owner_display_name, owner_notes, owner_phone
-    from backend.pulse_tiers import pulse_tier_number
-    tier_number = pulse_tier_number(session, contact)
-    show_sensitive = contact_reach(session, contact) is not None
-
-    # "active" while the owner is inside their own check-in window (same soft deadline as
-    # pulse_logic.process_user_pulse: last check-in + frequency_days); past it, "grace"
-    pulse_settings = session.get(PulseSettings, user_id)
-    frequency_days = pulse_settings.frequency_days if pulse_settings else PulseSettings().frequency_days
-    user_status = "active" if (
-        last_checkin and utc_now() < last_checkin.timestamp + timedelta(days=frequency_days)
-    ) else "grace"
-
-    return {
-        "contact_name": contact.name,
-        "contact_tier": tier_number,
-        "user_name": owner_display_name(session, user_id),
-        "user_phone": owner_phone(session, user_id),
-        "user_status": user_status,
-        "last_checkin": _utc_iso(last_checkin.timestamp) if last_checkin else None,
-        "show_sensitive": show_sensitive,
-        "sensitive_data": {
-             "medical_proxy": "Active" if show_sensitive else "Locked",
-             "safe_pass": show_sensitive
-        },
-        # The owner's own notes to this guardian (Messages page), always shown to them
-        "notes": [{"message": n.message, "sent_at": _utc_iso(n.sent_at)} for n in owner_notes(session, contact)],
-    }
+    from backend.pulse_logic import guardian_portal_view
+    return guardian_portal_view(session, contact)
 
 @router.get("/portal/{token}/vault")
 @limiter.limit("10/minute")  # Public portal read, authorized by the portal token
@@ -337,27 +353,8 @@ def get_portal_vault(request: Request, token: str, session: Session = Depends(ge
     if contact.portal_token_expires and contact.portal_token_expires < utc_now():
         raise HTTPException(status_code=401, detail="This link has rested. The person who shared it can send a fresh one.")
 
-    # The owner's "Automatic Release" switch (location_vault_enabled) decides whether notes are
-    # released at all; then the same rule as the portal view (pulse_logic.contact_reach).
-    from backend.pulse_logic import contact_reach
-    pulse_settings = session.get(PulseSettings, contact.user_id)
-    if not (pulse_settings and pulse_settings.location_vault_enabled):
-        return []
-    reached = contact_reach(session, contact)
-    if reached is None:
-        return []
-
-    def unlock_tier(condition: str):
-        # The vault page stores "tier_<N>_escalation"; anything unreadable stays locked
-        parts = (condition or "").split("_")
-        return int(parts[1]) if len(parts) >= 2 and parts[0] == "tier" and parts[1].isdigit() else None
-
-    items = session.exec(select(PulseVault).where(PulseVault.user_id == contact.user_id)).all()
-    return [
-        {"name": i.name, "content": (i.encrypted_content or b"").decode("utf-8", errors="replace")}
-        for i in items
-        if (t := unlock_tier(i.unlock_condition)) is not None and t <= reached
-    ]
+    from backend.pulse_logic import guardian_vault_records, guardian_vault_out
+    return guardian_vault_out(guardian_vault_records(session, contact))
 
 @router.post("/respond/{token}")
 @limiter.limit("10/minute")  # P1-High: Rate limit public portal actions
