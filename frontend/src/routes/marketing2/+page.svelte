@@ -913,6 +913,7 @@
                             <input
                                 type="text"
                                 bind:value={name}
+                                aria-label="First name"
                                 placeholder={$m2t.signupNamePlaceholder}
                                 onkeydown={(e) =>
                                     e.key === "Enter" && handleNameSubmit()}
@@ -946,6 +947,7 @@
                         <input
                             type="email"
                             bind:value={email}
+                            aria-label="Email address"
                             placeholder={$m2t.signupEmailPlaceholder}
                             onkeydown={(e) =>
                                 e.key === "Enter" && handleEmailSubmit()}

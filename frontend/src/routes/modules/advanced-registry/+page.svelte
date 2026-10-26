@@ -189,6 +189,7 @@
                 />
                 <input
                     bind:value={searchQuery}
+                    aria-label="Search registry"
                     placeholder="Search registry..."
                     class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm"
                 />

@@ -742,6 +742,7 @@
                     <input
                         type="text"
                         bind:value={searchQuery}
+                        aria-label="Search templates"
                         placeholder="Search templates..."
                         class="w-full px-4 py-3 pl-12 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
                     />

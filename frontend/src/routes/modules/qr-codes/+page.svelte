@@ -302,6 +302,7 @@
                     <input
                         type="text"
                         bind:value={searchQuery}
+                        aria-label="Search labels"
                         placeholder="Search labels..."
                         class="w-full bg-white border border-slate-200 rounded-2xl py-3 pl-12 pr-4 text-sm font-medium focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 outline-none transition-all shadow-sm"
                     />
