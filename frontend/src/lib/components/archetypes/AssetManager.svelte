@@ -1,6 +1,6 @@
 <script lang="ts">
     import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
-    import { onMount } from "svelte";
+    import { onMount, untrack } from "svelte";
     import {
         Plus,
         DollarSign,
@@ -141,7 +141,9 @@
             $conciergeEngine.lastExtractedData?.financial_account ||
             $conciergeEngine.lastExtractedData;
 
-        if (data && (data.name || data.value || data.location)) {
+        if (data && (data.name || hasNumber(data.value) || data.location)) {
+            // Runs only when the extracted data changes; reading the form here would re-run it forever.
+            untrack(() => {
             // Open form if not already open
             if (!showAddForm) showAddForm = true;
 
@@ -150,12 +152,13 @@
                 ...newAsset,
                 name: data.name || newAsset.name,
                 type: (data.type || newAsset.type) as AssetType,
-                value: data.value || newAsset.value,
+                value: hasNumber(data.value) ? data.value : newAsset.value, // an extracted 0 is a real value
                 location: data.location || newAsset.location,
                 accountNumber: data.accountNumber || newAsset.accountNumber,
                 beneficiaries: data.beneficiaries || newAsset.beneficiaries,
                 notes: data.notes || newAsset.notes,
             };
+            });
         }
     });
 
@@ -200,6 +203,11 @@
         if (v === null || v === undefined || String(v).trim() === "") return null;
         const n = Number(v);
         return Number.isFinite(n) ? n : null;
+    }
+
+    // A value was given (0 counts); blank, null or not-a-number does not.
+    function hasNumber(v: any): boolean {
+        return valueOf(v) !== null;
     }
 
     // Real change only: first recorded value to the latest one; nothing until two values exist.
@@ -494,6 +502,9 @@
     // Dollars and cents, with the sign before the symbol: -$1,250.50
     const money = (n: number) =>
         (Number(n) || 0).toLocaleString("en-US", { style: "currency", currency: "USD" });
+    // A row's own value as shown: a blank value reads as an em dash, $0 reads as $0.00.
+    const shownValue = (a: any): string =>
+        hasNumber(a.value) ? (isDebt(a) ? "-" : "") + money(Math.abs(Number(a.value))) : "\u2014";
     // The owned share as a whole percent, when it is something other than sole ownership
     const partShare = (a: any): number | null => {
         const pct = ownershipOf(a.ownershipPercentage);
@@ -959,12 +970,12 @@
                     <div class="text-right">
                         {#if $userRole !== "Family"}
                             <div class="font-bold text-lg text-foreground">
-                                {isDebt(asset) ? "-" : ""}{money(Math.abs(asset.value || 0))}
+                                {shownValue(asset)}
                             </div>
                             {#if isDebt(asset)}
                                 <div class="text-[11px] text-slate-500 font-medium">Owed</div>
                             {/if}
-                            {#if partShare(asset) !== null}
+                            {#if partShare(asset) !== null && hasNumber(asset.value)}
                                 <div class="text-[11px] text-slate-500 font-medium" data-testid="owned-share">
                                     Your {partShare(asset)}% share: {money(Math.abs(ownedValue(asset)))}
                                 </div>
@@ -1135,8 +1146,8 @@
                         <td class="px-4 py-3 text-slate-600 text-sm">{asset.location || '-'}</td>
                         <td class="px-4 py-3 text-right">
                             {#if $userRole !== "Family"}
-                                <span class="font-bold text-slate-800">{isDebt(asset) ? "-" : ""}{money(Math.abs(asset.value || 0))}</span>
-                                {#if partShare(asset) !== null}
+                                <span class="font-bold text-slate-800">{shownValue(asset)}</span>
+                                {#if partShare(asset) !== null && hasNumber(asset.value)}
                                     <div class="text-[11px] text-slate-500">Your {partShare(asset)}% share: {money(Math.abs(ownedValue(asset)))}</div>
                                 {/if}
                             {:else}
