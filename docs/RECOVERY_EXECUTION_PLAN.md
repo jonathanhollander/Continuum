@@ -1,6 +1,6 @@
 # Continuum — Recovery Execution Plan (subagent-run)
 
-**Last Updated:** 2026-10-26 16:09 EDT
+**Last Updated:** 2026-10-26 18:22 EDT
 
 The how and the order for [PROJECT_RECOVERY_PLAN.md](PROJECT_RECOVERY_PLAN.md) (phases A–F).
 Issue IDs (CU-0xx) and their evidence are in
@@ -829,7 +829,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | Wave D — Handover | ↺ | 2026-10-26 | Unicode text, evidence files, partial copies and truthful readiness reopened; current source findings are in X303–X357. |
 | Wave E — Polish | ↺ | 2026-10-26 | X341 focused archive keyboard correction verified locally; current integrated/release presentation checks remain open. |
 | O1 / O2 oversight (all waves) | ↺ | 2026-10-26 | Historical wave proofs retained; correction-batch reports are underway. Current integrated and release coverage remain open. |
-| R0 — Local rehearsal | ↺ | 2026-10-26 | Earlier22/23proof retained; composed current-correction rehearsal remains open. |
+| R0 — Local rehearsal | ✅ | 2026-10-26 | Current source e8e3576 passed 23/23 plus added history/sharing; T-A3 17/17. See current R0 report; actual desktop/PDF evidence reviewed. |
 | Release — deploy + full browser test | ↺ | 2026-10-26 | Earlier browser results retained as historical evidence; new source-review defects require targeted verification after correction. No new release/deployment was performed. |
 | Wave U — Final UI/UX pass | ↺ | 2026-10-26 | Script-only learning resources still presented as videos; U21 reopened via X338. This pass did not repeat visual QA. |
 | Wave G — Role-based page gap review | ↺ | 2026-10-26 | Source review found remaining role/data-path gaps; reopened parent rows link to X303–X357. |
@@ -1398,7 +1398,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X288 | ☑ | merged | Simulator: "Practice walkthrough", "Walk through this moment", "Looking over your plan…", true records line (no roles read); Siren→Compass; title leading space trimmed; 0 console errors |
 | X291 | ☑ | merged | Simulator result: "Ready for This Moment", "named on X of Y assets", Ghost→HeartHandshake, CircleX→CirclePlus, true Vault lines |
 | X284 | ☑ | merged ba55e5a | Five just/simple/stress-test/promise lines rewritten; three left (describe things, not effort) |
-| R0 | ↺ | docs/reviews/2026-10-26-R0/REPORT.md | Full completion test on merged main 17e17b7, local, synthetic data: 22 of 23 steps pass (owner adds/edits, controlled failure + retry, reload, preview, recipient finds note/steps/advisor/original, full letter, media). Fail: account transfer instructions missing from binder/PDF/recipient record → X275; smoke script out of date → X276  **Historical proof retained. Reopened for the current correction pass: composed local rehearsal and consolidated release/live acceptance remain pending. Existing configured production secrets must be preserved.** |
+| R0 | ☑ | docs/reviews/2026-10-26-implementation/R0-CURRENT.md | Final feature cut e8e3576: 23/23 composed owner→reader→copy steps and four added history/sharing groups; T-A3 once 17/17 on a separate synthetic owner; 16 source members, 3/3 exact original-file hashes, complete 4,786-character letter, immutable retry A with draft B retained. Final check 0 errors/0 warnings and production build pass. Agent desktop/PDF inspection and root evidence/sample visual review accepted; original harness failures retained, only affected assertions corrected/resumed. No app changes or production-data probes. Final release acceptance remains separate. |
 | X275 | ☑ | e279830 | Account "Transfer instructions" now prints for every account in all four outputs (binder, binder print-to-PDF, app PDF, recipient full record — one `SECTIONS` source); closed accounts show the date alone |
 | X276 | ☑ | 28ec576 | `scripts/smoke_test.py` sends today's payloads (documents, letters, time capsule, contact mappers, create strips id/created_at): fresh database 13/4 → 17 PASS, 0 FAIL |
 | Release | ↺ | 863d1b0 → 7adcba8 | Step 9 variables (production mode, new secrets) verified live; step 10 browser test (docs/reviews/2026-10-26-release/BROWSER-TEST.md) — completion test, every module, binder/PDF/download pass; defects X292 (uploads lost → Railway volume, verified across a redeploy), X293 (Full Record edit, verified live: edit persists after reload and in a second context, 0 console errors), X294 (timeline heading, verified live) fixed; O1 and O2 release ☑; X277 live: GET /api/pulse/vault ×20 → 20×200  **Historical proof retained. Reopened for the current correction pass: composed local rehearsal and consolidated release/live acceptance remain pending. Existing configured production secrets must be preserved.** |
