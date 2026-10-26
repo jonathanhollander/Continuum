@@ -1,6 +1,6 @@
 # Continuum — Recovery Execution Plan (subagent-run)
 
-**Last Updated:** 2026-10-26 02:50 EST
+**Last Updated:** 2026-10-26 03:05 EST
 
 The how and the order for [PROJECT_RECOVERY_PLAN.md](PROJECT_RECOVERY_PLAN.md) (phases A–F).
 Issue IDs (CU-0xx) and their evidence are in
@@ -170,6 +170,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | A0 | Worktree folder | orchestrator | `.gitignore` | Add `.worktrees/`. | `git check-ignore .worktrees/x` matches |
 | A1 | Pin the full backend set | `general-purpose` | `backend/requirements.txt`, `nixpacks.toml` | Pin production's full `pip freeze`; keep `python311`. | A fresh 3.11 venv installs, the dev user seeds, login returns 200 |
 | A2 | Stale CI line | `general-purpose` | `CLAUDE.md` (Deployment) | "Run `npm run check` and `npm run build` by hand." | One-line diff |
+| A4 | Backend starts locally (from A1 findings) | `general-purpose` | `backend/main.py` (the `__main__` block and the static mounts only) | `uvicorn.run("backend.main:app")`; mount `frontend/dist` folders only when they exist | From the repo root, `python -m backend.main` starts with no `frontend/dist`, and login returns 200 |
 | A3 | UI-payload smoke script (written test T-A3; see Test register) | `general-purpose` | `scripts/smoke_test.py` (new) | Reuse `docs/reviews/.../evidence/reproduce_api_probes.py`. Send each store's real payload (after `toSnake`), re-fetch, and diff every field. Cover every completion-scenario record type. | It reproduces CU-001, CU-002, CU-004 and CU-009 as failures, and journal/home-access as passes |
 
 ## Wave B — Shared contracts (one at a time: B1 → B2 → B3 → B4 → B5)
@@ -246,7 +247,8 @@ Listed so nothing is lost:
 | Card | Status | Commit | Proof verified |
 |---|---|---|---|
 | A0 | ☑ | 0444175 | `git check-ignore -v .worktrees/x` → `.gitignore:58` |
-| A1 | ▶ | | |
+| A1 | ☑ | 8dd0a90 | 65 pins identical to prod freeze; fresh 3.11 venv: pip check clean, alembic head, dev seed, POST /api/auth/token 200 |
+| A4 | ▶ | | |
 | A2 | ☑ | 8d54a13 | Diff = the Pre-deploy line plus the footer; `.github/` absent |
 | A3 | ▶ | | |
 | B1 | ☐ | | |
