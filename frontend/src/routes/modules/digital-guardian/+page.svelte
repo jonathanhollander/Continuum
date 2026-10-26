@@ -17,6 +17,7 @@
         FingerprintPattern as Fingerprint,
         X,
         Loader2,
+        Pencil,
     } from "lucide-svelte";
     import { onMount } from "svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
@@ -301,6 +302,32 @@
         });
     }
 
+    // Edit: the add modal's shell, filled in with the account's details; one update on save.
+    let editingId = $state<string | null>(null);
+    let draft = $state({ platform: "", username: "", type: "", description: "" });
+
+    function openEdit(asset: DigitalAccount) {
+        editingId = String(asset.id);
+        draft = {
+            platform: asset.platform ?? "",
+            username: asset.username ?? "",
+            type: asset.type ?? "",
+            description: asset.description ?? "",
+        };
+    }
+
+    async function saveEdit() {
+        if (!editingId) return;
+        const id = editingId;
+        const changes = { ...$state.snapshot(draft), name: draft.platform };
+        editingId = null;
+        try {
+            await digitalAssetsSync.update(id, changes as Partial<DigitalAccount>);
+        } catch {
+            // the manager already showed the one gentle message
+        }
+    }
+
     async function deleteAsset(id: string) {
         try {
             await digitalAssetsSync.delete(id);
@@ -343,6 +370,15 @@
         detailedDescription="Your physical assets are protected by law. Your digital assets are protected by passwords. Set up legacy contacts, inactive account managers, and document your digital inventory so your family isn't locked out of your photos, emails, and accounts."
         whyMatters="Without these specific setups, your family may lose access to irreplaceable memories, important accounts, and digital assets. Taking action now ensures your digital life can be properly managed."
     />
+
+    <div class="flex justify-end mb-6">
+        <button
+            onclick={() => (showWizard = true)}
+            class="bg-[#304743] text-white px-4 py-2 rounded-full font-bold hover:bg-[#2a3f3b] transition-colors flex items-center gap-2 text-sm"
+        >
+            <Siren size={16} /> Run Discovery Wizard
+        </button>
+    </div>
 
     <!-- AI Prompt Bar -->
     <div class="max-w-3xl mx-auto mb-8">
@@ -971,12 +1007,6 @@
             </div>
             <div class="flex items-center gap-3">
                 <DataViewToggle module="digital-guardian" onchange={(mode) => viewMode = mode} />
-                <button
-                    onclick={() => (showWizard = true)}
-                    class="bg-[#304743] text-white px-4 py-2 rounded-full font-bold hover:bg-[#2a3f3b] transition-colors flex items-center gap-2 text-sm"
-                >
-                    <Siren size={16} /> Run Discovery Wizard
-                </button>
             </div>
         </div>
 
@@ -1001,6 +1031,67 @@
                             oncomplete={handleWizardComplete}
                         />
                     </div>
+                </div>
+            {/if}
+
+            {#if editingId}
+                <div
+                    class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+                    transition:fade
+                >
+                    <form
+                        class="w-full max-w-2xl relative bg-white rounded-2xl shadow-2xl overflow-hidden"
+                        transition:slide
+                        aria-label="Edit these details"
+                        data-testid="digital-edit-form"
+                        onsubmit={(e) => { e.preventDefault(); saveEdit(); }}
+                    >
+                        <button
+                            type="button"
+                            aria-label="Not right now"
+                            class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10"
+                            onclick={() => (editingId = null)}
+                        >
+                            <X size={20} />
+                        </button>
+                        <div class="p-8 space-y-4">
+                            <h3 class="font-serif font-bold text-2xl text-[#304743]">
+                                Edit these details
+                            </h3>
+                            <label class="block text-sm font-bold text-slate-600">
+                                Platform
+                                <input bind:value={draft.platform} name="platform" class="mt-1 w-full border border-slate-200 rounded-xl px-3 py-2 font-normal text-slate-800" />
+                            </label>
+                            <label class="block text-sm font-bold text-slate-600">
+                                Username
+                                <input bind:value={draft.username} name="username" class="mt-1 w-full border border-slate-200 rounded-xl px-3 py-2 font-normal text-slate-800" />
+                            </label>
+                            <label class="block text-sm font-bold text-slate-600">
+                                Type
+                                <input bind:value={draft.type} name="type" class="mt-1 w-full border border-slate-200 rounded-xl px-3 py-2 font-normal text-slate-800" />
+                            </label>
+                            <label class="block text-sm font-bold text-slate-600">
+                                Description
+                                <input bind:value={draft.description} name="description" class="mt-1 w-full border border-slate-200 rounded-xl px-3 py-2 font-normal text-slate-800" />
+                            </label>
+                        </div>
+                        <div class="px-8 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+                            <button
+                                type="button"
+                                onclick={() => (editingId = null)}
+                                class="px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-200 transition-colors"
+                            >
+                                Not right now
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={!draft.platform.trim()}
+                                class="px-6 py-2.5 rounded-xl font-semibold bg-[#304743] text-white hover:bg-[#2a3f3b] transition-colors disabled:opacity-50"
+                            >
+                                Save my updates
+                            </button>
+                        </div>
+                    </form>
                 </div>
             {/if}
 
@@ -1048,12 +1139,24 @@
                                     </div>
                                 </div>
                             </div>
-                            <button
-                                onclick={() => deleteAsset(asset.id)}
-                                class="text-red-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-full transition-colors"
-                            >
-                                <X size={16} />
-                            </button>
+                            <div class="flex items-center gap-1">
+                                <button
+                                    onclick={() => openEdit(asset)}
+                                    aria-label="Edit these details"
+                                    title="Edit these details"
+                                    class="text-slate-400 hover:text-primary p-2 hover:bg-primary/5 rounded-full transition-colors"
+                                >
+                                    <Pencil size={16} />
+                                </button>
+                                <button
+                                    onclick={() => deleteAsset(asset.id)}
+                                    aria-label="Remove this item"
+                                    title="Remove this item"
+                                    class="text-red-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-full transition-colors"
+                                >
+                                    <X size={16} />
+                                </button>
+                            </div>
                         </div>
                     {/each}
                 {:else}
@@ -1082,7 +1185,17 @@
                                         <td class="px-4 py-3 text-slate-500 text-sm">{asset.description}</td>
                                         <td class="px-4 py-3 text-right">
                                             <button
+                                                onclick={() => openEdit(asset)}
+                                                aria-label="Edit these details"
+                                                title="Edit these details"
+                                                class="text-slate-400 hover:text-primary p-1 hover:bg-primary/5 rounded transition-colors"
+                                            >
+                                                <Pencil size={16} />
+                                            </button>
+                                            <button
                                                 onclick={() => deleteAsset(asset.id)}
+                                                aria-label="Remove this item"
+                                                title="Remove this item"
                                                 class="text-red-400 hover:text-red-600 p-1 hover:bg-red-50 rounded transition-colors"
                                             >
                                                 <X size={16} />
