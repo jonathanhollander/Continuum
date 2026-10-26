@@ -49,20 +49,6 @@
         )
             return;
 
-        // Track History before moving (unless it's just a validation failure)
-        // But wait, if validation fails we return. So we should record only if we proceed?
-        // The original code wrapped it, so it recorded history *before* calling originalNext.
-        // But originalNext had the validation check at the top.
-        // So it recorded history even if validation failed?
-        // No, if validation failed, originalNext returned early.
-        // But the history push happened *before* calling originalNext.
-        // So it pushed current index even if we didn't move? That seems like a bug in the original code too.
-        // Let's assume we want to push history only if we are actually moving.
-
-        // However, to be safe and strictly follow the "fix crash" goal, let's put it where it executes.
-
-        recordHistory();
-
         // Save Answer
         answers[currentStep.id] = currentInput;
         onanswer?.({ id: currentStep.id, value: currentInput });
@@ -93,6 +79,7 @@
             }
             const nextIndex = steps.findIndex((s: any) => s.id === nextId);
             if (nextIndex !== -1) {
+                recordHistory();
                 currentStepIndex = nextIndex;
                 restoreInput();
                 return;
@@ -101,6 +88,7 @@
 
         // Fallback: Linear
         if (currentStepIndex < steps.length - 1) {
+            recordHistory();
             currentStepIndex++;
             restoreInput();
         } else {

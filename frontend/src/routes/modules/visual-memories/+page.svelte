@@ -99,23 +99,46 @@
         showArchiveModal = true;
     }
 
-    function saveArchive() {
-        if (!archiveForm.platform || !archiveForm.locationDetails) return;
-
-        if (editingArchive && editingArchive.id) {
-            updateArchive(editingArchive.id, {
-                platform: archiveForm.platform,
-                location_details: archiveForm.locationDetails,
-                access_url: archiveForm.accessUrl,
-            });
-        } else {
-            addArchive({
-                platform: archiveForm.platform,
-                location_details: archiveForm.locationDetails,
-                access_url: archiveForm.accessUrl,
-            });
-        }
-        showArchiveModal = false;
+    let savingArchive = $state(false);
+    const archiveSaveVersions = new WeakMap<object, number>();
+    const archiveRecoveryIds = new WeakMap<object, string>();
+    async function saveArchive() {
+        if (savingArchive || !archiveForm.platform || !archiveForm.locationDetails) return;
+        const form = archiveForm;
+        const original = JSON.stringify(form);
+        const id = editingArchive?.id;
+        const submitted = {
+            platform: form.platform,
+            location_details: form.locationDetails,
+            access_url: form.accessUrl,
+        };
+        const version = (archiveSaveVersions.get(form) ?? 0) + 1;
+        archiveSaveVersions.set(form, version);
+        let completed = false;
+        const attempt = async () => {
+            if (savingArchive || completed || archiveSaveVersions.get(form) !== version) return;
+            savingArchive = true;
+            try {
+                const saved = id
+                    ? await updateArchive(id, submitted, attempt, archiveRecoveryIds.get(form))
+                    : await addArchive(submitted, attempt, archiveRecoveryIds.get(form));
+                completed = true;
+                archiveRecoveryIds.delete(form);
+                if (archiveForm === form) {
+                    if (JSON.stringify(archiveForm) === original) {
+                        showArchiveModal = false;
+                        editingArchive = null;
+                        archiveForm = { platform: "", locationDetails: "", accessUrl: "" };
+                    } else editingArchive = saved; // a later edit continues the saved location
+                }
+            } catch (e) {
+                if (e && typeof e === "object" && "recoveryId" in e && typeof e.recoveryId === "string") archiveRecoveryIds.set(form, e.recoveryId);
+                // The manager offers Retry; the location and instructions stay in this form.
+            } finally {
+                savingArchive = false;
+            }
+        };
+        await attempt();
     }
 
     async function handleDeleteArchive(id: number) {
@@ -258,7 +281,7 @@
 {:else}
 <!-- Archive Modal -->
 {#if showArchiveModal}
-    <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => (showArchiveModal = false) }}
+    <div role="dialog" aria-modal="true" aria-labelledby="archive-dialog-title" use:focusTrap={{ onEscape: () => (showArchiveModal = false) }}
         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
         transition:fade
     >
@@ -269,7 +292,7 @@
             <div
                 class="p-6 border-b border-border flex justify-between items-center"
             >
-                <h3 class="font-serif font-bold text-xl text-primary-deep dark:text-primary-hover">
+                <h3 id="archive-dialog-title" class="font-serif font-bold text-xl text-primary-deep dark:text-primary-hover">
                     {editingArchive ? "Edit Location" : "Add Legacy Location"}
                 </h3>
                 <button aria-label="Close"
@@ -337,11 +360,12 @@
                 </button>
                 <button
                     onclick={saveArchive}
-                    disabled={!archiveForm.platform ||
+                    disabled={savingArchive || !archiveForm.platform ||
                         !archiveForm.locationDetails}
+                    aria-busy={savingArchive}
                     class="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-bold text-sm shadow-sm hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
                 >
-                    <Save size={16} /> Save Location
+                    <Save size={16} /> {savingArchive ? "Saving..." : "Save Location"}
                 </button>
             </div>
         </div>

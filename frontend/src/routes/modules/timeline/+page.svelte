@@ -80,21 +80,41 @@
         date: undefined,
     });
 
-    function saveEvent() {
-        if (!newEvent.label || !newEvent.year) return;
-
-        const eventData = {
-            ...newEvent,
+    let saving = $state(false);
+    const saveVersions = new WeakMap<object, number>();
+    const recoveryIds = new WeakMap<object, string>();
+    async function saveEvent() {
+        if (saving || !newEvent.label || !newEvent.year) return;
+        const form = newEvent;
+        const eventData: Partial<LifeEvent> = JSON.parse(JSON.stringify({
+            ...form,
             custom_attributes: JSON.stringify(parsedCustomAttributes),
+        }));
+        const version = (saveVersions.get(form) ?? 0) + 1;
+        saveVersions.set(form, version);
+        let completed = false;
+        const attempt = async () => {
+            if (saving || completed || saveVersions.get(form) !== version) return;
+            saving = true;
+            try {
+                const saved = eventData.id
+                    ? await timelineStore.updateEvent(eventData.id, eventData, attempt, recoveryIds.get(form))
+                    : await timelineStore.addEvent(eventData, attempt, recoveryIds.get(form));
+                completed = true;
+                recoveryIds.delete(form);
+                if (newEvent === form) {
+                    const current = { ...newEvent, custom_attributes: JSON.stringify(parsedCustomAttributes) };
+                    if (JSON.stringify(current) === JSON.stringify(eventData)) resetForm();
+                    else newEvent.id = saved.id; // newer typing stays open and continues this same record
+                }
+            } catch (e) {
+                if (e && typeof e === "object" && "recoveryId" in e && typeof e.recoveryId === "string") recoveryIds.set(form, e.recoveryId);
+                // The manager keeps the submitted operation for Retry; this editor keeps its words.
+            } finally {
+                saving = false;
+            }
         };
-
-        if (newEvent.id) {
-            timelineStore.updateEvent(newEvent.id, eventData);
-        } else {
-            timelineStore.addEvent(eventData);
-        }
-
-        resetForm();
+        await attempt();
     }
 
     function editEvent(event: LifeEvent) {
@@ -249,7 +269,7 @@
 
     <!-- Add Modal -->
     {#if showAddModal}
-        <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: resetForm }}
+        <div role="dialog" aria-modal="true" aria-labelledby="timeline-dialog-title" use:focusTrap={{ onEscape: resetForm }}
             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
             transition:fade
         >
@@ -260,7 +280,7 @@
                 <div
                     class="p-4 border-b border-border flex justify-between items-center bg-muted"
                 >
-                    <h3 class="font-bold text-primary-deep dark:text-primary-hover">{newEvent.id ? "Update this event" : "New Life Event"}</h3>
+                    <h3 id="timeline-dialog-title" class="font-bold text-primary-deep dark:text-primary-hover">{newEvent.id ? "Update this event" : "New Life Event"}</h3>
                     <button aria-label="Close" onclick={resetForm}
                         ><X
                             size={20}
@@ -309,9 +329,7 @@
                                     const val = e.currentTarget.value;
                                     newEvent.date = val;
                                     if (val) {
-                                        newEvent.year = new Date(
-                                            val,
-                                        ).getFullYear();
+                                        newEvent.year = Number(val.slice(0, 4));
                                     }
                                 }}
                                 class="w-full p-2 rounded-lg border border-border focus:ring-2 ring-primary outline-none bg-card text-foreground"
@@ -407,9 +425,11 @@
 
                     <button
                         onclick={saveEvent}
-                        class="w-full py-3 bg-primary text-primary-foreground rounded-xl font-bold mt-2"
+                        disabled={saving}
+                        aria-busy={saving}
+                        class="w-full py-3 bg-primary text-primary-foreground rounded-xl font-bold mt-2 disabled:opacity-50"
                     >
-                        {newEvent.id ? "Update Event" : "Add to Timeline"}
+                        {saving ? "Saving..." : newEvent.id ? "Update Event" : "Add to Timeline"}
                     </button>
                 </div>
             </div>

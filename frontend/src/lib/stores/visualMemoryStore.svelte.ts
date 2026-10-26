@@ -172,19 +172,17 @@ export const toggleFavorite = (id: number) => {
 };
 
 // Archive Actions
-export const addArchive = (archive: Omit<ExternalArchive, 'id'>) => archiveManager.create(archive as ExternalArchive);
+export const addArchive = (archive: Omit<ExternalArchive, 'id'>, onRetry?: () => Promise<unknown>, recoveryId?: string) => archiveManager.create(archive as ExternalArchive, false, false, onRetry, recoveryId);
 export const removeArchive = (id: number) => archiveManager.delete(id);
-export const updateArchive = (id: number, updates: Partial<ExternalArchive>) => {
-    const item = archiveManager.items.find(a => a.id === id);
-    if (item) return archiveManager.update(id, { ...item, ...updates });
-};
+export const updateArchive = (id: number, updates: Partial<ExternalArchive>, onRetry?: () => Promise<unknown>, recoveryId?: string) =>
+    archiveManager.update(id, updates, true, onRetry, recoveryId);
 
 // Family Actions
-export const addFamilyMemory = (memory: Omit<FamilyMemory, 'id'>, onRetry?: () => Promise<unknown>) => familyManager.create(memory as FamilyMemory, false, false, onRetry);
+export const addFamilyMemory = (memory: Omit<FamilyMemory, 'id'>, onRetry?: () => Promise<unknown>, recoveryId?: string) => familyManager.create(memory as FamilyMemory, false, false, onRetry, recoveryId);
 export const removeFamilyMemory = (id: number) => familyManager.delete(id);
-export const updateFamilyMemory = (id: number, updates: Partial<FamilyMemory>) => {
+export const updateFamilyMemory = (id: number, updates: Partial<FamilyMemory>, onRetry?: () => Promise<unknown>, recoveryId?: string) => {
     const item = familyManager.items.find(m => m.id === id);
-    if (item) return familyManager.update(id, { ...item, ...updates });
+    if (item) return familyManager.update(id, { ...item, ...updates }, true, onRetry, recoveryId);
     notifications.showError({
         message: 'That memory has moved. Refresh whenever you\'re ready and it will be here to save.',
         code: 'NOT_FOUND',
