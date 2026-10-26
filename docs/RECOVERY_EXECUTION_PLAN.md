@@ -1,6 +1,6 @@
 # Continuum — Recovery Execution Plan (subagent-run)
 
-**Last Updated:** 2026-10-26 01:55 EST
+**Last Updated:** 2026-10-26 02:05 EST
 
 The how and the order for [PROJECT_RECOVERY_PLAN.md](PROJECT_RECOVERY_PLAN.md) (phases A–F).
 Issue IDs (CU-0xx) and their evidence are in
@@ -37,6 +37,12 @@ board, and it is the live checklist** (decision 9).
    - Each wave heading gets ✅ when all its cards are ☑.
    - The plan sections (A–E, O1/O2, R0, Release) are marked the same way.
    - The file is committed with each tick, so its state is always current.
+
+10. **Trust no existing code.** This code was written months ago by less capable agents.
+    - **Every subagent reads in full** the files it changes *and* the code around them: the callers and callees of each changed function, the store, mapper, endpoint and model on both sides of each data path, and the components that render the result. It checks all of that for bugs, not just the lines it edits.
+    - **Surrounding-code bugs** that affect the card's journey are fixed when they're small and inside the card's path, and listed in the report. Larger ones, or ones in files another card owns, are reported as new cards (so parallel agents don't clash).
+    - **The orchestrator's diff review** reads the code around each diff too (callers, callees, both sides of the data path) to catch side effects, without re-running the agent's work.
+    - **Never assume something works** because a doc, comment or "COMPLETE" file says so.
 
 ## Progress tracking (decision 9)
 
@@ -77,7 +83,7 @@ board, and it is the live checklist** (decision 9).
    - Dispatch the agent with that path as its working directory. Run each wave's parallel cards in one message, following the wave order below.
    - Mark the card **▶**.
 3. Each agent runs its own local proof scenario on synthetic data and reports its files and proof. Mark the card **◐**.
-4. **Review by diff only.** Read `git -C .worktrees/<card-id> diff main` against the card: scope, owned files, the acceptance conditions it claims, no feature removed. Merge if it's good. If not, send it back citing the specific diff lines (the card stays ◐).
+4. **Review by diff only.** Read `git -C .worktrees/<card-id> diff main` against the card: scope, owned files, the acceptance conditions it claims, no feature removed. **Also read the code around each hunk** (callers, callees, both sides of the data path) for side effects and bugs the change exposes (decision 10). Check the agent's surrounding-code findings, and turn the larger ones into cards. Merge if it's good. If not, send it back citing the specific diff lines (the card stays ◐).
 5. Commit with the card ID and push. Then:
    - **Clean up:** `git worktree remove .worktrees/<card-id>`, `git branch -d card/<card-id>`, and `git worktree prune` at the end of each wave.
    - **Mark the card ☑** with its commit and proof, and commit this file.
@@ -132,10 +138,11 @@ Stack: SvelteKit 5 runes, FastAPI/SQLModel. Read first: the CU entries in docs/r
 You own: <exact file paths, plus a migration if listed>. Edit nothing else. Do not edit docs/RECOVERY_EXECUTION_PLAN.md; the orchestrator marks progress.
 Smallest change: <what>.
 Acceptance (prove all in one scenario): <conditions>.
+Trust no existing code (decision 10): before changing anything, read in full the files you change and the code around them (callers, callees, the store/mapper/endpoint/model on both sides of the data path, the components that render it), and check it all for bugs. Fix small bugs on this card's path and list them. Report bigger ones, or ones in files you don't own, as new-card findings. Don't trust docs, comments or COMPLETE files.
 Ponytail: smallest change, one proof scenario, stop. No gates/hooks/CI. No feature removal. Synthetic data only.
 Desktop UI only (1280px+); don't add or change phone/tablet layouts. Keep DB/API calls fast: no queries in loops, filter on indexed columns, no unbounded lists.
 If it's bigger than this card, stop and report.
-Report: files changed, proof output, done or stopped (why).
+Report: files changed, proof output, surrounding code read (list), surrounding bugs fixed, surrounding bugs reported as new cards, done or stopped (why).
 ```
 
 ---
