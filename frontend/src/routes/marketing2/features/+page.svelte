@@ -136,8 +136,10 @@
                 $m2t.practicalItem3,
                 $m2t.practicalItem4,
             ],
-            color: "amber",
-            iconClass: "text-amber-400/70",
+            hoverBorder: "hover:border-gold/20",
+            iconBg: "bg-gold/10",
+            dot: "bg-gold/50",
+            iconClass: "text-gold-text/70",
         },
         {
             icon: Heart,
@@ -149,8 +151,10 @@
                 $m2t.personalItem3,
                 $m2t.personalItem4,
             ],
-            color: "rose",
-            iconClass: "text-rose-400/70",
+            hoverBorder: "hover:border-primary/20",
+            iconBg: "bg-primary/10",
+            dot: "bg-primary/50",
+            iconClass: "text-primary/70",
         },
         {
             icon: Shield,
@@ -162,8 +166,10 @@
                 $m2t.protectiveItem3,
                 $m2t.protectiveItem4,
             ],
-            color: "teal",
-            iconClass: "text-teal-400/70",
+            hoverBorder: "hover:border-primary/20",
+            iconBg: "bg-primary/10",
+            dot: "bg-primary/50",
+            iconClass: "text-primary/70",
         },
         {
             icon: Briefcase,
@@ -175,8 +181,10 @@
                 $m2t.preparedItem3,
                 $m2t.preparedItem4,
             ],
-            color: "indigo",
-            iconClass: "text-indigo-400/70",
+            hoverBorder: "hover:border-primary/20",
+            iconBg: "bg-primary/10",
+            dot: "bg-primary/50",
+            iconClass: "text-primary/70",
         },
     ]);
     const grainBg = `background-image: url('data:image/svg+xml,%3Csvg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noise"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%" height="100%" filter="url(%23noise)"/%3E%3C/svg%3E');`;
@@ -196,7 +204,7 @@
 <svelte:window bind:scrollY bind:innerHeight bind:innerWidth />
 
 <div
-    class="min-h-screen bg-[#0a0a0b] text-white overflow-x-hidden"
+    class="surface-dark min-h-screen bg-[#0a0a0b] text-white overflow-x-hidden"
     dir={$isRTL ? "rtl" : "ltr"}
 >
     <!-- Cursor Glow Effect (Desktop only) -->
@@ -204,7 +212,7 @@
         <div
             class="pointer-events-none fixed z-50 w-96 h-96 rounded-full opacity-20 blur-3xl"
             style="
-                background: radial-gradient(circle, rgba(251, 191, 36, 0.15) 0%, transparent 70%);
+                background: radial-gradient(circle, color-mix(in srgb, var(--color-gold) 15%, transparent) 0%, transparent 70%);
                 left: {$cursorGlow.x - 192}px;
                 top: {$cursorGlow.y - 192}px;
             "
@@ -213,7 +221,7 @@
 
     <!-- Scroll Progress Indicator -->
     <div
-        class="fixed top-0 left-0 h-[2px] bg-gradient-to-r from-amber-500 via-teal-500 to-rose-500 z-[100] origin-left"
+        class="fixed top-0 left-0 h-[2px] bg-primary z-[100] origin-left"
         style="transform: scaleX({$scrollProgress})"
     ></div>
 
@@ -222,7 +230,7 @@
         <div
             class="absolute w-[700px] h-[700px] rounded-full opacity-20 blur-[100px] animate-float-slow"
             style="
-                background: radial-gradient(circle, rgba(251, 191, 36, 0.1) 0%, transparent 70%);
+                background: radial-gradient(circle, color-mix(in srgb, var(--color-gold) 10%, transparent) 0%, transparent 70%);
                 top: -10%;
                 right: -20%;
                 transform: translateY({floatOffset1}px);
@@ -231,7 +239,7 @@
         <div
             class="absolute w-[500px] h-[500px] rounded-full opacity-15 blur-[80px] animate-float-medium"
             style="
-                background: radial-gradient(circle, rgba(244, 63, 94, 0.1) 0%, transparent 70%);
+                background: radial-gradient(circle, color-mix(in srgb, var(--color-primary) 10%, transparent) 0%, transparent 70%);
                 bottom: 20%;
                 left: -10%;
                 transform: translateY({-floatOffset2}px);
@@ -335,7 +343,7 @@
                                         )}
                                     class="w-full px-4 py-2 text-left text-sm hover:bg-white/5 transition-all duration-200 {$m2Language ===
                                     lang.code
-                                        ? 'text-amber-400'
+                                        ? 'text-gold-text'
                                         : 'text-white/70'}"
                                     style="animation: slideIn 0.2s ease {i *
                                         0.05}s both"
@@ -349,7 +357,7 @@
 
                 <a
                     href="/login"
-                    class="text-sm px-4 py-2 rounded-full border border-white/20 text-white/80 hover:text-white hover:border-white/40 transition-all duration-300 hover:shadow-[0_0_20px_rgba(251,191,36,0.2)]"
+                    class="text-sm px-4 py-2 rounded-full border border-white/20 text-white/80 hover:text-white hover:border-white/40 transition-all duration-300 hover:shadow-[0_0_20px_color-mix(in_srgb,var(--color-gold)_20%,transparent)]"
                 >
                     {$m2t.navLogin}
                 </a>
@@ -385,7 +393,7 @@
             <div class="max-w-3xl mx-auto text-center">
                 <a
                     href="/marketing2"
-                    class="inline-flex items-center gap-2 text-white/40 hover:text-white/60 transition-all duration-300 text-sm mb-8 group"
+                    class="inline-flex items-center gap-2 text-white/70 hover:text-white/90 transition-all duration-300 text-sm mb-8 group"
                     in:fade={{ duration: 300, delay: 100 }}
                 >
                     {#if $isRTL}
@@ -428,12 +436,12 @@
                 <div class="grid md:grid-cols-2 gap-8">
                     {#each featureCards as card, i}
                         <div
-                            class="card-3d reveal-section p-10 rounded-3xl bg-white/[0.02] border border-white/5 hover:border-{card.color}-500/20 transition-all duration-500"
+                            class="card-3d reveal-section p-10 rounded-3xl bg-white/[0.02] border border-white/5 {card.hoverBorder} transition-all duration-500"
                             use:reveal={{ delay: i * 100 }}
                             use:tilt3D
                         >
                             <div
-                                class="icon-container w-14 h-14 rounded-2xl bg-{card.color}-500/10 flex items-center justify-center mb-6"
+                                class="icon-container w-14 h-14 rounded-2xl {card.iconBg} flex items-center justify-center mb-6"
                             >
                                 <card.icon
                                     size={28}
@@ -446,7 +454,7 @@
                             <p class="text-white/50 leading-relaxed mb-6">
                                 {card.desc}
                             </p>
-                            <ul class="space-y-3 text-sm text-white/40">
+                            <ul class="space-y-3 text-sm text-white/70">
                                 {#each card.items as item, j}
                                     <li
                                         class="flex items-center gap-3 list-item-reveal"
@@ -455,7 +463,7 @@
                                             j * 0.05}s both"
                                     >
                                         <div
-                                            class="w-1.5 h-1.5 rounded-full bg-{card.color}-500/50 animate-pulse-slow"
+                                            class="w-1.5 h-1.5 rounded-full {card.dot} animate-pulse-slow"
                                         ></div>
                                         {item}
                                     </li>
@@ -473,10 +481,10 @@
                 class="max-w-2xl mx-auto text-center reveal-section"
                 use:reveal
             >
-                <p class="text-lg text-white/40 leading-relaxed mb-8">
+                <p class="text-lg text-white/70 leading-relaxed mb-8">
                     {$m2t.featuresMore}
                 </p>
-                <p class="text-base text-white/30 italic">
+                <p class="text-base text-white/70 italic">
                     {$m2t.featuresMoreSub}
                 </p>
             </div>
@@ -487,7 +495,7 @@
             <div class="max-w-xl mx-auto text-center reveal-section" use:reveal>
                 <a
                     href="/marketing2"
-                    class="inline-flex items-center gap-3 px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-full text-white/80 transition-all duration-300 group hover:shadow-[0_0_30px_rgba(251,191,36,0.2)]"
+                    class="inline-flex items-center gap-3 px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-full text-white/80 transition-all duration-300 group hover:shadow-[0_0_30px_color-mix(in_srgb,var(--color-gold)_20%,transparent)]"
                 >
                     {$m2t.ctaPrimary}
                     <ArrowRight
@@ -502,10 +510,10 @@
     <!-- Footer -->
     <footer class="py-12 px-6 border-t border-white/5">
         <div class="max-w-4xl mx-auto">
-            <nav class="flex justify-center gap-8 mb-8 text-sm text-white/40">
+            <nav class="flex justify-center gap-8 mb-8 text-sm text-white/70">
                 <a
                     href="/marketing2/how"
-                    class="hover:text-white/60 transition-colors duration-300"
+                    class="hover:text-white/90 transition-colors duration-300"
                     >{$m2t.navHow}</a
                 >
                 <a href="/marketing2/features" class="text-white/60"
@@ -513,15 +521,15 @@
                 >
                 <a
                     href="/marketing2#security"
-                    class="hover:text-white/60 transition-colors duration-300"
+                    class="hover:text-white/90 transition-colors duration-300"
                     >{$m2t.navSecurity}</a
                 >
             </nav>
             <div class="text-center space-y-4">
-                <p class="text-xs text-white/30">
+                <p class="text-xs text-white/70">
                     {$m2t.footerDisclaimer}
                 </p>
-                <p class="text-sm text-white/20 font-serif italic">
+                <p class="text-sm text-white/60 font-serif italic">
                     {$m2t.footerTagline}
                 </p>
             </div>
@@ -565,8 +573,8 @@
         height: 1px;
         background: linear-gradient(
             90deg,
-            rgba(251, 191, 36, 0.5),
-            rgba(20, 184, 166, 0.5)
+            color-mix(in srgb, var(--color-gold) 50%, transparent),
+            color-mix(in srgb, var(--color-primary) 50%, transparent)
         );
         transition: width 0.3s ease;
     }
@@ -725,7 +733,7 @@
 
     :global(a:focus-visible),
     :global(button:focus-visible) {
-        outline: 2px solid rgba(251, 191, 36, 0.5);
+        outline: 2px solid color-mix(in srgb, var(--color-gold) 50%, transparent);
         outline-offset: 4px;
     }
 </style>

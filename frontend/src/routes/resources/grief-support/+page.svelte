@@ -191,9 +191,10 @@
         if (selectedCountry) refreshHotlines();
     });
 
-    // JSON imports type `type` as string; the file only holds these four kinds.
+    // JSON imports `type` and `tone` as string; the file only holds these values.
     type GriefResource = (typeof griefResources)[number] & {
         type: "article" | "video" | "external" | "guide";
+        tone: "primary" | "gold";
     };
     const resources = griefResources as GriefResource[];
 
@@ -209,7 +210,7 @@
 </svelte:head>
 
 <div
-    class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-100 p-6 md:p-12"
+    class="surface-dark min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-foreground p-6 md:p-12"
 >
     {#if mounted}
         <div in:fade={{ duration: 800 }} class="grief-sanctuary max-w-6xl mx-auto">
@@ -218,15 +219,15 @@
                 <div
                     class="inline-flex items-center justify-center p-3 mb-6 bg-white/5 rounded-2xl backdrop-blur-xl border border-white/10 shadow-2xl"
                 >
-                    <LucideHeart class="w-8 h-8 text-rose-400 animate-pulse" />
+                    <LucideHeart class="w-8 h-8 text-primary animate-pulse" />
                 </div>
                 <h1
-                    class="text-4xl md:text-6xl font-serif font-light mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white via-rose-100 to-slate-300"
+                    class="text-4xl md:text-6xl font-serif font-light mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white via-primary-hover to-slate-300"
                 >
                     Grief Support Sanctuary
                 </h1>
                 <p
-                    class="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed"
+                    class="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed"
                 >
                     A quiet space for reflection, guidance, and discovery. You
                     can lean on others as you carry this.
@@ -251,14 +252,14 @@
                 >
                     <div class="flex items-center justify-between gap-3 mb-8">
                         <div class="flex items-center gap-3">
-                            <LucidePhone class="w-6 h-6 text-rose-400" />
+                            <LucidePhone class="w-6 h-6 text-primary" />
                             <h2 class="text-xl font-medium text-slate-100">Crisis Center</h2>
                         </div>
 
                         <select
                             aria-label="Country"
                             bind:value={selectedCountry}
-                            class="bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-xs text-slate-400 focus:outline-none focus:ring-1 focus:ring-rose-500/50"
+                            class="bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-xs text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
                         >
                             {#each countries as country}
                                 <option value={country.code}
@@ -274,7 +275,7 @@
                                 class="p-5 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors"
                             >
                                 <p
-                                    class="text-xs text-slate-500 uppercase tracking-widest mb-1"
+                                    class="text-xs text-muted-foreground uppercase tracking-widest mb-1"
                                 >
                                     {item.label}
                                 </p>
@@ -288,10 +289,10 @@
                     </div>
 
                     <div
-                        class="mt-8 p-6 rounded-2xl bg-rose-500/10 border border-rose-500/20"
+                        class="mt-8 p-6 rounded-2xl bg-primary/10 border border-primary/20"
                     >
                         <p
-                            class="text-sm text-rose-200/80 italic leading-relaxed"
+                            class="text-sm text-primary-hover italic leading-relaxed"
                         >
                             "If you are in danger or facing a medical
                             emergency, please reach out to your local emergency
@@ -313,7 +314,7 @@
                                 class="px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 border {selectedCategory ===
                                 category
                                     ? 'bg-white/10 border-white/20 text-white shadow-lg'
-                                    : 'bg-transparent border-white/5 text-slate-500 hover:border-white/10 hover:text-slate-300'}"
+                                    : 'bg-transparent border-white/5 text-muted-foreground hover:border-white/10 hover:text-slate-300'}"
                             >
                                 {category}
                             </button>
@@ -347,13 +348,13 @@
                         <!-- Local Search Discovery -->
                         <div
                             in:fly={{ y: 20, delay: 500, duration: 600 }}
-                            class="p-8 rounded-2xl bg-gradient-to-br from-indigo-500/10 to-rose-500/10 backdrop-blur-xl border border-white/10 flex flex-col items-start text-left group transition-all duration-500 md:col-span-2 lg:col-span-3"
+                            class="p-8 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 backdrop-blur-xl border border-white/10 flex flex-col items-start text-left group transition-all duration-500 md:col-span-2 lg:col-span-3"
                         >
                             <div
                                 class="flex items-start justify-between w-full mb-6"
                             >
                                 <LucideMapPin
-                                    class="w-10 h-10 text-indigo-400"
+                                    class="w-10 h-10 text-primary"
                                 />
                                 {#if showDiscovery}
                                     <button
@@ -361,7 +362,7 @@
                                             showDiscovery = false;
                                             searchResults = [];
                                         }}
-                                        class="text-xs text-slate-500 hover:text-slate-300"
+                                        class="text-xs text-muted-foreground hover:text-slate-300"
                                     >
                                         Done for now
                                     </button>
@@ -371,7 +372,7 @@
                             <h3 class="text-2xl font-medium mb-3 text-slate-100">
                                 Find Local Help
                             </h3>
-                            <p class="text-slate-400 mb-6 max-w-md">
+                            <p class="text-muted-foreground mb-6 max-w-md">
                                 Discover therapists, support groups, and
                                 practitioners in your area who specialize in
                                 bereavement care.
@@ -388,13 +389,13 @@
                                     placeholder="Enter your city or zip code..."
                                     onkeydown={(e) =>
                                         e.key === "Enter" && handleDiscovery()}
-                                    class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 transition-all placeholder:text-slate-600"
+                                    class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all placeholder:text-muted-foreground"
                                 />
                                 <button
                                     onclick={handleDiscovery}
                                     disabled={!searchLocation.trim() ||
                                         isSearching}
-                                    class="px-4 py-2 rounded-xl bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 transition-all disabled:opacity-30 text-sm font-medium"
+                                    class="px-4 py-2 rounded-xl bg-primary/20 text-primary-hover hover:bg-primary/30 transition-all disabled:opacity-30 text-sm font-medium"
                                 >
                                     {isSearching
                                         ? "Searching..."
@@ -407,7 +408,7 @@
                                     <p>{discoveryError}</p>
                                     <button
                                         onclick={handleDiscovery}
-                                        class="mt-2 px-3 py-1.5 rounded-xl bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 transition-all text-xs font-medium"
+                                        class="mt-2 px-3 py-1.5 rounded-xl bg-primary/20 text-primary-hover hover:bg-primary/30 transition-all text-xs font-medium"
                                     >
                                         Try again
                                     </button>
@@ -420,22 +421,22 @@
                                         <a
                                             href={result.url}
                                             target="_blank"
-                                            class="block p-5 rounded-2xl bg-white/5 border border-white/5 hover:border-indigo-500/30 hover:bg-white/10 transition-all"
+                                            class="block p-5 rounded-2xl bg-white/5 border border-white/5 hover:border-primary/30 hover:bg-white/10 transition-all"
                                         >
                                             <div
                                                 class="flex justify-between items-start mb-2"
                                             >
                                                 <h4
-                                                    class="font-medium text-indigo-100"
+                                                    class="font-medium text-primary-hover"
                                                 >
                                                     {result.title}
                                                 </h4>
                                                 <LucideArrowRight
-                                                    class="w-4 h-4 text-indigo-400"
+                                                    class="w-4 h-4 text-primary"
                                                 />
                                             </div>
                                             <p
-                                                class="text-sm text-slate-400 line-clamp-2"
+                                                class="text-sm text-muted-foreground line-clamp-2"
                                             >
                                                 {result.content}
                                             </p>
@@ -444,7 +445,7 @@
                                 </div>
                             {:else if showDiscovery && !isSearching && !discoveryError}
                                 <div
-                                    class="w-full p-8 border border-dashed border-white/10 rounded-2xl text-center text-slate-500 italic"
+                                    class="w-full p-8 border border-dashed border-white/10 rounded-2xl text-center text-muted-foreground italic"
                                 >
                                     A nearby city may have more support. We're
                                     glad to help you find resources.
@@ -463,17 +464,17 @@
                         >
                             <div class="flex items-center gap-4 mb-4">
                                 <div
-                                    class="w-12 h-12 rounded-2xl bg-rose-500/20 flex items-center justify-center border border-rose-500/20"
+                                    class="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center border border-primary/20"
                                 >
                                     <LucideHeart
-                                        class="w-6 h-6 text-rose-400"
+                                        class="w-6 h-6 text-primary"
                                     />
                                 </div>
                                 <div>
                                     <h3 class="text-xl font-medium text-slate-100">
                                         Bespoke Support
                                     </h3>
-                                    <p class="text-sm text-slate-500 italic">
+                                    <p class="text-sm text-muted-foreground italic">
                                         "I'm sitting with you."
                                     </p>
                                 </div>
@@ -491,7 +492,7 @@
                                         <div
                                             class="max-w-[85%] p-4 rounded-2xl {msg.role ===
                                             'user'
-                                                ? 'bg-indigo-500/20 border border-indigo-500/20 text-indigo-100 rounded-tr-none'
+                                                ? 'bg-primary/20 border border-primary/20 text-foreground rounded-tr-none'
                                                 : 'bg-white/5 border border-white/10 text-slate-300 rounded-tl-none'}"
                                         >
                                             <p class="text-sm leading-relaxed">
@@ -507,13 +508,13 @@
                                         >
                                             <div class="flex gap-1">
                                                 <div
-                                                    class="w-1.5 h-1.5 bg-rose-400/50 rounded-full animate-bounce"
+                                                    class="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce"
                                                 ></div>
                                                 <div
-                                                    class="w-1.5 h-1.5 bg-rose-400/50 rounded-full animate-bounce [animation-delay:0.2s]"
+                                                    class="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce [animation-delay:0.2s]"
                                                 ></div>
                                                 <div
-                                                    class="w-1.5 h-1.5 bg-rose-400/50 rounded-full animate-bounce [animation-delay:0.4s]"
+                                                    class="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce [animation-delay:0.4s]"
                                                 ></div>
                                             </div>
                                         </div>
@@ -542,7 +543,7 @@
                                     placeholder="Share what's on your heart..."
                                     onkeydown={(e) =>
                                         e.key === "Enter" && handleChat()}
-                                    class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-rose-500/30 transition-all placeholder:text-slate-600 italic font-serif"
+                                    class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all placeholder:text-muted-foreground italic font-serif"
                                 />
                                 <button aria-label="Send"
                                     onclick={handleChat}
