@@ -9,7 +9,8 @@ const VARIATIONS = [
 export const CONTEXT_SUGGESTIONS: Record<WriterContext, string[]> = {
     heirloom: ["How did you acquire this?", "Who gave it to you?", "What is your favorite memory of it?"],
     timeline: ["What happened?", "Who was there?", "How did you feel?"],
-    contact: ["How did you meet?", "What do you admire about them?", "Favorite shared experience?"],
+    // Caller notes: guidance for the person who calls this contact with the news.
+    contact: ["Best time to reach them", "How they would like to hear it", "Someone to have with them", "Words that would comfort them"],
     pet: ["How did they join the family?", "Funny quirks?", "What did you love most?"],
     funeral: ["Music requests", "Readings or poems", "Tone of the service"],
     letter: ["What do you want them to know?", "Life lessons", "Hopes for their future"],
@@ -32,6 +33,8 @@ export async function draftFromBullets(bullets: string[], context: WriterContext
             return `One of my most vivid memories is from this time. ${core} Looking back, I realize how pivotal this moment was in shaping who I am today.`;
         case "pet":
             return `My faithful companion brought so much joy to my life. ${core} Their loyalty and unconditional love taught me so much about friendship.`;
+        case "contact":
+            return `A few thoughts for whoever makes this call. ${core} Thank you for sharing the news with care.`;
         case "funeral":
             return `It is my wish that my final farewell reflects the values I held dear. ${core} I hope this brings comfort to those I leave behind.`;
         default:

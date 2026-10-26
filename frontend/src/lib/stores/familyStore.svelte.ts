@@ -62,6 +62,10 @@ const contactMapper = (item: any) => {
         role = legacyMap[role];
     }
 
+    // Call-list tier is stored as call_tier; the UI calls it `tier`. An explicit `tier`
+    // (null or "" included) wins over the copy the server sent; "" and null both mean none.
+    const callTier = (item.tier !== undefined ? item.tier : (item.callTier ?? item.call_tier)) || null;
+
     return {
         ...item,
         role: role || 'Other',
@@ -72,8 +76,7 @@ const contactMapper = (item: any) => {
         isBeneficiary: item.is_beneficiary ?? item.isBeneficiary ?? false,
         isEmergencyContact: item.is_emergency_contact ?? item.isEmergencyContact ?? false,
         tierId: item.tier_id ?? item.tierId ?? null,
-        // Call-list tier is stored as call_tier; the UI calls it `tier`. A local edit to `tier` wins.
-        tier: item.tier ?? item.callTier ?? item.call_tier ?? undefined,
+        tier: callTier ?? undefined,
         notificationStatus: item.notificationStatus ?? item.notification_status ?? undefined,
 
         // Local -> Remote
@@ -81,7 +84,7 @@ const contactMapper = (item: any) => {
         ['is_beneficiary']: item.isBeneficiary ?? item.is_beneficiary,
         ['is_emergency_contact']: item.isEmergencyContact ?? item.is_emergency_contact,
         ['tier_id']: item.tierId ?? item.tier_id,
-        ['callTier']: item.tier ?? item.callTier ?? item.call_tier
+        ['callTier']: callTier
     };
 };
 
