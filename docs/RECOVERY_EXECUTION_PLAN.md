@@ -1001,7 +1001,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | G11 | ▶ | | |
 | G12 | ▶ | | |
 | G13 | ▶ | | |
-| G14 | ▶ | | |
+| G14 | ☑ | 81da0b2 | Contacts: Designated Executor checkbox (create sent `false` always), Start page badge; medical proxy picks from contacts and fills phone; family-hub remove copy truthful; T0c wording on all four files. Start-page badges 0 → 1; executor control 0 → 1 (server `is_executor` true, hub ring shows); negative strings 3 → 0; proxy list null → 2 names |
 | G15 | ▶ | | |
 | G16 | ☑ | da47755 | Signed-out visitor on `/start` → `/signup?email=` with the email filled in (both cards); landing CTA encodes the email; T0e wording on start, signup, login, verify, welcome. Expert card `/login` → `/signup` prefilled; guided card `/start` → `/signup` prefilled. Encryption claims HOLD |
 | X215 | ▶ | | |
