@@ -323,7 +323,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X12 | ☑ | 7392f69 | Production mode: health p95 5.7 ms with no outbound call; `/api/auth/tokenX`, `/api/healthX` 403 (were exempt); token/refresh/magic-link and the real pulse `/respond/{token}`, `/confirm/{token}` routes exempt (the old exempt entry matched no route) |
 | X14 | ▶ | | |
 | X15 | ▶ | | |
-| X16 | ▶ | | |
+| X16 | ☑ | 10b25d0 | Fresh DB: GET prefs 200 `{}`, PATCH 200, GET returns the saved value (also fixed: PATCH mutated the JSON in place so it never saved). Production column is `json`, model `JSON`: same type; not run on the simulated schema |
 | X17 | ▶ | | |
 | X13 | ☐ (after B1: shares `estate_models.py`) | | |
 | X11 | ☑ | 1007f48 | `/api-guide` 200 html; `/api`, `/api/nope` 404 JSON; `/modules/x` 200; traversal no leak |
