@@ -78,8 +78,8 @@ export const moduleSyncKeys: Record<string, readonly string[]> = {
     guardian: ["digital_assets", "digital_guardian"], // digital_guardian: registered by its page
     heirlooms: ["heirlooms"],
     "visual-memories": ["visual_memories"],
-    // The legal-documents page saves through DocumentVault's own manager (registered on its mount).
-    documents: ["documents", "docs_legal-vault"],
+    // The legal-documents page saves through the documents manager (documentStore).
+    documents: ["documents"],
     subscriptions: ["subscriptions"],
     letters: ["letters"],
     pulse: ["pulse_status", "pulse_settings"],
