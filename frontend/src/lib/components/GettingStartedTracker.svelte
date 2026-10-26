@@ -76,16 +76,16 @@
     {#if variant === "sidebar"}
         <!-- Compact sidebar version -->
         <div
-            class="mx-3 mb-4 p-4 bg-black/15 border border-white/20 rounded-2xl"
+            class="mx-3 mb-4 p-4 bg-black/15 border border-gold/30 rounded-2xl"
             transition:slide
         >
             <div class="flex items-center justify-between mb-3">
-                <span class="text-xs font-bold text-white uppercase tracking-widest">
+                <span class="text-xs font-bold text-gold uppercase tracking-widest">
                     Building Your Foundation
                 </span>
                 <div class="flex gap-1">
                     {#each steps as step}
-                        <div class="w-2 h-2 rounded-full {step.complete ? 'bg-white' : 'bg-white/30'}"></div>
+                        <div class="w-2 h-2 rounded-full {step.complete ? 'bg-gold' : 'bg-gold/30'}"></div>
                     {/each}
                 </div>
             </div>
@@ -93,7 +93,7 @@
             <!-- Progress bar -->
             <div class="h-1.5 bg-black/20 rounded-full mb-3 overflow-hidden">
                 <div
-                    class="h-full bg-white rounded-full transition-all duration-500"
+                    class="h-full bg-gold rounded-full transition-all duration-500"
                     style="width: {progressPercent}%"
                 ></div>
             </div>
@@ -104,7 +104,7 @@
                     href={nextStep.href}
                     class="flex items-center gap-3 p-2 -mx-2 rounded-xl hover:bg-white/5 transition-colors group"
                 >
-                    <div class="p-2 bg-white/15 rounded-lg text-white">
+                    <div class="p-2 bg-gold/15 rounded-lg text-gold">
                         <nextStep.icon size={16} />
                     </div>
                     <div class="flex-1 min-w-0">
@@ -114,14 +114,14 @@
                     </div>
                     <ArrowRight
                         size={14}
-                        class="text-white group-hover:translate-x-1 transition-transform"
+                        class="text-gold group-hover:translate-x-1 transition-transform"
                     />
                 </a>
             {/if}
 
             <button
                 onclick={dismiss}
-                class="mt-2 w-full text-xs text-white underline-offset-2 hover:underline transition-colors"
+                class="mt-2 w-full text-xs text-white/70 hover:text-white transition-colors"
             >
                 I'll explore on my own
             </button>
@@ -231,19 +231,19 @@
 {:else if allComplete && !dismissed}
     <!-- Completion state - affirming without celebrating -->
     <div
-        class="mx-3 mb-4 p-4 bg-black/15 border border-white/20 rounded-2xl text-center"
+        class="mx-3 mb-4 p-4 bg-black/15 border border-gold/30 rounded-2xl text-center"
         transition:slide
     >
         <div class="text-2xl mb-2">✨</div>
-        <p class="text-sm font-medium text-white">
+        <p class="text-sm font-medium text-gold">
             You've laid a strong foundation
         </p>
-        <p class="text-xs text-white mt-1">
+        <p class="text-xs text-white/70 mt-1">
             This is meaningful work. Continue when you're ready.
         </p>
         <button
             onclick={dismiss}
-            class="mt-3 text-xs text-white underline-offset-2 hover:underline"
+            class="mt-3 text-xs text-white/70 hover:text-white"
         >
             Continue exploring
         </button>
