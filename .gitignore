@@ -53,3 +53,6 @@ __pycache__/
 .codegraph/
 graphify-out/
 openwiki/.run.json
+
+# Agent worktrees (docs/RECOVERY_EXECUTION_PLAN.md decision 6)
+.worktrees/
