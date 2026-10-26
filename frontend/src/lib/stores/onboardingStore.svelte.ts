@@ -5,7 +5,7 @@ import { familyStore } from "$lib/stores/familyStore.svelte";
 import { insuranceStore } from "$lib/stores/insuranceStore.svelte";
 import { heirloomStore } from "$lib/stores/heirloomStore.svelte";
 import { digitalAssetsStore } from "$lib/stores/digitalAssetsStore.svelte";
-import { medicalStore } from "$lib/stores/medicalStore.svelte";
+import { medicalStore, type MedicalDirective, type MedicalProfile } from "$lib/stores/medicalStore.svelte";
 import { activityLog } from '$lib/stores/activityLog.svelte';
 import { registerProfileSlice } from "$lib/services/sync.svelte";
 
@@ -65,18 +65,17 @@ export const onboardingStore = {
             digitalAssetsStore.addAccount(account);
         });
 
-        // 6. Medical
-        samples.medical.forEach(directive => {
+        // 6. Medical: each sample carries the medical profile beside the directive fields;
+        // the directive is saved without them and the profile is saved on its own.
+        let medicalProfile: Partial<MedicalProfile> | null = null;
+        (samples.medical as (MedicalDirective & Partial<MedicalProfile>)[]).forEach(sample => {
+            const { organDonor, bloodType, allergies, ...directive } = sample;
+            medicalProfile ??= { organDonor, bloodType, allergies };
             medicalStore.addDirective(directive);
         });
 
-        // Set profile data if available in sample
-        if (samples.medical.length > 0) {
-            medicalStore.updateProfile({
-                organDonor: samples.medical[0].organDonor,
-                bloodType: samples.medical[0].bloodType,
-                allergies: samples.medical[0].allergies
-            });
+        if (medicalProfile) {
+            medicalStore.updateProfile(medicalProfile);
         }
 
         // 7. Log Event

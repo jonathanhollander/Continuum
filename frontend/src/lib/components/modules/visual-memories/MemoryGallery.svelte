@@ -79,7 +79,7 @@
     function toggleSelection(id: string, e: Event) {
         e.stopPropagation();
         if (selectedIds.includes(id)) {
-            selectedIds = selectedIds.filter((i) => i !== id);
+            selectedIds = selectedIds.filter((i: string) => i !== id);
         } else {
             selectedIds = [...selectedIds, id];
         }

@@ -244,7 +244,7 @@
         return `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     }
 
-    const eventTypeIcons = {
+    const eventTypeIcons: Record<string, typeof Gift> = {
         birthday: Gift,
         holiday: Sparkles,
         anniversary: Heart,
@@ -316,10 +316,10 @@
                             showAddForm = true;
                         }}
                     >
-                        <svelte:fragment slot="icon">
+                        {#snippet icon()}
                             {@const Icon = eventTypeIcons[sample.type] || CalendarIcon}
                             <Icon size={20} class="text-slate-400" />
-                        </svelte:fragment>
+                        {/snippet}
                     </GhostRow>
                 {/each}
             </div>

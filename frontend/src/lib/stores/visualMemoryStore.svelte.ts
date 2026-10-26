@@ -7,7 +7,7 @@ import { deleteMedia, mediaIdFromRef } from "$lib/services/mediaService";
 export type MemoryType = 'photo' | 'video' | 'recipe' | 'quote';
 
 export interface VisualMemory {
-    id?: number;
+    id: number;
     user_id?: number;
     url: string;
     name: string;
@@ -20,7 +20,7 @@ export interface VisualMemory {
 }
 
 export interface ExternalArchive {
-    id?: number;
+    id: number;
     user_id?: number;
     platform: string;
     access_url?: string;
@@ -29,7 +29,7 @@ export interface ExternalArchive {
 }
 
 export interface FamilyMemory {
-    id?: number;
+    id: number;
     user_id?: number;
     type: 'photo' | 'recipe' | 'quote';
     title: string;

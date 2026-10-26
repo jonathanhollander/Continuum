@@ -1,7 +1,7 @@
 import { registerSync } from "$lib/services/sync.svelte";
 
 export interface Utility {
-    id?: number;
+    id: number;
     user_id?: number;
     provider: string;
     service_type: string;

@@ -25,7 +25,10 @@ const named = (v: any) => { const t = String(v ?? '').trim(); return t !== '' &&
 
 export const estateAnalytics = derived(
     [estateProfile, petStore, medicalStore, advancedAssetStore, digitalAssetsStore, estateAudit, heirloomStore, funeralStore, pulse, financialAssetsStore, familyStore, insuranceStore],
-    ([$profile, $pets, $medical, $advanced, $digital, $audit, $heirlooms, $funeral, $pulse, $accounts, $family, $policies]) => {
+    ([$profile, $pets, $medicalRaw, $advanced, $digital, $audit, $heirlooms, $funeral, $pulse, $accounts, $familyRaw, $policies]) => {
+        // Their subscribe hands over the store itself (members / directives getters)
+        const $medical = $medicalRaw as typeof medicalStore;
+        const $family = $familyRaw as typeof familyStore;
 
         // --- 1. Legal Readiness ---
         // The executor is named on the profile, or is a contact with the Executor role

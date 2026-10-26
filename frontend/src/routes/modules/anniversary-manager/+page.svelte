@@ -52,7 +52,7 @@
         tags: [],
     });
 
-    const typeIcons = {
+    const typeIcons: Record<string, typeof Sparkles> = {
         birthday: Sparkles,
         anniversary: Heart,
         passing: Wind,
@@ -182,10 +182,10 @@
                                     showAddModal = true;
                                 }}
                             >
-                                <svelte:fragment slot="icon">
+                                {#snippet icon()}
                                     {@const Icon = typeIcons[sample.type] || Heart}
                                     <Icon size={20} class="text-slate-400" />
-                                </svelte:fragment>
+                                {/snippet}
                             </GhostRow>
                         {/each}
                     </div>

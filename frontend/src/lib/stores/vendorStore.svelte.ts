@@ -1,7 +1,7 @@
 import { registerSync } from "$lib/services/sync.svelte";
 
 export interface Vendor {
-    id?: number;
+    id: number;
     user_id?: number;
     name: string;
     category: string;

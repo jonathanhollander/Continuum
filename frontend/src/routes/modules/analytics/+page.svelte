@@ -18,7 +18,7 @@
     let pillars = $derived($estateAnalytics.pillars);
     let gaps = $derived($estateAnalytics.gaps.filter((g) => !!g));
 
-    let showFireDrill = false;
+    let showFireDrill = $state(false);
 
     function getHealthColor(score: number) {
         if (score >= 80) return "text-emerald-400";
@@ -37,7 +37,7 @@
     class="min-h-screen bg-slate-950 text-slate-100 p-8 relative overflow-hidden"
 >
     {#if showFireDrill}
-        <FireDrill onclose={() => (showFireDrill = false)} />
+        <FireDrill on:close={() => (showFireDrill = false)} />
     {/if}
 
     <!-- Background Gradient -->
