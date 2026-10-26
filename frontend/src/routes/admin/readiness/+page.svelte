@@ -127,12 +127,30 @@
                 {/if}
             </p>
 
+            {#if id === "family"}
+                <div class="mb-4 text-sm text-slate-300" data-testid="contact-readiness-evidence">
+                    <p class="text-xs text-slate-400 mb-3">{audit.contactEvidence.rule}</p>
+                    <p class="font-medium mb-2">Recorded contacts: {audit.contactEvidence.includedContacts.length}</p>
+                    {#each audit.contactEvidence.includedContacts as contact (contact.id)}
+                        <details class="border-t border-slate-800 py-2" data-contact-id={contact.id}>
+                            <summary class="cursor-pointer break-words">{contact.name} <span class="text-xs text-slate-400">#{contact.id}</span></summary>
+                            <dl class="mt-2 space-y-1 text-xs break-words">
+                                <div><dt class="inline text-slate-400">Role: </dt><dd class="inline">{contact.role}</dd></div>
+                                {#if contact.relation}<div><dt class="inline text-slate-400">Relationship: </dt><dd class="inline">{contact.relation}</dd></div>{/if}
+                                {#if contact.email}<div><dt class="inline text-slate-400">Email: </dt><dd class="inline">{contact.email}</dd></div>{/if}
+                                {#if contact.phone}<div><dt class="inline text-slate-400">Phone: </dt><dd class="inline">{contact.phone}</dd></div>{/if}
+                            </dl>
+                        </details>
+                    {/each}
+                </div>
+            {/if}
+
             <div class="flex justify-end">
                 <a
                     href="/modules/{modulePath[id] ?? id}"
                     class="text-xs text-primary hover:text-primary-hover flex items-center gap-1 font-medium"
                 >
-                    Go to Module <ArrowRight size={12} />
+                    {id === "family" ? "View contact records" : "Go to Module"} <ArrowRight size={12} />
                 </a>
             </div>
         </div>
