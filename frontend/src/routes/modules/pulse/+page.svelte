@@ -165,6 +165,13 @@
                 Your inner circle is standing by. Next scheduled nudge in {pulse.next_nudge ||
                     "--:--"}.
             </p>
+            {#if pulse.guardianCheckin}
+                <p class="text-primary text-sm max-w-sm mx-auto">
+                    {pulse.guardianCheckin.by} checked on you on {new Date(
+                        pulse.guardianCheckin.at,
+                    ).toLocaleString()}.
+                </p>
+            {/if}
         </div>
     </div>
 

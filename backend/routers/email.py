@@ -210,6 +210,7 @@ def resend_email(
         "message": "We'll keep this message here so it can be sent again later."
     }
     template_name = email_log.template_name or ""
+    tier_contact, tier_number = None, None
     if template_name == "magic_link":
         return {"status": "request_new",
                 "message": "A fresh sign-in link is ready to request from the sign-in page."}
@@ -226,7 +227,8 @@ def resend_email(
             if not contact:
                 return {"status": "send_fresh",
                         "message": "This alert is best sent fresh from the Pulse page."}
-            context = tier_alert_context(session, contact, int(template_name[-1]))
+            tier_contact, tier_number = contact, int(template_name[-1])
+            context = tier_alert_context(session, contact, tier_number)
         else:
             # e.g. pulse_safety_timer: the timer it belonged to is unrecorded
             return {"status": "send_fresh",
@@ -262,6 +264,13 @@ def resend_email(
     # The resend wrote its own log row; mark the original so it isn't offered again.
     email_log.status = "resent"
     session.add(email_log)
+    if tier_contact is not None:
+        # Same Pulse message row as send_notification: the owner's messages page shows it and
+        # pulse_logic.retry_failed_tier_sends sees a delivered alert, so it sends nothing more.
+        from backend.pulse_logic import tier_sent_text
+        from backend.pulse_models import PulseMessage
+        session.add(PulseMessage(user_id=tier_contact.user_id, contact_id=tier_contact.id,
+                                 direction="user_to_contact", message=tier_sent_text(tier_number)))
     session.commit()
 
     logger.info(

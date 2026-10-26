@@ -36,45 +36,74 @@ def check_and_escalate_all(session: Session):
                 exc_info=True
             )
 
+# A guardian's "they're OK" (portal snooze or confirmation) is stored as a PulseCheckin with one of
+# these methods. It is never the owner's own check-in.
+GUARDIAN_CHECKIN_METHODS = ("guardian_snooze", "guardian_confirmation")
+
+# One clock, shared by the scheduler, the owner's /api/pulse/status and the guardian portal:
+# - the outage starts at the owner's own last check-in; escalation history (and so portal access)
+#   counts from there and only an owner check-in closes it;
+# - a guardian action after that pauses new alerts (and retries) until guardian time +
+#   frequency_days + grace_period_hours, the same wait an owner check-in would give; then
+#   escalation carries on from the tier already reached.
+
+def owner_last_checkin(session: Session, user_id: int) -> Optional[PulseCheckin]:
+    return session.exec(select(PulseCheckin).where(
+        PulseCheckin.user_id == user_id,
+        col(PulseCheckin.method).notin_(GUARDIAN_CHECKIN_METHODS),
+    ).order_by(PulseCheckin.timestamp.desc())).first()
+
+def guardian_checkin_since(session: Session, user_id: int, since: datetime) -> Optional[PulseCheckin]:
+    return session.exec(select(PulseCheckin).where(
+        PulseCheckin.user_id == user_id,
+        col(PulseCheckin.method).in_(GUARDIAN_CHECKIN_METHODS),
+        PulseCheckin.timestamp > since,
+    ).order_by(PulseCheckin.timestamp.desc())).first()
+
+def current_escalation(session: Session, user_id: int, since: datetime) -> Optional[PulseEscalationLog]:
+    """Highest welfare tier logged in this outage (after `since`); tier-0 safety-timer rows don't count."""
+    return session.exec(select(PulseEscalationLog).where(
+        PulseEscalationLog.user_id == user_id,
+        PulseEscalationLog.tier_number != SAFETY_TIMER_LOG_TIER,
+        PulseEscalationLog.triggered_at > since,
+    ).order_by(PulseEscalationLog.tier_number.desc())).first()
+
+def alerts_paused_until(settings: PulseSettings, guardian: Optional[PulseCheckin]) -> Optional[datetime]:
+    if not guardian:
+        return None
+    return guardian.timestamp + timedelta(days=settings.frequency_days, hours=settings.grace_period_hours)
+
 def process_user_pulse(session: Session, settings: PulseSettings):
     user_id = settings.user_id
-    
-    # 1. Get last check-in
-    statement = select(PulseCheckin).where(PulseCheckin.user_id == user_id).order_by(PulseCheckin.timestamp.desc())
-    last_checkin = session.exec(statement).first()
-    
+
+    # 1. The owner's own last check-in starts this outage (guardian actions never do)
+    last_checkin = owner_last_checkin(session, user_id)
     last_checkin_time = last_checkin.timestamp if last_checkin else datetime.min
-    
+
     # 2. Calculate Deadlines
     frequency_delta = timedelta(days=settings.frequency_days)
     grace_delta = timedelta(hours=settings.grace_period_hours)
-    
+
     soft_deadline = last_checkin_time + frequency_delta
     hard_deadline = soft_deadline + grace_delta
-    
+
     now = datetime.utcnow()
-    
-    # If within safe zone, do nothing (or reset escalation if needed)
-    if now < soft_deadline:
+
+    # Inside the window, or in the grace period (overdue but not escalating)
+    if now < hard_deadline:
+        if now >= soft_deadline:
+            logger.debug(f"User {user_id} is in Grace Period (Overdue)")
         return
-        
-    # If in Grace Period (Overdue but not Escalating)
-    if soft_deadline < now < hard_deadline:
-        # TODO: Send "Soft Nudge" to USER if not sent recently
-        logger.debug(f"User {user_id} is in Grace Period (Overdue)")
+
+    # A guardian said they're OK: no new alerts until the pause ends; history stays
+    paused_until = alerts_paused_until(settings, guardian_checkin_since(session, user_id, last_checkin_time))
+    if paused_until and now < paused_until:
+        logger.debug(f"User {user_id}: alerts paused by a guardian until {paused_until}")
         return
-        
-    # 3. Escalation Logic (Past Hard Deadline)
-    # Check the Escalation Log to see what we've already done *for this specific outage*
-    # We define "this outage" as any log created AFTER the last valid check-in
-    
-    log_stmt = select(PulseEscalationLog).where(
-        PulseEscalationLog.user_id == user_id,
-        PulseEscalationLog.triggered_at > last_checkin_time
-    ).order_by(PulseEscalationLog.tier_number.desc())
-    
-    last_log = session.exec(log_stmt).first()
-    
+
+    # 3. Escalation Logic (Past Hard Deadline): what has been done in this outage
+    last_log = current_escalation(session, user_id, last_checkin_time)
+
     current_tier_number = last_log.tier_number if last_log else 0
     if current_tier_number > 0:
         try:
@@ -82,7 +111,7 @@ def process_user_pulse(session: Session, settings: PulseSettings):
         except Exception:
             session.rollback()
             logger.error(f"Tier {current_tier_number} retry for user {user_id} failed", exc_info=True)
-    
+
     # Decide if we need to escalate to the NEXT tier
     next_tier_number = current_tier_number + 1
     
@@ -168,6 +197,10 @@ def trigger_escalation(session: Session, user_id: int, tier_number: int, referen
 
 TIER_FAIL_TEXT = "We couldn't deliver this alert to"  # owner-facing; the technical reason is logged only
 TIER_MAX_ATTEMPTS = 3
+
+def tier_sent_text(tier_number: int) -> str:
+    """Owner-facing PulseMessage text for a delivered tier alert (send_notification, admin resend)."""
+    return f"[System Alert Tier {tier_number}] Escalation notification sent via email"
 
 def retry_failed_tier_sends(session: Session, log: PulseEscalationLog):
     """Re-send the current tier to contacts whose only attempts since it triggered failed,
@@ -264,11 +297,7 @@ def tier_alert_context(session: Session, contact: PulseContact, tier_number: int
         "portal_url": f"{settings.get_frontend_url()}/portal/{contact.portal_token}",
     }
     if tier_number >= 2:
-        last_checkin = session.exec(
-            select(PulseCheckin)
-            .where(PulseCheckin.user_id == contact.user_id)
-            .order_by(PulseCheckin.timestamp.desc())
-        ).first()
+        last_checkin = owner_last_checkin(session, contact.user_id)
         if last_checkin:
             context.update({
                 "last_checkin_date": last_checkin.timestamp.strftime("%B %d, %Y at %I:%M %p UTC"),
@@ -322,7 +351,7 @@ def send_notification(session: Session, contact: PulseContact, tier_number: int)
         user_id=contact.user_id,
         contact_id=contact.id,
         direction="user_to_contact",  # System acting on behalf of user
-        message=(f"[System Alert Tier {tier_number}] Escalation notification sent via email"
+        message=(tier_sent_text(tier_number)
                  if result.status != "failed" else
                  f"[System Alert Tier {tier_number}] {TIER_FAIL_TEXT} {contact.name}.")
     )
