@@ -378,8 +378,8 @@ def update_item(
             if key == "custom_attributes" and isinstance(value, dict):
                 value = json.dumps(value)
 
-            if key == "category":
-                continue  # membership is set on create only
+            if key == "category" and model is Asset:
+                continue  # asset membership is set on create only
             if hasattr(db_item, key):
                 setattr(db_item, key, value)
 

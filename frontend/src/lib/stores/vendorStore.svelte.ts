@@ -11,10 +11,15 @@ export interface Vendor {
     notes?: string;
 }
 
-const mapper = (data: any): Vendor => ({
-    ...data,
-    id: typeof data.id === 'string' && data.id.length > 10 ? undefined : Number(data.id) || data.id,
-});
+// Runs on server records, local records and outgoing payloads alike: keep the server id.
+const mapper = (data: any): Vendor => {
+    const { role, ...rest } = data;
+    return {
+        ...rest,
+        id: typeof data.id === 'string' && data.id.length > 10 ? undefined : Number(data.id) || data.id,
+        category: data.category || role || 'Other', // server requires a category
+    };
+};
 
 const manager = registerSync<Vendor>('vendors', 'vendors', mapper, '/api/data')
     .setAffirmationContext('general');

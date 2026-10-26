@@ -85,9 +85,9 @@
     // the card reads the saved count straight from the same endpoint instead.
     const COMPONENT_KEYS: Record<string, string> = {
         "docs_legal-vault": "/api/data/vault_documents",
-        home_vendors: "/api/data/vendors",
+        vendors: "/api/data/vendors",
         home_access: "/api/data/home_access",
-        home_utilities: "/api/data/utilities",
+        utilities: "/api/data/utilities",
     };
     let componentCounts = $state<Record<string, number>>({});
 
@@ -228,7 +228,7 @@
         contacts: ["family_members", "family_relationships"],
         documents: ["docs_legal-vault"],
         medical: ["medical_profile", "medical_directives"],
-        "home-manual": ["home_vendors", "home_access", "home_utilities"],
+        "home-manual": ["vendors", "home_access", "utilities"],
         pulse: ["pulse_settings"],
         subscriptions: ["subscriptions"],
         pets: ["pets"],
