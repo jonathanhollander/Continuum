@@ -12,7 +12,8 @@ export const REFLECTION_POOLS = {
                         "What is the funniest thing that ever happened to us?",
                         "What is a quiet moment we shared that you'll never forget?",
                         "Describe a trip or adventure that changed our relationship."
-                    ]
+                    ],
+                    suggestions: ["Our first trip together", "The day we met", "A quiet moment shared"]
                 },
                 {
                     category: "Values",
@@ -22,7 +23,8 @@ export const REFLECTION_POOLS = {
                         "How did your partner show you love in small ways?",
                         "What values did you share that built your foundation?",
                         "What brings you the most pride when you think of them?"
-                    ]
+                    ],
+                    suggestions: ["Your kindness", "Your strength", "Your sense of humor"]
                 },
                 {
                     category: "Hopes",
@@ -32,7 +34,8 @@ export const REFLECTION_POOLS = {
                         "What do you want them to know about moving forward?",
                         "What do you hope they never forget about themselves?",
                         "If you could promise them one thing for the future, what would it be?"
-                    ]
+                    ],
+                    suggestions: ["Deep happiness", "Finding peace", "Adventure and love"]
                 }
             ]
         },
@@ -46,7 +49,8 @@ export const REFLECTION_POOLS = {
                         "What principles did you stand by, even when it was hard?",
                         "What does 'integrity' mean to you in practice?",
                         "What do you believe is the most important virtue?"
-                    ]
+                    ],
+                    suggestions: ["Integrity", "Compassion", "Curiosity"]
                 },
                 {
                     category: "Lessons",
@@ -55,7 +59,8 @@ export const REFLECTION_POOLS = {
                         "What advice would you give your younger self?",
                         "What mistake taught you the most about life?",
                         "What is a truth you discovered later in life?"
-                    ]
+                    ],
+                    suggestions: ["A lesson learned the hard way", "A moment of clarity", "A childhood memory"]
                 },
                 {
                     category: "Legacy",
@@ -64,7 +69,8 @@ export const REFLECTION_POOLS = {
                         "How do you want to be remembered by your community?",
                         "What tradition do you hope continues after you?",
                         "What message of hope do you want to leave behind?"
-                    ]
+                    ],
+                    suggestions: ["To be happy", "To find your passion", "To be kind"]
                 }
             ]
         }
