@@ -37,7 +37,8 @@ import {
     Stethoscope,
     Building2,
     MapPin,
-    Eye
+    Eye,
+    LifeBuoy
 } from "lucide-svelte";
 
 export type UserRole = "Owner" | "Executor" | "Family";
@@ -162,7 +163,7 @@ export const navGroups: NavGroup[] = [
                 allowedRoles: ["Owner", "Executor"],
                 isExecutorEssential: true,
                 isCoreAction: true,
-                tooltip: "Securely document bank accounts and investments"
+                tooltip: "A place for your bank accounts and investments"
             },
             {
                 label: "Insurance Portfolio",
@@ -189,7 +190,7 @@ export const navGroups: NavGroup[] = [
                 href: "/modules/subscriptions",
                 icon: Receipt,
                 allowedRoles: ["Owner", "Executor"],
-                tooltip: "Recurring payments and memberships to cancel"
+                tooltip: "Recurring payments and memberships your family may want to review"
             },
             {
                 label: "Digital Guardian",
@@ -215,7 +216,7 @@ export const navGroups: NavGroup[] = [
                 allowedRoles: ["Owner", "Executor"],
                 isExecutorEssential: true,
                 isCoreAction: true,
-                tooltip: "Wills, trusts, and critical legal files"
+                tooltip: "Wills, trusts, and the legal papers that matter"
             },
             {
                 label: "Health & Medical",
@@ -259,7 +260,7 @@ export const navGroups: NavGroup[] = [
                 href: "/binder",
                 icon: Activity,
                 allowedRoles: ["Owner", "Executor"],
-                tooltip: "Generate a physical backup of your plan"
+                tooltip: "A printed copy of your plan to keep close"
             },
         ],
     },
@@ -344,7 +345,7 @@ export const navGroups: NavGroup[] = [
                 href: "/modules/advanced-registry",
                 icon: Database,
                 allowedRoles: ["Owner", "Executor"],
-                tooltip: "Comprehensive database of all items"
+                tooltip: "Everything you have recorded, in one place"
             },
             {
                 label: "Builder Tools",
@@ -353,7 +354,7 @@ export const navGroups: NavGroup[] = [
                 href: "/modules/builders-console",
                 icon: Hammer,
                 allowedRoles: ["Owner"],
-                tooltip: "Developer tools for customizing Continuum"
+                tooltip: "Customize how Continuum works for you"
             },
             {
                 label: "Treasure Hunt",
@@ -362,7 +363,7 @@ export const navGroups: NavGroup[] = [
                 href: "/modules/treasure-hunt",
                 icon: MapPin,
                 allowedRoles: ["Owner", "Executor", "Family"],
-                tooltip: "Interactive guide to finding important items"
+                tooltip: "A gentle guide to finding what matters"
             },
             {
                 label: "Settings",
@@ -370,7 +371,7 @@ export const navGroups: NavGroup[] = [
                 href: "/settings",
                 icon: Settings,
                 allowedRoles: ["Owner", "Executor", "Family"],
-                tooltip: "Manage your account and preferences"
+                tooltip: "Your account and preferences"
             },
         ],
     },
@@ -389,6 +390,19 @@ export const recipientPreviewEntry: NavItem = {
     icon: Eye,
     allowedRoles: ["Owner"],
     tooltip: "You can choose who receives a start page of their own in Family & Contacts",
+};
+
+// Help & Resources (G0e U-f). The sidebar lists it at the end of Extras and the Command
+// Center finds it; kept out of navGroups (like the recipient preview) so the dashboard grid
+// and the data settings cards see only modules.
+export const helpAfterGroup = "groupExtras";
+export const helpEntry: NavItem = {
+    label: "Help & Resources",
+    key: "help",
+    href: "/help",
+    icon: LifeBuoy,
+    allowedRoles: ["Owner", "Executor", "Family"],
+    tooltip: "Guides and answers, whenever you need them",
 };
 
 // Pulse sub-navigation (shown when in Pulse section)

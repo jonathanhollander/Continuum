@@ -120,6 +120,24 @@
             .filter((group) => group.items.length > 0),
     );
 
+    // A stats tile shows only when the current role can open its page (the layout's
+    // role guard sends other roles back here).
+    const navItems = navGroups.flatMap((g) => g.items);
+    const canOpen = (href: string) =>
+        navItems.find((i) => i.href === href)?.allowedRoles.includes($userRole) ?? true;
+    let showPolicies = $derived(canOpen("/modules/insurance"));
+    let showAccounts = $derived(canOpen("/modules/financial-accounts"));
+    let tileCount = $derived(2 + (showPolicies ? 1 : 0) + (showAccounts ? 1 : 0));
+
+    // The status chips' own names, for the filtered list's heading.
+    const statusName: Record<string, string> = {
+        safe: "Kept safe",
+        saving: "Saving",
+        local: "On device",
+        "attention-needed": "Worth a look",
+        ready: "Ready",
+    };
+
     function recordCount(count: number, one: string, many?: string) {
         return { inProgress: count > 0, count, label: pluralWord(count, one, many) };
     }
@@ -337,7 +355,7 @@
                 window.focus();
             }
             notifications.showInfo(
-                "We've opened the Treasure Hunt in a new tab for you so you don't lose your place here.",
+                "We've opened the Treasure Hunt in a new tab so your place here is kept.",
                 "Treasure Hunt Opened",
             );
         }
@@ -430,7 +448,11 @@
             <!-- Compact Progress Stats -->
             {#if !loading}
                 <div
-                    class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8"
+                    class="grid grid-cols-2 {tileCount === 4
+                        ? 'sm:grid-cols-4'
+                        : tileCount === 3
+                          ? 'sm:grid-cols-3'
+                          : ''} gap-4 mb-8"
                     in:fly={{ y: 20, duration: 600, delay: 200 }}
                 >
                     <a
@@ -459,6 +481,7 @@
                             </div>
                         {/if}
                     </a>
+                    {#if showPolicies}
                     <a
                         href="/modules/insurance"
                         class="bg-white/5 border border-white/10 rounded-xl p-4 text-center hover:bg-white/10 hover:border-primary/30 hover:scale-[1.02] transition-all cursor-pointer block"
@@ -485,6 +508,8 @@
                             </div>
                         {/if}
                     </a>
+                    {/if}
+                    {#if showAccounts}
                     <a
                         href="/modules/financial-accounts"
                         class="bg-white/5 border border-white/10 rounded-xl p-4 text-center hover:bg-white/10 hover:border-primary/30 hover:scale-[1.02] transition-all cursor-pointer block"
@@ -511,6 +536,7 @@
                             </div>
                         {/if}
                     </a>
+                    {/if}
                     <a
                         href="/modules/medical"
                         class="bg-white/5 border border-white/10 rounded-xl p-4 text-center hover:bg-white/10 hover:border-primary/30 hover:scale-[1.02] transition-all cursor-pointer block"
@@ -638,7 +664,7 @@
                                 >{statusSummary.attention}</span
                             >
                             <span class="text-xs text-orange-400/70"
-                                >Needs attention</span
+                                >Worth a look</span
                             >
                         </button>
                     {/if}
@@ -671,7 +697,7 @@
                     <div class="mb-8" in:fade={{ duration: 300 }}>
                         <h2 class="text-lg text-slate-300 mb-5">
                             {searchResults.length === 0
-                                ? `Nothing found for "${searchQuery}"`
+                                ? `Let's find "${searchQuery}" another way. Try a different word.`
                                 : `${searchResults.length} result${searchResults.length === 1 ? "" : "s"}`}
                         </h2>
                         {#if searchResults.length > 0}
@@ -754,14 +780,12 @@
                     <!-- Status Filtered Results -->
                     <div class="mb-8" in:fade={{ duration: 300 }}>
                         <h2 class="text-lg text-slate-300 mb-5">
-                            Showing modules with "{filterByStatus ===
-                            "attention-needed"
-                                ? "needs attention"
-                                : filterByStatus}" status
+                            Showing modules with "{statusName[filterByStatus ?? ""] ??
+                                filterByStatus}" status
                         </h2>
                         {#if statusFilteredGroups.length === 0}
                             <p class="text-slate-400 text-center py-8">
-                                No modules with this status
+                                Sections with this status will appear here.
                             </p>
                         {:else}
                             <div class="space-y-6">
