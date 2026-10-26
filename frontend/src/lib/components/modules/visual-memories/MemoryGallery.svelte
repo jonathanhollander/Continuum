@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { VisualMemory } from "$lib/stores/visualMemoryStore.svelte";
+    import { tagList, type VisualMemory } from "$lib/stores/visualMemoryStore.svelte";
     import {
         Grid,
         LayoutTemplate,
@@ -9,6 +9,8 @@
         Heart,
     } from "lucide-svelte";
     import { fade, fly } from "svelte/transition";
+    import { onDestroy } from "svelte";
+    import { mediaIdFromRef, getMediaBlobUrl } from "$lib/services/mediaService";
 
     let {
         memories = [],
@@ -27,6 +29,32 @@
         onSelectionChange?: (ids: string[]) => void;
         onViewChange?: (mode: "grid" | "carousel") => void;
     }>();
+
+    // Stored files (url = "/api/media/12/download") need the auth header, so they are
+    // fetched once and shown from object URLs. data: URLs from older records show as-is.
+    let blobUrls = $state<Record<string, string>>({});
+    const requested = new Set<string>();
+
+    $effect(() => {
+        for (const m of memories) {
+            const ref = m?.url;
+            if (!ref || requested.has(ref) || mediaIdFromRef(ref) === null) continue;
+            requested.add(ref);
+            getMediaBlobUrl(ref)
+                .then((u) => (blobUrls = { ...blobUrls, [ref]: u }))
+                .catch((e) => {
+                    requested.delete(ref);
+                    console.warn("[visual-memories] file is taking a moment to open", e);
+                });
+        }
+    });
+
+    onDestroy(() => Object.values(blobUrls).forEach((u) => URL.revokeObjectURL(u)));
+
+    function srcOf(m: VisualMemory): string | undefined {
+        if (!m?.url) return undefined;
+        return mediaIdFromRef(m.url) === null ? m.url : blobUrls[m.url];
+    }
 
     // Carousel State
     let activeIndex = $state(0);
@@ -114,7 +142,7 @@
                     role="button"
                     tabindex="0"
                     class="group relative aspect-square bg-slate-100 rounded-xl overflow-hidden cursor-pointer hover:shadow-lg transition-all {selectedIds.includes(
-                        memory.id,
+                        String(memory.id),
                     )
                         ? 'ring-4 ring-indigo-500 ring-offset-2'
                         : ''}"
@@ -126,14 +154,24 @@
                         }
                     }}
                 >
-                    <img
-                        src={memory.url}
-                        alt={memory.name}
-                        class="w-full h-full object-cover transition-transform duration-500 {isSelectionMode
-                            ? 'scale-100'
-                            : 'group-hover:scale-105'}"
-                        loading="lazy"
-                    />
+                    {#if memory.type === "video"}
+                        <video
+                            src={srcOf(memory)}
+                            muted
+                            playsinline
+                            preload="metadata"
+                            class="w-full h-full object-cover"
+                        ></video>
+                    {:else}
+                        <img
+                            src={srcOf(memory)}
+                            alt={memory.name}
+                            class="w-full h-full object-cover transition-transform duration-500 {isSelectionMode
+                                ? 'scale-100'
+                                : 'group-hover:scale-105'}"
+                            loading="lazy"
+                        />
+                    {/if}
 
                     <!-- Selection Overlay -->
                     {#if isSelectionMode}
@@ -142,12 +180,12 @@
                         >
                             <div
                                 class="h-6 w-6 rounded-full border-2 border-white flex items-center justify-center transition-colors {selectedIds.includes(
-                                    memory.id,
+                                    String(memory.id),
                                 )
                                     ? 'bg-indigo-500 border-indigo-500'
                                     : 'bg-black/30'}"
                             >
-                                {#if selectedIds.includes(memory.id)}
+                                {#if selectedIds.includes(String(memory.id))}
                                     <div
                                         class="w-2.5 h-2.5 bg-white rounded-full"
                                     ></div>
@@ -167,7 +205,7 @@
                                 {memory.name}
                             </div>
                             <div class="flex gap-2 mt-1">
-                                {#each memory.tags as tag}
+                                {#each tagList(memory.tags) as tag}
                                     <span
                                         class="text-[10px] bg-white/20 backdrop-blur px-2 py-0.5 rounded-full text-white"
                                         >{tag}</span
@@ -206,12 +244,23 @@
         >
             <!-- Main Image -->
             {#key activeIndex}
-                <img
-                    src={memories[activeIndex].url}
-                    alt={memories[activeIndex].name}
-                    class="absolute inset-0 w-full h-full object-contain"
-                    in:fade={{ duration: 300 }}
-                />
+                {#if memories[activeIndex].type === "video"}
+                    <!-- svelte-ignore a11y_media_has_caption -->
+                    <video
+                        src={srcOf(memories[activeIndex])}
+                        controls
+                        playsinline
+                        class="absolute left-20 right-20 top-0 w-[calc(100%-10rem)] h-[calc(100%-16rem)] object-contain"
+                        in:fade={{ duration: 300 }}
+                    ></video>
+                {:else}
+                    <img
+                        src={srcOf(memories[activeIndex])}
+                        alt={memories[activeIndex].name}
+                        class="absolute inset-0 w-full h-full object-contain"
+                        in:fade={{ duration: 300 }}
+                    />
+                {/if}
             {/key}
 
             <!-- Controls -->
@@ -241,7 +290,7 @@
                             {memories[activeIndex].name}
                         </h2>
                         <div class="flex gap-2 mb-4">
-                            {#each memories[activeIndex].tags as tag}
+                            {#each tagList(memories[activeIndex].tags) as tag}
                                 <span
                                     class="text-xs bg-white/20 backdrop-blur px-3 py-1 rounded-full"
                                     >{tag}</span
@@ -281,11 +330,15 @@
                                 : 'border-transparent opacity-50 hover:opacity-80'}"
                             onclick={() => (activeIndex = i)}
                         >
-                            <img
-                                src={mem.url}
-                                alt=""
-                                class="w-full h-full object-cover"
-                            />
+                            {#if mem.type === "video"}
+                                <video src={srcOf(mem)} muted preload="metadata" class="w-full h-full object-cover"></video>
+                            {:else}
+                                <img
+                                    src={srcOf(mem)}
+                                    alt=""
+                                    class="w-full h-full object-cover"
+                                />
+                            {/if}
                         </button>
                     {/each}
                 </div>

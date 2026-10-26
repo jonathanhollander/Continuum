@@ -12,7 +12,7 @@ export interface VisualMemory {
     name: string;
     date?: string;
     type: 'photo' | 'video';
-    tags: string[]; // Frontend wants array
+    tags: string; // comma-separated, as the server keeps it (tagList() splits it)
     is_favorite: boolean;
     description?: string;
     size?: number;
@@ -43,25 +43,18 @@ export interface FamilyMemory {
 // --- Mappers ---
 
 /**
- * Normalizes bidirectional data flow between Frontend (camelCase + Arrays)
- * and Backend (snake_case + Strings/Booleans).
+ * The mapper runs on the way out (POST/PUT body) as well as on the way in, so it keeps
+ * the server's shape: tags stay one comma-separated string (the column is a string; an
+ * array in the body made every create and update fail). Split them for display with tagList().
  */
 const visualMapper = (data: any): VisualMemory => {
     if (!data) return data;
-
-    // 1. Handle Tags (Backend gives string, Frontend gives array)
-    let tags: string[] = [];
-    if (typeof data.tags === 'string') {
-        tags = data.tags.split(',').filter(Boolean);
-    } else if (Array.isArray(data.tags)) {
-        tags = data.tags;
-    }
-
-    return {
-        ...data,
-        tags
-    };
+    const tags = Array.isArray(data.tags) ? data.tags.join(',') : (data.tags ?? '');
+    return { ...data, tags };
 };
+
+export const tagList = (tags: string | string[] | null | undefined): string[] =>
+    Array.isArray(tags) ? tags : (tags || '').split(',').map((t) => t.trim()).filter(Boolean);
 
 const archiveMapper = (data: any): ExternalArchive => data;
 
@@ -105,7 +98,7 @@ export const syncAllMemories = () => Promise.all([
 ]);
 
 // Visual Actions
-export const addMemory = (memory: Omit<VisualMemory, 'id'>) => {
+export const addMemory = (memory: Omit<VisualMemory, 'id' | 'tags'> & { tags: string | string[] }) => {
     // Backend expects comma-separated string for tags
     const payload = {
         ...memory,
