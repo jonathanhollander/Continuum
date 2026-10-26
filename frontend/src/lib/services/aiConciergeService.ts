@@ -1,40 +1,62 @@
 import { get } from 'svelte/store';
-import { activeAccountId } from '../stores/keyringStore';
 import { userRole } from '../stores/conciergeStore.svelte.ts';
 
 import { apiFetch } from '../api/client';
 import { parseApiError } from './errorHandler';
-import { sanitizeInput } from '../utils/sanitize';
+import { createRedactionSession } from '../utils/sanitize';
+import { captureSession, assertCurrentSession, sessionToken } from './sessionOwnership';
 
 export const AI_UNAVAILABLE = "AI help is resting right now. Everything else is here for you, and you can come back whenever you're ready.";
 
 /**
  * Sends a chat request to our own server (which holds the AI key).
- * Every user message passes through the privacy filter first, so SSNs, account
+ * Every message passes through a request-local privacy filter first, so SSNs, account
  * numbers, emails and phone numbers stay in the browser.
  * Returns the model's text, or throws an Error carrying a gentle message.
  */
-export async function callAiProxy(messages: Array<{ role: string; content: string }>): Promise<string> {
+export async function callAiProxy(
+    messages: Array<{ role: string; content: string }>,
+    options: { preserveSensitiveValues?: boolean } = {}
+): Promise<string> {
+    const owner = captureSession();
+    assertCurrentSession(owner);
+    const redactions = createRedactionSession(messages.map((m) => m.content));
+    const outgoing = messages.map((m) => ({ ...m, content: redactions.redact(m.content) }));
+    const instruction = 'Keep every bracketed REDACTED token exactly as supplied; each represents a distinct private detail restored locally after your reply.';
+    const system = outgoing.find((m) => m.role === 'system');
+    if (system) system.content += `\n${instruction}`;
+    else outgoing.unshift({ role: 'system', content: instruction });
     const headers: Record<string, string> = {};
     if (typeof document !== 'undefined') {
         const m = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]+)/);
         if (m) headers['X-CSRF-Token'] = decodeURIComponent(m[1]);
     }
+    assertCurrentSession(owner);
+    const token = sessionToken(owner);
+    if (token) headers.Authorization = `Bearer ${token}`;
     const response = await apiFetch('/api/ai/chat', {
         method: 'POST',
         headers,
         body: JSON.stringify({
             model: 'google/gemini-2.0-flash-001',
-            messages: messages.map((m) => (m.role === 'user' ? { ...m, content: sanitizeInput(m.content) } : m))
+            messages: outgoing
         })
     });
+    assertCurrentSession(owner);
     if (!response.ok) {
         const serverError = new Error((await parseApiError(response)).message);
         (serverError as any).gentle = true;
         throw serverError;
     }
     const data = await response.json();
-    return data.choices[0].message.content;
+    assertCurrentSession(owner);
+    try {
+        return redactions.restoreResponse(String(data.choices[0].message.content), options.preserveSensitiveValues);
+    } catch {
+        const error = new Error("Your words are still here. You can try another version whenever you're ready.");
+        (error as any).gentle = true;
+        throw error;
+    }
 }
 
 import { overwhelmState } from './overwhelmDetection';

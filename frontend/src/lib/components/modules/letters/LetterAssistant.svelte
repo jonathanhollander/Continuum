@@ -6,6 +6,9 @@
         Feather,
     } from "lucide-svelte";
     import { aiDraftLetter, aiSoftenLetter } from "$lib/services/writerService";
+    import { auth } from "$lib/stores/auth";
+    import { captureSession, isCurrentSession, type SessionOwnership } from "$lib/services/sessionOwnership";
+    import { onDestroy } from "svelte";
 
     let { currentContent = "", onupdate } = $props<{
         currentContent?: string;
@@ -24,20 +27,56 @@
     // The AI's version waits here until the person chooses it; the letter changes only then.
     let suggestion = $state<string | null>(null);
     let notice = $state("");
+    let owner = captureSession();
+    let requestVersion = 0;
+    let suggestionOwner: SessionOwnership | null = null;
+    let suggestionSource: string | null = null;
+    const sourceFingerprint = () => JSON.stringify([mode, currentContent, bullets]);
+    function discardSuggestion() {
+        suggestionOwner = null;
+        suggestionSource = null;
+        suggestion = null;
+    }
+    $effect(() => {
+        $auth;
+        if (!isCurrentSession(owner)) {
+            owner = captureSession();
+            requestVersion++;
+            isProcessing = false;
+            discardSuggestion();
+            bullets = ["", "", ""];
+            notice = "";
+        }
+        if (suggestion && suggestionSource !== sourceFingerprint()) discardSuggestion();
+    });
+    onDestroy(() => { requestVersion++; });
 
     async function ask(run: () => Promise<string>) {
+        if (isProcessing) return;
+        const startedBy = captureSession();
+        if (!isCurrentSession(startedBy)) return;
+        const version = ++requestVersion;
+        const source = sourceFingerprint();
         isProcessing = true;
         notice = "";
-        suggestion = null;
+        discardSuggestion();
         try {
             const result = await run();
-            if (result) suggestion = result;
+            if (version !== requestVersion || !isCurrentSession(startedBy) || source !== sourceFingerprint()) return;
+            if (result) {
+                suggestionOwner = startedBy;
+                suggestionSource = source;
+                suggestion = result;
+            }
             else notice = "Your letter is just as you left it. The helper can try again in a moment.";
         } catch (e) {
+            if (version !== requestVersion || !isCurrentSession(startedBy) || source !== sourceFingerprint()) return;
             console.error(e);
-            notice = "Your letter is just as you left it. The helper can try again in a moment.";
+            notice = (e as any)?.gentle && e instanceof Error && e.message
+                ? e.message
+                : "Your letter is just as you left it. The helper can try again in a moment.";
         } finally {
-            isProcessing = false;
+            if (version === requestVersion && isCurrentSession(startedBy)) isProcessing = false;
         }
     }
 
@@ -52,8 +91,10 @@
     }
 
     function useSuggestion() {
-        if (suggestion && onupdate) onupdate(suggestion);
-        suggestion = null;
+        if (suggestion && suggestionOwner && isCurrentSession(suggestionOwner) && suggestionSource === sourceFingerprint()) {
+            onupdate?.(suggestion);
+        }
+        discardSuggestion();
     }
 </script>
 
@@ -198,7 +239,7 @@
                         Use this version
                     </button>
                     <button
-                        onclick={() => (suggestion = null)}
+                        onclick={discardSuggestion}
                         class="py-2.5 bg-card border border-border text-muted-foreground rounded-xl font-bold text-xs hover:bg-muted transition-all"
                     >
                         Keep my words
