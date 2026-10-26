@@ -1,6 +1,6 @@
 # Continuum — Recovery Execution Plan (subagent-run)
 
-**Last Updated:** 2026-10-26 05:15 EST
+**Last Updated:** 2026-10-26 05:35 EST
 
 The how and the order for [PROJECT_RECOVERY_PLAN.md](PROJECT_RECOVERY_PLAN.md) (phases A–F).
 Issue IDs (CU-0xx) and their evidence are in
@@ -58,6 +58,12 @@ board, and it is the live checklist** (decision 9).
     - **In the loop:** every loop run advances Wave X as well as the build.
     - **As many X agents as needed** (owner, 2026-10-26: "assign additionaly subagents for X issues as needed"): every X card whose files are free is dispatched at once, each with its own agent.
 
+13. **Final UI/UX pass, Wave U** (owner, 2026-10-26: "at the end of all the fixes have subagents review the ui ux and implment improvements and screenlayout that has been missed previously. Add to plan").
+    - **When:** after Waves A–E and X are merged, before R0, so the rehearsal and the release test cover it.
+    - **Review:** read-only review agents go through every page in the route inventory at desktop 1440×900. They look for UX and screen-layout problems missed so far: layout, spacing, alignment, hierarchy, empty, loading and error states, navigation and flow, consistency with neighbouring modules, readability and contrast, and tone (`docs/TONE_GUIDE.md`, `docs/UI_CONSISTENCY_STANDARDS.md`). Each finding comes with a screenshot and file:line.
+    - **Implement:** each proven finding becomes a U card, coded by its own subagent in its own worktree. The orchestrator approves it by diff review plus before/after screenshots at the same size, then merges it.
+    - **Same rules:** desktop only, ponytail, no tests, no feature removal, no gates.
+
 ## Test register (decision 11)
 
 Every written test is listed here: approved before it is written, and completed after. There are no other tests.
@@ -113,6 +119,8 @@ Every written test is listed here: approved before it is written, and completed 
    - **Mark the card ☑** with its commit and proof, and commit this file.
 6. **Wave X (decision 12):** on every pass, dispatch any X card whose owned files are free, and review/merge finished ones the same way. Every new out-of-build finding becomes an X card in the same turn.
 7. **Oversight:** at the end of each wave, run O1 and O2 in parallel on the wave's merged diff. Their proven findings become cards in the next wave. Then mark the wave heading **✅**.
+
+**Final UI/UX pass (decision 13):** when Waves A–E and X are all ☑, run U0, then dispatch the U cards in parallel (by owned files), review and merge them as usual, then run O1/O2 on Wave U.
 
 **Rehearsal (end of the coding pass, still local):**
 8. **R0:** a validation subagent runs the full completion test (owner context and recipient context) against the merged `main`, built and served locally on synthetic data.
@@ -236,7 +244,14 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | E10 | Broken hero image on contacts (O2) | — | The contacts page hero image reference | The top-right hero image is a broken placeholder on `/modules/contacts`; fix the path or asset (check other modules for the same) | The image renders; same check on neighbouring modules |
 | E8 | Branch triage | — | Remote branches | Delete merged branches; list the rest with their unique commits |
 
-## Wave X — Out-of-build bugs (decision 12; parallel track, approved by orchestrator diff review)
+## Wave U — Final UI/UX review and improvements (decision 13; after A–E and X, before R0)
+
+| ID | Card | Agent | Owns | Change | Acceptance |
+|---|---|---|---|---|---|
+| U0 | UI/UX review | Read-only `ui-standards-auditor` and `ui-debugger` agents, split by area (e.g. legacy and letters; finances and estate; family, contacts and recipient; dashboard, navigation, settings and onboarding) | Nothing (report only) | Visit every route at 1440×900 on the merged build. List each UX or layout problem not already fixed by an earlier card, with a screenshot, file:line, the smallest fix, and a severity | A findings list per area; each item becomes a U card |
+| U1… | One card per proven finding (or per page when findings share a file) | `ui-standards-enforcer` / `general-purpose` | That page's route and component files | The smallest fix that resolves the finding | Before/after screenshots at 1440×900, same size, with the pixel-level change described; nothing removed from the page or navigation |
+
+ (decision 12; parallel track, approved by orchestrator diff review)
 
 | ID | Card | Source | Owns | Change | Acceptance |
 |---|---|---|---|---|---|
@@ -272,6 +287,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | O1 / O2 oversight (all waves) | ☐ | | |
 | R0 — Local rehearsal | ☐ | | |
 | Release — deploy + full browser test | ☐ | | |
+| Wave U — Final UI/UX pass | ☐ | | |
 | Wave X — Out-of-build bugs | ▶ | | |
 
 ## Card status (marked by the orchestrator, decision 9)
@@ -321,7 +337,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X3 | ☑ | 70068dd | `ENVIRONMENT=production` locally: health 200 "production"; POST without CSRF header 403, with cookie+header 200; no `_technical`; login 200; fetch wrapper (bundled, node stub) adds the header to same-origin writes only. Also fixed: HTTPS redirect loop behind Railway's proxy (would have broken the deploy), CORS substring match. Release must set the variables below |
 | X4 | ☑ | 9e539f4 | Started from `backend/` and from the root: `/`, `/_app/...`, `/modules/x` 200; traversal variants never leak; prefix check replaced by `commonpath` (sibling `dist-other` could pass before) |
 | X12 | ☑ | 7392f69 | Production mode: health p95 5.7 ms with no outbound call; `/api/auth/tokenX`, `/api/healthX` 403 (were exempt); token/refresh/magic-link and the real pulse `/respond/{token}`, `/confirm/{token}` routes exempt (the old exempt entry matched no route) |
-| X14 | ▶ | | |
+| X14 | ☑ | 905a2ff | Caller-less `register/challenge` and `register/verify` (the latter returned success without verifying) removed; the `magic-link` stub was shadowed by the real route, which still answers; CSRF refusal is a clean JSON 403 with no traceback |
 | X15 | ▶ | | |
 | X16 | ☑ | 10b25d0 | Fresh DB: GET prefs 200 `{}`, PATCH 200, GET returns the saved value (also fixed: PATCH mutated the JSON in place so it never saved). Production column is `json`, model `JSON`: same type; not run on the simulated schema |
 | X17 | ▶ | | |
@@ -333,6 +349,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X8 | ☐ (after Wave C) | | |
 | X9 | ☑ | b95307d | Magic link verifies once (200), second use 401 "already used"; request logged as `magic_link_requested`, not an auth success; `sub:"abc"` 401; login/me/refresh/jh@ 200. Passkey-finish fixes (keep specific 400/401, audit, missing-user 401) read, not run: needs a real WebAuthn assertion — check in the release browser test |
 | X10 | ☑ | c2e8ad1 | Echo off: 503 path p50 2.6 ms, p95 4.1 ms; O1's 473 ms was echo-logging overhead. One shared httpx client |
+| U0 | ☐ | | |
 | O1 — per wave (A–E) | ▶ (A done: login p95 133, /me 4.8, refresh 19.2, ai/chat 503 path 473 → X10) | | |
 | O2 — per wave (A–E) | ▶ (A done: X1 pages render the gentle message, no layout break; findings → X15, X16, X17, E9, E10) | | |
 | O1 — release table | ☐ | | |
