@@ -1,5 +1,9 @@
 <script lang="ts">
     import { directiveSync, profileSync } from "$lib/stores/medicalStore.svelte";
+    import { captureSession } from "$lib/services/sessionOwnership";
+    import { activeAccountId } from "$lib/stores/keyringStore";
+    import { currentProfileId } from "$lib/stores/profileContext";
+    import { get } from "svelte/store";
     import { formSaveAttempt } from "$lib/utils/formSaveAttempt";
     import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { readCustom } from "$lib/utils/customFields";
@@ -67,7 +71,7 @@
 
     let showProfileEdit = $state(false);
     let savingProfile = $state(false);
-    const profileFailures = new WeakMap<object, string>();
+    const profileFailures = new Map<string, Set<string>>();
     let tempProfile = $state({
         organDonor: medicalStore.profile.organDonor,
         bloodType: medicalStore.profile.bloodType,
@@ -101,12 +105,15 @@
         const fields = JSON.stringify(form);
         const submitted = { ...form };
         const ownerName = estateProfile.current.ownerName || "User";
+        const owner = captureSession();
+        const failuresKey = JSON.stringify([owner.generation, get(activeAccountId), get(currentProfileId)]);
         savingProfile = true;
         try {
-            const superseded = profileFailures.get(form);
-            if (superseded) profileSync.releaseRecovery(superseded);
+            // This explicit full-profile save supersedes earlier failed snapshots
+            // in the same session/namespace, including an editor that was reopened.
+            for (const id of profileFailures.get(failuresKey) || []) profileSync.releaseRecovery(id, owner);
+            profileFailures.delete(failuresKey);
             await medicalStore.updateProfile(submitted);
-            profileFailures.delete(form);
             // New typing, or a newly opened editor, still belongs to the person editing.
             if (tempProfile === form && JSON.stringify(form) === fields) showProfileEdit = false;
             activityLog.logEvent({
@@ -119,7 +126,11 @@
             });
         } catch (error) {
             const recoveryId = (error as { recoveryId?: string } | null)?.recoveryId;
-            if (recoveryId) profileFailures.set(form, recoveryId);
+            if (recoveryId) {
+                const failures = profileFailures.get(failuresKey) || new Set<string>();
+                failures.add(recoveryId);
+                profileFailures.set(failuresKey, failures);
+            }
             // The manager keeps the submitted draft and shows its gentle retry message.
         } finally {
             savingProfile = false;
