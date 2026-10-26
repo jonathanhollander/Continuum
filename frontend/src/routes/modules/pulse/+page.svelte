@@ -265,12 +265,12 @@
                 <a
                     href="/modules/pulse/settings"
                     class="text-primary hover:text-primary-hover flex items-center gap-1.5"
-                    ><Settings class="w-4 h-4" /> Configure</a
+                    ><Settings class="w-4 h-4" /> Your Check-in Settings</a
                 >
                 <a
                     href="/modules/pulse/contacts"
                     class="text-primary hover:text-primary-hover flex items-center gap-1.5"
-                    ><Users class="w-4 h-4" /> Manage Contacts</a
+                    ><Users class="w-4 h-4" /> Trusted Contacts</a
                 >
             </div>
         </div>

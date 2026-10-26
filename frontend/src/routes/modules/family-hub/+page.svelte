@@ -817,7 +817,7 @@
                             <a
                                 href="/modules/timeline"
                                 class="text-xs font-bold text-primary hover:underline"
-                                >Manage Full Timeline →</a
+                                >The Life Timeline →</a
                             >
                         </div>
                     </div>
