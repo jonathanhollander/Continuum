@@ -241,7 +241,7 @@
         calendar: ["calendar_events"],
         "advanced-registry": ["advanced_assets"],
         builders: ["acceptance_tasks", "estate_complexity"],
-        journal: ["journal_entries", "ethical_will", "life_lessons"],
+        journal: ["journal_entries"],
         "visual-memories": ["visual_memories", "external_archives"],
         capsule: ["time_capsule"],
         timeline: ["timeline_events"],

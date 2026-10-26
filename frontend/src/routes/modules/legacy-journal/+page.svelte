@@ -97,6 +97,8 @@
     onMount(async () => {
         await journalStore.sync();
         isLoading = false;
+        // Lessons and letters this device kept for the account before they moved here (once).
+        await journalStore.adoptDeviceKeys();
     });
 
     function openAddModal() {
@@ -115,7 +117,8 @@
         editingEntry = entry;
         newEntry = { ...entry };
         try {
-            parsedCustomAttributes = entry.tags ? {} : {};
+            const parsed = JSON.parse(entry.custom_attributes || "{}");
+            parsedCustomAttributes = parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
         } catch {
             parsedCustomAttributes = {};
         }
@@ -125,16 +128,19 @@
     async function saveEntry() {
         if (!newEntry.content) return;
 
-        if (editingEntry && editingEntry.id) {
-            await journalStore.update(editingEntry.id, {
-                ...newEntry,
-                type: "reflection",
-            } as JournalEntry);
-        } else {
-            await journalStore.create({
-                ...newEntry,
-                type: "reflection",
-            } as JournalEntry);
+        const data = {
+            ...newEntry,
+            type: "reflection",
+            custom_attributes: JSON.stringify(parsedCustomAttributes),
+        } as JournalEntry;
+        try {
+            if (editingEntry && editingEntry.id) {
+                await journalStore.update(editingEntry.id, data);
+            } else {
+                await journalStore.create(data);
+            }
+        } catch {
+            return; // SyncManager showed a gentle message; the form keeps the person's words.
         }
 
         showAddModal = false;
