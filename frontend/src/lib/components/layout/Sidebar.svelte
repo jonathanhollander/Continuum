@@ -119,10 +119,13 @@
         return {
             ...recipientPreviewEntry,
             label: relation
-                ? `For My ${relation.charAt(0).toUpperCase()}${relation.slice(1)} (preview)`
-                : `For ${first} (preview)`,
+                ? $dict.previewForRelation.replace(
+                      "{relation}",
+                      () => `${relation.charAt(0).toUpperCase()}${relation.slice(1)}`,
+                  )
+                : $dict.previewForName.replace("{name}", () => first),
             href: `/for/preview/${recipient.contact_id}`,
-            tooltip: `See the start page ${first} opens with their link`,
+            tooltip: $dict.previewTip.replace("{name}", () => first),
         };
     });
 

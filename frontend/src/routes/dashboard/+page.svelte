@@ -89,9 +89,10 @@
 
     // Greeting Typewriter
     let greeting = $state("");
-    let fullGreeting = $derived(
-        estateAudit.totalScore > 0 ? getGreeting() : "Ready when you are",
-    );
+    let fullGreeting = $derived.by(() => {
+        const english = estateAudit.totalScore > 0 ? getGreeting() : "Ready when you are";
+        return ($dict.dashGreet as Record<string, string>)[english] ?? english;
+    });
 
     // Dynamic Metrics
     // The same net the financial page shows: open assets less open debts
@@ -101,6 +102,20 @@
     // other languages read the dictionary by key (as the sidebar does).
     const navText = (key: string, label: string) =>
         $language === "en" ? label : $dict[key] || label;
+    // Group subtitles and card tooltips read navDesc / navTip the same way (X232).
+    const navDesc = (key: string, text?: string) =>
+        !text || $language === "en" ? (text ?? "") : ($dict.navDesc as Record<string, string>)[key] || text;
+    const navTip = (key: string, text?: string) =>
+        !text || $language === "en" ? (text ?? "") : ($dict.navTip as Record<string, string>)[key] || text;
+
+    // Dictionary text (X237): `{name}` slots filled in, and a count picks its plural form
+    // by the active language's rules.
+    const fill = (text: string, vars: Record<string, string | number>) =>
+        text.replace(/\{(\w+)\}/g, (slot, k) => String(vars[k] ?? slot));
+    const countWord = (forms: Record<string, string>, n: number) =>
+        forms[new Intl.PluralRules($language).select(n)] ?? forms.other;
+    const tileWord = (tile: string, n: number) =>
+        countWord(($dict.dashTile as Record<string, Record<string, string>>)[tile], n);
 
     // Only cards that hold saved records show a save badge (not Settings, the catalog, tools).
     const holdsRecords = (key: string) => key in moduleSyncKeys;
@@ -128,14 +143,8 @@
     let showAccounts = $derived(canOpen("/modules/financial-accounts"));
     let tileCount = $derived(2 + (showPolicies ? 1 : 0) + (showAccounts ? 1 : 0));
 
-    // The status chips' own names, for the filtered list's heading.
-    const statusName: Record<string, string> = {
-        safe: "Kept safe",
-        saving: "Saving",
-        local: "On device",
-        "attention-needed": "Worth a look",
-        ready: "Ready",
-    };
+    // The status chips' own names, also used for the filtered list's heading.
+    let statusName = $derived($dict.dashStatus as Record<string, string>);
 
     function recordCount(count: number, one: string, many?: string) {
         return { inProgress: count > 0, count, label: pluralWord(count, one, many) };
@@ -421,10 +430,10 @@
                 >
                     {greeting}<span class="animate-pulse">_</span>
                 </div>
-                <h1 class="font-serif text-3xl font-bold tracking-tight text-white">Dashboard</h1>
+                <h1 class="font-serif text-3xl font-bold tracking-tight text-white">{$dict.dashboard}</h1>
                 {#if totalValue > 0}
                     <div class="text-sm text-emerald-400/80">
-                        {currency.format(totalValue)} net across your documented accounts
+                        {fill($dict.dashNet, { amount: currency.format(totalValue) })}
                     </div>
                 {/if}
             </div>
@@ -449,7 +458,7 @@
                         {#if contactsLoading}
                             <div class="flex h-8 items-center justify-center" role="status" data-testid="tile-loading">
                                 <Loader2 size={20} class="animate-spin text-indigo-300" />
-                                <span class="sr-only">Gathering your records...</span>
+                                <span class="sr-only">{$dict.dashGathering}</span>
                             </div>
                         {:else}
                             <div class="text-2xl font-bold text-white">
@@ -457,7 +466,7 @@
                             </div>
                         {/if}
                         <div class="text-sm text-slate-400">
-                            {pluralWord(contactCount, "Contact")}
+                            {tileWord("contacts", contactCount)}
                         </div>
                         {#if !contactsLoading && !cardLoading("contacts")}
                             <div class="mt-2 flex justify-center">
@@ -476,7 +485,7 @@
                         {#if policiesLoading}
                             <div class="flex h-8 items-center justify-center" role="status" data-testid="tile-loading">
                                 <Loader2 size={20} class="animate-spin text-indigo-300" />
-                                <span class="sr-only">Gathering your records...</span>
+                                <span class="sr-only">{$dict.dashGathering}</span>
                             </div>
                         {:else}
                             <div class="text-2xl font-bold text-white">
@@ -484,7 +493,7 @@
                             </div>
                         {/if}
                         <div class="text-sm text-slate-400">
-                            {pluralWord(policyCount, "Policy", "Policies")}
+                            {tileWord("policies", policyCount)}
                         </div>
                         {#if !policiesLoading && !cardLoading("insurance")}
                             <div class="mt-2 flex justify-center">
@@ -504,7 +513,7 @@
                         {#if accountsLoading}
                             <div class="flex h-8 items-center justify-center" role="status" data-testid="tile-loading">
                                 <Loader2 size={20} class="animate-spin text-indigo-300" />
-                                <span class="sr-only">Gathering your records...</span>
+                                <span class="sr-only">{$dict.dashGathering}</span>
                             </div>
                         {:else}
                             <div class="text-2xl font-bold text-white">
@@ -512,7 +521,7 @@
                             </div>
                         {/if}
                         <div class="text-sm text-slate-400">
-                            {pluralWord(accountCount, "Open account")}
+                            {tileWord("accounts", accountCount)}
                         </div>
                         {#if !accountsLoading && !cardLoading("financial")}
                             <div class="mt-2 flex justify-center">
@@ -531,14 +540,14 @@
                         {#if medicalLoading}
                             <div class="flex h-8 items-center justify-center" role="status" data-testid="tile-loading">
                                 <Loader2 size={20} class="animate-spin text-indigo-300" />
-                                <span class="sr-only">Gathering your records...</span>
+                                <span class="sr-only">{$dict.dashGathering}</span>
                             </div>
                         {:else}
                             <div class="text-2xl font-bold text-white">
                                 {medicalCount}
                             </div>
                         {/if}
-                        <div class="text-sm text-slate-400">Medical</div>
+                        <div class="text-sm text-slate-400">{$dict.dashMedical}</div>
                         {#if !medicalLoading && !cardLoading("medical")}
                             <div class="mt-2 flex justify-center">
                                 <SyncBadge status={getModuleSyncStatus("medical")} size="md" showLabel={true} />
@@ -557,9 +566,9 @@
                         />
                         <input
                             type="text"
-                            aria-label="Find a section of your plan"
+                            aria-label={$dict.dashFindLabel}
                             bind:value={searchQuery}
-                            placeholder="Find what you need..."
+                            placeholder={$dict.dashFindPlaceholder}
                             class="w-full bg-slate-950/50 border border-white/10 rounded-xl pl-11 pr-4 py-3 text-white placeholder-slate-500 focus:border-primary/50 focus:outline-none transition-all backdrop-blur-sm"
                         />
                         <div
@@ -572,7 +581,7 @@
                 {#if !chipsAnswered}
                     <div class="mb-6 flex items-center gap-2" role="status" data-testid="chips-loading">
                         <Loader2 size={14} class="animate-spin text-indigo-300" />
-                        <span class="text-xs text-slate-500">Gathering your records...</span>
+                        <span class="text-xs text-slate-500">{$dict.dashGathering}</span>
                     </div>
                 {:else}
                 <div
@@ -594,7 +603,7 @@
                             >{statusSummary.safe}</span
                         >
                         <span class="text-xs text-emerald-400/70"
-                            >Kept safe</span
+                            >{statusName.safe}</span
                         >
                     </button>
                     {#if statusSummary.saving > 0}
@@ -611,7 +620,7 @@
                             <span class="text-sm font-medium text-amber-400"
                                 >{statusSummary.saving}</span
                             >
-                            <span class="text-xs text-amber-400/70">Saving</span
+                            <span class="text-xs text-amber-400/70">{statusName.saving}</span
                             >
                         </button>
                     {/if}
@@ -629,7 +638,7 @@
                                 >{statusSummary.local}</span
                             >
                             <span class="text-xs text-sky-400/70"
-                                >On device</span
+                                >{statusName.local}</span
                             >
                         </button>
                     {/if}
@@ -648,7 +657,7 @@
                                 >{statusSummary.attention}</span
                             >
                             <span class="text-xs text-orange-400/70"
-                                >Worth a look</span
+                                >{statusName["attention-needed"]}</span
                             >
                         </button>
                     {/if}
@@ -663,14 +672,14 @@
                         <span class="text-sm font-medium text-slate-400"
                             >{statusSummary.ready}</span
                         >
-                        <span class="text-xs text-slate-400/70">Ready</span>
+                        <span class="text-xs text-slate-400/70">{statusName.ready}</span>
                     </button>
                     {#if filterByStatus}
                         <button
                             onclick={() => (filterByStatus = null)}
                             class="ml-2 text-xs text-slate-500 hover:text-slate-300 underline"
                         >
-                            Clear filter
+                            {$dict.dashClearFilter}
                         </button>
                     {/if}
                 </div>
@@ -681,8 +690,8 @@
                     <div class="mb-8" in:fade={{ duration: 300 }}>
                         <h2 class="text-lg text-slate-300 mb-5">
                             {searchResults.length === 0
-                                ? `Let's find "${searchQuery}" another way. Try a different word.`
-                                : `${searchResults.length} result${searchResults.length === 1 ? "" : "s"}`}
+                                ? fill($dict.dashFindOther, { q: searchQuery })
+                                : fill(countWord($dict.dashResults, searchResults.length), { n: searchResults.length })}
                         </h2>
                         {#if searchResults.length > 0}
                             <div
@@ -691,7 +700,7 @@
                                 {#each searchResults as item, i (item.key)}
                                     {@const status = getModuleStatus(item)}
                                     <Tooltip
-                                        content={item.tooltip ?? ""}
+                                        content={navTip(item.key, item.tooltip)}
                                         position="top"
                                         delay={500}
                                     >
@@ -762,12 +771,13 @@
                     <!-- Status Filtered Results -->
                     <div class="mb-8" in:fade={{ duration: 300 }}>
                         <h2 class="text-lg text-slate-300 mb-5">
-                            Showing modules with "{statusName[filterByStatus ?? ""] ??
-                                filterByStatus}" status
+                            {fill($dict.dashShowing, {
+                                status: statusName[filterByStatus ?? ""] ?? filterByStatus ?? "",
+                            })}
                         </h2>
                         {#if statusFilteredGroups.length === 0}
                             <p class="text-slate-400 text-center py-8">
-                                Sections with this status will appear here.
+                                {$dict.dashStatusEmpty}
                             </p>
                         {:else}
                             <div class="space-y-6">
@@ -796,7 +806,7 @@
                                                 {@const status =
                                                     getModuleStatus(item)}
                                                 <Tooltip
-                                                    content={item.tooltip ?? ""}
+                                                    content={navTip(item.key, item.tooltip)}
                                                     position="top"
                                                     delay={500}
                                                 >
@@ -849,7 +859,7 @@
                                                                         <p
                                                                             class="text-sm text-emerald-400/80 mt-0.5"
                                                                         >
-                                                                            Started
+                                                                            {$dict.dashStarted}
                                                                         </p>
                                                                     {/if}
                                                                 </div>
@@ -909,7 +919,7 @@
                                             <p
                                                 class="text-base text-slate-400 mt-2 pl-8"
                                             >
-                                                {group.groupDescription}
+                                                {navDesc(group.groupKey, group.groupDescription)}
                                             </p>
                                         {/if}
                                     </div>
@@ -932,7 +942,7 @@
                                                     <p
                                                         class="text-base text-slate-500 mt-1"
                                                     >
-                                                        {group.groupDescription}
+                                                        {navDesc(group.groupKey, group.groupDescription)}
                                                     </p>
                                                 {/if}
                                             </div>
@@ -960,7 +970,7 @@
                                             {@const status =
                                                 getModuleStatus(item)}
                                             <Tooltip
-                                                content={item.tooltip ?? ""}
+                                                content={navTip(item.key, item.tooltip)}
                                                 position="top"
                                                 delay={500}
                                             >
@@ -1016,7 +1026,7 @@
                                                                     <p
                                                                         class="text-sm text-emerald-400/80 mt-0.5"
                                                                     >
-                                                                        Started
+                                                                        {$dict.dashStarted}
                                                                     </p>
                                                                 {/if}
                                                             </div>
