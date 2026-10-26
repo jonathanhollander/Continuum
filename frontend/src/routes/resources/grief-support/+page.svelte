@@ -17,10 +17,7 @@
     import GuideViewer from "$lib/components/GuideViewer.svelte";
     import griefResources from "$lib/data/griefResources.json";
     import { getGuideById, type Guide } from "$lib/data/familyGuides";
-    import {
-        userRole,
-        language as languageStore,
-    } from "$lib/stores/conciergeStore.svelte";
+    import { language as languageStore } from "$lib/stores/conciergeStore.svelte";
     import { t } from "$lib/stores/localization";
     import {
         getHotlinesByCountry,
