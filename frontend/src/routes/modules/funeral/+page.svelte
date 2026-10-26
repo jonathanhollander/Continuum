@@ -242,7 +242,6 @@
     <LivingBlueprintHeader
         title="Final Wishes"
         subtitle={module.title}
-        tier={module.role === "owner" ? "preparation" : "executor"}
         detailedDescription={module.description}
     />
 {/if}

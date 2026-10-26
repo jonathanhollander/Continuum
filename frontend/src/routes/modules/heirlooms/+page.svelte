@@ -305,7 +305,6 @@
 <LivingBlueprintHeader
     title="Heirlooms & Treasures"
     subtitle="Objects carry stories that deserve to be told"
-    tier="legacy"
     detailedDescription="When you document the history and meaning behind your treasured possessions, you're ensuring these stories survive—transforming objects into heirlooms that connect generations."
     whyMatters="Objects without stories become 'stuff' that gets donated or thrown away. That watch your grandfather wore every day? Without its story documented, it loses its meaning. You're preserving the emotional value that makes these items irreplaceable."
 >

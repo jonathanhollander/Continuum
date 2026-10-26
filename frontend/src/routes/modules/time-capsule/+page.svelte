@@ -240,7 +240,6 @@
 <LivingBlueprintHeader
     title="Time Capsule Vault"
     subtitle="Preserving wisdom, voice, and presence across time"
-    tier="legacy"
     detailedDescription="Messages safely locked until the perfect milestone. Record video messages, write letters, or preserve your voice for graduations, weddings, and life's meaningful moments."
     whyMatters="The messages you write here will comfort your loved ones for years to come, in your own words. Imagine your daughter graduating, getting married, or having her first child—and finding your voice waiting for her at each milestone."
 >

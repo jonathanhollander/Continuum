@@ -123,7 +123,6 @@
     <LivingBlueprintHeader
         title="QR Access Codes"
         subtitle="Bridge the gap between physical reality and digital security"
-        tier="protection"
         detailedDescription="Generate encrypted access keys and asset labels that connect your physical belongings to digital documentation. Create QR codes for your Red Binder that give your executor instant access to critical information."
         whyMatters="QR codes transform static documents into dynamic access points. Your executor can scan a single code to access exactly what they need, when they need it, without searching through files."
     >

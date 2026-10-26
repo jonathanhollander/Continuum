@@ -379,7 +379,6 @@
     <LivingBlueprintHeader
         title="The Home Operating Manual"
         subtitle="The instruction manual for your physical house"
-        tier="preparation"
         detailedDescription="Document your trusted vendors, access codes, and utility shutoff locations. Don't leave your family guessing how to turn off the water or who to call when something breaks."
         whyMatters="In a crisis, your family needs immediate access to critical home information. Without these details, simple tasks become overwhelming challenges during an already difficult time."
     />

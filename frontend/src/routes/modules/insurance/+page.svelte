@@ -408,7 +408,6 @@
 <LivingBlueprintHeader
     title="Insurance Portfolio"
     subtitle="Protecting your loved ones with financial security"
-    tier="protection"
     detailedDescription="Life insurance and protection policies are acts of love. They ensure your family has financial security when you're no longer here to provide it, bridging the gap when they need it most."
     whyMatters="Billions in insurance benefits go unclaimed every year simply because beneficiaries didn't know policies existed. Cataloging them here guarantees your foresight protects those you love."
 >

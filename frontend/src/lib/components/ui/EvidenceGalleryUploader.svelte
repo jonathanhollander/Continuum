@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { untrack } from "svelte";
     import { Upload, Loader2 } from "lucide-svelte";
     import MediaGallery, { type GalleryItem } from "./MediaGallery.svelte";
     import { blobUrlFor } from "./MediaView.svelte";
@@ -8,18 +9,28 @@
 
     /** Stored evidence (media references). Files upload as they are chosen; the
      *  owner saves the list on its record and removes media it no longer keeps. */
-    export let evidence: EvidenceItem[] = [];
-    export let module = "properties";
-    export let referenceId: string | undefined = undefined;
-    export let onsetCover: ((mediaId: number) => void) | undefined = undefined;
+    let {
+        evidence = $bindable([]),
+        module = "properties",
+        referenceId = undefined,
+        onsetCover = undefined,
+    }: {
+        evidence?: EvidenceItem[];
+        module?: string;
+        referenceId?: string;
+        onsetCover?: (mediaId: number) => void;
+    } = $props();
 
-    let isDragging = false;
-    let isProcessing = false;
+    let isDragging = $state(false);
+    let isProcessing = $state(false);
     let fileInput: HTMLInputElement;
 
     // Object URLs from the shared authorised cache, by media id.
-    let urls: Record<number, string> = {};
-    $: loadUrls(evidence);
+    let urls: Record<number, string> = $state({});
+    $effect(() => {
+        const list = evidence;
+        untrack(() => loadUrls(list));
+    });
 
     function loadUrls(list: EvidenceItem[]) {
         for (const e of list) {
@@ -89,18 +100,20 @@
     }
 
     // EvidenceItem -> GalleryItem, once its file has opened
-    $: galleryItems = evidence
-        .filter((e) => urls[e.id])
-        .map(
-            (e) =>
-                ({
-                    id: String(e.id),
-                    url: urls[e.id],
-                    type: e.mime.startsWith("video/") ? "video" : "image",
-                    name: e.filename,
-                    isFavorite: false,
-                }) as GalleryItem,
-        );
+    let galleryItems = $derived(
+        evidence
+            .filter((e) => urls[e.id])
+            .map(
+                (e) =>
+                    ({
+                        id: String(e.id),
+                        url: urls[e.id],
+                        type: e.mime.startsWith("video/") ? "video" : "image",
+                        name: e.filename,
+                        isFavorite: false,
+                    }) as GalleryItem,
+            ),
+    );
 </script>
 
 <div class="space-y-6">
@@ -110,13 +123,13 @@
         {isDragging
             ? 'border-blue-500 bg-blue-50'
             : 'border-slate-200 hover:border-blue-400 hover:bg-slate-50'}"
-        on:dragover={handleDragOver}
-        on:dragleave={handleDragLeave}
-        on:drop={handleDrop}
+        ondragover={handleDragOver}
+        ondragleave={handleDragLeave}
+        ondrop={handleDrop}
         role="button"
         tabindex="0"
-        on:click={() => fileInput.click()}
-        on:keydown={(e) => {
+        onclick={() => fileInput.click()}
+        onkeydown={(e) => {
             if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
                 e.preventDefault();
                 fileInput.click();
@@ -129,7 +142,7 @@
             accept="image/*,video/*"
             class="hidden"
             bind:this={fileInput}
-            on:change={handleFileSelect}
+            onchange={handleFileSelect}
         />
 
         {#if isProcessing}

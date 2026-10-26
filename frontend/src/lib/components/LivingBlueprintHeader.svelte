@@ -4,25 +4,30 @@
     import { fly } from "svelte/transition";
     import GuidanceBlock from "$lib/components/guidance/GuidanceBlock.svelte";
 
-    export let title: string;
-    export let subtitle: string | undefined = undefined;
-    // Kept so existing pages compile; the header shows no tier label (card E3:
-    // the raw tier id rendered as a literal "financial Module" eyebrow).
-    // Kept so existing pages that pass tier still compile.
-    // svelte-ignore export_let_unused
-    export let tier: string = "preparation";
-    export let detailedDescription: string | undefined = undefined;
-    export let whyMatters: string | undefined = undefined;
+    import type { Snippet } from "svelte";
 
-    let className: string | undefined = undefined;
-    export { className as class };
+    let {
+        title,
+        subtitle = undefined,
+        detailedDescription = undefined,
+        whyMatters = undefined,
+        class: className = undefined,
+        children,
+    }: {
+        title: string;
+        subtitle?: string;
+        detailedDescription?: string;
+        whyMatters?: string;
+        class?: string;
+        children?: Snippet;
+    } = $props();
 
-    let mounted = false;
+    let mounted = $state(false);
     let headerEl: HTMLElement;
     // Inside a padded page wrapper the header already sits on the body's left
     // edge, so its content takes no inset of its own; full-width it takes the
     // same 32px inset as the module page bodies (p-8).
-    let nested = false;
+    let nested = $state(false);
 
     onMount(() => {
         const host = headerEl.closest("main") ?? document.body;
@@ -92,7 +97,7 @@
 
                 <!-- Action Slot -->
                 <div class="pt-4" in:fly={{ y: 20, duration: 800, delay: 200 }}>
-                    <slot />
+                    {@render children?.()}
                 </div>
             {/if}
         </div>
