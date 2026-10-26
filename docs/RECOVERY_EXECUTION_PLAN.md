@@ -1012,7 +1012,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X292 | ◐ code merged; storage owner decision | | `file_storage.py`: empty endpoint/region → AWS default; startup log names the active provider. Production keys (`AWS_ACCESS_KEY_ID` "R1ST…", bucket continuum, us-east-1) fail with InvalidAccessKeyId against AWS — not AWS keys, and no endpoint is set. Uploads still land on the container disk (no volume) until the owner picks: Railway volume (recommended) or working S3 credentials/endpoint |
 | X293 | ☑ | merged | Full Record rows: "Edit these details" opens the Add form pre-filled; saves via the singleton SyncManager (POST); edit seen after reload and in a second context; 0 console errors |
 | X294 | ▶ | | |
-| X295 | ▶ | | |
+| X295 | ☑ | merged | pulse respond retry message amber→muted; /auth/verify on site tokens (bg #0f172a, primary #7FB5AB), layout unchanged; LivingMesh grace kept (used by portal and pulse layout) |
 | X296 | ☑ | merged | `est_time` defaults to 0 (no migration; model_validate fills it); `estTime` removed from client and 38 seed rows; first tick POST 200 without it |
 | X297 | ☑ | merged | Simulator checks: "A copy of your passport or ID saved in your Vault.", "Your accounts and cards saved in Financial Accounts.", directive line names the page that matched |
 | X298 | ▶ | | |
