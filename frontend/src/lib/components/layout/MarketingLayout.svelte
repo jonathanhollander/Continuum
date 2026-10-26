@@ -18,7 +18,7 @@
 </script>
 
 <div
-    class="min-h-screen bg-[#0F1115] text-slate-200 font-sans antialiased selection:bg-amber-500/30 selection:text-amber-100 overflow-x-hidden {isRTL
+    class="surface-dark min-h-screen bg-[#0F1115] text-slate-200 font-sans antialiased selection:bg-gold/30 selection:text-white overflow-x-hidden {isRTL
         ? 'rtl'
         : ''}"
     dir={isRTL ? "rtl" : "ltr"}
@@ -67,7 +67,7 @@
 
     {@render children?.()}
 
-    <footer class="py-24 bg-black text-center text-slate-600 text-sm">
+    <footer class="py-24 bg-black text-center text-muted-foreground text-sm">
         <p>
             &copy; {new Date().getFullYear()} Continuum Legacy Systems. Forever.
         </p>

@@ -76,9 +76,13 @@
     }
 </script>
 
-<div class="min-h-screen relative overflow-hidden font-sans text-slate-200">
+<div class="surface-dark min-h-screen relative overflow-hidden font-sans text-foreground">
     <LivingMesh
-        status={state.data?.user_status === "active" ? "active" : "grace"}
+        status={state.error
+            ? "disabled"
+            : state.data?.user_status === "active"
+              ? "active"
+              : "grace"}
     />
 
     <div
@@ -87,44 +91,44 @@
         <div class="max-w-md w-full space-y-6">
             <div class="text-center mb-8">
                 <div
-                    class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-900/50 border border-slate-700 backdrop-blur-md mb-4 text-amber-400"
+                    class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-background/50 border border-border backdrop-blur-md mb-4 text-warning"
                 >
                     <AlertTriangle class="w-6 h-6" />
                 </div>
-                <h1 class="text-xl font-serif text-white tracking-wide">
+                <h1 class="text-xl font-serif text-foreground tracking-wide">
                     Checking in on {state.data?.user_name || "your loved one"}
                 </h1>
             </div>
 
             {#if state.loading}
                 <div
-                    class="bg-slate-900/40 rounded-2xl p-12 text-center border border-slate-800"
+                    class="bg-background/40 rounded-2xl p-12 text-center border border-slate-800"
                 >
                     <div
-                        class="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"
+                        class="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"
                     ></div>
                 </div>
             {:else if state.error}
                 <div
-                    class="bg-rose-950/20 border border-rose-900/50 rounded-2xl p-8 text-center backdrop-blur-md"
+                    class="bg-background/60 border border-border rounded-2xl p-8 text-center backdrop-blur-md"
                 >
-                    <Shield class="w-12 h-12 text-rose-500 mx-auto mb-4" />
+                    <Shield class="w-12 h-12 text-warning mx-auto mb-4" />
                     {#if !state.offline}
-                        <h2 class="text-lg font-medium text-white mb-2">
+                        <h2 class="text-lg font-medium text-foreground mb-2">
                             This link has rested
                         </h2>
                     {/if}
-                    <p class="text-slate-400 text-sm">{state.error}</p>
+                    <p class="text-muted-foreground text-sm">{state.error}</p>
                 </div>
             {:else if state.actionSuccess}
                 <div
-                    class="bg-slate-900/80 border border-teal-500/30 rounded-[2.5rem] p-10 text-center backdrop-blur-xl shadow-2xl"
+                    class="bg-background/80 border border-primary/30 rounded-[2.5rem] p-10 text-center backdrop-blur-xl shadow-2xl"
                     in:fade
                 >
                     <CheckCircle2
-                        class="w-16 h-16 text-teal-400 mx-auto mb-6"
+                        class="w-16 h-16 text-primary mx-auto mb-6"
                     />
-                    <h2 class="text-2xl font-serif text-white mb-4">
+                    <h2 class="text-2xl font-serif text-foreground mb-4">
                         {state.actionSuccess === "snoozed"
                             ? "Thank you, it's recorded"
                             : "Thank you"}
@@ -145,18 +149,18 @@
                 <div class="space-y-4" in:slide>
                     <!-- Alert Context -->
                     <div
-                        class="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-6 backdrop-blur-md"
+                        class="bg-warning/10 border border-warning/20 rounded-2xl p-6 backdrop-blur-md"
                     >
                         <div class="flex gap-4">
-                            <Clock class="w-10 h-10 text-amber-400 shrink-0" />
+                            <Clock class="w-10 h-10 text-warning shrink-0" />
                             <div>
-                                <h3 class="font-medium text-amber-200">
+                                <h3 class="font-medium text-warning">
                                     {state.data.user_status === "active"
                                         ? "Checked in recently"
                                         : "It has been quiet for a little while"}
                                 </h3>
                                 <p
-                                    class="text-sm text-amber-200/70 mt-1 leading-relaxed"
+                                    class="text-sm text-warning/90 mt-1 leading-relaxed"
                                 >
                                     {#if state.data.last_checkin}
                                         {state.data.user_name}'s last check-in was {parseUtc(
@@ -176,19 +180,19 @@
                     <div class="grid grid-cols-1 gap-4">
                         <button
                             onclick={() => handleAction("snooze")}
-                            class="bg-slate-800/80 hover:bg-slate-700 hover:border-teal-500/50 border border-slate-700 transition-all rounded-2xl p-6 text-left group"
+                            class="bg-card/80 hover:bg-slate-700 hover:border-primary/50 border border-border transition-all rounded-2xl p-6 text-left group"
                         >
                             <div class="flex items-center gap-4">
                                 <PauseCircle
-                                    class="w-6 h-6 text-teal-400 group-hover:scale-110 transition-transform"
+                                    class="w-6 h-6 text-primary group-hover:scale-110 transition-transform"
                                 />
                                 <div>
                                     <div
-                                        class="text-slate-100 font-medium text-sm"
+                                        class="text-foreground font-medium text-sm"
                                     >
                                         I've spoken with {state.data.user_name} and they're well
                                     </div>
-                                    <div class="text-slate-500 text-xs mt-0.5">
+                                    <div class="text-muted-foreground text-xs mt-0.5">
                                         Pauses further alerts for a while
                                     </div>
                                 </div>
@@ -197,17 +201,17 @@
 
                         <button
                             onclick={() => handleAction("acknowledge")}
-                            class="bg-slate-800/80 hover:bg-slate-700 hover:border-slate-500 border border-slate-700 transition-all rounded-2xl p-6 text-left"
+                            class="bg-card/80 hover:bg-slate-700 hover:border-slate-500 border border-border transition-all rounded-2xl p-6 text-left"
                         >
                             <div class="flex items-center gap-4">
-                                <Info class="w-6 h-6 text-slate-400" />
+                                <Info class="w-6 h-6 text-muted-foreground" />
                                 <div>
                                     <div
                                         class="text-slate-300 font-medium text-sm"
                                     >
                                         I've seen this
                                     </div>
-                                    <div class="text-slate-500 text-xs mt-0.5">
+                                    <div class="text-muted-foreground text-xs mt-0.5">
                                         I'm looking in on them
                                     </div>
                                 </div>
@@ -217,7 +221,7 @@
 
                     {#if state.actionError}
                         <p
-                            class="text-sm text-amber-300 text-center leading-relaxed"
+                            class="text-sm text-warning text-center leading-relaxed"
                             role="status"
                         >
                             {state.actionError}
@@ -225,7 +229,7 @@
                     {/if}
 
                     <div class="p-6 text-center">
-                        <p class="text-xs text-slate-500 leading-relaxed">
+                        <p class="text-xs text-muted-foreground leading-relaxed">
                             When you mark {state.data.user_name} as OK, it appears
                             in their check-in history.
                         </p>

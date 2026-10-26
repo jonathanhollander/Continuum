@@ -148,16 +148,16 @@
     {#if showHeader}
         <div class="flex items-center justify-between">
             <h3
-                class="text-lg font-medium text-slate-200 flex items-center gap-2"
+                class="text-lg font-medium text-foreground flex items-center gap-2"
             >
-                <Users class="w-5 h-5 text-slate-400" />
+                <Users class="w-5 h-5 text-muted-foreground" />
                 {viewMode === "escalation"
                     ? "Who we reach out to"
                     : "Trusted Contacts"}
             </h3>
             {#if viewMode === "escalation"}
                 <div
-                    class="text-[10px] uppercase tracking-widest text-slate-500 font-bold"
+                    class="text-[10px] uppercase tracking-widest text-muted-foreground font-bold"
                 >
                     Personal timing set
                 </div>
@@ -167,9 +167,9 @@
 
     {#if error}
         <div
-            class="bg-red-500/10 border border-red-500/50 p-4 rounded-xl text-red-200 text-sm flex items-center gap-3"
+            class="bg-warning-soft border border-warning/40 p-4 rounded-xl text-foreground text-sm flex items-center gap-3"
         >
-            <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+            <div class="w-2 h-2 rounded-full bg-warning"></div>
             <div>
                 <strong>Your circle is taking a moment to load.</strong>
                 <br />
@@ -177,7 +177,7 @@
             </div>
             <button
                 onclick={loadData}
-                class="ml-auto text-xs bg-red-500/20 px-3 py-1 rounded hover:bg-red-500/30 transition-colors"
+                class="ml-auto text-xs text-warning bg-warning-soft border border-warning/40 px-3 py-1 rounded hover:bg-warning/20 transition-colors"
                 >Try again</button
             >
         </div>
@@ -186,40 +186,40 @@
     <div class="space-y-6">
         {#if loading}
             <div
-                class="h-40 bg-slate-900/50 rounded-2xl animate-pulse flex items-center justify-center"
+                class="h-40 bg-background/50 rounded-2xl animate-pulse flex items-center justify-center"
             >
-                <span class="text-slate-500 text-sm font-medium animate-bounce"
+                <span class="text-muted-foreground text-sm font-medium animate-bounce"
                     >Gathering your circle...</span
                 >
             </div>
         {:else if tiers.length === 0 && !error}
             <div
-                class="text-center py-12 bg-slate-900/30 rounded-2xl border border-slate-800 border-dashed"
+                class="text-center py-12 bg-background/30 rounded-2xl border border-slate-800 border-dashed"
             >
                 <button
                     onclick={loadData}
-                    class="bg-teal-500/10 text-teal-400 hover:text-teal-300 hover:bg-teal-500/20 px-4 py-2 rounded-lg text-sm font-bold transition-all"
+                    class="bg-primary/10 text-primary hover:text-primary-hover hover:bg-primary/20 px-4 py-2 rounded-lg text-sm font-bold transition-all"
                     >Set up your circle's plan</button
                 >
             </div>
         {:else if (viewMode === "contacts" ? guardians.length : contacts.length) === 0 && !error}
             <!-- EMPTY STATE -->
             <div
-                class="text-center py-16 bg-slate-900/30 rounded-[2rem] border border-slate-800 border-dashed backdrop-blur-sm"
+                class="text-center py-16 bg-background/30 rounded-[2rem] border border-slate-800 border-dashed backdrop-blur-sm"
             >
                 <div
-                    class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-6"
+                    class="w-16 h-16 bg-card rounded-full flex items-center justify-center mx-auto mb-6"
                 >
-                    <Users class="w-8 h-8 text-slate-500" />
+                    <Users class="w-8 h-8 text-muted-foreground" />
                 </div>
                 <p
-                    class="text-slate-400 max-w-sm mx-auto mb-8 text-sm leading-relaxed"
+                    class="text-muted-foreground max-w-sm mx-auto mb-8 text-sm leading-relaxed"
                 >
                     Choose the first person you trust, whenever you're ready.
                 </p>
                 <button
                     onclick={() => openAddGuardianModal(tiers[0]?.id ?? null)}
-                    class="inline-flex items-center gap-2 bg-teal-500 text-slate-950 px-6 py-3 rounded-xl font-bold text-sm hover:bg-teal-400 transition-colors"
+                    class="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-xl font-bold text-sm hover:bg-primary-hover transition-colors"
                 >
                     <Plus class="w-4 h-4" /> Add a guardian
                 </button>
@@ -229,12 +229,12 @@
             <div class="flex items-center justify-between gap-4">
                 <a
                     href="/modules/pulse/escalation"
-                    class="text-sm text-teal-400 hover:text-teal-300 transition-colors font-bold"
+                    class="text-sm text-primary hover:text-primary-hover transition-colors font-bold"
                     >Escalation Plan</a
                 >
                 <button
                     onclick={() => openAddGuardianModal(tiers[0]?.id ?? null)}
-                    class="text-xs text-teal-500 hover:text-teal-400 flex items-center gap-1 font-bold"
+                    class="text-xs text-primary hover:text-primary-hover flex items-center gap-1 font-bold"
                 >
                     <Plus class="w-3 h-3" /> Add Guardian
                 </button>
@@ -245,32 +245,32 @@
                         class="bg-slate-950/30 border border-slate-800/50 rounded-xl p-4 flex items-center gap-3"
                     >
                         <div
-                            class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-teal-400 border border-teal-500/20"
+                            class="w-8 h-8 rounded-full bg-card flex items-center justify-center text-xs font-bold text-primary border border-primary/20"
                         >
                             {contact.name.charAt(0)}
                         </div>
                         <div class="flex-1 min-w-0">
-                            <div class="text-sm text-slate-200 font-medium">
+                            <div class="text-sm text-foreground font-medium">
                                 {contact.name}
                             </div>
                             <div
-                                class="text-xs text-slate-500 break-all"
+                                class="text-xs text-muted-foreground break-all"
                             >
                                 {#if contact.email}
                                 {contact.email}
                             {:else}
-                                <a href="/modules/contacts" class="text-amber-300 hover:text-amber-200">Add an email so we can reach {contact.name}</a>
+                                <a href="/modules/contacts" class="text-warning hover:underline">Add an email so we can reach {contact.name}</a>
                             {/if}
                             </div>
                         </div>
                         <span
-                            class="text-xs font-bold text-teal-500 uppercase tracking-wider"
+                            class="text-xs font-bold text-primary uppercase tracking-wider"
                             >Tier {n}</span
                         >
                         <button
                             onclick={() => deleteContact(contact.id)}
                             aria-label="Remove {contact.name}"
-                            class="text-slate-600 hover:text-rose-400 transition-colors"
+                            class="text-muted-foreground hover:text-danger transition-colors"
                         >
                             <Trash2 class="w-4 h-4" />
                         </button>
@@ -281,14 +281,14 @@
             {#each tiers as tier (tier.id)}
                 {@const tierContacts = getContactsForTier(tier.tier_number)}
                 <div
-                    class="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden backdrop-blur-sm"
+                    class="bg-background/50 border border-slate-800 rounded-2xl overflow-hidden backdrop-blur-sm"
                 >
                     <div
-                        class="bg-slate-800/30 px-6 py-3 flex justify-between items-center {tierContacts.length ? 'border-b border-slate-800' : ''}"
+                        class="bg-card/30 px-6 py-3 flex justify-between items-center {tierContacts.length ? 'border-b border-slate-800' : ''}"
                     >
                         <div class="flex items-center gap-3">
                             <span
-                                class="text-xs font-bold text-teal-500 uppercase tracking-wider"
+                                class="text-xs font-bold text-primary uppercase tracking-wider"
                                 >Tier {tier.tier_number}</span
                             >
                             {#if editingTierId === tier.id}
@@ -296,7 +296,7 @@
                                     <input
                                         type="number"
                                         aria-label={`Tier ${tier.tier_number} hours`}
-                                        class="w-12 bg-slate-900 border border-teal-500/50 rounded px-1 py-0.5 text-xs text-white"
+                                        class="w-12 bg-background border border-primary/50 rounded px-1 py-0.5 text-xs text-foreground"
                                         bind:value={tier.delay_hours}
                                         use:focusOnMount
                                         onkeydown={(e) => {
@@ -307,13 +307,13 @@
                                             }
                                         }}
                                     />
-                                    <span class="text-[10px] text-slate-500"
+                                    <span class="text-[10px] text-muted-foreground"
                                         >hours</span
                                     >
                                     <button
                                         onclick={() => updateTier(tier)}
                                         aria-label="Save"
-                                        class="text-emerald-400 hover:text-emerald-300"
+                                        class="text-primary hover:text-primary-hover"
                                     >
                                         <Check class="w-3 h-3" />
                                     </button>
@@ -322,7 +322,7 @@
                                 <button
                                     type="button"
                                     aria-label={`Tier ${tier.tier_number}: ${tier.delay_hours} hours by default`}
-                                    class="text-[10px] text-slate-400 uppercase tracking-widest bg-slate-900/50 px-2 py-0.5 rounded border border-slate-700 flex items-center gap-2 cursor-pointer hover:border-teal-500/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-400 transition-colors"
+                                    class="text-[10px] text-muted-foreground uppercase tracking-widest bg-background/50 px-2 py-0.5 rounded border border-border flex items-center gap-2 cursor-pointer hover:border-primary/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary transition-colors"
                                     onclick={() => startTierEdit(tier)}
                                 >
                                     {tier.delay_hours} hours by default
@@ -332,7 +332,7 @@
                         </div>
                         <button
                             onclick={() => openAddGuardianModal(tier.id)}
-                            class="text-xs text-teal-500 hover:text-teal-400 flex items-center gap-1 font-bold"
+                            class="text-xs text-primary hover:text-primary-hover flex items-center gap-1 font-bold"
                         >
                             <Plus class="w-3 h-3" /> Add Guardian
                         </button>
@@ -348,23 +348,23 @@
                                 >
                                     <div class="flex items-center gap-3">
                                         <div
-                                            class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-teal-400 border border-teal-500/20"
+                                            class="w-8 h-8 rounded-full bg-card flex items-center justify-center text-xs font-bold text-primary border border-primary/20"
                                         >
                                             {contact.name.charAt(0)}
                                         </div>
                                         <div>
                                             <div
-                                                class="text-sm text-slate-200 font-medium"
+                                                class="text-sm text-foreground font-medium"
                                             >
                                                 {contact.name}
                                             </div>
                                             <div
-                                                class="text-xs text-slate-500 break-all"
+                                                class="text-xs text-muted-foreground break-all"
                                             >
                                                 {#if contact.email}
                                 {contact.email}
                             {:else}
-                                <a href="/modules/contacts" class="text-amber-300 hover:text-amber-200">Add an email so we can reach {contact.name}</a>
+                                <a href="/modules/contacts" class="text-warning hover:underline">Add an email so we can reach {contact.name}</a>
                             {/if}
                                             </div>
                                         </div>
@@ -373,7 +373,7 @@
                                         onclick={() =>
                                             deleteContact(contact.id)}
                                         aria-label="Remove {contact.name}"
-                                        class="text-slate-600 hover:text-rose-400 transition-colors"
+                                        class="text-muted-foreground hover:text-danger transition-colors"
                                     >
                                         <Trash2 class="w-4 h-4" />
                                     </button>
@@ -386,7 +386,7 @@
                                     <div class="space-y-2">
                                         <label
                                             for="delay-{contact.id}"
-                                            class="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest"
+                                            class="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest"
                                         >
                                             <Settings2 class="w-3 h-3" /> Personal
                                             wait (hours)
@@ -401,17 +401,17 @@
                                                         individualDelayHours: delayValue(e.currentTarget.value),
                                                     })}
                                                 placeholder={tier.delay_hours.toString()}
-                                                class="w-16 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-teal-400 focus:outline-none focus:border-teal-500/50"
+                                                class="w-16 bg-background border border-border rounded px-2 py-1 text-xs text-primary focus:outline-none focus:border-primary/50"
                                             />
                                             <span
-                                                class="text-[10px] text-slate-600 italic"
+                                                class="text-[10px] text-muted-foreground italic"
                                                 >Used instead of the tier's wait</span
                                             >
                                         </div>
                                     </div>
                                     <div class="space-y-2">
                                         <div
-                                            class="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest"
+                                            class="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest"
                                         >
                                             <BellRing class="w-3 h-3" /> Safety
                                             Timer
@@ -424,7 +424,7 @@
                                                     })}
                                                 class="text-[10px] px-2 py-1 rounded border transition-colors {contact.notify_on_safety_timer
                                                     ? 'bg-indigo-500/10 border-indigo-500/50 text-indigo-400'
-                                                    : 'bg-slate-800 border-slate-700 text-slate-500'}"
+                                                    : 'bg-card border-border text-muted-foreground'}"
                                             >
                                                 {contact.notify_on_safety_timer
                                                     ? "Told when I start a timer"

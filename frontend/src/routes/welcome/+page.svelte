@@ -163,7 +163,7 @@
             <!-- Trust Badge -->
             <div class="flex items-center justify-center gap-2 text-muted-foreground text-xs pt-4" in:fade={{ delay: 800 }}>
                 <Shield class="w-4 h-4" />
-                <span>Your data is private and encrypted</span>
+                <span>Your information stays private to your account</span>
             </div>
         </div>
     {:else}

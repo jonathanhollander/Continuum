@@ -312,7 +312,7 @@
 <svelte:window bind:scrollY bind:innerHeight bind:innerWidth />
 
 <div
-    class="min-h-screen bg-[#0a0a0b] text-white overflow-x-hidden"
+    class="surface-dark min-h-screen bg-[#0a0a0b] text-white overflow-x-hidden"
     dir={$isRTL ? "rtl" : "ltr"}
 >
     <!-- Easter Egg Animation (Konami Code: ↑↑↓↓←→←→BA) -->
@@ -334,7 +334,7 @@
             <div
                 class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center easter-message"
             >
-                <p class="text-2xl font-serif text-amber-400">
+                <p class="text-2xl font-serif text-gold-text">
                     Thank you for caring.
                 </p>
                 <p class="text-sm text-white/50 mt-2">
@@ -349,7 +349,7 @@
         <div
             class="pointer-events-none fixed z-50 w-96 h-96 rounded-full opacity-20 blur-3xl"
             style="
-                background: radial-gradient(circle, rgba(251, 191, 36, 0.15) 0%, transparent 70%);
+                background: radial-gradient(circle, color-mix(in srgb, var(--color-gold) 15%, transparent) 0%, transparent 70%);
                 left: {$cursorGlow.x - 192}px;
                 top: {$cursorGlow.y - 192}px;
                 transition: opacity 0.3s;
@@ -359,7 +359,7 @@
 
     <!-- Scroll Progress Indicator -->
     <div
-        class="fixed top-0 left-0 h-[2px] bg-gradient-to-r from-amber-500 via-teal-500 to-rose-500 z-[100] origin-left"
+        class="fixed top-0 left-0 h-[2px] bg-primary z-[100] origin-left"
         style="transform: scaleX({$scrollProgress})"
     ></div>
 
@@ -369,7 +369,7 @@
         <div
             class="absolute w-[800px] h-[800px] rounded-full opacity-30 blur-[120px] animate-float-slow"
             style="
-                background: radial-gradient(circle, rgba(251, 191, 36, 0.1) 0%, transparent 70%);
+                background: radial-gradient(circle, color-mix(in srgb, var(--color-gold) 10%, transparent) 0%, transparent 70%);
                 top: -20%;
                 left: -10%;
                 transform: translateY({floatOffset1}px);
@@ -378,7 +378,7 @@
         <div
             class="absolute w-[600px] h-[600px] rounded-full opacity-20 blur-[100px] animate-float-medium"
             style="
-                background: radial-gradient(circle, rgba(20, 184, 166, 0.1) 0%, transparent 70%);
+                background: radial-gradient(circle, color-mix(in srgb, var(--color-primary) 10%, transparent) 0%, transparent 70%);
                 top: 40%;
                 right: -15%;
                 transform: translateY({-floatOffset2}px);
@@ -387,7 +387,7 @@
         <div
             class="absolute w-[500px] h-[500px] rounded-full opacity-20 blur-[80px] animate-float-fast"
             style="
-                background: radial-gradient(circle, rgba(244, 63, 94, 0.08) 0%, transparent 70%);
+                background: radial-gradient(circle, color-mix(in srgb, var(--color-primary) 8%, transparent) 0%, transparent 70%);
                 bottom: 10%;
                 left: 20%;
                 transform: translateY({floatOffset3}px);
@@ -498,7 +498,7 @@
                                         )}
                                     class="w-full px-4 py-2 text-left text-sm hover:bg-white/5 transition-all duration-200 {$m2Language ===
                                     lang.code
-                                        ? 'text-amber-400'
+                                        ? 'text-gold-text'
                                         : 'text-white/70'}"
                                     style="animation: slideIn 0.2s ease {i *
                                         0.05}s both"
@@ -513,7 +513,7 @@
                 <!-- Login button with glow -->
                 <a
                     href="/login"
-                    class="text-sm px-4 py-2 rounded-full border border-white/20 text-white/80 hover:text-white hover:border-white/40 transition-all duration-300 hover:shadow-[0_0_20px_rgba(251,191,36,0.2)]"
+                    class="text-sm px-4 py-2 rounded-full border border-white/20 text-white/80 hover:text-white hover:border-white/40 transition-all duration-300 hover:shadow-[0_0_20px_color-mix(in_srgb,var(--color-gold)_20%,transparent)]"
                 >
                     {$m2t.navLogin}
                 </a>
@@ -586,7 +586,7 @@
 
                     <div in:fade={{ duration: 800, delay: 600 }}>
                         <p
-                            class="text-2xl md:text-3xl font-serif text-amber-400/90 mb-8"
+                            class="text-2xl md:text-3xl font-serif text-gold-text/90 mb-8"
                             in:fly={{
                                 y: 20,
                                 duration: 800,
@@ -604,7 +604,7 @@
                         </p>
                         <a
                             href="/marketing2/features"
-                            class="inline-flex items-center gap-2 text-sm text-white/40 hover:text-white/70 transition-all duration-300 group"
+                            class="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white transition-all duration-300 group"
                             in:fade={{ duration: 500, delay: 1200 }}
                         >
                             {$m2t.ctaExplore}
@@ -641,13 +641,13 @@
                     {$m2t.kitchenTitle}
                 </h2>
                 <p
-                    class="text-lg text-white/40 leading-relaxed mb-10 italic reveal-section"
+                    class="text-lg text-white/70 leading-relaxed mb-10 italic reveal-section"
                     use:reveal={{ delay: 200 }}
                 >
                     {$m2t.kitchenDesc}
                 </p>
                 <p
-                    class="text-xl text-rose-400/70 font-serif text-center reveal-section"
+                    class="text-xl text-primary/70 font-serif text-center reveal-section"
                     use:reveal={{ delay: 400 }}
                 >
                     {$m2t.kitchenPunchline}
@@ -674,7 +674,7 @@
                     {$m2t.weightDesc}
                 </p>
                 <p
-                    class="text-xl text-amber-400/80 font-serif italic reveal-section"
+                    class="text-xl text-gold-text/80 font-serif italic reveal-section"
                     use:reveal={{ delay: 400 }}
                 >
                     {$m2t.weightBridge}
@@ -692,9 +692,9 @@
                 use:reveal
             >
                 <div
-                    class="icon-container w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-8"
+                    class="icon-container w-12 h-12 rounded-full bg-gold/10 flex items-center justify-center mx-auto mb-8"
                 >
-                    <Compass size={24} class="text-amber-400/70 icon-spin" />
+                    <Compass size={24} class="text-gold-text/70 icon-spin" />
                 </div>
                 <h2
                     class="text-3xl md:text-4xl font-serif text-white/90 mb-8"
@@ -709,7 +709,7 @@
                     {$m2t.guideDesc}
                 </p>
                 <p
-                    class="text-base text-white/40 italic reveal-section"
+                    class="text-base text-white/70 italic reveal-section"
                     use:reveal={{ delay: 400 }}
                 >
                     {$m2t.guideReassurance}
@@ -727,9 +727,9 @@
                         <div class="pulse-ring pulse-ring-2"></div>
                         <div class="pulse-ring pulse-ring-3"></div>
                         <div
-                            class="w-12 h-12 rounded-full bg-teal-500/20 flex items-center justify-center absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                            class="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
                         >
-                            <Heart size={24} class="text-teal-400 heart-beat" />
+                            <Heart size={24} class="text-primary heart-beat" />
                         </div>
                     </div>
                     <h2
@@ -751,13 +751,13 @@
                         {$m2t.pulseHow}
                     </p>
                     <p
-                        class="text-base text-white/40 leading-relaxed reveal-section"
+                        class="text-base text-white/70 leading-relaxed reveal-section"
                         use:reveal={{ delay: 400 }}
                     >
                         {$m2t.pulseTiers}
                     </p>
                     <p
-                        class="text-xl text-teal-400/80 font-serif italic reveal-section"
+                        class="text-xl text-primary/80 font-serif italic reveal-section"
                         use:reveal={{ delay: 600 }}
                     >
                         {$m2t.pulseGift}
@@ -782,7 +782,7 @@
                 <h2 class="text-2xl md:text-3xl font-serif text-white/80 mb-6">
                     {$m2t.distinctionTitle}
                 </h2>
-                <p class="text-base text-white/40 leading-relaxed mb-4">
+                <p class="text-base text-white/70 leading-relaxed mb-4">
                     {$m2t.distinctionDesc}
                 </p>
                 <p class="text-base text-white/50 leading-relaxed mb-8">
@@ -799,11 +799,11 @@
             <div class="max-w-4xl mx-auto reveal-section" use:reveal>
                 <div class="text-center mb-16">
                     <div
-                        class="icon-container w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-8"
+                        class="icon-container w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-8"
                     >
                         <Lock
                             size={24}
-                            class="text-emerald-400/70 icon-shimmer"
+                            class="text-primary/70 icon-shimmer"
                         />
                     </div>
                     <h2
@@ -826,11 +826,11 @@
                             use:tilt3D
                         >
                             <h3
-                                class="text-lg font-serif text-emerald-400/90 mb-3"
+                                class="text-lg font-serif text-primary/90 mb-3"
                             >
                                 {card.title}
                             </h3>
-                            <p class="text-sm text-white/40">{card.desc}</p>
+                            <p class="text-sm text-white/70">{card.desc}</p>
                         </div>
                     {/each}
                 </div>
@@ -854,11 +854,11 @@
                             use:tilt3D
                         >
                             <h3
-                                class="text-xl font-serif text-amber-400/90 mb-3"
+                                class="text-xl font-serif text-gold-text/90 mb-3"
                             >
                                 {card.title}
                             </h3>
-                            <p class="text-sm text-white/40">{card.desc}</p>
+                            <p class="text-sm text-white/70">{card.desc}</p>
                         </div>
                     {/each}
                 </div>
@@ -874,7 +874,7 @@
                     <div class="flex justify-center mb-6">
                         {#each Array(5) as _, i}
                             <span
-                                class="text-amber-400/60 text-sm"
+                                class="text-gold-text/60 text-sm"
                                 style="animation: starPop 0.3s ease {i *
                                     0.1}s both">★</span
                             >
@@ -887,7 +887,7 @@
                         family. Continuum let me say everything I needed to say,
                         in my own time, in my own words."
                     </blockquote>
-                    <p class="text-sm text-white/40">— A Continuum user</p>
+                    <p class="text-sm text-white/70">— A Continuum user</p>
                 </div>
             </div>
         </section>
@@ -907,7 +907,7 @@
                         </p>
 
                         <div class="max-w-md mx-auto space-y-6">
-                            <p class="text-sm text-white/40">
+                            <p class="text-sm text-white/70">
                                 {$m2t.signupNamePrompt}
                             </p>
                             <input
@@ -917,13 +917,13 @@
                                 placeholder={$m2t.signupNamePlaceholder}
                                 onkeydown={(e) =>
                                     e.key === "Enter" && handleNameSubmit()}
-                                class="w-full bg-transparent border-b border-white/20 focus:border-amber-500/50 py-4 text-2xl font-serif text-center text-white/90 outline-none transition-all duration-300 placeholder:text-white/20 focus:shadow-[0_4px_20px_-4px_rgba(251,191,36,0.3)]"
+                                class="w-full bg-transparent border-b border-white/20 focus:border-gold/50 py-4 text-2xl font-serif text-center text-white/90 outline-none transition-all duration-300 placeholder:text-white/60 focus:shadow-[0_4px_20px_-4px_color-mix(in_srgb,var(--color-gold)_30%,transparent)]"
                             />
 
                             {#if name.trim().length > 1}
                                 <button
                                     onclick={handleNameSubmit}
-                                    class="mt-8 inline-flex items-center gap-3 px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-full text-white/80 transition-all duration-300 group hover:shadow-[0_0_30px_rgba(251,191,36,0.2)]"
+                                    class="mt-8 inline-flex items-center gap-3 px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-full text-white/80 transition-all duration-300 group hover:shadow-[0_0_30px_color-mix(in_srgb,var(--color-gold)_20%,transparent)]"
                                     in:scale={{
                                         duration: 300,
                                         start: 0.9,
@@ -941,7 +941,7 @@
                     </div>
                 {:else if signupStep === 1}
                     <div class="text-center" in:fly={{ x: 50, duration: 400 }}>
-                        <p class="text-sm text-white/40 mb-8">
+                        <p class="text-sm text-white/70 mb-8">
                             {$m2t.signupEmailPrompt}
                         </p>
                         <input
@@ -951,13 +951,13 @@
                             placeholder={$m2t.signupEmailPlaceholder}
                             onkeydown={(e) =>
                                 e.key === "Enter" && handleEmailSubmit()}
-                            class="w-full max-w-md mx-auto block bg-transparent border-b border-white/20 focus:border-amber-500/50 py-4 text-xl text-center text-white/90 outline-none transition-all duration-300 placeholder:text-white/20 focus:shadow-[0_4px_20px_-4px_rgba(251,191,36,0.3)]"
+                            class="w-full max-w-md mx-auto block bg-transparent border-b border-white/20 focus:border-gold/50 py-4 text-xl text-center text-white/90 outline-none transition-all duration-300 placeholder:text-white/60 focus:shadow-[0_4px_20px_-4px_color-mix(in_srgb,var(--color-gold)_30%,transparent)]"
                         />
 
                         {#if email.includes("@") && email.includes(".")}
                             <button
                                 onclick={handleEmailSubmit}
-                                class="mt-8 inline-flex items-center gap-3 px-8 py-4 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 rounded-full text-amber-200 transition-all duration-300 group hover:shadow-[0_0_30px_rgba(251,191,36,0.3)]"
+                                class="mt-8 inline-flex items-center gap-3 px-8 py-4 bg-gold/20 hover:bg-gold/30 border border-gold/30 rounded-full text-gold-text transition-all duration-300 group hover:shadow-[0_0_30px_color-mix(in_srgb,var(--color-gold)_30%,transparent)]"
                                 in:scale={{
                                     duration: 300,
                                     start: 0.9,
@@ -974,7 +974,7 @@
 
                         <button
                             onclick={() => (signupStep = 0)}
-                            class="mt-6 block mx-auto text-sm text-white/30 hover:text-white/50 transition-colors"
+                            class="mt-6 block mx-auto text-sm text-white/70 hover:text-white/90 transition-colors"
                         >
                             {$m2t.signupBack}
                         </button>
@@ -991,9 +991,9 @@
                         <div class="relative w-20 h-20 mx-auto mb-8">
                             <div class="success-ring"></div>
                             <div
-                                class="w-16 h-16 rounded-full bg-teal-500/10 border border-teal-500/30 flex items-center justify-center absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                                class="w-16 h-16 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
                             >
-                                <Heart size={28} class="text-teal-400" />
+                                <Heart size={28} class="text-primary" />
                             </div>
                         </div>
                         <h2 class="text-3xl font-serif text-white/90 mb-2">
@@ -1005,7 +1005,7 @@
                         </p>
                         <a
                             href="/start?email={encodeURIComponent(email)}"
-                            class="inline-flex items-center gap-3 px-8 py-4 bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/30 rounded-full text-teal-200 transition-all duration-300 group hover:shadow-[0_0_30px_rgba(20,184,166,0.3)]"
+                            class="inline-flex items-center gap-3 px-8 py-4 bg-primary/20 hover:bg-primary/30 border border-primary/30 rounded-full text-primary-hover transition-all duration-300 group hover:shadow-[0_0_30px_color-mix(in_srgb,var(--color-primary)_30%,transparent)]"
                         >
                             {$m2t.signupEnter}
                             <ArrowRight
@@ -1022,28 +1022,28 @@
     <!-- Footer -->
     <footer class="py-12 px-6 border-t border-white/5">
         <div class="max-w-4xl mx-auto">
-            <nav class="flex justify-center gap-8 mb-8 text-sm text-white/40">
+            <nav class="flex justify-center gap-8 mb-8 text-sm text-white/70">
                 <a
                     href="/marketing2/how"
-                    class="hover:text-white/60 transition-colors duration-300"
+                    class="hover:text-white/90 transition-colors duration-300"
                     >{$m2t.navHow}</a
                 >
                 <a
                     href="/marketing2/features"
-                    class="hover:text-white/60 transition-colors duration-300"
+                    class="hover:text-white/90 transition-colors duration-300"
                     >{$m2t.navFeatures}</a
                 >
                 <a
                     href="#security"
-                    class="hover:text-white/60 transition-colors duration-300"
+                    class="hover:text-white/90 transition-colors duration-300"
                     >{$m2t.navSecurity}</a
                 >
             </nav>
             <div class="text-center space-y-4">
-                <p class="text-xs text-white/30">
+                <p class="text-xs text-white/70">
                     {$m2t.footerDisclaimer}
                 </p>
-                <p class="text-sm text-white/20 font-serif italic">
+                <p class="text-sm text-white/60 font-serif italic">
                     {$m2t.footerTagline}
                 </p>
             </div>
@@ -1084,8 +1084,8 @@
         height: 1px;
         background: linear-gradient(
             90deg,
-            rgba(251, 191, 36, 0.5),
-            rgba(20, 184, 166, 0.5)
+            color-mix(in srgb, var(--color-gold) 50%, transparent),
+            color-mix(in srgb, var(--color-primary) 50%, transparent)
         );
         transition: width 0.3s ease;
     }
@@ -1202,7 +1202,7 @@
         left: 50%;
         transform: translate(-50%, -50%);
         border-radius: 50%;
-        border: 1px solid rgba(20, 184, 166, 0.3);
+        border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
         animation: pulseRing 3s ease-out infinite;
     }
 
@@ -1294,7 +1294,7 @@
 
     .icon-container:hover {
         transform: scale(1.1);
-        box-shadow: 0 0 30px rgba(251, 191, 36, 0.2);
+        box-shadow: 0 0 30px color-mix(in srgb, var(--color-gold) 20%, transparent);
     }
 
     /* Success ring animation */
@@ -1306,7 +1306,7 @@
         width: 80px;
         height: 80px;
         border-radius: 50%;
-        border: 2px solid rgba(20, 184, 166, 0.3);
+        border: 2px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
         animation: successRing 1s ease-out;
     }
 
@@ -1399,7 +1399,7 @@
     :global(a:focus-visible),
     :global(button:focus-visible),
     :global(input:focus-visible) {
-        outline: 2px solid rgba(251, 191, 36, 0.5);
+        outline: 2px solid color-mix(in srgb, var(--color-gold) 50%, transparent);
         outline-offset: 4px;
     }
 
