@@ -27,6 +27,9 @@
             $profiles[0] || { name: "User" },
     );
 
+    // The owner's own profile is stored as "Me"; it shows in the active language (X232).
+    const shownName = (name: string) => (name === "Me" ? $dict.profileMe : name);
+
     function toggleDropdown() {
         isOpen = !isOpen;
         isCreating = false;
@@ -79,7 +82,7 @@
             <div
                 class="w-10 h-10 rounded-full bg-white/15 ring-1 ring-white/25 flex items-center justify-center shadow-lg text-white font-bold shrink-0"
             >
-                {activeProfile.name.charAt(0).toUpperCase()}
+                {shownName(activeProfile.name).charAt(0).toUpperCase()}
             </div>
 
             <!-- Info -->
@@ -93,7 +96,7 @@
                         : $dict.planningFor}
                 </p>
                 <p class="text-sm font-bold text-white truncate">
-                    {activeProfile.name}
+                    {shownName(activeProfile.name)}
                 </p>
             </div>
         </button>
@@ -102,7 +105,7 @@
         <button
             onclick={() => goto("/settings")}
             class="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
-            title="Settings"
+            title={$dict.settings}
         >
             <Settings size={16} class="text-white/70 hover:text-white" />
         </button>
@@ -150,13 +153,13 @@
                         <div
                             class="w-8 h-8 rounded-full bg-white/15 ring-1 ring-white/25 flex items-center justify-center text-xs text-white font-bold"
                         >
-                            {profile.name.charAt(0)}
+                            {shownName(profile.name).charAt(0)}
                         </div>
                         <div class="text-left flex-1">
                             <div
                                 class="text-sm font-medium text-slate-200 group-hover:text-white transition-colors"
                             >
-                                {profile.name}
+                                {shownName(profile.name)}
                             </div>
                         </div>
                         {#if $currentProfileId === profile.id}
@@ -177,7 +180,7 @@
                         <!-- svelte-ignore a11y_autofocus -->
                         <input
                             bind:value={newProfileName}
-                            placeholder="Name (e.g. Spouse)"
+                            placeholder={$dict.placeholderProfileName}
                             class="w-full bg-transparent text-sm text-white placeholder:text-slate-400 outline-none mb-2"
                             autofocus
                             onkeydown={(e) =>
@@ -188,13 +191,13 @@
                                 onclick={createProfile}
                                 class="flex-1 py-1 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary-hover transition-all shadow-lg"
                             >
-                                Create
+                                {$dict.btnCreate}
                             </button>
                             <button
                                 onclick={() => (isCreating = false)}
                                 class="px-2 py-1 text-xs text-slate-400 hover:text-white"
                             >
-                                Maybe later
+                                {$dict.maybeLater}
                             </button>
                         </div>
                     </div>
@@ -214,7 +217,7 @@
                             <Plus size={14} />
                         </div>
                         <span class="text-sm font-medium"
-                            >Add Family Member</span
+                            >{$dict.addFamilyMember}</span
                         >
                     </button>
                 {/if}
@@ -230,7 +233,7 @@
                     >
                         <Settings size={14} class="text-slate-400" />
                     </div>
-                    <span class="text-sm font-medium">Settings</span>
+                    <span class="text-sm font-medium">{$dict.settings}</span>
                 </a>
             </div>
         </div>
@@ -242,7 +245,7 @@
             class="fixed inset-0 z-40 bg-black/20 cursor-default"
             onclick={toggleDropdown}
             transition:fade
-            aria-label="Close dropdown"
+            aria-label={$dict.closeDropdown}
         ></button>
     {/if}
 </div>

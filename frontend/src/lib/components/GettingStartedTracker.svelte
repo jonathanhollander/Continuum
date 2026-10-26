@@ -5,6 +5,7 @@
     import { documentStore } from "$lib/stores/documentStore.svelte";
     import { pulse } from "$lib/stores/pulse.svelte";
     import { browser } from "$app/environment";
+    import { dict } from "$lib/stores/conciergeStore.svelte";
 
     // Props
     interface Props {
@@ -81,7 +82,7 @@
         >
             <div class="flex items-center justify-between mb-3">
                 <span class="text-xs font-bold text-gold uppercase tracking-widest">
-                    Building Your Foundation
+                    {$dict.gsTitle}
                 </span>
                 <div class="flex gap-1">
                     {#each steps as step}
@@ -109,7 +110,7 @@
                     </div>
                     <div class="flex-1 min-w-0">
                         <p class="text-sm font-medium text-white truncate">
-                            {nextStep.label}
+                            {($dict.gsStep as Record<string, string>)[nextStep.id] ?? nextStep.label}
                         </p>
                     </div>
                     <ArrowRight
@@ -123,7 +124,7 @@
                 onclick={dismiss}
                 class="mt-2 w-full text-xs text-white/70 hover:text-white transition-colors"
             >
-                I'll explore on my own
+                {$dict.gsDismiss}
             </button>
         </div>
 

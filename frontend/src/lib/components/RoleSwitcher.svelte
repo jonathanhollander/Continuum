@@ -8,6 +8,7 @@
      */
 
     import { contextStore } from "$lib/stores/contextStore.svelte";
+    import { dict } from "$lib/stores/conciergeStore.svelte";
     import { UserCog, Users, Heart, Briefcase } from 'lucide-svelte';
 
     // dark: the header above this page is dark (layout's isDarkHeader), so the trigger text goes light.
@@ -31,8 +32,8 @@
     async function selectRole(role: 'planning' | 'executor' | 'family' | 'advisor') {
         isOpen = false;
         if (contextStore.role === role) return;
-        const label = roles.find((r) => r.value === role)?.label ?? role;
-        if (!(await askConfirm(`Change your perspective to ${label}? You can switch back here anytime.`, "Change my perspective"))) return;
+        const label = $dict.roleLabel?.[role] ?? roles.find((r) => r.value === role)?.label ?? role;
+        if (!(await askConfirm($dict.roleConfirm.replace("{role}", label), $dict.roleConfirmBtn))) return;
         contextStore.setRole(role);
     }
 </script>
@@ -47,14 +48,14 @@
     >
         <UserCog size={16} />
         <span class="hidden md:inline">
-            {roles.find(r => r.value === contextStore.role)?.label || 'Role'}
+            {$dict.roleLabel?.[contextStore.role] || roles.find(r => r.value === contextStore.role)?.label || $dict.roleFallback}
         </span>
     </button>
 
     {#if isOpen}
         <div class="absolute top-full right-0 mt-2 w-56 bg-popover rounded-xl shadow-lg border border-border py-2 z-50">
             <div class="px-3 py-2 text-xs font-bold uppercase text-muted-foreground border-b border-border mb-2">
-                Switch Context
+                {$dict.switchContext}
             </div>
             {#each roles as role}
                 {@const Icon = role.icon}
@@ -67,7 +68,7 @@
                     </div>
                     <div class="flex-1">
                         <div class="text-sm font-medium text-popover-foreground">
-                            {role.label}
+                            {$dict.roleLabel?.[role.value] ?? role.label}
                         </div>
                     </div>
                     {#if contextStore.role === role.value}
@@ -78,7 +79,7 @@
 
             <div class="border-t border-border mt-2 pt-2 px-3 py-2">
                 <div class="text-xs text-muted-foreground">
-                    Context-aware messaging adapts language based on role.
+                    {$dict.roleNote}
                 </div>
             </div>
         </div>
@@ -89,6 +90,6 @@
     <button
         class="fixed inset-0 z-40"
         onclick={() => isOpen = false}
-        aria-label="Close role switcher"
+        aria-label={$dict.closeRoleSwitcher}
     ></button>
 {/if}

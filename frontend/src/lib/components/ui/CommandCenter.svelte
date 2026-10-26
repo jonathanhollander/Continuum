@@ -54,6 +54,9 @@
         allPages.find((i) => i.href === href)?.allowedRoles.includes($userRole) ?? true;
     const pageName = (i: NavItem) =>
         $language === "en" ? i.label : ($dict as Record<string, string>)[i.key] || i.label;
+    // The page's tooltip in the active language is searchable too (English stays searchable).
+    const pageTip = (i: NavItem) =>
+        $language === "en" ? "" : (($dict.navTip as Record<string, string>)[i.key] ?? "");
 
     // Search Source based on stores
     // We create a derived store to auto-update search index when data changes
@@ -65,7 +68,7 @@
                         label: pageName(i),
                         href: i.href,
                         icon: i.icon,
-                        keywords: [...(extraKeywords[i.key] ?? []), i.tooltip ?? ""],
+                        keywords: [...(extraKeywords[i.key] ?? []), i.tooltip ?? "", pageTip(i)],
                         type: "navigation",
                         description: "",
                     })),
@@ -75,7 +78,7 @@
                     icon: Shield,
                     keywords: ["policy", "insurance", p.insurer, p.policyNumber],
                     type: "policy",
-                    description: p.policyNumber ? `Policy #${p.policyNumber}` : "",
+                    description: p.policyNumber ? $dict.cmdPolicyNo.replace("{n}", p.policyNumber) : "",
                 })),
                 ...(petStore.items || []).map((p: any) => ({
                     label: p.name,
@@ -167,7 +170,7 @@
             <input
                 bind:this={inputElement}
                 bind:value={query}
-                placeholder="Find what you're looking for..."
+                placeholder={$dict.cmdPlaceholder}
                 class="flex-1 bg-transparent border-none outline-none text-lg font-medium text-foreground placeholder:text-muted-foreground"
             />
             <div
@@ -183,7 +186,7 @@
                 <div
                     class="px-3 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest"
                 >
-                    Where would you like to go?
+                    {$dict.cmdHeading}
                 </div>
                 {#each filteredItems as item, i}
                     {@const Icon = item.icon}
@@ -209,7 +212,7 @@
                             {/if}
                         </span>
                         {#if item.type !== "navigation"}
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{item.type}</span>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{($dict.cmdType as Record<string, string>)[item.type] ?? item.type}</span>
                         {/if}
                         {#if i === selectedIndex}
                             <ArrowRight size={14} class="opacity-50" />
@@ -225,7 +228,7 @@
                     </div>
                     <div class="text-center">
                         <p class="text-sm">
-                            Try 'Digital', 'Executor' or 'Will' to find your way.
+                            {$dict.cmdHint}
                         </p>
                     </div>
                 </div>
@@ -241,16 +244,16 @@
                     ><span
                         class="px-1.5 py-0.5 bg-card border border-border rounded text-muted-foreground"
                         >↑↓</span
-                    > Navigate</span
+                    > {$dict.cmdNavigate}</span
                 >
                 <span class="flex items-center gap-1"
                     ><span
                         class="px-1.5 py-0.5 bg-card border border-border rounded text-muted-foreground"
-                        >Enter</span
-                    > Select</span
+                        >{$dict.cmdEnterKey}</span
+                    > {$dict.cmdSelect}</span
                 >
             </div>
-            <div class="flex items-center gap-1">Continuum Command Center</div>
+            <div class="flex items-center gap-1">{$dict.cmdFooter}</div>
         </div>
     </div>
 </div>
