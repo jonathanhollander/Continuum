@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { focusTrap } from "$lib/actions/focusTrap";
     import { fade, fly } from "svelte/transition";
     import {
@@ -120,9 +121,9 @@
         showArchiveModal = false;
     }
 
-    function handleDeleteArchive(id: number) {
+    async function handleDeleteArchive(id: number) {
         if (
-            confirm(
+            await askConfirm(
                 "Remove this archive location? You can add it back anytime.",
             )
         ) {
@@ -217,8 +218,8 @@
         if (saved > 0) affirmMemories();
     }
 
-    function handleRemoveMemory(id: number) {
-        if (confirm("Remove this item? You can upload it again if needed.")) {
+    async function handleRemoveMemory(id: number) {
+        if (await askConfirm("Remove this item? You can upload it again if needed.")) {
             removeVisualMemory(id);
         }
     }
@@ -234,9 +235,9 @@
         }
     }
 
-    function handleBulkDeleteSubmit() {
+    async function handleBulkDeleteSubmit() {
         if (
-            confirm(
+            await askConfirm(
                 `Remove ${selectedCount} ${selectedCount === 1 ? "memory" : "memories"}?`,
             )
         ) {

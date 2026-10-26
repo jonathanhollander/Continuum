@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { fade, scale } from "svelte/transition";
     import { focusTrap } from "$lib/actions/focusTrap";
     import { Plus, Search, X } from "lucide-svelte";
@@ -82,9 +83,9 @@
         }
     }
 
-    function removeLesson(id?: number) {
+    async function removeLesson(id?: number) {
         if (id === undefined) return;
-        if (!confirm("Remove this lesson? You can add it back later.")) return;
+        if (!(await askConfirm("Remove this lesson? You can add it back later."))) return;
         journalStore.delete(id);
     }
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { onMount } from "svelte";
     import { customFieldStore } from "$lib/stores/customFieldStore.svelte";
     import { Plus, Trash2, Settings, X, Save } from "lucide-svelte";
@@ -42,7 +43,7 @@
 
     async function removeDefinition(id: number, name: string) {
         if (
-            confirm(
+            await askConfirm(
                 `Delete field "${name}"? Data in this field will remain but be hidden.`,
             )
         ) {

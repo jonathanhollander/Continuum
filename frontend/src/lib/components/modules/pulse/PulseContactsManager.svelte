@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { onMount } from "svelte";
     import {
         Users,
@@ -101,7 +102,7 @@
     // private" stays as it is. Saved through the shared contacts SyncManager, so the contacts page
     // shows it at once; on failure that store rolls back and shows its own gentle message.
     async function deleteContact(contactId: number) {
-        if (!confirm("Remove this contact from your Pulse network? You can add them back later.")) return;
+        if (!(await askConfirm("Remove this contact from your Pulse network? You can add them back later."))) return;
         const contact = contacts.find((c) => c.id === contactId);
         const updates: Record<string, unknown> = { tierId: null };
         if (contact?.call_tier && contact.call_tier !== "4_DNR") updates.tier = null;

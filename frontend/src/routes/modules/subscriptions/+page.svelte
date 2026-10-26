@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { focusTrap } from "$lib/actions/focusTrap";
     import { readCustom } from "$lib/utils/customFields";
     import {
@@ -208,9 +209,9 @@
 
     async function removeSubscription(id: string) {
         if (
-            !confirm(
+            !(await askConfirm(
                 "Remove this subscription? This detail can always be added back later.",
-            )
+            ))
         )
             return;
         const sub = subscriptions.find((s) => s.id === id);

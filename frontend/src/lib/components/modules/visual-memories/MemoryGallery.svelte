@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { tagList, removeMemory, type VisualMemory } from "$lib/stores/visualMemoryStore.svelte";
     import {
         Grid,
@@ -107,9 +108,9 @@
         if (activeIndex > 0) activeIndex--;
     }
 
-    function handleRemove(id: string, e?: Event) {
+    async function handleRemove(id: string, e?: Event) {
         e?.stopPropagation();
-        if (confirm("Remove this item? You can upload it again if needed.")) {
+        if (await askConfirm("Remove this item? You can upload it again if needed.")) {
             removeMemory(Number(id));
         }
     }

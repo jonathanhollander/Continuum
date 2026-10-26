@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { fade } from "svelte/transition";
     import { Save, Heart, Anchor, Shield, Sun, Edit3, X } from "lucide-svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
@@ -139,7 +140,7 @@ With all my love,
 
     async function removeValue(id?: number) {
         if (id === undefined) return;
-        if (!confirm("Remove this value? You can add it again whenever you like.")) return;
+        if (!(await askConfirm("Remove this value? You can add it again whenever you like."))) return;
         await journalStore.delete(id);
     }
 </script>
