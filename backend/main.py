@@ -472,7 +472,7 @@ async def serve_spa(full_path: str):
 
     # If the path starts with api, it should have been caught by the routes above.
     # If we are here, it means the API route doesn't exist.
-    if full_path.startswith("api"):
+    if full_path == "api" or full_path.startswith("api/"):
         raise HTTPException(status_code=404, detail="API endpoint not found")
 
     # P1-High: Path traversal protection
@@ -484,7 +484,7 @@ async def serve_spa(full_path: str):
     clean_path = full_path.lstrip("/")
 
     # Block any path containing traversal sequences before joining
-    if ".." in clean_path or clean_path.startswith("/"):
+    if ".." in clean_path:
         logger.warning(f"Blocked potential path traversal attempt: '{full_path}'")
         return _spa_index()
 
