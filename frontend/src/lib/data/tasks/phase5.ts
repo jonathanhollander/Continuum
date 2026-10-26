@@ -7,7 +7,7 @@ export const phase5Tasks = [
         phase: "Closing",
         blocks: [
             { type: "heading_1", content: "Task 36: Final Income Tax" },
-            { type: "paragraph", content: "You must file a final Form 1040 covering Jan 1 through date of death." },
+            { type: "paragraph", content: "A final Form 1040 covers Jan 1 through the date of death." },
             { type: "heading_2", content: "Details" },
             { type: "numbered_list_item", content: "**Due Date:** April 15 of year following death." },
             { type: "numbered_list_item", content: "**Marking:** Write 'DECEASED' on top of return." },
@@ -23,10 +23,10 @@ export const phase5Tasks = [
         phase: "Closing",
         blocks: [
             { type: "heading_1", content: "Task 37: Estate Tax" },
-            { type: "paragraph", content: "Federal return only needed if estate > $13.61 million (2024). State thresholds may be lower ($1M+)." },
+            { type: "paragraph", content: "A federal return applies when the estate is over $13.61 million (2024). State thresholds may be lower ($1M+)." },
             { type: "heading_2", content: "Portability" },
-            { type: "paragraph", content: "Even if no tax owed, you may want to file to transfer unused exemption to spouse ('portability')." },
-            { type: "callout", content: "PROFESSIONAL HELP: Never DIY an estate tax return. Hire a specialist.", icon: "emoji:⚠️", color: "red_background" }
+            { type: "paragraph", content: "Filing can also pass the unused exemption to a spouse ('portability'), whatever tax is owed." },
+            { type: "callout", content: "A specialist can guide an estate tax return with you.", icon: "emoji:⚠️", color: "red_background" }
         ]
     },
     {
@@ -52,11 +52,11 @@ export const phase5Tasks = [
         phase: "Closing",
         blocks: [
             { type: "heading_1", content: "Task 39: Asset Distribution" },
-            { type: "paragraph", content: "The finish line! Transfer assets per the Will. DO NOT do this until debts/taxes are paid." },
+            { type: "paragraph", content: "The finish line! Transfer assets per the Will. Distribute once debts and taxes are settled." },
             { type: "heading_2", content: "Procedure" },
             { type: "numbered_list_item", content: "**Specific Bequests:** First (e.g., 'Ring to Sarah')." },
             { type: "numbered_list_item", content: "**Residue:** Percentage splits of remaining pot." },
-            { type: "numbered_list_item", content: "**Receipts:** BENEFICIARIES MUST SIGN RECEIPTS." },
+            { type: "numbered_list_item", content: "**Receipts:** Ask each beneficiary to sign a receipt." },
             { type: "callout", content: "CYA: Get a signed receipt and liability release from every beneficiary.", icon: "emoji:🛡️", color: "blue_background" }
         ]
     },
@@ -84,7 +84,7 @@ export const phase5Tasks = [
         phase: "Expert",
         blocks: [
             { type: "heading_1", content: "Task 41: Professional Team Assembly" },
-            { type: "paragraph", content: "For complex estates, you need a coordinated team. One wrong move can lead to personal liability." },
+            { type: "paragraph", content: "For complex estates, a coordinated team keeps everything on track." },
             { type: "heading_2", content: "The Core Three" },
             { type: "bulleted_list_item", content: "**Estate Attorney:** For court filings and legal interpretation." },
             { type: "bulleted_list_item", content: "**CPA:** For the complex 'Form 706' and final income taxes." },
@@ -100,7 +100,7 @@ export const phase5Tasks = [
         phase: "Expert",
         blocks: [
             { type: "heading_1", content: "Task 42: Business Continuity" },
-            { type: "paragraph", content: "If the deceased owned a business, it must keep running or be legally paused to prevent value loss." },
+            { type: "paragraph", content: "If the deceased owned a business, keeping it running, or pausing it properly, helps protect its value." },
             { type: "heading_2", content: "Action Plan" },
             { type: "to_do", to_do: { checked: false, rich_text: [{ text: { content: "Appoint Interim Manager" } }] } },
             { type: "to_do", to_do: { checked: false, rich_text: [{ text: { content: "Review Operating Agreement" } }] } },
@@ -115,7 +115,7 @@ export const phase5Tasks = [
         phase: "Assets",
         blocks: [
             { type: "heading_1", content: "Task 43: Specialized Assets" },
-            { type: "paragraph", content: "Standard homeowners insurance often excludes high-value items. Secure these immediately." },
+            { type: "paragraph", content: "Standard homeowners insurance often covers high-value items only in part. Placing these somewhere safe, when you can, helps." },
             { type: "heading_2", content: "Steps" },
             { type: "numbered_list_item", content: "**Inventory:** Take high-res photos and video." },
             { type: "numbered_list_item", content: "**Appraisal:** Hire an USPAP-certified appraiser." },
@@ -131,7 +131,7 @@ export const phase5Tasks = [
         blocks: [
             { type: "heading_1", content: "Task 44: Succession Review" },
             { type: "paragraph", content: "Read the 'Buy-Sell' agreements or Operating Agreements. They often mandate what happens to shares at death." },
-            { type: "callout", content: "DEADLINES: Many agreements have 30/60/90 day windows to exercise buy-out options.", icon: "emoji:⏰", color: "red_background" }
+            { type: "callout", content: "Many agreements have 30/60/90 day windows to exercise buy-out options.", icon: "emoji:⏰", color: "red_background" }
         ]
     },
     {
@@ -152,12 +152,12 @@ export const phase5Tasks = [
     {
         id: "task-46",
         title: "Investment Portfolio Rebalancing",
-        desc: "Manage market risk during the probate period.",
+        desc: "Look after the investments during the probate period.",
         urgent: false,
         phase: "Expert",
         blocks: [
-            { type: "heading_1", content: "Task 46: Portfolio Risk" },
-            { type: "paragraph", content: "You are responsible for 'Prudent Management'. If the market crashes and you did nothing, beneficiaries might sue." },
+            { type: "heading_1", content: "Task 46: Looking After the Portfolio" },
+            { type: "paragraph", content: "You are responsible for 'Prudent Management'. Steady, careful management protects you and the beneficiaries." },
             { type: "callout", content: "PRUDENT INVESTOR ACT: Consult with a financial advisor on whether to move to cash or stay invested.", icon: "emoji:📈", color: "yellow_background" }
         ]
     },
@@ -169,7 +169,7 @@ export const phase5Tasks = [
         phase: "Expert",
         blocks: [
             { type: "heading_1", content: "Task 47: Trust Coordination" },
-            { type: "paragraph", content: "Many 'Pour-over Wills' move assets into a trust. You must coordinate with the Trustee (who might be someone else)." },
+            { type: "paragraph", content: "Many 'Pour-over Wills' move assets into a trust. Working together with the Trustee (who may be someone else) keeps it smooth." },
             { type: "heading_2", content: "Coordination Items" },
             { type: "bulleted_list_item", content: "Transfer of titles to Trust name" },
             { type: "bulleted_list_item", content: "Final asset accounting for the Trustee" }
@@ -184,7 +184,7 @@ export const phase5Tasks = [
         blocks: [
             { type: "heading_1", content: "Task 48: Estate Tax Strategy" },
             { type: "paragraph", content: "Even if no tax is due, you may file to protect the 'Portability' of the exemption for the surviving spouse." },
-            { type: "callout", content: "DEADLINE: Form 706 is usually due within 9 months of death.", icon: "emoji:📅", color: "red_background" }
+            { type: "callout", content: "Form 706 is usually due within 9 months of death.", icon: "emoji:📅", color: "red_background" }
         ]
     },
     {

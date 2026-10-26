@@ -7,7 +7,7 @@ export const phase3Tasks = [
         phase: "Financial",
         blocks: [
             { type: "heading_1", content: "Task 21: Notify Banks" },
-            { type: "paragraph", content: "Banks must be notified to freeze accounts + stop automatic withdrawals. You'll need Letters Testamentary." },
+            { type: "paragraph", content: "Letting banks know early helps stop automatic withdrawals. You'll need Letters Testamentary." },
             { type: "heading_2", content: "Action Steps" },
             { type: "numbered_list_item", content: "**Call Bank:** Ask for Estate Services" },
             { type: "numbered_list_item", content: "**Submit Docs:** Death cert + Letters Testamentary" },
@@ -23,8 +23,8 @@ export const phase3Tasks = [
         phase: "Financial",
         blocks: [
             { type: "heading_1", content: "Task 22: Cancel Credit Cards" },
-            { type: "paragraph", content: "Cancel cards immediately to prevent fraud. You are NOT personally liable for debt (unless joint owner)." },
-            { type: "callout", content: "LIABILITY: You are not responsible for deceased's debt. Estate pays it.", icon: "emoji:🛡️", color: "blue_background" },
+            { type: "paragraph", content: "Closing cards early protects against fraud. You are personally responsible only for debts you hold jointly." },
+            { type: "callout", content: "The estate pays the rest.", icon: "emoji:🛡️", color: "blue_background" },
             { type: "heading_2", content: "Steps" },
             { type: "numbered_list_item", content: "**Call Number on Card**" },
             { type: "numbered_list_item", content: "**Report Death**" },
@@ -57,8 +57,8 @@ export const phase3Tasks = [
             { type: "heading_2", content: "Categories" },
             { type: "bulleted_list_item", content: "**Life:** File claim (requires death cert)" },
             { type: "bulleted_list_item", content: "**Health:** Cancel (stop premiums)" },
-            { type: "bulleted_list_item", content: "**Home:** UPDATE policy to 'Estate/Unoccupied' - DO NOT CANCEL." },
-            { type: "callout", content: "HOME INSURANCE: Vacant homes need special coverage. Notify insurer immediately.", icon: "emoji:🏠", color: "red_background" }
+            { type: "bulleted_list_item", content: "**Home:** Update the policy to 'Estate/Unoccupied' and keep the policy active." },
+            { type: "callout", content: "Vacant homes need special coverage. Let the insurer know soon.", icon: "emoji:🏠", color: "red_background" }
         ]
     },
     {
@@ -74,7 +74,7 @@ export const phase3Tasks = [
             { type: "bulleted_list_item", content: "**Continue Payments:** From estate funds" },
             { type: "bulleted_list_item", content: "**Assumption:** Heir takes over loan" },
             { type: "bulleted_list_item", content: "**Sell:** Pay off loan from proceeds" },
-            { type: "callout", content: "KEEP PAYING: Do not miss payments! Foreclosure is still possible.", icon: "emoji:⚠️", color: "red_background" }
+            { type: "callout", content: "Keep the mortgage current to protect the home.", icon: "emoji:⚠️", color: "red_background" }
         ]
     },
     {
@@ -151,7 +151,7 @@ export const phase3Tasks = [
             { type: "bulleted_list_item", content: "Equifax" },
             { type: "bulleted_list_item", content: "Experian" },
             { type: "bulleted_list_item", content: "TransUnion" },
-            { type: "callout", content: "IDENTITY THEFT: 2.5 million deceased identities stolen yearly. Do this ASAP.", icon: "emoji:🛡️", color: "red_background" }
+            { type: "callout", content: "A prompt notice protects their identity.", icon: "emoji:🛡️", color: "red_background" }
         ]
     }
 ];

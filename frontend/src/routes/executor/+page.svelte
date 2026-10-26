@@ -5,7 +5,6 @@
      * Provides comprehensive guidance and resources with grief-aware language
      */
 
-    import { onMount } from 'svelte';
     import { fade, fly } from 'svelte/transition';
     import {
         FileText,
@@ -20,15 +19,14 @@
         Stethoscope
     } from 'lucide-svelte';
     import { contextStore } from "$lib/stores/contextStore.svelte";
-    import { estateAudit, AuditStore } from "$lib/stores/auditStore.svelte";
-    import ExecutorProgressTracker from '$lib/components/executor/ExecutorProgressTracker.svelte';
+    import { auth } from "$lib/stores/auth";
+    import ExecutorProgressTracker, { TONES, stepsFor, type Tone } from '$lib/components/executor/ExecutorProgressTracker.svelte';
     import SupportResources from '$lib/components/executor/SupportResources.svelte';
     import { getEncouragementMessage } from '$lib/utils/contextualMessages';
 
-    // Viewing this page leaves the saved role as it is; the Perspective switch in settings changes it
-    onMount(() => {
-        estateAudit.runAudit();
-    });
+    // Viewing this page leaves the saved role as it is; the Perspective switch in settings changes it.
+    // The name given in the executor welcome is saved with the account, so it is here after a reload too.
+    let deceasedName = $derived(contextStore.deceasedName || ($auth.user as { deceased_name?: string } | null)?.deceased_name || '');
 
     // Essential areas with progress tracking
     const essentialAreas = [
@@ -38,42 +36,40 @@
             title: 'Important Documents',
             description: 'Death certificate, will, trust documents',
             link: '/modules/legal-documents',
-            color: 'rose',
+            color: 'rose' as Tone,
             tasks: [
-                'Obtain certified copies of death certificate',
-                'Locate will and trust documents',
-                'Gather birth certificate and marriage license',
-                'Find Social Security information'
+                "Gather certified copies of the death certificate when you're ready",
+                'Find the will and trust documents',
+                'Gather the birth certificate and marriage license',
+                'Find the Social Security information'
             ]
         },
         {
             id: 'contacts',
-            auditId: 'family',
             icon: Users,
             title: 'Notifications',
-            description: 'People and organizations to notify',
+            description: 'People and organizations to let know',
             link: '/modules/contacts',
-            color: 'indigo',
+            color: 'indigo' as Tone,
             tasks: [
-                'Notify immediate family members',
-                'Contact employer or former employers',
-                'Inform Social Security Administration',
-                'Notify banks and financial institutions'
+                'Let close family know',
+                'Let the employer or former employers know',
+                'Let Social Security know',
+                'Let the banks know'
             ]
         },
         {
             id: 'financial',
-            auditId: 'financial',
             icon: DollarSign,
             title: 'Financial Accounts',
             description: 'Bank accounts, investments, retirement funds',
             link: '/modules/financial-accounts',
-            color: 'emerald',
+            color: 'emerald' as Tone,
             tasks: [
-                'Identify all bank accounts',
-                'Locate investment and retirement accounts',
-                'Document outstanding debts',
-                'Review credit card accounts'
+                'Gather the bank accounts',
+                'Find the investment and retirement accounts',
+                'Note any debts',
+                'Look over the credit card accounts'
             ]
         },
         {
@@ -82,22 +78,21 @@
             title: 'Property & Assets',
             description: 'Real estate, vehicles, valuable possessions',
             link: '/modules/property',
-            color: 'amber',
+            color: 'amber' as Tone,
             tasks: [
-                'Secure real estate property',
-                'Document vehicle ownership',
-                'Inventory valuable items',
-                'Arrange for property maintenance'
+                'Look after the property',
+                'Note who owns each vehicle',
+                'List the valuable items',
+                'Arrange care for the home'
             ]
         },
         {
             id: 'medical',
-            auditId: 'medical',
             icon: Stethoscope,
             title: 'Medical Wishes',
             description: 'Healthcare directives, donation wishes, care providers',
             link: '/modules/medical',
-            color: 'cyan',
+            color: 'cyan' as Tone,
             tasks: [
                 'Find the healthcare directive and living will',
                 'Check organ and tissue donation wishes',
@@ -107,10 +102,6 @@
         }
     ];
 
-    // An area's progress as a share of the most its audit can award (areas without an audit have none).
-    const areaPct = (auditId?: string) =>
-        auditId ? Math.round(((estateAudit.moduleScores[auditId] || 0) / (AuditStore.maxScores[auditId] || 50)) * 100) : 0;
-
     // Resources and guides
     const resources = [
         {
@@ -118,33 +109,26 @@
             description: 'Understanding your role and legal obligations',
             icon: BookOpen,
             link: '/modules/executor-toolkit',
-            color: 'purple'
+            color: 'purple' as Tone
         },
         {
-            title: 'Timeline & Deadlines',
-            description: 'Important dates and filing requirements',
+            title: 'Gov & Bureaus',
+            description: 'Legal and government steps, gathered in one place',
             icon: Clock,
-            link: '/modules/executor-toolkit',
-            color: 'blue'
+            link: '/modules/executor-toolkit?tab=bureau',
+            color: 'blue' as Tone
         },
         {
             title: 'Professional Help',
             description: 'When to consult attorneys and accountants',
             icon: Shield,
             link: '/modules/contacts',
-            color: 'cyan'
+            color: 'cyan' as Tone
         }
     ];
 
     let expandedArea = $state<string | null>(null);
     let encouragement = $state(getEncouragementMessage());
-
-    // Calculate completion for essential areas
-    let essentialCompletion = $derived.by(() => {
-        const scored = essentialAreas.filter(a => a.auditId);
-        const completed = scored.filter(a => areaPct(a.auditId) > 50).length;
-        return Math.round((completed / scored.length) * 100);
-    });
 
     function toggleArea(id: string) {
         expandedArea = expandedArea === id ? null : id;
@@ -163,8 +147,8 @@
                 Estate Administration Hub
             </h1>
             <p class="text-xl text-slate-300 max-w-3xl leading-relaxed mb-4">
-                {#if contextStore.deceasedName}
-                    You're managing {contextStore.deceasedName}'s estate. This is important work, and we're here to support you every step of the way.
+                {#if deceasedName}
+                    You're managing {deceasedName}'s estate. This is important work, and we're here to support you every step of the way.
                 {:else}
                     You're managing their estate. This is important work, and we're here to support you every step of the way.
                 {/if}
@@ -176,7 +160,7 @@
 
         <!-- Progress Overview -->
         <div class="mb-8">
-            <ExecutorProgressTracker completion={essentialCompletion} />
+            <ExecutorProgressTracker />
         </div>
 
         <!-- Support Resources -->
@@ -191,18 +175,20 @@
                 Essential Areas
             </h2>
             <p class="text-slate-400 mb-6">
-                These are the core areas you'll need to address. Start with what feels manageable, and take breaks when you need them.
+                These are the core areas to explore when you're ready. Start with what feels manageable, and take breaks when you need them.
             </p>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {#each essentialAreas as area, i}
                     {@const Icon = area.icon}
-                    {@const score = areaPct(area.auditId)}
+                    {@const tone = TONES[area.color]}
+                    {@const steps = stepsFor(area.link)}
+                    {@const score = steps.pct}
                     {@const isExpanded = expandedArea === area.id}
 
                     <div
                         class="rounded-2xl bg-slate-800/40 border border-slate-700/50 overflow-hidden
-                               hover:border-{area.color}-500/30 transition-all duration-300"
+                               {tone.border} transition-all duration-300"
                         in:fly={{ y: 20, duration: 500, delay: i * 100 }}
                     >
                         <!-- Area Header -->
@@ -210,8 +196,8 @@
                             onclick={() => toggleArea(area.id)}
                             class="w-full p-6 flex items-start gap-4 text-left hover:bg-slate-800/60 transition-colors"
                         >
-                            <div class="w-14 h-14 rounded-xl bg-{area.color}-500/10 flex items-center justify-center flex-shrink-0">
-                                <Icon size={28} class="text-{area.color}-400" />
+                            <div class="w-14 h-14 rounded-xl {tone.tile} flex items-center justify-center flex-shrink-0">
+                                <Icon size={28} class={tone.icon} />
                             </div>
 
                             <div class="flex-1">
@@ -227,11 +213,11 @@
                                     <div class="flex items-center gap-2 text-xs">
                                         <div class="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
                                             <div
-                                                class="h-full bg-{area.color}-500 transition-all duration-500"
+                                                class="h-full {tone.bar} transition-all duration-500"
                                                 style="width: {score}%"
                                             ></div>
                                         </div>
-                                        <span class="text-{area.color}-400 font-medium">{score}%</span>
+                                        <span class="{tone.icon} font-medium whitespace-nowrap">{steps.done} of {steps.total} steps</span>
                                     </div>
                                 {/if}
                             </div>
@@ -249,15 +235,14 @@
                                 </div>
                                 {#each area.tasks as task}
                                     <div class="flex items-start gap-2 text-sm">
-                                        <div class="w-5 h-5 rounded border border-slate-600 flex-shrink-0 mt-0.5"></div>
+                                        <span class="w-1.5 h-1.5 rounded-full bg-slate-500 flex-shrink-0 mt-2"></span>
                                         <span class="text-slate-300">{task}</span>
                                     </div>
                                 {/each}
 
                                 <a
                                     href={area.link}
-                                    class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-{area.color}-500/20 text-{area.color}-400
-                                           hover:bg-{area.color}-500/30 rounded-lg font-medium transition-colors"
+                                    class="mt-4 inline-flex items-center gap-2 px-4 py-2 {tone.link} rounded-lg font-medium transition-colors"
                                 >
                                     Go to {area.title}
                                     <span class="opacity-70">→</span>
@@ -282,15 +267,16 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {#each resources as resource}
                     {@const Icon = resource.icon}
+                    {@const tone = TONES[resource.color]}
                     <a
                         href={resource.link}
                         class="p-6 rounded-2xl bg-slate-800/40 border border-slate-700/50
-                               hover:border-{resource.color}-500/30 hover:bg-slate-800/60
+                               {tone.border} hover:bg-slate-800/60
                                transition-all duration-300 group"
                     >
-                        <div class="w-12 h-12 rounded-xl bg-{resource.color}-500/10 flex items-center justify-center mb-4
+                        <div class="w-12 h-12 rounded-xl {tone.tile} flex items-center justify-center mb-4
                                     group-hover:scale-110 transition-transform">
-                            <Icon size={24} class="text-{resource.color}-400" />
+                            <Icon size={24} class={tone.icon} />
                         </div>
                         <h3 class="text-lg font-semibold text-white mb-2">
                             {resource.title}
@@ -306,7 +292,7 @@
         <!-- Footer Note -->
         <div class="text-center py-8 border-t border-slate-800">
             <p class="text-sm text-slate-500">
-                Remember: You can work at your own pace. Save your progress at any time and return when you're ready.
+                Remember: You can work at your own pace and return whenever you're ready.
             </p>
         </div>
     </div>

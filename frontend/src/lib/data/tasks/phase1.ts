@@ -7,8 +7,8 @@ export const phase1Tasks = [
         phase: "Immediate",
         blocks: [
             { type: "heading_1", content: "Task 01: Locate Will & Legal Documents" },
-            { type: "paragraph", content: "Your first responsibility as executor is locating the will and essential legal documents. Without these, you cannot proceed with estate administration. This task should be completed within 24-48 hours of death." },
-            { type: "callout", content: "URGENT: The will must be filed with probate court within 30 days in most states. Missing this deadline can result in legal complications.", icon: "emoji:⚠️", color: "red_background" },
+            { type: "paragraph", content: "Your first responsibility as executor is locating the will and essential legal documents. These documents open the way for the steps that follow. Take this at the pace that feels right." },
+            { type: "callout", content: "Most states ask for the will to be filed within 30 days. Your attorney can confirm the date for your state.", icon: "emoji:⚠️", color: "red_background" },
             { type: "heading_2", content: "Documents to Find" },
             { type: "to_do", to_do: { checked: false, rich_text: [{ text: { content: "Last Will and Testament (original, not copy)" } }] } },
             { type: "to_do", to_do: { checked: false, rich_text: [{ text: { content: "Trust documents (if applicable)" } }] } },
@@ -35,7 +35,7 @@ export const phase1Tasks = [
         phase: "Immediate",
         blocks: [
             { type: "heading_1", content: "Task 02: Order Death Certificates" },
-            { type: "paragraph", content: "Death certificates are required by nearly every institution you'll contact. Order 10-15 certified copies immediately - ordering more later is expensive and time-consuming." },
+            { type: "paragraph", content: "Death certificates are required by nearly every institution you'll contact. Many people find 10-15 certified copies helpful to have from the start." },
             { type: "heading_2", content: "How Many to Order" },
             { type: "paragraph", content: "**Minimum: 10 copies**\n**Recommended: 15 copies for complex estates**" },
             { type: "paragraph", content: "Each copy needed for:" },
@@ -66,7 +66,7 @@ export const phase1Tasks = [
         phase: "Immediate",
         blocks: [
             { type: "heading_1", content: "Task 03: Secure Property & Valuables" },
-            { type: "paragraph", content: "Within 24-48 hours of death, you must secure all property and valuables. Empty homes are targets for theft. Vehicles need protection. This is both a legal duty and practical necessity." },
+            { type: "paragraph", content: "Within the first days, it helps to secure the home and valuables." },
             { type: "heading_2", content: "Immediate Actions (Day 1)" },
             { type: "to_do", to_do: { checked: false, rich_text: [{ text: { content: "Change locks on residence (prevents unauthorized access)" } }] } },
             { type: "to_do", to_do: { checked: false, rich_text: [{ text: { content: "Collect all keys (home, car, storage, office)" } }] } },
@@ -80,7 +80,7 @@ export const phase1Tasks = [
             { type: "bulleted_list_item", content: "**Lawn/snow:** Maintain to avoid abandoned property appearance" },
             { type: "bulleted_list_item", content: "**Monitoring:** Check property weekly for damage, break-ins" },
             { type: "bulleted_list_item", content: "**Alarm systems:** Maintain active service" },
-            { type: "callout", content: "INSURANCE WARNING: Some homeowners policies require occupied dwelling. Notify insurance company of death immediately or coverage may lapse.", icon: "emoji:⚠️", color: "red_background" }
+            { type: "callout", content: "Some homeowners policies ask that the home be occupied. Telling the insurer helps keep coverage in place.", icon: "emoji:⚠️", color: "red_background" }
         ]
     },
     {
@@ -91,7 +91,7 @@ export const phase1Tasks = [
         phase: "Immediate",
         blocks: [
             { type: "heading_1", content: "Task 04: Pet Care Arrangements" },
-            { type: "paragraph", content: "Pets need immediate attention - they cannot be left alone while you handle other executor duties. This is often an emotionally charged but urgent responsibility." },
+            { type: "paragraph", content: "Pets need caring for soon, and they will need someone close by." },
             { type: "heading_2", content: "Immediate Needs (First 24 Hours)" },
             { type: "to_do", to_do: { checked: false, rich_text: [{ text: { content: "Ensure pets have food, water, shelter TODAY" } }] } },
             { type: "to_do", to_do: { checked: false, rich_text: [{ text: { content: "Check will for pet guardian designation" } }] } },
@@ -102,8 +102,8 @@ export const phase1Tasks = [
             { type: "numbered_list_item", content: "**Family member adoption:** Ideal for pet continuity" },
             { type: "numbered_list_item", content: "**Friend adoption:** Someone pet already knows" },
             { type: "numbered_list_item", content: "**Boarding facility:** Temporary solution ($30-60/day)" },
-            { type: "numbered_list_item", content: "**Rescue organization:** Last resort, no-kill shelter only" },
-            { type: "heading_2", content: "Don't Forget" },
+            { type: "numbered_list_item", content: "**Rescue organization:** A no-kill shelter, as a gentle further option" },
+            { type: "heading_2", content: "Worth remembering" },
             { type: "bulleted_list_item", content: "**Vet records:** Get copies for new guardian" },
             { type: "bulleted_list_item", content: "**Medications:** Ensure supply and instructions" },
             { type: "bulleted_list_item", content: "**Pet trust funds:** Check if money designated for pet care" },
@@ -119,7 +119,7 @@ export const phase1Tasks = [
         phase: "Immediate",
         blocks: [
             { type: "heading_1", content: "Task 05: Family & Friend Notifications" },
-            { type: "paragraph", content: "While the closest family likely knows, you must systematically notify extended family, close friends, and important relationships. This prevents hurtful situations where someone learns about death through social media or obituary." },
+            { type: "paragraph", content: "It helps to tell extended family and close friends directly. This spares anyone from learning through social media." },
             { type: "heading_2", content: "Notification Priority Order" },
             { type: "paragraph", content: "**Tier 1 (Immediate - Within Hours):**" },
             { type: "bulleted_list_item", content: "Spouse, children, parents" },
@@ -177,7 +177,7 @@ export const phase1Tasks = [
         phase: "Immediate",
         blocks: [
             { type: "heading_1", content: "Task 07: Safe Deposit Box Access" },
-            { type: "paragraph", content: "If deceased had a safe deposit box, accessing it is time-sensitive. Contents may include the original will, valuable jewelry, stock certificates, or other critical documents." },
+            { type: "paragraph", content: "If deceased had a safe deposit box, calling the bank early helps. Contents may include the original will, valuable jewelry, stock certificates, or other critical documents." },
             { type: "heading_2", content: "Locating the Box" },
             { type: "paragraph", content: "**Where to check:**" },
             { type: "bulleted_list_item", content: "Bank statements (annual safe deposit fees)" },
@@ -190,7 +190,7 @@ export const phase1Tasks = [
             { type: "numbered_list_item", content: "**If you're co-owner:** Immediate access with your ID and key" },
             { type: "numbered_list_item", content: "**If named executor:** Usually requires death certificate + court appointment letter" },
             { type: "numbered_list_item", content: "**Emergency access:** Some states allow one-time access to retrieve will before probate" },
-            { type: "callout", content: "TIMING: Some states require waiting for probate appointment before access. Others allow emergency access to find the will. Call the bank ASAP to understand their requirements.", icon: "emoji:⏰", color: "yellow_background" },
+            { type: "callout", content: "TIMING: Some states require waiting for probate appointment before access. Others allow emergency access to find the will. Calling the bank early helps you learn their requirements.", icon: "emoji:⏰", color: "yellow_background" },
             { type: "heading_2", content: "What You Might Find" },
             { type: "bulleted_list_item", content: "Original will" },
             { type: "bulleted_list_item", content: "Valuables: Jewelry, coins" },
@@ -221,7 +221,7 @@ export const phase1Tasks = [
             { type: "callout", content: "RECEIPTS ARE MANDATORY: Keep every receipt, invoice, statement. Probate court may require proof of every expense.", icon: "emoji:🧾", color: "red_background" },
             { type: "heading_2", content: "Reimbursement Rules" },
             { type: "paragraph", content: "**You CAN be reimbursed for:** Mileage ($0.67/mile), professional fees, court costs, property maintenance." },
-            { type: "paragraph", content: "**You CANNOT be reimbursed for:** Your time (unless executor fee authorized), meals during routine errands, personal purchases." },
+            { type: "paragraph", content: "You can be reimbursed for estate costs. Routine meals and personal purchases fall outside that, and your time is paid through an authorized executor fee." },
             { type: "callout", content: "PRO TIP: Never mix personal and estate expenses. Use separate credit card or checking account for estate purchases.", icon: "emoji:💡", color: "blue_background" }
         ]
     },
@@ -276,7 +276,7 @@ export const phase1Tasks = [
             { type: "heading_2", content: "Death Benefits to Claim" },
             { type: "bulleted_list_item", content: "Life insurance (often 1-2x salary)" },
             { type: "bulleted_list_item", content: "Pension survivor benefits" },
-            { type: "callout", content: "URGENT: Some benefits have SHORT CLAIM WINDOWS (30-60 days). Ask HR for specific deadlines.", icon: "emoji:⏰", color: "red_background" }
+            { type: "callout", content: "Some benefits have short claim windows (30-60 days). HR can share the dates.", icon: "emoji:⏰", color: "red_background" }
         ]
     }
 ];
