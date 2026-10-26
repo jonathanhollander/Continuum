@@ -60,6 +60,7 @@ from backend.models.qr_models import QRAccessPack, QRAssetLabel
 from backend.models.acceptance_models import AcceptanceTask
 from backend.models.activity_models import ActivityLogEntry
 from backend.models.audit_log import AuditLog
+from backend.models.ai_settings import AISetting
 
 # Import SQLModel's metadata (all our models use SQLModel)
 from sqlmodel import SQLModel
