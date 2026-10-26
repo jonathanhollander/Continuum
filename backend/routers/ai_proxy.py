@@ -24,6 +24,16 @@ UNAVAILABLE_MESSAGE = (
     "and you can come back to this whenever you're ready."
 )
 
+_client: Optional[httpx.AsyncClient] = None
+
+
+def _get_client() -> httpx.AsyncClient:
+    """One shared client (lazily created) so connections to OpenRouter are reused."""
+    global _client
+    if _client is None or _client.is_closed:
+        _client = httpx.AsyncClient(timeout=httpx.Timeout(45.0, connect=10.0))
+    return _client
+
 
 class ChatMessage(BaseModel):
     role: Literal["system", "user", "assistant"]
@@ -59,8 +69,7 @@ async def ai_chat(
         "Content-Type": "application/json",
     }
     try:
-        async with httpx.AsyncClient(timeout=httpx.Timeout(45.0, connect=10.0)) as client:
-            resp = await client.post(OPENROUTER_URL, json=payload, headers=headers)
+        resp = await _get_client().post(OPENROUTER_URL, json=payload, headers=headers)
     except httpx.HTTPError as exc:
         logger.warning(f"AI provider request failed: {type(exc).__name__}")
         raise HTTPException(status_code=503, detail=UNAVAILABLE_MESSAGE)
