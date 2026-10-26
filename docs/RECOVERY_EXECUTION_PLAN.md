@@ -456,7 +456,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X67 | ☑ | 30d3655 | TestClient: Pulse contact POST empty/`{}` → 422; client `user_id`/`id`/token ignored; PUT returns the saved row (22 keys), another account 404; contacts-page add → `notify_on_safety_timer` false (explicit true kept); expired safety timer emails only the two enrolled contacts; 1440×900 on `/modules/pulse/settings` add + edit held after reload, 0 page errors, health 200 |
 | X71 | ☑ | 2ba5736 | PulseContactsManager uses `apiGet`/`apiPut`; edits send only their fields; `X` imported; failure line "Your circle is taking a moment to load."; remove goes through `contactSync` (a plain delete was re-uploaded by the store → X76). 1440×900 with a legacy `call_tier` row: `/modules/pulse/contacts` and `/escalation` load (4 tiers, 0 page errors), Select Guardian opens, add/edit/remove held after reload, DB 0 rows, no re-POST |
 | C9 | ☑ | f6073b6 | Cause: page mappers deleted every id on the way in, and two registrations per endpoint. 1440×900: vendor, access code, utility created (id 1 each), ids kept after reload, each updated and removed with the change held after reload, 1 GET per endpoint (was 2), 0 page errors. Added edit buttons and a shutoff-location field; removed the always-empty vendor "company" column and the always-"No instructions set" panel (no model field). Also fixed: PUT dropped `category` for every model (B2 change meant for Asset only) |
-| C10 | ☐ | | |
+| C10 | ▶ | | |
 | D1 | ☐ | | |
 | D2 | ☐ | | |
 | D3 | ☐ | | |
