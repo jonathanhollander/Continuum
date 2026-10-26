@@ -71,7 +71,9 @@ def get_contacts(user: User = Depends(get_current_user), session: Session = Depe
 @router.post("/", response_model=PulseContact)
 def create_contact(request: Request, body: ContactCreate, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     """Create a new global contact."""
-    contact = PulseContact(user_id=user.id, name=body.name)
+    # Contacts added here start outside the Pulse safety-timer reach-out (the column default
+    # enrolls them); the person can still choose it, here or on the Pulse pages.
+    contact = PulseContact(user_id=user.id, name=body.name, notify_on_safety_timer=False)
     _apply(contact, body.model_dump(exclude_unset=True), user, session)
 
     session.add(contact)

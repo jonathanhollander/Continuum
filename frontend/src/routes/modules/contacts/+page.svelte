@@ -88,10 +88,6 @@
         ),
     );
 
-    let callList = $derived(
-        contacts.filter((c: FamilyMember) => c.tier || c.tierId),
-    );
-
     // AI Intake Integration
     $effect(() => {
         const rawData = $conciergeEngine.lastExtractedData;
