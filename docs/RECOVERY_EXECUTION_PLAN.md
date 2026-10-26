@@ -410,7 +410,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | Wave B — Shared contracts | ✅ | 2026-10-26 | B0–B5.1 ☑; O1 every touched endpoint in target; O2: 23 routes, navigation unchanged, console errors 16–43/page → 0, four endless spinners fixed, failed saves keep the draft; findings → C1, C10, X54, X58, U0, T0, V0 seeds |
 | Wave C — Scenario records | ✅ | | C1–C10, C7.1–C7.4 ☑; O2 done (28 routes, console/network errors 27 → 0, navigation unchanged, `/settings/data` crash gone; findings → X82–X85, D4, T0/G0/U0/V0 seeds); O1 done (no endpoint over target, query counts flat 20 → 200 records, no keystroke syncs; findings → X88, X89; unbounded list endpoints and the 14–17 GET `syncAll` fan-out per cold load noted for R0 — response times fine today) |
 | Wave D — Handover | ▶ | | D1–D4 ☑; O1/O2 for Wave D dispatched |
-| Wave E — Polish | ▶ | | E1 dispatched |
+| Wave E — Polish | ▶ | | E1, E9, E10 dispatched |
 | O1 / O2 oversight (all waves) | ☐ | | |
 | R0 — Local rehearsal | ☐ | | |
 | Release — deploy + full browser test | ☐ | | |
@@ -507,8 +507,8 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | E6 | ☐ | | |
 | E7 | ☐ | | |
 | E8 | ☐ | | |
-| E9 | ☐ | | |
-| E10 | ☐ | | |
+| E9 | ▶ | | |
+| E10 | ▶ | | |
 | X1 | ☑ | 4575c17 | Build with fake `sk-or-` key: no `sk-or-`/`openrouter.ai` in dist; `/api/ai/chat` 401 without token, 503 gentle message with no key. Also fixed: duplicate user message, unsanitised history, CSRF header on the AI call |
 | X2 | ☑ | 91321f9 | `git ls-files` lists no .db; `*.db` ignored; local copies kept on disk. Old copy in `34780fe` (branch `origin/stash-backup/2026-01-26-34780fe`) holds 1 non-dev user row, empty password. Owner 2026-10-26: bundled to `docs/archive/stash-backup-2026-01-26-34780fe.bundle` (local only, git-ignored, verified), remote branch deleted |
 | X3 | ☑ | 70068dd | `ENVIRONMENT=production` locally: health 200 "production"; POST without CSRF header 403, with cookie+header 200; no `_technical`; login 200; fetch wrapper (bundled, node stub) adds the header to same-origin writes only. Also fixed: HTTPS redirect loop behind Railway's proxy (would have broken the deploy), CORS substring match. Release must set the variables below |
