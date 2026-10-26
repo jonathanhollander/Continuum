@@ -10,7 +10,6 @@
      */
     import { LayoutGrid, Table } from "lucide-svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
-    import { onMount } from "svelte";
 
     interface Props {
         /** Module identifier for preference storage (e.g., "contacts", "medical") */
@@ -24,13 +23,7 @@
     // Local state that syncs with store
     let viewMode = $state<ViewMode>('card');
 
-    // Initialize store and sync local state
-    onMount(async () => {
-        await userPreferencesStore.init();
-        viewMode = userPreferencesStore.getViewMode(module);
-    });
-
-    // Keep local state in sync with store
+    // The layout loads saved preferences at sign-in (card X230); follow the store.
     $effect(() => {
         if (userPreferencesStore.isInitialized) {
             viewMode = userPreferencesStore.getViewMode(module);

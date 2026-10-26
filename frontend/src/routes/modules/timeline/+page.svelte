@@ -351,7 +351,7 @@
                             bind:value={newEvent.assignedContactId}
                             class="w-full p-2 rounded-lg border focus:ring-2 ring-[#4A7C74] outline-none bg-white text-sm"
                         >
-                            <option value={undefined}>No one assigned</option>
+                            <option value={undefined}>Choose someone from your contacts</option>
                             {#each familyStore.members as member}
                                 <option value={String(member.id)}
                                     >{member.name} ({member.role})</option

@@ -85,7 +85,7 @@ const BRIEFS: Record<string, CompassBrief> = {
         title: "Digital Guardian",
         mission: "Keep your digital life (photos, emails, crypto) within your family's reach.",
         emotional_context: "Our digital lives are huge parts of who we are now. Losing access to 20 years of photos is a modern tragedy we can prevent.",
-        human_impact: "Most terms of service say your account dies with you. giving your executor lawful access (like Apple Legacy Contact) is the only way to save those memories.",
+        human_impact: "Giving your executor lawful access (like Apple Legacy Contact) keeps those memories within your family's reach.",
         key_deliverables: [
             "Set up a Password Manager emergency access.",
             "Configure Apple/Google Inactive Account Manager.",
@@ -97,7 +97,7 @@ const BRIEFS: Record<string, CompassBrief> = {
     },
     '/modules/medical': {
         title: "Medical Directives",
-        mission: "Speak for yourself when you cannot speaking.",
+        mission: "Your voice in healthcare decisions, written down for the people you trust.",
         emotional_context: "This is the hardest part. No one wants to think about life support. But your family *desperately* wants to know what you would want, so they don't have to guess.",
         human_impact: "The burden of deciding to end life support is traumatic. By writing down your wishes (Living Will), you lift that weight off your spouse or children's shoulders. You give them permission to let go.",
         key_deliverables: [
