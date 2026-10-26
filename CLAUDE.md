@@ -96,7 +96,7 @@ Automated wellness check-ins. If user doesn't respond, escalates to emergency co
 
 ### Frontend
 - **Svelte 5 Runes**: Use `$state`, `$derived`, `$effect` (not old store syntax)
-- **API calls**: Use `apiFetch()` from `errorHandler.ts`
+- **API calls**: Use `apiFetch()` from `$lib/api/client` (returns the Response); show errors with `parseApiError` / `handleFetchError` from `errorHandler.ts`
 - **Routes**: `/modules/{name}/+page.svelte` pattern
 - **Stores**: `{name}Store.svelte.ts` using SyncManager
 
@@ -175,7 +175,7 @@ Detailed guides exist for specific topics:
 
 ---
 
-_Last Updated: 2026-10-26 01:09 EST_
+_Last Updated: 2026-10-26 07:13 EST_
 
 <!-- OPENWIKI:START -->
 
