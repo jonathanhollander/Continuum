@@ -47,6 +47,7 @@
     } from "$lib/utils/contextualMessages";
     import ContextualMessage from "$lib/components/ContextualMessage.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
+    import { readCustom } from "$lib/utils/customFields";
     import RecipientLinkPanel from "$lib/components/recipient/RecipientLinkPanel.svelte";
 
     let activeTab = $state("call-list");
@@ -204,11 +205,7 @@
             // A contact without a call-list tier stays that way unless one is chosen here.
             tier: contact.tier ?? "",
         };
-        try {
-            parsedCustomAttributes = contact.custom_attributes ? JSON.parse(contact.custom_attributes) : {};
-        } catch {
-            parsedCustomAttributes = {};
-        }
+        parsedCustomAttributes = readCustom(contact);
         showAddModal = true;
     }
 
