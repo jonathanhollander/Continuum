@@ -827,7 +827,7 @@ def update_view_preferences(
 ):
     """Update user's view preferences."""
     # Merge with existing preferences if any
-    current_prefs = current_user.view_preferences or {}
+    current_prefs = dict(current_user.view_preferences or {})
     current_prefs.update(preferences.view_preferences)
 
     current_user.view_preferences = current_prefs
