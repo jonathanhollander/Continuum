@@ -1,6 +1,6 @@
 # Continuum — Recovery Execution Plan (subagent-run)
 
-**Last Updated:** 2026-10-26 03:45 EST
+**Last Updated:** 2026-10-26 04:10 EST
 
 The how and the order for [PROJECT_RECOVERY_PLAN.md](PROJECT_RECOVERY_PLAN.md) (phases A–F).
 Issue IDs (CU-0xx) and their evidence are in
@@ -63,7 +63,7 @@ Every written test is listed here: approved before it is written, and completed 
 
 | ID | File | Approved by / when | What it checks (one thing) | Full justification: why it's needed and why a manual proof isn't enough | How and when it's run | Keep or remove |
 |---|---|---|---|---|---|---|
-| T-A3 | `scripts/smoke_test.py` (to be written in card A3) | Orchestrator, 2026-10-26 (planned; confirm at A3) | For each completion-scenario record type, the UI's real payload survives a save and re-fetch, field by field | The review proved that fields silently disappear after a "successful" save (CU-001), and that endpoints reject the UI's payload while model-shaped probes pass (CU-002, CU-009). Waves B and C all change that shared save path. Without one script, every card would re-probe by hand, which is more testing, not less, and inconsistent. It reuses the review's existing `reproduce_api_probes.py` rather than adding new code. Run by hand only; never wired into commit or deploy. | By hand: once per B or C card that touches the save path, and once in R0 | Keep until the release pass is green, then decide |
+| T-A3 | `scripts/smoke_test.py` (written, card A3, commit eb9aca7; 667 lines, stdlib only) | Orchestrator, 2026-10-26 (approved before writing; confirmed at A3 review) | For each completion-scenario record type, the UI's real payload survives a save and re-fetch, field by field | The review proved that fields silently disappear after a "successful" save (CU-001), and that endpoints reject the UI's payload while model-shaped probes pass (CU-002, CU-009). Waves B and C all change that shared save path. Without one script, every card would re-probe by hand, which is more testing, not less, and inconsistent. It reuses the review's existing `reproduce_api_probes.py` rather than adding new code. Run by hand only; never wired into commit or deploy. | By hand: `python3 scripts/smoke_test.py --base http://localhost:<port>` (`--verbose` for payloads). Once per B or C card that touches the save path, and once in R0. Always exits 0 | Keep until the release pass is green, then decide |
 
 ## Progress tracking (decision 9)
 
@@ -182,17 +182,18 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | A5 | Surrounding bugs from A1/A4 (decision 10) | `general-purpose` | `backend/auth.py`; `seed_dev_user` and the `__main__` block in `backend/main.py` | Seed failures logged with traceback; remove the no-op passlib "fix"; timezone-aware JWT expiry; local reload watches `backend/` only | Fresh DB: seed + login 200; an existing bcrypt-format hash verifies; token `exp` decodes correctly |
 | A3 | UI-payload smoke script (written test T-A3; see Test register) | `general-purpose` | `scripts/smoke_test.py` (new) | Reuse `docs/reviews/.../evidence/reproduce_api_probes.py`. Send each store's real payload (after `toSnake`), re-fetch, and diff every field. Cover every completion-scenario record type. | It reproduces CU-001, CU-002, CU-004 and CU-009 as failures, and journal/home-access as passes |
 
-## Wave B — Shared contracts (one at a time: B1 → B2 → B3 → B4 → B5)
+## Wave B — Shared contracts (one at a time: B0 → B1 → B2 → B3 → B4 → B5)
 
 | ID | Card | CU | Agent | Owns | Acceptance (A3 script plus one browser save) |
 |---|---|---|---|---|---|
-| B1 | Explicit field contracts | 001 | `api-contract-validator` | `frontend/src/lib/services/sync.svelte.ts` (key conversion), the Asset-family mappers in `frontend/src/lib/stores/{financialAssetsStore,propertyStore,digitalAssetsStore,subscriptionStore}.svelte.ts`, field aliases in `backend/estate_models.py` | Every displayed writable field on financial, property and subscription survives create, edit, re-fetch and reload, including 0 and empty values; custom-field keys are preserved |
+| B0 | Schema drift (from A3, verified on production) | 001 | `database-migration` | One new idempotent Alembic migration (adds only what's missing, checking the live columns first; never drops) | Production (read 2026-10-26, alembic head `817c6b026811`) has **no `custom_attributes` column on any table**, though 13 models declare it and migration `2d53606557e8` claims to add 7. So every generic-API create on those tables fails on a migrated DB. After the migration, on both a fresh Alembic DB and a copy of production's column list (`prod_schema.json`), every model column exists; A3's asset-table creates no longer fail on a missing column. Applied to production only at release, by `alembic upgrade head` (additive only) |
+| B1 | Explicit field contracts | 001 | `api-contract-validator` | `frontend/src/lib/services/sync.svelte.ts` (key conversion), the Asset-family mappers in `frontend/src/lib/stores/{financialAssetsStore,propertyStore,digitalAssetsStore,subscriptionStore}.svelte.ts`, field aliases in `backend/estate_models.py` | Every displayed writable field on financial, property and subscription survives create, edit, re-fetch and reload, including 0 and empty values; custom-field keys are preserved. Also (A3): financial "Transfer Instructions" and statement upload persist (`AssetManager.svelte:195-211`, owned for this); `valueHistory` isn't reset on create (`financialAssetsStore.svelte.ts:55`); the digital-asset create sends the required `name` |
 | B2 | Category membership | 004 | `fastapi-development` | `backend/routers/estate_data.py`, and an Alembic migration adding a category column if needed | Each of properties, digital assets and generic heirlooms lists only its own rows after create, update and delete; existing mixed rows are reported, and **not migrated on production without an owner yes** |
-| B3 | Singleton vs. collection | 006, 011 | `fastapi-development` | `SingletonSyncManager` in `sync.svelte.ts`; `/api/estate/profile` in `backend/main.py`; the `funeral_data` and `advanced_assets` handling in `estate_data.py` | Repeated saves update one record; profile settings merge rather than replace each other; the UI always receives an object |
+| B3 | Singleton vs. collection | 006, 011 | `fastapi-development` | `SingletonSyncManager` in `sync.svelte.ts`; `/api/estate/profile` in `backend/main.py`; the `funeral_data` and `advanced_assets` handling in `estate_data.py` | Repeated saves update one record; profile settings merge rather than replace each other; the UI always receives an object. Also (A3): the singleton update strips `id`/`user_id` (`sync.svelte.ts:440-450`); funeral wishes never get `"0"`/`"1"` keys or a double-encoded budget (`funeral/+page.svelte:71-74`, `funeralStore.svelte.ts:61-79`, owned for this) |
 | B4 | Truthful save state | 013 | `error-handling-standardization` | Status handling in `sync.svelte.ts`; `frontend/src/lib/stores/activityLog.svelte.ts`; the activity-log model ID default | A forced failure shows one failure message, keeps the draft and offers retry; an activity-log failure never marks a successful save as failed; one success shows one message |
-| B5 | Store initialization | 014 | `frontend-state-cleanup` | `registerSync`, `getRegistry` and `syncAll` in `sync.svelte.ts`; the callers in `frontend/src/routes/+layout.svelte` | A direct visit, a reload, and logout/login all show the right records; a second browser context fetches the same estate |
+| B5 | Store initialization | 014 | `frontend-state-cleanup` | `registerSync`, `getRegistry` and `syncAll` in `sync.svelte.ts`; the callers in `frontend/src/routes/+layout.svelte` | A direct visit, a reload, and logout/login all show the right records; a second browser context fetches the same estate. Also (A3): the property page actually syncs (`propertyStore.sync?.()` is undefined, `property/+page.svelte:58`); the heirlooms page calls init and its update works (`heirlooms/+page.svelte:113`) |
 
-## Wave C — Dependable scenario records (C6 → C2 → then C1, C3, C4, C5, C7 in parallel)
+## Wave C — Dependable scenario records (C6 → C2 → then C1, C3, C4, C5, C7, C8, C9 in parallel → C10)
 
 | ID | Card | CU | Owns | Acceptance |
 |---|---|---|---|---|
@@ -201,7 +202,10 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | C1 | Documents | 002 | `frontend/src/lib/components/archetypes/DocumentVault.svelte`; the `Document` model in `backend/estate_models.py` plus an Alembic migration for the new metadata columns; the `documents`/`vault_documents` mapping in `estate_data.py` | A real PDF (via C2) *and* a physical-only document, with title, category, witnesses, review date, original location and custom fields; edit, reload and download from a second context |
 | C3 | Letter to a named recipient | 008 | `frontend/src/routes/modules/letters/+page.svelte`, `frontend/src/lib/stores/letterStore.svelte.ts`, the `Letter` model plus a migration if fields are missing | Recipient picked from contacts; reopening a draft edits it with no duplicate; full text survives reload. **Release behaviour:** a letter is visible in the recipient view immediately, unless the owner marks it "Hold". A future date or condition is stored and shown, labelled "Automatic delivery isn't available yet". The scheduled feature is kept and labelled, not faked |
 | C4 | Journal, ethical will, lessons | 007 | The ethical-will and life-lessons components under `frontend/src/lib/components/`, and `journalStore.svelte.ts` | They save, edit and reload through the existing `JournalEntry` types; no sample text is ever saved automatically |
-| C5 | Time capsule | 009 | `frontend/src/routes/modules/time-capsule/+page.svelte`, `frontend/src/lib/stores/timeCapsuleStore.svelte.ts` | Text and video capsules (video via C2) create, edit and reload; the media plays in a second context; the locked/released lists are accurate |
+| C5 | Time capsule | 009 | `frontend/src/routes/modules/time-capsule/+page.svelte`, `frontend/src/lib/stores/timeCapsuleStore.svelte.ts` | Text and video capsules (video via C2) create, edit and reload; the media plays in a second context; the locked/released lists are accurate. Also (A3): `TimeCapsuleMessage.created_at` needs a default (`estate_models.py:376`), since the API refuses it as protected; owned for this |
+| C8 | Contacts save and status (from A3) | — | `backend/routers/contacts.py` create/update; `frontend/src/routes/modules/contacts/+page.svelte` status update | Create returns the saved contact with its id (today `{}`: `log_audit` commit expires it, `contacts.py:33-42`); `tier` and notification status persist or are mapped to real `PulseContact` fields (`contacts/+page.svelte:179`) |
+| C9 | Home manual ids (from A3) | — | `accessMapper`/`vendorMapper` in `frontend/src/routes/modules/home-manual/+page.svelte` | Server records keep their ids, so they can be edited and removed after reload (`:48`, `:61`) |
+| C10 | Debts are liabilities (from A3) | — | The type list in `AssetManager.svelte` (after B1) and the financial totals | A debt type exists and is subtracted, not added to total assets (`AssetManager.svelte:603-619`) |
 | C7 | Verify the rest of the scenario's records | — | **Verify only:** debt (financial), insurance policy, advisor contact, household instruction (home manual), heirloom story, final wishes | Each passes create → every field returned → edit → reload → second context. Failures become C7.x fix cards that own only that module's route and store files |
 
 ## Wave D — The handover (D1 → then D2, D3, D4 in parallel)
@@ -263,8 +267,9 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | A1 | ☑ | 8dd0a90 | 65 pins identical to prod freeze; fresh 3.11 venv: pip check clean, alembic head, dev seed, POST /api/auth/token 200 |
 | A4 | ☑ | 020f77c | No frontend/dist: `python -m backend.main` starts, dev seeds, login 200, SPA routes 404 not 500 |
 | A2 | ☑ | 8d54a13 | Diff = the Pre-deploy line plus the footer; `.github/` absent |
-| A3 | ▶ | | |
+| A3 | ☑ | eb9aca7 | Ran on an Alembic-built DB: 3 PASS (journal create/edit, home access), 13 FAIL; reproduces CU-001 (subscription, letter), CU-002, CU-009; CU-001/004 for asset tables masked by a missing column (see B0). Ran twice: the first run had a false PASS, fixed |
 | A5 | ☑ | 151c77b | Fresh DB: seed + login 200; token exp = configured 15 min; legacy `$2b$` hash verifies (was broken: passlib 1.7.4 + bcrypt 5 raise ValueError) |
+| B0 | ▶ | | |
 | B1 | ☐ | | |
 | B2 | ☐ | | |
 | B3 | ☐ | | |
@@ -277,6 +282,9 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | C4 | ☐ | | |
 | C5 | ☐ | | |
 | C7 | ☐ | | |
+| C8 | ☐ | | |
+| C9 | ☐ | | |
+| C10 | ☐ | | |
 | D1 | ☐ | | |
 | D2 | ☐ | | |
 | D3 | ☐ | | |
