@@ -4,6 +4,7 @@
   import { fade } from "svelte/transition";
   import { API_BASE_URL } from "$lib/config";
   import LivingMesh from "$lib/components/pulse/LivingMesh.svelte";
+  import { Shield } from "lucide-svelte";
 
   let token = $page.params.token;
   let loading = $state(true);
@@ -15,6 +16,11 @@
 
   let actionLoading = $state(false);
   let actionMessage = $state("");
+
+  // The name opens the heading; the API's fallback ("someone close to you") starts lowercase
+  function capitalise(s: string): string {
+    return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+  }
 
   // The API sends UTC with "Z"; a time without a zone is still read as UTC, never local
   function parseUtc(ts: string): Date {
@@ -102,6 +108,7 @@
     <div
       class="bg-background/60 p-8 rounded-2xl border border-border text-center max-w-md backdrop-blur-md"
     >
+      <Shield class="w-12 h-12 text-warning mx-auto mb-4" />
       <h1 class="text-2xl font-serif text-foreground mb-2">This link has rested for now</h1>
       <p class="text-muted-foreground">{error}</p>
     </div>
@@ -114,7 +121,7 @@
       <div class="bg-background p-6 text-center border-b border-border">
         <h1 class="text-xl font-medium text-foreground">
           {data.user_status === "active"
-            ? `${data.user_name} checked in recently`
+            ? `${capitalise(data.user_name)} checked in recently`
             : `We're waiting to hear from ${data.user_name}`}
         </h1>
         <p class="text-sm text-muted-foreground mt-1">
