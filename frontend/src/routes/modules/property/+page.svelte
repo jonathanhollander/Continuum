@@ -415,27 +415,46 @@
         showAddModal = true;
     }
 
-    async function deleteItem(id: string, name: string) {
-        if (
-            confirm(
-                `Remove "${name}" from your property list? You can add it back anytime.`,
-            )
-        ) {
-            try {
-                await propertyStore.deleteItem(id);
-            } catch {
-                return;
-            }
-            if (propertyStore.items.some((i) => String(i.id) === String(id))) return;
+    // Remove asks in the page first: the card (or table row) shows the question and two answers.
+    let removingId = $state<string | null>(null);
 
-            activityLog.logEvent({
-                module: "Property",
-                action: "DELETE",
-                entityType: "Asset",
-                entityId: id,
-                entityName: name,
-                userContext: $estateProfile.ownerName || "User",
-            });
+    async function deleteItem(id: string, name: string) {
+        removingId = null;
+        try {
+            await propertyStore.deleteItem(id);
+        } catch {
+            return;
+        }
+        if (propertyStore.items.some((i) => String(i.id) === String(id))) return;
+
+        activityLog.logEvent({
+            module: "Property",
+            action: "DELETE",
+            entityType: "Asset",
+            entityId: id,
+            entityName: name,
+            userContext: $estateProfile.ownerName || "User",
+        });
+    }
+
+    // Status as a label: first letter capitalised; nothing shown when empty.
+    function statusLabel(status: string | undefined): string {
+        const s = (status ?? "").trim();
+        return s ? s.charAt(0).toUpperCase() + s.slice(1) : "";
+    }
+
+    // The modal's "Ownership Document" field, opened from the card.
+    let openingDocument = $state<string | null>(null);
+    async function openOwnershipDocument(item: PropertyItem) {
+        const ref = mediaIdFromRef(item.documents);
+        if (ref === null || openingDocument) return;
+        openingDocument = String(item.id);
+        try {
+            await downloadMedia(ref, undefined, cachedBlobUrl(ref));
+        } catch (e) {
+            console.warn("[property] ownership document open paused", ref, e);
+        } finally {
+            openingDocument = null;
         }
     }
 
@@ -473,7 +492,7 @@
             userContext: $estateProfile.ownerName || "User",
         });
 
-        alert("QR Label generated! Redirecting to QR Access Center...");
+        notifications.showSuccess("Your label is ready in the QR Access Center.", "QR Label generated");
         goto("/modules/qr-codes");
     }
 </script>
@@ -658,7 +677,7 @@
                                 <Edit2 size={18} />
                             </button>
                             <button
-                                onclick={() => deleteItem(item.id, item.name)}
+                                onclick={() => (removingId = String(item.id))}
                                 aria-label="Remove this item"
                                 class="p-3 bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-2xl transition-all"
                             >
@@ -666,6 +685,28 @@
                             </button>
                         </div>
                     </div>
+
+                    {#if removingId === String(item.id)}
+                        <div class="p-4 mb-8 bg-rose-50 rounded-2xl border border-rose-100 space-y-3" role="group" aria-label="Remove {item.name}" transition:slide>
+                            <p class="text-sm text-rose-800">Remove "{item.name}" from your property list? You can add it back anytime.</p>
+                            <div class="flex gap-2">
+                                <button
+                                    type="button"
+                                    onclick={() => (removingId = null)}
+                                    class="flex-1 py-2 text-sm font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all"
+                                >
+                                    Not right now
+                                </button>
+                                <button
+                                    type="button"
+                                    onclick={() => deleteItem(item.id, item.name)}
+                                    class="flex-1 py-2 text-sm font-bold text-white bg-rose-600 rounded-xl hover:bg-rose-700 transition-all"
+                                >
+                                    Remove this item
+                                </button>
+                            </div>
+                        </div>
+                    {/if}
 
                     <div class="grid grid-cols-2 gap-4 mb-8">
                         <div
@@ -691,9 +732,9 @@
                                 Current Status
                             </p>
                             <p
-                                class="text-sm font-black text-slate-700 tracking-tight capitalize"
+                                class="text-sm font-black text-slate-700 tracking-tight"
                             >
-                                {item.status}
+                                {statusLabel(item.status)}
                             </p>
                         </div>
                     </div>
@@ -742,7 +783,31 @@
                     </div>
                 </div>
 
-                <div class="mt-auto p-2">
+                <div class="mt-auto p-2 space-y-2">
+                    {#if mediaIdFromRef(item.documents) !== null}
+                        <button
+                            type="button"
+                            onclick={() => openOwnershipDocument(item)}
+                            aria-busy={openingDocument === String(item.id)}
+                            class="w-full text-left bg-slate-100 rounded-2xl p-6 text-slate-900 flex items-center justify-between group/doc hover:bg-slate-200 transition-colors duration-300"
+                        >
+                            <span>
+                                <span
+                                    class="block text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1"
+                                >
+                                    Critical Documents
+                                </span>
+                                <span class="block font-bold text-sm tracking-tight">
+                                    Ownership Document
+                                </span>
+                            </span>
+                            <span
+                                class="w-10 h-10 rounded-full bg-slate-900/10 flex items-center justify-center group-hover/doc:translate-x-1 transition-transform"
+                            >
+                                <Download size={20} />
+                            </span>
+                        </button>
+                    {/if}
                     {#if (item.evidence ?? []).length > 0}
                         <button
                             type="button"
@@ -857,10 +922,10 @@
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 text-sm text-slate-600">{item.type}</td>
-                                <td class="px-4 py-3 text-sm text-slate-600">{item.location || '-'}</td>
+                                <td class="px-4 py-3 text-sm text-slate-600">{item.location || ''}</td>
                                 <td class="px-4 py-3 text-sm text-slate-600 font-medium">${item.valuation?.toLocaleString() || '0'}</td>
                                 <td class="px-4 py-3">
-                                    <span class="text-xs font-medium text-slate-600 capitalize">{item.status || 'owned'}</span>
+                                    <span class="text-xs font-medium text-slate-600">{statusLabel(item.status)}</span>
                                 </td>
                                 <td class="px-4 py-3 text-right">
                                     <div class="flex items-center justify-end gap-2">
@@ -879,7 +944,7 @@
                                             <Edit2 size={14} />
                                         </button>
                                         <button aria-label="Remove this item"
-                                            onclick={() => deleteItem(item.id, item.name)}
+                                            onclick={() => (removingId = String(item.id))}
                                             class="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
                                         >
                                             <Trash2 size={14} />
@@ -887,6 +952,31 @@
                                     </div>
                                 </td>
                             </tr>
+                            {#if removingId === String(item.id)}
+                                <tr class="bg-rose-50">
+                                    <td colspan="6" class="px-4 py-3">
+                                        <div class="flex items-center justify-between gap-4" role="group" aria-label="Remove {item.name}">
+                                            <p class="text-sm text-rose-800">Remove "{item.name}" from your property list? You can add it back anytime.</p>
+                                            <div class="flex gap-2 shrink-0">
+                                                <button
+                                                    type="button"
+                                                    onclick={() => (removingId = null)}
+                                                    class="px-4 py-2 text-sm font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all"
+                                                >
+                                                    Not right now
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onclick={() => deleteItem(item.id, item.name)}
+                                                    class="px-4 py-2 text-sm font-bold text-white bg-rose-600 rounded-xl hover:bg-rose-700 transition-all"
+                                                >
+                                                    Remove this item
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {/if}
                         {/each}
                     </tbody>
                 </table>
