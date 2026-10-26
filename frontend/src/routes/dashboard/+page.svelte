@@ -19,6 +19,7 @@
     import { preferenceStore } from "$lib/stores/preferenceStore";
     import {
         getModuleSyncStatus,
+        moduleManagers,
         syncStatusStore,
     } from "$lib/stores/syncStatusStore.svelte";
     import { fade, fly } from "svelte/transition";
@@ -53,7 +54,6 @@
     import { financialAssetsSync } from "$lib/stores/financialAssetsStore.svelte";
     import { directiveSync } from "$lib/stores/medicalStore.svelte";
     import { digitalAssetsSync } from "$lib/stores/digitalAssetsStore.svelte";
-    import { getRegistry } from "$lib/services/sync.svelte";
 
     // Executor mode welcome state
     let showExecutorWelcome = $state(false);
@@ -241,23 +241,9 @@
     );
 
     // A store's first load sets the same "syncing" status as a save, so a card shows no badge
-    // until each store its badge reads (syncStatusStore's mapping, by registry key) has answered.
-    const cardStores: Record<string, string[]> = {
-        contacts: ["family_members"], financial: ["properties"], insurance: ["insurance_policies"],
-        medical: ["medical_profile", "medical_directives"], pets: ["pets"], property: ["properties"],
-        guardian: ["digital_assets"], heirlooms: ["heirlooms"], documents: ["documents"],
-        subscriptions: ["subscriptions"], letters: ["letters"], pulse: ["pulse_status"],
-        "home-manual": ["home_access", "utilities", "vendors"], funeral: ["funeral_data"],
-        journal: ["journal_entries"], calendar: ["calendar_events"],
-        "advanced-registry": ["advanced_assets"], capsule: ["time_capsule"],
-        timeline: ["timeline_events"],
-    };
+    // until each store its badge reads (syncStatusStore's moduleSyncKeys) has answered.
     function cardLoading(key: string): boolean {
-        const registry = getRegistry() as Record<string, { status: string; lastSync: Date | null }>;
-        return (cardStores[key] ?? []).some((k) => {
-            const m = registry[k];
-            return !!m && m.lastSync === null && m.status !== "error";
-        });
+        return moduleManagers(key).some((m) => m.lastSync === null && m.status !== "error");
     }
 
     // Sync status summary for color key
