@@ -14,7 +14,7 @@
 
 <div class="bg-gray-50 rounded-xl p-8 border border-gray-200">
     <div
-        class="flex items-center gap-2 mb-6 text-gray-400 text-xs font-bold uppercase tracking-widest"
+        class="flex items-center gap-2 mb-6 text-gray-600 text-xs font-bold uppercase tracking-widest"
     >
         <Lock size={12} />
         <span>Developer Settings</span>

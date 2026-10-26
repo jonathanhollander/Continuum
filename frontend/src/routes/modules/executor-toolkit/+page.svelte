@@ -106,7 +106,7 @@
         {#if $currentScenario === "Sudden"}
             <div
                 in:slide
-                class="mt-4 mx-auto max-w-2xl bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3 text-left"
+                class="mt-4 max-w-2xl bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3 text-left"
             >
                 <TriangleAlert class="text-red-500 shrink-0 mt-1" size={20} />
                 <div>
@@ -123,7 +123,7 @@
         {:else if $currentScenario === "Planned"}
             <div
                 in:slide
-                class="mt-4 mx-auto max-w-2xl bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3 text-left"
+                class="mt-4 max-w-2xl bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3 text-left"
             >
                 <Leaf class="text-green-500 shrink-0 mt-1" size={20} />
                 <div>
