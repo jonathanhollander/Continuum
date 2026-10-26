@@ -1,6 +1,6 @@
 # Continuum — Recovery Execution Plan (subagent-run)
 
-**Last Updated:** 2026-10-26 04:50 EST
+**Last Updated:** 2026-10-26 05:15 EST
 
 The how and the order for [PROJECT_RECOVERY_PLAN.md](PROJECT_RECOVERY_PLAN.md) (phases A–F).
 Issue IDs (CU-0xx) and their evidence are in
@@ -231,6 +231,8 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | E5 | Desktop keyboard basics | 025 (desktop part) | `frontend/src/lib/components/ui/Modal.svelte`, plus unnamed icon buttons in the files E1–E4 don't own | Focus is trapped and returns in dialogs; every control has a name; every journey in the completion test can be done by keyboard at 1440×900 |
 | E6 | Park unused stores | — | `frontend/src/lib/stores/{calendarStore,visualMemoryStore,advancedAssetStore}.ts` → `frontend/_archive/` (outside `src/`) | 0 importers before the move; the build passes; `svelte-check` no longer lists them |
 | E7 | Remaining type errors in touched files | — | Files changed in Waves B–E that still have svelte-check errors, excluding files another E card owns | Those files show 0 errors; behaviour fixes are noted per file |
+| E9 | Grief-support page visuals (O2) | — | `frontend/src/routes/resources/grief-support/+page.svelte` | The city/zip placeholder overlaps "Find support" (`:307`, `:313`); "Bespoke Support", "Sibling Conversations", "Crisis Center" headings are dark on dark (`:379`); breadcrumb reads "Active Module"; a white band below the dark section | Screenshots before and after at 1440×900 show none of these |
+| E10 | Broken hero image on contacts (O2) | — | The contacts page hero image reference | The top-right hero image is a broken placeholder on `/modules/contacts`; fix the path or asset (check other modules for the same) | The image renders; same check on neighbouring modules |
 | E8 | Branch triage | — | Remote branches | Delete merged branches; list the rest with their unique commits |
 
 ## Wave X — Out-of-build bugs (decision 12; parallel track, approved by orchestrator diff review)
@@ -249,6 +251,10 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X11 | SPA catch-all swallows non-API paths (X4 finding) | `serve_spa` uses `full_path.startswith("api")`, so `/apiary`, `/api-guide` get a JSON 404 instead of the app; a dead `startswith("/")` check after `lstrip` | The `serve_spa` lines in `backend/main.py` | `full_path == "api" or full_path.startswith("api/")`; drop the dead check | `/api-guide` gets the SPA; `/api/nope` still a JSON 404 |
 | X12 | Health check and CSRF exemptions (X3 findings) | `/api/health` HEADs the app's own public `FRONTEND_URL` on every call (`backend/main.py:~341`), and the fetch wrapper uses `/api/health` to refresh the CSRF cookie; `is_csrf_exempt` matches exempt paths by prefix (`backend/csrf.py:44-47`); `ALLOWED_HOSTS` is defined but unused (`config.py:107`) | The health handler in `backend/main.py`; `backend/csrf.py` | Health makes no outbound call; exempt paths match exactly (keeping intended sub-paths such as passkey routes explicit); report `ALLOWED_HOSTS` | Health p95 ≤ 50 ms locally; `/api/auth/tokenX` POST without a header gets 403 in production mode; login, refresh, magic link and passkey routes still exempt |
 | X13 | Calendar date type mismatch (B0.1 finding) | Production `calendar_events.date` is `timestamp`; the model is a string | The `CalendarEvent` model and the calendar route/store | Read and write work against a timestamp column on PostgreSQL and SQLite; no data change | Create, edit and reload one calendar event locally on a DB with a timestamp `date` column |
+| X14 | Legacy auth stubs and CSRF middleware (X12 findings) | `POST /api/auth/register/verify` (`backend/main.py:~372`) returns success without verifying anything; `register/challenge` and a `magic-link` stub (`:365`, `:377`) duplicate real router paths; the CSRF middleware raises `HTTPException` inside `BaseHTTPMiddleware` (`csrf.py:~158`), logging a traceback per refusal | The three stubs in `backend/main.py`; the dispatch in `backend/csrf.py` | Remove stubs that have no caller (grep frontend and backend first; keep any with a caller and make it real or 410); return `JSONResponse(403)` | No caller breaks; the stub paths 404/405 or reach the real router; a CSRF refusal is a clean 403 with no traceback |
+| X15 | AI error presentation (O2, from X1) | The prompt bar wraps the "AI help isn't available" notice as `[Draft based on: …]` in a monospace box (`AIPromptBar.svelte:111`, `:229`); the grief companion shows the generic notice instead of its own gentle fallback (`aiGriefService.ts:77-80`; `docs/TONE_GUIDE.md:130-132`); a dead "creative brain" fallback (`AIPromptBar.svelte:114-115`) | `frontend/src/lib/components/concierge/AIPromptBar.svelte`; `frontend/src/lib/services/aiGriefService.ts` | Show the unavailable notice as a plain gentle message (no draft prefix, normal font); the grief chat uses its grief-specific fallback; remove the dead fallback text | Desktop 1440×900 with no key: both pages show the right message; screenshots before and after |
+| X16 | Preferences endpoint 500 (O2) | `/api/auth/me/preferences` fails: `'User' object has no attribute 'view_preferences'`; migration `817c6b026811` adds the column but `User` (`backend/database.py`) lacks the field; production has `users.view_preferences` (json) | The `User` model in `backend/database.py`; the preferences handlers in `backend/routers/auth.py` | Add the field matching the column type | GET and PUT preferences 200 and round-trip on a fresh DB and on the simulated production schema |
+| X17 | Fonts blocked by CSP (O2) | The Content-Security-Policy `style_src` (`backend/main.py:103`) has no `fonts.googleapis.com` and no `font_src` for `fonts.gstatic.com`, so the app's Google Fonts never load, in production too | The CSP builder in `backend/main.py` | Allow exactly those two hosts | No CSP font errors in the console; the intended fonts render (screenshot before and after) |
 | X6 | Rotate the OpenRouter key (was F1) | The key is public in shipped JS | Owner step at openrouter.ai (Claude may not create or copy API keys) | Create a new key, put it in the Railway variable X1 reads, revoke the old one | Done after X1 is live; the old key returns 401 |
 
 ---
@@ -307,11 +313,17 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | E6 | ☐ | | |
 | E7 | ☐ | | |
 | E8 | ☐ | | |
+| E9 | ☐ | | |
+| E10 | ☐ | | |
 | X1 | ☑ | 4575c17 | Build with fake `sk-or-` key: no `sk-or-`/`openrouter.ai` in dist; `/api/ai/chat` 401 without token, 503 gentle message with no key. Also fixed: duplicate user message, unsanitised history, CSRF header on the AI call |
 | X2 | ☑ | 91321f9 | `git ls-files` lists no .db; `*.db` ignored; local copies kept on disk. Old copy in `34780fe` (branch `origin/stash-backup/2026-01-26-34780fe`) holds 1 non-dev user row, empty password. Owner 2026-10-26: bundled to `docs/archive/stash-backup-2026-01-26-34780fe.bundle` (local only, git-ignored, verified), remote branch deleted |
 | X3 | ☑ | 70068dd | `ENVIRONMENT=production` locally: health 200 "production"; POST without CSRF header 403, with cookie+header 200; no `_technical`; login 200; fetch wrapper (bundled, node stub) adds the header to same-origin writes only. Also fixed: HTTPS redirect loop behind Railway's proxy (would have broken the deploy), CORS substring match. Release must set the variables below |
 | X4 | ☑ | 9e539f4 | Started from `backend/` and from the root: `/`, `/_app/...`, `/modules/x` 200; traversal variants never leak; prefix check replaced by `commonpath` (sibling `dist-other` could pass before) |
-| X12 | ▶ | | |
+| X12 | ☑ | 7392f69 | Production mode: health p95 5.7 ms with no outbound call; `/api/auth/tokenX`, `/api/healthX` 403 (were exempt); token/refresh/magic-link and the real pulse `/respond/{token}`, `/confirm/{token}` routes exempt (the old exempt entry matched no route) |
+| X14 | ▶ | | |
+| X15 | ▶ | | |
+| X16 | ▶ | | |
+| X17 | ▶ | | |
 | X13 | ☐ (after B1: shares `estate_models.py`) | | |
 | X11 | ☑ | 1007f48 | `/api-guide` 200 html; `/api`, `/api/nope` 404 JSON; `/modules/x` 200; traversal no leak |
 | X5 | ☐ | | |
@@ -321,7 +333,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X9 | ☑ | b95307d | Magic link verifies once (200), second use 401 "already used"; request logged as `magic_link_requested`, not an auth success; `sub:"abc"` 401; login/me/refresh/jh@ 200. Passkey-finish fixes (keep specific 400/401, audit, missing-user 401) read, not run: needs a real WebAuthn assertion — check in the release browser test |
 | X10 | ☑ | c2e8ad1 | Echo off: 503 path p50 2.6 ms, p95 4.1 ms; O1's 473 ms was echo-logging overhead. One shared httpx client |
 | O1 — per wave (A–E) | ▶ (A done: login p95 133, /me 4.8, refresh 19.2, ai/chat 503 path 473 → X10) | | |
-| O2 — per wave (A–E) | ☐ | | |
+| O2 — per wave (A–E) | ▶ (A done: X1 pages render the gentle message, no layout break; findings → X15, X16, X17, E9, E10) | | |
 | O1 — release table | ☐ | | |
 | O2 — release screenshots | ☐ | | |
 | R0 | ☐ | | |
