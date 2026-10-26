@@ -10,9 +10,22 @@ export interface PulseStatus {
     // A guardian's "they're OK" since the owner's own last check-in
     guardianCheckin?: { at: string; by: string } | null;
     escalationTier?: number | null;
-    // When that tier was alerted (UTC ISO)
+    // Stage progression, independently of email acceptance (UTC ISO).
     escalationAt?: string | null;
+    tierActivity?: PulseTierActivity[];
     alertsPausedUntil?: string | null;
+}
+
+export type PulseAlertState = 'provider_accepted' | 'saved_local' | 'failed' | 'awaiting_attempt' | 'recorded';
+export interface PulseTierActivity {
+    tierNumber: number;
+    reachedAt: string | null;
+    outcomes: { state: PulseAlertState; count: number; contactIds: number[] }[];
+    contacts: {
+        contactId: number; contactName: string; state: PulseAlertState; attempts: number;
+        failedAttempts: number; retryAvailable: boolean;
+        sourceMessages: { id: number; message: string; sentAt: string; state: PulseAlertState }[];
+    }[];
 }
 
 export interface PulseSettings {

@@ -69,6 +69,67 @@ def _record_owner_checkin(session: Session, user_id: int, method: str, note: str
     send_all_clear(session, user_id, previous.timestamp if previous else datetime.min)
     return {"status": "success", "timestamp": _utc_iso(checkin.timestamp)}
 
+
+def _tier_activity(session: Session, user_id: int, since: datetime) -> list[dict]:
+    """Current-outage stage progression and its named, message-backed email outcomes."""
+    from backend.pulse_logic import (
+        _outage_tier_times, is_tier_accepted, is_tier_fail, tier_prefix,
+        TIER_LOCAL_TEXT, TIER_MAX_ATTEMPTS,
+    )
+    from backend.pulse_tiers import pulse_tier_expression
+
+    reached = _outage_tier_times(session, user_id, since)
+    contacts = session.exec(select(PulseContact, pulse_tier_expression()).where(
+        PulseContact.user_id == user_id)).all()
+    names = {contact.id: contact.name for contact, _ in contacts}
+    members: dict[int, dict[int, list]] = {n: {} for n in reached}
+    for contact, n in contacts:
+        if n in reached:
+            members[n][contact.id] = []
+    rows = session.exec(select(PulseMessage).where(
+        PulseMessage.user_id == user_id,
+        PulseMessage.direction == "user_to_contact",
+        PulseMessage.sent_at > since,
+        PulseMessage.message.startswith("[System Alert Tier "),
+    ).order_by(PulseMessage.id)).all()
+    for row in rows:
+        for n in range(1, 5):
+            if not row.message.startswith(tier_prefix(n)):
+                continue
+            state = ("provider_accepted" if is_tier_accepted(row.message, n)
+                     else "saved_local" if row.message == tier_prefix(n) + TIER_LOCAL_TEXT
+                     else "failed" if is_tier_fail(row.message, n)
+                     else "recorded")
+            members.setdefault(n, {}).setdefault(row.contact_id, []).append({
+                "id": row.id, "message": row.message, "sent_at": _utc_iso(row.sent_at), "state": state,
+            })
+            break
+
+    stages = []
+    states = ("provider_accepted", "saved_local", "failed", "awaiting_attempt", "recorded")
+    for n, stage_members in sorted(members.items()):
+        recipients = []
+        for contact_id, evidence in stage_members.items():
+            observed = {row["state"] for row in evidence}
+            state = next((value for value in states[:3] if value in observed),
+                         "recorded" if evidence else "awaiting_attempt")
+            failed_attempts = sum(row["state"] == "failed" for row in evidence)
+            recipients.append({
+                "contact_id": contact_id, "contact_name": names.get(contact_id, "Saved contact"),
+                "state": state, "attempts": len(evidence), "failed_attempts": failed_attempts,
+                "retry_available": state == "failed" and failed_attempts < TIER_MAX_ATTEMPTS,
+                "source_messages": evidence,
+            })
+        recipients.sort(key=lambda contact: (contact["contact_name"].casefold(), contact["contact_id"]))
+        stages.append({
+            "tier_number": n, "reached_at": _utc_iso(reached.get(n)), "contacts": recipients,
+            "outcomes": [{"state": state, "count": sum(c["state"] == state for c in recipients),
+                          "contact_ids": [c["contact_id"] for c in recipients if c["state"] == state]}
+                         for state in states],
+        })
+    return stages
+
+
 @router.get("/status", summary="Get current Pulse status", description="Returns if Pulse is active, grace period status, and the next expected nudge time.")
 def get_status(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     settings = session.get(PulseSettings, user.id)
@@ -101,6 +162,7 @@ def get_status(user: User = Depends(get_current_user), session: Session = Depend
         } if guardian else None,
         "escalation_tier": escalation.tier_number if escalation else None,
         "escalation_at": _utc_iso(escalation.triggered_at) if escalation else None,
+        "tier_activity": _tier_activity(session, user.id, since),
         "alerts_paused_until": _utc_iso(paused_until) if paused_until and now < paused_until else None,
     }
 
