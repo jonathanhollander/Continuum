@@ -222,7 +222,7 @@ const SECTIONS: SectionDef[] = [
         key: 'financial_accounts', source: 'financial_accounts', title: 'Accounts and debts',
         name: (r) => r.name || r.institution || 'Account',
         consumed: ['name', 'institution', 'value', 'balance_estimate', 'type', 'account_type',
-            'accountNumber', 'account_number_encrypted', 'is_closed', 'closure_date', 'closureNotes'],
+            'accountNumber', 'account_number_encrypted', 'is_closed', 'closure_date'],
         fields: [
             [(r) => r.type || r.account_type, 'Type'],
             [(r) => (has(r.value) ? r.value : r.balance_estimate), 'Value', {
@@ -236,7 +236,9 @@ const SECTIONS: SectionDef[] = [
             ['beneficiaryEmail', 'Beneficiary email'],
             ['loginUrl', 'Login address'],
             ['notes', 'Notes', { long: true }],
-            [(r) => (r.is_closed ? [r.closure_date && dateWords(r.closure_date), r.closureNotes].filter(Boolean).join(' — ') || 'Closed' : ''), 'Closed']
+            // The asset card's "Transfer Instructions", shown for every account, open or closed.
+            ['closureNotes', 'Transfer instructions', { long: true }],
+            [(r) => (r.is_closed ? (r.closure_date ? dateWords(r.closure_date) : 'Closed') : ''), 'Closed']
         ],
         summary: (rows) => {
             const t = estateTotals(rows.map((r) => ({ ...r, value: has(r.value) ? r.value : r.balance_estimate })));
