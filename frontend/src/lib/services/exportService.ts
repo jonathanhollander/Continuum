@@ -110,6 +110,21 @@ function humanize(key: string): string {
     return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
+// Dates read in words, as the modules show them: "2030-01-01" -> "January 1, 2030".
+const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?$/;
+function dateWords(v: any): string {
+    const raw = String(v ?? '');
+    const s = raw.trim();
+    const m = ISO_DATE.exec(s);
+    if (!m) return raw; // anything else is kept exactly as written
+    // A plain date is a calendar day, read without a time zone shift.
+    const d = s.length === 10 ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : new Date(s);
+    return Number.isNaN(d.getTime()) ? s : d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+// Stored values such as "active" or "needs_review" read as words: "Active", "Needs review".
+const words = (v: any) => humanize(String(v));
+
 function text(v: any): string {
     if (typeof v === 'boolean') return v ? 'Yes' : '';
     if (Array.isArray(v)) return v.map(text).filter(Boolean).join(', ');
@@ -119,6 +134,7 @@ function text(v: any): string {
             .map(([k, x]) => `${humanize(k)}: ${text(x)}`)
             .join('; ');
     }
+    if (typeof v === 'string') return dateWords(v);
     return has(v) ? String(v) : '';
 }
 
@@ -161,6 +177,15 @@ const assetCategoryTotals = (rows: any[]): PacketField[] => [
         : [])
 ];
 
+// The documents module's readiness (DocumentVault docState): "Review due" once the review
+// date arrives, "Ready" when the family can find it.
+function documentState(r: any): string {
+    const t = new Date();
+    const today = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+    if (r.next_review_date && String(r.next_review_date).slice(0, 10) <= today) return 'Review due';
+    return r.file_path || String(r.location || r.location_physical || '').trim() ? 'Ready' : '';
+}
+
 const SECTIONS: SectionDef[] = [
     {
         key: 'financial_accounts', source: 'financial_accounts', title: 'Accounts and debts',
@@ -180,7 +205,7 @@ const SECTIONS: SectionDef[] = [
             ['beneficiaryEmail', 'Beneficiary email'],
             ['loginUrl', 'Login address'],
             ['notes', 'Notes', { long: true }],
-            [(r) => (r.is_closed ? [r.closure_date, r.closureNotes].filter(Boolean).join(' — ') || 'Closed' : ''), 'Closed']
+            [(r) => (r.is_closed ? [r.closure_date && dateWords(r.closure_date), r.closureNotes].filter(Boolean).join(' — ') || 'Closed' : ''), 'Closed']
         ],
         summary: (rows) => {
             const t = estateTotals(rows.map((r) => ({ ...r, value: has(r.value) ? r.value : r.balance_estimate })));
@@ -197,7 +222,7 @@ const SECTIONS: SectionDef[] = [
         name: (r) => r.name,
         fields: [
             ['type', 'Type'], ['valuation', 'Value', { money: true }], ['location', 'Location'],
-            ['purchaseDate', 'Purchase date'], ['ownershipDetails', 'Ownership'], ['status', 'Status'],
+            ['purchaseDate', 'Purchase date'], ['ownershipDetails', 'Ownership'], ['status', 'Status', { fmt: words }],
             ['notes', 'Notes', { long: true }],
             [(r) => {
                 const ev = parseJSON(r.evidence);
@@ -214,7 +239,7 @@ const SECTIONS: SectionDef[] = [
             ['platform', 'Platform'], ['username', 'Username'], ['preference', 'Wish for this account'],
             ['instructions', 'Instructions', { long: true }], ['description', 'Description', { long: true }],
             ['valuation', 'Value', { money: true }], ['notes', 'Notes', { long: true }],
-            [(r) => (r.is_closed ? r.closure_date || 'Closed' : ''), 'Closed']
+            [(r) => (r.is_closed ? (r.closure_date ? dateWords(r.closure_date) : 'Closed') : ''), 'Closed']
         ],
         consumed: ['is_closed', 'closure_date', 'type', 'status'],
         summary: assetCategoryTotals
@@ -244,7 +269,7 @@ const SECTIONS: SectionDef[] = [
             ['insurance_type', 'Type'], ['insurer', 'Insurer'], ['policy_number', 'Policy number'],
             [(r) => (has(r.premium_amount) && Number(r.premium_amount) !== 0 ? `${money(r.premium_amount)}${r.premium_frequency ? ` ${String(r.premium_frequency).toLowerCase()}` : ''}` : ''), 'Premium'],
             ['beneficiaries', 'Beneficiaries'], ['agent_name', 'Agent'], ['agent_contact', 'Agent contact'],
-            ['expiration_date', 'Expires', { fmt: (v) => String(v).slice(0, 10) }], ['status', 'Status'],
+            ['expiration_date', 'Expires', { fmt: dateWords }], ['status', 'Status', { fmt: words }],
             ['claims_procedure', 'How to claim', { long: true }], ['notes', 'Notes', { long: true }]
         ],
         consumed: ['premium_amount', 'premium_frequency']
@@ -256,9 +281,9 @@ const SECTIONS: SectionDef[] = [
             [(r) => r.category, 'Type'],
             [(r) => r.location || r.location_physical, 'Original kept at'],
             ['witnesses', 'Witnesses'], ['signed_date', 'Signed'], ['next_review_date', 'Next review'],
-            ['status', 'Status'], ['notes', 'Notes', { long: true }]
+            [(r) => documentState(r), 'Status'], ['notes', 'Notes', { long: true }]
         ],
-        consumed: ['title', 'name', 'location', 'location_physical', 'file_path']
+        consumed: ['title', 'name', 'location', 'location_physical', 'file_path', 'status']
     },
     {
         key: 'contacts', source: 'contacts', title: 'People to contact',
@@ -276,7 +301,7 @@ const SECTIONS: SectionDef[] = [
         name: (r) => r.title,
         fields: [
             ['recipient_name', 'To'], ['date', 'Written'],
-            [(r) => r.triggerDate || r.triggerMilestone || '', 'For when'],
+            [(r) => (r.triggerDate ? dateWords(r.triggerDate) : r.triggerMilestone || ''), 'For when'],
             [(r) => (r.isLocked ? 'Kept on hold by the author' : ''), 'Hold'],
             ['content', 'Letter', { long: true }]
         ],
@@ -287,7 +312,7 @@ const SECTIONS: SectionDef[] = [
         name: (r) => r.title || humanize(r.type || 'reflection'),
         fields: [
             ['type', 'Kind', { fmt: (v) => humanize(v) }],
-            ['created_at', 'Written', { fmt: (v) => String(v).slice(0, 10) }],
+            ['created_at', 'Written', { fmt: dateWords }],
             ['tags', 'Tags'],
             ['content', 'In their words', { long: true }]
         ],
@@ -298,9 +323,9 @@ const SECTIONS: SectionDef[] = [
         name: (r) => r.title,
         fields: [
             ['recipient', 'For'],
-            [(r) => (r.trigger_type === 'milestone' ? `Milestone: ${r.trigger_value}` : r.trigger_value ? `On ${r.trigger_value}` : ''), 'Opens'],
+            [(r) => (r.trigger_type === 'milestone' ? `Milestone: ${r.trigger_value}` : r.trigger_value ? `On ${dateWords(r.trigger_value)}` : ''), 'Opens'],
             [(r) => (r.is_released ? 'Released' : ''), 'Status'],
-            ['created_at', 'Recorded', { fmt: (v) => String(v).slice(0, 10) }],
+            ['created_at', 'Recorded', { fmt: dateWords }],
             ['content_preview', 'Message', { long: true }]
         ],
         consumed: ['trigger_type', 'trigger_value', 'is_released', 'video_url', 'audio_url']
@@ -384,7 +409,7 @@ const SCOPES: Record<ExportScope, string[] | null> = {
     medical: ['medical_profiles', 'medical_directives']
 };
 
-function buildFields(def: SectionDef, r: any): PacketField[] {
+function buildFields(def: SectionDef, r: any, title = ''): PacketField[] {
     const out: PacketField[] = [];
     const used = new Set<string>([...(def.consumed || [])]);
     for (const [key, label, opts] of def.fields) {
@@ -410,7 +435,7 @@ function buildFields(def: SectionDef, r: any): PacketField[] {
         if (used.has(k) || ALWAYS_SKIP.has(k) || !has(v) || isFileValue(v)) continue;
         if (typeof v === 'boolean' && !v) continue;
         const t = text(v);
-        if (t) out.push({ label: humanize(k), value: t, long: t.length > 80 });
+        if (t && t !== title) out.push({ label: humanize(k), value: t, long: t.length > 80 }); // the card title is said once
     }
     // Custom fields the owner added (their own keys, kept as written).
     const custom = parseJSON(r.custom_attributes);
@@ -447,11 +472,12 @@ export function buildPacket(snapshot: Snapshot, scope: ExportScope = 'full'): Pa
             const id = def.source === 'medical_profiles' ? 'profile' : r.id;
             const attachments = byRecord.get(`${def.source}:${id}`) ?? [];
             for (const a of attachments) if (!used.includes(a)) used.push(a);
+            const title = text(def.name(r)) || def.title;
             return {
                 section: def.source,
                 id,
-                title: text(def.name(r)) || def.title,
-                fields: buildFields(def, r),
+                title,
+                fields: buildFields(def, r, title),
                 attachments
             };
         });
@@ -466,7 +492,8 @@ export function buildPacket(snapshot: Snapshot, scope: ExportScope = 'full'): Pa
     ].filter((n, i, a) => n && a.indexOf(n) === i);
 
     return {
-        ownerName: o.owner_name || o.display_name || o.email || '',
+        // The name the owner gave (estate profile, else the account's name); never the sign-in email.
+        ownerName: String(o.owner_name || o.display_name || '').trim(),
         executors,
         generatedAt: snapshot.generated_at,
         sections,
@@ -548,10 +575,7 @@ const esc = (s: any) =>
 
 const fmtSize = (b: number) => (b >= 1048576 ? `${(b / 1048576).toFixed(1)} MB` : b >= 1024 ? `${Math.round(b / 1024)} KB` : `${b} bytes`);
 
-const fmtDate = (iso: string) => {
-    const d = new Date(iso);
-    return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-};
+const fmtDate = (iso: string) => dateWords(iso);
 
 export const PACKET_CSS = `
 .cx-packet{font-family:Georgia,'Times New Roman',serif;color:#1c1917;line-height:1.55}
@@ -580,7 +604,7 @@ export const PACKET_CSS = `
 .cx-packet .cx-file-name{font:13px system-ui,sans-serif;color:#57534e}
 .cx-packet a{color:#304743}
 .cx-packet .cx-id{font:12px system-ui,sans-serif;color:#78716c;margin-left:8px}
-@media print{.cx-packet .cx-page{break-after:page;border:none}.cx-packet .cx-record{border-color:#d6d3d1;break-inside:auto}.cx-packet h2,.cx-packet h3{break-after:avoid}}
+@media print{.cx-packet .cx-page{break-after:page;border:none}.cx-packet .cx-page:last-child{break-after:auto}.cx-packet .cx-record{border-color:#d6d3d1;break-inside:avoid}.cx-packet h2,.cx-packet h3{break-after:avoid}.cx-packet .cx-files video,.cx-packet .cx-files audio{display:none}}
 `;
 
 function fileBlock(a: SnapshotAttachment, url: string | null): string {
@@ -596,7 +620,7 @@ function fileBlock(a: SnapshotAttachment, url: string | null): string {
 /** The packet as HTML. `urlFor` gives each attachment's address (a blob URL on screen, a path in the zip). */
 export function packetHTML(packet: Packet, urlFor: (a: SnapshotAttachment) => string | null = () => null): string {
     const parts: string[] = [`<style>${PACKET_CSS}</style>`];
-    parts.push(`<section class="cx-page cx-cover"><div><div class="cx-kicker">The estate of</div><h1>${esc(packet.ownerName)}</h1><div class="cx-rule"></div></div>
+    parts.push(`<section class="cx-page cx-cover"><div>${packet.ownerName ? `<div class="cx-kicker">The estate of</div><h1>${esc(packet.ownerName)}</h1>` : ''}<div class="cx-rule"></div></div>
 <div class="cx-meta"><div><h3>Prepared</h3><p>${esc(fmtDate(packet.generatedAt))}</p></div>${packet.executors.length ? `<div><h3>Executor</h3><p>${packet.executors.map(esc).join('<br>')}</p></div>` : ''}</div></section>`);
     parts.push(`<section class="cx-page"><h2>Contents</h2><ol class="cx-toc">${packet.sections
         .map((s) => `<li><a href="#cx-${esc(s.key)}">${esc(s.title)}</a> <span class="cx-id">${s.records.length}</span></li>`)
@@ -661,8 +685,10 @@ export function packetPDF(packet: Packet, images: Map<string, string> = new Map(
 
     // Cover
     y = 200;
-    write('THE ESTATE OF', 12, { bold: true, color: 48, gap: 8 });
-    write(packet.ownerName, 32, { bold: true, color: 48, gap: 24 });
+    if (packet.ownerName) {
+        write('THE ESTATE OF', 12, { bold: true, color: 48, gap: 8 });
+        write(packet.ownerName, 32, { bold: true, color: 48, gap: 24 });
+    }
     write(`Prepared ${fmtDate(packet.generatedAt)}`, 13, { color: 90, gap: 6 });
     if (packet.executors.length) write(`Executor: ${packet.executors.join(', ')}`, 13, { color: 90 });
 
@@ -870,7 +896,7 @@ export async function buildDownloadCopy(
     }
 
     onProgress('Writing the packet...');
-    const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>The estate of ${esc(packet.ownerName)}</title></head><body style="margin:0;background:#fff">${packetHTML(packet, (a) => (blobs.has(a.key) ? attachmentPath(a) : null))}</body></html>`;
+    const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${packet.ownerName ? `The estate of ${esc(packet.ownerName)}` : 'Continuum'}</title></head><body style="margin:0;background:#fff">${packetHTML(packet, (a) => (blobs.has(a.key) ? attachmentPath(a) : null))}</body></html>`;
     entries.unshift({ path: 'packet.html', data: enc.encode(html) });
     const images = await imageDataUrls(blobs, included);
     entries.splice(1, 0, { path: 'packet.pdf', data: new Uint8Array(await packetPDF(packet, images).arrayBuffer()) });
