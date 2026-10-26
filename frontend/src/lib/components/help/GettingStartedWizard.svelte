@@ -6,8 +6,19 @@
         Shield,
         Users,
     } from "lucide-svelte";
+    import { navGroups } from "$lib/config/navigation";
+    import { userRole } from "$lib/stores/conciergeStore.svelte";
 
     let currentStep = $state(1);
+
+    // Builder Tools opens only for the roles its nav entry allows (the layout guard sends others away).
+    const builderToolsHref = "/modules/builders-console";
+    let canOpenBuilderTools = $derived(
+        navGroups
+            .flatMap((g) => g.items)
+            .find((i) => i.href === builderToolsHref)
+            ?.allowedRoles.includes($userRole) ?? false,
+    );
 
     const steps = [
         {
@@ -120,10 +131,12 @@
                     </p>
                 </div>
             </div>
-            <a href="/modules/builders-console" data-testid="wizard-link" class="inline-flex items-center gap-2 mt-8 px-6 py-3 rounded-xl border-2 border-primary text-primary-deep dark:text-primary-hover font-bold hover:bg-primary/5 transition-colors">
-                Choose your level in Builder Tools
-                <ArrowRight size={16} />
-            </a>
+            {#if canOpenBuilderTools}
+                <a href={builderToolsHref} data-testid="wizard-link" class="inline-flex items-center gap-2 mt-8 px-6 py-3 rounded-xl border-2 border-primary text-primary-deep dark:text-primary-hover font-bold hover:bg-primary/5 transition-colors">
+                    Choose your level in Builder Tools
+                    <ArrowRight size={16} />
+                </a>
+            {/if}
         {:else if currentStep === 2}
             <h2 class="text-3xl font-serif text-primary-deep dark:text-primary-hover mb-4">
                 Who is your Executor?

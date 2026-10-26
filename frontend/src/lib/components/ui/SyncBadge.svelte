@@ -3,8 +3,8 @@
      * SyncBadge - Displays sync status with compassionate, non-anxiety-inducing colors and labels.
      *
      * Colours come from the app.css status tokens: success (kept safe), info (saving) and the
-     * gentle warning for "needs attention". "On this device" and "Ready" share the quiet slate
-     * of the label, which reads on the dark dashboard in both themes.
+     * gentle warning for "needs attention". "On this device" and "Ready" use a quiet slate dot;
+     * the label uses the theme's muted-foreground token, matching the tile text around it.
      * Labels use positive, supportive language appropriate for end-of-life planning context.
      */
 
@@ -85,7 +85,7 @@
     ></span>
 
     {#if showLabel}
-        <span class="text-xs text-slate-400 group-hover:text-slate-300 transition-colors">
+        <span class="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
             {config.label}
         </span>
     {/if}

@@ -4,7 +4,7 @@
     import ProfessionalDirectory from "$lib/components/help/ProfessionalDirectory.svelte";
     import GettingStartedWizard from "$lib/components/help/GettingStartedWizard.svelte";
 
-    let activeTab: "guide" | "resources" | "faq" = "guide";
+    let activeTab: "guide" | "resources" | "faq" = $state("guide");
 </script>
 
 <div class="min-h-screen bg-background pb-20">
@@ -42,7 +42,7 @@
         {activeTab === 'guide'
                     ? 'bg-card border-transparent text-primary-deep dark:text-primary-hover shadow-lg'
                     : 'bg-primary-deep/80 border-white/20 text-white hover:bg-primary-deep'}"
-                on:click={() => (activeTab = "guide")}
+                onclick={() => (activeTab = "guide")}
             >
                 <BookOpen
                     size={20}
@@ -58,7 +58,7 @@
         {activeTab === 'resources'
                     ? 'bg-card border-transparent text-primary-deep dark:text-primary-hover shadow-lg'
                     : 'bg-primary-deep/80 border-white/20 text-white hover:bg-primary-deep'}"
-                on:click={() => (activeTab = "resources")}
+                onclick={() => (activeTab = "resources")}
             >
                 <Users
                     size={20}
@@ -74,7 +74,7 @@
         {activeTab === 'faq'
                     ? 'bg-card border-transparent text-primary-deep dark:text-primary-hover shadow-lg'
                     : 'bg-primary-deep/80 border-white/20 text-white hover:bg-primary-deep'}"
-                on:click={() => (activeTab = "faq")}
+                onclick={() => (activeTab = "faq")}
             >
                 <HelpCircle
                     size={20}
