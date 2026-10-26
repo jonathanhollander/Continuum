@@ -566,20 +566,25 @@ def _safe_redirect(value: Optional[str]) -> Optional[str]:
         return None
     return value
 
-@router.post("/magic-link", summary="Send Magic Link", description="Sends a short-lived login link to the user's email. Fallback for passkeys.")
+@router.post("/magic-link", summary="Request Magic Link", description="Requests a short-lived sign-in email. Existing passkeys remain available.")
 @limiter.limit("5/minute")
 def send_magic_link(request: Request, link_data: MagicLinkRequest, session: Session = Depends(get_session)):
     """
     Send magic link for passwordless login.
     Fallback for users without passkey support.
     """
+    # Receipt of a request says nothing about the account or email delivery outcome.
+    response = {
+        "status": "requested",
+        "message": "Your sign-in request is received. If a link arrives, open it within 15 minutes. You can also sign in with an existing passkey."
+    }
     user = session.exec(select(User).where(User.email == link_data.email)).first()
 
     if not user:
-        # Don't reveal if user exists or not (timing-safe response)
+        # Keep the public response identical for existing and unknown accounts.
         # Still log the attempt for security monitoring
         log_auth_failure(session, request, link_data.email, "magic_link", "User not found")
-        return {"status": "sent", "message": "If this email has a space, a sign-in link is on its way."}
+        return response
 
     # Generate magic link JWT token with short expiration
     access_token = create_access_token(
@@ -605,45 +610,51 @@ def send_magic_link(request: Request, link_data: MagicLinkRequest, session: Sess
             magic_link_url=magic_link_url,
             db_session=session
         )
-        sent = result.status != "failed"
+        delivery_state = result.delivery_state
+        accepted = result.provider_accepted
+        outcome = {"delivery_state": delivery_state, "provider": result.provider}
         # A request is not a login: record it as a request, not as an auth success
         log_audit(
             session=session, request=request, action="magic_link_requested",
             user_id=user.id, user_email=user.email, resource_type="magic_link_request",
-            success=sent, error_message=None if sent else (result.error or "Email not sent")
+            success=accepted, error_message=None if accepted else delivery_state,
+            details=json.dumps(outcome)
         )
-        if sent:
+        context = {"user_id": user.id, "email": user.email, **outcome}
+        if accepted:
             logger.info(
-                "Magic link email sent",
-                extra={"context": {"user_id": user.id, "email": user.email}}
+                "Magic link email accepted by provider",
+                extra={"context": context}
+            )
+        elif delivery_state == "saved_local":
+            logger.info(
+                "Magic link email prepared locally",
+                extra={"context": context}
             )
         else:
             logger.warning(
                 "Magic link email failed to send",
-                extra={"context": {"user_id": user.id, "email": user.email, "error": result.error}}
+                extra={"context": context}
             )
     except Exception as e:
         log_audit(
             session=session, request=request, action="magic_link_requested",
             user_id=user.id, user_email=user.email, resource_type="magic_link_request",
-            success=False, error_message=type(e).__name__
+            success=False, error_message=type(e).__name__,
+            details=json.dumps({"delivery_state": "failed"})
         )
         logger.warning(
             "Magic link email failed to send",
             extra={"context": {
                 "user_id": user.id,
                 "email": user.email,
-                "error": str(e),
-                "error_type": type(e).__name__
+                "error_type": type(e).__name__,
+                "delivery_state": "failed"
             }}
         )
-        # Still return success to prevent email enumeration
+        # The public receipt stays uniform even when sending raises.
 
-    # Return success (don't leak if email exists)
-    return {
-        "status": "sent",
-        "message": "If this email has a space, a sign-in link is on its way."
-    }
+    return response
 
 @router.get("/magic-link/verify")
 @limiter.limit("5/minute")
