@@ -622,7 +622,13 @@ def verify_magic_link(request: Request, token: str, session: Session = Depends(g
             log_auth_failure(session, request, "", "magic_link_verify", "Invalid token type")
             raise HTTPException(status_code=401, detail="Invalid token type")
 
-        user = session.get(User, int(user_id))
+        try:
+            user_pk = int(user_id)
+        except (TypeError, ValueError):
+            log_auth_failure(session, request, "", "magic_link_verify", "Token missing valid subject")
+            raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+        user = session.get(User, user_pk)
         if not user:
             log_auth_failure(session, request, "", "magic_link_verify", "User not found")
             raise HTTPException(status_code=401, detail="User not found")
