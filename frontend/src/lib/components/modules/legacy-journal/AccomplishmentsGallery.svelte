@@ -53,8 +53,8 @@
                     onclick={() => (activeCategory = cat)}
                     class="px-4 py-1.5 rounded-full text-sm font-bold transition-all border
                     {activeCategory === cat
-                        ? 'bg-amber-600 border-amber-600 text-white shadow-sm'
-                        : 'bg-white border-stone-200 text-stone-500 hover:border-amber-200'}"
+                        ? 'bg-primary border-primary text-primary-foreground shadow-sm'
+                        : 'bg-white border-stone-200 text-stone-500 hover:border-primary/40'}"
                 >
                     {cat}
                 </button>
@@ -70,8 +70,9 @@
             <input
                 type="text"
                 bind:value={searchTerm}
+                aria-label="Search accomplishments"
                 placeholder="Search accomplishments..."
-                class="w-full pl-10 pr-4 py-2 rounded-xl border border-stone-200 focus:border-amber-500 focus:ring-0 text-sm bg-white"
+                class="w-full pl-10 pr-4 py-2 rounded-xl border border-stone-200 focus:border-primary focus:ring-0 text-sm bg-white"
             />
         </div>
     </div>
@@ -120,7 +121,7 @@
 
                     <div class="flex justify-between items-start mb-4">
                         <div
-                            class="px-2.5 py-1 rounded-md bg-amber-50 text-[10px] font-black text-amber-600 tracking-wider uppercase border border-amber-100"
+                            class="px-2.5 py-1 rounded-md bg-primary/10 text-[10px] font-black text-primary tracking-wider uppercase border border-primary/20"
                         >
                             {acc.category || "Personal"}
                         </div>
