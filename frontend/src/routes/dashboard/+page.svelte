@@ -69,20 +69,12 @@
     // Greeting Typewriter
     let greeting = $state("");
     let fullGreeting = $derived(
-        estateAudit.totalScore > 0 ? getGreeting() : "Taking a moment...",
+        estateAudit.totalScore > 0 ? getGreeting() : "Ready when you are",
     );
 
     // Dynamic Metrics
     // The same net the financial page shows: open assets less open debts
     let totalValue = $derived(estateTotals(financialAssetsStore.items).net);
-    let networkSize = $derived(familyStore.members.length);
-    let coverageCount = $derived(
-        digitalAssetsStore.items.filter(
-            (a) => !a.isClosed && a.platform !== "Example",
-        ).length +
-            insuranceStore.policies.length +
-            (estateAudit.moduleScores["financial"] ? 1 : 0),
-    );
 
     // Filter nav groups by user role
     let filteredNavGroups = $derived(
@@ -115,7 +107,7 @@
                     label: pluralWord(familyStore.members.length, "person", "people"),
                 };
             case "financial":
-                // A debt is recorded here too, but it is no account; the audit's "financial" score reads property
+                // A debt is recorded here too, but it is no account (the audit's "financial" score reads these records)
                 return {
                     inProgress: financialAssetsStore.items.length > 0,
                     count: accountCount,
@@ -233,7 +225,6 @@
     const currency = new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: "USD",
-        maximumFractionDigits: 0,
     });
 
     let hasAutoRedirected = false;

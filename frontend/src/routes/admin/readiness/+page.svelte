@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { estateAudit } from "$lib/stores/auditStore.svelte";
+    import { estateAudit, AuditStore } from "$lib/stores/auditStore.svelte";
     import { CircleCheck, Circle, ArrowRight } from "lucide-svelte";
 
     onMount(() => {
@@ -12,6 +12,17 @@
         audit.percentage === 100 ? "text-emerald-400" : "text-blue-400";
     $: ringColor =
         audit.percentage === 100 ? "stroke-emerald-500" : "stroke-blue-500";
+
+    // Each area's page; every id the audit scores has one
+    const modulePath: Record<string, string> = {
+        financial: "financial-accounts",
+        insurance: "insurance",
+        family: "contacts",
+        medical: "medical",
+        digital: "digital-guardian",
+    };
+    const share = (id: string, score: number) =>
+        Math.min(1, score / (AuditStore.maxScores[id] || 50));
 </script>
 
 <!-- Header Section -->
@@ -82,32 +93,23 @@
             <div class="h-2 bg-slate-800 rounded-full overflow-hidden mb-4">
                 <div
                     class="h-full bg-blue-500 transition-all duration-500"
-                    style="width: {(score / 50) * 100}%"
+                    style="width: {share(id, score) * 100}%"
                 ></div>
-                <!-- Note: simplified max score visualization, assume roughly 50-ish per mod for visual -->
             </div>
 
             <p class="text-sm text-slate-400 mb-4">
                 {#if score === 0}
-                    Critical data missing.
-                {:else if score < 30}
-                    Partially complete.
+                    Ready when you are.
+                {:else if share(id, score) < 1}
+                    A good start.
                 {:else}
-                    Excellent coverage.
+                    Well covered.
                 {/if}
             </p>
 
             <div class="flex justify-end">
                 <a
-                    href="/modules/{id === 'financial'
-                        ? 'financial-accounts'
-                        : id === 'legal'
-                          ? 'legal-documents'
-                          : id === 'family'
-                            ? 'contacts'
-                            : id === 'digital'
-                              ? 'digital-guardian'
-                              : id}"
+                    href="/modules/{modulePath[id] ?? id}"
                     class="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-medium"
                 >
                     Go to Module <ArrowRight size={12} />

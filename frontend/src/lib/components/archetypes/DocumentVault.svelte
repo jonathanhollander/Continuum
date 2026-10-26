@@ -33,6 +33,7 @@
     import type { ViewMode } from "$lib/stores/userPreferencesStore.svelte";
     import { downloadMedia, mediaIdFromRef } from "$lib/services/mediaService";
     import { notifications } from "$lib/stores/notificationStore";
+    import { pluralWord } from "$lib/utils/plural";
 
     let { module, viewMode: initialViewMode = 'card' }: { module: { id: string; name?: string }, viewMode?: ViewMode } = $props();
     let viewMode = $state<ViewMode>(initialViewMode);
@@ -251,20 +252,38 @@
         }
     }
 
+    // Nothing in the app sets a document's saved status, so readiness comes from its real fields:
+    // the family can find it (a stored copy, or where the original is kept) and any review date is still ahead.
+    function localToday(): string {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    }
+    const today = localToday();
+    function reviewDue(doc: Doc): boolean {
+        return !!doc.nextReviewDate && doc.nextReviewDate <= today;
+    }
+    function docState(doc: Doc): "ready" | "review" | "locate" {
+        if (reviewDue(doc)) return "review";
+        return doc.filePath || String(doc.location || "").trim() ? "ready" : "locate";
+    }
+    const stateLabel = { ready: "Ready", review: "Review due", locate: "Add where it's kept" };
+
     function getStatusColor(doc: Doc) {
-        if (doc.status === "needs_review")
+        const state = docState(doc);
+        if (state === "review")
             return "bg-amber-500/10 text-amber-700 border-amber-200";
-        if (doc.status === "pending")
+        if (state === "locate")
             return "bg-gray-500/10 text-gray-600 border-gray-200";
         return "bg-[#4A7C74]/10 text-[#4A7C74] border-[#4A7C74]/20";
     }
 
     // Vault Health Logic
-    let completeDocs = $derived(docs.length);
-    let needsReview = $derived(
-        docs.filter((d) => d.status === "needs_review").length,
+    let readyDocs = $derived(docs.filter((d) => docState(d) === "ready").length);
+    let needsReview = $derived(docs.length - readyDocs);
+    // Share of documents ready for the family; no score until there is a document
+    let healthScore = $derived(
+        docs.length ? Math.round((readyDocs / docs.length) * 100) : null,
     );
-    let healthScore = $derived(Math.max(0, 100 - needsReview * 20));
 
     // Wizard Logic
     function startWizard() {
@@ -304,30 +323,41 @@
             >
                 <CircleCheck size={14} /> Peace of Mind Score
             </p>
-            <div class="mt-2 flex items-baseline gap-2">
-                <span class="text-4xl font-serif font-bold text-[#304743]"
-                    >{healthScore}%</span
-                >
-                <span class="text-sm font-medium text-muted-foreground"
-                    >protected</span
-                >
-            </div>
+            {#if healthScore === null}
+                <div class="mt-2" data-testid="vault-score">
+                    <span class="text-2xl font-serif font-bold text-[#304743]"
+                        >Ready when you are</span
+                    >
+                </div>
+                <p class="mt-4 text-xs text-muted-foreground">
+                    Your first document starts your score.
+                </p>
+            {:else}
+                <div class="mt-2 flex items-baseline gap-2" data-testid="vault-score">
+                    <span class="text-4xl font-serif font-bold text-[#304743]"
+                        >{healthScore}%</span
+                    >
+                    <span class="text-sm font-medium text-muted-foreground"
+                        >ready for your family</span
+                    >
+                </div>
 
-            <div class="mt-4 flex gap-1">
-                {#if healthScore === 100}
-                    <div
-                        class="text-xs bg-[#4A7C74]/10 text-[#4A7C74] px-2 py-1 rounded-full flex items-center gap-1 font-bold"
-                    >
-                        <CircleCheck size={10} /> Fully Protected
-                    </div>
-                {:else}
-                    <div
-                        class="text-xs bg-amber-500/10 text-amber-700 px-2 py-1 rounded-full flex items-center gap-1 font-bold"
-                    >
-                        <CircleAlert size={10} /> Gaps Detected
-                    </div>
-                {/if}
-            </div>
+                <div class="mt-4 flex gap-1">
+                    {#if readyDocs === docs.length}
+                        <div
+                            class="text-xs bg-[#4A7C74]/10 text-[#4A7C74] px-2 py-1 rounded-full flex items-center gap-1 font-bold"
+                        >
+                            <CircleCheck size={10} /> Every document ready
+                        </div>
+                    {:else}
+                        <div
+                            class="text-xs bg-amber-500/10 text-amber-700 px-2 py-1 rounded-full flex items-center gap-1 font-bold"
+                        >
+                            <CircleAlert size={10} /> {readyDocs} of {docs.length} ready
+                        </div>
+                    {/if}
+                </div>
+            {/if}
         </div>
 
         <!-- Assistant Banner -->
@@ -347,7 +377,7 @@
                         {:else if docs.length === 0}
                             Let's secure your first document.
                         {:else if needsReview > 0}
-                            {needsReview} items need your attention.
+                            {needsReview} {pluralWord(needsReview, "item")} could use your attention.
                         {:else}
                             Your vault is secure.
                         {/if}
@@ -362,8 +392,8 @@
                             meaningful steps you can take today. I can help you
                             file it correctly.
                         {:else if needsReview > 0}
-                            Reviewing these documents ensures your current
-                            wishes are honored, not old ones.
+                            A quick look keeps each one current and easy for
+                            your family to find.
                         {:else}
                             Rest easy knowing your critical information is
                             organized and accessible to those you trust.
@@ -673,7 +703,7 @@
                                         doc,
                                     )} uppercase tracking-wider"
                                 >
-                                    {doc.status?.replace("_", " ")}
+                                    {stateLabel[docState(doc)]}
                                 </span>
                             </div>
 
@@ -696,8 +726,7 @@
                                 {/if}
                                 {#if doc.nextReviewDate}
                                     <span
-                                        class="flex items-center gap-1 {doc.status ===
-                                        'needs_review'
+                                        class="flex items-center gap-1 {reviewDue(doc)
                                             ? 'text-amber-700 font-bold'
                                             : ''}"
                                     >
@@ -822,7 +851,7 @@
                             </td>
                             <td class="px-4 py-3">
                                 <span class="text-xs font-bold px-2 py-1 rounded border {getStatusColor(doc)} uppercase">
-                                    {doc.status?.replace("_", " ")}
+                                    {stateLabel[docState(doc)]}
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-slate-600 text-sm">{doc.signedDate || '-'}</td>
