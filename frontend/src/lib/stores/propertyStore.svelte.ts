@@ -105,9 +105,10 @@ export const propertyStore = {
         const mediaIds = propertyMediaIds(propertySync.items.find((i) => String(i.id) === String(id)));
         // The files go once the record is really gone, including after Try Again on a failed remove.
         return propertySync.delete(id, mediaIds.length === 0 ? undefined : async () => {
-            for (const m of mediaIds) {
-                await deleteMedia(m).catch((e) => console.warn('[property] evidence removal paused', m, e));
-            }
+            const results = await Promise.allSettled(mediaIds.map((m) => deleteMedia(m)));
+            results.forEach((r, i) => {
+                if (r.status === 'rejected') console.warn('[property] evidence removal paused', mediaIds[i], r.reason);
+            });
         });
     },
 

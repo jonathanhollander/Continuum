@@ -262,18 +262,36 @@
     }
 
     // Card covers, as object URLs from the shared authorised cache.
+    // Each cover is asked for once its card is within 200 px of the screen.
     let coverUrls = $state<Record<string, string>>({});
-    $effect(() => {
-        for (const item of items) {
-            const id = mediaIdFromRef(item.thumbnail);
-            if (id === null || coverUrls[id] !== undefined) continue;
-            coverUrls[id] = "";
-            blobUrlFor(id).then(
-                (u) => (coverUrls[id] = u),
-                (e) => console.warn("[property] cover open paused", id, e),
-            );
-        }
-    });
+    function loadCover(ref: string | undefined) {
+        const id = mediaIdFromRef(ref);
+        if (id === null || coverUrls[id] !== undefined) return;
+        coverUrls[id] = "";
+        blobUrlFor(id).then(
+            (u) => (coverUrls[id] = u),
+            (e) => console.warn("[property] cover open paused", id, e),
+        );
+    }
+    function coverInView(node: HTMLElement, ref: string | undefined) {
+        let current = ref;
+        let near = false;
+        const io = new IntersectionObserver(
+            (entries) => {
+                near = entries.some((e) => e.isIntersecting);
+                if (near) loadCover(current);
+            },
+            { rootMargin: "200px 0px" },
+        );
+        io.observe(node);
+        return {
+            update(next: string | undefined) {
+                current = next;
+                if (near) loadCover(current);
+            },
+            destroy: () => io.disconnect(),
+        };
+    }
 
     async function handleAddItem() {
         if (!newItem.name || !newItem.location) return;
@@ -629,6 +647,7 @@
         {#each filteredItems as item (item.id)}
             <div
                 class="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 overflow-hidden group flex flex-col relative"
+                use:coverInView={item.thumbnail}
                 transition:scale={{
                     duration: 400,
                     delay: 0,
