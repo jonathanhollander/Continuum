@@ -558,7 +558,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | E4 | ☑ | 3b7eef7 | `visionService` removed (it named every photo "Vintage Rolex Submariner" and wrote a made-up value into heirloom name/story and property evidence names) — photos keep their file name, plain "Add a photo"; JargonSlayer per-row fake scans removed, one "Example will, explained" labelled EXAMPLE, touches no records; prompt-bar fake dictation removed; letters drafting line "Placing your words into a letter template" (X70 prompt already labelled); "Simplify view" removed (only a false toast). Also: "I need some guidance" now closes the break offer, dark-on-dark term heading. 1440×900: no invented text on the server, documents byte-identical, 0 errors |
 | X128 | ▶ | | |
 | X129 | ▶ | | |
-| X130 | ▶ | | |
+| X130 | ☑ | 18cdbd2 | DocumentVault search filters cards and table by name, type or notes (mapper now keeps `notes`); one Cards/Table toggle (the vault's), now read from `userPreferencesStore` — before, neither toggle held after reload; header toggle and `viewMode` prop removed. 1440×900: 13 checks ALL PASS, 0 errors |
 | E5 | ▶ | | |
 | E6 | ☑ | 0da1844 | `calendarStore.ts` (0 importers; every import ends `.svelte` → live store) `git mv` to `frontend/_archive/`; `visualMemoryStore.ts` and `advancedAssetStore.ts` were already deleted in B5/B5.1. Build passes; svelte-check files 4136 → 4135, errors 122 → 122 |
 | E7 | ▶ | | |
