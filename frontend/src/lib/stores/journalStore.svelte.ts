@@ -18,7 +18,7 @@ export interface JournalEntry {
 
 // The server list arrives camelCased; keep custom_attributes under its wire name only, so an
 // update never carries a stale customAttributes copy alongside it.
-const mapper = (data: any): JournalEntry => {
+const mapper = (data: any): JournalEntry & { id: number } => {
     const { customAttributes, ...rest } = data;
     return {
         ...rest,
