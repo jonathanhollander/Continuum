@@ -119,8 +119,7 @@ MODEL_MAP = {
     "home_access": HomeAccess,
     "utilities": Utility,
     "documents": Document,
-    # Alias: the vault's older endpoint name (settings/data still counts from it). GET only lands
-    # here; routers/documents.py claims /vault_documents/{id}, so DocumentVault uses "documents".
+    # Alias: the vault's older endpoint name (settings/data counts from it); every verb lands here.
     "vault_documents": Document,
     "letters": Letter,
     "future_letters": Letter,  # Alias for frontend SyncManager endpoint
