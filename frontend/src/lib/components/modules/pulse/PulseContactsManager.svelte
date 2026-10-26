@@ -8,8 +8,11 @@
         Pencil,
         Settings2,
         BellRing,
+        X,
     } from "lucide-svelte";
     import { fade, slide } from "svelte/transition";
+    import { apiGet, apiPut } from "$lib/api/client";
+    import { contactSync } from "$lib/stores/familyStore.svelte";
 
     let {
         userId = 1,
@@ -23,8 +26,7 @@
     let loading = $state(true);
     let error = $state<string | null>(null);
 
-    // Use relative path by default to leverage Vite Proxy (solves CORS)
-    const baseUrl = import.meta.env.VITE_API_BASE || "";
+    const gentleRetry = "Let's try that once more in a moment.";
 
     onMount(async () => {
         await loadData();
@@ -34,30 +36,15 @@
         loading = true;
         error = null;
         try {
-            console.log(
-                "Fetching Pulse data from relative path:",
-                baseUrl || "/api (proxied)",
-            );
-
-            const [tiersRes, contactsRes] = await Promise.all([
-                fetch(`${baseUrl}/api/pulse/tiers?user_id=${userId}`),
-                fetch(`${baseUrl}/api/pulse/contacts?user_id=${userId}`),
+            const [tiersData, contactsData] = await Promise.all([
+                apiGet("/api/pulse/tiers"),
+                apiGet("/api/pulse/contacts"),
             ]);
-
-            if (!tiersRes.ok)
-                throw new Error(`Tiers Error: ${tiersRes.status}`);
-            if (!contactsRes.ok)
-                throw new Error(`Contacts Error: ${contactsRes.status}`);
-
-            tiers = await tiersRes.json();
-            contacts = await contactsRes.json();
-
-            if (tiers.length === 0) {
-                console.warn("No tiers returned!");
-            }
+            tiers = tiersData;
+            contacts = contactsData;
         } catch (e: any) {
             console.error(e);
-            error = e.message || "Unknown error";
+            error = e?.message || gentleRetry;
         } finally {
             loading = false;
         }
@@ -65,37 +52,29 @@
 
     async function updateTier(tier: any) {
         try {
-            await fetch(
-                `${baseUrl}/api/pulse/tiers/${tier.id}?user_id=${userId}`,
-                {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(tier),
-                },
-            );
+            await apiPut(`/api/pulse/tiers/${tier.id}`, tier);
             editingTierId = null;
         } catch (e) {
             console.error(e);
-            alert("Error updating tier");
+            alert(gentleRetry);
         }
     }
 
+    // Send only the fields this page edits, so stored legacy values elsewhere on the row stay untouched.
     async function updateContact(contact: any) {
         try {
-            const res = await fetch(
-                `${baseUrl}/api/pulse/contacts/${contact.id}?user_id=${userId}`,
-                {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(contact),
-                },
-            );
-            if (res.ok) {
-                contacts = [...contacts];
-            }
+            await apiPut(`/api/pulse/contacts/${contact.id}`, {
+                individual_delay_hours:
+                    contact.individual_delay_hours === "" ||
+                    contact.individual_delay_hours == null
+                        ? null
+                        : Number(contact.individual_delay_hours),
+                notify_on_safety_timer: !!contact.notify_on_safety_timer,
+            });
+            contacts = [...contacts];
         } catch (e) {
             console.error(e);
-            alert("Error updating contact");
+            alert(gentleRetry);
         }
     }
 
@@ -107,67 +86,37 @@
     async function openAddGuardianModal(tierId: number) {
         targetTierId = tierId;
         try {
-            // Fetch ALL contacts
-            const res = await fetch(
-                `${baseUrl}/api/contacts?user_id=${userId}`,
-            );
-            if (res.ok) {
-                const all = await res.json();
-                // Filter: Only show those NOT already assigned to a tier (or allow moving? simplify: distinct list)
-                // Actually, duplicate contacts in list is confusing. Just show all valid candidates.
-                // A candidate is someone who doesn't have a tier_id OR we allow moving them.
-                // Let's simple: Show everyone. The user picks one.
-                globalContacts = all;
-                showAddGuardianModal = true;
-            }
+            globalContacts = await apiGet("/api/contacts");
+            showAddGuardianModal = true;
         } catch (e) {
             console.error(e);
-            alert("Failed to load global contacts.");
+            alert(gentleRetry);
         }
     }
 
     async function promoteContact() {
         if (!selectedContactId || !targetTierId) return;
-
-        // Optimistic / Local Update Logic? No, stick to API.
-        const contact = globalContacts.find((c) => c.id == selectedContactId);
-        if (!contact) return;
-
-        // We are updating the contact to have a tier_id
-        const updated = { ...contact, tier_id: targetTierId };
-
         try {
-            const res = await fetch(
-                `${baseUrl}/api/contacts/${selectedContactId}?user_id=${userId}`,
-                {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(updated),
-                },
-            );
-
-            if (res.ok) {
-                await loadData(); // Refresh Pulse UI
-                showAddGuardianModal = false;
-                selectedContactId = null;
-            }
+            await apiPut(`/api/contacts/${selectedContactId}`, {
+                tier_id: targetTierId,
+            });
+            await loadData();
+            showAddGuardianModal = false;
+            selectedContactId = null;
         } catch (e) {
             console.error(e);
-            alert("Failed to assign guardian.");
+            alert(gentleRetry);
         }
     }
 
     async function deleteContact(contactId: number) {
         if (!confirm("Remove this contact from your Pulse network? You can add them back later.")) return;
-        try {
-            await fetch(
-                `${baseUrl}/api/pulse/contacts/${contactId}?user_id=${userId}`,
-                { method: "DELETE" },
-            );
+        // Through the shared contacts SyncManager, so its saved copy drops this person too;
+        // otherwise its next sync would see the server empty and upload them again.
+        // On failure it shows its own gentle message and keeps the person listed.
+        await contactSync.delete(contactId);
+        if (contactSync.status !== "error") {
             contacts = contacts.filter((c) => c.id !== contactId);
-        } catch (e) {
-            console.error(e);
-            alert("Error deleting contact");
         }
     }
 
@@ -203,16 +152,14 @@
         >
             <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
             <div>
-                <strong>Data Error:</strong>
-                {error}
+                <strong>Your circle is taking a moment to load.</strong>
                 <br />
-                <span class="text-xs opacity-75">Check backend connection.</span
-                >
+                <span class="text-xs opacity-75">{gentleRetry}</span>
             </div>
             <button
                 onclick={loadData}
                 class="ml-auto text-xs bg-red-500/20 px-3 py-1 rounded hover:bg-red-500/30 transition-colors"
-                >Retry</button
+                >Try again</button
             >
         </div>
     {/if}
