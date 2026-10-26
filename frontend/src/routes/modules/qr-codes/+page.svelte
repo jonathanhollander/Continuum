@@ -491,9 +491,9 @@
                         class="px-4 py-1.5 bg-[#4A7C74] rounded-full text-[10px] font-black uppercase tracking-widest text-white mb-6 inline-block"
                         >Best Practices</span
                     >
-                    <h2 class="text-4xl font-black font-serif leading-tight">
+                    <h2 class="text-4xl font-black font-serif leading-tight text-white">
                         Securing Your <span
-                            class="italic font-light text-[#4A7C74]"
+                            class="italic font-light text-[#9FD0C7]"
                             >Physical Legacy</span
                         >
                     </h2>
@@ -507,7 +507,7 @@
                             <Smartphone size={24} class="text-[#4A7C74]" />
                         </div>
                         <div>
-                            <h4 class="font-bold text-xl mb-1">
+                            <h4 class="font-bold text-xl mb-1 text-white">
                                 Testing is Key
                             </h4>
                             <p class="text-slate-400">
@@ -524,7 +524,7 @@
                             <Shield size={24} class="text-[#4A7C74]" />
                         </div>
                         <div>
-                            <h4 class="font-bold text-xl mb-1">Gated Access</h4>
+                            <h4 class="font-bold text-xl mb-1 text-white">Gated Access</h4>
                             <p class="text-slate-400">
                                 The "Family Essentials" pack is designed for
                                 convenience, while the "Executor Master" pack

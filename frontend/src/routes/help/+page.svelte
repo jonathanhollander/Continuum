@@ -22,7 +22,7 @@
                 <Shield size={14} />
                 <span>Support Center</span>
             </div>
-            <h1 class="font-serif text-4xl md:text-5xl mb-4">
+            <h1 class="font-serif text-4xl md:text-5xl mb-4 text-white">
                 Help & Resources
             </h1>
             <p class="text-white/70 text-lg max-w-2xl font-light">
