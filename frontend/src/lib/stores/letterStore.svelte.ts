@@ -1,28 +1,40 @@
 import { registerSync } from "$lib/services/sync.svelte";
 
+// The page works in camelCase; SyncManager sends recipientName -> recipient_name etc.,
+// while triggerDate / triggerMilestone / isLocked go as named (CAMEL_WIRE_KEYS).
 export interface Letter {
-    id?: number;
-    user_id?: number;
-    recipient_name?: string;
+    id: number | string;
     title: string;
     content: string;
-    release_condition: string;
-    status: string;
-    custom_attributes?: string; // JSON string of custom field values
-    // Written by the letters page (camelCase columns on the server)
+    recipientName?: string;
+    recipientContactId?: number | null; // contacts row (PulseContact.id)
+    releaseCondition?: string;
+    status?: string;
     date?: string;
-    type?: string;
-    triggerDate?: string;
-    triggerMilestone?: string;
-    isLocked?: boolean;
+    type?: string; // "emotional" | "transactional"
+    triggerDate?: string | null; // stored and shown with the letter
+    triggerMilestone?: string | null; // stored and shown with the letter
+    isLocked?: boolean; // "Hold": kept back from the recipient view
+    customAttributes?: string; // JSON text of custom field values
 }
 
-const mapper = (data: any): Letter => ({
-    ...data,
-    id: typeof data.id === 'string' && data.id.length > 10 ? undefined : Number(data.id) || data.id,
-    recipient_name: data.recipient_name ?? data.recipientName,
-    release_condition: data.release_condition ?? data.releaseCondition ?? 'death',
-});
+// Runs on server rows (already camelCased) and on outgoing items: one spelling per field,
+// so a stale snake_case copy can never overwrite an edit on the wire.
+const mapper = (data: any): Letter => {
+    const {
+        recipient_name, recipient_contact_id, release_condition, custom_attributes,
+        user_id, userId, ...rest
+    } = data;
+    return {
+        ...rest,
+        id: typeof data.id === 'string' && data.id.length > 10 ? data.id : Number(data.id) || data.id,
+        recipientName: data.recipientName ?? recipient_name ?? '',
+        recipientContactId: data.recipientContactId ?? recipient_contact_id ?? null,
+        releaseCondition: data.releaseCondition ?? release_condition ?? 'death',
+        customAttributes: data.customAttributes ?? custom_attributes ?? '{}',
+        isLocked: !!data.isLocked,
+    };
+};
 
 // The one owner of 'letters' (the letters page uses it too).
 export const lettersSync = registerSync<Letter>('letters', 'letters', mapper, '/api/data')
@@ -34,7 +46,7 @@ export const letterStore = {
     get items() { return manager.items; },
     get status() { return manager.status; },
     create: (item: Omit<Letter, 'id'>) => manager.create(item as Letter),
-    update: (id: number, updates: Partial<Letter>) => manager.update(id, updates as Letter),
-    delete: (id: number) => manager.delete(id),
+    update: (id: number | string, updates: Partial<Letter>) => manager.update(id, updates),
+    delete: (id: number | string) => manager.delete(id),
     sync: () => manager.sync()
 };
