@@ -264,7 +264,7 @@
                     <p class="mt-2 text-xs text-gray-500" role="status">
                         {copyStatus === "copied"
                             ? "Copied."
-                            : "We couldn't copy that just now. You can select the text and copy it yourself."}
+                            : "Selecting the text will let you copy it yourself."}
                     </p>
                 {/if}
             {/if}

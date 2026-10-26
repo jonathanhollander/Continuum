@@ -36,7 +36,7 @@
         id: string;
         title: string;
         date: string; // MMDD for recurring (e.g. "1225"), YYYYMMDD for one-time
-        type: "birthday" | "holiday" | "anniversary" | "passing" | "other";
+        type: EventType;
         isRecurring: boolean;
         wish: string;
         emailTemplate?: {
@@ -78,7 +78,7 @@
 
     // --- Logic ---
 
-    import { calendarSync as calendarStoreSync } from "$lib/stores/calendarStore.svelte";
+    import { calendarSync as calendarStoreSync, EVENT_TYPES, type EventType } from "$lib/stores/calendarStore.svelte";
     import type { SyncManager } from "$lib/services/sync.svelte";
 
     // Stored dates are "MMDD" / "YYYYMMDD" (older rows may be "MM-DD" / "YYYY-MM-DD").
@@ -264,8 +264,10 @@
         holiday: Sparkles,
         anniversary: Heart,
         passing: Flower2,
+        ritual: Heart,
         other: CalendarIcon,
     };
+    const typeLabel = (type: string) => EVENT_TYPES.find((t) => t.value === type)?.label ?? type;
 
     const eventTypeColors: Record<string, string> = {
         birthday: "text-rose-500 bg-rose-50",
@@ -285,8 +287,8 @@
     <LivingBlueprintHeader
         title="Event Calendar"
         subtitle="Afterlife Calendar"
-        detailedDescription="Ensure your birthday, holidays, and anniversaries are celebrated exactly how you want them to be. Create meaningful rituals and messages for the dates that matter most."
-        whyMatters="Without your guidance, special dates become painful reminders instead of opportunities for connection. By documenting your wishes, you transform grief into intentional remembrance."
+        detailedDescription="You can shape how your birthday, holidays and anniversaries are celebrated. Create meaningful rituals and messages for the dates that matter most."
+        whyMatters="With your guidance, special dates become moments of connection. By documenting your wishes, you transform grief into intentional remembrance."
     >
         <div class="flex items-center gap-3">
             <DataViewToggle module="calendar" onchange={(mode) => viewMode = mode} />
@@ -300,11 +302,16 @@
     </LivingBlueprintHeader>
 
 <div class="p-8 max-w-[1400px] mx-auto animate-in fade-in duration-500">
+    <p class="text-sm text-slate-500 mb-6">
+        These dates also appear in
+        <a href="/modules/anniversary-manager" class="font-bold text-[#304743] hover:underline">Important Dates</a>,
+        where you can write ritual guidance for your family.
+    </p>
 
     {#if events.length === 0}
         <EmptyState
             title="Create meaningful moments for the future"
-            whyMatters="<strong>Birthdays, anniversaries, and holidays will still arrive after you're gone.</strong> Without your guidance, these dates may become painful reminders instead of opportunities for connection.<br/><br/>By documenting your wishes for these special days, you transform difficult dates into moments of joy. Your family will know exactly how to honor you, celebrate together, and feel your presence even in your absence."
+            whyMatters="<strong>Birthdays, anniversaries and holidays will keep arriving, and your family can feel your presence on them.</strong> With your guidance, special dates become moments of connection.<br/><br/>By documenting your wishes for these special days, you transform difficult dates into moments of joy. Your family will know exactly how to honor you, celebrate together, and feel your presence even in your absence."
             encouragement="Start with your birthday or a holiday you love. Add others as they come to mind."
             icon={Clock}
             iconClass="text-[#304743]"
@@ -443,7 +450,7 @@
                 <div>
                     <h3 class="font-bold text-gray-600 mb-1">Add Another Date</h3>
                     <p class="text-sm">
-                        Birthdays, anniversaries, or just a Tuesday.
+                        Birthdays, anniversaries, or an ordinary Tuesday.
                     </p>
                 </div>
             </button>
@@ -477,7 +484,7 @@
                             <td class="px-4 py-3 text-slate-600">{formatDisplayDate(evt.date, evt.isRecurring)}</td>
                             <td class="px-4 py-3">
                                 <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-medium capitalize">
-                                    {evt.type}
+                                    {typeLabel(evt.type)}
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-slate-500 text-sm">{evt.isRecurring ? 'Yes' : 'No'}</td>
@@ -591,12 +598,9 @@
                                     bind:value={newEvent.type}
                                     class="w-full px-4 py-2 rounded-xl border border-gray-200 bg-white"
                                 >
-                                    <option value="birthday">Birthday</option>
-                                    <option value="anniversary"
-                                        >Anniversary</option
-                                    >
-                                    <option value="holiday">Holiday</option>
-                                    <option value="other">Other</option>
+                                    {#each EVENT_TYPES as t}
+                                        <option value={t.value}>{t.label}</option>
+                                    {/each}
                                 </select>
                             </div>
                         </div>
@@ -634,7 +638,7 @@
                             class="w-full px-4 py-2 rounded-xl border border-amber-200 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                         ></textarea>
                         <p class="text-xs text-amber-600/70 mt-2">
-                            A simple instruction creates connection.
+                            A small instruction creates connection.
                         </p>
                     </div>
 
@@ -647,9 +651,8 @@
                             </h4>
                         </div>
                         <p class="text-sm text-gray-500 mb-4">
-                            Draft a message for this day. Your executor can
-                            click a button to open this in their email client to
-                            send it on your behalf.
+                            Draft a message for this day. Your executor can open
+                            this in their email, ready for them to send for you.
                         </p>
 
                         <div class="space-y-3">
@@ -704,7 +707,7 @@
                     <button
                         onclick={resetForm}
                         class="px-6 py-2 rounded-xl font-bold text-gray-500 hover:bg-gray-200 transition-colors"
-                        >Not right now</button
+                        >Maybe later</button
                     >
                     <button
                         onclick={handleSave}

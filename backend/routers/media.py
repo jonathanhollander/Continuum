@@ -371,4 +371,4 @@ def update_media_metadata(
     session.commit()
     session.refresh(media)
 
-    return {"ok": True, "message": "Metadata updated"}
+    return {"ok": True, "message": "Saved."}

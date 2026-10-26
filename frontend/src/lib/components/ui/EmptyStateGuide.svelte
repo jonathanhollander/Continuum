@@ -51,7 +51,7 @@
         heirlooms: {
             title: "Treasure Registry",
             description:
-                "Catalog items that carry emotional value. Ensure their stories aren't lost.",
+                "Catalog items that carry emotional value. Keep their stories alive for the people who will treasure them.",
             icon: Gift,
             examples: [
                 { name: "Grandfather's Watch", role: "For: James (Son)" },
@@ -73,7 +73,7 @@
                     role: "e.g. 'What a Wonderful World'",
                 },
                 { name: "Flower Preference", role: "e.g. White Lilies" },
-                { name: "Dress Code", role: "e.g. Colorful / No Black" },
+                { name: "Dress Code", role: "e.g. Colorful and bright" },
                 { name: "Preferred Venue", role: "e.g. Seaside Park" },
                 { name: "Pallbearers", role: "e.g. Cousins & Uncles" },
                 { name: "Donations", role: "e.g. Local Animal Shelter" },
@@ -96,7 +96,7 @@
         legal: {
             title: "Document Vault",
             description:
-                "Securely log locations of critical documents. We verify that you know where they are.",
+                "Note where each important document is kept, so your family can find it.",
             icon: FileText,
             examples: [
                 { name: "Last Will & Testament", role: "Location: Safe" },
@@ -110,7 +110,7 @@
         home: {
             title: "Home Operating Manual",
             description:
-                "Don't leave them guessing. Log trusted vendors and critical shutoff locations.",
+                "Give your family a clear guide to the people and places that keep your home running.",
             icon: Hammer,
             examples: [
                 { name: "Plumber", role: "Contact: Mario" },
@@ -124,11 +124,11 @@
         subscriptions: {
             title: "Recurring Charges",
             description:
-                "Identify 'Zombie Bills' and services that need cancellation.",
+                "Gather the recurring charges your family may want to review.",
             icon: Receipt,
             examples: [
                 { name: "Netflix", role: "Cycle: Monthly" },
-                { name: "Gym Membership", role: "Diff: Hard" },
+                { name: "Gym Membership", role: "Cycle: Monthly" },
                 { name: "Amazon Prime", role: "Cycle: Yearly" },
                 { name: "Spotify", role: "Cycle: Monthly" },
                 { name: "New York Times", role: "Cycle: Weekly" },
@@ -150,7 +150,7 @@
         },
         default: {
             title: "Start Building",
-            description: "This section is empty. Add your first item to begin.",
+            description: "This space is ready for your first item, whenever you are.",
             icon: Plus,
             examples: [],
         },

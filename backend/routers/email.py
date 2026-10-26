@@ -197,7 +197,7 @@ def resend_email(
         )
         return {
             "status": "already_sent",
-            "message": "This email was already sent successfully"
+            "message": "This email has already reached them."
         }
 
     # Attempt resend: rebuild the payload from the log row (send_email takes only payload=).

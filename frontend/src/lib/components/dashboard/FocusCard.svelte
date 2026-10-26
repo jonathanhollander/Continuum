@@ -25,7 +25,7 @@
                 : 'bg-indigo-500/20 text-indigo-300 shadow-[0_0_15px_rgba(99,102,241,0.3)]'}"
         >
             <Sparkles size={10} />
-            {type === "critical" ? "Critical Priority" : "Insight"}
+            {type === "critical" ? "Worth a look" : "Insight"}
         </div>
 
         <!-- Content -->

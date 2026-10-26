@@ -80,4 +80,4 @@ async def discover_local_support(
 
     except Exception as e:
         logger.error(f"Tavily search failed: {e}")
-        raise HTTPException(status_code=500, detail="Local discovery service temporarily unavailable.")
+        raise HTTPException(status_code=500, detail="Local support search is taking a moment. Try again shortly.")
