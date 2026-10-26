@@ -225,7 +225,7 @@
                                     onclick={() => generatePack(pack.id)}
                                     class="px-8 py-4 bg-primary text-primary-foreground rounded-2xl font-black text-sm flex items-center gap-3 hover:scale-105 transition-all shadow-xl shadow-primary/20"
                                 >
-                                    <Sparkles size={18} /> Generate Secure Key
+                                    <Sparkles size={18} /> Create QR Code
                                 </button>
                             {:else}
                                 <button

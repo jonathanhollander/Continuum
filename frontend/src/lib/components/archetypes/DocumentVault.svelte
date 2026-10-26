@@ -348,11 +348,11 @@
                         {#if isLoading}
                             Gathering your documents…
                         {:else if docs.length === 0}
-                            Let's secure your first document.
+                            Let's add your first document.
                         {:else if needsReview > 0}
                             {needsReview} {pluralWord(needsReview, "item")} could use your attention.
                         {:else}
-                            Your vault is secure.
+                            Every document is ready.
                         {/if}
                     </h4>
                     <p

@@ -189,7 +189,8 @@
                 Activity History
             </h1>
             <p class="text-muted-foreground mt-2 text-lg">
-                Complete audit trail of all changes across your estate plan.
+                A record of additions, edits and exports from sections like
+                Property, Letters and Heirlooms, newest first.
             </p>
         </div>
 
