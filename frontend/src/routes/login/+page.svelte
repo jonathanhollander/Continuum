@@ -182,7 +182,10 @@
                 return;
             }
 
-            await apiPost("/api/auth/magic-link", { email: magicLinkEmail });
+            await apiPost("/api/auth/magic-link", {
+                email: magicLinkEmail,
+                redirect: $page.url.searchParams.get("redirect") || undefined,
+            });
 
             // Store email for "Remember Me" early
             if (typeof localStorage !== "undefined") {
@@ -398,7 +401,9 @@
                 <p class="text-slate-400 text-lg">
                     Don't have an account?
                     <a
-                        href="/signup"
+                        href={$page.url.searchParams.get("redirect")
+                            ? `/signup?redirect=${encodeURIComponent($page.url.searchParams.get("redirect") ?? "")}`
+                            : "/signup"}
                         class="text-teal-400 hover:text-teal-300 font-bold transition-colors"
                     >
                         Create one

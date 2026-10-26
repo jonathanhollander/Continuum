@@ -568,6 +568,16 @@ def passkey_login_finish(request: Request, payload: PasskeyLoginFinishPayload, s
 
 class MagicLinkRequest(BaseModel):
     email: EmailStr
+    redirect: Optional[str] = None
+
+
+def _safe_redirect(value: Optional[str]) -> Optional[str]:
+    """Keep only a same-site relative path (e.g. /modules/pets); anything else is dropped."""
+    if not value or len(value) > 500 or not value.startswith("/") or value.startswith("//"):
+        return None
+    if "\\" in value or any(ord(c) < 32 for c in value) or "://" in value:
+        return None
+    return value
 
 @router.post("/magic-link", summary="Send Magic Link", description="Sends a short-lived login link to the user's email. Fallback for passkeys.")
 @limiter.limit("5/minute")
@@ -595,6 +605,10 @@ def send_magic_link(request: Request, link_data: MagicLinkRequest, session: Sess
     from backend.config import settings
     frontend_url = settings.get_frontend_url()
     magic_link_url = f"{frontend_url}/auth/verify?token={access_token}"
+    safe_redirect = _safe_redirect(link_data.redirect)
+    if safe_redirect:
+        from urllib.parse import quote
+        magic_link_url += f"&redirect={quote(safe_redirect, safe='/')}"
 
     # Send email with magic link
     from backend.utils.audit import log_audit
