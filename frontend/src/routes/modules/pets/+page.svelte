@@ -19,7 +19,6 @@
     import UniversalUploader from "$lib/components/ui/UniversalUploader.svelte";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
-    import Affirmation from "$lib/components/Affirmation.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
     import Modal from "$lib/components/ui/Modal.svelte";
@@ -34,7 +33,6 @@
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
 
     let showAddForm = $state(false);
-    let showAffirmation = $state(false);
     let viewMode = $state<ViewMode>('card');
     let parsedCustomAttributes = $state<Record<string, any>>({});
     let isLoading = $state(true);
@@ -89,8 +87,7 @@
             });
         }
 
-        closeAndReset();
-        showAffirmation = true;
+        closeAndReset(); // the store shows the one affirmation
         } catch {
             // The manager already showed the one gentle message; the form stays open with the draft.
         }
@@ -179,8 +176,6 @@
 {:else}
 <div class="max-w-4xl mx-auto p-8 animate-in fade-in duration-500">
 
-    <!-- Affirmation Message -->
-    <Affirmation module="pets" bind:show={showAffirmation} />
 
     <!-- AI Prompt Bar -->
     <div class="max-w-3xl mx-auto mb-8">

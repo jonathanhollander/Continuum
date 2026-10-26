@@ -23,11 +23,9 @@
     import EmptyState from "$lib/components/EmptyState.svelte";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
-    import Affirmation from "$lib/components/Affirmation.svelte";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
 
     let viewMode = $state<ViewMode>('card');
-    let showAffirmation = $state(false);
 
     // --- Types ---
     type CalendarEvent = {
@@ -136,13 +134,16 @@
             custom_attributes: JSON.stringify(parsedCustomAttributes),
         };
 
-        if (editingId) {
-            await calendarSync.update(editingId, eventData);
-        } else {
-            await calendarSync.create(eventData);
+        // The store affirms a successful save and shows the gentle error on failure (form stays open).
+        try {
+            if (editingId) {
+                await calendarSync.update(editingId, eventData);
+            } else {
+                await calendarSync.create(eventData, false, false, handleSave);
+            }
+        } catch {
+            return;
         }
-
-        showAffirmation = true;
         resetForm();
     }
 
@@ -286,8 +287,6 @@
         </div>
     </LivingBlueprintHeader>
 
-    <!-- Affirmation Message -->
-    <Affirmation module="general" bind:show={showAffirmation} />
 
     {#if events.length === 0}
         <EmptyState
