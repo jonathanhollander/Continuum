@@ -1,6 +1,10 @@
 <script lang="ts">
     import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { focusTrap } from "$lib/actions/focusTrap";
+    import { get } from "svelte/store";
+    import { captureSession, isCurrentSession } from "$lib/services/sessionOwnership";
+    import { activeAccountId } from "$lib/stores/keyringStore";
+    import { currentProfileId } from "$lib/stores/profileContext";
     import { readCustom } from "$lib/utils/customFields";
     import { fade, scale } from "svelte/transition";
     import {
@@ -28,7 +32,7 @@
     import { estateExecutorName } from "$lib/stores/analyticsStore";
     import { activityLog } from "$lib/stores/activityLog.svelte";
     import { UserCircle, MapPin as MapPinIcon, Cross } from "lucide-svelte";
-    import { funeralStore, type FuneralWishes, type FuneralBudgetItem } from "$lib/stores/funeralStore.svelte";
+    import { funeralStore, funeralSync, type FuneralWishes, type FuneralBudgetItem } from "$lib/stores/funeralStore.svelte";
     import FuneralWizard from "$lib/components/modules/funeral/FuneralWizard.svelte";
     import LegalDisclaimer from "$lib/components/common/LegalDisclaimer.svelte";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
@@ -57,82 +61,108 @@
     let wishes = $derived($funeralStore!.wishes);
     let budgetItems = $derived($funeralStore!.budget);
 
+    let savingExpense = $state(false);
+    let costNote = $state<string | null>(null);
+    const recordedCost = (value: unknown): number | undefined => {
+        if ((typeof value !== "number" && typeof value !== "string") || (typeof value === "string" && !value.trim())) return undefined;
+        const amount = Number(value);
+        return Number.isFinite(amount) ? amount : undefined;
+    };
+    const shownCost = (value: unknown) => {
+        const amount = recordedCost(value);
+        return amount === undefined ? "Unknown" : `$${amount.toLocaleString()}`;
+    };
+    let expenseBusy = $derived(savingExpense || funeralSync.status === "syncing");
+    type ExpenseAttempt = { json: string; run: () => Promise<unknown>; release: () => void };
+    const expenseAttempts = new WeakMap<object, ExpenseAttempt>();
+    const expenseEdits = new Map<string, ExpenseAttempt>();
+    const expenseIds = new WeakMap<object, string>();
+    let expenseWrite: Promise<unknown> | null = null;
+    const expenseFingerprint = (form: object) => JSON.stringify({ fields: $state.snapshot(form), custom: parsedCustomAttributes });
+
     async function saveExpense() {
-        if (!newExpense.name) return;
-
-        const customAttrsString = JSON.stringify(parsedCustomAttributes);
-
-        if (newExpense.id) {
-            // Edit Mode: the item's industry average stays as it was.
-            try {
-                await funeralStore.update((data) => ({
-                ...data,
-                budget: data.budget.map((item) =>
-                    item.id === newExpense.id
-                        ? ({
-                              ...item,
-                              ...newExpense,
-                              cost: Number(newExpense.cost),
-                              custom_attributes: customAttrsString,
-                          } as FuneralBudgetItem)
-                        : item,
-                ),
-                }));
-            } catch {
-                return; // the manager already showed the one gentle message; the form stays open
-            }
-
-            // Log UPDATE
-            activityLog.logEvent({
-                module: "Funeral Planning",
-                action: "UPDATE",
-                entityType: "Budget Item",
-                entityId: newExpense.id,
-                entityName: newExpense.name || "Unnamed Item",
-                changes: [], // Simplified for now
-                userContext: $estateProfile.ownerName || "User",
-            });
-        } else {
-            // Create Mode
-            const newId = crypto.randomUUID();
-            try {
-                await funeralStore.update((data) => ({
-                ...data,
-                budget: [
-                    ...data.budget,
-                    {
-                        id: newId,
-                        name: newExpense.name || "Expense",
-                        cost: Number(newExpense.cost),
-                        estimated: industryAverage(newExpense.name),
-                        custom_attributes: customAttrsString,
-                    },
-                ],
-                }));
-            } catch {
-                return;
-            }
-
-            // Log CREATE
-            activityLog.logEvent({
-                module: "Funeral Planning",
-                action: "CREATE",
-                entityType: "Budget Item",
-                entityId: newId,
-                entityName: newExpense.name,
-                userContext: $estateProfile.ownerName || "User",
-            });
+        if (expenseBusy || !newExpense.name) return;
+        const cost = recordedCost(newExpense.cost);
+        if (cost === undefined) {
+            costNote = "A cost, including 0, completes this detail.";
+            return;
         }
-        resetExpenseForm();
+        costNote = null;
+        const form = newExpense;
+        const json = expenseFingerprint(form);
+        const earlier = expenseAttempts.get(form);
+        if (earlier?.json === json) { await earlier.run(); return; }
+        earlier?.release();
+        const isEdit = !!form.id;
+        const id = form.id || expenseIds.get(form) || crypto.randomUUID();
+        expenseIds.set(form, id);
+        const entry: FuneralBudgetItem = {
+            ...JSON.parse(json).fields, id, name: form.name, cost,
+            ...(!isEdit ? { estimated: industryAverage(form.name) } : {}),
+            custom_attributes: JSON.stringify(parsedCustomAttributes),
+        };
+        const owner = captureSession();
+        const account = get(activeAccountId);
+        const profile = get(currentProfileId);
+        const current = () => isCurrentSession(owner) && get(activeAccountId) === account && get(currentProfileId) === profile;
+        const userContext = $estateProfile.ownerName || "User";
+        const recoveryId = crypto.randomUUID();
+        let pending: Promise<unknown> | null = null;
+        let completed = false;
+        let released = false;
+        const attempt: ExpenseAttempt = {
+            json,
+            release: () => { released = true; funeralSync.releaseRecovery(recoveryId, owner); },
+            run: () => {
+                if (pending) return pending;
+                if (completed || released || !current()) return Promise.resolve();
+                const before = expenseWrite;
+                const p = (async () => {
+                    if (before) await before.catch(() => {});
+                    if (completed || released || !current()) return;
+                    savingExpense = true;
+                    try {
+                        const rows = funeralSync.data?.budget || [];
+                        const budget = rows.some((row) => row.id === id)
+                            ? rows.map((row) => row.id === id ? { ...row, ...entry } : row)
+                            : [...rows, entry];
+                        await funeralSync.update({ budget }, false, recoveryId, attempt.run);
+                        completed = true;
+                        if (expenseEdits.get(id) === attempt) expenseEdits.delete(id);
+                        try {
+                            activityLog.logEvent({
+                                module: "Funeral Planning", action: isEdit ? "UPDATE" : "CREATE", entityType: "Budget Item",
+                                entityId: id, entityName: entry.name, changes: [], userContext,
+                            });
+                        } catch { /* The record is already saved. */ }
+                        if (!released && current() && newExpense === form) {
+                            if (expenseFingerprint(form) === json) resetExpenseForm();
+                            else form.id = id;
+                        }
+                    } catch { /* The shared notice keeps this attempt; the form keeps its fields. */ }
+                    finally { savingExpense = false; }
+                })().finally(() => { pending = null; if (expenseWrite === p) expenseWrite = null; });
+                pending = p;
+                expenseWrite = p;
+                return p;
+            },
+        };
+        expenseAttempts.set(form, attempt);
+        expenseEdits.set(id, attempt);
+        await attempt.run();
     }
 
     function editExpense(item: FuneralBudgetItem) {
+        costNote = null;
+        expenseEdits.get(item.id)?.release();
+        expenseEdits.delete(item.id);
         newExpense = { ...item };
         parsedCustomAttributes = readCustom(item);
         showAddExpense = true;
     }
 
     function resetExpenseForm() {
+        costNote = null;
         newExpense = { id: undefined, name: "", cost: 0 };
         parsedCustomAttributes = {};
         showAddExpense = false;
@@ -173,14 +203,16 @@
 
     // Reactive Updates
     let totalBudget = $derived(
-        $funeralStore!.budget.reduce((acc, item) => acc + Number(item.cost || 0), 0),
+        $funeralStore!.budget.reduce((acc, item) => acc + (recordedCost(item.cost) ?? 0), 0),
     );
+    let unknownBudgetCost = $derived(budgetItems.some((item) => recordedCost(item.cost) === undefined));
     // Compare only the items that have a national average, against their own costs.
     let comparedItems = $derived(budgetItems.filter((i) => industryAverage(i.name) !== undefined));
     let totalEstimated = $derived(
         comparedItems.reduce((acc, item) => acc + (industryAverage(item.name) ?? 0), 0),
     );
-    let comparedCost = $derived(comparedItems.reduce((acc, item) => acc + Number(item.cost || 0), 0));
+    let comparedCost = $derived(comparedItems.reduce((acc, item) => acc + (recordedCost(item.cost) ?? 0), 0));
+    let unknownComparedCost = $derived(comparedItems.some((item) => recordedCost(item.cost) === undefined));
     let variance = $derived(totalEstimated - comparedCost);
     // Auto-Fill adds only the common costs the budget doesn't hold yet.
     let missingStandard = $derived(standardItems.filter((s) => !budgetItems.some((i) => findStandard(i.name) === s)));
@@ -394,7 +426,7 @@
                                 Total Estimated Cost
                             </div>
                             <div class="text-4xl font-serif font-bold">
-                                ${totalBudget.toLocaleString()}
+                                {unknownBudgetCost ? "Unknown" : `$${totalBudget.toLocaleString()}`}
                             </div>
                         </div>
 
@@ -426,7 +458,9 @@
                                 Saving vs. Avg
                             </div>
                             <p class="text-sm opacity-90 leading-relaxed">
-                                {#if variance === 0}
+                                {#if unknownComparedCost}
+                                    Unknown
+                                {:else if variance === 0}
                                     Your plan matches the national average.
                                 {:else if variance > 0}
                                     You are projected to save <span
@@ -496,7 +530,7 @@
                                     </div>
                                     <div class="flex items-center gap-6">
                                         <div class="font-bold text-foreground">
-                                            ${item.cost.toLocaleString()}
+                                            {shownCost(item.cost)}
                                         </div>
                                         <div class="flex gap-2">
                                             <button
@@ -579,9 +613,13 @@
                             <input id="funeral-cost"
                                 type="number"
                                 bind:value={newExpense.cost}
+                                aria-invalid={costNote ? true : undefined}
+                                aria-describedby={costNote ? "funeral-cost-note" : undefined}
+                                oninput={() => (costNote = null)}
                                 class="w-full p-3 bg-muted border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium"
                                 placeholder="0.00"
                             />
+                            {#if costNote}<p id="funeral-cost-note" role="status" class="text-sm text-muted-foreground">{costNote}</p>{/if}
                         </div>
                         <div class="pt-4 mt-4 border-t border-border">
                             <CustomFieldsManager
@@ -591,10 +629,11 @@
                         </div>
                         <button
                             onclick={saveExpense}
-                            disabled={!newExpense.name}
+                            disabled={expenseBusy || !newExpense.name}
+                            aria-busy={expenseBusy}
                             class="w-full py-4 bg-primary hover:bg-primary-hover text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Save this detail
+                            {expenseBusy ? "Saving..." : "Save this detail"}
                         </button>
                     </div>
                 </div>

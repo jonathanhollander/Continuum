@@ -40,10 +40,10 @@ export const digitalAssetsStore = {
         digitalAssetsSync.create({ ...acc, isClosed: false }),
     removeAccount: (id: string) => digitalAssetsSync.delete(id),
     updateAccount: (id: string, data: Partial<DigitalAccount>) => digitalAssetsSync.update(id, data),
-    toggleClosure: (id: string) => {
+    toggleClosure: async (id: string) => {
         const item = digitalAssetsSync.items.find(i => i.id === id);
         if (item) {
-            digitalAssetsSync.update(id, {
+            return digitalAssetsSync.update(id, {
                 isClosed: !item.isClosed,
                 closureDate: !item.isClosed ? new Date().toISOString() : null // null clears it on the server
             });

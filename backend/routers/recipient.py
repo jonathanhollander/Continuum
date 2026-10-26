@@ -35,6 +35,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, FrozenSet, Optional, Set, Tuple
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import JSONResponse
 from sqlmodel import Session, SQLModel, select
 
 from backend.auth import get_current_user
@@ -223,12 +224,12 @@ def view(token: str, session: Session = Depends(get_session)):
     out = _view(session, contact, preview=False)
     share_notes = contact.is_executor or out["snapshot"]["owner"].get("executor_note_sharing") == "all_recipients"
     _remember_shown(token, contact, _media_ids(out["snapshot"]), bool(share_notes))  # the page's files ask next
-    return out
+    return JSONResponse(content=out)
 
 
 @router.get("/preview/{contact_id}", summary="The owner's preview of a recipient's start page")
 def preview(contact_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
-    return _view(session, _owned(session, contact_id, user), preview=True)
+    return JSONResponse(content=_view(session, _owned(session, contact_id, user), preview=True))
 
 
 @router.get("/links")

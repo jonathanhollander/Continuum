@@ -1478,7 +1478,7 @@ export class SingletonSyncManager<T extends object> {
     }
 
     // quiet: a background write — no affirmation, failures go to the console only.
-    async update(newData: Partial<T>, quiet = false, recoveryId?: string) {
+    async update(newData: Partial<T>, quiet = false, recoveryId?: string, onRetry?: () => Promise<unknown>) {
         const owner = captureOwner();
         const generation = this.generation;
         const current = () => generation === this.generation && currentOwner(owner);
@@ -1565,7 +1565,13 @@ export class SingletonSyncManager<T extends object> {
                 message: 'Your draft is kept. We can save it again whenever you\'re ready.',
                 code: 'DATABASE_ERROR',
                 technicalDetails: errMessage(e) || String(e)
-            }, () => { if (current() && !this.released(owner, operation.key)) this.update(newData, quiet, operation.key).catch(() => {}); }));
+            }, () => {
+                if (current() && !this.released(owner, operation.key)) {
+                    Promise.resolve().then(() => {
+                        if (current() && !this.released(owner, operation.key)) return onRetry ? onRetry() : this.update(newData, quiet, operation.key);
+                    }).catch(() => {});
+                }
+            }));
             throw identifiedFailure(e, operation.key);
         } finally {
             settled();

@@ -1,4 +1,9 @@
 <script lang="ts">
+    import { get } from "svelte/store";
+    import { captureSession, isCurrentSession } from "$lib/services/sessionOwnership";
+    import { activeAccountId } from "$lib/stores/keyringStore";
+    import { currentProfileId } from "$lib/stores/profileContext";
+    import { formSaveAttempt } from "$lib/utils/formSaveAttempt";
     import { focusTrap } from "$lib/actions/focusTrap";
     import {
         advancedAssetStore,
@@ -7,6 +12,7 @@
         type AssetTransaction,
         type MaintenanceLog,
         type InsuranceClaim,
+        type AdvancedAssetState,
     } from "$lib/stores/advancedAssetStore.svelte";
     import {
         digitalAssetsStore,
@@ -120,38 +126,94 @@
 
     const today = () => new Date().toISOString().split("T")[0];
 
-    // One save; the form closes and clears only when it lands (a failure shows the manager's
-    // one gentle message and keeps what was typed).
+    let saving = $state(false);
+    let registryBusy = $derived(saving || advancedAssetSync.status === "syncing" || digitalAssetsSync.status === "syncing");
+    const saveAccountOnce = formSaveAttempt(digitalAssetsSync);
+    type RegistryAttempt = { json: string; run: () => Promise<unknown>; release: () => void };
+    const registryAttempts = new WeakMap<object, RegistryAttempt>();
+    const registryEdits = new Map<string, RegistryAttempt>();
+    const draftIds = new WeakMap<object, string>();
+    let registryWrite: Promise<unknown> | null = null;
+    const draftFor = (kind: typeof addType) => kind === "transaction" ? newTx : kind === "maintenance" ? newMaint : kind === "claim" ? newClaim : newAccount;
+    const registryFingerprint = (form: object) => JSON.stringify({ fields: $state.snapshot(form), custom: parsedCustomAttributes });
+
     async function handleAdd() {
-        const customAttrsString = JSON.stringify(parsedCustomAttributes);
-        try {
-            if (editingId) await saveEdit(customAttrsString);
-            else if (addType === "transaction")
-                await advancedAssetStore.addTransaction({
-                    ...newTx,
-                    custom_attributes: customAttrsString,
-                } as Omit<AssetTransaction, "id">);
-            else if (addType === "maintenance")
-                await advancedAssetStore.addMaintenance({
-                    ...newMaint,
-                    custom_attributes: customAttrsString,
-                } as Omit<MaintenanceLog, "id">);
-            else if (addType === "claim")
-                await advancedAssetStore.addClaim({
-                    ...newClaim,
-                    custom_attributes: customAttrsString,
-                } as Omit<InsuranceClaim, "id">);
-            else if (addType === "account")
-                await digitalAssetsSync.create({
-                    ...$state.snapshot(newAccount),
-                    isClosed: false,
-                } as Partial<DigitalAccount>);
-        } catch {
+        if (registryBusy) return;
+        const kind = addType;
+        const form = draftFor(kind);
+        const json = registryFingerprint(form);
+        if (kind === "account") {
+            const original = JSON.stringify($state.snapshot(form));
+            saving = true;
+            try {
+                await saveAccountOnce(form, { ...$state.snapshot(newAccount), isClosed: false }, (saved) => {
+                    if (newAccount === form) {
+                        if (addType === kind && JSON.stringify($state.snapshot(form)) === original) {
+                            resetForm();
+                            showAddModal = false;
+                        } else form.id = saved.id;
+                    }
+                }, form.id);
+            } catch { /* The manager keeps the draft and its Retry. */ }
+            finally { saving = false; }
             return;
         }
-
-        resetForm();
-        showAddModal = false;
+        const earlier = registryAttempts.get(form);
+        if (earlier?.json === json) { await earlier.run(); return; }
+        earlier?.release();
+        const id = editingId || form.id || draftIds.get(form) || crypto.randomUUID();
+        draftIds.set(form, id);
+        const entry = { ...structuredClone($state.snapshot(form)), id, custom_attributes: JSON.stringify(parsedCustomAttributes) };
+        const list = kind === "transaction" ? "transactions" : kind === "maintenance" ? "maintenance" : "claims";
+        const recordKey = `${kind}:${id}`;
+        const owner = captureSession();
+        const account = get(activeAccountId);
+        const profile = get(currentProfileId);
+        const current = () => isCurrentSession(owner) && get(activeAccountId) === account && get(currentProfileId) === profile;
+        const recoveryId = crypto.randomUUID();
+        let pending: Promise<unknown> | null = null;
+        let completed = false;
+        let released = false;
+        const attempt: RegistryAttempt = {
+            json,
+            release: () => { released = true; advancedAssetSync.releaseRecovery(recoveryId, owner); },
+            run: () => {
+                if (pending) return pending;
+                if (completed || released || !current()) return Promise.resolve();
+                const before = registryWrite;
+                const p = (async () => {
+                    if (before) await before.catch(() => {});
+                    if (completed || released || !current()) return;
+                    saving = true;
+                    try {
+                        // Apply this one immutable row to the latest list; other recorded rows stay intact.
+                        const rows = (advancedAssetSync.data || DEFAULT_ADVANCED_STATE)[list];
+                        const next = rows.some((row) => row.id === id)
+                            ? rows.map((row) => row.id === id ? { ...row, ...entry } : row)
+                            : [entry, ...rows];
+                        await advancedAssetSync.update({ [list]: next } as Partial<AdvancedAssetState>, false, recoveryId, attempt.run);
+                        completed = true;
+                        if (registryEdits.get(recordKey) === attempt) registryEdits.delete(recordKey);
+                        if (!released && current() && draftFor(kind) === form) {
+                            if (addType === kind && registryFingerprint(form) === json) {
+                                resetForm();
+                                showAddModal = false;
+                            } else {
+                                form.id = id;
+                                if (addType === kind) editingId = id;
+                            }
+                        }
+                    } catch { /* One shared notice; all visible fields remain editable. */ }
+                    finally { saving = false; }
+                })().finally(() => { pending = null; if (registryWrite === p) registryWrite = null; });
+                pending = p;
+                registryWrite = p;
+                return p;
+            },
+        };
+        registryAttempts.set(form, attempt);
+        registryEdits.set(recordKey, attempt);
+        await attempt.run();
     }
 
     function resetForm() {
@@ -175,6 +237,9 @@
     };
 
     function startEdit(kind: "transaction" | "maintenance" | "claim", item: AssetTransaction | MaintenanceLog | InsuranceClaim) {
+        const recordKey = `${kind}:${item.id}`;
+        registryEdits.get(recordKey)?.release();
+        registryEdits.delete(recordKey);
         const copy = { ...$state.snapshot(item) } as any;
         if (kind === "transaction") newTx = copy;
         if (kind === "maintenance") newMaint = copy;
@@ -183,20 +248,6 @@
         addType = kind;
         editingId = item.id;
         showAddModal = true;
-    }
-
-    // Replace the one row in place through the same singleton update the adds use.
-    // A failed save shows the manager's message, rolls back and keeps the form open.
-    function saveEdit(customAttrsString: string) {
-        const list = addType === "transaction" ? "transactions" : addType === "maintenance" ? "maintenance" : "claims";
-        const draft = addType === "transaction" ? newTx : addType === "maintenance" ? newMaint : newClaim;
-        const current = advancedAssetSync.data || DEFAULT_ADVANCED_STATE;
-        return advancedAssetSync.update({
-            ...current,
-            [list]: (current[list] as { id: string }[]).map((x) =>
-                x.id === editingId ? { ...x, ...$state.snapshot(draft), id: x.id, custom_attributes: customAttrsString } : x,
-            ),
-        });
     }
 
     // The store has no remove calls: save the record without the item, the same
@@ -639,7 +690,7 @@
                                     <p
                                         class="font-black text-foreground font-mono"
                                     >
-                                        ${(claim.amountClaimed ?? 0).toLocaleString()}
+                                        {claim.amountClaimed == null ? "Unknown" : `$${claim.amountClaimed.toLocaleString()}`}
                                     </p>
                                 </div>
                                 <button aria-label="Edit these details"
@@ -782,7 +833,7 @@
                                         onclick={() =>
                                             digitalAssetsStore.toggleClosure(
                                                 acc.id,
-                                            )}
+                                            ).catch(() => {})}
                                         class="flex items-center gap-2 group"
                                     >
                                         <div
@@ -1207,9 +1258,11 @@
                 <div class="pt-6 flex items-center gap-4">
                     <button
                         onclick={handleAdd}
+                        disabled={registryBusy}
+                        aria-busy={registryBusy}
                         class="flex-1 py-4 bg-primary text-primary-foreground rounded-2xl font-black shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all text-sm"
                     >
-                        Save my thoughts
+                        {registryBusy ? "Saving..." : "Save my thoughts"}
                     </button>
                     <button
                         onclick={closeModal}

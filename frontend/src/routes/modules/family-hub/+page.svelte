@@ -31,6 +31,9 @@
     import { timelineStore } from "$lib/stores/timelineStore.svelte";
     import { estateExecutorName } from "$lib/stores/analyticsStore";
     import { activityLog } from "$lib/stores/activityLog.svelte";
+    import { getRegistry } from "$lib/services/sync.svelte";
+    import { formSaveAttempt } from "$lib/utils/formSaveAttempt";
+    import { captureSession, type SessionOwnership } from "$lib/services/sessionOwnership";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
@@ -172,75 +175,61 @@
         await attempt();
     }
 
+    let savingMemory = $state(false);
+    const memoryManager = getRegistry().family_memories;
+    const saveMemoryOnce = formSaveAttempt(memoryManager);
+    const memoryRecoveries = new Map<string, { id: string; owner: SessionOwnership }>();
+    let memoryBusy = $derived(savingMemory || memoryManager.status === "syncing");
+
     async function saveMemory() {
-        if (!newMemory.title) return;
-
+        if (memoryBusy || !newMemory.title) return;
+        const form = newMemory;
+        const original = JSON.stringify($state.snapshot(form));
+        const submitted = { ...JSON.parse(original), is_favorite: form.is_favorite ?? false };
+        const id = form.id;
+        const owner = captureSession();
+        const userContext = $estateProfile.ownerName || "User";
+        const oldMemory = id ? memories.find((m) => m.id === id) : undefined;
+        const changes = oldMemory ? ["title", "desc", "text"].flatMap((field) => {
+            const key = field as "title" | "desc" | "text";
+            return oldMemory[key] !== submitted[key]
+                ? [{ field: field === "desc" ? "description" : field, oldValue: oldMemory[key], newValue: submitted[key] }]
+                : [];
+        }) : [];
+        let failureId: string | undefined;
+        savingMemory = true;
         try {
-        if (newMemory.id) {
-            // Edit Mode
-            const oldMemory = memories.find(
-                (m: Memory) => m.id === newMemory.id,
-            );
-            const changes = [];
-
-            if (oldMemory) {
-                if (oldMemory.title !== newMemory.title)
-                    changes.push({
-                        field: "title",
-                        oldValue: oldMemory.title,
-                        newValue: newMemory.title,
+            await saveMemoryOnce(form, submitted, (saved) => {
+                if (id && memoryRecoveries.get(String(id))?.id === failureId) memoryRecoveries.delete(String(id));
+                // Bookkeeping follows the confirmed write and never changes its outcome.
+                try {
+                    activityLog.logEvent({
+                        module: "Family Hub", action: id ? "UPDATE" : "CREATE", entityType: "Memory",
+                        entityId: String(saved.id), entityName: submitted.title || "Unnamed Memory", changes, userContext,
                     });
-                if (oldMemory.desc !== newMemory.desc)
-                    changes.push({
-                        field: "description",
-                        oldValue: oldMemory.desc,
-                        newValue: newMemory.desc,
-                    });
-                if (oldMemory.text !== newMemory.text)
-                    changes.push({
-                        field: "text",
-                        oldValue: oldMemory.text,
-                        newValue: newMemory.text,
-                    });
+                } catch { /* The record is already saved. */ }
+                if (newMemory === form) {
+                    if (JSON.stringify($state.snapshot(form)) === original) resetForm();
+                    else form.id = Number(saved.id);
+                }
+            }, id);
+        } catch (e) {
+            if (e && typeof e === "object" && "recoveryId" in e && typeof e.recoveryId === "string") {
+                failureId = e.recoveryId;
+                if (id) memoryRecoveries.set(String(id), { id: failureId, owner });
             }
-
-            await updateFamilyMemory(newMemory.id, newMemory as any);
-
-            // Log UPDATE
-            activityLog.logEvent({
-                module: "Family Hub",
-                action: "UPDATE",
-                entityType: "Memory",
-                entityId: String(newMemory.id),
-                entityName: newMemory.title || "Unnamed Memory",
-                changes,
-                userContext: $estateProfile.ownerName || "User",
-            });
-        } else {
-            // Create Mode
-            const created = await addFamilyMemory({
-                ...newMemory,
-                is_favorite: false,
-            } as any, saveMemory);
-
-            // Log CREATE
-            activityLog.logEvent({
-                module: "Family Hub",
-                action: "CREATE",
-                entityType: "Memory",
-                entityId: String(created?.id ?? "new"),
-                entityName: newMemory.title || "Unnamed Memory",
-                userContext: $estateProfile.ownerName || "User",
-            });
-        }
-
-        resetForm();
-        } catch {
-            // The manager already showed the one gentle message; the form stays open with the draft.
+            // The shared notice keeps this immutable attempt; every visible field stays here.
+        } finally {
+            savingMemory = false;
         }
     }
 
     function editMemory(memory: Memory) {
+        const earlier = memoryRecoveries.get(String(memory.id));
+        if (earlier) {
+            memoryManager.releaseRecovery(earlier.id, earlier.owner);
+            memoryRecoveries.delete(String(memory.id));
+        }
         newMemory = { ...memory };
         showAddModal = true;
     }
@@ -472,9 +461,11 @@
 
                     <button
                         onclick={saveMemory}
+                        disabled={memoryBusy}
+                        aria-busy={memoryBusy}
                         class="w-full py-4 bg-primary text-primary-foreground rounded-xl font-bold shadow-lg hover:shadow-xl hover:bg-primary-hover transition-all transform active:scale-95"
                     >
-                        Save this memory
+                        {memoryBusy ? "Saving..." : "Save this memory"}
                     </button>
                 </div>
             </div>
