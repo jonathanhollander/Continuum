@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { fade, fly } from 'svelte/transition';
 	import type { ErrorNotification } from '$lib/services/errorHandler';
+	import { CircleAlert, Clock, Lock, Paperclip, Search, WifiOff } from 'lucide-svelte';
 
 	interface Props {
 		notification: ErrorNotification;
@@ -35,15 +36,16 @@
 		return () => clearInterval(timer);
 	});
 
-	// Icon based on error code
+	// Icon based on error code, drawn in the gentle warning colour
 	const getIcon = (code?: string) => {
-		if (code?.includes('AUTH') || code?.includes('TOKEN')) return '🔒';
-		if (code === 'NOT_FOUND') return '🔍';
-		if (code === 'NETWORK_ERROR') return '📡';
-		if (code?.includes('FILE')) return '📎';
-		if (code === 'RATE_LIMITED') return '⏱️';
-		return '⚠️';
+		if (code?.includes('AUTH') || code?.includes('TOKEN')) return Lock;
+		if (code === 'NOT_FOUND') return Search;
+		if (code === 'NETWORK_ERROR') return WifiOff;
+		if (code?.includes('FILE')) return Paperclip;
+		if (code === 'RATE_LIMITED') return Clock;
+		return CircleAlert;
 	};
+	const Icon = $derived(getIcon(notification.code));
 
 </script>
 
@@ -53,8 +55,8 @@
 	role="alert"
 	aria-live="polite"
 >
-	<div class="error-icon">
-		{getIcon(notification.code)}
+	<div class="error-icon" aria-hidden="true">
+		<Icon size={22} />
 	</div>
 
 	<div class="error-content">
@@ -91,8 +93,14 @@
 		align-items: flex-start;
 		gap: 12px;
 		padding: 16px;
-		background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);
-		border-left: 4px solid #ff4444;
+		/* A save that didn't go through is a gentle "needs a look" (warning), never alarm red. */
+		background: linear-gradient(
+			135deg,
+			color-mix(in srgb, var(--color-warning) 8%, var(--color-card)) 0%,
+			var(--color-card) 100%
+		);
+		border: 1px solid var(--color-border);
+		border-left: 4px solid var(--color-warning);
 		border-radius: 8px;
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 		max-width: 450px;
@@ -103,8 +111,10 @@
 	}
 
 	.error-icon {
-		font-size: 24px;
 		flex-shrink: 0;
+		display: flex;
+		color: var(--color-warning);
+		padding-top: 1px;
 	}
 
 	.error-content {
@@ -116,13 +126,13 @@
 
 	.error-title {
 		font-weight: 600;
-		color: #2d3748;
+		color: var(--color-foreground);
 		font-size: 15px;
 		margin: 0;
 	}
 
 	.error-message {
-		color: #4a5568;
+		color: var(--color-muted-foreground);
 		font-size: 14px;
 		line-height: 1.5;
 		margin: 0;
@@ -137,7 +147,7 @@
 	.details-toggle {
 		background: none;
 		border: none;
-		color: #3182ce;
+		color: var(--color-primary-hover);
 		font-size: 12px;
 		cursor: pointer;
 		padding: 0;
@@ -145,12 +155,12 @@
 	}
 
 	.details-toggle:hover {
-		color: #2c5aa0;
+		color: var(--color-foreground);
 	}
 
 	.technical-details {
-		background: #f7fafc;
-		border: 1px solid #e2e8f0;
+		background: var(--color-muted);
+		border: 1px solid var(--color-border);
 		border-radius: 4px;
 		padding: 8px;
 		margin-top: 8px;
@@ -164,7 +174,7 @@
 		font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 		white-space: pre-wrap;
 		word-break: break-word;
-		color: #4a5568;
+		color: var(--color-muted-foreground);
 	}
 
 	.retry-button,
@@ -179,21 +189,22 @@
 	}
 
 	.retry-button {
-		background: #3182ce;
-		color: white;
+		background: var(--color-primary);
+		color: var(--color-primary-foreground);
 	}
 
 	.retry-button:hover {
-		background: #2c5aa0;
+		background: var(--color-primary-hover);
 	}
 
 	.dismiss-button {
-		background: #e2e8f0;
-		color: #4a5568;
+		background: var(--color-muted);
+		color: var(--color-foreground);
+		border: 1px solid var(--color-border);
 	}
 
 	.dismiss-button:hover {
-		background: #cbd5e0;
+		background: var(--color-border);
 	}
 
 	.close-button {
@@ -204,7 +215,7 @@
 		border: none;
 		font-size: 24px;
 		line-height: 1;
-		color: #a0aec0;
+		color: var(--color-muted-foreground);
 		cursor: pointer;
 		padding: 4px;
 		width: 32px;
@@ -217,8 +228,8 @@
 	}
 
 	.close-button:hover {
-		background: rgba(0, 0, 0, 0.05);
-		color: #4a5568;
+		background: var(--color-muted);
+		color: var(--color-foreground);
 	}
 
 	/* Compassionate, gentle animations */

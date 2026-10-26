@@ -14,7 +14,7 @@
 
     let audit = $derived($estateAudit);
     let ringColor = $derived(
-        audit.percentage === 100 ? "stroke-emerald-500" : "stroke-blue-500",
+        audit.percentage === 100 ? "stroke-success" : "stroke-info",
     );
     // A gentle cue, not 0% and 0 pts, until every store the audit reads has its first server
     // answer (a store this device already holds records for counts as answered).
@@ -75,12 +75,12 @@
         </svg>
         <div class="absolute inset-0 flex flex-col items-center justify-center">
             {#if isLoading}
-                <Loader2 size={28} class="animate-spin text-blue-400" />
+                <Loader2 size={28} class="animate-spin text-info" />
             {:else}
                 <span class="text-3xl font-bold text-white"
                     >{audit.percentage}%</span
                 >
-                <span class="text-[10px] uppercase tracking-widest text-slate-500"
+                <span class="text-[10px] uppercase tracking-widest text-muted-foreground"
                     >Ready</span
                 >
             {/if}
@@ -90,7 +90,7 @@
 
 {#if isLoading}
     <div class="flex flex-col items-center justify-center gap-3 py-16" role="status" data-testid="readiness-loading">
-        <Loader2 class="w-8 h-8 animate-spin text-blue-400" />
+        <Loader2 class="w-8 h-8 animate-spin text-info" />
         <p class="text-sm text-slate-400">Gathering your records...</p>
     </div>
 {:else}
@@ -112,7 +112,7 @@
             <!-- Mini Progress Bar -->
             <div class="h-2 bg-slate-800 rounded-full overflow-hidden mb-4">
                 <div
-                    class="h-full bg-blue-500 transition-all duration-500"
+                    class="h-full bg-info transition-all duration-500"
                     style="width: {share(id, score) * 100}%"
                 ></div>
             </div>
@@ -130,7 +130,7 @@
             <div class="flex justify-end">
                 <a
                     href="/modules/{modulePath[id] ?? id}"
-                    class="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-medium"
+                    class="text-xs text-primary hover:text-primary-hover flex items-center gap-1 font-medium"
                 >
                     Go to Module <ArrowRight size={12} />
                 </a>
@@ -146,9 +146,9 @@
         <div class="space-y-3">
             {#each audit.issues.slice(0, 5) as issue}
                 <div
-                    class="flex items-center gap-4 p-4 bg-slate-900/50 border-l-4 border-amber-500 rounded-r-lg"
+                    class="flex items-center gap-4 p-4 bg-slate-900/50 border-l-4 border-warning rounded-r-lg"
                 >
-                    <CircleCheck class="text-amber-500 shrink-0" size={20} />
+                    <CircleCheck class="text-warning shrink-0" size={20} />
                     <span class="text-slate-300 text-sm font-medium"
                         >{issue}</span
                     >

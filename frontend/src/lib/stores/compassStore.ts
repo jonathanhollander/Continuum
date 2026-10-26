@@ -83,7 +83,7 @@ const BRIEFS: Record<string, CompassBrief> = {
     },
     '/modules/digital-guardian': {
         title: "Digital Guardian",
-        mission: "Ensure your digital life (photos, emails, crypto) doesn't vanish.",
+        mission: "Keep your digital life (photos, emails, crypto) within your family's reach.",
         emotional_context: "Our digital lives are huge parts of who we are now. Losing access to 20 years of photos is a modern tragedy we can prevent.",
         human_impact: "Most terms of service say your account dies with you. giving your executor lawful access (like Apple Legacy Contact) is the only way to save those memories.",
         key_deliverables: [

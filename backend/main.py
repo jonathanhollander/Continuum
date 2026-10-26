@@ -242,13 +242,28 @@ if settings.is_production():
 
 # --- Global Exception Handlers ---
 
+# The technical message stays in the logs. The browser receives it only on a local
+# development run: ENVIRONMENT defaults to "development", and production on Railway
+# leaves it unset, so a Railway run counts as deployed whatever ENVIRONMENT says (X227).
+SEND_TECHNICAL_TO_BROWSER = settings.is_development() and not settings.RAILWAY_ENVIRONMENT
+
+
+def _error_json(request: Request, error_response) -> dict:
+    body = error_response.to_dict()
+    technical = body.get("_technical") or error_response.message
+    logger.info(f"{request.method} {request.url.path} -> {error_response.status_code}: {technical}")
+    if not SEND_TECHNICAL_TO_BROWSER:
+        body.pop("_technical", None)
+    return body
+
+
 @app.exception_handler(ContinuumException)
 async def continuum_exception_handler(request: Request, exc: ContinuumException):
     """Handle all ContinuumException errors with consistent formatting."""
     error_response = exc.to_error_response()
     return JSONResponse(
         status_code=exc.status_code,
-        content=error_response.to_dict()
+        content=_error_json(request, error_response)
     )
 
 
@@ -258,7 +273,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     error_response = handle_exception(exc, context=f"{request.method} {request.url.path}")
     return JSONResponse(
         status_code=exc.status_code,
-        content=error_response.to_dict()
+        content=_error_json(request, error_response)
     )
 
 
@@ -268,7 +283,7 @@ async def general_exception_handler(request: Request, exc: Exception):
     error_response = handle_exception(exc, context=f"{request.method} {request.url.path}")
     return JSONResponse(
         status_code=error_response.status_code,
-        content=error_response.to_dict()
+        content=_error_json(request, error_response)
     )
 
 # --- Models ---

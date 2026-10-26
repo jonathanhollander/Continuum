@@ -42,8 +42,8 @@ def update_family_memory(memory_id: int, memory_data: FamilyMemory, user: User =
     if not db_memory or db_memory.user_id != user.id:
         raise HTTPException(status_code=404, detail="That memory may have been moved.")
     
-    # Update fields
-    for key, value in memory_data.model_dump(exclude={"id", "user_id"}).items():
+    # Only the fields the client sent (card X227, same as PUT /visual).
+    for key, value in memory_data.model_dump(exclude_unset=True, exclude={"id", "user_id"}).items():
         setattr(db_memory, key, value)
     
     session.add(db_memory)
@@ -166,7 +166,8 @@ def update_external_archive(archive_id: int, archive_data: ExternalArchive, user
     if not db_archive or db_archive.user_id != user.id:
         raise HTTPException(status_code=404, detail="That archive may have been moved.")
     
-    for key, value in archive_data.model_dump(exclude={"id", "user_id"}).items():
+    # Only the fields the client sent (card X233, same as PUT /family and /visual).
+    for key, value in archive_data.model_dump(exclude_unset=True, exclude={"id", "user_id"}).items():
         setattr(db_archive, key, value)
     
     session.add(db_archive)

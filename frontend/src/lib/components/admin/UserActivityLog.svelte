@@ -30,7 +30,7 @@
     <div class="h-64 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
         {#if $engagementLog.length === 0}
             <div class="text-center py-10 text-muted-foreground italic text-sm">
-                No activity recorded yet for this session.
+                Activity from this session will appear here.
             </div>
         {:else}
             {#each [...$engagementLog].reverse() as log, i}

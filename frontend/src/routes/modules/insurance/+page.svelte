@@ -438,7 +438,7 @@
 <LivingBlueprintHeader
     title="Insurance Portfolio"
     subtitle="Protecting your loved ones with financial security"
-    detailedDescription="Life insurance and protection policies are acts of love. They ensure your family has financial security to look after them, bridging the gap when they need it most."
+    detailedDescription="Life insurance and protection policies are acts of love. They bring your family financial support, bridging the gap when they need it most."
     whyMatters="Cataloging your policies here helps every benefit reach the people you love."
 >
     <div class="flex flex-wrap items-center gap-3">

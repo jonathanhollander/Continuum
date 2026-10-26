@@ -52,22 +52,22 @@
                 <div class="flex items-center gap-3 mb-2 opacity-60">
                     <Activity size={20} class="text-indigo-400" />
                     <span class="text-xs font-bold uppercase tracking-widest"
-                        >System Status</span
+                        >Where Things Stand</span
                     >
                 </div>
                 <h1 class="text-5xl font-serif font-bold text-white mb-2">
                     Insights
                 </h1>
                 <p class="text-slate-400 text-lg max-w-2xl mb-6">
-                    Monitor the vitality of your estate preparedness across
-                    three core pillars: Legal, Financial, and Legacy.
+                    A gentle look at how your plans are coming together across
+                    three pillars: Legal, Financial, and Legacy.
                 </p>
                 <button
                     class="flex items-center gap-2 bg-slate-900 border border-slate-700 text-white px-6 py-3 rounded-2xl transition-all shadow-xl shadow-slate-900/40 hover:scale-105 active:scale-95 font-bold"
                     onclick={() => (showFireDrill = true)}
                 >
                     <Flame size={18} />
-                    Check System Integrity
+                    Try the Fire Drill
                 </button>
             </div>
 
@@ -281,7 +281,7 @@
                                         <div
                                             class="text-slate-500 text-xs uppercase tracking-wider mt-1"
                                         >
-                                            {gap.type} Pillar Impact
+                                            {gap.type} pillar
                                         </div>
                                     </div>
                                 </div>
@@ -308,9 +308,9 @@
                     All in order
                 </h2>
                 <p class="text-emerald-200/80 max-w-lg mx-auto">
-                    Your continuum health is excellent. All major pillars are
-                    secured. Consider reviewing your beneficiaries annually or
-                    adding more personal stories to your legacy.
+                    Each pillar is in good shape. A yearly look at your
+                    beneficiaries, and a new story now and then, keeps your
+                    legacy current.
                 </p>
             </div>
         {/if}

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { notifications } from '$lib/stores/notificationStore';
 	import ErrorNotification from './ErrorNotification.svelte';
+	import { CircleCheck, Info } from 'lucide-svelte';
 
 	import { onMount } from 'svelte';
 
@@ -61,7 +62,7 @@
 			/>
 		{:else if notification.type === 'success'}
 			<div class="success-notification" role="alert">
-				<div class="notification-icon">✅</div>
+				<div class="notification-icon" aria-hidden="true"><CircleCheck size={22} /></div>
 				<div class="notification-content">
 					<div class="notification-title">{notification.title}</div>
 					{#if notification.secondaryMessage && notification.secondaryMessage !== notification.message}
@@ -80,7 +81,7 @@
 			</div>
 		{:else if notification.type === 'info'}
 			<div class="info-notification" role="status">
-				<div class="notification-icon">ℹ️</div>
+				<div class="notification-icon" aria-hidden="true"><Info size={22} /></div>
 				<div class="notification-content">
 					<div class="notification-title">{notification.title}</div>
 					<div class="notification-message">{notification.message}</div>
@@ -136,19 +137,31 @@
 		animation: slideIn 0.3s ease-out;
 	}
 
+	/* Palette tokens from app.css, so both themes follow (V0e section 3). */
 	.success-notification {
-		background: linear-gradient(135deg, #f0fff4 0%, #ffffff 100%);
-		border-left: 4px solid #48bb78;
+		--status: var(--color-success);
 	}
 
 	.info-notification {
-		background: linear-gradient(135deg, #ebf8ff 0%, #ffffff 100%);
-		border-left: 4px solid #4299e1;
+		--status: var(--color-info);
+	}
+
+	.success-notification,
+	.info-notification {
+		background: linear-gradient(
+			135deg,
+			color-mix(in srgb, var(--status) 8%, var(--color-card)) 0%,
+			var(--color-card) 100%
+		);
+		border: 1px solid var(--color-border);
+		border-left: 4px solid var(--status);
 	}
 
 	.notification-icon {
-		font-size: 24px;
 		flex-shrink: 0;
+		display: flex;
+		color: var(--status);
+		padding-top: 1px;
 	}
 
 	.notification-content {
@@ -160,18 +173,18 @@
 
 	.notification-title {
 		font-weight: 600;
-		color: #2d3748;
+		color: var(--color-foreground);
 		font-size: 15px;
 	}
 
 	.notification-message {
-		color: #4a5568;
+		color: var(--color-muted-foreground);
 		font-size: 14px;
 		line-height: 1.5;
 	}
 
 	.notification-secondary {
-		color: #48bb78;
+		color: var(--color-success);
 		font-size: 13px;
 		line-height: 1.4;
 		font-weight: 500;
@@ -186,7 +199,7 @@
 		border: none;
 		font-size: 24px;
 		line-height: 1;
-		color: #a0aec0;
+		color: var(--color-muted-foreground);
 		cursor: pointer;
 		padding: 4px;
 		width: 32px;
@@ -199,8 +212,8 @@
 	}
 
 	.close-button:hover {
-		background: rgba(0, 0, 0, 0.05);
-		color: #4a5568;
+		background: var(--color-muted);
+		color: var(--color-foreground);
 	}
 
 	@keyframes slideIn {

@@ -162,30 +162,30 @@
 
 <div class="space-y-2">
     {#if label}
-        <label id="{uid}-label" for="{uid}-file" class="block text-xs font-bold uppercase text-gray-500 mb-1"
+        <label id="{uid}-label" for="{uid}-file" class="block text-xs font-bold uppercase text-muted-foreground mb-1"
             >{label}</label
         >
     {/if}
 
     {#if value}
         <div
-            class="relative rounded-xl overflow-hidden bg-white border border-gray-200 group transition-all hover:shadow-md"
+            class="relative rounded-xl overflow-hidden bg-card border border-border group transition-all hover:shadow-md"
         >
             <MediaView src={mediaId ?? value} record={uploaded && uploaded.id === shownId ? uploaded : undefined} />
 
             <!-- Overlay Actions -->
-            <div class="bg-gray-50 p-2 flex justify-end gap-2 border-t border-gray-100">
+            <div class="bg-muted p-2 flex justify-end gap-2 border-t border-border">
                 <button
                     type="button"
                     onclick={() => fileInput?.click()}
-                    class="text-gray-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-200 flex items-center gap-2"
+                    class="text-foreground px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-card hover:shadow-sm border border-transparent hover:border-border flex items-center gap-2"
                 >
                     <RefreshCw size={14} /> Replace
                 </button>
                 <button
                     type="button"
                     onclick={clearFile}
-                    class="text-rose-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-white hover:shadow-sm border border-transparent hover:border-rose-100 flex items-center gap-2"
+                    class="text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-card hover:shadow-sm border border-transparent hover:border-border flex items-center gap-2"
                 >
                     <Trash2 size={14} /> Remove
                 </button>
@@ -199,13 +199,19 @@
                 class="hidden"
             />
         </div>
+        {#if error}
+            <p role="alert" class="text-xs font-bold text-warning">
+                {error}
+            </p>
+        {/if}
     {:else}
         <div
             class="relative border-2 border-dashed rounded-xl p-6 text-center transition-all cursor-pointer
             {dragging
-                ? 'border-[#4A7C74] bg-[#4A7C74]/5'
-                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}
-            {error ? 'border-red-300 bg-red-50' : ''}"
+                ? 'border-primary bg-primary-soft'
+                : error
+                  ? 'border-warning bg-card'
+                  : 'border-border bg-card hover:border-muted-foreground/40 hover:bg-muted'}"
             ondragover={handleDragOver}
             ondragleave={handleDragLeave}
             ondrop={handleDrop}
@@ -225,34 +231,34 @@
             />
 
             <div
-                class="flex flex-col items-center justify-center gap-3 text-gray-400"
+                class="flex flex-col items-center justify-center gap-3 text-muted-foreground"
             >
                 {#if processing}
                     <div
                         class="relative h-12 w-12 flex items-center justify-center"
                     >
                         <Loader2
-                            class="animate-spin text-[#4A7C74]"
+                            class="animate-spin text-primary"
                             size={32}
                         />
                     </div>
                     <div
                         class="flex flex-col gap-1 items-center w-full max-w-[200px]"
                     >
-                        <span class="text-sm font-medium text-gray-700"
+                        <span class="text-sm font-medium text-foreground"
                             >Uploading... {uploadProgress}%</span
                         >
                         <div
-                            class="w-full h-1 bg-gray-200 rounded-full overflow-hidden"
+                            class="w-full h-1 bg-border rounded-full overflow-hidden"
                         >
                             <div
-                                class="h-full bg-[#4A7C74] transition-all duration-300"
+                                class="h-full bg-primary transition-all duration-300"
                                 style="width: {uploadProgress}%"
                             ></div>
                         </div>
                     </div>
                 {:else}
-                    <div class="p-3 bg-white rounded-full shadow-sm">
+                    <div class="p-3 bg-card rounded-full shadow-sm">
                         {#if mode === "document"}
                             <FileText size={24} />
                         {:else if mode === "image"}
@@ -262,14 +268,14 @@
                         {/if}
                     </div>
                     <div>
-                        <p class="text-sm font-bold text-gray-600">
+                        <p class="text-sm font-bold text-foreground">
                             {mode === "image"
                                 ? "Upload Image"
                                 : mode === "document"
                                   ? "Upload Document"
                                   : "Add a file here"}
                         </p>
-                        <p class="text-xs mt-1 text-gray-400">
+                        <p class="text-xs mt-1 text-muted-foreground">
                             {mode === "image"
                                 ? "JPG, PNG"
                                 : mode === "document"
@@ -282,7 +288,8 @@
 
             {#if error}
                 <div
-                    class="mt-3 text-xs font-bold text-red-500 bg-white/50 py-1 px-2 rounded inline-block"
+                    role="alert"
+                    class="mt-3 text-xs font-bold text-warning py-1 px-2 rounded inline-block"
                 >
                     {error}
                 </div>

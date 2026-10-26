@@ -110,15 +110,15 @@
 <div class="flex flex-col h-full">
     <!-- View Controls -->
     <div class="flex justify-between items-center mb-6">
-        <div class="text-xs font-bold uppercase tracking-widest text-slate-400">
+        <div class="text-xs font-bold uppercase tracking-widest text-muted-foreground">
             {items.length} Items
         </div>
-        <div class="bg-slate-100 p-1 rounded-lg flex">
+        <div class="bg-muted p-1 rounded-lg flex">
             <button
                 type="button"
                 class="p-2 rounded-md transition-all {viewMode === 'grid'
-                    ? 'bg-white text-[#4A7C74] shadow-sm'
-                    : 'text-slate-400 hover:text-slate-600'}"
+                    ? 'bg-card text-primary shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'}"
                 onclick={() => {
                     viewMode = "grid";
                     onviewchange?.("grid");
@@ -128,9 +128,10 @@
                 <Grid size={18} />
             </button>
             <button
+                type="button"
                 class="p-2 rounded-md transition-all {viewMode === 'carousel'
-                    ? 'bg-white text-[#4A7C74] shadow-sm'
-                    : 'text-slate-400 hover:text-slate-600'}"
+                    ? 'bg-card text-primary shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'}"
                 onclick={() => {
                     viewMode = "carousel";
                     onviewchange?.("carousel");
@@ -147,14 +148,14 @@
     {#if viewMode === "grid"}
         {#if items.length === 0}
             <div
-                class="flex flex-col items-center justify-center py-20 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200"
+                class="flex flex-col items-center justify-center py-20 bg-muted rounded-2xl border-2 border-dashed border-border"
             >
                 <div
-                    class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-slate-300 shadow-sm mb-4"
+                    class="w-16 h-16 bg-card rounded-full flex items-center justify-center text-muted-foreground shadow-sm mb-4"
                 >
                     <ImageIcon size={32} />
                 </div>
-                <p class="text-slate-400 font-medium">Photos you add will appear here.</p>
+                <p class="text-muted-foreground font-medium">Photos you add will appear here.</p>
             </div>
         {:else}
             <div
@@ -165,10 +166,10 @@
                     <div
                         role="button"
                         tabindex="0"
-                        class="group relative aspect-square bg-slate-100 rounded-xl overflow-hidden cursor-pointer hover:shadow-lg transition-all text-left appearance-none border-none p-0 w-full {selectedIds.includes(
+                        class="group relative aspect-square bg-muted rounded-xl overflow-hidden cursor-pointer hover:shadow-lg transition-all text-left appearance-none border-none p-0 w-full {selectedIds.includes(
                             item.id,
                         )
-                            ? 'ring-4 ring-indigo-500 ring-offset-2'
+                            ? 'ring-4 ring-primary ring-offset-2'
                             : ''}"
                         onclick={() => handleCardClick(item)}
                         onkeydown={(e) => {
@@ -223,7 +224,7 @@
                                     class="h-6 w-6 rounded-full border-2 border-white flex items-center justify-center transition-colors {selectedIds.includes(
                                         item.id,
                                     )
-                                        ? 'bg-indigo-500 border-indigo-500'
+                                        ? 'bg-primary border-primary'
                                         : 'bg-black/30'}"
                                 >
                                     {#if selectedIds.includes(item.id)}
@@ -250,7 +251,8 @@
                                 <div class="absolute top-2 right-2 flex gap-1">
                                     {#if allowFavorites}
                                         <button
-                                            class="p-1.5 bg-white/80 backdrop-blur rounded-full hover:bg-white text-slate-500 hover:text-red-500 transition-colors"
+                                            type="button"
+                                            class="p-1.5 bg-card/80 backdrop-blur rounded-full hover:bg-card text-muted-foreground hover:text-gold-text transition-colors"
                                             onclick={(e) =>
                                                 toggleFavorite(item.id, e)}
                                             title="Favorite"
@@ -258,14 +260,15 @@
                                             <Heart
                                                 size={14}
                                                 class={item.isFavorite
-                                                    ? "fill-red-500 text-red-500"
+                                                    ? "fill-gold text-gold-text"
                                                     : ""}
                                             />
                                         </button>
                                     {/if}
                                     {#if allowDelete}
                                         <button
-                                            class="p-1.5 bg-white/80 backdrop-blur rounded-full hover:bg-white text-slate-500 hover:text-rose-500 transition-colors"
+                                            type="button"
+                                            class="p-1.5 bg-card/80 backdrop-blur rounded-full hover:bg-card text-muted-foreground hover:text-foreground transition-colors"
                                             onclick={(e) =>
                                                 handleDelete(item.id, e)}
                                             title="Delete"
@@ -280,6 +283,7 @@
                                         class="flex gap-2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity delay-75"
                                     >
                                         <button
+                                            type="button"
                                             class="text-[10px] bg-white/20 backdrop-blur px-2 py-0.5 rounded-full text-white hover:bg-white/40"
                                             onclick={(e) =>
                                                 handleSetCover(item, e)}
@@ -322,7 +326,7 @@
             {/key}
 
             <!-- Controls -->
-            <button aria-label="Previous"
+            <button type="button" aria-label="Previous"
                 class="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/40 text-white hover:bg-black/60 disabled:opacity-30 backdrop-blur transition-all z-20"
                 onclick={prevImage}
                 disabled={activeIndex === 0}
@@ -330,7 +334,7 @@
                 <ChevronLeft size={24} />
             </button>
 
-            <button aria-label="Next"
+            <button type="button" aria-label="Next"
                 class="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/40 text-white hover:bg-black/60 disabled:opacity-30 backdrop-blur transition-all z-20"
                 onclick={nextImage}
                 disabled={activeIndex === items.length - 1}
@@ -356,16 +360,16 @@
 
                     <div class="flex gap-2">
                         {#if allowDelete}
-                            <button aria-label="Remove this item"
+                            <button type="button" aria-label="Remove this item"
                                 class="p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
                                 onclick={(e) =>
                                     handleDelete(items[activeIndex].id, e)}
                             >
-                                <Trash2 size={20} class="text-rose-400" />
+                                <Trash2 size={20} class="text-white" />
                             </button>
                         {/if}
                         {#if allowFavorites}
-                            <button aria-label="Favorite" aria-pressed={!!items[activeIndex].isFavorite}
+                            <button type="button" aria-label="Favorite" aria-pressed={!!items[activeIndex].isFavorite}
                                 class="p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
                                 onclick={() =>
                                     ontogglefavorite?.(items[activeIndex].id)}
@@ -373,7 +377,7 @@
                                 <Heart
                                     size={20}
                                     class={items[activeIndex].isFavorite
-                                        ? "fill-red-500 text-red-500"
+                                        ? "fill-gold text-gold"
                                         : ""}
                                 />
                             </button>
@@ -387,6 +391,7 @@
                 >
                     {#each items as item, i}
                         <button
+                            type="button"
                             class="relative w-16 h-16 shrink-0 rounded-lg overflow-hidden border-2 transition-all {i ===
                             activeIndex
                                 ? 'border-white opacity-100 scale-105'
@@ -414,7 +419,7 @@
             </div>
 
             <!-- Close Carousel -->
-            <button aria-label="Close"
+            <button type="button" aria-label="Close"
                 class="absolute top-4 right-4 p-2 bg-black/20 hover:bg-black/40 rounded-full text-white backdrop-blur transition-colors z-30"
                 onclick={() => (viewMode = "grid")}
             >

@@ -35,7 +35,7 @@ export async function parseApiError(response: Response): Promise<ErrorDetails> {
     try {
         const data: ApiErrorResponse = await response.json();
         return {
-            message: data.error?.message || 'Something unexpected happened. We can try again whenever you\'re ready.',
+            message: data.error?.message || 'That paused for a moment. We can try again whenever you\'re ready.',
             code: data.error?.code,
             details: data.error?.details,
             timestamp: data.error?.timestamp,
@@ -70,11 +70,11 @@ function getGenericErrorMessage(status: number): string {
         case 429:
             return `Take your time. We're here when you're ready.`;
         case 500:
-            return `Something unexpected happened on our side. Our team has been told.`;
+            return `That paused on our side for a moment. We can try again whenever you're ready.`;
         case 503:
             return `Connecting is taking a moment. We can try again shortly.`;
         default:
-            return `Something unexpected happened. We can try again together, or support is here to help.`;
+            return `That paused for a moment. We can try again together, or support is here to help.`;
     }
 }
 
@@ -97,7 +97,7 @@ export function handleFetchError(error: unknown): ErrorDetails {
     }
 
     return {
-        message: `Something unexpected happened. We can try again whenever you're ready.`,
+        message: `That paused for a moment. We can try again whenever you're ready.`,
         code: 'UNKNOWN_ERROR',
         details: { originalError: String(error) }
     };
@@ -174,7 +174,7 @@ export function getErrorTitle(code?: string): string {
             return 'Saving is taking a moment';
 
         default:
-            return 'Something unexpected happened';
+            return "We're here to help";
     }
 }
 

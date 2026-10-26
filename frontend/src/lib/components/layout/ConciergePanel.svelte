@@ -299,7 +299,7 @@
             onpointerup={onPointerUp}
         >
             <div class="flex items-center gap-3">
-                <div class="p-2 bg-indigo-500/20 rounded-xl text-indigo-400">
+                <div class="p-2 bg-primary/20 rounded-xl text-primary-soft dark:text-primary">
                     <Sparkles size={20} />
                 </div>
                 <div>
@@ -308,7 +308,7 @@
                     </h2>
                     <div class="flex items-center gap-2">
                         <span
-                            class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"
+                            class="w-1.5 h-1.5 rounded-full bg-primary-soft dark:bg-primary animate-pulse"
                         ></span>
                         <span
                             class="text-[10px] uppercase tracking-widest text-white/40 font-bold"
@@ -316,11 +316,11 @@
                         >
                         {#if $conciergeEngine.currentContextName}
                             <div
-                                class="flex items-center gap-1.5 px-2 py-0.5 bg-indigo-500/20 rounded-full border border-indigo-500/30"
+                                class="flex items-center gap-1.5 px-2 py-0.5 bg-primary/20 rounded-full border border-primary/30"
                             >
-                                <Target size={10} class="text-indigo-400" />
+                                <Target size={10} class="text-primary-soft dark:text-primary" />
                                 <span
-                                    class="text-[9px] font-bold uppercase tracking-wider text-indigo-300"
+                                    class="text-[9px] font-bold uppercase tracking-wider text-primary-soft dark:text-primary-hover"
                                     >{$conciergeEngine.currentContextName}</span
                                 >
                             </div>
@@ -536,7 +536,7 @@
                 >
                     {#each Array(8) as _, i}
                         <div
-                            class="w-1 bg-indigo-400/60 rounded-full animate-pulse"
+                            class="w-1 bg-primary-soft/60 dark:bg-primary/60 rounded-full animate-pulse"
                             style="height: {20 +
                                 Math.random() * 60}%; animation-delay: {i *
                                 0.1}s"
@@ -549,8 +549,8 @@
                 <button aria-label="Voice input" aria-pressed={$conciergeEngine.isListening}
                     onclick={toggleVoice}
                     class="p-4 rounded-2xl transition-all shadow-lg {$conciergeEngine.isListening
-                        ? 'bg-rose-500 text-white animate-pulse shadow-rose-500/20'
-                        : 'bg-slate-800 text-indigo-400 hover:bg-slate-700 shadow-black/20'}"
+                        ? 'bg-primary text-primary-foreground animate-pulse shadow-primary/20'
+                        : 'bg-slate-800 text-primary-soft dark:text-primary hover:bg-slate-700 shadow-black/20'}"
                 >
                     {#if $conciergeEngine.isListening}
                         <MicOff size={24} />

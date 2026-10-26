@@ -61,18 +61,21 @@ function createOnboardingStore() {
             save();
         },
 
-        populateDemoData() {
+        async populateDemoData() {
             console.log("Populating Demo Data...");
             const samples = getSmartSamples('en');
+            // Every sample save is awaited and caught (card X233); a failed one already
+            // shows the store's gentle message, so the rest carry on.
+            const saves: Promise<unknown>[] = [];
 
             // 1. Property
             samples.property.forEach(item => {
-                propertyStore.addItem(item);
+                saves.push(propertyStore.addItem(item));
             });
 
             // 2. Family
             samples.family.forEach(member => {
-                familyStore.addMember(member);
+                saves.push(familyStore.addMember(member));
             });
             // Add a mock relationship for demo visual goodness if needed, 
             // but smartSamples currently only returns members interactively.
@@ -81,33 +84,35 @@ function createOnboardingStore() {
 
             // 3. Insurance
             samples.insurance.forEach(policy => {
-                insuranceStore.addPolicy(policy);
+                saves.push(insuranceStore.addPolicy(policy));
             });
 
             // 4. Heirlooms
             samples.heirlooms.forEach(heirloom => {
-                heirloomStore.addItem(heirloom);
+                saves.push(heirloomStore.addItem(heirloom));
             });
 
             // 5. Digital Assets
             samples.digital.forEach(account => {
-                digitalAssetsStore.addAccount(account);
+                saves.push(digitalAssetsStore.addAccount(account));
             });
 
             // 6. Medical
             samples.medical.forEach(directive => {
-                medicalStore.addDirective(directive);
+                saves.push(medicalStore.addDirective(directive));
             });
             // Set profile data if available in sample (it is)
             if (samples.medical.length > 0) {
                 // The sample directives also carry the profile fields.
                 const first = samples.medical[0] as (typeof samples.medical)[number] & Partial<MedicalProfile>;
-                medicalStore.updateProfile({
+                saves.push(medicalStore.updateProfile({
                     organDonor: first.organDonor,
                     bloodType: first.bloodType,
                     allergies: first.allergies
-                });
+                }));
             }
+
+            await Promise.allSettled(saves);
 
             // 7. Log Event
             activityLog.logEvent({

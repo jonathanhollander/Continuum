@@ -10,9 +10,9 @@
     let audit = $derived($estateAudit);
     // The level box takes the level's colour (it was red even at Low)
     const tones = {
-        High: { box: "bg-red-500/10 border-red-500/20", icon: "text-red-500", label: "text-red-400" },
-        Moderate: { box: "bg-amber-500/10 border-amber-500/20", icon: "text-amber-500", label: "text-amber-400" },
-        Low: { box: "bg-emerald-500/10 border-emerald-500/20", icon: "text-emerald-500", label: "text-emerald-400" },
+        High: { box: "bg-danger-soft border-danger/30", icon: "text-danger", label: "text-danger" },
+        Moderate: { box: "bg-warning-soft border-warning/30", icon: "text-warning", label: "text-warning" },
+        Low: { box: "bg-success/10 border-success/30", icon: "text-success", label: "text-success" },
     };
     let level = $derived(
         audit.issues.length > 5 ? "High" : audit.issues.length > 0 ? "Moderate" : "Low",
@@ -53,13 +53,13 @@
             <h3
                 class="flex items-center gap-2 text-lg font-bold text-white mb-6"
             >
-                <TriangleAlert class="text-amber-500" size={20} />
+                <TriangleAlert class="text-warning" size={20} />
                 Records worth a closer look
             </h3>
 
             {#if audit.issues.length === 0}
                 <div
-                    class="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-sm flex items-center gap-2"
+                    class="p-4 bg-success/10 border border-success/30 rounded-lg text-success text-sm flex items-center gap-2"
                 >
                     <Activity size={16} /> Everything is current.
                 </div>
@@ -70,7 +70,7 @@
                             class="flex items-start gap-3 p-3 bg-slate-950 rounded border border-slate-800"
                         >
                             <span
-                                class="w-1.5 h-1.5 rounded-full bg-red-500 mt-2 shrink-0"
+                                class="w-1.5 h-1.5 rounded-full bg-danger mt-2 shrink-0"
                             ></span>
                             <span class="text-sm text-slate-300">{issue}</span>
                         </li>
@@ -86,12 +86,12 @@
         class="bg-slate-950 border border-slate-800 rounded-xl p-6 overflow-hidden"
     >
         <h3
-            class="text-sm font-mono text-slate-500 mb-4 uppercase tracking-wider"
+            class="text-sm font-mono text-muted-foreground mb-4 uppercase tracking-wider"
         >
             Raw Audit Telemetry
         </h3>
         <pre
-            class="text-xs text-emerald-500 font-mono overflow-x-auto p-4 bg-slate-900 rounded-lg border border-slate-800 max-h-64">
+            class="text-xs text-success font-mono overflow-x-auto p-4 bg-slate-900 rounded-lg border border-slate-800 max-h-64">
 {JSON.stringify(audit, null, 2)}
         </pre>
     </section>

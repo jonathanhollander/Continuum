@@ -3,7 +3,7 @@
 	import logo from "$lib/assets/logo.png";
 	import "../app.css";
 	import { page } from "$app/stores";
-	import { onMount, setContext } from "svelte";
+	import { onMount, setContext, untrack } from "svelte";
 	import { goto } from "$app/navigation";
 	import { estateAudit } from "$lib/stores/auditStore.svelte";
 	import ConciergePanel from "$lib/components/layout/ConciergePanel.svelte";
@@ -147,6 +147,7 @@
 
 	import { auth } from "$lib/stores/auth";
 	import { syncAll, clearAll } from "$lib/services/sync.svelte";
+	import { userPreferencesStore } from "$lib/stores/userPreferencesStore.svelte";
 
 	// Derived: Is this the Wizard or Marketing Landing?
 	let isWizardRoute = $derived(
@@ -213,6 +214,8 @@
 			// Card X142: the page's own stores first, the rest a moment later (see syncAll);
 			// the dashboard shows every module, so it takes them all at once.
 			syncAll({ everything: isDashboardRoute });
+			// Saved Cards/Table choices, so every view opens the way it was left (card X230).
+			untrack(() => userPreferencesStore.init());
 
 			// Initialize overwhelm detector from user preference
 			if ($auth.user) {
@@ -345,17 +348,17 @@
 {#if $auth.loading}
 	<!-- Global Loading State -->
 	<div
-		class="min-h-screen bg-[#0F1115] flex flex-col items-center justify-center p-6 font-sans"
+		class="min-h-screen bg-background flex flex-col items-center justify-center p-6 font-sans"
 	>
 		<div class="relative">
 			<div
-				class="absolute inset-0 bg-teal-500/20 blur-3xl rounded-full animate-pulse"
+				class="absolute inset-0 bg-primary/20 blur-3xl rounded-full animate-pulse"
 			></div>
 			<Loader2
-				class="w-12 h-12 text-teal-400 animate-spin relative z-10"
+				class="w-12 h-12 text-primary animate-spin relative z-10"
 			/>
 		</div>
-		<p class="mt-6 text-slate-400 font-medium tracking-wide animate-pulse">
+		<p class="mt-6 text-muted-foreground font-medium tracking-wide animate-pulse">
 			Verifying your security credentials...
 		</p>
 	</div>
@@ -421,13 +424,13 @@
 				<!-- Mobile Header -->
 				<header
 					class="lg:hidden sticky top-0 z-30 border-b px-4 py-3 flex items-center justify-between {isDarkHeader
-						? 'bg-[#0F1115] border-white/5'
+						? 'bg-primary-deep border-white/10'
 						: 'bg-background border-border'}"
 				>
 					<div class="flex items-center gap-3">
 						<button aria-label={$dict.menu}
 							class="p-2 -ml-2 rounded-lg {isDarkHeader
-								? 'text-slate-300 hover:bg-white/10'
+								? 'text-white/80 hover:bg-white/10'
 								: 'text-muted-foreground hover:bg-muted'}"
 							onclick={toggleSidebar}
 						>
@@ -443,7 +446,7 @@
 					<a aria-label={$dict.settings}
 						href="/settings"
 						class="p-2 rounded-lg {isDarkHeader
-							? 'text-slate-300 hover:bg-white/10'
+							? 'text-white/80 hover:bg-white/10'
 							: 'text-muted-foreground hover:bg-muted'}"
 					>
 						<Settings class="w-5 h-5" />
@@ -454,25 +457,25 @@
 				{#if !isFocusMode}
 					<header
 						class="hidden lg:flex sticky top-0 z-40 h-20 px-8 items-center justify-between border-b transition-all {isDarkHeader
-							? 'bg-[#0F1115] border-white/5'
+							? 'bg-primary-deep border-white/10'
 							: 'bg-background border-border'}"
 					>
 						<!-- Breadcrumbs / Page Title -->
 						<div
 							class="flex items-center gap-2 text-sm {isDarkHeader
-								? 'text-slate-400'
+								? 'text-white/70'
 								: 'text-muted-foreground'}"
 						>
 							<span
 								class="uppercase tracking-wider font-semibold text-xs {isDarkHeader
-									? 'text-slate-400'
+									? 'text-white/70'
 									: 'text-muted-foreground'}"
 								>{$dict.groupOverview || "Estate Overview"}</span
 							>
 							<ChevronRight
 								size={14}
 								class={isDarkHeader
-									? "text-slate-500"
+									? "text-white/70"
 									: "text-muted-foreground"}
 							/>
 							<span
@@ -487,8 +490,14 @@
 
 						<!-- Header Actions -->
 						<div class="flex items-center gap-6">
-							<!-- Take a Break Button -->
-							<TakeBreakButton variant="icon-only" />
+							<!-- Take a Break Button (on the dark header its icon goes light) -->
+							<span
+								class="contents {isDarkHeader
+									? '[&>button]:text-white/80 [&>button:hover]:text-white [&>button:hover]:bg-white/10'
+									: ''}"
+							>
+								<TakeBreakButton variant="icon-only" />
+							</span>
 
 							<!-- Context-Aware Role Switcher -->
 							<RoleSwitcher dark={isDarkHeader} />
@@ -510,7 +519,7 @@
 											e.currentTarget.value as any,
 										)}
 									class="bg-transparent text-[10px] font-bold uppercase tracking-tight outline-none cursor-pointer transition-colors border-none p-0 pr-1 focus:ring-0 min-w-0 {isDarkHeader
-										? 'text-slate-300 hover:text-white'
+										? 'text-white/80 hover:text-white'
 										: 'text-muted-foreground hover:text-foreground'}"
 								>
 									<option value="teal">🟢 {$dict.colors.teal}</option>
@@ -531,7 +540,7 @@
 								<Globe
 									size={14}
 									class="{isDarkHeader
-										? 'text-slate-400'
+										? 'text-white/70'
 										: 'text-muted-foreground'} shrink-0"
 								/>
 								<select
@@ -542,7 +551,7 @@
 											e.currentTarget.value as any,
 										)}
 									class="bg-transparent text-[10px] font-bold uppercase tracking-tight outline-none cursor-pointer transition-colors border-none p-0 pr-1 focus:ring-0 min-w-0 {isDarkHeader
-										? 'text-slate-300 hover:text-white'
+										? 'text-white/80 hover:text-white'
 										: 'text-muted-foreground hover:text-foreground'}"
 								>
 									<option value="en">🇺🇸 EN</option>

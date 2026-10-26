@@ -618,7 +618,7 @@
                             Legacy & Logistics
                         </h2>
                         <p class="text-stone-500">
-                            Final details to ensure your message is heard.
+                            Final details that carry your message.
                         </p>
                     </div>
 
