@@ -59,6 +59,18 @@ const storageAccount = () => get(activeAccountId) || 'anonymous';
 
 export type SyncStatus = "idle" | "syncing" | "error" | "synced";
 
+// Writes go out with keepalive, so one sent as the page unloads still reaches the server. The
+// browser allows 64 KiB of keepalive bodies in flight in all; a write that would pass that goes
+// out as a plain fetch.
+const KEEPALIVE_BUDGET = 60 * 1024;
+let keepaliveBytes = 0;
+function writeFetch(url: string, init: RequestInit): Promise<Response> {
+    const size = typeof init.body === 'string' ? new TextEncoder().encode(init.body).length : 0;
+    if (keepaliveBytes + size > KEEPALIVE_BUDGET) return fetch(url, init);
+    keepaliveBytes += size;
+    return fetch(url, { ...init, keepalive: true }).finally(() => { keepaliveBytes -= size; });
+}
+
 export class SyncManager<T extends { id: number | string }> {
     items = $state<T[]>([]);
     status = $state<SyncStatus>("idle");
@@ -179,7 +191,14 @@ export class SyncManager<T extends { id: number | string }> {
             if (!current()) return;
             // An upload an account switch interrupted resumes, though the server now holds its first items.
             const pendingUpload = getStored<T[]>(this.uploadKey, []);
+            // Only records the server never had go up: a device record whose id the server once
+            // returned and now lacks was removed there (another device, a direct delete) and leaves
+            // this device with the mirror below. A device that has not yet kept that id list
+            // (its first sync since it was added) uploads its copy only to an empty server, as before.
+            const sentIds = getStored<string[] | null>(this.sentKey, null);
+            const sent = sentIds ? new Set(sentIds) : null;
             const toUpload = pendingUpload.length > 0 ? pendingUpload
+                : sent ? localItemsSnapshot.filter(i => !sent.has(String(i.id)))
                 : remoteItems.length === 0 ? localItemsSnapshot : [];
             if (toUpload.length > 0) {
                 console.log(`[Sync:${this.key}] Migrating ${toUpload.length} local items to cloud...`);
@@ -214,13 +233,17 @@ export class SyncManager<T extends { id: number | string }> {
         }
     }
 
+    /** Mirror the server's list (server truth): the device keeps it and the ids the server holds. */
     private updateLocal(data: T[]) {
         this.items = data;
         setStored(this.key, data);
+        setStored(this.sentKey, data.map(i => String(i.id)));
         this.notify();
     }
 
     private get uploadKey() { return `${this.key}__pending_upload`; }
+    /** Ids of this account's records the server has returned to this device. */
+    private get sentKey() { return `${this.key}__server_ids`; }
 
     /** Upload local items one by one into `account`, always with that account's token. Stops as soon as
      *  the person signs out, another account becomes active or the store is reset (false); the items not yet sent stay in
@@ -256,7 +279,7 @@ export class SyncManager<T extends { id: number | string }> {
         delete payload.created_at;
         delete payload.updated_at;
 
-        const res = await fetch(`${BASE_URL}${this.apiBase}/${this.endpoint}`, {
+        const res = await writeFetch(`${BASE_URL}${this.apiBase}/${this.endpoint}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -293,6 +316,8 @@ export class SyncManager<T extends { id: number | string }> {
             if (!skipLocal) {
                 this.items = [...this.items, newItem];
                 setStored(this.key, this.items);
+                const sentIds = getStored<string[] | null>(this.sentKey, null);
+                if (sentIds) setStored(this.sentKey, [...sentIds, String(newItem.id)]);
                 this.notify();
 
                 // Affirm only a save the person made (quiet = background bookkeeping).
@@ -361,7 +386,7 @@ export class SyncManager<T extends { id: number | string }> {
             delete payload.created_at;
             delete payload.updated_at;
 
-            const res = await fetch(`${BASE_URL}${this.apiBase}/${this.endpoint}/${id}`, {
+            const res = await writeFetch(`${BASE_URL}${this.apiBase}/${this.endpoint}/${id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -428,7 +453,7 @@ export class SyncManager<T extends { id: number | string }> {
 
         try {
             const token = get(auth).token;
-            const res = await fetch(`${BASE_URL}${this.apiBase}/${this.endpoint}/${id}`, {
+            const res = await writeFetch(`${BASE_URL}${this.apiBase}/${this.endpoint}/${id}`, {
                 method: "DELETE",
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -833,7 +858,7 @@ export class SingletonSyncManager<T extends object> {
             const token = get(auth).token;
             const payload = this.wirePayload(this.data);
 
-            const res = await fetch(`${BASE_URL}${this.apiBase}/${this.endpoint}`, {
+            const res = await writeFetch(`${BASE_URL}${this.apiBase}/${this.endpoint}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

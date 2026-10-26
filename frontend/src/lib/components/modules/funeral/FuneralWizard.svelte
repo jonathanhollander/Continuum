@@ -17,7 +17,7 @@
         Droplets,
         Leaf,
     } from "lucide-svelte";
-    import { onDestroy } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import {
         funeralStore,
         type FuneralWishes,
@@ -50,6 +50,7 @@
     let draft: FuneralWishes | null = null;
     let saveTimer: ReturnType<typeof setTimeout> | null = null;
     let saving = false;
+    let sending: FuneralWishes | null = null; // the draft the save in flight carries
 
     // Derived State
     $: wishes = draft ?? ($funeralStore?.wishes || funeralStore.wishes);
@@ -85,6 +86,7 @@
         if (saving || !draft) return; // the save in flight picks up the newer draft
         const sent = draft;
         saving = true;
+        sending = sent;
         try {
             await funeralStore.update((data) => ({ ...data, wishes: sent }));
             if (draft === sent) draft = null; // saved: show the server's copy
@@ -95,12 +97,28 @@
             saveTimer = null;
         } finally {
             saving = false;
+            sending = null;
         }
         if (draft && !saveTimer) flush(); // changes made while that save ran
     }
 
     onDestroy(() => {
         if (saveTimer) flush();
+    });
+
+    // Leaving or reloading the page: the change not yet sent goes now (the manager's
+    // write is keepalive, so it reaches the server as the page unloads).
+    function sendBeforeLeaving() {
+        if (saveTimer) clearTimeout(saveTimer);
+        saveTimer = null;
+        const pending = draft;
+        if (!pending || pending === sending) return;
+        sending = pending;
+        funeralStore.update((data) => ({ ...data, wishes: pending })).catch(() => {});
+    }
+    onMount(() => {
+        window.addEventListener("pagehide", sendBeforeLeaving);
+        return () => window.removeEventListener("pagehide", sendBeforeLeaving);
     });
 
     // Actions
