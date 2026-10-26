@@ -21,7 +21,7 @@ from backend.models.qr_models import QRAccessPack, QRAssetLabel
 from backend.models.acceptance_models import AcceptanceTask
 from backend.models.automation_models import AutomationRule
 from backend.utils.logger import get_logger
-from backend.utils.audit import log_audit, log_deletion
+from backend.utils.audit import log_audit
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/api/data", tags=["estate_data"])
@@ -280,7 +280,7 @@ def get_items(data_type: str, user: User = Depends(get_current_user), session: S
     return session.exec(statement).all()
 
 def _log_estate_action(session: Session, request: Request, action: str, user: User, data_type: str, resource_id: Any):
-    """Helper to centralize audit logging for estate data."""
+    """Add the audit row to the session; the caller's commit writes it with the change (X278)."""
     log_audit(
         session=session,
         request=request,
@@ -288,7 +288,8 @@ def _log_estate_action(session: Session, request: Request, action: str, user: Us
         user_id=user.id,
         user_email=user.email,
         resource_type=data_type,
-        resource_id=str(resource_id)
+        resource_id=str(resource_id),
+        commit=False,
     )
 
 @router.post("/{data_type}", summary="Create estate item")
@@ -341,19 +342,17 @@ def create_item(
                     if k != "user_id" and hasattr(existing, k):
                         setattr(existing, k, v)
                 session.add(existing)
-                session.commit()
-                session.refresh(existing)
                 _log_estate_action(session, request, "update", user, data_type, existing.id)
+                session.commit()
                 session.refresh(existing)
                 return existing
 
         db_item = model.model_validate(validated_data)
         session.add(db_item)
-        session.commit()
-        session.refresh(db_item)
-
+        session.flush()  # assigns db_item.id for the audit row
         _log_estate_action(session, request, "create", user, data_type, db_item.id)
-        session.refresh(db_item)  # Re-load attributes after audit logging expired them
+        session.commit()  # the item and its audit row in one transaction
+        session.refresh(db_item)
         return db_item
     except ValueError as e:
         logger.warning(f"Rejected {data_type} item data: {e}")
@@ -421,11 +420,9 @@ def update_item(
                 setattr(db_item, key, value)
 
         session.add(db_item)
-        session.commit()
-        session.refresh(db_item)
-
         _log_estate_action(session, request, "update", user, data_type, item_id)
-        session.refresh(db_item)  # Re-load attributes after audit logging expired them
+        session.commit()  # the change and its audit row in one transaction
+        session.refresh(db_item)
         return db_item
     except HTTPException:
         raise
@@ -457,15 +454,8 @@ def delete_item(request: Request, data_type: str, item_id: str, user: User = Dep
         if model is Asset and not _in_category(session, data_type, db_item):
             raise HTTPException(status_code=404, detail="That item may have been moved.")
 
-        log_deletion(
-            session=session,
-            request=request,
-            user_id=user.id,
-            user_email=user.email,
-            resource_type=data_type,
-            resource_id=item_id
-        )
-
+        # Same row log_deletion wrote (action delete_<type>), committed with the delete.
+        _log_estate_action(session, request, "delete", user, data_type, item_id)
         session.delete(db_item)
         session.commit()
         return {"status": "deleted"}

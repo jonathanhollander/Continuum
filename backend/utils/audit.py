@@ -22,7 +22,8 @@ def log_audit(
     resource_id: Optional[str] = None,
     success: bool = True,
     error_message: Optional[str] = None,
-    details: Optional[str] = None
+    details: Optional[str] = None,
+    commit: bool = True
 ) -> None:
     """
     Log an audit event to the database.
@@ -38,6 +39,8 @@ def log_audit(
         success: Whether the action succeeded
         error_message: Error message if action failed
         details: Additional context as JSON string
+        commit: False adds the row to the session only; the caller's own commit
+            writes it together with the change it records (one transaction).
     """
     try:
         audit = AuditLog(
@@ -53,7 +56,8 @@ def log_audit(
             details=details
         )
         session.add(audit)
-        session.commit()
+        if commit:
+            session.commit()
     except Exception as e:
         # Don't fail the main operation if audit logging fails
         logger.error(f"Audit logging failed for action '{action}': {e}")
