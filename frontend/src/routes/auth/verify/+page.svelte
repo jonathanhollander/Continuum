@@ -27,11 +27,12 @@
                 throw new Error("Verification failed");
             }
 
-            const { access_token } = await res.json();
+            const { access_token, refresh_token } = await res.json();
 
             // Store token
             if (typeof localStorage !== "undefined") {
                 localStorage.setItem("continuum_auth_token", access_token);
+                if (refresh_token) localStorage.setItem("continuum_refresh_token", refresh_token);
             }
 
             status = "success";

@@ -127,6 +127,8 @@
                     "continuum_auth_token",
                     result.access_token,
                 );
+                if (result.refresh_token)
+                    localStorage.setItem("continuum_refresh_token", result.refresh_token);
             }
 
             notifications.showSuccess(

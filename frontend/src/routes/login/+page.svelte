@@ -72,6 +72,8 @@
                     "continuum_auth_token",
                     finishResult.access_token,
                 );
+                if (finishResult.refresh_token)
+                    localStorage.setItem("continuum_refresh_token", finishResult.refresh_token);
             }
 
             notifications.showSuccess(
@@ -151,6 +153,8 @@
                         "continuum_auth_token",
                         data.access_token,
                     );
+                    if (data.refresh_token)
+                        localStorage.setItem("continuum_refresh_token", data.refresh_token);
                 }
 
                 await auth.init();

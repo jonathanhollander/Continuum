@@ -31,6 +31,59 @@ const initialState: AuthState = {
     error: null
 };
 
+const TOKEN_KEY = 'continuum_auth_token';
+const REFRESH_KEY = 'continuum_refresh_token';
+
+/** Store the access token and, when the server sent one, the refresh token. */
+export function storeTokens(accessToken: string, refreshToken?: string | null) {
+    if (!browser) return;
+    localStorage.setItem(TOKEN_KEY, accessToken);
+    if (refreshToken) localStorage.setItem(REFRESH_KEY, refreshToken);
+}
+
+function clearTokens() {
+    if (!browser) return;
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(REFRESH_KEY);
+}
+
+export type RefreshResult = { ok: true; token: string } | { ok: false; definite: boolean };
+
+let refreshInFlight: Promise<RefreshResult> | null = null;
+
+/**
+ * Exchange the stored refresh token for new tokens (the server rotates it, so a
+ * refresh token is single-use). Parallel callers share one request.
+ * `definite: false` means a network/server problem, so tokens are kept.
+ */
+export function refreshSession(): Promise<RefreshResult> {
+    if (!browser) return Promise.resolve({ ok: false, definite: false });
+    if (refreshInFlight) return refreshInFlight;
+    const refreshToken = localStorage.getItem(REFRESH_KEY);
+    if (!refreshToken) return Promise.resolve({ ok: false, definite: true });
+
+    refreshInFlight = (async (): Promise<RefreshResult> => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ refresh_token: refreshToken })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                storeTokens(data.access_token, data.refresh_token);
+                return { ok: true, token: data.access_token };
+            }
+            return { ok: false, definite: res.status === 401 || res.status === 400 || res.status === 422 };
+        } catch {
+            return { ok: false, definite: false };
+        }
+    })().finally(() => {
+        refreshInFlight = null;
+    });
+    return refreshInFlight;
+}
+
 function createAuthStore() {
     const { subscribe, set, update } = writable<AuthState>(initialState);
 
@@ -41,14 +94,29 @@ function createAuthStore() {
          * Initialize auth state from stored token
          */
         init: async () => {
-            const token = browser ? localStorage.getItem('continuum_auth_token') : null;
+            let token = browser ? localStorage.getItem(TOKEN_KEY) : null;
             if (!token) return;
 
             update(s => ({ ...s, loading: true, error: null }));
             try {
-                const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
+                let res = await fetch(`${API_BASE_URL}/api/auth/me`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
+
+                if (res.status === 401) {
+                    // Access token expired: try the refresh token once before giving up
+                    const refreshed = await refreshSession();
+                    if (refreshed.ok) {
+                        token = refreshed.token;
+                        res = await fetch(`${API_BASE_URL}/api/auth/me`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                    } else if (!refreshed.definite) {
+                        // Could not reach the server: keep the tokens for the next try
+                        update(s => ({ ...s, loading: false, error: 'Could not reach the server' }));
+                        return;
+                    }
+                }
 
                 if (res.ok) {
                     const user = await res.json();
@@ -60,15 +128,18 @@ function createAuthStore() {
                         preferenceStore.setOnboardingComplete(true);
                     }
                     update(s => ({ ...s, token, user, isAuthenticated: true, loading: false }));
-                } else {
-                    // Token expired or invalid
-                    if (browser) localStorage.removeItem('continuum_auth_token');
+                } else if (res.status === 401) {
+                    // Definitely signed out (refresh also refused)
+                    clearTokens();
                     update(s => ({ ...s, token: null, user: null, isAuthenticated: false, loading: false }));
+                } else {
+                    // Server trouble (5xx etc.): keep tokens
+                    update(s => ({ ...s, loading: false, error: 'Could not reach the server' }));
                 }
             } catch (e) {
+                // Network failure: keep the tokens so a reload once back online still works
                 console.error("Auth init failed", e);
-                if (browser) localStorage.removeItem('continuum_auth_token');
-                update(s => ({ ...s, token: null, user: null, isAuthenticated: false, loading: false, error: 'Failed to initialize authentication' }));
+                update(s => ({ ...s, loading: false, error: 'Failed to initialize authentication' }));
             }
         },
 
@@ -88,7 +159,7 @@ function createAuthStore() {
                     const data = await res.json();
                     const token = data.access_token;
 
-                    if (browser) localStorage.setItem('continuum_auth_token', token);
+                    storeTokens(token, data.refresh_token);
 
                     // Fetch user info
                     const userRes = await fetch(`${API_BASE_URL}/api/auth/me`, {
@@ -136,7 +207,7 @@ function createAuthStore() {
                     const data = await res.json();
                     const token = data.access_token;
 
-                    if (browser) localStorage.setItem('continuum_auth_token', token);
+                    storeTokens(token, data.refresh_token);
 
                     // Fetch user info
                     const userRes = await fetch(`${API_BASE_URL}/api/auth/me`, {
@@ -169,7 +240,7 @@ function createAuthStore() {
          * Logout current user
          */
         logout: () => {
-            if (browser) localStorage.removeItem('continuum_auth_token');
+            clearTokens();
             set({ token: null, user: null, isAuthenticated: false, loading: false, error: null });
         },
 
