@@ -19,7 +19,7 @@ from backend.utils.clock import utc_now
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from pathlib import Path
-from typing import Optional, Dict, Any, Union
+from typing import Optional, Dict, Any, Union, Literal
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from backend.config import settings
 from sqlmodel import Session
@@ -41,12 +41,24 @@ class EmailPayload(BaseModel):
     user_id: Optional[int] = None
 
 class EmailResult(BaseModel):
-    """Schema for email delivery result."""
+    """Send outcome. `sent` means provider acceptance, rather than receipt by a person."""
     status: str
     message_id: Optional[str] = None
     provider: str
     error: Optional[str] = None
     file_path: Optional[str] = None
+
+    @property
+    def delivery_state(self) -> Literal["provider_accepted", "saved_local", "failed"]:
+        if self.status == "saved_local":
+            return "saved_local"
+        if self.status in ("sent", "resent", "delivered") and self.provider != "local":
+            return "provider_accepted"
+        return "failed"
+
+    @property
+    def provider_accepted(self) -> bool:
+        return self.delivery_state == "provider_accepted"
 
 
 def _name_from_email(to_email: Optional[str]) -> str:
@@ -170,15 +182,18 @@ class EmailService:
             else:
                 result = self._save_to_local(to_email, subject, html_body)
 
-            # Update log entry on success
+            outcome = EmailResult(**result)
+            # The actual provider can differ after fallback. A local preparation has its
+            # created_at timestamp, while sent_at records an external provider's acceptance.
             if db_session and log_entry:
-                log_entry.status = result.get("status", "sent")
-                log_entry.provider_message_id = result.get("message_id")
-                log_entry.sent_at = utc_now()
+                log_entry.status = outcome.status
+                log_entry.provider = outcome.provider
+                log_entry.provider_message_id = outcome.message_id
+                log_entry.sent_at = utc_now() if outcome.provider_accepted else None
                 db_session.add(log_entry)
                 db_session.commit()
 
-            return EmailResult(**result)
+            return outcome
 
         except Exception as e:
             logger.error(
