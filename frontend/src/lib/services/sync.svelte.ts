@@ -5,6 +5,7 @@ import { auth } from "../stores/auth.ts";
 import { activeAccountId } from "$lib/stores/keyringStore";
 import { currentProfileId } from "$lib/stores/profileContext";
 import { get } from "svelte/store";
+import { untrack } from "svelte";
 import { notifications } from "$lib/stores/notificationStore";
 
 const toCamel = (str: string) => str.replace(/([-_][a-z])/g, group => group.toUpperCase().replace('-', '').replace('_', ''));
@@ -72,9 +73,18 @@ function writeFetch(url: string, init: RequestInit): Promise<Response> {
 }
 
 export class SyncManager<T extends { id: number | string }> {
-    items = $state<T[]>([]);
-    status = $state<SyncStatus>("idle");
-    lastSync = $state<Date | null>(null);
+    #items = $state<T[]>([]);
+    /** The records; a page, derived value or effect reading them marks this store as one the page shows (syncAll). */
+    get items(): T[] { shownBy(this); return this.#items; }
+    set items(value: T[]) { this.#items = value; }
+    #status = $state<SyncStatus>("idle");
+    /** See lastSync: a shown sync status marks the store shown too. */
+    get status(): SyncStatus { shownBy(this); return this.#status; }
+    set status(value: SyncStatus) { this.#status = value; }
+    #lastSync = $state<Date | null>(null);
+    /** When the server last answered; reading it (a "loaded yet?" cue) also marks the store shown. */
+    get lastSync(): Date | null { shownBy(this); return this.#lastSync; }
+    set lastSync(value: Date | null) { this.#lastSync = value; }
     error = $state<string | null>(null);
 
     private key: string;
@@ -821,9 +831,18 @@ function sharedRecord(url: string) {
 }
 
 export class SingletonSyncManager<T extends object> {
-    data = $state<T | null>(null);
-    status = $state<SyncStatus>("idle");
-    lastSync = $state<Date | null>(null);
+    #data = $state<T | null>(null);
+    /** See SyncManager.items. */
+    get data(): T | null { shownBy(this); return this.#data; }
+    set data(value: T | null) { this.#data = value; }
+    #status = $state<SyncStatus>("idle");
+    /** See lastSync: a shown sync status marks the store shown too. */
+    get status(): SyncStatus { shownBy(this); return this.#status; }
+    set status(value: SyncStatus) { this.#status = value; }
+    #lastSync = $state<Date | null>(null);
+    /** When the server last answered; reading it (a "loaded yet?" cue) also marks the store shown. */
+    get lastSync(): Date | null { shownBy(this); return this.#lastSync; }
+    set lastSync(value: Date | null) { this.#lastSync = value; }
     error = $state<string | null>(null);
     private subscriptions = new Set<(value: T | null) => void>();
     private affirmationContext?: 'general' | 'documents' | 'wishes' | 'contacts' | 'medical' | 'pets' | 'insurance' | 'funeral' | 'subscriptions' | 'heirlooms' | 'timeline' | 'letters' | 'timeCapsule' | 'pulse';
@@ -1123,16 +1142,60 @@ export function registerProfileSlice<T extends object>(key: string, mapper: (dat
     return registerManager(key, 'estate/profile', '/api', () => new SingletonSyncManager<T>(key, 'estate/profile', mapper, '/api', true)) as unknown as SingletonSyncManager<T>;
 }
 
+// Stores something on screen has read (a template, derived value or effect), and the stores
+// syncAll left for later. At session start a store the page shows is fetched at once; the rest
+// follow a moment after those have answered, one at a time while the browser is idle, and any of
+// them is fetched at once when something starts showing it.
+const _shown = new WeakSet<object>();
+const _later = new Set<{ sync(): Promise<void> }>();
+let _sessionRun = 0;
+/** How long the page's own stores have the network to themselves before the rest begin. */
+const REST_AFTER_MS = 2000;
+
+function shownBy(m: { sync(): Promise<void> }) {
+    if (!browser || !$effect.tracking()) return;
+    _shown.add(m);
+    // Out of the read: a sync sets state, which a template or derived value may not do.
+    if (_later.delete(m)) queueMicrotask(() => { m.sync().catch(() => {}); });
+}
+
+const whenIdle = () => new Promise<void>(resolve => {
+    if (typeof requestIdleCallback === 'function') requestIdleCallback(() => resolve(), { timeout: 2000 });
+    else setTimeout(resolve, 50);
+});
+
 /** Signed-in session start (or account switch): a store holding another account's records (or
- *  none, after logout) reloads from the active account's; then every store fetches from the server.
- *  A store already on this account keeps its records and any sync it is running: sync() joins that
- *  run, so a page's onMount sync and this call migrate local records up once, not twice. */
-export async function syncAll() {
-    _sessionActive = true;
-    const account = storageAccount();
-    const managers = Object.values(getRegistry()) as any[];
-    managers.forEach(m => { if (m.loadedFor !== account) m.reset(false); });
-    return Promise.allSettled(managers.map(m => m.sync()));
+ *  none, after logout) reloads from the active account's; then every store fetches from the server,
+ *  the ones the page shows first (see shownBy). A store already on this account keeps its records
+ *  and any sync it is running: sync() joins that run, so a page's onMount sync and this call
+ *  migrate local records up once, not twice. `everything`: a page that shows every module (the
+ *  dashboard, whose cards appear only once its first stores answer) fetches them all at once. */
+export function syncAll({ everything = false }: { everything?: boolean } = {}) {
+    return untrack(() => {
+        _sessionActive = true;
+        _later.clear();
+        const run = ++_sessionRun;
+        const started = Date.now();
+        const account = storageAccount();
+        const managers = Object.values(getRegistry()) as any[];
+        managers.forEach(m => { if (m.loadedFor !== account) m.reset(false); });
+        const now = managers.filter(m => everything || _shown.has(m) || m.status === 'syncing');
+        managers.forEach(m => { if (!now.includes(m)) _later.add(m); });
+        const first = Promise.allSettled(now.map(m => m.sync()));
+        // The rest; one that answered since this call began (a page synced it) is done.
+        const rest = first.then(async () => {
+            await new Promise(r => setTimeout(r, REST_AFTER_MS));
+            while (run === _sessionRun && _later.size > 0) {
+                await whenIdle();
+                if (run !== _sessionRun) break;
+                const m = _later.values().next().value as any;
+                if (!m) break;
+                _later.delete(m);
+                if (!(m.lastSync && m.lastSync.getTime() >= started)) await m.sync().catch(() => {});
+            }
+        });
+        return Promise.allSettled([first, rest]);
+    });
 }
 
 // The active account becoming known (or changing) points every store at that account's records
@@ -1152,5 +1215,7 @@ if (browser) {
 /** Logout: forget every in-memory record so the next account never sees them. */
 export function clearAll() {
     _sessionActive = false;
+    _sessionRun++;
+    _later.clear();
     (Object.values(getRegistry()) as any[]).forEach(m => m.reset(true));
 }

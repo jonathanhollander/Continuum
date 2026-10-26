@@ -190,7 +190,9 @@
 		if ($auth.token && !$auth.loading && $auth.token !== lastSyncedToken && !isRecipientRoute) {
 			console.log("[Layout] Auth detected, starting global sync...");
 			lastSyncedToken = $auth.token;
-			syncAll();
+			// Card X142: the page's own stores first, the rest a moment later (see syncAll);
+			// the dashboard shows every module, so it takes them all at once.
+			syncAll({ everything: isDashboardRoute });
 
 			// Initialize overwhelm detector from user preference
 			if ($auth.user) {
