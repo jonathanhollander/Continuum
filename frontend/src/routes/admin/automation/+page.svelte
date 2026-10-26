@@ -30,7 +30,7 @@
                     <h1
                         class="font-bold text-white text-3xl flex items-center gap-2"
                     >
-                        <Zap size={20} class="text-[#D4AF37]" />
+                        <Zap size={20} class="text-gold-text" />
                         Automation Control Center
                     </h1>
                     <p
@@ -42,7 +42,7 @@
             </div>
 
             <div class="flex items-center gap-3">
-                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"
+                <span class="w-2 h-2 rounded-full bg-success animate-pulse"
                 ></span>
                 <span class="text-sm font-bold text-slate-300"
                     >System Active</span
@@ -75,12 +75,12 @@
             <!-- Right Column: Sidebar -->
             <div class="space-y-6">
                 <div
-                    class="bg-[#304743] rounded-xl p-6 text-white text-center shadow-lg"
+                    class="bg-primary-deep rounded-xl p-6 text-white text-center shadow-lg"
                 >
                     <div
                         class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4"
                     >
-                        <Zap size={32} class="text-[#D4AF37]" />
+                        <Zap size={32} class="text-gold-text" />
                     </div>
                     <h3 class="font-bold text-xl text-white mb-2">Automation Limits</h3>
                     <div class="space-y-2 text-sm text-white/70 mb-6">
@@ -96,14 +96,14 @@
                         </p>
                     </div>
                     <button
-                        class="w-full py-2 bg-white text-[#304743] rounded-lg font-bold text-sm hover:bg-gray-100 transition-colors"
+                        class="w-full py-2 bg-white text-primary-deep rounded-lg font-bold text-sm hover:bg-white/90 transition-colors"
                     >
                         View Logs
                     </button>
                 </div>
 
                 <div
-                    class="bg-yellow-50 rounded-xl p-6 border border-yellow-200 text-yellow-800"
+                    class="bg-warning-soft rounded-xl p-6 border border-warning/30 text-warning"
                 >
                     <h4 class="font-bold flex items-center gap-2 mb-2">
                         <Settings size={16} />
