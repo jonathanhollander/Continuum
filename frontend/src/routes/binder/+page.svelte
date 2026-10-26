@@ -45,8 +45,12 @@
         }
     }
 
-    onMount(load);
+    onMount(() => {
+        document.body.classList.add("binder-print");
+        load();
+    });
     onDestroy(() => {
+        if (typeof document !== "undefined") document.body.classList.remove("binder-print");
         for (const u of urls.values()) URL.revokeObjectURL(u);
     });
 
@@ -145,17 +149,17 @@
             margin: 12mm;
             size: auto;
         }
-        :global(body) {
+        :global(body.binder-print) {
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
         /* The app shell's <main> is a scroll box, which clips a long packet after a
            few printed pages; print the whole packet, without the sidebar and top bar. */
-        :global(main) {
+        :global(body.binder-print main) {
             overflow: visible !important;
         }
-        :global(aside),
-        :global(body header) {
+        :global(body.binder-print aside),
+        :global(body.binder-print header) {
             display: none !important;
         }
     }
