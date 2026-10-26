@@ -15,6 +15,8 @@
     import { preferenceStore } from "$lib/stores/preferenceStore";
     import { goto } from "$app/navigation";
     import { auth } from "$lib/stores/auth";
+    import { keyringEmails } from "$lib/stores/keyringStore";
+    import { get } from "svelte/store";
 
     // Accessibility scale
     const fontSizeClass = $derived(
@@ -28,15 +30,17 @@
     );
 
     let ready = $state(false);
-    // Read before the layout's handoff pickup strips ?email from the URL
-    const handoffEmail = new URLSearchParams(window.location.search).get("email");
+    // The marketing CTA's ?email, and ?path (guided | expert) when a visitor
+    // returns here from signup or sign-in with the choice they made
+    const startParams = new URLSearchParams(window.location.search);
+    const handoffEmail = startParams.get("email");
+    const chosenPath = startParams.get("path");
 
     onMount(() => {
         // Ensure concierge is closed on mount so user must choose
         conciergeEngine.close();
 
-        const params = new URLSearchParams(window.location.search);
-        const force = params.get("force");
+        const force = startParams.get("force");
         const delay = force ? 100 : 1200;
 
         setTimeout(() => {
@@ -44,26 +48,35 @@
         }, delay);
     });
 
-    // A visitor without an account creates one first; the email from the
-    // marketing CTA (?email=) carries through to the signup form.
-    function sendToSignupIfNeeded(): boolean {
+    // Back from signup or sign-in: continue the path chosen before it
+    let pathApplied = false;
+    $effect(() => {
+        if (pathApplied || !chosenPath || !$auth.user) return;
+        pathApplied = true;
+        if (chosenPath === "guided") startGuided();
+        else if (chosenPath === "expert") startExpert();
+    });
+
+    // A visitor without a session signs in (an email this browser already
+    // knows) or creates an account first; the email from the marketing CTA
+    // fills the form, and the chosen path comes back here afterwards.
+    function sendToSignInIfNeeded(path: "guided" | "expert"): boolean {
         if ($auth.user || $auth.token) return false;
-        goto(
-            handoffEmail
-                ? `/signup?email=${encodeURIComponent(handoffEmail)}`
-                : "/signup",
-        );
+        const params = new URLSearchParams({ redirect: `/start?path=${path}` });
+        if (handoffEmail) params.set("email", handoffEmail);
+        const returning = !!handoffEmail && get(keyringEmails).includes(handoffEmail);
+        goto(`${returning ? "/login" : "/signup"}?${params}`);
         return true;
     }
 
     function startGuided() {
-        if (sendToSignupIfNeeded()) return;
+        if (sendToSignInIfNeeded("guided")) return;
         preferenceStore.setExpertMode(false);
         conciergeEngine.open();
     }
 
     function startExpert() {
-        if (sendToSignupIfNeeded()) return;
+        if (sendToSignInIfNeeded("expert")) return;
         preferenceStore.setExpertMode(true);
         preferenceStore.setOnboardingComplete(true);
         goto("/dashboard");

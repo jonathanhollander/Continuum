@@ -145,7 +145,6 @@
 		}
 	});
 
-	import { registerAccount } from "$lib/stores/keyringStore";
 	import { auth } from "$lib/stores/auth";
 	import { syncAll, clearAll } from "$lib/services/sync.svelte";
 
@@ -237,17 +236,19 @@
 		// Run audit on load
 		estateAudit.runAudit();
 
-		// Handoff Pickup Logic
+		// Handoff pickup from the marketing CTA (/start?email=&lang=) only. The /start page reads
+		// the email itself; the account becomes active at sign-in (auth.ts), never from a URL.
 		const email = $page.url.searchParams.get("email");
 		const lang = $page.url.searchParams.get("lang");
 
-		if (email) {
-			registerAccount(email);
+		if (email && $page.url.pathname === "/start") {
 			if (lang) language.set(lang as any);
 
-			// Clean URL after pickup
-			const cleanUrl = $page.url.pathname + $page.url.hash;
-			goto(cleanUrl, { replaceState: true });
+			// Clean URL after pickup, keeping any other params
+			const clean = new URL($page.url);
+			clean.searchParams.delete("email");
+			clean.searchParams.delete("lang");
+			goto(clean.pathname + clean.search + clean.hash, { replaceState: true });
 		}
 
 		const handleGlobalKeydown = (e: KeyboardEvent) => {
