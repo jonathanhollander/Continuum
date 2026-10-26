@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { readCustom } from "$lib/utils/customFields";
     import {
         Receipt,
         Plus,
@@ -158,11 +159,7 @@
 
     function editSubscription(sub: Subscription) {
         newSub = { ...sub };
-        try {
-            parsedCustomAttributes = JSON.parse(sub.custom_attributes || "{}");
-        } catch {
-            parsedCustomAttributes = {};
-        }
+        parsedCustomAttributes = readCustom(sub);
         showAddForm = true;
     }
 

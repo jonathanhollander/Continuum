@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { readCustom } from "$lib/utils/customFields";
     import { fade, fly } from "svelte/transition";
     import {
         Gift,
@@ -269,11 +270,7 @@
             image: item.image || "",
             ownershipDetails: item.ownershipDetails || "",
         };
-        try {
-            parsedCustomAttributes = item.custom_attributes ? JSON.parse(item.custom_attributes) : {};
-        } catch {
-            parsedCustomAttributes = {};
-        }
+        parsedCustomAttributes = readCustom(item);
         showAddForm = true;
     }
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { readCustom } from "$lib/utils/customFields";
     import {
         insuranceStore,
         insuranceSync,
@@ -311,11 +312,7 @@
     function editPolicy(policy: InsurancePolicy) {
         newPolicy = { ...policy };
         // Parse custom attributes for editing
-        try {
-            parsedCustomAttributes = JSON.parse(policy.custom_attributes || "{}");
-        } catch {
-            parsedCustomAttributes = {};
-        }
+        parsedCustomAttributes = readCustom(policy);
         isEditing = true;
         showAddModal = true;
     }

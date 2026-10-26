@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { readCustom } from "$lib/utils/customFields";
     import { fade, slide } from "svelte/transition";
     import { onMount } from "svelte";
     import {
@@ -178,11 +179,7 @@
             formBody = "";
         }
 
-        try {
-            parsedCustomAttributes = JSON.parse(evt.custom_attributes || "{}");
-        } catch {
-            parsedCustomAttributes = {};
-        }
+        parsedCustomAttributes = readCustom(evt);
 
         showAddForm = true;
     }

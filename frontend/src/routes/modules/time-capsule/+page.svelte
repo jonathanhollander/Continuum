@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { readCustom } from "$lib/utils/customFields";
     import {
         timeCapsuleStore,
         capsuleStatus,
@@ -101,11 +102,7 @@
             videoUrl: msg.videoUrl,
             mediaId: msg.mediaId,
         };
-        try {
-            parsedCustomAttributes = msg.custom_attributes ? JSON.parse(msg.custom_attributes) : {};
-        } catch {
-            parsedCustomAttributes = {};
-        }
+        parsedCustomAttributes = readCustom(msg);
         activeCapsule = null;
         showAddModal = true;
     }

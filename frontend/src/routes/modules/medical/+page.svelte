@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { readCustom } from "$lib/utils/customFields";
     import { fade, slide } from "svelte/transition";
     import { onMount } from "svelte";
     import {
@@ -127,11 +128,7 @@
 
     function editDirective(dir: MedicalDirective) {
         newDirective = { ...dir };
-        try {
-            parsedCustomAttributes = JSON.parse(dir.custom_attributes || "{}");
-        } catch {
-            parsedCustomAttributes = {};
-        }
+        parsedCustomAttributes = readCustom(dir);
         showAddForm = true;
     }
 
