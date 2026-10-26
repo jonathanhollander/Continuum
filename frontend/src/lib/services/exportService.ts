@@ -148,7 +148,7 @@ interface SectionDef {
 // Never shown as a field: identifiers, internal JSON and the record's own name.
 const ALWAYS_SKIP = new Set([
     'id', 'user_id', 'userId', 'custom_attributes', 'customAttributes', 'valueHistory', 'category',
-    'media_id', 'mediaId', 'portal_token', 'portal_token_expires', 'tier_id', 'priority',
+    'media_id', 'mediaId', 'portal_token', 'portal_token_expires', 'recipient_token', 'recipient_token_created_at', 'tier_id', 'priority',
     'can_view_history', 'individual_delay_hours', 'notify_on_safety_timer', 'notification_status',
     'beneficiary_id', 'maintenanceSchedule', 'thumbnail', 'is_digitized', 'assigned_contact_id',
     'image', 'avatar', 'url' // files show as attachments; stock pictures are left out
@@ -265,11 +265,11 @@ const SECTIONS: SectionDef[] = [
         name: (r) => r.name,
         fields: [
             ['role', 'Role'], ['relation', 'Relationship'], ['phone', 'Phone'], ['email', 'Email'],
-            [(r) => [r.is_executor && 'Executor', r.is_beneficiary && 'Beneficiary', r.is_emergency_contact && 'Emergency contact'].filter(Boolean).join(', '), 'Named as'],
+            [(r) => [r.is_executor && 'Executor', r.is_beneficiary && 'Beneficiary', r.is_emergency_contact && 'Emergency contact', r.is_recipient && 'Recipient'].filter(Boolean).join(', '), 'Named as'],
             ['call_tier', 'Call order', { fmt: (v) => ({ '1_Immediate': 'Tier 1: Immediate Notification', '2_SameDay': 'Tier 2: Same Day (Inner Circle)', '3_Service': 'Tier 3: Service Notice', '4_DNR': 'Tier 4' } as Record<string, string>)[v] || v }],
             ['notes', 'Notes', { long: true }]
         ],
-        consumed: ['is_executor', 'is_beneficiary', 'is_emergency_contact', 'avatar']
+        consumed: ['is_executor', 'is_beneficiary', 'is_emergency_contact', 'is_recipient', 'avatar']
     },
     {
         key: 'letters', source: 'letters', title: 'Letters',

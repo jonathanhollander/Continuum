@@ -1,0 +1,355 @@
+<script lang="ts">
+    // The recipient's start page (card D2). One component for both the link (/for/<token>)
+    // and the owner's preview (/for/preview/<contactId>), so the two always match. Everything
+    // comes from the token-scoped snapshot (D1's builder, filtered on the server); files come
+    // through the given fetcher, and the download copy is D1's zip built from the same files.
+    import { onDestroy, onMount } from "svelte";
+    import { slide } from "svelte/transition";
+    import { Archive, Loader2, Phone, Mail, ChevronDown } from "lucide-svelte";
+    import {
+        buildPacket,
+        packetHTML,
+        loadAttachmentFiles,
+        buildDownloadCopy,
+        saveBlob,
+        type SnapshotAttachment,
+    } from "$lib/services/exportService";
+    import type { RecipientView } from "$lib/services/recipientService";
+
+    let {
+        view,
+        fetchBlob,
+    }: {
+        view: RecipientView;
+        fetchBlob: (a: SnapshotAttachment) => Promise<Blob>;
+    } = $props();
+
+    const snapshot = $derived(view.snapshot);
+    const packet = $derived(buildPacket(view.snapshot, "full"));
+    const rows = (k: string): any[] => snapshot.sections[k] ?? [];
+    const recipient = $derived(view.recipient);
+    const firstName = $derived((recipient.name || "").trim().split(/\s+/)[0] || recipient.name);
+    const ownerName = $derived(packet.ownerName || "the person who shared this");
+
+    // Files: fetched once, shown from blob URLs, reused by the download copy.
+    let files = $state<Map<string, Blob>>(new Map());
+    let urls = $state<Map<string, string>>(new Map());
+    let filesReady = $state(false);
+    let busy = $state<string | null>(null);
+    let downloadNote = $state<string | null>(null);
+    let showFull = $state(false);
+
+    onMount(async () => {
+        files = await loadAttachmentFiles(snapshot, packet.attachments, fetchBlob);
+        const next = new Map<string, string>();
+        for (const [k, b] of files) next.set(k, URL.createObjectURL(b));
+        urls = next;
+        filesReady = true;
+    });
+    onDestroy(() => {
+        for (const u of urls.values()) URL.revokeObjectURL(u);
+    });
+
+    const byRecord = $derived.by(() => {
+        const m = new Map<string, SnapshotAttachment[]>();
+        for (const a of snapshot.attachments) {
+            for (const r of a.records) {
+                const k = `${r.section}:${r.id}`;
+                m.set(k, [...(m.get(k) ?? []), a]);
+            }
+        }
+        return m;
+    });
+    const filesFor = (section: string, id: any) => byRecord.get(`${section}:${id}`) ?? [];
+
+    // People to reach, in the owner's call order. "Kept private" stays in the full record only.
+    const TIERS: Record<string, [number, string]> = {
+        "1_Immediate": [1, "First call"],
+        "2_SameDay": [2, "Same day"],
+        "3_Service": [3, "Extended circle"],
+    };
+    const people = $derived(
+        rows("contacts")
+            .filter((c) => c.id !== recipient.id && c.call_tier !== "4_DNR")
+            .sort((a, b) => (TIERS[a.call_tier]?.[0] ?? 9) - (TIERS[b.call_tier]?.[0] ?? 9)),
+    );
+    const firstCalls = $derived(
+        people.filter((c) => c.call_tier === "1_Immediate").length
+            ? people.filter((c) => c.call_tier === "1_Immediate")
+            : people.filter((c) => c.is_emergency_contact),
+    );
+
+    const originals = $derived([
+        ...rows("documents")
+            .filter((d) => d.location || d.location_physical)
+            .map((d) => ({ key: `documents:${d.id}`, name: d.name || d.title, kind: d.category, where: d.location || d.location_physical, files: filesFor("documents", d.id) })),
+        ...rows("medical_directives")
+            .filter((d) => d.location_of_original)
+            .map((d) => ({ key: `medical_directives:${d.id}`, name: d.title, kind: "Medical directive", where: d.location_of_original, files: filesFor("medical_directives", d.id) })),
+    ]);
+
+    const letters = $derived(rows("letters"));
+    const capsules = $derived(rows("time_capsule"));
+    const memories = $derived(
+        [...rows("visual_memories").map((r) => ({ section: "visual_memories", r, title: r.name, text: r.description })),
+         ...rows("family_memories").map((r) => ({ section: "family_memories", r, title: r.title, text: r.desc || r.text }))]
+            .map((m) => ({ ...m, files: filesFor(m.section, m.r.id) }))
+            .filter((m) => m.files.length > 0),
+    );
+
+    const names = (list: any[]) => {
+        const n = list.map((c) => c.name).filter(Boolean);
+        return n.length <= 1 ? n.join("") : `${n.slice(0, -1).join(", ")} and ${n[n.length - 1]}`;
+    };
+
+    const hasWishes = $derived(
+        rows("funeral_data").some((f) => {
+            try {
+                const w = typeof f.wishes === "string" ? JSON.parse(f.wishes) : f.wishes;
+                return w && Object.values(w).some((v) => v !== "" && v !== null && v !== false && !(Array.isArray(v) && v.length === 0));
+            } catch {
+                return false;
+            }
+        }),
+    );
+    const otherExecutors = $derived(packet.executors.filter((n) => n !== recipient.name));
+    const pets = $derived(rows("pets"));
+
+    // First steps, from what the owner recorded.
+    const steps = $derived.by(() => {
+        const out: { title: string; body: string; href?: string }[] = [
+            { title: "Take a moment for yourself", body: "There is time. This page stays here for you, and you can come back to it whenever you need." },
+        ];
+        if (firstCalls.length)
+            out.push({ title: `Let ${names(firstCalls)} know`, body: `${ownerName} asked that they hear first. Their numbers are below.`, href: "#people" });
+        if (recipient.is_executor)
+            out.push({ title: "You are named as executor", body: "The originals of the important papers are listed below, with where each one is kept.", href: "#originals" });
+        else if (otherExecutors.length)
+            out.push({ title: `${otherExecutors.join(" and ")} can help with the legal steps`, body: `${ownerName} named them as executor.`, href: "#people" });
+        if (hasWishes)
+            out.push({ title: "Their final wishes are written down", body: "You can read them in the full record at the end of this page.", href: "#record" });
+        if (pets.length)
+            out.push({ title: `${names(pets)} will need care`, body: "Their routines, food and vet are in the full record.", href: "#record" });
+        out.push({ title: "When you feel ready, a funeral home can guide the first arrangements", body: "You can lean on them for the practical steps." });
+        return out;
+    });
+
+    const html = $derived(showFull ? packetHTML(packet, (a) => urls.get(a.key) ?? null) : "");
+
+    const fmtDate = (v: any) => {
+        if (!v) return "";
+        const d = new Date(String(v).length === 10 ? `${v}T12:00:00` : v);
+        return Number.isNaN(d.getTime()) ? String(v) : d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+    };
+
+    async function downloadCopy() {
+        busy = "download";
+        downloadNote = null;
+        try {
+            const blob = await buildDownloadCopy(snapshot, (m) => (downloadNote = m), filesReady ? files : undefined, fetchBlob);
+            const safe = (s: string) => s.replace(/[^\w\- ]+/g, "").trim() || "Continuum";
+            saveBlob(blob, `${safe(ownerName)} - for ${safe(recipient.name)}.zip`);
+            downloadNote = "Your copy is saved. It opens in any browser, with every file beside it.";
+        } catch {
+            downloadNote = "The copy is taking a moment. You can try again shortly.";
+        } finally {
+            busy = null;
+        }
+    }
+</script>
+
+{#snippet media(list: SnapshotAttachment[])}
+    {#if list.length}
+        <div class="mt-4 flex flex-col gap-3">
+            {#each list as a (a.key)}
+                {@const url = urls.get(a.key)}
+                {#if url && a.mime_type.startsWith("video/")}
+                    <video src={url} controls preload="metadata" class="w-full max-w-xl rounded-xl bg-black" data-testid="recipient-video"></video>
+                {:else if url && a.mime_type.startsWith("audio/")}
+                    <audio src={url} controls class="w-full max-w-xl" data-testid="recipient-audio"></audio>
+                {:else if url && a.mime_type.startsWith("image/")}
+                    <img src={url} alt={a.filename || "Photo"} class="max-w-md max-h-80 rounded-xl object-cover" />
+                {:else if url}
+                    <a href={url} download={a.filename} target="_blank" rel="noopener" class="text-[#304743] underline text-sm">Open {a.filename || "this file"}</a>
+                {:else}
+                    <span class="text-sm text-stone-500 inline-flex items-center gap-2"><Loader2 class="w-4 h-4 animate-spin" /> Opening {a.filename || "this file"}…</span>
+                {/if}
+            {/each}
+        </div>
+    {/if}
+{/snippet}
+
+<div class="min-h-screen bg-[#FAF8F5] text-stone-800" data-testid="recipient-page">
+    {#if view.preview}
+        <div class="bg-[#304743] text-white text-sm text-center py-2.5 px-4" data-testid="recipient-preview-banner">
+            Your preview: this is the page {recipient.name} sees.
+        </div>
+    {/if}
+
+    <main class="max-w-4xl mx-auto px-8 py-16 space-y-14">
+        <header class="space-y-4">
+            <p class="text-xs font-bold uppercase tracking-[0.2em] text-[#304743]">For {recipient.name}</p>
+            <h1 class="font-serif text-5xl leading-tight text-[#304743]" data-testid="recipient-owner">From {ownerName}</h1>
+            <div class="w-24 h-2 bg-[#D4AF37] rounded-full"></div>
+            <p class="text-lg text-stone-600 max-w-2xl leading-relaxed">
+                {ownerName} gathered these things for you, {firstName}. Take whatever you need, in your own time.
+            </p>
+        </header>
+
+        {#if view.note}
+            <section class="bg-white rounded-2xl border border-stone-200 p-8 shadow-sm" data-testid="recipient-note">
+                <h2 class="text-xs font-bold uppercase tracking-widest text-stone-500 mb-4">A note for you</h2>
+                <p class="font-serif text-xl leading-relaxed whitespace-pre-wrap">{view.note}</p>
+            </section>
+        {/if}
+
+        <section data-testid="recipient-steps">
+            <h2 class="font-serif text-3xl text-[#304743] mb-6">The first steps</h2>
+            <ol class="space-y-3">
+                {#each steps as s, i}
+                    <li class="flex gap-4 bg-white rounded-2xl border border-stone-200 p-5">
+                        <span class="shrink-0 w-8 h-8 rounded-full bg-[#304743]/10 text-[#304743] font-bold flex items-center justify-center">{i + 1}</span>
+                        <div>
+                            <p class="font-semibold text-stone-800">{s.title}</p>
+                            <p class="text-stone-600 text-sm mt-1">{s.body}{#if s.href}<a href={s.href} class="ml-1 text-[#304743] underline">See below</a>{/if}</p>
+                        </div>
+                    </li>
+                {/each}
+            </ol>
+        </section>
+
+        {#if people.length}
+            <section id="people" data-testid="recipient-contacts">
+                <h2 class="font-serif text-3xl text-[#304743] mb-6">People to reach</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    {#each people as c (c.id)}
+                        <article class="bg-white rounded-2xl border border-stone-200 p-5" data-contact={c.id}>
+                            <div class="flex items-start justify-between gap-3">
+                                <div>
+                                    <p class="font-semibold text-lg">{c.name}</p>
+                                    <p class="text-sm text-stone-500">{[c.relation, c.role].filter(Boolean).join(" · ")}{#if c.is_executor} · Executor{/if}</p>
+                                </div>
+                                {#if TIERS[c.call_tier]}
+                                    <span class="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-[#D4AF37]/15 text-[#7a6420]">{TIERS[c.call_tier][1]}</span>
+                                {/if}
+                            </div>
+                            <div class="mt-3 space-y-1 text-sm">
+                                {#if c.phone}<a href={`tel:${c.phone}`} class="flex items-center gap-2 text-[#304743]"><Phone class="w-4 h-4" />{c.phone}</a>{/if}
+                                {#if c.email}<a href={`mailto:${c.email}`} class="flex items-center gap-2 text-[#304743]"><Mail class="w-4 h-4" />{c.email}</a>{/if}
+                            </div>
+                            {#if c.notes}<p class="mt-3 text-sm text-stone-600 whitespace-pre-wrap">{c.notes}</p>{/if}
+                        </article>
+                    {/each}
+                </div>
+            </section>
+        {/if}
+
+        {#if originals.length}
+            <section id="originals" data-testid="recipient-originals">
+                <h2 class="font-serif text-3xl text-[#304743] mb-6">Where the originals are kept</h2>
+                <div class="bg-white rounded-2xl border border-stone-200 divide-y divide-stone-100">
+                    {#each originals as d (d.key)}
+                        <div class="p-5 grid grid-cols-[1fr_1.4fr] gap-6" data-record={d.key}>
+                            <div>
+                                <p class="font-semibold">{d.name}</p>
+                                {#if d.kind}<p class="text-sm text-stone-500">{d.kind}</p>{/if}
+                            </div>
+                            <div>
+                                <p class="text-stone-700">{d.where}</p>
+                                {@render media(d.files)}
+                            </div>
+                        </div>
+                    {/each}
+                </div>
+            </section>
+        {/if}
+
+        {#if letters.length}
+            <section data-testid="recipient-letters">
+                <h2 class="font-serif text-3xl text-[#304743] mb-6">{letters.length === 1 ? "A letter for you" : "Letters for you"}</h2>
+                <div class="space-y-6">
+                    {#each letters as l (l.id)}
+                        <article class="bg-white rounded-2xl border border-stone-200 p-8 shadow-sm" data-letter={l.id}>
+                            <h3 class="font-serif text-2xl text-stone-800">{l.title}</h3>
+                            <p class="text-sm text-stone-500 mt-1">
+                                {[l.date ? `Written ${fmtDate(l.date)}` : "", l.triggerMilestone ? `For ${l.triggerMilestone}` : l.triggerDate ? `For ${fmtDate(l.triggerDate)}` : ""].filter(Boolean).join(" · ")}
+                            </p>
+                            <p class="font-serif text-lg leading-relaxed whitespace-pre-wrap mt-6" data-testid="letter-content">{l.content}</p>
+                            {@render media(filesFor("letters", l.id))}
+                        </article>
+                    {/each}
+                </div>
+            </section>
+        {/if}
+
+        {#if capsules.length}
+            <section data-testid="recipient-capsules">
+                <h2 class="font-serif text-3xl text-[#304743] mb-6">Time capsule messages</h2>
+                <div class="space-y-6">
+                    {#each capsules as m (m.id)}
+                        <article class="bg-white rounded-2xl border border-stone-200 p-8" data-capsule={m.id}>
+                            <h3 class="font-serif text-2xl">{m.title}</h3>
+                            <p class="text-sm text-stone-500 mt-1">
+                                {m.trigger_type === "milestone" ? `For ${String(m.trigger_value).replace(/[_-]+/g, " ")}` : m.trigger_value ? `Opened ${fmtDate(m.trigger_value)}` : ""}
+                            </p>
+                            {#if m.content_preview}<p class="font-serif text-lg leading-relaxed whitespace-pre-wrap mt-5">{m.content_preview}</p>{/if}
+                            {@render media(filesFor("time_capsule", m.id))}
+                        </article>
+                    {/each}
+                </div>
+            </section>
+        {/if}
+
+        {#if memories.length}
+            <section data-testid="recipient-memories">
+                <h2 class="font-serif text-3xl text-[#304743] mb-6">Photos and recordings</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    {#each memories as m (m.section + m.r.id)}
+                        <article class="bg-white rounded-2xl border border-stone-200 p-5">
+                            <p class="font-semibold">{m.title}</p>
+                            {#if m.text}<p class="text-sm text-stone-600 mt-1">{m.text}</p>{/if}
+                            {@render media(m.files)}
+                        </article>
+                    {/each}
+                </div>
+            </section>
+        {/if}
+
+        <section id="record" class="bg-white rounded-2xl border border-stone-200 p-8 space-y-5" data-testid="recipient-record">
+            <h2 class="font-serif text-3xl text-[#304743]">The full record</h2>
+            <p class="text-stone-600 leading-relaxed">
+                Everything {ownerName} recorded, in one place: accounts, property, insurance, documents, wishes and more.
+                The copy holds this whole page and every file, and opens in any browser.
+            </p>
+            <div class="flex flex-wrap gap-3">
+                <button
+                    onclick={() => (showFull = !showFull)}
+                    class="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-[#304743]/30 text-[#304743] font-semibold hover:bg-[#304743]/5"
+                    data-testid="recipient-show-record"
+                >
+                    <ChevronDown class="w-4 h-4 transition-transform {showFull ? 'rotate-180' : ''}" />
+                    {showFull ? "Fold the full record away" : "Read the full record"}
+                </button>
+                <button
+                    onclick={downloadCopy}
+                    disabled={busy !== null}
+                    class="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#304743] text-white font-semibold hover:opacity-90 disabled:opacity-60"
+                    data-testid="recipient-download"
+                >
+                    {#if busy}<Loader2 class="w-4 h-4 animate-spin" />{:else}<Archive class="w-4 h-4" />{/if}
+                    Save a copy to keep
+                </button>
+            </div>
+            {#if downloadNote}<p class="text-sm text-stone-600" data-testid="recipient-download-note">{downloadNote}</p>{/if}
+            {#if showFull}
+                <div transition:slide class="border-t border-stone-100 pt-4 -mx-8" data-testid="recipient-packet">
+                    {@html html}
+                </div>
+            {/if}
+        </section>
+
+        <footer class="text-center text-sm text-stone-500 pt-6">
+            Kept with care by Continuum for {ownerName}.
+        </footer>
+    </main>
+</div>

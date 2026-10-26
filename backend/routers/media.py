@@ -193,7 +193,11 @@ async def download_media(
     Redirects to S3 presigned URL or serves local file.
     """
     media = get_owned_media(session, media_id, user)
+    return serve_media_file(media)
 
+
+def serve_media_file(media: MediaFile):
+    """The file's bytes: a presigned redirect for S3, the stored file otherwise."""
     # Handle S3 Storage
     if media.storage_provider == "s3":
         presigned_url = storage.get_presigned_url(media.storage_path)
@@ -215,6 +219,26 @@ async def download_media(
         media_type=media.mime_type,
         filename=media.filename
     )
+
+
+@router.get("/shared/{token}/{media_id}")
+async def download_shared_media(
+    token: str,
+    media_id: int,
+    session: Session = Depends(get_session)
+):
+    """
+    A file on a recipient's start page (card D2), opened with that page's link instead of a
+    sign-in. Only files the recipient view itself shows are served: the owner's own, undeleted
+    files attached to a record in that view (held letters and unreleased capsules are left out).
+    """
+    from backend.routers.recipient import contact_for_token, recipient_snapshot
+    contact = contact_for_token(session, token)
+    shown = {a.get("media_id") for a in recipient_snapshot(session, contact)["attachments"] if a.get("source") == "media"}
+    media = session.get(MediaFile, media_id)
+    if media_id not in shown or not media or media.deleted_at is not None or media.user_id != contact.user_id:
+        raise HTTPException(status_code=404, detail=NOT_FOUND)
+    return serve_media_file(media)
 
 
 @router.get("/", response_model=List[MediaFileResponse])

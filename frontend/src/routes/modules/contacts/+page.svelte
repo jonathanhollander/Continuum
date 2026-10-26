@@ -47,6 +47,7 @@
     } from "$lib/utils/contextualMessages";
     import ContextualMessage from "$lib/components/ContextualMessage.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
+    import RecipientLinkPanel from "$lib/components/recipient/RecipientLinkPanel.svelte";
 
     let activeTab = $state("call-list");
     let parsedCustomAttributes = $state<Record<string, any>>({});
@@ -740,6 +741,8 @@
                     bind:data={parsedCustomAttributes}
                 />
             </div>
+
+            <RecipientLinkPanel contactId={editingId} name={newContact.name} />
 
             <!-- Footer buttons: sticky to the bottom of the dialog's scroll area so they stay in view (-bottom-6 cancels the scroll area's p-6). -->
             <div class="sticky -bottom-6 z-10 -mx-6 -mb-6 px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 mt-6">

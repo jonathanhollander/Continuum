@@ -135,6 +135,14 @@ class PulseContact(SQLModel, table=True):
     call_tier: Optional[str] = Field(default=None) # "1_Immediate", "2_SameDay", "3_Service", "4_DNR"
     notification_status: Optional[str] = Field(default=None) # "Pending", "Called", "LeftMsg", "Notified", "Unreachable"
 
+    # Recipient start page (card D2): the owner marks this person as a recipient, may leave them a
+    # note, and issues one link. recipient_token is the link's secret (32 random bytes); clearing it
+    # closes the link. These are owner-only: the contacts API never accepts them from the client.
+    is_recipient: bool = Field(default=False)
+    recipient_note: Optional[str] = Field(default=None)
+    recipient_token: Optional[str] = Field(default=None, index=True)
+    recipient_token_created_at: Optional[datetime] = Field(default=None)
+
 class PulseSafetyTimer(SQLModel, table=True):
     __tablename__ = "pulse_safety_timers"
     id: Optional[int] = Field(default=None, primary_key=True)

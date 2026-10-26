@@ -16,7 +16,7 @@ import base64
 import json
 import re
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from fastapi import APIRouter, Depends
 from sqlmodel import Session, select
@@ -61,7 +61,7 @@ SECTION_MODELS = [
 
 # Columns that never leave the server (link secrets).
 PRIVATE_FIELDS = {
-    "contacts": {"portal_token", "portal_token_expires"},
+    "contacts": {"portal_token", "portal_token_expires", "recipient_token", "recipient_token_created_at"},
 }
 
 # The owner-facing profile keys the packet shows (estate/profile stores them snake_case).
@@ -164,14 +164,18 @@ def _attachments(sections: Dict[str, List[Dict[str, Any]]], media: Dict[int, Med
     return list(stored.values()) + inline, missing
 
 
-def build_snapshot(session: Session, user_id: int) -> Dict[str, Any]:
+def build_snapshot(session: Session, user_id: int,
+                   keep: Optional[Callable[[str, Dict[str, Any]], bool]] = None) -> Dict[str, Any]:
+    """`keep(section, row)` (optional) drops records before attachments are matched, so a
+    filtered snapshot (the recipient view, card D2) lists only the files its records use."""
     user = session.get(User, user_id)
     sections: Dict[str, List[Dict[str, Any]]] = {}
     for section, model in SECTION_MODELS:
         stmt = select(model).where(model.user_id == user_id)
         if hasattr(model, "id"):
             stmt = stmt.order_by(model.id)
-        sections[section] = [_row(section, r) for r in session.exec(stmt).all()]
+        rows = [_row(section, r) for r in session.exec(stmt).all()]
+        sections[section] = [r for r in rows if keep(section, r)] if keep else rows
 
     media_rows = session.exec(
         select(MediaFile).where(MediaFile.user_id == user_id, MediaFile.deleted_at == None)  # noqa: E711
