@@ -18,7 +18,13 @@
         error: null as string | null,
         data: null as any,
         actionSuccess: null as "snoozed" | "acknowledged" | null,
+        actionError: null as string | null,
     });
+
+    // The API sends naive UTC timestamps (no "Z"); read them as UTC, not local time
+    function parseUtc(ts: string): Date {
+        return new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(ts) ? ts : ts + "Z");
+    }
 
     onMount(async () => {
         const token = $page.params.token;
@@ -37,6 +43,7 @@
 
     async function handleAction(action: "snooze" | "acknowledge") {
         const token = $page.params.token;
+        state.actionError = null;
         try {
             const baseUrl = API_BASE_URL;
             const res = await fetch(
@@ -48,9 +55,15 @@
             if (res.ok) {
                 const result = await res.json();
                 state.actionSuccess = result.status;
+            } else {
+                state.actionError =
+                    res.status === 401 || res.status === 404
+                        ? "We couldn't record that just now. This link may have expired; please try again in a little while."
+                        : "We couldn't record that just now. Please try again in a little while.";
             }
         } catch (e) {
-            console.error(e);
+            state.actionError =
+                "We couldn't record that just now. Please try again in a little while.";
         }
     }
 </script>
@@ -136,9 +149,9 @@
                                     class="text-sm text-amber-200/70 mt-1 leading-relaxed"
                                 >
                                     {#if state.data.last_checkin}
-                                        {state.data.user_name}'s last check-in was {new Date(
+                                        {state.data.user_name}'s last check-in was {parseUtc(
                                             state.data.last_checkin,
-                                        ).toLocaleDateString()} at {new Date(
+                                        ).toLocaleDateString()} at {parseUtc(
                                             state.data.last_checkin,
                                         ).toLocaleTimeString()}.
                                     {:else}
@@ -191,6 +204,15 @@
                             </div>
                         </button>
                     </div>
+
+                    {#if state.actionError}
+                        <p
+                            class="text-sm text-amber-300 text-center leading-relaxed"
+                            role="status"
+                        >
+                            {state.actionError}
+                        </p>
+                    {/if}
 
                     <div class="p-6 text-center">
                         <p class="text-xs text-slate-500 leading-relaxed">
