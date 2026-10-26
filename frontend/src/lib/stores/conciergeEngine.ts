@@ -48,6 +48,7 @@ interface ConciergeState {
     hasPendingContextSwitch: boolean;
     isPoppedOut: boolean;
     floatingPosition: { x: number; y: number } | null;
+    floatingPositionV?: number;
     floatingSize: { width: number; height: number } | null;
     popOutMode: 'pip' | 'floating' | null;
 }
@@ -66,7 +67,8 @@ function createConciergeEngine() {
         hasPendingContextSwitch: false,
         isPoppedOut: false,
         popOutMode: null,
-        floatingPosition: { x: 50, y: 50 }, // Default top-right-ish
+        floatingPosition: null, // null = default spot, chosen by ConciergePanel
+        floatingPositionV: 2,
         floatingSize: { width: 340, height: 580 }
     };
 
@@ -77,9 +79,14 @@ function createConciergeEngine() {
         if (saved) {
             try {
                 const parsed = JSON.parse(saved);
+                // Before v2 the default {x:50,y:50} was saved on every broadcast; read it once as unset.
+                const p = parsed?.floatingPosition;
+                const legacyDefault = parsed?.floatingPositionV !== 2 && p?.x === 50 && p?.y === 50;
                 savedState = {
                     ...initialState,
                     ...parsed,
+                    floatingPosition: legacyDefault ? null : (parsed?.floatingPosition ?? null),
+                    floatingPositionV: 2,
                     isOpen: false,
                     isPoppedOut: false,
                     popOutMode: null
