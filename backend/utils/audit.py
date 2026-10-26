@@ -8,6 +8,7 @@ from typing import Optional
 
 
 from backend.utils.logger import get_logger
+from backend.limiter import client_ip
 
 logger = get_logger(__name__)
 
@@ -42,7 +43,7 @@ def log_audit(
         audit = AuditLog(
             user_id=user_id,
             user_email=user_email,
-            ip_address=request.client.host if request.client else None,
+            ip_address=client_ip(request),
             user_agent=request.headers.get("user-agent"),
             action=action,
             resource_type=resource_type,
