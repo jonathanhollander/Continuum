@@ -167,8 +167,10 @@ export const calendarStore = {
 // Derived store: every event with its next date, soonest first.
 // The manager's subscribe hands out the items array itself.
 export const upcomingEvents = derived(calendarSync, (items: AnniversaryEvent[]) => {
-    const now = new Date();
-    const currentYear = now.getFullYear();
+    // These are local calendar days: today's moment stays upcoming through the end of today.
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const currentYear = today.getFullYear();
 
     return items.map(event => {
         // Accepts "MM-DD", "YYYY-MM-DD" and the calendar page's "MMDD" / "YYYYMMDD".
@@ -184,7 +186,7 @@ export const upcomingEvents = derived(calendarSync, (items: AnniversaryEvent[]) 
         const year = !event.recurring && Number.isFinite(savedYear) ? savedYear : currentYear;
         const eventDate = new Date(year, month - 1, day);
 
-        if (eventDate < now && event.recurring) {
+        if (eventDate < today && event.recurring) {
             eventDate.setFullYear(currentYear + 1);
         }
 
