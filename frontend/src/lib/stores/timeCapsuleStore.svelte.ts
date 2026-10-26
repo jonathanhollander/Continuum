@@ -63,14 +63,12 @@ export const timeCapsuleStore = {
     get items() { return timeCapsuleSync.items; },
     get status() { return timeCapsuleSync.status; },
 
-    addMessage: (message: Omit<TimeCapsuleMessage, 'id' | 'isReleased' | 'createdAt'> & { mediaId?: string }) => {
-        return timeCapsuleSync.create({
-            ...message,
-            id: crypto.randomUUID(),
-            isReleased: false,
-            createdAt: new Date().toISOString()
-        } as TimeCapsuleMessage);
+    // The server sets id and created_at (both protected in the API).
+    addMessage: (message: Omit<TimeCapsuleMessage, 'id' | 'isReleased' | 'createdAt'>) => {
+        return timeCapsuleSync.create({ ...message, isReleased: false } as TimeCapsuleMessage);
     },
+
+    updateMessage: (id: string, changes: Partial<TimeCapsuleMessage>) => timeCapsuleSync.update(id, changes),
 
     removeMessage: (id: string) => timeCapsuleSync.delete(id),
 
@@ -84,10 +82,21 @@ export const timeCapsuleStore = {
     subscribe: timeCapsuleSync.subscribe.bind(timeCapsuleSync)
 };
 
-export const capsuleStatus = derived(timeCapsuleSync, ($sync) => {
-    const items = $sync?.items ?? [];
+/** Today as YYYY-MM-DD in the person's own time zone (the date input's format). */
+const today = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+/** Released: marked released, or a date capsule whose date has arrived. */
+export const isCapsuleReleased = (m: TimeCapsuleMessage) =>
+    !!m.isReleased || (m.triggerType === 'date' && !!m.triggerValue && m.triggerValue <= today());
+
+// The sync store emits the item array itself.
+export const capsuleStatus = derived(timeCapsuleSync, ($items) => {
+    const items: TimeCapsuleMessage[] = $items ?? [];
     return {
-        unlocked: items.filter(m => m.isReleased),
-        locked: items.filter(m => !m.isReleased)
+        unlocked: items.filter(isCapsuleReleased),
+        locked: items.filter(m => !isCapsuleReleased(m))
     };
 });

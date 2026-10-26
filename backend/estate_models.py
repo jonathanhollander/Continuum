@@ -1,4 +1,5 @@
 from typing import Optional
+import uuid
 from sqlalchemy import Index
 from sqlmodel import Field, SQLModel
 from datetime import datetime
@@ -371,7 +372,7 @@ class LifeEvent(SQLModel, table=True):
 # --- TIME CAPSULE ---
 class TimeCapsuleMessage(SQLModel, table=True):
     """Model for scheduled future messages or milestone-triggered recordings."""
-    id: Optional[str] = Field(default=None, primary_key=True)
+    id: Optional[str] = Field(default_factory=lambda: uuid.uuid4().hex, primary_key=True)  # text PK: the server names new rows
     user_id: int = Field(foreign_key="users.id", index=True)
     title: str
     recipient: str
@@ -382,7 +383,7 @@ class TimeCapsuleMessage(SQLModel, table=True):
     trigger_type: str  # date, milestone
     trigger_value: str
     is_released: bool = Field(default=False)
-    created_at: str
+    created_at: str = Field(default_factory=lambda: datetime.now().astimezone().isoformat())  # protected in the API, so the server sets it
     custom_attributes: Optional[str] = Field(default="{}")
 
 # --- FUNERAL ---

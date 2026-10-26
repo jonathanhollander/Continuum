@@ -5,6 +5,7 @@
         COMMON_MILESTONES,
         type TimeCapsuleMessage,
         type ReleaseTrigger,
+        isCapsuleReleased,
     } from "$lib/stores/timeCapsuleStore.svelte";
     import {
         Lock,
@@ -23,6 +24,7 @@
         X,
         Loader2,
         Sparkles,
+        Pencil,
     } from "lucide-svelte";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import { onMount } from "svelte";
@@ -31,6 +33,8 @@
     import VideoRecorder from "$lib/components/media/VideoRecorder.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
     import { mediaStorage } from "$lib/services/indexedDB";
+    import { uploadMedia } from "$lib/services/mediaService";
+    import MediaView from "$lib/components/ui/MediaView.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
@@ -52,62 +56,136 @@
     let showAddModal = $state(false);
     let parsedCustomAttributes = $state<Record<string, any>>({});
     let isRecording = $state(false);
-    let recordedMediaId = $state<string | null>(null);
-    let newMessage = $state<Partial<TimeCapsuleMessage>>({
+    let isUploading = $state(false);
+    let formNote = $state<string | null>(null);
+    let isSaving = $state(false);
+    /** The capsule being edited; null while writing a new one. */
+    let editingId = $state<string | null>(null);
+
+    const emptyMessage = (): Partial<TimeCapsuleMessage> => ({
         title: "",
         recipient: "",
         contentPreview: "",
         triggerType: "date",
         triggerValue: "",
+        videoUrl: undefined,
+        mediaId: undefined,
     });
+    let newMessage = $state<Partial<TimeCapsuleMessage>>(emptyMessage());
+    let hasVideo = $derived(!!(newMessage.videoUrl || newMessage.mediaId));
+
+    function resetForm() {
+        newMessage = emptyMessage();
+        parsedCustomAttributes = {};
+        editingId = null;
+        isRecording = false;
+        formNote = null;
+    }
+
+    function openNew() {
+        if (editingId) resetForm(); // a draft of a new capsule stays; an edit does not carry over
+        showAddModal = true;
+    }
+
+    function openEdit(msg: TimeCapsuleMessage) {
+        resetForm();
+        editingId = String(msg.id);
+        newMessage = {
+            title: msg.title,
+            recipient: msg.recipient,
+            contentPreview: msg.contentPreview ?? "",
+            triggerType: msg.triggerType,
+            triggerValue: msg.triggerValue,
+            videoUrl: msg.videoUrl,
+            mediaId: msg.mediaId,
+        };
+        try {
+            parsedCustomAttributes = msg.custom_attributes ? JSON.parse(msg.custom_attributes) : {};
+        } catch {
+            parsedCustomAttributes = {};
+        }
+        activeCapsule = null;
+        showAddModal = true;
+    }
+
+    function setTrigger(type: ReleaseTrigger) {
+        if (newMessage.triggerType === type) return;
+        newMessage.triggerType = type;
+        // The milestone list shows its first choice, so the value matches what is shown.
+        newMessage.triggerValue = type === "milestone" ? COMMON_MILESTONES[0].id : "";
+    }
 
     async function handleAdd() {
-        if (
-            !newMessage.title ||
-            !newMessage.recipient ||
-            !newMessage.triggerValue
-        )
+        if (!newMessage.title || !newMessage.recipient || !newMessage.triggerValue) {
+            formNote = "A title, a name and a release moment complete this capsule.";
             return;
-
-        const messageToAdd = {
-            ...newMessage,
-            mediaId: recordedMediaId,
-            custom_attributes: JSON.stringify(parsedCustomAttributes),
-        };
-
-        timeCapsuleStore.addMessage(messageToAdd as any);
-
-        // Reset
-        newMessage = {
-            title: "",
-            recipient: "",
-            contentPreview: "",
-            triggerType: "date",
-            triggerValue: "",
-        };
-        recordedMediaId = null;
-        isRecording = false;
-        showAddModal = false;
-        parsedCustomAttributes = {};
-        showAffirmation = true;
-    }
-
-    async function handleSaveVideo(event: CustomEvent<Blob>) {
-        const id = crypto.randomUUID();
-        await mediaStorage.save(id, event.detail);
-        recordedMediaId = id;
-        isRecording = false;
-    }
-
-    let activeVideoUrl = $state<string | null>(null);
-    async function playVideo(mediaId: string) {
-        if (!mediaId) return;
-        const url = await mediaStorage.getUrl(mediaId);
-        if (url) {
-            activeVideoUrl = url;
-        } else {
-            alert("Video file not found in local storage.");
         }
+        if (isUploading || isSaving) return;
+
+        const fields = {
+            title: newMessage.title,
+            recipient: newMessage.recipient,
+            contentPreview: newMessage.contentPreview ?? "",
+            triggerType: newMessage.triggerType as ReleaseTrigger,
+            triggerValue: newMessage.triggerValue,
+            videoUrl: newMessage.videoUrl ?? null,
+            mediaId: newMessage.mediaId ?? null,
+            custom_attributes: JSON.stringify(parsedCustomAttributes),
+        } as any;
+
+        isSaving = true;
+        try {
+            if (editingId) {
+                await timeCapsuleStore.updateMessage(editingId, fields);
+            } else {
+                await timeCapsuleStore.addMessage(fields);
+                showAffirmation = true;
+            }
+            resetForm();
+            showAddModal = false;
+        } catch {
+            // The sync manager shows a gentle note; the form keeps every word.
+        } finally {
+            isSaving = false;
+        }
+    }
+
+    async function handleSaveVideo(event: CustomEvent<{ blob: Blob; duration: number }>) {
+        const blob = event.detail.blob;
+        isUploading = true;
+        formNote = null;
+        try {
+            const file = new File([blob], "capsule.webm", { type: blob.type || "video/webm" });
+            const saved = await uploadMedia(file, "time_capsules", editingId ?? undefined);
+            newMessage.videoUrl = saved.download_url;
+            newMessage.mediaId = undefined;
+        } catch (e: any) {
+            formNote = e?.message || "Your video is taking a moment to save. Record again when you're ready.";
+        } finally {
+            isUploading = false;
+            isRecording = false;
+        }
+    }
+
+    /** The capsule open in the reader; legacyVideoUrl plays a video kept in this browser. */
+    let activeCapsule = $state<TimeCapsuleMessage | null>(null);
+    let legacyVideoUrl = $state<string | null>(null);
+    let readerNote = $state<string | null>(null);
+
+    async function openCapsule(msg: TimeCapsuleMessage) {
+        closeCapsule();
+        activeCapsule = msg;
+        if (!msg.videoUrl && msg.mediaId) {
+            legacyVideoUrl = await mediaStorage.getUrl(msg.mediaId);
+            if (!legacyVideoUrl) readerNote = "This video lives in the browser where it was recorded.";
+        }
+    }
+
+    function closeCapsule() {
+        if (legacyVideoUrl) URL.revokeObjectURL(legacyVideoUrl);
+        legacyVideoUrl = null;
+        readerNote = null;
+        activeCapsule = null;
     }
 
     function getMilestoneLabel(id: string) {
@@ -124,12 +202,12 @@
     subtitle="Preserving wisdom, voice, and presence across time"
     tier="legacy"
     detailedDescription="Messages safely locked until the perfect milestone. Record video messages, write letters, or preserve your voice for graduations, weddings, and life's meaningful moments."
-    whyMatters="The messages you write here will comfort your loved ones when you're no longer here to say them yourself. Imagine your daughter graduating, getting married, or having her first child—and finding your voice waiting for her at each milestone."
+    whyMatters="The messages you write here will comfort your loved ones for years to come, in your own words. Imagine your daughter graduating, getting married, or having her first child—and finding your voice waiting for her at each milestone."
 >
     <div class="flex items-center gap-3">
         <DataViewToggle module="time-capsule" onchange={(mode) => viewMode = mode} />
         <button
-            on:click={() => (showAddModal = true)}
+            on:click={openNew}
             class="px-8 py-4 bg-indigo-600 text-white rounded-full font-bold shadow-xl shadow-indigo-200 hover:bg-indigo-700 hover:scale-105 transition-all flex items-center gap-3 shrink-0"
         >
             <Plus size={24} />
@@ -175,12 +253,22 @@
                     >
                         <Lock size={20} />
                     </div>
-                    <button
-                        on:click={() => timeCapsuleStore.removeMessage(msg.id)}
-                        class="p-2 text-slate-300 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100"
-                    >
-                        <Trash2 size={16} />
-                    </button>
+                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                            on:click={() => openEdit(msg)}
+                            aria-label="Edit this capsule"
+                            class="p-2 text-slate-300 hover:text-indigo-600 transition-colors"
+                        >
+                            <Pencil size={16} />
+                        </button>
+                        <button
+                            on:click={() => timeCapsuleStore.removeMessage(msg.id)}
+                            aria-label="Remove this capsule"
+                            class="p-2 text-slate-300 hover:text-rose-500 transition-colors"
+                        >
+                            <Trash2 size={16} />
+                        </button>
+                    </div>
                 </div>
 
                 <div class="space-y-1">
@@ -201,9 +289,33 @@
                 <div
                     class="p-4 bg-white/60 rounded-xl border border-slate-100 group-hover:border-indigo-100 transition-colors"
                 >
-                    <p class="text-sm text-slate-500 italic line-clamp-2">
-                        "{msg.contentPreview}"
-                    </p>
+                    {#if msg.contentPreview}
+                        <p class="text-sm text-slate-500 italic line-clamp-2">
+                            "{msg.contentPreview}"
+                        </p>
+                    {/if}
+                    {#if msg.videoUrl || msg.mediaId}
+                        <p class="text-xs font-bold text-indigo-600 flex items-center gap-2 {msg.contentPreview ? 'mt-2' : ''}">
+                            <Video size={14} /> Video message
+                        </p>
+                    {/if}
+                </div>
+
+                <div class="flex gap-2">
+                    <button
+                        on:click={() => openCapsule(msg)}
+                        class="flex-1 py-2 text-sm font-bold text-indigo-700 bg-white border border-indigo-100 rounded-xl hover:bg-indigo-50 transition-all"
+                    >
+                        {msg.videoUrl || msg.mediaId ? "Watch" : "Read"}
+                    </button>
+                    {#if msg.triggerType === "milestone"}
+                        <button
+                            on:click={() => timeCapsuleStore.releaseMessage(String(msg.id))}
+                            class="flex-1 py-2 text-sm font-bold text-emerald-700 bg-white border border-emerald-100 rounded-xl hover:bg-emerald-50 transition-all"
+                        >
+                            Milestone reached
+                        </button>
+                    {/if}
                 </div>
 
                 <div
@@ -244,6 +356,13 @@
                     >
                         <Unlock size={20} />
                     </div>
+                    <button
+                        on:click={() => openEdit(msg)}
+                        aria-label="Edit this capsule"
+                        class="p-2 text-slate-300 hover:text-emerald-700 transition-colors opacity-0 group-hover:opacity-100"
+                    >
+                        <Pencil size={16} />
+                    </button>
                 </div>
 
                 <div class="space-y-1">
@@ -267,12 +386,11 @@
                 </div>
 
                 <button
-                    on:click={() =>
-                        msg.mediaId ? playVideo(msg.mediaId) : null}
+                    on:click={() => openCapsule(msg)}
                     class="w-full py-3 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 transition-all flex items-center justify-center gap-2"
                 >
                     <Video size={18} />
-                    {msg.mediaId ? "Play Message" : "View Message"}
+                    {msg.videoUrl || msg.mediaId ? "Play Message" : "View Message"}
                 </button>
             </div>
         {/each}
@@ -281,12 +399,12 @@
             <div class="md:col-span-2 lg:col-span-3">
                 <EmptyState
                     title="Words waiting to be written"
-                    whyMatters="<strong>The messages you write here will comfort your loved ones when you're no longer here to say them yourself.</strong> Imagine your daughter graduating, getting married, or having her first child—and finding your voice waiting for her at each milestone.<br/><br/>These aren't just letters. They're your presence at moments you can't physically attend. They're proof that you thought about their future, that you cared enough to speak across time."
-                    encouragement="You don't need to write them all today. Start with just one person, one moment. The rest will come when you're ready."
+                    whyMatters="<strong>The messages you write here will comfort your loved ones for years to come, in your own words.</strong> Imagine your daughter graduating, getting married, or having her first child—and finding your voice waiting for her at each milestone.<br/><br/>Each one is your presence at a moment that matters, and proof that you thought about their future and cared enough to speak across time."
+                    encouragement="Start with one person and one moment. The rest will come when you're ready."
                     icon={MessageSquare}
                     iconClass="text-purple-500"
                     ctaLabel="Write your first message"
-                    onAction={() => (showAddModal = true)}
+                    onAction={openNew}
                 />
 
                 <!-- Sample Data GhostRows -->
@@ -307,7 +425,7 @@
                                         triggerType: sample.triggerType,
                                         triggerValue: sample.triggerValue
                                     };
-                                    showAddModal = true;
+                                    openNew();
                                 }}
                             >
                                 <svelte:fragment slot="icon">
@@ -319,7 +437,7 @@
                 </div>
             </div>
             <button
-                on:click={() => (showAddModal = true)}
+                on:click={openNew}
                 class="px-8 py-3.5 bg-indigo-600 text-white rounded-full font-bold shadow-lg hover:shadow-indigo-200 transition-all flex items-center mx-auto gap-2"
             >
                 <Plus size={20} />
@@ -357,7 +475,14 @@
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-slate-500 text-sm max-w-[200px] truncate">{msg.contentPreview || '-'}</td>
-                            <td class="px-4 py-3 text-right">
+                            <td class="px-4 py-3 text-right whitespace-nowrap">
+                                <button
+                                    on:click={() => openEdit(msg)}
+                                    aria-label="Edit this capsule"
+                                    class="opacity-0 group-hover:opacity-100 p-1 text-slate-300 hover:text-indigo-600 transition-all"
+                                >
+                                    <Pencil size={16} />
+                                </button>
                                 <button
                                     on:click={() => timeCapsuleStore.removeMessage(msg.id)}
                                     class="opacity-0 group-hover:opacity-100 p-1 text-slate-300 hover:text-rose-500 transition-all"
@@ -371,7 +496,7 @@
             </table>
             {#if $timeCapsuleStore.length === 0}
                 <div class="p-8 text-center text-slate-500">
-                    No time capsules yet. Create your first message to preserve your voice across time.
+                    Your first message will appear here, ready for the moment you choose.
                 </div>
             {/if}
         </div>
@@ -398,15 +523,16 @@
                             <h2
                                 class="font-serif text-3xl font-bold text-slate-900 tracking-tight"
                             >
-                                Speak Across Time
+                                {editingId ? "Revisit This Capsule" : "Speak Across Time"}
                             </h2>
                         </div>
                         <p class="text-slate-500 text-sm leading-relaxed pl-16">
-                            These words will find their way to someone you love at exactly the right moment—a graduation, a wedding, a milestone you won't be there to witness. This is your presence, preserved.
+                            These words will find their way to someone you love at exactly the right moment—a graduation, a wedding, a milestone worth celebrating. This is your presence, preserved.
                         </p>
                     </div>
                     <button
                         on:click={() => (showAddModal = false)}
+                        aria-label="Close"
                         class="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400"
                     >
                         <X />
@@ -446,24 +572,24 @@
                         >
                         <div class="flex gap-2">
                             <button
-                                on:click={() =>
-                                    (newMessage.triggerType = "date")}
+                                on:click={() => setTrigger("date")}
                                 class="flex-1 py-3 px-4 rounded-xl border-2 transition-all font-bold text-sm {newMessage.triggerType ===
                                 'date'
                                     ? 'bg-indigo-50 border-indigo-600 text-indigo-700'
                                     : 'bg-transparent border-slate-100 text-slate-400'}"
                             >
                                 <Calendar size={16} class="inline mr-2" />
+                                Date
                             </button>
                             <button
-                                on:click={() =>
-                                    (newMessage.triggerType = "milestone")}
+                                on:click={() => setTrigger("milestone")}
                                 class="flex-1 py-3 px-4 rounded-xl border-2 transition-all font-bold text-sm {newMessage.triggerType ===
                                 'milestone'
                                     ? 'bg-indigo-50 border-indigo-600 text-indigo-700'
                                     : 'bg-transparent border-slate-100 text-slate-400'}"
                             >
                                 <MilestoneIcon size={16} class="inline mr-2" />
+                                Milestone
                             </button>
                         </div>
                     </div>
@@ -499,34 +625,44 @@
                         >Legacy Content</label
                     >
 
-                    {#if isRecording}
-                        <VideoRecorder on:save={handleSaveVideo} />
-                    {:else if recordedMediaId}
-                        <div
-                            class="p-6 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center justify-between"
-                        >
-                            <div
-                                class="flex items-center gap-3 text-emerald-700"
-                            >
-                                <ShieldCheck size={24} />
-                                <span class="font-bold"
-                                    >Video Message Recorded</span
-                                >
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {#if isRecording}
+                            <div class="md:col-span-2 space-y-2">
+                                <VideoRecorder on:save={handleSaveVideo} />
+                                {#if isUploading}
+                                    <p class="text-sm text-slate-500 flex items-center gap-2">
+                                        <Loader2 size={16} class="animate-spin" /> Keeping your video safe…
+                                    </p>
+                                {/if}
                             </div>
+                        {:else if hasVideo}
+                            <div
+                                class="p-6 bg-emerald-50 rounded-2xl border border-emerald-100 flex flex-col justify-center gap-3"
+                            >
+                                <div
+                                    class="flex items-center gap-3 text-emerald-700"
+                                >
+                                    <ShieldCheck size={24} />
+                                    <span class="font-bold"
+                                        >Video Message Recorded</span
+                                    >
+                                </div>
+                                <button
+                                    on:click={() => {
+                                        isRecording = true;
+                                        formNote = null;
+                                    }}
+                                    class="self-start text-xs font-bold text-emerald-600 hover:underline"
+                                >
+                                    Re-record
+                                </button>
+                            </div>
+                        {:else}
                             <button
                                 on:click={() => {
-                                    recordedMediaId = null;
                                     isRecording = true;
+                                    formNote = null;
                                 }}
-                                class="text-xs font-bold text-emerald-600 hover:underline"
-                            >
-                                Re-record
-                            </button>
-                        </div>
-                    {:else}
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <button
-                                on:click={() => (isRecording = true)}
                                 class="p-6 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center gap-3 text-slate-400 hover:border-indigo-300 hover:text-indigo-600 transition-all"
                             >
                                 <Video size={32} />
@@ -534,13 +670,13 @@
                                     >Record Video</span
                                 >
                             </button>
-                            <textarea
-                                bind:value={newMessage.contentPreview}
-                                placeholder="Or type a written legacy note..."
-                                class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl h-full focus:ring-2 focus:ring-indigo-500 outline-none font-medium resize-none"
-                            ></textarea>
-                        </div>
-                    {/if}
+                        {/if}
+                        <textarea
+                            bind:value={newMessage.contentPreview}
+                            placeholder="Your written words, in your own voice..."
+                            class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl min-h-32 focus:ring-2 focus:ring-indigo-500 outline-none font-medium resize-none {isRecording ? 'md:col-span-2' : ''}"
+                        ></textarea>
+                    </div>
                 </div>
 
                 <!-- Custom Fields -->
@@ -551,16 +687,14 @@
                     />
                 </div>
 
+                {#if formNote}
+                    <p class="text-sm text-indigo-700 bg-indigo-50 rounded-xl px-4 py-3">{formNote}</p>
+                {/if}
+
                 <div class="flex gap-4">
                     <button
                         on:click={() => {
-                            newMessage = {
-                                title: "",
-                                recipient: "",
-                                contentPreview: "",
-                                triggerType: "date",
-                                triggerValue: "",
-                            };
+                            resetForm();
                             showAddModal = false;
                         }}
                         class="px-6 py-4 border border-slate-200 rounded-2xl font-bold text-slate-500 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-100 transition-all"
@@ -575,39 +709,54 @@
                     </button>
                     <button
                         on:click={handleAdd}
-                        class="flex-2 py-4 px-10 bg-indigo-900 text-white rounded-2xl font-bold shadow-xl shadow-indigo-100 hover:bg-indigo-950 transition-all"
+                        disabled={isUploading || isSaving}
+                        class="flex-2 py-4 px-10 bg-indigo-900 text-white rounded-2xl font-bold shadow-xl shadow-indigo-100 hover:bg-indigo-950 transition-all disabled:opacity-60"
                     >
-                        Seal Capsule
+                        {editingId ? "Save Changes" : "Seal Capsule"}
                     </button>
                 </div>
             </div>
         </div>
     {/if}
 
-    <!-- Video Player Overlay -->
-    {#if activeVideoUrl}
+    <!-- Capsule Reader -->
+    {#if activeCapsule}
         <div
-            class="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4"
+            class="fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-xl flex items-center justify-center p-4"
             transition:fade
         >
-            <button
-                on:click={() => {
-                    URL.revokeObjectURL(activeVideoUrl!);
-                    activeVideoUrl = null;
-                }}
-                class="absolute top-8 right-8 p-4 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all"
-            >
-                <X size={32} />
-            </button>
-            <div
-                class="w-full max-w-4xl aspect-video rounded-2xl overflow-hidden shadow-2xl bg-black"
-            >
-                <video
-                    src={activeVideoUrl}
-                    controls
-                    autoplay
-                    class="w-full h-full"
-                ></video>
+            <div class="relative w-full max-w-3xl bg-white rounded-[2rem] shadow-2xl p-8 space-y-5 max-h-[90vh] overflow-y-auto">
+                <button
+                    on:click={closeCapsule}
+                    aria-label="Close"
+                    class="absolute top-5 right-5 p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-all"
+                >
+                    <X size={24} />
+                </button>
+                <div class="space-y-1 pr-10">
+                    <h2 class="font-serif text-2xl font-bold text-slate-900">{activeCapsule.title}</h2>
+                    <p class="text-xs font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
+                        <User size={12} /> For <span class="text-slate-600">{activeCapsule.recipient}</span>
+                        <span class="text-slate-300">·</span>
+                        {isCapsuleReleased(activeCapsule) ? "Released" : "Locked"}
+                    </p>
+                </div>
+                {#if activeCapsule.videoUrl}
+                    <div class="rounded-2xl overflow-hidden border border-slate-100">
+                        <MediaView src={activeCapsule.videoUrl} />
+                    </div>
+                {:else if legacyVideoUrl}
+                    <div class="rounded-2xl overflow-hidden bg-black aspect-video">
+                        <!-- svelte-ignore a11y_media_has_caption -->
+                        <video src={legacyVideoUrl} controls class="w-full h-full"></video>
+                    </div>
+                {/if}
+                {#if readerNote}
+                    <p class="text-sm text-slate-500">{readerNote}</p>
+                {/if}
+                {#if activeCapsule.contentPreview}
+                    <p class="text-slate-700 leading-relaxed whitespace-pre-wrap">{activeCapsule.contentPreview}</p>
+                {/if}
             </div>
         </div>
     {/if}
