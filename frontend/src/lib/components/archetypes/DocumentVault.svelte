@@ -29,6 +29,7 @@
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
+    import Modal from "$lib/components/ui/Modal.svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { activityLog } from "$lib/stores/activityLog.svelte";
     import { userPreferencesStore } from "$lib/stores/userPreferencesStore.svelte";
@@ -259,20 +260,18 @@
         }
     }
 
-    async function removeDoc(id: string) {
-        if (
-            !confirm(
-                "Would you like to remove this document? This action is permanent.",
-            )
-        )
-            return;
-        if (!docSync) return;
+    // Remove asks in the page (shared Modal) before anything is sent.
+    let removing = $state<Doc | null>(null);
 
-        const doc = docs.find((d) => d.id === id);
+    async function confirmRemove() {
+        const doc = removing;
+        removing = null;
+        if (!doc || !docSync) return;
+        const id = doc.id;
         await docSync.delete(id);
 
         // Log DELETE only if the item is really gone (the manager rolls back and shows its message on failure)
-        if (doc && !docSync.items.some((d) => d.id === id)) {
+        if (!docSync.items.some((d) => d.id === id)) {
             activityLog.logEvent({
                 module: module.name || "Document Vault",
                 action: "DELETE",
@@ -470,6 +469,7 @@
             />
             <input
                 bind:value={searchQuery}
+                aria-label="Search your documents"
                 placeholder="Search your peace of mind..."
                 class="w-full bg-transparent border-none outline-none pl-9 text-sm h-10 placeholder:text-muted-foreground/50"
             />
@@ -604,6 +604,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div class="space-y-1.5">
                             <label
+                                for="doc-title"
                                 class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Document Title</label
                             >
@@ -624,10 +625,12 @@
                         </div>
                         <div class="space-y-1.5">
                             <label
+                                for="doc-category"
                                 class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Category</label
                             >
                             <select
+                                id="doc-category"
                                 bind:value={newDoc.type}
                                 class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
                             >
@@ -850,9 +853,10 @@
                             <Pencil size={18} />
                         </button>
                         <button
-                            onclick={() => removeDoc(doc.id)}
+                            onclick={() => (removing = doc)}
                             class="p-2 hover:bg-destructive/10 text-muted-foreground hover:text-destructive rounded-full transition-colors"
-                            title="Remove"
+                            title="Remove this item"
+                            aria-label="Remove this item"
                         >
                             <Trash2 size={18} />
                         </button>
@@ -934,13 +938,15 @@
                                         onclick={() => editDoc(doc)}
                                         class="p-1 hover:bg-slate-100 text-slate-400 hover:text-[#4A7C74] rounded transition-colors"
                                         title="Edit"
+                                        aria-label="Edit"
                                     >
                                         <Pencil size={14} />
                                     </button>
                                     <button
-                                        onclick={() => removeDoc(doc.id)}
+                                        onclick={() => (removing = doc)}
                                         class="p-1 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded transition-colors"
-                                        title="Remove"
+                                        title="Remove this item"
+                                        aria-label="Remove this item"
                                     >
                                         <Trash2 size={14} />
                                     </button>
@@ -974,6 +980,28 @@
     {/if}
 
     <!-- An example will with legal terms explained -->
+    <Modal
+        bind:open={() => removing !== null, (v) => { if (!v) removing = null; }}
+        title="Would you like to remove this document?"
+        description="This action is permanent."
+    >
+        <p class="font-serif font-bold text-[#304743]">{removing?.name}</p>
+        <div class="flex justify-end gap-3 pt-6">
+            <button
+                type="button"
+                onclick={() => (removing = null)}
+                class="px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+                >Not right now</button
+            >
+            <button
+                type="button"
+                onclick={confirmRemove}
+                class="px-6 py-2.5 rounded-xl font-semibold bg-rose-600 text-white hover:bg-rose-700 transition-colors"
+                >Remove this item</button
+            >
+        </div>
+    </Modal>
+
     {#if showExampleWill}
         <JargonSlayer onclose={() => (showExampleWill = false)} />
     {/if}
