@@ -65,6 +65,7 @@ board, and it is the live checklist** (decision 9).
     - **Same rules:** desktop only, ponytail, no tests, no feature removal, no gates.
 
 14. **Production holds no live data** (owner, 2026-10-26: "you are approved to run anything against production. NO DATA IS LIVE AND NO DATA WILL BE LOST"). Production migrations, variables, backfills and redeploys run without asking; this lifts decision 4's "mixed records need an owner yes". Take a `pg_dump` first. Messaging real people and spending still need a yes.
+15. **Test emails to @sincuerda.com are approved** (owner, 2026-10-26: "test emails may be sent to @sincuerda.com if needed. OWNER APPROVED"). Agents may send real test mail to any @sincuerda.com address (synthetic accounts such as test+x@sincuerda.com) without asking. Other recipients still need a yes. No email provider is configured today (production uses the local outbox), so real sending waits on Postmark or SMTP credentials.
     - **Every push to `main` auto-deploys** (Railway is linked to the repo) and **deploys don't run migrations**: after merging a migration, run `alembic upgrade head` against production. 2026-10-26: production upgraded 817c6b026811 → e8b3d6a1c9f2 (backup `scratchpad/prod_backup_2026-10-26.dump`, 45 tables); `calendar_events.date` is now text, `assets.category` exists.
 
 ## Test register (decision 11)
