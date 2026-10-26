@@ -136,7 +136,8 @@
                             appears in their check-in history.
                         {:else}
                             Thank you for looking in on {state.data.user_name}.
-                            It means a great deal to have you close.
+                            It means a great deal to have you close. This
+                            appears in their messages.
                         {/if}
                     </p>
                 </div>
