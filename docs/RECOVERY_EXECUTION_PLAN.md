@@ -638,7 +638,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X156 | ▶ | | |
 | X157 | ☐ (queued: 20-agent limit) | | |
 | X158 | ☐ (queued: 20-agent limit) | | |
-| X159 | ☐ (queued: 20-agent limit; worktree ready) | | |
+| X159 | ▶ | | |
 | X160 | ☐ (queued: 20-agent limit) | | |
 | X138 | ☑ | c5a7077 | Toolbar Download (insurance, property) saves the stored files of every record shown (follows search; disabled when none; cached files reused); subscriptions Filter chips by the difficulty words already shown (Easy/Medium/Hard), clear on reclick or close; `aiGriefService` uses `contextStore.isExecutor` (store holds `executor` after X118 — the old check never matched). Downloads byte-identical, executor/planner personas checked with the AI call intercepted; 0 errors |
 | X114 | ☑ | fdd80b5 | `routers/pets.py`, `heirlooms.py`, `insurance.py` removed (no caller: the app uses `/api/data/pets`, `/heirlooms` → Asset, `/insurance_policies`; `heirlooms.py` wrote the unused `Heirloom` table). TestClient: before `200 {}`; after 405/404, the `/api/data/*` paths create and list; server starts clean |
@@ -773,7 +773,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | U32 | ▶ | | |
 | U33 | ▶ | | |
 | U34 | ▶ | | |
-| U35 | ▶ | | |
+| U35 | ☑ | 5278cb9 | Pets content and AI bar in the header's container (AI bar x=480 → 312, pet card 448 → 312, header 312). Build clean, 0 page errors |
 | U36 | ▶ | | |
 | U37 | ☐ (queued: 20-agent limit) | | |
 | U38 | ☐ (queued: 20-agent limit) | | |
