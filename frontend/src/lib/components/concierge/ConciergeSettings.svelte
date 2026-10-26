@@ -256,7 +256,7 @@
                     <div class="grid grid-cols-1 gap-1.5">
                         <label for="cs-phone"
                             class="text-[10px] font-bold text-slate-400 uppercase"
-                            >Your phone</label
+                            >{$dict.labelOwnerPhone}</label
                         >
                         <input
                             id="cs-phone"

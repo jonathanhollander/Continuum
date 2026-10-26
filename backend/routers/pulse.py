@@ -364,7 +364,9 @@ def guardian_respond(request: Request, token: str, action: str, session: Session
     if not contact: raise HTTPException(status_code=404, detail="This link has rested. The person who shared it can send a fresh one.")
     if contact.portal_token_expires and contact.portal_token_expires < utc_now():
         raise HTTPException(status_code=401, detail="This link has rested. The person who shared it can send a fresh one.")
-        
+    if action not in ("snooze", "acknowledge"):
+        raise HTTPException(status_code=400, detail="This link offers two choices: they're OK, or I've seen this.")
+
     if action == "snooze":
         # Pauses new alerts (pulse_logic.alerts_paused_until); the owner's own clock, escalation
         # history and other guardians' access stay as they were
@@ -375,11 +377,25 @@ def guardian_respond(request: Request, token: str, action: str, session: Session
 
     if action == "acknowledge":
         # "I've seen this": a note to the owner on their Messages page. Never a check-in, so the
-        # owner's clock, alerts and every guardian's access stay as they were.
-        session.add(PulseMessage(user_id=contact.user_id, contact_id=contact.id,
-                                 direction="contact_to_user", message="I've seen this. I'm looking in on you."))
-        session.commit()
+        # owner's clock, alerts and every guardian's access stay as they were. One note per guardian
+        # per outage: a repeat since the owner's own last check-in adds nothing.
+        from backend.pulse_logic import owner_last_checkin
+        last = owner_last_checkin(session, contact.user_id)
+        repeat = select(PulseMessage.id).where(
+            PulseMessage.user_id == contact.user_id,
+            PulseMessage.contact_id == contact.id,
+            PulseMessage.direction == "contact_to_user",
+            PulseMessage.message == ACKNOWLEDGE_MESSAGE,
+        )
+        if last:
+            repeat = repeat.where(PulseMessage.sent_at > last.timestamp)
+        if session.exec(repeat).first() is None:
+            session.add(PulseMessage(user_id=contact.user_id, contact_id=contact.id,
+                                     direction="contact_to_user", message=ACKNOWLEDGE_MESSAGE))
+            session.commit()
     return {"status": "acknowledged"}
+
+ACKNOWLEDGE_MESSAGE = "I've seen this. I'm looking in on you."
 
 # --- Messaging ---
 

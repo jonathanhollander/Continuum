@@ -10,6 +10,8 @@ export interface PulseStatus {
     // A guardian's "they're OK" since the owner's own last check-in
     guardianCheckin?: { at: string; by: string } | null;
     escalationTier?: number | null;
+    // When that tier was alerted (UTC ISO)
+    escalationAt?: string | null;
     alertsPausedUntil?: string | null;
 }
 
