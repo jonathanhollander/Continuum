@@ -107,7 +107,7 @@
 >
     <!-- Header -->
     <LivingBlueprintHeader
-        title="Anniversary Manager"
+        title="Important Dates"
         subtitle="Transforming sensitive dates into intentional moments of connection"
         tier="legacy"
         detailedDescription="Create meaningful rituals for birthdays, anniversaries, and remembrance days. Guide your family on how to observe these dates with intention, healing, and legacy."

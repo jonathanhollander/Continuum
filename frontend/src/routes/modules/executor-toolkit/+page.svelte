@@ -100,7 +100,7 @@
             <Briefcase size={40} />
         </div>
         <h1 class="font-serif font-bold text-4xl text-[#304743] mb-4">
-            Executor Toolkit
+            Executor Guide
         </h1>
 
         {#if $currentScenario === "Sudden"}

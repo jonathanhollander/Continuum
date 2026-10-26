@@ -56,7 +56,7 @@
                     >
                 </div>
                 <h1 class="text-5xl font-serif font-bold text-white mb-2">
-                    Continuum Health
+                    Insights
                 </h1>
                 <p class="text-slate-400 text-lg max-w-2xl mb-6">
                     Monitor the vitality of your estate preparedness across
