@@ -16,6 +16,7 @@
         Flame,
         Droplets,
         Leaf,
+        Info,
     } from "lucide-svelte";
     import { onDestroy, onMount } from "svelte";
     import {
@@ -197,17 +198,17 @@
 </script>
 
 <div
-    class="bg-white rounded-2xl border border-stone-100 shadow-xl overflow-hidden min-h-[600px] flex flex-col"
+    class="bg-card rounded-2xl border border-border shadow-xl overflow-hidden min-h-[600px] flex flex-col"
 >
     <!-- Progress Header -->
-    <div class="bg-stone-50 border-b border-stone-100 p-6">
+    <div class="bg-muted border-b border-border p-6">
         <div class="flex justify-between max-w-3xl mx-auto relative">
             <!-- Progress Line -->
             <div
-                class="absolute top-5 left-0 right-0 h-0.5 bg-stone-200 -z-0"
+                class="absolute top-5 left-0 right-0 h-0.5 bg-border -z-0"
             ></div>
             <div
-                class="absolute top-5 left-0 h-0.5 bg-[#4A7C74] -z-0 transition-all duration-500"
+                class="absolute top-5 left-0 h-0.5 bg-primary -z-0 transition-all duration-500"
                 style="width: {((currentStep - 1) / (STEPS.length - 1)) * 100}%"
             ></div>
 
@@ -228,18 +229,18 @@
                     <div
                         class="w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300
                         {step.id === currentStep
-                            ? 'bg-[#4A7C74] border-[#4A7C74] text-white shadow-lg scale-110'
+                            ? 'bg-primary border-primary text-primary-foreground shadow-lg scale-110'
                             : step.id < currentStep
-                              ? 'bg-[#4A7C74] border-[#4A7C74] text-white'
-                              : 'bg-white border-stone-300 text-stone-300 group-hover:border-[#4A7C74]/50'}"
+                              ? 'bg-primary border-primary text-primary-foreground'
+                              : 'bg-card border-slate-300 text-muted-foreground group-hover:border-primary/50'}"
                     >
                         <svelte:component this={step.icon} size={18} />
                     </div>
                     <div
                         class="text-[10px] font-bold uppercase tracking-widest transition-colors duration-300
                         {step.id === currentStep
-                            ? 'text-[#4A7C74]'
-                            : 'text-stone-400'}"
+                            ? 'text-primary-hover'
+                            : 'text-muted-foreground'}"
                     >
                         {step.title}
                     </div>
@@ -255,11 +256,11 @@
                 <div in:fade class="space-y-8">
                     <div class="text-center space-y-2">
                         <h2
-                            class="text-3xl font-serif font-bold text-[#304743]"
+                            class="text-3xl font-serif font-bold text-primary-deep dark:text-primary-hover"
                         >
                             Faith & Foundation
                         </h2>
-                        <p class="text-stone-500">
+                        <p class="text-muted-foreground">
                             Choose the tradition that feels closest to your life
                             and values.
                         </p>
@@ -273,14 +274,14 @@
                                 on:click={() => setTradition(tradition.key)}
                                 class="p-4 rounded-xl border-2 text-left transition-all hover:scale-[1.02]
                                 {wishes.religiousTradition === tradition.key
-                                    ? 'border-[#4A7C74] bg-[#4A7C74]/5 shadow-md ring-1 ring-[#4A7C74]'
-                                    : 'border-stone-100 hover:border-[#4A7C74]/30 bg-white'}"
+                                    ? 'border-primary bg-primary/5 shadow-md ring-1 ring-primary'
+                                    : 'border-border hover:border-primary/30 bg-card'}"
                             >
-                                <div class="font-bold text-stone-800 mb-1">
+                                <div class="font-bold text-foreground mb-1">
                                     {tradition.name}
                                 </div>
                                 <div
-                                    class="text-xs text-stone-500 line-clamp-2"
+                                    class="text-xs text-muted-foreground line-clamp-2"
                                 >
                                     {tradition.commonRituals
                                         .slice(0, 3)
@@ -292,7 +293,7 @@
 
                     <a
                         href="/modules/funeral/traditions/{activeTradition.key}"
-                        class="inline-flex items-center gap-2 text-sm font-bold text-[#4A7C74] hover:text-[#304743] transition-colors"
+                        class="inline-flex items-center gap-2 text-sm font-bold text-primary hover:text-primary-deep dark:hover:text-primary-hover transition-colors"
                     >
                         <BookOpen size={16} /> Learn about {activeTradition.name} traditions
                         <ArrowRight size={14} />
@@ -320,11 +321,11 @@
                 <div in:fade class="space-y-8">
                     <div class="text-center space-y-2">
                         <h2
-                            class="text-3xl font-serif font-bold text-[#304743]"
+                            class="text-3xl font-serif font-bold text-primary-deep dark:text-primary-hover"
                         >
                             The Farewell
                         </h2>
-                        <p class="text-stone-500">
+                        <p class="text-muted-foreground">
                             Your wishes for your final resting place.
                         </p>
                     </div>
@@ -336,20 +337,20 @@
                             on:click={() => setDisposition("Burial")}
                             class="p-6 rounded-2xl border-2 text-left transition-all relative overflow-hidden group
                              {wishes.disposition === 'Burial'
-                                ? 'border-[#4A7C74] bg-[#FBF9EB]'
-                                : 'border-stone-100 hover:border-[#4A7C74]/30'}"
+                                ? 'border-primary bg-primary-soft'
+                                : 'border-border hover:border-primary/30'}"
                         >
                             <div class="flex items-center gap-4 mb-4">
                                 <div
-                                    class="p-3 bg-white rounded-full shadow-sm text-[#4A7C74]"
+                                    class="p-3 bg-card rounded-full shadow-sm text-primary"
                                 >
                                     <Leaf size={24} />
                                 </div>
-                                <span class="font-bold text-xl text-stone-800"
+                                <span class="font-bold text-xl text-foreground"
                                     >Burial</span
                                 >
                             </div>
-                            <p class="text-sm text-stone-600">
+                            <p class="text-sm text-muted-foreground">
                                 Traditional interment in the ground or a
                                 mausoleum.
                             </p>
@@ -360,41 +361,42 @@
                             on:click={() =>
                                 !isForbidden("cremation") &&
                                 setDisposition("Cremation")}
+                            aria-disabled={isForbidden("cremation")}
                             class="p-6 rounded-2xl border-2 text-left transition-all relative overflow-hidden group
                              {wishes.disposition === 'Cremation'
-                                ? 'border-[#4A7C74] bg-[#FBF9EB]'
-                                : 'border-stone-100'}
+                                ? 'border-primary bg-primary-soft'
+                                : 'border-border'}
                              {isForbidden('cremation')
-                                ? 'opacity-50 cursor-not-allowed grayscale'
-                                : 'hover:border-[#4A7C74]/30'}"
+                                ? 'cursor-not-allowed bg-muted'
+                                : 'hover:border-primary/30'}"
                         >
                             <div class="flex items-center gap-4 mb-4">
                                 <div
-                                    class="p-3 bg-white rounded-full shadow-sm text-orange-500"
+                                    class="p-3 bg-card rounded-full shadow-sm text-primary"
                                 >
                                     <Flame size={24} />
                                 </div>
-                                <span class="font-bold text-xl text-stone-800"
+                                <span class="font-bold text-xl text-foreground"
                                     >Cremation</span
                                 >
                             </div>
                             {#if isForbidden("cremation")}
                                 <div
-                                    class="text-xs font-bold text-red-500 bg-red-50 px-2 py-1 rounded inline-block mb-2"
+                                    class="text-xs font-bold text-foreground bg-muted px-2 py-1 rounded inline-flex items-center gap-1 mb-2"
                                 >
-                                    Many {activeTradition.name} families choose burial.
+                                    <Info size={12} /> Many {activeTradition.name} families choose burial.
                                 </div>
                             {/if}
-                            <p class="text-sm text-stone-600">
+                            <p class="text-sm text-muted-foreground">
                                 A gentle return to ashes, held in an urn or scattered.
                             </p>
                         </button>
                     </div>
 
                     <!-- Prep Options -->
-                    <div class="bg-stone-50 rounded-xl p-6">
+                    <div class="bg-muted rounded-xl p-6">
                         <h3
-                            class="font-bold text-stone-700 mb-4 flex items-center gap-2"
+                            class="font-bold text-foreground mb-4 flex items-center gap-2"
                         >
                             <Droplets size={18} /> Body Preparation
                         </h3>
@@ -404,8 +406,8 @@
                                     <button
                                         class="px-4 py-2 rounded-lg border text-sm font-bold transition-all
                                         {hasRitual(wishes, option)
-                                            ? 'bg-[#4A7C74] text-white border-[#4A7C74]'
-                                            : 'bg-white border-stone-200 text-stone-500 hover:border-[#4A7C74]'}"
+                                            ? 'bg-primary text-primary-foreground border-primary'
+                                            : 'bg-card border-border text-muted-foreground hover:border-primary'}"
                                         on:click={() => toggleRitual(option)}
                                     >
                                         {option}
@@ -419,11 +421,11 @@
                 <div in:fade class="space-y-8">
                     <div class="text-center space-y-2">
                         <h2
-                            class="text-3xl font-serif font-bold text-[#304743]"
+                            class="text-3xl font-serif font-bold text-primary-deep dark:text-primary-hover"
                         >
                             The Ceremony
                         </h2>
-                        <p class="text-stone-500">
+                        <p class="text-muted-foreground">
                             Where and how we gather to honor your life.
                         </p>
                     </div>
@@ -431,7 +433,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div class="space-y-4">
                             <label for="funeral-wizard-venue"
-                                class="text-xs font-bold uppercase tracking-widest text-stone-400"
+                                class="text-xs font-bold uppercase tracking-widest text-muted-foreground"
                                 >Venue</label
                             >
                             <input id="funeral-wizard-venue"
@@ -443,13 +445,13 @@
                                         e.currentTarget.value,
                                     )}
                                 placeholder="e.g. St. Mary's Church, The Beach, Funeral Home..."
-                                class="w-full p-4 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-[#4A7C74] outline-none font-medium"
+                                class="w-full p-4 bg-muted border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium"
                             />
                         </div>
 
                         <div class="space-y-4">
                             <label for="funeral-wizard-officiant"
-                                class="text-xs font-bold uppercase tracking-widest text-stone-400"
+                                class="text-xs font-bold uppercase tracking-widest text-muted-foreground"
                                 >Officiant ({activeTradition.terminology
                                     .officiant})</label
                             >
@@ -462,16 +464,16 @@
                                         e.currentTarget.value,
                                     )}
                                 placeholder={`Name of ${activeTradition.terminology.officiant}...`}
-                                class="w-full p-4 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-[#4A7C74] outline-none font-medium"
+                                class="w-full p-4 bg-muted border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium"
                             />
                         </div>
                     </div>
 
                     <div
-                        class="bg-[#FBF9EB] rounded-2xl p-8 border border-[#4A7C74]/10"
+                        class="bg-primary-soft rounded-2xl p-8 border border-primary/10"
                     >
                         <h3
-                            class="font-serif font-bold text-xl text-[#304743] mb-6 flex items-center gap-3"
+                            class="font-serif font-bold text-xl text-primary-deep dark:text-primary-hover mb-6 flex items-center gap-3"
                         >
                             <Scroll size={20} />
                             {activeTradition.name} Rituals
@@ -479,19 +481,19 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {#each activeTradition.commonRituals as ritual}
                                 <button
-                                    class="flex items-center gap-3 p-3 bg-white/50 hover:bg-white rounded-xl border border-transparent hover:border-[#4A7C74]/20 transition-all text-left group"
+                                    class="flex items-center gap-3 p-3 bg-card/50 hover:bg-card rounded-xl border border-transparent hover:border-primary/20 transition-all text-left group"
                                     on:click={() => toggleRitual(ritual)}
                                 >
                                     <div
                                         class="w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors
                                         {hasRitual(wishes, ritual)
-                                            ? 'bg-[#4A7C74] border-[#4A7C74] text-white'
-                                            : 'border-stone-300 text-transparent group-hover:border-[#4A7C74]'}"
+                                            ? 'bg-primary border-primary text-primary-foreground'
+                                            : 'border-slate-300 text-transparent group-hover:border-primary'}"
                                     >
                                         <Check size={14} />
                                     </div>
                                     <span
-                                        class="text-stone-700 font-medium group-hover:text-[#304743]"
+                                        class="text-foreground font-medium group-hover:text-primary-deep dark:group-hover:text-primary-hover"
                                         >{ritual}</span
                                     >
                                 </button>
@@ -503,11 +505,11 @@
                 <div in:fade class="space-y-8">
                     <div class="text-center space-y-2">
                         <h2
-                            class="text-3xl font-serif font-bold text-[#304743]"
+                            class="text-3xl font-serif font-bold text-primary-deep dark:text-primary-hover"
                         >
                             Atmosphere
                         </h2>
-                        <p class="text-stone-500">
+                        <p class="text-muted-foreground">
                             Setting the tone, music, and feeling of the service.
                         </p>
                     </div>
@@ -532,21 +534,21 @@
                     <!-- Music & Flowers (Simplified for prototype) -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div
-                            class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm"
+                            class="bg-card p-6 rounded-xl border border-border shadow-sm"
                         >
                             <h3
-                                class="font-bold text-stone-700 mb-2 flex items-center gap-2"
+                                class="font-bold text-foreground mb-2 flex items-center gap-2"
                             >
                                 <Music size={18} /> Music Requests
                             </h3>
                             <div class="space-y-2">
                                 {#each wishes.music || [] as song, i}
                                     <div
-                                        class="flex justify-between items-center text-sm p-2 bg-stone-50 rounded"
+                                        class="flex justify-between items-center text-sm p-2 bg-muted rounded"
                                     >
                                         <span>{song}</span>
                                         <button
-                                            class="text-red-400 hover:text-red-600"
+                                            class="text-muted-foreground hover:text-foreground"
                                             aria-label="Remove this item"
                                             on:click={() => {
                                                 const newMusic =
@@ -577,10 +579,10 @@
                                             }
                                         }}
                                         placeholder="Share a song (Artist - Title)"
-                                        class="flex-1 min-w-0 text-sm p-2 bg-stone-50 border border-stone-200 rounded-lg outline-none focus:ring-1 focus:ring-[#4A7C74]"
+                                        class="flex-1 min-w-0 text-sm p-2 bg-muted border border-border rounded-lg outline-none focus:ring-1 focus:ring-primary"
                                     />
                                     <button
-                                        class="text-xs font-bold text-[#4A7C74] uppercase tracking-wide px-2 disabled:opacity-40"
+                                        class="text-xs font-bold text-primary uppercase tracking-wide px-2 disabled:opacity-40"
                                         disabled={!newSong.trim()}
                                         on:click={addSong}>+ Add Song</button
                                     >
@@ -589,15 +591,15 @@
                         </div>
 
                         <div
-                            class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm"
+                            class="bg-card p-6 rounded-xl border border-border shadow-sm"
                         >
                             <h3
-                                class="font-bold text-stone-700 mb-2 flex items-center gap-2"
+                                class="font-bold text-foreground mb-2 flex items-center gap-2"
                             >
                                 <Flower size={18} /> Floral Preferences
                             </h3>
                             <textarea
-                                class="w-full text-sm bg-stone-50 border border-stone-100 rounded-lg p-3 outline-none focus:ring-1 focus:ring-[#4A7C74]"
+                                class="w-full text-sm bg-muted border border-border rounded-lg p-3 outline-none focus:ring-1 focus:ring-primary"
                                 placeholder="e.g. White Lilies only, or 'In Lieu of Flowers'..."
                                 value={wishes.flowers || ""}
                                 on:change={(e) =>
@@ -613,11 +615,11 @@
                 <div in:fade class="space-y-8">
                     <div class="text-center space-y-2">
                         <h2
-                            class="text-3xl font-serif font-bold text-[#304743]"
+                            class="text-3xl font-serif font-bold text-primary-deep dark:text-primary-hover"
                         >
                             Legacy & Logistics
                         </h2>
-                        <p class="text-stone-500">
+                        <p class="text-muted-foreground">
                             Final details that carry your message.
                         </p>
                     </div>
@@ -643,7 +645,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="space-y-4">
                             <label for="funeral-wizard-charity-donations"
-                                class="text-xs font-bold uppercase tracking-widest text-stone-400"
+                                class="text-xs font-bold uppercase tracking-widest text-muted-foreground"
                                 >Charity Donations</label
                             >
                             <input id="funeral-wizard-charity-donations"
@@ -655,30 +657,30 @@
                                         e.currentTarget.value,
                                     )}
                                 placeholder="Organization name..."
-                                class="w-full p-4 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-[#4A7C74] outline-none font-medium"
+                                class="w-full p-4 bg-muted border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium"
                             />
                         </div>
                     </div>
 
                     <div
                         data-testid="funeral-onward"
-                        class="bg-[#FBF9EB] rounded-2xl p-6 border border-[#4A7C74]/10 space-y-4"
+                        class="bg-primary-soft rounded-2xl p-6 border border-primary/10 space-y-4"
                     >
-                        <p class="font-serif text-lg text-[#304743] flex items-center gap-2">
+                        <p class="font-serif text-lg text-primary-deep dark:text-primary-hover flex items-center gap-2">
                             <Check size={18} /> Your wishes are saved as you go.
                         </p>
                         <div class="flex flex-wrap gap-3">
                             {#if onOpenBudget}
                                 <button
                                     on:click={onOpenBudget}
-                                    class="px-5 py-2.5 bg-[#304743] hover:bg-[#2A3F3B] text-white rounded-xl font-bold text-sm flex items-center gap-2 transition-colors"
+                                    class="px-5 py-2.5 bg-primary-deep hover:opacity-90 text-white rounded-xl font-bold text-sm flex items-center gap-2 transition-colors"
                                 >
                                     Continue to Financial Care <ArrowRight size={16} />
                                 </button>
                             {/if}
                             <a
                                 href="/modules/letters"
-                                class="px-5 py-2.5 bg-white border border-stone-200 hover:border-[#4A7C74] text-[#304743] rounded-xl font-bold text-sm flex items-center gap-2 transition-colors"
+                                class="px-5 py-2.5 bg-card border border-border hover:border-primary text-primary-deep dark:text-primary-hover rounded-xl font-bold text-sm flex items-center gap-2 transition-colors"
                             >
                                 Continue to Letters to Loved Ones <ArrowRight size={16} />
                             </a>
@@ -691,12 +693,12 @@
 
     <!-- Footer Controls -->
     <div
-        class="p-6 bg-white border-t border-stone-100 flex justify-between items-center"
+        class="p-6 bg-card border-t border-border flex justify-between items-center"
     >
         <button
             on:click={prevStep}
             disabled={currentStep === 1}
-            class="px-6 py-3 rounded-xl font-bold text-stone-500 hover:bg-stone-50 disabled:opacity-30 disabled:hover:bg-transparent transition-colors flex items-center gap-2"
+            class="px-6 py-3 rounded-xl font-bold text-muted-foreground hover:bg-muted disabled:invisible transition-colors flex items-center gap-2"
         >
             <ArrowLeft size={18} /> Back
         </button>
@@ -704,7 +706,7 @@
         {#if currentStep < STEPS.length}
             <button
                 on:click={nextStep}
-                class="px-8 py-3 bg-[#304743] hover:bg-[#2A3F3B] text-white rounded-xl font-bold shadow-lg shadow-[#304743]/20 flex items-center gap-2 transition-all hover:-translate-y-0.5"
+                class="px-8 py-3 bg-primary-deep hover:opacity-90 text-white rounded-xl font-bold shadow-lg shadow-primary-deep/20 flex items-center gap-2 transition-all hover:-translate-y-0.5"
             >
                 Continue <ArrowRight size={18} />
             </button>

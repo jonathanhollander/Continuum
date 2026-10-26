@@ -82,7 +82,7 @@
                 <span>Search for Unclaimed Property</span>
                 <ExternalLink size={20} class="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </button>
-            <p class="text-slate-500 text-sm mt-4">
+            <p class="text-slate-400 text-sm mt-4">
                 Opens unclaimed.org in a new tab. This is a free government-affiliated service.
             </p>
             <a

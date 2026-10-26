@@ -153,10 +153,10 @@
         { type: "education", label: "Education", dot: "bg-blue-500" },
         { type: "work", label: "Work", dot: "bg-emerald-500" },
         { type: "relationship", label: "Relationship", dot: "bg-rose-500" },
-        { type: "accomplishment", label: "Accomplishment", dot: "bg-amber-500" },
+        { type: "accomplishment", label: "Accomplishment", dot: "bg-amber-700" },
     ];
     function dotClass(type: string) {
-        if (type === "future") return "bg-gray-400";
+        if (type === "future") return "bg-slate-400";
         return TYPE_STYLES.find((t) => t.type === type)?.dot ?? "bg-purple-500";
     }
 
@@ -232,7 +232,7 @@
         <div class="flex items-center gap-3">
             <DataViewToggle module="timeline" />
             <button
-                class="px-4 py-2 rounded-lg text-sm font-bold bg-[#4A7C74] text-white shadow-md flex items-center gap-2 hover:bg-[#3b635d]"
+                class="px-4 py-2 rounded-lg text-sm font-bold bg-primary text-primary-foreground shadow-md flex items-center gap-2 hover:bg-primary-hover"
                 onclick={() => (showAddModal = true)}
             >
                 <Plus size={16} /> Add Event
@@ -254,29 +254,29 @@
             transition:fade
         >
             <div
-                class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
+                class="bg-card rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
                 in:scale
             >
                 <div
-                    class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50"
+                    class="p-4 border-b border-border flex justify-between items-center bg-muted"
                 >
-                    <h3 class="font-bold text-[#304743]">New Life Event</h3>
+                    <h3 class="font-bold text-primary-deep dark:text-primary-hover">New Life Event</h3>
                     <button aria-label="Close" onclick={resetForm}
                         ><X
                             size={20}
-                            class="text-gray-400 hover:text-gray-600"
+                            class="text-muted-foreground hover:text-foreground"
                         /></button
                     >
                 </div>
                 <div class="p-6 space-y-4">
                     <div class="space-y-1">
-                        <label for="timeline-label" class="text-xs font-bold uppercase text-gray-400"
+                        <label for="timeline-label" class="text-xs font-bold uppercase text-muted-foreground"
                             >Label</label
                         >
                         <input
                             id="timeline-label"
                             bind:value={newEvent.label}
-                            class="w-full p-2 rounded-lg border focus:ring-2 ring-[#4A7C74] outline-none"
+                            class="w-full p-2 rounded-lg border focus:ring-2 ring-primary outline-none"
                             placeholder="e.g. Started Business"
                         />
                     </div>
@@ -295,7 +295,7 @@
                         <div class="space-y-1">
                             <label
                                 for="timeline-date"
-                                class="text-xs font-bold uppercase text-gray-400"
+                                class="text-xs font-bold uppercase text-muted-foreground"
                                 >Date</label
                             >
                             <input
@@ -314,19 +314,19 @@
                                         ).getFullYear();
                                     }
                                 }}
-                                class="w-full p-2 rounded-lg border focus:ring-2 ring-[#4A7C74] outline-none"
+                                class="w-full p-2 rounded-lg border focus:ring-2 ring-primary outline-none"
                             />
                         </div>
                         <div class="space-y-1">
                             <label
                                 for="timeline-type"
-                                class="text-xs font-bold uppercase text-gray-400"
+                                class="text-xs font-bold uppercase text-muted-foreground"
                                 >Type</label
                             >
                             <select
                                 id="timeline-type"
                                 bind:value={newEvent.type}
-                                class="w-full p-2 rounded-lg border focus:ring-2 ring-[#4A7C74] outline-none bg-white"
+                                class="w-full p-2 rounded-lg border focus:ring-2 ring-primary outline-none bg-card"
                             >
                                 <option value="milestone">Milestone</option>
                                 <option value="education">Education</option>
@@ -343,13 +343,13 @@
                     </div>
 
                     <div class="space-y-1">
-                        <label for="timeline-contact" class="text-xs font-bold uppercase text-gray-400"
+                        <label for="timeline-contact" class="text-xs font-bold uppercase text-muted-foreground"
                             >Designated Contact</label
                         >
                         <select
                             id="timeline-contact"
                             bind:value={newEvent.assignedContactId}
-                            class="w-full p-2 rounded-lg border focus:ring-2 ring-[#4A7C74] outline-none bg-white text-sm"
+                            class="w-full p-2 rounded-lg border focus:ring-2 ring-primary outline-none bg-card text-sm"
                         >
                             <option value={undefined}>Choose someone from your contacts</option>
                             {#each familyStore.members as member}
@@ -362,18 +362,18 @@
 
                     {#if newEvent.type === "accomplishment"}
                         <div
-                            class="space-y-4 pt-2 border-t border-stone-100 animate-in fade-in slide-in-from-top-2 duration-300"
+                            class="space-y-4 pt-2 border-t border-border animate-in fade-in slide-in-from-top-2 duration-300"
                         >
                             <div class="space-y-1">
                                 <label
                                     for="timeline-category"
-                                    class="text-xs font-bold uppercase text-gray-400"
+                                    class="text-xs font-bold uppercase text-muted-foreground"
                                     >Category</label
                                 >
                                 <select
                                     id="timeline-category"
                                     bind:value={newEvent.category}
-                                    class="w-full p-2 rounded-lg border focus:ring-2 ring-amber-400 outline-none bg-white"
+                                    class="w-full p-2 rounded-lg border focus:ring-2 ring-primary outline-none bg-card"
                                 >
                                     <option value="Personal">Personal</option>
                                     <option value="Career">Career</option>
@@ -398,7 +398,7 @@
                     {/if}
 
                     <!-- Custom Fields -->
-                    <div class="pt-4 mt-4 border-t border-gray-100">
+                    <div class="pt-4 mt-4 border-t border-border">
                         <CustomFieldsManager
                             entityType="timeline"
                             bind:data={parsedCustomAttributes}
@@ -407,7 +407,7 @@
 
                     <button
                         onclick={saveEvent}
-                        class="w-full py-3 bg-[#4A7C74] text-white rounded-xl font-bold mt-2"
+                        class="w-full py-3 bg-primary text-primary-foreground rounded-xl font-bold mt-2"
                     >
                         {newEvent.id ? "Update Event" : "Add to Timeline"}
                     </button>
@@ -421,20 +421,20 @@
         <div class="flex flex-col items-end gap-4">
             <div class="flex gap-4">
                 <div
-                    class="flex items-center gap-2 bg-white p-1 rounded-xl border border-gray-100 shadow-sm"
+                    class="flex items-center gap-2 bg-card p-1 rounded-xl border border-border shadow-sm"
                 >
                     <button
                         class="px-4 py-2 rounded-lg text-sm font-bold transition-all {showMemento
-                            ? 'text-gray-500 hover:bg-gray-50'
-                            : 'bg-stone-100 text-stone-800'}"
+                            ? 'text-muted-foreground hover:bg-muted'
+                            : 'bg-muted text-foreground'}"
                         onclick={() => (showMemento = false)}
                     >
                         Timeline
                     </button>
                     <button
                         class="px-4 py-2 rounded-lg text-sm font-bold transition-all {showMemento
-                            ? 'bg-purple-600 text-white shadow-md'
-                            : 'text-gray-500 hover:bg-gray-50'}"
+                            ? 'bg-primary text-primary-foreground shadow-md'
+                            : 'text-muted-foreground hover:bg-muted'}"
                         onclick={() => (showMemento = true)}
                     >
                         Memento Mori
@@ -458,7 +458,7 @@
     <!-- Empty State with GhostRow Samples -->
     {#if lifeEvents.length === 0 && !showMemento}
         <div class="mb-8" in:fade>
-            <div class="border border-amber-200 bg-amber-50/50 rounded-xl p-4 mb-4 flex items-center gap-3 text-amber-800">
+            <div class="border border-gold/30 bg-gold/10 rounded-xl p-4 mb-4 flex items-center gap-3 text-foreground">
                 <Sparkles size={20} />
                 <p class="text-sm font-medium">
                     Concierge Mode: Showing example life events to inspire you.
@@ -483,7 +483,7 @@
                         }}
                     >
                         {#snippet icon()}
-                            <SampleIcon size={20} class="text-slate-400" />
+                            <SampleIcon size={20} class="text-muted-foreground" />
                         {/snippet}
                     </GhostRow>
                 {/each}
@@ -491,7 +491,7 @@
             <div class="flex justify-center mt-4">
                 <button
                     onclick={() => (showAddModal = true)}
-                    class="text-sm font-bold text-[#4A7C74] hover:bg-[#4A7C74]/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                    class="text-sm font-bold text-primary hover:bg-primary/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
                 >
                     <Plus size={14} /> Add Your First Life Event
                 </button>
@@ -503,9 +503,9 @@
     {#if !showMemento && lifeEvents.some((e) => e.type === "accomplishment")}
         <div class="mb-12" in:slide>
             <div class="flex items-center gap-2 mb-4">
-                <Trophy class="text-amber-500" size={20} />
+                <Trophy class="text-gold-text" size={20} />
                 <h3
-                    class="font-bold text-[#304743] uppercase tracking-widest text-sm"
+                    class="font-bold text-primary-deep dark:text-primary-hover uppercase tracking-widest text-sm"
                 >
                     Trophy Case
                 </h3>
@@ -513,7 +513,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {#each lifeEvents.filter((e) => e.type === "accomplishment") as trophy}
                     <div
-                        class="bg-white border border-amber-100 p-6 rounded-2xl relative group cursor-pointer hover:shadow-xl hover:border-amber-300 transition-all flex flex-col h-full"
+                        class="bg-card border border-gold/30 p-6 rounded-2xl relative group cursor-pointer hover:shadow-xl hover:border-gold transition-all flex flex-col h-full"
                         role="button"
                         tabindex="0"
                         onclick={() => editEvent(trophy)}
@@ -533,7 +533,7 @@
                                     editEvent(trophy);
                                 }}
                                 aria-label="Edit Event"
-                                class="p-2 bg-amber-50 text-amber-600 rounded-full hover:bg-amber-100"
+                                class="p-2 bg-gold/15 text-gold-text rounded-full hover:bg-gold/25"
                             >
                                 <Pencil size={14} />
                             </button>
@@ -541,25 +541,25 @@
 
                         <div class="flex items-center gap-2 mb-4">
                             <div
-                                class="px-3 py-1 bg-amber-50 text-amber-700 text-[10px] font-black uppercase tracking-tighter rounded-full border border-amber-100"
+                                class="px-3 py-1 bg-gold/10 text-gold-text text-[10px] font-black uppercase tracking-tighter rounded-full border border-gold/30"
                             >
                                 {trophy.category || "Personal"}
                             </div>
                             <div
-                                class="text-xs font-bold text-stone-400 capitalize"
+                                class="text-xs font-bold text-muted-foreground capitalize"
                             >
                                 {trophy.year}
                             </div>
                         </div>
 
                         <h4
-                            class="font-serif font-bold text-xl text-[#304743] mb-2 group-hover:text-amber-700 transition-colors"
+                            class="font-serif font-bold text-xl text-primary-deep dark:text-primary-hover mb-2 group-hover:text-primary-hover transition-colors"
                         >
                             {trophy.label}
                         </h4>
 
                         {#if trophy.description}
-                            <p class="text-sm text-stone-500 mb-4 line-clamp-2">
+                            <p class="text-sm text-muted-foreground mb-4 line-clamp-2">
                                 {trophy.description}
                             </p>
                         {/if}
@@ -569,11 +569,11 @@
                                 trophy.assignedContactId,
                             )}
                             <div
-                                class="mt-4 pt-4 border-t border-stone-100 flex items-center justify-between"
+                                class="mt-4 pt-4 border-t border-border flex items-center justify-between"
                             >
                                 <div class="flex items-center gap-2">
                                     <div
-                                        class="w-6 h-6 rounded-full bg-stone-100 flex items-center justify-center overflow-hidden border border-stone-200"
+                                        class="w-6 h-6 rounded-full bg-muted flex items-center justify-center overflow-hidden border border-border"
                                     >
                                         {#if contact?.avatar}
                                             <img
@@ -583,7 +583,7 @@
                                             />
                                         {:else}
                                             <span
-                                                class="text-[8px] font-bold text-stone-400"
+                                                class="text-[8px] font-bold text-muted-foreground"
                                                 >{contact?.name
                                                     ?.slice(0, 2)
                                                     .toUpperCase() ||
@@ -593,11 +593,11 @@
                                     </div>
                                     <div class="flex flex-col">
                                         <span
-                                            class="text-[10px] font-bold text-stone-600 leading-tight"
+                                            class="text-[10px] font-bold text-muted-foreground leading-tight"
                                             >{contact?.name || "Unknown"}</span
                                         >
                                         <span
-                                            class="text-[8px] text-stone-400 leading-tight capitalize"
+                                            class="text-[8px] text-muted-foreground leading-tight capitalize"
                                             >{contact?.role || "Contact"}</span
                                         >
                                     </div>
@@ -613,7 +613,7 @@
                                                 .join("\n\n");
                                             window.location.href = `mailto:${contact.email}?subject=${encodeURIComponent(trophy.label)}&body=${encodeURIComponent(body)}`;
                                         }}
-                                        class="p-2 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-colors shadow-sm"
+                                        class="p-2 bg-primary-soft text-primary-hover rounded-full hover:bg-primary/20 transition-colors shadow-sm"
                                         title="Notify via Email"
                                     >
                                         <Mail size={12} />
@@ -623,9 +623,9 @@
                         {/if}
 
                         {#if trophy.reflection}
-                            <div class="mt-4 pt-4 border-t border-stone-100">
+                            <div class="mt-4 pt-4 border-t border-border">
                                 <p
-                                    class="text-xs text-stone-400 italic line-clamp-3"
+                                    class="text-xs text-muted-foreground italic line-clamp-3"
                                 >
                                     "{trophy.reflection}"
                                 </p>
@@ -640,11 +640,11 @@
     {#if showMemento}
         <!-- Memento Mori Grid -->
         <div
-            class="bg-white rounded-2xl border border-border shadow-sm p-8"
+            class="bg-card rounded-2xl border border-border shadow-sm p-8"
             in:fade
         >
             <div
-                class="flex items-start gap-4 mb-8 bg-purple-50 p-4 rounded-xl text-purple-900 border border-purple-100"
+                class="flex items-start gap-4 mb-8 bg-primary-soft p-4 rounded-xl text-foreground border border-primary/20"
             >
                 <Hourglass class="shrink-0 mt-1" />
                 <div>
@@ -675,13 +675,13 @@
                     <div
                         class="w-2 h-2 rounded-[1px] transition-colors cursor-pointer relative group
                         {week.hasEvent
-                            ? 'bg-amber-400 hover:bg-amber-500 ring-2 ring-amber-200 z-10'
+                            ? 'bg-gold hover:bg-gold-muted ring-2 ring-gold/40 z-10'
                             : ''}
                         {!week.hasEvent && week.isLived
-                            ? 'bg-[#304743]/80 hover:bg-[#304743]'
+                            ? 'bg-primary-deep/80 hover:bg-primary-deep'
                             : ''}
                         {!week.hasEvent && !week.isLived
-                            ? 'bg-gray-100 hover:bg-purple-200'
+                            ? 'bg-muted hover:bg-primary/30'
                             : ''}"
                         onmouseenter={() => (hoveredWeek = week)}
                     ></div>
@@ -692,29 +692,29 @@
             <!-- Permanent Legend -->
             <div class="mt-8 flex justify-center gap-8 text-sm opacity-60">
                 <div class="flex items-center gap-2">
-                    <div class="w-3 h-3 bg-[#304743]/80 rounded-[1px]"></div>
-                    <span class="text-gray-600">Lived</span>
+                    <div class="w-3 h-3 bg-primary-deep/80 rounded-[1px]"></div>
+                    <span class="text-muted-foreground">Lived</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <div class="w-3 h-3 bg-amber-400 rounded-[1px]"></div>
-                    <span class="text-gray-600">Event</span>
+                    <div class="w-3 h-3 bg-gold rounded-[1px]"></div>
+                    <span class="text-muted-foreground">Event</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <div
-                        class="w-2 h-2 rounded-[1px] bg-gray-100 rounded-[1px]"
+                        class="w-2 h-2 rounded-[1px] bg-muted rounded-[1px]"
                     ></div>
-                    <span class="text-gray-600">Remaining</span>
+                    <span class="text-muted-foreground">Remaining</span>
                 </div>
             </div>
 
             <!-- Floating Tooltip -->
             {#if hoveredWeek && hoveredWeek.hasEvent}
                 <div
-                    class="fixed z-50 bg-white/95 backdrop-blur shadow-xl border border-stone-200 rounded-xl p-4 pointer-events-none w-64 animate-in fade-in zoom-in-95 duration-150"
+                    class="fixed z-50 bg-card/95 backdrop-blur shadow-xl border border-border rounded-xl p-4 pointer-events-none w-64 animate-in fade-in zoom-in-95 duration-150"
                     style="top: {tooltipY}px; left: {tooltipX}px;"
                 >
                     <div
-                        class="text-xs uppercase tracking-widest text-[#304743]/60 font-bold mb-2 pb-2 border-b border-stone-100"
+                        class="text-xs uppercase tracking-widest text-muted-foreground font-bold mb-2 pb-2 border-b border-border"
                     >
                         Week {hoveredWeek.index + 1} | {birthYear +
                             Math.floor(hoveredWeek.index / 52)}
@@ -725,17 +725,17 @@
                         <div class="flex items-start gap-2 mb-2 last:mb-0">
                             <Icon
                                 size={16}
-                                class="text-amber-500 shrink-0 mt-1"
+                                class="text-gold-text shrink-0 mt-1"
                             />
                             <div>
                                 <div
-                                    class="text-[#304743] font-bold leading-tight"
+                                    class="text-primary-deep dark:text-primary-hover font-bold leading-tight"
                                 >
                                     {event.label}
                                 </div>
                                 {#if event.description}
                                     <p
-                                        class="text-xs text-stone-500 italic mt-0.5 line-clamp-2"
+                                        class="text-xs text-muted-foreground italic mt-0.5 line-clamp-2"
                                     >
                                         {event.description}
                                     </p>
@@ -748,34 +748,34 @@
         </div>
     {:else if viewMode === 'table' && lifeEvents.length > 0}
         <!-- Table View -->
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
             <table class="w-full">
-                <thead class="bg-slate-50 border-b border-slate-200">
+                <thead class="bg-muted border-b border-border">
                     <tr>
-                        <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Year</th>
-                        <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Label</th>
-                        <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Type</th>
-                        <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Details</th>
-                        <th class="px-4 py-3 text-right text-xs font-bold uppercase text-slate-500">Actions</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Year</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Label</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Type</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Details</th>
+                        <th class="px-4 py-3 text-right text-xs font-bold uppercase text-muted-foreground">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-border">
                     {#each [...lifeEvents].sort((a, b) => a.year - b.year) as event (event.id)}
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="px-4 py-3 text-sm font-bold text-slate-600">{event.year}</td>
-                            <td class="px-4 py-3 font-medium text-slate-800">{event.label}</td>
-                            <td class="px-4 py-3 text-sm text-slate-600">
+                        <tr class="hover:bg-muted transition-colors">
+                            <td class="px-4 py-3 text-sm font-bold text-muted-foreground">{event.year}</td>
+                            <td class="px-4 py-3 font-medium text-foreground">{event.label}</td>
+                            <td class="px-4 py-3 text-sm text-muted-foreground">
                                 <span class="inline-flex items-center gap-2">
                                     <span class="w-2 h-2 rounded-full {dotClass(event.type)}"></span>
                                     {TYPE_STYLES.find((t) => t.type === event.type)?.label ?? "Future Plan"}
                                 </span>
                             </td>
-                            <td class="px-4 py-3 text-sm text-slate-600 max-w-xs truncate">{event.description || ''}</td>
+                            <td class="px-4 py-3 text-sm text-muted-foreground max-w-xs truncate">{event.description || ''}</td>
                             <td class="px-4 py-3 text-right">
                                 <div class="flex items-center justify-end gap-2">
                                     <button
                                         onclick={() => editEvent(event)}
-                                        class="p-1.5 text-slate-400 hover:text-primary transition-colors"
+                                        class="p-1.5 text-muted-foreground hover:text-primary transition-colors"
                                         title="Edit Event"
                                         aria-label="Edit Event"
                                     >
@@ -783,7 +783,7 @@
                                     </button>
                                     <button
                                         onclick={() => removeEvent(event.id)}
-                                        class="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
+                                        class="p-1.5 text-muted-foreground hover:text-foreground transition-colors"
                                         title="Delete Event"
                                         aria-label="Delete Event"
                                     >
@@ -799,15 +799,15 @@
     {:else}
         <!-- Timeline View -->
         <div
-            class="bg-white rounded-2xl shadow-xl border border-stone-100 p-8 overflow-hidden relative"
+            class="bg-card rounded-2xl shadow-xl border border-border p-8 overflow-hidden relative"
         >
             <!-- Controls -->
             <div class="flex justify-between items-center mb-6">
                 <!-- Zoom Control -->
                 <div
-                    class="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100"
+                    class="flex items-center gap-3 bg-muted px-4 py-2 rounded-xl border border-border"
                 >
-                    <span class="text-xs font-bold text-gray-400 uppercase"
+                    <span class="text-xs font-bold text-muted-foreground uppercase"
                         >Zoom Level</span
                     >
                     <input
@@ -816,14 +816,14 @@
                         max="100"
                         bind:value={pixelsPerYear}
                         aria-label="Zoom Level"
-                        class="w-32 accent-[#4A7C74] cursor-pointer"
+                        class="w-32 accent-primary cursor-pointer"
                     />
-                    <span class="text-xs text-gray-400 font-mono w-8"
+                    <span class="text-xs text-muted-foreground font-mono w-8"
                         >{pixelsPerYear}px</span
                     >
                 </div>
 
-                <div class="flex flex-wrap justify-end gap-4 text-sm text-gray-400">
+                <div class="flex flex-wrap justify-end gap-4 text-sm text-muted-foreground">
                     {#each TYPE_STYLES as t (t.type)}
                         <div class="flex items-center gap-2">
                             <div class="w-2 h-2 rounded-full {t.dot}"></div>
@@ -834,11 +834,11 @@
             </div>
 
             <div
-                class="overflow-x-auto pb-12 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent"
+                class="overflow-x-auto pb-12 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent"
             >
                 <!-- Line -->
                 <div
-                    class="absolute top-32 left-0 right-0 h-0.5 bg-gradient-to-r from-stone-200 via-stone-300 to-stone-200"
+                    class="absolute top-32 left-0 right-0 h-0.5 bg-gradient-to-r from-border via-slate-300 to-border"
                 ></div>
 
                 <!-- Events -->
@@ -857,16 +857,16 @@
                             <!-- Top Label (Alternating) -->
                             {#if i % 2 === 0}
                                 <div
-                                    class="mb-6 opacity-60 group-hover:opacity-100 transition-all -translate-y-1 group-hover:translate-y-0 text-center w-32"
+                                    class="mb-6 opacity-80 group-hover:opacity-100 transition-all -translate-y-1 group-hover:translate-y-0 text-center w-32"
                                 >
                                     <div
-                                        class="text-sm font-bold text-[#304743]"
+                                        class="text-sm font-bold text-primary-deep dark:text-primary-hover"
                                     >
                                         {event.label}
                                     </div>
                                     {#if event.assignedContactId}
                                         <div
-                                            class="text-[9px] font-bold text-stone-400 uppercase tracking-tighter truncate px-2"
+                                            class="text-[9px] font-bold text-muted-foreground uppercase tracking-tighter truncate px-2"
                                         >
                                             Assigned: {getContactById(
                                                 event.assignedContactId,
@@ -881,7 +881,7 @@
                                 <div
                                     class="relative z-10 w-12 h-12 rounded-full border-4 border-white shadow-lg flex items-center justify-center transition-transform group-hover:scale-110
                                 {event.year > currentYear
-                                        ? 'bg-gray-100 text-gray-400 border-dashed border-gray-300'
+                                        ? 'bg-muted text-muted-foreground border-dashed border-slate-300'
                                         : `${dotClass(event.type)} text-white`}"
                                 >
                                     <Icon
@@ -898,7 +898,7 @@
                                             editEvent(event);
                                         }}
                                         aria-label="Edit Event"
-                                        class="bg-blue-100 text-blue-500 p-1 rounded-full hover:scale-110 shadow-sm"
+                                        class="bg-primary-soft text-primary-hover p-1 rounded-full hover:scale-110 shadow-sm"
                                         title="Edit Event"
                                     >
                                         <Pencil size={12} />
@@ -908,7 +908,7 @@
                                             e.stopPropagation();
                                             removeEvent(event.id);
                                         }}
-                                        class="bg-red-100 text-red-500 p-1 rounded-full hover:scale-110 shadow-sm"
+                                        class="bg-muted text-muted-foreground hover:text-foreground p-1 rounded-full hover:scale-110 shadow-sm"
                                         title="Delete Event"
                                     >
                                         <Trash2 size={12} />
@@ -918,7 +918,7 @@
 
                             <!-- Year -->
                             <div
-                                class="mt-3 text-xs font-bold text-gray-400 group-hover:text-[#304743] transition-colors"
+                                class="mt-3 text-xs font-bold text-muted-foreground group-hover:text-primary-deep dark:group-hover:text-primary-hover transition-colors"
                             >
                                 {event.year}
                             </div>
@@ -926,16 +926,16 @@
                             <!-- Bottom Label (Alternating) -->
                             {#if i % 2 !== 0}
                                 <div
-                                    class="mt-6 opacity-60 group-hover:opacity-100 transition-all translate-y-1 group-hover:translate-y-0 text-center w-32"
+                                    class="mt-6 opacity-80 group-hover:opacity-100 transition-all translate-y-1 group-hover:translate-y-0 text-center w-32"
                                 >
                                     <div
-                                        class="text-sm font-bold text-[#304743]"
+                                        class="text-sm font-bold text-primary-deep dark:text-primary-hover"
                                     >
                                         {event.label}
                                     </div>
                                     {#if event.assignedContactId}
                                         <div
-                                            class="text-[9px] font-bold text-stone-400 uppercase tracking-tighter truncate px-2"
+                                            class="text-[9px] font-bold text-muted-foreground uppercase tracking-tighter truncate px-2"
                                         >
                                             Assigned: {getContactById(
                                                 event.assignedContactId,
@@ -953,12 +953,12 @@
                         style="left: {getPosition(currentYear)}px"
                     >
                         <div
-                            class="absolute -top-16 text-xs font-bold uppercase tracking-widest text-[#4A7C74]"
+                            class="absolute -top-16 text-xs font-bold uppercase tracking-widest text-primary"
                         >
                             Today
                         </div>
                         <div
-                            class="w-0.5 h-32 bg-[#4A7C74]/50 border-l-2 border-dashed border-[#4A7C74]"
+                            class="w-0.5 h-32 bg-primary/50 border-l-2 border-dashed border-primary"
                         ></div>
                     </div>
                 </div>

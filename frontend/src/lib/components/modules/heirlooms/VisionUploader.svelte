@@ -66,8 +66,8 @@
     <div
         class="relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 overflow-hidden group
         {isDragging
-            ? 'border-indigo-500 bg-indigo-50/50'
-            : 'border-stone-200 hover:border-indigo-300 hover:bg-stone-50'}"
+            ? 'border-primary bg-primary/5'
+            : 'border-border hover:border-primary/40 hover:bg-muted'}"
         ondragover={handleDragOver}
         ondragleave={handleDragLeave}
         ondrop={handleDrop}
@@ -125,14 +125,14 @@
                 }}
             >
                 <div
-                    class="w-16 h-16 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-sm border border-indigo-100"
+                    class="w-16 h-16 bg-primary-soft text-primary-hover rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-sm border border-primary/20"
                 >
                     <ImagePlus size={32} />
                 </div>
-                <h3 class="text-sm font-bold text-slate-700 mb-1">
+                <h3 class="text-sm font-bold text-foreground mb-1">
                     Add a photo
                 </h3>
-                <p class="text-xs text-slate-400">
+                <p class="text-xs text-muted-foreground">
                     Add a photo by dropping it here or choosing one
                 </p>
             </div>
@@ -140,9 +140,9 @@
     </div>
 
     {#if uploading}
-        <p class="text-xs text-slate-500 text-center" aria-live="polite">Saving your photo…</p>
+        <p class="text-xs text-muted-foreground text-center" aria-live="polite">Saving your photo…</p>
     {:else if message}
-        <p class="text-xs text-slate-600 text-center" aria-live="polite">{message}</p>
+        <p class="text-xs text-muted-foreground text-center" aria-live="polite">{message}</p>
     {/if}
 
     <!-- Provenance / Story Field with SmartTextarea -->

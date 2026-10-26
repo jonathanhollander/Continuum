@@ -155,11 +155,11 @@
 <div class="flex flex-col h-full">
     <!-- View Controls -->
     <div class="flex justify-end mb-6">
-        <div class="bg-slate-100 p-1 rounded-lg flex">
+        <div class="bg-muted p-1 rounded-lg flex">
             <button
                 class="p-2 rounded-md transition-all {viewMode === 'grid'
-                    ? 'bg-white text-[#4A7C74] shadow-sm'
-                    : 'text-slate-400 hover:text-slate-600'}"
+                    ? 'bg-card text-primary shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'}"
                 onclick={() => {
                     viewMode = "grid";
                     onViewChange?.("grid");
@@ -170,8 +170,8 @@
             </button>
             <button
                 class="p-2 rounded-md transition-all {viewMode === 'carousel'
-                    ? 'bg-white text-[#4A7C74] shadow-sm'
-                    : 'text-slate-400 hover:text-slate-600'}"
+                    ? 'bg-card text-primary shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'}"
                 onclick={() => {
                     viewMode = "carousel";
                     onViewChange?.("carousel");
@@ -193,10 +193,10 @@
                 <div
                     role="button"
                     tabindex="0"
-                    class="group relative aspect-square bg-slate-100 rounded-xl overflow-hidden cursor-pointer hover:shadow-lg transition-all {selectedIds.includes(
+                    class="group relative aspect-square bg-muted rounded-xl overflow-hidden cursor-pointer hover:shadow-lg transition-all {selectedIds.includes(
                         String(memory.id),
                     )
-                        ? 'ring-4 ring-indigo-500 ring-offset-2'
+                        ? 'ring-4 ring-primary ring-offset-2 ring-offset-background'
                         : ''}"
                     onclick={() => handleCardClick(memory)}
                     onkeydown={(e) => {
@@ -245,12 +245,12 @@
                                 class="h-6 w-6 rounded-full border-2 border-white flex items-center justify-center transition-colors {selectedIds.includes(
                                     String(memory.id),
                                 )
-                                    ? 'bg-indigo-500 border-indigo-500'
+                                    ? 'bg-primary border-primary'
                                     : 'bg-black/30'}"
                             >
                                 {#if selectedIds.includes(String(memory.id))}
                                     <div
-                                        class="w-2.5 h-2.5 bg-white rounded-full"
+                                        class="w-2.5 h-2.5 bg-primary-foreground rounded-full"
                                     ></div>
                                 {/if}
                             </div>
@@ -284,7 +284,7 @@
                             class="absolute top-2 right-2 transition-opacity flex gap-2"
                         >
                             <button
-                                class="p-2 bg-white/80 backdrop-blur rounded-full hover:bg-white text-slate-500 hover:text-red-500 transition-colors"
+                                class="p-2 bg-card/80 backdrop-blur rounded-full hover:bg-card text-muted-foreground hover:text-primary transition-colors"
                                 onclick={(e) =>
                                     toggleFavorite(String(memory.id), e)}
                                 aria-label="Favorite"
@@ -294,12 +294,12 @@
                                     size={14}
                                     class={memory.is_favorite ||
                                     (memory as any).isFavorite
-                                        ? "fill-red-500 text-red-500"
+                                        ? "fill-primary text-primary"
                                         : ""}
                                 />
                             </button>
                             <button
-                                class="p-2 bg-white/80 backdrop-blur rounded-full hover:bg-white text-slate-500 hover:text-red-500 transition-colors"
+                                class="p-2 bg-card/80 backdrop-blur rounded-full hover:bg-card text-muted-foreground hover:text-foreground transition-colors"
                                 onclick={(e) => handleRemove(String(memory.id), e)}
                                 aria-label="Remove this item"
                                 title="Remove this item"
@@ -443,7 +443,7 @@
                             size={20}
                             class={memories[activeIndex].is_favorite ||
                             (memories[activeIndex] as any).isFavorite
-                                ? "fill-red-500 text-red-500"
+                                ? "fill-primary text-primary"
                                 : ""}
                         />
                     </button>

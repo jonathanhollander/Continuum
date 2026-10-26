@@ -249,12 +249,12 @@
 
     <!-- Tabs -->
     <div class="flex justify-center items-center gap-4 mb-8">
-        <div class="bg-gray-100 p-1.5 rounded-xl inline-flex gap-2">
+        <div class="bg-muted p-1.5 rounded-xl inline-flex gap-2">
             <button
                 class="px-6 py-2.5 rounded-lg font-bold text-sm transition-all {activeTab ===
                 'wishes'
-                    ? 'bg-white shadow-sm text-[#304743]'
-                    : 'text-gray-500 hover:text-gray-900'}"
+                    ? 'bg-card shadow-sm text-primary-deep dark:text-primary-hover'
+                    : 'text-muted-foreground hover:text-foreground'}"
                 onclick={() => (activeTab = "wishes")}
             >
                 Vision & Spirit
@@ -262,8 +262,8 @@
             <button
                 class="px-6 py-2.5 rounded-lg font-bold text-sm transition-all {activeTab ===
                 'budget'
-                    ? 'bg-white shadow-sm text-[#304743]'
-                    : 'text-gray-500 hover:text-gray-900'}"
+                    ? 'bg-card shadow-sm text-primary-deep dark:text-primary-hover'
+                    : 'text-muted-foreground hover:text-foreground'}"
                 onclick={() => (activeTab = "budget")}
             >
                 Financial Care
@@ -272,23 +272,23 @@
     </div>
 
     <div
-        class="bg-white rounded-2xl border border-border shadow-sm overflow-hidden min-h-[500px] p-8"
+        class="bg-card rounded-2xl border border-border shadow-sm overflow-hidden min-h-[500px] p-8"
     >
         <!-- Memorial Subject Header (Synced): only the values that are filled in -->
         {#if $estateProfile.ownerName || $estateExecutorName || $estateProfile.legalCityState}
         <div
-            class="mb-10 p-6 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-6"
+            class="mb-10 p-6 bg-muted border border-border rounded-2xl flex flex-col md:flex-row justify-between items-center gap-6"
         >
             {#if $estateProfile.ownerName}
             <div class="flex items-center gap-4">
-                <div class="p-3 bg-white rounded-xl shadow-sm text-slate-400">
+                <div class="p-3 bg-card rounded-xl shadow-sm text-muted-foreground">
                     <UserCircle size={32} />
                 </div>
                 <div>
-                    <h2 class="text-xl font-bold text-slate-800">
+                    <h2 class="text-xl font-bold text-foreground">
                         Celebrating the Life of {$estateProfile.ownerName}
                     </h2>
-                    <p class="text-sm text-slate-500 italic">
+                    <p class="text-sm text-muted-foreground italic">
                         Pre-filled from Estate Profile
                     </p>
                 </div>
@@ -297,21 +297,21 @@
 
             {#if $estateExecutorName}
             {#if $estateProfile.ownerName}
-            <div class="h-10 w-px bg-slate-200 hidden md:block"></div>
+            <div class="h-10 w-px bg-border hidden md:block"></div>
             {/if}
 
             <div class="flex items-center gap-4">
                 <div class="text-right">
                     <p
-                        class="text-xs font-bold uppercase tracking-widest text-slate-400"
+                        class="text-xs font-bold uppercase tracking-widest text-muted-foreground"
                     >
                         Chief Coordinator
                     </p>
-                    <p class="font-bold text-slate-700">
+                    <p class="font-bold text-foreground">
                         {$estateExecutorName}
                     </p>
                 </div>
-                <div class="p-3 bg-white rounded-xl shadow-sm text-primary">
+                <div class="p-3 bg-card rounded-xl shadow-sm text-primary">
                     <Users size={24} />
                 </div>
             </div>
@@ -319,21 +319,21 @@
 
             {#if $estateProfile.legalCityState}
             {#if $estateProfile.ownerName || $estateExecutorName}
-            <div class="h-10 w-px bg-slate-200 hidden md:block"></div>
+            <div class="h-10 w-px bg-border hidden md:block"></div>
             {/if}
 
             <div class="flex items-center gap-4">
                 <div class="text-right">
                     <p
-                        class="text-xs font-bold uppercase tracking-widest text-slate-400"
+                        class="text-xs font-bold uppercase tracking-widest text-muted-foreground"
                     >
                         Local Area
                     </p>
-                    <p class="font-bold text-slate-700">
+                    <p class="font-bold text-foreground">
                         {$estateProfile.legalCityState}
                     </p>
                 </div>
-                <div class="p-3 bg-white rounded-xl shadow-sm text-primary">
+                <div class="p-3 bg-card rounded-xl shadow-sm text-primary">
                     <MapPinIcon size={24} />
                 </div>
             </div>
@@ -359,7 +359,7 @@
 
                     <!-- Example costs (the same standard estimates Auto-Fill adds) -->
                     <div class="mt-8">
-                        <p class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-4 text-center">Example entries to inspire you</p>
+                        <p class="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-4 text-center">Example entries to inspire you</p>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 opacity-60">
                             {#each standardItems.slice(0, 3) as sample}
                                 <GhostRow
@@ -374,7 +374,7 @@
                                     }}
                                 >
                                     {#snippet icon()}
-                                        <DollarSign size={20} class="text-slate-400" />
+                                        <DollarSign size={20} class="text-muted-foreground" />
                                     {/snippet}
                                 </GhostRow>
                             {/each}
@@ -386,7 +386,7 @@
                         class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 items-end"
                     >
                         <div
-                            class="p-6 rounded-2xl bg-[#304743] text-white shadow-lg"
+                            class="p-6 rounded-2xl bg-primary-deep text-white shadow-lg"
                         >
                             <div
                                 class="text-xs font-bold uppercase tracking-wider opacity-70 mb-1"
@@ -400,18 +400,18 @@
 
                         {#if comparedItems.length > 0}
                         <div
-                            class="p-6 rounded-2xl bg-white border border-stone-200 shadow-sm"
+                            class="p-6 rounded-2xl bg-card border border-border shadow-sm"
                         >
                             <div
-                                class="text-xs font-bold uppercase tracking-wider text-stone-500 mb-1"
+                                class="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1"
                             >
                                 Industry Avg. (Projected)
                             </div>
-                            <div class="text-2xl font-bold text-stone-700">
+                            <div class="text-2xl font-bold text-foreground">
                                 ${totalEstimated.toLocaleString()}
                             </div>
                             {#if comparedItems.length < budgetItems.length}
-                                <div class="text-xs text-stone-400 mt-1">
+                                <div class="text-xs text-muted-foreground mt-1">
                                     Across the {comparedItems.length} common costs
                                 </div>
                             {/if}
@@ -419,8 +419,8 @@
 
                         <div
                             class="p-6 rounded-2xl h-fit {variance >= 0
-                                ? 'bg-emerald-50 text-emerald-800'
-                                : 'bg-rose-50 text-rose-800'}"
+                                ? 'bg-success/10 text-success'
+                                : 'bg-muted text-foreground'}"
                         >
                             <div class="flex items-center gap-2 font-bold mb-1">
                                 Saving vs. Avg
@@ -448,13 +448,13 @@
 
                     <!-- Budget Table -->
                     <div
-                        class="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden"
+                        class="bg-card rounded-xl shadow-sm border border-border overflow-hidden"
                     >
                         <div
-                            class="px-6 py-4 border-b border-stone-100 flex justify-between items-center"
+                            class="px-6 py-4 border-b border-border flex justify-between items-center"
                         >
                             <h3
-                                class="font-bold text-stone-700 flex items-center gap-2"
+                                class="font-bold text-foreground flex items-center gap-2"
                             >
                                 <DollarSign size={18} /> Financial Stewardship
                             </h3>
@@ -462,7 +462,7 @@
                                 {#if missingStandard.length > 0}
                                 <button
                                     onclick={prefillEstimates}
-                                    class="text-xs font-bold text-stone-500 hover:text-[#4A7C74] px-3 py-1.5 rounded-lg hover:bg-stone-50 transition-colors"
+                                    class="text-xs font-bold text-muted-foreground hover:text-primary px-3 py-1.5 rounded-lg hover:bg-muted transition-colors"
                                 >
                                     Auto-Fill Common Costs
                                 </button>
@@ -472,30 +472,30 @@
                                         newExpense = { name: "", cost: 0 };
                                         showAddExpense = true;
                                     }}
-                                    class="bg-[#4A7C74] hover:bg-[#3b635d] text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow-sm transition-all flex items-center gap-1"
+                                    class="bg-primary hover:bg-primary-hover text-primary-foreground px-4 py-1.5 rounded-lg text-sm font-bold shadow-sm transition-all flex items-center gap-1"
                                 >
                                     <Plus size={14} /> Add Item
                                 </button>
                             </div>
                         </div>
 
-                        <div class="divide-y divide-stone-100">
+                        <div class="divide-y divide-border">
                             {#each budgetItems as item (item.id)}
                                 <div
-                                    class="px-6 py-4 flex items-center justify-between group hover:bg-stone-50 transition-colors"
+                                    class="px-6 py-4 flex items-center justify-between group hover:bg-muted transition-colors"
                                 >
                                     <div>
-                                        <div class="font-bold text-stone-800">
+                                        <div class="font-bold text-foreground">
                                             {item.name}
                                         </div>
                                         {#if industryAverage(item.name) !== undefined}
-                                            <div class="text-xs text-stone-400">
+                                            <div class="text-xs text-muted-foreground">
                                                 Industry avg.: ${industryAverage(item.name)?.toLocaleString()}
                                             </div>
                                         {/if}
                                     </div>
                                     <div class="flex items-center gap-6">
-                                        <div class="font-bold text-stone-700">
+                                        <div class="font-bold text-foreground">
                                             ${item.cost.toLocaleString()}
                                         </div>
                                         <div class="flex gap-2">
@@ -503,7 +503,7 @@
                                                 onclick={() =>
                                                     editExpense(item)}
                                                 aria-label="Edit these details"
-                                                class="p-2 text-stone-400 hover:text-[#4A7C74] bg-white border border-stone-200 rounded-full shadow-sm"
+                                                class="p-2 text-muted-foreground hover:text-primary bg-card border border-border rounded-full shadow-sm"
                                             >
                                                 <Pencil size={14} />
                                             </button>
@@ -511,7 +511,7 @@
                                                 onclick={() =>
                                                     removeExpense(item.id)}
                                                 aria-label="Remove this item"
-                                                class="p-2 text-stone-400 hover:text-red-500 bg-white border border-stone-200 rounded-full shadow-sm"
+                                                class="p-2 text-muted-foreground hover:text-foreground bg-card border border-border rounded-full shadow-sm"
                                             >
                                                 <Trash2 size={14} />
                                             </button>
@@ -532,11 +532,11 @@
                 transition:fade
             >
                 <div
-                    class="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden"
+                    class="bg-card rounded-2xl w-full max-w-md shadow-xl overflow-hidden"
                     transition:scale={{ start: 0.95 }}
                 >
                     <div
-                        class="bg-[#304743] p-6 flex justify-between items-start text-white"
+                        class="bg-primary-deep p-6 flex justify-between items-start text-white"
                     >
                         <div class="flex-1 pr-4">
                             <h3 class="font-serif font-bold text-xl text-white">
@@ -545,7 +545,7 @@
                                     : "Plan Ahead"}
                             </h3>
                             <p
-                                class="text-emerald-100/80 text-sm mt-1 leading-relaxed"
+                                class="text-white/80 text-sm mt-1 leading-relaxed"
                             >
                                 {newExpense.id
                                     ? "Keep your estimates current—it helps your family plan with clarity."
@@ -554,7 +554,7 @@
                         </div>
                         <button aria-label="Close"
                             onclick={resetExpenseForm}
-                            class="text-white/50 hover:text-white transition-colors mt-1"
+                            class="text-white/70 hover:text-white transition-colors mt-1"
                         >
                             <X size={24} />
                         </button>
@@ -567,7 +567,7 @@
                             >
                             <input id="funeral-name"
                                 bind:value={newExpense.name}
-                                class="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-[#4A7C74] outline-none font-medium"
+                                class="w-full p-3 bg-muted border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium"
                                 placeholder="e.g. Venue Rental"
                             />
                         </div>
@@ -579,11 +579,11 @@
                             <input id="funeral-cost"
                                 type="number"
                                 bind:value={newExpense.cost}
-                                class="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-[#4A7C74] outline-none font-medium"
+                                class="w-full p-3 bg-muted border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium"
                                 placeholder="0.00"
                             />
                         </div>
-                        <div class="pt-4 mt-4 border-t border-stone-100">
+                        <div class="pt-4 mt-4 border-t border-border">
                             <CustomFieldsManager
                                 entityType="funeral"
                                 bind:data={parsedCustomAttributes}
@@ -592,7 +592,7 @@
                         <button
                             onclick={saveExpense}
                             disabled={!newExpense.name}
-                            class="w-full py-4 bg-[#4A7C74] hover:bg-[#3b635d] text-white font-bold rounded-xl shadow-lg shadow-[#4A7C74]/20 transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                            class="w-full py-4 bg-primary hover:bg-primary-hover text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             Save this detail
                         </button>

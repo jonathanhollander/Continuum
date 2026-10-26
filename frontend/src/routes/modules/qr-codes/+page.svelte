@@ -128,20 +128,20 @@
     >
         <div class="flex items-center gap-4">
             <div
-                class="bg-[#FDFBF7] border border-stone-200 p-4 rounded-2xl flex items-center gap-6 shadow-sm"
+                class="bg-card border border-border p-4 rounded-2xl flex items-center gap-6 shadow-sm"
             >
                 <div
-                    class="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center text-stone-400"
+                    class="w-12 h-12 bg-muted rounded-2xl flex items-center justify-center text-muted-foreground"
                 >
                     <History size={24} />
                 </div>
                 <div>
                     <p
-                        class="text-[10px] font-black uppercase tracking-widest text-stone-400"
+                        class="text-[10px] font-black uppercase tracking-widest text-muted-foreground"
                     >
                         Active Keys
                     </p>
-                    <p class="text-sm font-bold text-slate-700">
+                    <p class="text-sm font-bold text-foreground">
                         {$qrStore.assetLabels.length +
                             $qrStore.accessPacks.filter((p) => p.qrUrl).length} Total
                     </p>
@@ -167,9 +167,9 @@
     <!-- Essential Access Packs -->
     <section class="space-y-8">
         <div class="flex items-center gap-4">
-            <div class="w-1 h-8 bg-[#4A7C74] rounded-full"></div>
+            <div class="w-1 h-8 bg-primary rounded-full"></div>
             <h2
-                class="text-2xl font-black text-slate-900 uppercase tracking-tighter"
+                class="text-2xl font-black text-foreground uppercase tracking-tighter"
             >
                 Digital Access Keys
             </h2>
@@ -179,15 +179,15 @@
             {#each $qrStore.accessPacks as pack}
                 {@const Icon = pack.type === "Executor" ? Shield : Users}
                 <div
-                    class="group relative bg-white rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-500 overflow-hidden flex flex-col md:flex-row"
+                    class="group relative bg-card rounded-[3rem] border border-border shadow-sm hover:shadow-2xl transition-all duration-500 overflow-hidden flex flex-col md:flex-row"
                 >
                     <div class="p-10 flex-1 space-y-6">
                         <div class="flex items-center gap-4">
                             <div
                                 class="w-16 h-16 rounded-2xl flex items-center justify-center {pack.type ===
                                 'Executor'
-                                    ? 'bg-slate-900 text-white'
-                                    : 'bg-[#4A7C74] text-white'} shadow-xl"
+                                    ? 'bg-primary-deep text-white'
+                                    : 'bg-primary text-primary-foreground'} shadow-xl"
                             >
                                 <Icon
                                     size={32}
@@ -195,24 +195,24 @@
                             </div>
                             <div>
                                 <span
-                                    class="text-[10px] font-black uppercase tracking-widest text-slate-400"
+                                    class="text-[10px] font-black uppercase tracking-widest text-muted-foreground"
                                     >{pack.type} Access Pack</span
                                 >
                                 <h3
-                                    class="text-2xl font-black text-slate-900 font-serif"
+                                    class="text-2xl font-black text-foreground font-serif"
                                 >
                                     {pack.name}
                                 </h3>
                             </div>
                         </div>
-                        <p class="text-slate-500 text-lg leading-relaxed">
+                        <p class="text-muted-foreground text-lg leading-relaxed">
                             {pack.description}
                         </p>
 
                         <div class="flex flex-wrap gap-2">
                             {#each pack.modules as mod}
                                 <span
-                                    class="px-3 py-1 bg-slate-50 text-slate-500 rounded-full text-[10px] font-black uppercase tracking-wider border border-slate-100"
+                                    class="px-3 py-1 bg-muted text-muted-foreground rounded-full text-[10px] font-black uppercase tracking-wider border border-border"
                                 >
                                     {mod}
                                 </span>
@@ -223,20 +223,20 @@
                             {#if !pack.qrUrl}
                                 <button
                                     onclick={() => generatePack(pack.id)}
-                                    class="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-sm flex items-center gap-3 hover:scale-105 transition-all shadow-xl shadow-slate-900/20"
+                                    class="px-8 py-4 bg-primary text-primary-foreground rounded-2xl font-black text-sm flex items-center gap-3 hover:scale-105 transition-all shadow-xl shadow-primary/20"
                                 >
                                     <Sparkles size={18} /> Generate Secure Key
                                 </button>
                             {:else}
                                 <button
                                     onclick={() => printPack(pack)}
-                                    class="px-8 py-4 bg-[#4A7C74] text-white rounded-2xl font-black text-sm flex items-center gap-3 hover:scale-105 transition-all shadow-xl shadow-[#4A7C74]/20"
+                                    class="px-8 py-4 bg-primary text-primary-foreground rounded-2xl font-black text-sm flex items-center gap-3 hover:scale-105 transition-all shadow-xl shadow-primary/20"
                                 >
                                     <Printer size={18} /> Print for Red Binder
                                 </button>
                                 <button
                                     onclick={() => generatePack(pack.id)}
-                                    class="p-4 bg-slate-50 text-slate-400 hover:text-slate-900 rounded-2xl transition-all"
+                                    class="p-4 bg-muted text-muted-foreground hover:text-foreground rounded-2xl transition-all"
                                     title="Regenerate Key"
                                 >
                                     <History size={18} />
@@ -246,11 +246,11 @@
                     </div>
 
                     <div
-                        class="md:w-72 bg-slate-50 p-10 flex flex-col items-center justify-center border-l border-slate-100"
+                        class="md:w-72 bg-muted p-10 flex flex-col items-center justify-center border-l border-border"
                     >
                         {#if pack.qrUrl}
                             <div
-                                class="bg-white p-4 rounded-2xl shadow- inner ring-8 ring-slate-100 group-hover:scale-105 transition-transform duration-500"
+                                class="bg-white p-4 rounded-2xl shadow- inner ring-8 ring-muted group-hover:scale-105 transition-transform duration-500"
                             >
                                 <img
                                     src={pack.qrUrl}
@@ -259,15 +259,15 @@
                                 />
                             </div>
                             <p
-                                class="mt-4 text-[10px] font-black text-slate-400 uppercase tracking-widest"
+                                class="mt-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest"
                             >
                                 Scan to Preview
                             </p>
                         {:else}
                             <div
-                                class="w-40 h-40 rounded-2xl border-4 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-300"
+                                class="w-40 h-40 rounded-2xl border-4 border-dashed border-border flex flex-col items-center justify-center text-muted-foreground"
                             >
-                                <Smartphone size={32} class="mb-2 opacity-20" />
+                                <Smartphone size={32} class="mb-2" />
                                 <span
                                     class="text-[10px] font-black uppercase text-center px-4"
                                     >Ready to generate</span
@@ -284,9 +284,9 @@
     <section class="space-y-8">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <div class="w-1 h-8 bg-amber-500 rounded-full"></div>
+                <div class="w-1 h-8 bg-gold rounded-full"></div>
                 <h2
-                    class="text-2xl font-black text-slate-900 uppercase tracking-tighter"
+                    class="text-2xl font-black text-foreground uppercase tracking-tighter"
                 >
                     Physical Asset Labels
                 </h2>
@@ -296,7 +296,7 @@
                 <DataViewToggle module="qr-codes" />
                 <div class="relative w-80">
                     <Search
-                        class="absolute left-4 top-3 text-slate-400"
+                        class="absolute left-4 top-3 text-muted-foreground"
                         size={18}
                     />
                     <input
@@ -304,7 +304,7 @@
                         bind:value={searchQuery}
                         aria-label="Search labels"
                         placeholder="Search labels..."
-                        class="w-full bg-white border border-slate-200 rounded-2xl py-3 pl-12 pr-4 text-sm font-medium focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 outline-none transition-all shadow-sm"
+                        class="w-full bg-card border border-border rounded-2xl py-3 pl-12 pr-4 text-sm font-medium focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all shadow-sm"
                     />
                 </div>
             </div>
@@ -312,24 +312,24 @@
 
         {#if $qrStore.assetLabels.length === 0}
             <div
-                class="bg-white border-2 border-dashed border-slate-200 p-24 rounded-[3rem] text-center space-y-4"
+                class="bg-card border-2 border-dashed border-border p-24 rounded-[3rem] text-center space-y-4"
             >
                 <div
-                    class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-slate-300"
+                    class="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto text-muted-foreground"
                 >
                     <ScanLine size={40} />
                 </div>
-                <h3 class="text-xl font-bold text-slate-400">
+                <h3 class="text-xl font-bold text-muted-foreground">
                     Your asset labels will appear here
                 </h3>
-                <p class="text-slate-400 max-w-sm mx-auto text-sm">
+                <p class="text-muted-foreground max-w-sm mx-auto text-sm">
                     Visit the Heirlooms or Property modules to generate labels
                     for physical items.
                 </p>
                 <div class="pt-4">
                     <a
                         href="/modules/property"
-                        class="inline-flex items-center gap-2 text-[#4A7C74] font-black uppercase text-xs tracking-widest hover:underline"
+                        class="inline-flex items-center gap-2 text-primary font-black uppercase text-xs tracking-widest hover:underline"
                     >
                         Go to Assets <ArrowRight size={14} />
                     </a>
@@ -338,7 +338,7 @@
 
             <!-- Sample Assets That Can Get QR Labels -->
             <div class="mt-8">
-                <p class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-4 text-center">Assets that could have QR labels</p>
+                <p class="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-4 text-center">Assets that could have QR labels</p>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 opacity-60">
                     {#each getSmartSamples($language).heirlooms || [] as sample}
                         <GhostRow
@@ -366,11 +366,11 @@
                 >
                     {#each filteredAssets as label}
                         <div
-                            class="group bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300"
+                            class="group bg-card p-6 rounded-[2.5rem] border border-border shadow-sm hover:shadow-xl transition-all duration-300"
                         >
                             <div class="flex gap-4 items-start mb-6">
                                 <div
-                                    class="w-24 h-24 bg-slate-50 p-2 rounded-2xl ring-4 ring-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden"
+                                    class="w-24 h-24 bg-white p-2 rounded-2xl ring-4 ring-muted border border-border flex items-center justify-center overflow-hidden"
                                 >
                                     <img
                                         src={label.qrUrl}
@@ -383,7 +383,7 @@
                                         class="flex items-center justify-between mb-1"
                                     >
                                         <span
-                                            class="text-[10px] font-black uppercase tracking-tighter text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full"
+                                            class="text-[10px] font-black uppercase tracking-tighter text-primary-hover bg-primary-soft px-2 py-0.5 rounded-full"
                                             >{label.assetType}</span
                                         >
                                         <button aria-label="Remove this item"
@@ -393,18 +393,18 @@
                                                     label.assetName,
                                                     label.assetType,
                                                 )}
-                                            class="text-slate-200 hover:text-rose-500 transition-colors"
+                                            class="text-muted-foreground hover:text-foreground transition-colors"
                                         >
                                             <Trash2 size={14} />
                                         </button>
                                     </div>
                                     <h4
-                                        class="font-bold text-slate-900 leading-tight truncate"
+                                        class="font-bold text-foreground leading-tight truncate"
                                     >
                                         {label.assetName}
                                     </h4>
                                     <div
-                                        class="mt-2 flex items-center gap-1.5 text-slate-400"
+                                        class="mt-2 flex items-center gap-1.5 text-muted-foreground"
                                     >
                                         <Smartphone size={12} />
                                         <span
@@ -416,7 +416,7 @@
                             </div>
                             <button
                                 onclick={() => window.print()}
-                                class="w-full py-3 bg-slate-50 hover:bg-slate-900 hover:text-white text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                                class="w-full py-3 bg-muted hover:bg-primary hover:text-primary-foreground text-muted-foreground rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
                             >
                                 <Printer size={14} /> Print Label
                             </button>
@@ -425,42 +425,42 @@
                 </div>
             {:else}
                 <!-- Table View -->
-                <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                <div class="bg-card rounded-xl border border-border overflow-hidden">
                     <table class="w-full">
-                        <thead class="bg-slate-50 border-b border-slate-200">
+                        <thead class="bg-muted border-b border-border">
                             <tr>
-                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">QR</th>
-                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Asset Name</th>
-                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Type</th>
-                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Status</th>
-                                <th class="text-right px-4 py-3 text-xs font-bold uppercase text-slate-500">Actions</th>
+                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">QR</th>
+                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Asset Name</th>
+                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Type</th>
+                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Status</th>
+                                <th class="text-right px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100">
+                        <tbody class="divide-y divide-border">
                             {#each filteredAssets as label}
-                                <tr class="hover:bg-slate-50 transition-colors group">
+                                <tr class="hover:bg-muted transition-colors group">
                                     <td class="px-4 py-3">
                                         <img src={label.qrUrl} alt="QR" class="w-12 h-12 object-contain" />
                                     </td>
-                                    <td class="px-4 py-3 font-medium text-slate-800">{label.assetName}</td>
+                                    <td class="px-4 py-3 font-medium text-foreground">{label.assetName}</td>
                                     <td class="px-4 py-3">
-                                        <span class="text-xs font-bold px-2 py-1 bg-amber-50 text-amber-600 rounded">
+                                        <span class="text-xs font-bold px-2 py-1 bg-primary-soft text-primary-hover rounded">
                                             {label.assetType}
                                         </span>
                                     </td>
-                                    <td class="px-4 py-3 text-slate-500 text-sm">Deep Link Active</td>
+                                    <td class="px-4 py-3 text-muted-foreground text-sm">Deep Link Active</td>
                                     <td class="px-4 py-3 text-right">
                                         <div class="flex items-center justify-end gap-2">
                                             <button
                                                 onclick={() => window.print()}
-                                                class="p-1 text-slate-400 hover:text-slate-600 transition-colors"
+                                                class="p-1 text-muted-foreground hover:text-foreground transition-colors"
                                                 title="Print"
                                             >
                                                 <Printer size={16} />
                                             </button>
                                             <button aria-label="Remove this item"
                                                 onclick={() => deleteAssetQR(label.assetId, label.assetName, label.assetType)}
-                                                class="p-1 text-slate-300 hover:text-rose-500 transition-colors"
+                                                class="p-1 text-muted-foreground hover:text-foreground transition-colors"
                                             >
                                                 <Trash2 size={16} />
                                             </button>
@@ -480,7 +480,7 @@
         class="bg-slate-900 rounded-[4rem] p-12 text-white overflow-hidden relative"
     >
         <div
-            class="absolute top-0 right-0 w-96 h-96 bg-[#4A7C74] rounded-full blur-[12rem] opacity-20 -mr-48 -mt-48"
+            class="absolute top-0 right-0 w-96 h-96 bg-primary rounded-full blur-[12rem] opacity-20 -mr-48 -mt-48"
         ></div>
         <div
             class="relative grid grid-cols-1 lg:grid-cols-2 gap-12 items-center"
@@ -488,12 +488,12 @@
             <div class="space-y-8">
                 <div>
                     <span
-                        class="px-4 py-1.5 bg-[#4A7C74] rounded-full text-[10px] font-black uppercase tracking-widest text-white mb-6 inline-block"
+                        class="px-4 py-1.5 bg-primary rounded-full text-[10px] font-black uppercase tracking-widest text-primary-foreground mb-6 inline-block"
                         >Best Practices</span
                     >
                     <h2 class="text-4xl font-black font-serif leading-tight text-white">
                         Securing Your <span
-                            class="italic font-light text-[#9FD0C7]"
+                            class="italic font-light text-primary-on-dark"
                             >Physical Legacy</span
                         >
                     </h2>
@@ -504,7 +504,7 @@
                         <div
                             class="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center shrink-0"
                         >
-                            <Smartphone size={24} class="text-[#4A7C74]" />
+                            <Smartphone size={24} class="text-primary-on-dark" />
                         </div>
                         <div>
                             <h4 class="font-bold text-xl mb-1 text-white">
@@ -521,7 +521,7 @@
                         <div
                             class="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center shrink-0"
                         >
-                            <Shield size={24} class="text-[#4A7C74]" />
+                            <Shield size={24} class="text-primary-on-dark" />
                         </div>
                         <div>
                             <h4 class="font-bold text-xl mb-1 text-white">Gated Access</h4>
@@ -540,7 +540,7 @@
                     class="bg-white/5 border border-white/10 p-8 rounded-[2.5rem] backdrop-blur-sm space-y-4"
                 >
                     <div
-                        class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-[#4A7C74]"
+                        class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-primary-on-dark"
                     >
                         <CircleCheck size={20} />
                     </div>
@@ -551,7 +551,7 @@
                         heirlooms just by scanning them."
                     </p>
                     <p
-                        class="text-[10px] font-black uppercase tracking-widest text-[#4A7C74]"
+                        class="text-[10px] font-black uppercase tracking-widest text-slate-300"
                     >
                         — User Feedback
                     </p>
@@ -560,7 +560,7 @@
                     class="bg-white/5 border border-white/10 p-8 rounded-[2.5rem] backdrop-blur-sm mt-8 space-y-4"
                 >
                     <div
-                        class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-[#4A7C74]"
+                        class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-primary-on-dark"
                     >
                         <LayoutGrid size={20} />
                     </div>
@@ -571,7 +571,7 @@
                         everything for our executor."
                     </p>
                     <p
-                        class="text-[10px] font-black uppercase tracking-widest text-[#4A7C74]"
+                        class="text-[10px] font-black uppercase tracking-widest text-slate-300"
                     >
                         — User Feedback
                     </p>

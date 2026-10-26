@@ -534,13 +534,13 @@
     <div class="space-y-2">
         <label
             for="letter-recipient"
-            class="block text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+            class="block text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1"
             >Who this letter is for</label
         >
         <select
             id="letter-recipient"
             bind:value={letterRecipientId}
-            class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800 text-sm"
+            class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground text-sm"
         >
             <option value="">Choose someone from your contacts</option>
             {#each contacts as contact (contact.id)}
@@ -552,10 +552,10 @@
             {/each}
         </select>
         {#if contacts.length === 0}
-            <p class="text-[11px] text-slate-500 pl-1">
+            <p class="text-[11px] text-muted-foreground pl-1">
                 People you add in <a
                     href="/modules/contacts"
-                    class="text-primary underline">Contacts</a
+                    class="text-primary-hover underline">Contacts</a
                 > appear here.
             </p>
         {/if}
@@ -573,39 +573,39 @@
             <DataViewToggle module="letters" />
         {/if}
         <div
-            class="bg-[#FDFBF7] border border-stone-200 p-4 rounded-2xl flex items-center gap-6 shadow-sm"
+            class="bg-card border border-border p-4 rounded-2xl flex items-center gap-6 shadow-sm"
         >
             <div class="flex -space-x-3">
                 {#each [1, 2, 3] as i}
                     <div
-                        class="w-10 h-10 rounded-full border-2 border-[#FDFBF7] bg-stone-100 flex items-center justify-center"
+                        class="w-10 h-10 rounded-full border-2 border-card bg-muted flex items-center justify-center"
                     >
-                        <FileText size={16} class="text-stone-400" />
+                        <FileText size={16} class="text-muted-foreground" />
                     </div>
                 {/each}
             </div>
             <div>
                 <p
-                    class="text-[10px] font-black uppercase tracking-widest text-stone-400"
+                    class="text-[10px] font-black uppercase tracking-widest text-muted-foreground"
                 >
                     Your letters
                 </p>
                 {#if isLoading}
-                    <p class="text-sm font-bold text-slate-500" data-testid="letters-count">Gathering your letters…</p>
+                    <p class="text-sm font-bold text-muted-foreground" data-testid="letters-count">Gathering your letters…</p>
                 {:else if savedLetters.length > 0}
-                    <p class="text-sm font-bold text-slate-700" data-testid="letters-count">
+                    <p class="text-sm font-bold text-foreground" data-testid="letters-count">
                         {plural(savedLetters.length, "letter", "letters")}
                     </p>
-                    <p class="text-xs text-slate-500" data-testid="letters-states">{letterStates}</p>
+                    <p class="text-xs text-muted-foreground" data-testid="letters-states">{letterStates}</p>
                 {:else}
-                    <p class="text-sm font-bold text-slate-700" data-testid="letters-count">Ready when you are</p>
+                    <p class="text-sm font-bold text-foreground" data-testid="letters-count">Ready when you are</p>
                 {/if}
             </div>
             {#if savedLetters.length > 0}
                 <button
                     onclick={() => viewLetter(savedLetters[0])}
                     aria-label="Continue writing your letter"
-                    class="p-2 bg-stone-100 hover:bg-[#4A7C74] hover:text-white rounded-xl transition-all"
+                    class="p-2 bg-muted hover:bg-primary hover:text-primary-foreground rounded-xl transition-all"
                 >
                     <ArrowRight size={18} />
                 </button>
@@ -617,7 +617,7 @@
 {#if isLoading}
     <div class="flex flex-col items-center justify-center gap-3 py-16" role="status" data-testid="letters-loading">
         <Loader2 class="w-8 h-8 animate-spin text-primary" />
-        <p class="text-sm text-slate-500">Gathering your letters…</p>
+        <p class="text-sm text-muted-foreground">Gathering your letters…</p>
     </div>
 {:else}
 <div
@@ -644,29 +644,29 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
             <button
                 onclick={() => startEmotionalFlow("ethical_will")}
-                class="group relative overflow-hidden bg-white p-10 rounded-2xl border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 text-left flex gap-8 items-center"
+                class="group relative overflow-hidden bg-card p-10 rounded-2xl border border-border shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 text-left flex gap-8 items-center"
             >
                 <div
-                    class="absolute top-0 right-0 w-32 h-32 bg-amber-50/50 rounded-bl-[5rem] -mr-8 -mt-8 group-hover:scale-110 transition-transform"
+                    class="absolute top-0 right-0 w-32 h-32 bg-gold/10 rounded-bl-[5rem] -mr-8 -mt-8 group-hover:scale-110 transition-transform"
                 ></div>
                 <div
-                    class="w-20 h-20 bg-amber-100 text-amber-700 rounded-2xl flex items-center justify-center shrink-0 shadow-inner group-hover:rotate-6 transition-transform"
+                    class="w-20 h-20 bg-gold/15 text-gold-text rounded-2xl flex items-center justify-center shrink-0 shadow-inner group-hover:rotate-6 transition-transform"
                 >
                     <PenTool size={36} />
                 </div>
                 <div>
                     <h3
-                        class="text-2xl font-black text-slate-900 mb-2 font-serif"
+                        class="text-2xl font-black text-foreground mb-2 font-serif"
                     >
                         Draft Ethical Will
                     </h3>
-                    <p class="text-slate-500 text-lg leading-snug">
+                    <p class="text-muted-foreground text-lg leading-snug">
                         Share your values, life lessons, and hopes for the next
                         generation.
                     </p>
                 </div>
                 <div
-                    class="ml-auto w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-[#4A7C74] group-hover:text-white transition-all"
+                    class="ml-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-all"
                 >
                     <ArrowRight size={20} />
                 </div>
@@ -674,29 +674,29 @@
 
             <button
                 onclick={() => startEmotionalFlow("spouse")}
-                class="group relative overflow-hidden bg-white p-10 rounded-2xl border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 text-left flex gap-8 items-center"
+                class="group relative overflow-hidden bg-card p-10 rounded-2xl border border-border shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 text-left flex gap-8 items-center"
             >
                 <div
-                    class="absolute top-0 right-0 w-32 h-32 bg-rose-50/50 rounded-bl-[5rem] -mr-8 -mt-8 group-hover:scale-110 transition-transform"
+                    class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[5rem] -mr-8 -mt-8 group-hover:scale-110 transition-transform"
                 ></div>
                 <div
-                    class="w-20 h-20 bg-primary/10 text-primary rounded-2xl flex items-center justify-center shrink-0 shadow-inner group-hover:-rotate-6 transition-transform"
+                    class="w-20 h-20 bg-primary-soft text-primary-hover rounded-2xl flex items-center justify-center shrink-0 shadow-inner group-hover:-rotate-6 transition-transform"
                 >
                     <Heart size={36} />
                 </div>
                 <div>
                     <h3
-                        class="text-2xl font-black text-slate-900 mb-2 font-serif"
+                        class="text-2xl font-black text-foreground mb-2 font-serif"
                     >
                         Letter to Loved Ones
                     </h3>
-                    <p class="text-slate-500 text-lg leading-snug">
+                    <p class="text-muted-foreground text-lg leading-snug">
                         Leave a personal, heartfelt message for your spouse or
                         children.
                     </p>
                 </div>
                 <div
-                    class="ml-auto w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-primary group-hover:text-primary-foreground transition-all"
+                    class="ml-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-all"
                 >
                     <ArrowRight size={20} />
                 </div>
@@ -706,13 +706,13 @@
         {#if savedLetters.length > 0}
             <!-- Saved letters: reopen to keep writing -->
             <div class="space-y-4" data-testid="saved-letters">
-                <h3 class="text-xl font-black text-slate-900 font-serif">
+                <h3 class="text-xl font-black text-foreground font-serif">
                     Your letters
                 </h3>
                 {#if viewMode === "table"}
-                    <div class="overflow-x-auto bg-white rounded-2xl border border-slate-100 shadow-sm">
+                    <div class="overflow-x-auto bg-card rounded-2xl border border-border shadow-sm">
                         <table class="w-full text-left text-sm" data-testid="saved-letters-table">
-                            <thead class="text-[10px] font-black uppercase tracking-widest text-slate-500 border-b border-slate-100">
+                            <thead class="text-[10px] font-black uppercase tracking-widest text-muted-foreground border-b border-border">
                                 <tr>
                                     <th class="px-5 py-3">Letter</th>
                                     <th class="px-5 py-3">For</th>
@@ -723,10 +723,10 @@
                             </thead>
                             <tbody>
                                 {#each savedLetters as letter (letter.id)}
-                                    <tr class="border-b border-slate-50 last:border-0" data-testid="saved-letter-row">
-                                        <td class="px-5 py-3 font-bold text-slate-900">{letter.title}</td>
-                                        <td class="px-5 py-3 text-slate-600">{letter.recipientName}</td>
-                                        <td class="px-5 py-3 text-slate-500">
+                                    <tr class="border-b border-border last:border-0" data-testid="saved-letter-row">
+                                        <td class="px-5 py-3 font-bold text-foreground">{letter.title}</td>
+                                        <td class="px-5 py-3 text-muted-foreground">{letter.recipientName}</td>
+                                        <td class="px-5 py-3 text-muted-foreground">
                                             {#if letter.triggerDate}
                                                 {new Date(letter.triggerDate + "T00:00:00").toLocaleDateString()}
                                             {/if}
@@ -736,21 +736,21 @@
                                         </td>
                                         <td class="px-5 py-3">
                                             {#if letter.isLocked}
-                                                <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-stone-100 text-stone-600">On hold</span>
+                                                <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-muted text-muted-foreground">On hold</span>
                                             {:else}
-                                                <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-primary/10 text-primary">Ready to read</span>
+                                                <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-primary-soft text-primary-hover">Ready to read</span>
                                             {/if}
                                         </td>
                                         <td class="px-5 py-3 whitespace-nowrap text-right">
                                             <button
                                                 onclick={() => viewLetter(letter)}
-                                                class="px-3 py-1.5 rounded-lg bg-[#4A7C74] text-white text-xs font-bold hover:opacity-90"
+                                                class="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:opacity-90"
                                             >
                                                 Continue writing
                                             </button>
                                             <button
                                                 onclick={() => deleteLetter(letter.id, letter.recipientName || letter.title)}
-                                                class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-900"
+                                                class="px-3 py-1.5 rounded-lg text-xs font-bold text-muted-foreground hover:text-foreground"
                                             >
                                                 Remove this letter
                                             </button>
@@ -764,38 +764,38 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {#each savedLetters as letter (letter.id)}
                         <div
-                            class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col gap-3"
+                            class="bg-card p-6 rounded-2xl border border-border shadow-sm flex flex-col gap-3"
                             data-testid="saved-letter"
                         >
                             <div class="flex items-start justify-between gap-3">
-                                <h4 class="font-bold text-slate-900 leading-snug">
+                                <h4 class="font-bold text-foreground leading-snug">
                                     {letter.title}
                                 </h4>
                                 {#if letter.isLocked}
                                     <span
-                                        class="shrink-0 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-stone-100 text-stone-600"
+                                        class="shrink-0 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-muted text-muted-foreground"
                                         >On hold</span
                                     >
                                 {:else}
                                     <span
-                                        class="shrink-0 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-primary/10 text-primary"
+                                        class="shrink-0 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-primary-soft text-primary-hover"
                                         >Ready to read</span
                                     >
                                 {/if}
                             </div>
                             {#if letter.recipientName}
-                                <p class="text-sm text-slate-600">
+                                <p class="text-sm text-muted-foreground">
                                     For {letter.recipientName}
                                 </p>
                             {/if}
                             {#if letter.triggerDate}
-                                <p class="text-xs text-slate-500">
+                                <p class="text-xs text-muted-foreground">
                                     {new Date(letter.triggerDate + "T00:00:00").toLocaleDateString()}
                                     · Saved with your chosen date
                                 </p>
                             {/if}
                             {#if letter.triggerMilestone}
-                                <p class="text-xs text-slate-500">
+                                <p class="text-xs text-muted-foreground">
                                     {milestoneLabel(letter.triggerMilestone)}
                                     · Saved with your chosen milestone
                                 </p>
@@ -803,13 +803,13 @@
                             <div class="flex items-center gap-1 mt-auto pt-2" data-testid="saved-letter-actions">
                                 <button
                                     onclick={() => viewLetter(letter)}
-                                    class="shrink-0 whitespace-nowrap px-4 py-2 rounded-xl bg-[#4A7C74] text-white text-sm font-bold hover:opacity-90"
+                                    class="shrink-0 whitespace-nowrap px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90"
                                 >
                                     Continue writing
                                 </button>
                                 <button
                                     onclick={() => deleteLetter(letter.id, letter.recipientName || letter.title)}
-                                    class="shrink-0 whitespace-nowrap px-3 py-2 rounded-xl text-sm font-bold text-slate-500 hover:text-slate-900"
+                                    class="shrink-0 whitespace-nowrap px-3 py-2 rounded-xl text-sm font-bold text-muted-foreground hover:text-foreground"
                                 >
                                     Remove this letter
                                 </button>
@@ -824,7 +824,7 @@
         <!-- Category Browser -->
         <div class="space-y-8">
             <div
-                class="flex flex-col md:flex-row gap-6 items-center justify-between border-b border-slate-100 pb-8"
+                class="flex flex-col md:flex-row gap-6 items-center justify-between border-b border-border pb-8"
             >
                 <div class="flex flex-wrap items-center gap-2">
                     {#each categories as cat}
@@ -832,8 +832,8 @@
                             onclick={() => (filterCategory = cat)}
                             class="px-5 py-2.5 rounded-2xl text-xs font-bold tracking-wider transition-all {filterCategory ===
                             cat
-                                ? 'bg-slate-900 text-white shadow-xl'
-                                : 'bg-white text-slate-500 hover:text-slate-900 border border-slate-200'}"
+                                ? 'bg-primary text-primary-foreground shadow-xl'
+                                : 'bg-card text-muted-foreground hover:text-foreground border border-border'}"
                         >
                             {cat}
                         </button>
@@ -842,7 +842,7 @@
 
                 <div class="relative w-full md:w-80">
                     <Search
-                        class="absolute left-4 top-3.5 text-slate-400"
+                        class="absolute left-4 top-3.5 text-muted-foreground"
                         size={18}
                     />
                     <input
@@ -850,7 +850,7 @@
                         bind:value={searchQuery}
                         aria-label="Search templates"
                         placeholder="Search templates..."
-                        class="w-full px-4 py-3 pl-12 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                        class="w-full px-4 py-3 pl-12 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                     />
                 </div>
             </div>
@@ -860,12 +860,12 @@
                     {@const Icon = categoryIcons[ template.category ] || FileText}
                     <button
                         onclick={() => selectTransactional(template)}
-                        class="group bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 text-left flex flex-col justify-between min-h-[160px]"
+                        class="group bg-card p-6 rounded-2xl border border-border shadow-sm hover:shadow-xl transition-all duration-300 text-left flex flex-col justify-between min-h-[160px]"
                     >
                         <div>
                             <div class="flex items-center gap-3 mb-4">
                                 <div
-                                    class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-[#4A7C74] group-hover:text-white transition-all"
+                                    class="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-all"
                                 >
                                     <Icon
                                         size={20}
@@ -877,16 +877,16 @@
                                 >
                             </div>
                             <h3
-                                class="text-xl font-bold text-slate-900 tracking-tight group-hover:text-primary transition-colors"
+                                class="text-xl font-bold text-foreground tracking-tight group-hover:text-primary transition-colors"
                             >
                                 {template.title}
                             </h3>
                         </div>
                         <div
-                            class="flex items-center justify-between mt-6 opacity-40 group-hover:opacity-100 transition-opacity"
+                            class="flex items-center justify-between mt-6"
                         >
                             <span
-                                class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter"
+                                class="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter"
                                 >Draft Template</span
                             >
                             <ArrowRight size={16} class="text-primary" />
@@ -903,13 +903,13 @@
             <div class="flex items-center justify-between">
                 <button
                     onclick={resetSelection}
-                    class="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors"
+                    class="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
                 >
                     <ArrowLeft size={16} /> Back to Library
                 </button>
                 {#if filledFromProfile}
                     <div
-                        class="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full text-xs font-bold"
+                        class="flex items-center gap-2 px-4 py-2 bg-primary-soft text-primary-hover rounded-full text-xs font-bold"
                     >
                         <Sparkles size={14} />
                         <span>Auto-mapped from Estate Profile</span>
@@ -918,13 +918,13 @@
             </div>
 
             <div
-                class="bg-white p-12 rounded-2xl border border-slate-100 shadow-2xl shadow-slate-900/5 space-y-10"
+                class="bg-card p-12 rounded-2xl border border-border shadow-2xl shadow-slate-900/5 space-y-10"
             >
                 <div class="text-center space-y-2">
-                    <h2 class="text-3xl font-black text-slate-900 font-serif">
+                    <h2 class="text-3xl font-black text-foreground font-serif">
                         Customize {selectedTemplate.title}
                     </h2>
-                    <p class="text-slate-500">
+                    <p class="text-muted-foreground">
                         Share a few details and we'll fill in your formal
                         letter.
                     </p>
@@ -935,14 +935,14 @@
                         <div class="space-y-3">
                             <label
                                 for="letter-var-{i}"
-                                class="block text-[11px] font-black text-slate-800 uppercase tracking-widest pl-1"
+                                class="block text-[11px] font-black text-foreground uppercase tracking-widest pl-1"
                                 >{variable}</label
                             >
                             <input
                                 id="letter-var-{i}"
                                 type="text"
                                 bind:value={templateVariables[variable]}
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                                 placeholder="Share {variable.toLowerCase()}..."
                             />
                         </div>
@@ -952,7 +952,7 @@
                 <div class="pt-8 flex items-center justify-center gap-6">
                     <button
                         onclick={applyVariables}
-                        class="text-sm font-black text-slate-400 hover:text-slate-900 uppercase tracking-widest transition-colors"
+                        class="text-sm font-black text-muted-foreground hover:text-foreground uppercase tracking-widest transition-colors"
                     >
                         Continue with blank fields
                     </button>
@@ -976,18 +976,18 @@
                 <div class="flex items-center justify-between gap-4">
                     <button aria-label="Back to Your letters"
                         onclick={() => (mode = "menu")}
-                        class="p-4 bg-white border border-slate-100 rounded-2xl text-slate-400 hover:text-slate-900 transition-all"
+                        class="p-4 bg-card border border-border rounded-2xl text-muted-foreground hover:text-foreground transition-all"
                     >
                         <ArrowLeft size={20} />
                     </button>
                     <div class="flex-1">
                         <h2
-                            class="text-3xl font-black text-slate-900 font-serif leading-tight"
+                            class="text-3xl font-black text-foreground font-serif leading-tight"
                         >
                             {selectedTemplate.title}
                         </h2>
                         <p
-                            class="text-slate-500 font-bold text-xs uppercase tracking-widest mt-1"
+                            class="text-muted-foreground font-bold text-xs uppercase tracking-widest mt-1"
                         >
                             Review & Refine Draft
                         </p>
@@ -996,28 +996,28 @@
                         onclick={saveToVault}
                         disabled={saving}
                         aria-busy={saving}
-                        class="p-4 bg-[#4A7C74] text-white rounded-2xl shadow-xl shadow-[#4A7C74]/20"
+                        class="p-4 bg-primary text-primary-foreground rounded-2xl shadow-xl shadow-primary/20"
                     >
                         <ArrowRight size={20} />
                     </button>
                 </div>
 
                 <div
-                    class="bg-indigo-50/50 border border-indigo-100 p-8 rounded-2xl flex gap-6 items-center"
+                    class="bg-primary/5 border border-primary/20 p-8 rounded-2xl flex gap-6 items-center"
                 >
                     <div
-                        class="w-14 h-14 bg-primary/10 text-primary rounded-2xl flex items-center justify-center shrink-0 shadow-inner"
+                        class="w-14 h-14 bg-primary-soft text-primary-hover rounded-2xl flex items-center justify-center shrink-0 shadow-inner"
                     >
                         <FileText size={28} />
                     </div>
                     <div>
                         <h4
-                            class="font-black text-indigo-900 uppercase tracking-tighter text-sm"
+                            class="font-black text-foreground uppercase tracking-tighter text-sm"
                         >
                             Audience: {selectedTemplate.audience}
                         </h4>
                         <p
-                            class="text-indigo-800/70 text-sm font-medium leading-relaxed mt-1"
+                            class="text-muted-foreground text-sm font-medium leading-relaxed mt-1"
                         >
                             This letter is structured to satisfy typical
                             requirements for {selectedTemplate.category?.toLowerCase() ||
@@ -1036,7 +1036,7 @@
                     bind:value={generatedLetter}
                     aria-label="Your letter"
                     placeholder="Your draft will appear here once you've shared a few details."
-                    class="block w-full bg-white p-12 rounded-2xl border shadow-2xl shadow-slate-900/5 font-mono text-base leading-relaxed text-slate-700 h-[600px] resize-none paper-texture ring-8 ring-slate-50/50 focus:outline-none focus:border-primary"
+                    class="block w-full bg-card p-12 rounded-2xl border shadow-2xl shadow-slate-900/5 font-mono text-base leading-relaxed text-slate-800 h-[600px] resize-none paper-texture ring-8 ring-muted/50 focus:outline-none focus:border-primary"
                 ></textarea>
             </div>
 
@@ -1044,14 +1044,14 @@
             <div class="space-y-8 lg:pt-24">
                 {#if selectedTemplate.requiredDocs && selectedTemplate.requiredDocs.length > 0}
                     <div
-                        class="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm space-y-6"
+                        class="bg-card p-8 rounded-2xl border border-border shadow-sm space-y-6"
                         in:slide
                     >
                         <h4
-                            class="font-black text-slate-900 uppercase tracking-widest text-xs flex items-center gap-3"
+                            class="font-black text-foreground uppercase tracking-widest text-xs flex items-center gap-3"
                         >
                             <span
-                                class="w-4 h-4 bg-primary/10 text-primary rounded-lg flex items-center justify-center"
+                                class="w-4 h-4 bg-primary-soft text-primary-hover rounded-lg flex items-center justify-center"
                                 ><CircleCheck size={10} /></span
                             >
                             Documents that may help
@@ -1059,13 +1059,13 @@
                         <ul class="space-y-4">
                             {#each selectedTemplate.requiredDocs as doc}
                                 <li
-                                    class="flex items-start gap-3 bg-slate-50 p-4 rounded-xl border border-slate-100/50"
+                                    class="flex items-start gap-3 bg-muted p-4 rounded-xl border border-border/50"
                                 >
                                     <div
                                         class="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0"
                                     ></div>
                                     <span
-                                        class="text-sm font-bold text-slate-600 leading-snug"
+                                        class="text-sm font-bold text-muted-foreground leading-snug"
                                         >{doc}</span
                                     >
                                 </li>
@@ -1076,17 +1076,17 @@
 
                 {#if selectedTemplate.followUp}
                     <div
-                        class="bg-[#FDFBF7] p-8 rounded-2xl border border-stone-200 shadow-sm space-y-4"
+                        class="bg-card p-8 rounded-2xl border border-border shadow-sm space-y-4"
                         in:slide
                     >
                         <h4
-                            class="font-black text-stone-900 uppercase tracking-widest text-xs flex items-center gap-3"
+                            class="font-black text-foreground uppercase tracking-widest text-xs flex items-center gap-3"
                         >
-                            <Sparkles size={16} class="text-amber-500" />
+                            <Sparkles size={16} class="text-gold-text" />
                             Expert Advice
                         </h4>
                         <p
-                            class="text-sm text-stone-600 leading-relaxed font-medium italic"
+                            class="text-sm text-muted-foreground leading-relaxed font-medium italic"
                         >
                             "{selectedTemplate.followUp}"
                         </p>
@@ -1097,7 +1097,7 @@
                     <button
                         onclick={printLetter}
                         disabled={!generatedLetter.trim()}
-                        class="py-3 rounded-xl font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                        class="py-3 rounded-xl font-bold text-muted-foreground bg-card border border-border hover:bg-muted flex items-center justify-center gap-2 transition-all disabled:opacity-50"
                     >
                         <Printer size={16} /> Print
                     </button>
@@ -1105,7 +1105,7 @@
                         onclick={downloadLetterPDF}
                         disabled={pdfBusy || !generatedLetter.trim()}
                         aria-busy={pdfBusy}
-                        class="py-3 rounded-xl font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                        class="py-3 rounded-xl font-bold text-muted-foreground bg-card border border-border hover:bg-muted flex items-center justify-center gap-2 transition-all disabled:opacity-50"
                     >
                         <Download size={16} /> Download PDF
                     </button>
@@ -1115,7 +1115,7 @@
                     onclick={saveToVault}
                     disabled={saving}
                     aria-busy={saving}
-                    class="w-full bg-slate-900 text-white p-6 rounded-2xl font-black flex items-center justify-center gap-3 shadow-2xl shadow-slate-900/30 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+                    class="w-full bg-primary text-primary-foreground p-6 rounded-2xl font-black flex items-center justify-center gap-3 shadow-2xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
                 >
                     {saving ? "Saving..." : "Save my letter"} <ArrowRight size={20} />
                 </button>
@@ -1129,19 +1129,19 @@
                 <div class="flex items-center gap-4">
                     <button
                         onclick={() => (mode = "menu")}
-                        class="p-3 bg-white border border-slate-100 rounded-xl text-slate-400 hover:text-slate-900"
+                        class="p-3 bg-card border border-border rounded-xl text-muted-foreground hover:text-foreground"
                         aria-label="Back to Your letters"
                     >
                         <ArrowLeft size={18} />
                     </button>
                     <div>
                         <h2
-                            class="text-3xl font-black text-slate-900 font-serif"
+                            class="text-3xl font-black text-foreground font-serif"
                         >
                             Refine Your Draft
                         </h2>
                         <p
-                            class="text-[10px] font-black text-primary uppercase tracking-[0.2em] mt-1 italic"
+                            class="text-[10px] font-black text-primary-hover uppercase tracking-[0.2em] mt-1 italic"
                         >
                             Personal Reflection in Progress
                         </p>
@@ -1153,7 +1153,7 @@
                         onclick={addWritingPrompt}
                         data-testid="writing-prompt"
                         title="Adds a reflection question to your draft"
-                        class="flex items-center gap-3 px-6 py-3 rounded-2xl font-black text-sm transition-all bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+                        class="flex items-center gap-3 px-6 py-3 rounded-2xl font-black text-sm transition-all bg-card border border-border text-muted-foreground hover:bg-muted"
                     >
                         <Sparkles size={18} class="text-primary" />
                         A gentle prompt
@@ -1161,7 +1161,7 @@
                     <button
                         onclick={printLetter}
                         disabled={!generatedLetter.trim()}
-                        class="flex items-center gap-2 px-5 py-3 rounded-2xl font-black text-sm bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all disabled:opacity-50"
+                        class="flex items-center gap-2 px-5 py-3 rounded-2xl font-black text-sm bg-card border border-border text-muted-foreground hover:bg-muted transition-all disabled:opacity-50"
                     >
                         <Printer size={18} /> Print
                     </button>
@@ -1169,7 +1169,7 @@
                         onclick={downloadLetterPDF}
                         disabled={pdfBusy || !generatedLetter.trim()}
                         aria-busy={pdfBusy}
-                        class="flex items-center gap-2 px-5 py-3 rounded-2xl font-black text-sm bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all disabled:opacity-50"
+                        class="flex items-center gap-2 px-5 py-3 rounded-2xl font-black text-sm bg-card border border-border text-muted-foreground hover:bg-muted transition-all disabled:opacity-50"
                     >
                         <Download size={18} /> Download PDF
                     </button>
@@ -1177,7 +1177,7 @@
                         onclick={saveToVault}
                         disabled={saving}
                         aria-busy={saving}
-                        class="flex items-center gap-2 px-8 py-3 bg-[#4A7C74] text-white rounded-xl font-black shadow-xl shadow-[#4A7C74]/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+                        class="flex items-center gap-2 px-8 py-3 bg-primary text-primary-foreground rounded-xl font-black shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
                     >
                         <Save size={18} />
                         {saving ? "Saving..." : "Save my letter"}
@@ -1190,27 +1190,27 @@
                 <div class="lg:col-span-2 space-y-8">
                     <!-- Legacy Trigger Settings (New Feature) -->
                     <div
-                        class="bg-indigo-50/50 border border-indigo-100 p-8 rounded-2xl space-y-6"
+                        class="bg-primary/5 border border-primary/20 p-8 rounded-2xl space-y-6"
                     >
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {@render recipientPicker()}
                             <div class="space-y-2">
                                 <span
-                                    class="block text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+                                    class="block text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1"
                                     >When they can read it</span
                                 >
                                 <label
-                                    class="flex items-start gap-3 px-4 py-3 rounded-xl border border-slate-200 bg-white cursor-pointer"
+                                    class="flex items-start gap-3 px-4 py-3 rounded-xl border border-border bg-card cursor-pointer"
                                 >
                                     <input
                                         type="checkbox"
                                         bind:checked={letterHold}
-                                        class="mt-1 accent-[#4A7C74]"
+                                        class="mt-1 accent-primary"
                                         data-testid="letter-hold"
                                     />
-                                    <span class="text-sm text-slate-700">
+                                    <span class="text-sm text-foreground">
                                         <span class="font-bold">Keep on hold</span><br />
-                                        <span class="text-xs text-slate-500"
+                                        <span class="text-xs text-muted-foreground"
                                             >{letterHold
                                                 ? "This letter stays with you until you release it."
                                                 : "Ready for them to read in their view."}</span
@@ -1223,7 +1223,7 @@
                         <div class="flex items-center gap-3">
                             <History size={20} class="text-primary" />
                             <h4
-                                class="font-bold text-slate-900 uppercase tracking-widest text-xs"
+                                class="font-bold text-foreground uppercase tracking-widest text-xs"
                             >
                                 A date or milestone that matters
                             </h4>
@@ -1232,26 +1232,26 @@
                             <div class="space-y-2">
                                 <label
                                     for="letter-release-date"
-                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+                                    class="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1"
                                     >Chosen date</label
                                 >
                                 <input
                                     id="letter-release-date"
                                     type="date"
                                     bind:value={letterTriggerDate}
-                                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                    class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                                 />
                             </div>
                             <div class="space-y-2">
                                 <label
                                     for="letter-milestone"
-                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+                                    class="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1"
                                     >Or a milestone</label
                                 >
                                 <select
                                     id="letter-milestone"
                                     bind:value={letterTriggerMilestone}
-                                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800 appearance-none"
+                                    class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground appearance-none"
                                 >
                                     <option value=""
                                         >Choose a milestone, if you like</option
@@ -1268,14 +1268,14 @@
                             </div>
                         </div>
                         <p
-                            class="text-[10px] text-primary/60 font-medium italic"
+                            class="text-[10px] text-muted-foreground font-medium italic"
                         >
                             Saved with your chosen date or milestone, and shown
                             with the letter.
                         </p>
 
                         <!-- Custom Fields -->
-                        <div class="pt-4 mt-4 border-t border-indigo-100">
+                        <div class="pt-4 mt-4 border-t border-primary/20">
                             <CustomFieldsManager
                                 entityType="letter"
                                 bind:data={customAttributes}
@@ -1285,11 +1285,11 @@
 
                     <div class="relative group">
                         <div
-                            class="absolute -inset-4 bg-gradient-to-r from-[#4A7C74]/5 to-blue-500/5 rounded-2xl blur-2xl opacity-50 group-hover:opacity-100 transition-opacity"
+                            class="absolute -inset-4 bg-gradient-to-r from-primary/5 to-primary/10 rounded-2xl blur-2xl opacity-50 group-hover:opacity-100 transition-opacity"
                         ></div>
                         <div
                             data-letter-editor
-                            class="relative bg-[#FDFBF7] p-16 rounded-2xl border border-stone-200 shadow-2xl font-serif text-xl leading-[2] text-stone-800 paper-texture ring-8 ring-stone-50/30 min-h-[700px]"
+                            class="relative bg-[#FDFBF7] p-16 rounded-2xl border border-border shadow-2xl font-serif text-xl leading-[2] text-slate-800 paper-texture ring-8 ring-muted/30 min-h-[700px]"
                         >
                             <SmartTextarea
                                 bind:value={generatedLetter}
@@ -1315,22 +1315,22 @@
                     <!-- Status card: what is true about where a letter is kept -->
                     <div class="space-y-4">
                         <div
-                            class="bg-emerald-50 p-6 rounded-2xl border border-emerald-100 flex gap-4"
+                            class="bg-success/10 p-6 rounded-2xl border border-success/20 flex gap-4"
                             data-testid="letter-kept-note"
                         >
                             <div
-                                class="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center shrink-0"
+                                class="w-10 h-10 bg-primary-soft text-primary-hover rounded-xl flex items-center justify-center shrink-0"
                             >
                                 <Save size={20} />
                             </div>
                             <div>
                                 <h4
-                                    class="font-black text-emerald-900 text-xs uppercase tracking-widest mb-1"
+                                    class="font-black text-success text-xs uppercase tracking-widest mb-1"
                                 >
                                     Kept in your account
                                 </h4>
                                 <p
-                                    class="text-[11px] text-emerald-800/70 font-medium leading-tight"
+                                    class="text-[11px] text-foreground font-medium leading-tight"
                                 >
                                     Each time you choose Save my letter, this letter is kept in your account, ready to open and continue on any device.
                                 </p>
@@ -1351,14 +1351,14 @@
                         <div
                             class="w-12 h-2 rounded-full {i <=
                             currentPromptIndex
-                                ? 'bg-[#4A7C74]'
-                                : 'bg-slate-200'} transition-all duration-500"
+                                ? 'bg-primary'
+                                : 'bg-border'} transition-all duration-500"
                         ></div>
                     {/each}
                 </div>
                 <button
                     onclick={resetSelection}
-                    class="text-xs font-black uppercase tracking-widest text-slate-400 hover:text-primary transition-colors"
+                    class="text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors"
                 >
                     Maybe later
                 </button>
@@ -1366,13 +1366,13 @@
 
             <div class="space-y-6">
                 <p
-                    class="text-[10px] font-black uppercase tracking-[0.3em] text-[#4A7C74] text-center"
+                    class="text-[10px] font-black uppercase tracking-[0.3em] text-primary-hover text-center"
                 >
                     Step {currentPromptIndex + 1} of 3
                 </p>
                 <div class="flex flex-col items-center gap-4 px-4">
                     <h2
-                        class="text-4xl font-black text-slate-900 font-serif leading-tight text-center"
+                        class="text-4xl font-black text-foreground font-serif leading-tight text-center"
                     >
                         {currentQuestion}
                     </h2>
@@ -1385,12 +1385,12 @@
 
             <div class="relative group">
                 <div
-                    class="absolute -inset-4 bg-gradient-to-b from-[#4A7C74]/10 to-transparent rounded-2xl blur-xl opacity-50 group-hover:opacity-80 transition-opacity"
+                    class="absolute -inset-4 bg-gradient-to-b from-primary/10 to-transparent rounded-2xl blur-xl opacity-50 group-hover:opacity-80 transition-opacity"
                 ></div>
                 {#key currentPromptIndex}
                     <div
                         data-reflection-box
-                        class="relative w-full h-80 bg-white border-2 border-slate-100 rounded-2xl shadow-2xl focus-within:border-[#4A7C74] transition-all overflow-hidden p-8"
+                        class="relative w-full h-80 bg-card border-2 border-border rounded-2xl shadow-2xl focus-within:border-primary transition-all overflow-hidden p-8"
                     >
                         <SmartTextarea
                             bind:value={reflections[currentPromptIndex]}
@@ -1410,13 +1410,13 @@
                 <button
                     onclick={nextEmotionalPrompt}
                     disabled={!reflections[currentPromptIndex]}
-                    class="group flex items-center gap-4 bg-[#4A7C74] text-white px-16 py-6 rounded-2xl font-black text-xl shadow-2xl shadow-[#4A7C74]/30 hover:scale-105 active:scale-95 transition-all disabled:opacity-20 disabled:grayscale"
+                    class="group flex items-center gap-4 bg-primary text-primary-foreground px-16 py-6 rounded-2xl font-black text-xl shadow-2xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all disabled:opacity-20 disabled:grayscale"
                 >
                     {currentPromptIndex === 2
                         ? "Create my letter"
                         : "Continue when ready"}
                     <div
-                        class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center group-hover:translate-x-2 transition-transform"
+                        class="w-10 h-10 rounded-full bg-card/20 flex items-center justify-center group-hover:translate-x-2 transition-transform"
                     >
                         <ArrowRight size={24} />
                     </div>

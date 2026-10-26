@@ -263,18 +263,18 @@
         transition:fade
     >
         <div
-            class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
+            class="bg-card rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
             in:fly={{ y: 20 }}
         >
             <div
-                class="p-6 border-b border-slate-100 flex justify-between items-center"
+                class="p-6 border-b border-border flex justify-between items-center"
             >
-                <h3 class="font-serif font-bold text-xl text-[#304743]">
+                <h3 class="font-serif font-bold text-xl text-primary-deep dark:text-primary-hover">
                     {editingArchive ? "Edit Location" : "Add Legacy Location"}
                 </h3>
                 <button aria-label="Close"
                     onclick={() => (showArchiveModal = false)}
-                    class="text-slate-400 hover:text-slate-600"
+                    class="text-muted-foreground hover:text-foreground"
                 >
                     <X size={20} />
                 </button>
@@ -283,55 +283,55 @@
             <div class="p-6 space-y-4">
                 <div class="space-y-2">
                     <label for="memory-platform"
-                        class="text-xs font-bold uppercase text-slate-500 tracking-wider"
+                        class="text-xs font-bold uppercase text-muted-foreground tracking-wider"
                         >Platform / Device Name</label
                     >
                     <input id="memory-platform"
                         type="text"
                         bind:value={archiveForm.platform}
                         placeholder="e.g. iCloud, Google Photos, My Passport Drive"
-                        class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#4A7C74]/20 focus:border-[#4A7C74] outline-none font-medium"
+                        class="w-full px-4 py-2 rounded-lg border border-border focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium"
                     />
                 </div>
 
                 <div class="space-y-2">
                     <label for="memory-location-details"
-                        class="text-xs font-bold uppercase text-slate-500 tracking-wider"
+                        class="text-xs font-bold uppercase text-muted-foreground tracking-wider"
                         >Access Instructions</label
                     >
                     <textarea id="memory-location-details"
                         bind:value={archiveForm.locationDetails}
                         placeholder="How do executors access this? e.g. 'Login details in password vault' or 'Physical drive in fireproof safe'"
-                        class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#4A7C74]/20 focus:border-[#4A7C74] outline-none font-medium h-24 resize-none"
+                        class="w-full px-4 py-2 rounded-lg border border-border focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium h-24 resize-none"
                     ></textarea>
                 </div>
 
                 <div class="space-y-2">
                     <label for="memory-access-url"
-                        class="text-xs font-bold uppercase text-slate-500 tracking-wider"
+                        class="text-xs font-bold uppercase text-muted-foreground tracking-wider"
                         >Direct URL (Optional)</label
                     >
                     <div class="relative">
                         <ExternalLink
                             size={16}
-                            class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                            class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                         />
                         <input id="memory-access-url"
                             type="text"
                             bind:value={archiveForm.accessUrl}
                             placeholder="https://..."
-                            class="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#4A7C74]/20 focus:border-[#4A7C74] outline-none font-medium text-sm"
+                            class="w-full pl-10 pr-4 py-2 rounded-lg border border-border focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium text-sm"
                         />
                     </div>
                 </div>
             </div>
 
             <div
-                class="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3"
+                class="p-6 bg-muted border-t border-border flex justify-end gap-3"
             >
                 <button
                     onclick={() => (showArchiveModal = false)}
-                    class="px-4 py-2 font-bold text-slate-500 hover:text-slate-700 text-sm"
+                    class="px-4 py-2 font-bold text-muted-foreground hover:text-foreground text-sm"
                 >
                     Maybe later
                 </button>
@@ -339,7 +339,7 @@
                     onclick={saveArchive}
                     disabled={!archiveForm.platform ||
                         !archiveForm.locationDetails}
-                    class="px-6 py-2 bg-[#4A7C74] text-white rounded-lg font-bold text-sm shadow-sm hover:bg-[#3b635d] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+                    class="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-bold text-sm shadow-sm hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
                 >
                     <Save size={16} /> Save Location
                 </button>
@@ -364,14 +364,14 @@
 
     <!-- Tabs / Navigation -->
     <div
-        class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 border-b border-slate-100 pb-4"
+        class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 border-b border-border pb-4"
     >
-        <div class="flex p-1 bg-slate-100 rounded-full">
+        <div class="flex p-1 bg-muted rounded-full">
             <button
                 class="px-6 py-2 rounded-full font-bold text-sm transition-all {activeTab ===
                 'gallery'
-                    ? 'bg-white text-[#4A7C74] shadow-sm'
-                    : 'text-slate-500 hover:text-[#4A7C74]'}"
+                    ? 'bg-card text-primary shadow-sm'
+                    : 'text-muted-foreground hover:text-primary'}"
                 onclick={() => (activeTab = "gallery")}
             >
                 Curated Gallery
@@ -379,8 +379,8 @@
             <button
                 class="px-6 py-2 rounded-full font-bold text-sm transition-all {activeTab ===
                 'archives'
-                    ? 'bg-white text-[#4A7C74] shadow-sm'
-                    : 'text-slate-500 hover:text-[#4A7C74]'}"
+                    ? 'bg-card text-primary shadow-sm'
+                    : 'text-muted-foreground hover:text-primary'}"
                 onclick={() => (activeTab = "archives")}
             >
                 External Archives
@@ -391,7 +391,7 @@
             {#if activeTab === "archives"}
                 <button
                     onclick={() => openArchiveModal()}
-                    class="flex items-center gap-2 px-4 py-2 bg-[#4A7C74] text-white rounded-lg font-bold text-sm hover:bg-[#3b635d] transition-colors shadow-sm"
+                    class="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-bold text-sm hover:bg-primary-hover transition-colors shadow-sm"
                 >
                     <Plus size={16} /> Add Location
                 </button>
@@ -399,7 +399,7 @@
                 <DataViewToggle module="visual-memories" />
                 <button
                     onclick={triggerUpload}
-                    class="flex items-center gap-2 px-4 py-2 bg-[#4A7C74] text-white rounded-lg font-bold text-sm hover:bg-[#3b635d] transition-colors shadow-sm"
+                    class="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-bold text-sm hover:bg-primary-hover transition-colors shadow-sm"
                 >
                     {#if uploadingCount > 0}
                         <Loader2 size={16} class="animate-spin" /> Saving your memories…
@@ -415,14 +415,14 @@
     {#if activeTab === "gallery"}
         <div in:fade>
             <div
-                class="bg-white rounded-2xl border border-slate-200 p-8 min-h-[400px] relative"
+                class="bg-card rounded-2xl border border-border p-8 min-h-[400px] relative"
             >
                 {#if hasMemories}
                     <div class="absolute top-8 left-8 z-10">
                         <button
                             class="text-sm font-bold px-3 py-1.5 rounded-lg transition-colors {isSelectionMode
-                                ? 'bg-indigo-100 text-indigo-700'
-                                : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}"
+                                ? 'bg-primary-soft text-primary-hover'
+                                : 'bg-muted text-muted-foreground hover:bg-border'}"
                             onclick={toggleSelectionMode}
                         >
                             {isSelectionMode
@@ -442,7 +442,7 @@
                         <div class="flex justify-center mt-6">
                             <button
                                 onclick={triggerUpload}
-                                class="text-sm font-bold text-[#4A7C74] hover:bg-[#4A7C74]/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                                class="text-sm font-bold text-primary hover:bg-primary/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
                             >
                                 <Image size={14} /> Upload First Memory
                             </button>
@@ -452,7 +452,7 @@
                     <div class="overflow-x-auto mt-12">
                         <table class="w-full text-left text-sm">
                             <thead>
-                                <tr class="border-b border-slate-200 text-xs font-bold uppercase tracking-wider text-slate-500">
+                                <tr class="border-b border-border text-xs font-bold uppercase tracking-wider text-muted-foreground">
                                     <th class="py-3 pr-4">Name</th>
                                     <th class="py-3 pr-4">Type</th>
                                     <th class="py-3 pr-4">Tags</th>
@@ -462,21 +462,21 @@
                             </thead>
                             <tbody>
                                 {#each visualMemories.items as memory (memory.id)}
-                                    <tr class="border-b border-slate-100">
-                                        <td class="py-3 pr-4 font-medium text-slate-800">{memory.name}</td>
-                                        <td class="py-3 pr-4 text-slate-600">{memory.type === "video" ? "Video" : "Photo"}</td>
+                                    <tr class="border-b border-border">
+                                        <td class="py-3 pr-4 font-medium text-foreground">{memory.name}</td>
+                                        <td class="py-3 pr-4 text-muted-foreground">{memory.type === "video" ? "Video" : "Photo"}</td>
                                         <td class="py-3 pr-4">
                                             <div class="flex flex-wrap gap-1">
                                                 {#each tagList(memory.tags) as tag}
-                                                    <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">{tag}</span>
+                                                    <span class="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">{tag}</span>
                                                 {/each}
                                             </div>
                                         </td>
                                         <td class="py-3 pr-4">
                                             <button
                                                 class="text-xs font-bold px-2 py-1 rounded-lg transition-colors {memory.is_favorite || (memory as any).isFavorite
-                                                    ? 'bg-rose-50 text-rose-600'
-                                                    : 'text-slate-500 hover:bg-slate-100'}"
+                                                    ? 'bg-primary-soft text-primary-hover'
+                                                    : 'text-muted-foreground hover:bg-muted'}"
                                                 aria-pressed={!!(memory.is_favorite || (memory as any).isFavorite)}
                                                 onclick={() => toggleVisualFavorite(Number(memory.id))}
                                             >
@@ -486,7 +486,7 @@
                                         <td class="py-3 text-right">
                                             <button
                                                 aria-label="Remove this item"
-                                                class="text-xs font-bold px-3 py-1.5 rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+                                                class="text-xs font-bold px-3 py-1.5 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                                                 onclick={() => handleRemoveMemory(Number(memory.id))}
                                             >
                                                 Remove this item
@@ -533,14 +533,14 @@
         <div in:fade>
             {#if !hasArchives}
                 <div
-                    class="bg-white rounded-2xl border border-slate-200 p-4 min-h-[400px] flex items-center justify-center"
+                    class="bg-card rounded-2xl border border-border p-4 min-h-[400px] flex items-center justify-center"
                 >
                     <EmptyState
                         title="Your memories live in many places"
                         whyMatters="<strong>Your family's photos and videos live in many places.</strong> iCloud, Google Photos, Dropbox, old hard drives, Facebook albums each hold irreplaceable memories.<br/><br/>Listing where they live helps your family find the visual story of your life: birthdays, vacations, quiet moments, family history."
                         encouragement="Start with just one location—wherever you store most of your photos. You can add more as you remember them."
                         icon={Image}
-                        iconClass="text-purple-500"
+                        iconClass="text-primary"
                         ctaLabel="Add first archive location"
                         onAction={() => openArchiveModal()}
                     />
@@ -560,10 +560,10 @@
                     <!-- Add Card -->
                     <button
                         onclick={() => openArchiveModal()}
-                        class="border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-slate-400 hover:border-[#4A7C74]/50 hover:bg-[#4A7C74]/5 hover:text-[#4A7C74] transition-all min-h-[160px] group"
+                        class="border-2 border-dashed border-border rounded-xl p-6 flex flex-col items-center justify-center text-muted-foreground hover:border-primary/50 hover:bg-primary/5 hover:text-primary transition-all min-h-[160px] group"
                     >
                         <div
-                            class="w-12 h-12 rounded-full bg-slate-50 group-hover:bg-white flex items-center justify-center mb-3 transition-colors"
+                            class="w-12 h-12 rounded-full bg-muted group-hover:bg-card flex items-center justify-center mb-3 transition-colors"
                         >
                             <Plus size={24} />
                         </div>

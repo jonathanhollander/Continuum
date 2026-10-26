@@ -58,28 +58,28 @@
 </script>
 
 <div
-    class="bg-white rounded-[2rem] border border-slate-100 shadow-xl overflow-hidden"
+    class="bg-card rounded-[2rem] border border-border shadow-xl overflow-hidden"
 >
-    <div class="p-6 bg-[#4A7C74] text-white flex items-center justify-between">
+    <div class="p-6 bg-primary text-primary-foreground flex items-center justify-between">
         <div class="flex items-center gap-3">
-            <div class="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
+            <div class="p-2 bg-card/20 rounded-xl backdrop-blur-sm">
                 <Sparkles size={18} />
             </div>
-            <h3 class="font-bold font-serif text-lg text-white">Gentle Helper</h3>
+            <h3 class="font-bold font-serif text-lg text-primary-foreground">Gentle Helper</h3>
         </div>
         <div class="flex bg-black/20 rounded-lg p-1 text-xs font-bold">
             <button
                 class="px-3 py-1 rounded-md transition-all {mode === 'draft'
-                    ? 'bg-white text-[#4A7C74] shadow-sm'
-                    : 'text-white/70 hover:text-white'}"
+                    ? 'bg-card text-primary shadow-sm'
+                    : 'text-primary-foreground hover:bg-black/10'}"
                 onclick={() => (mode = "draft")}
             >
                 Draft
             </button>
             <button
                 class="px-3 py-1 rounded-md transition-all {mode === 'refine'
-                    ? 'bg-white text-[#4A7C74] shadow-sm'
-                    : 'text-white/70 hover:text-white'}"
+                    ? 'bg-card text-primary shadow-sm'
+                    : 'text-primary-foreground hover:bg-black/10'}"
                 onclick={() => (mode = "refine")}
             >
                 Refine
@@ -91,20 +91,20 @@
         {#if mode === "draft"}
             <div class="space-y-4">
                 <p
-                    class="text-xs font-bold uppercase tracking-widest text-slate-400"
+                    class="text-xs font-bold uppercase tracking-widest text-muted-foreground"
                 >
                     Bullets to Narrative
                 </p>
                 <div class="space-y-2">
                     {#each bullets as bullet, i}
                         <div class="flex items-center gap-2">
-                            <span class="text-slate-300 font-bold text-xs"
+                            <span class="text-muted-foreground font-bold text-xs"
                                 >{i + 1}</span
                             >
                             <input
                                 type="text"
                                 bind:value={bullets[i]}
-                                class="w-full bg-slate-50 border-none rounded-xl px-4 py-2 text-sm font-medium focus:ring-2 focus:ring-[#4A7C74]/20"
+                                class="w-full bg-muted border-none rounded-xl px-4 py-2 text-sm font-medium focus:ring-2 focus:ring-primary/20"
                                 placeholder={i === 0
                                     ? "Share a specific memory..."
                                     : i === 1
@@ -117,7 +117,7 @@
                 <button
                     onclick={handleDraft}
                     disabled={isProcessing}
-                    class="w-full py-3 bg-slate-900 text-white rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-800 disabled:opacity-50 transition-all"
+                    class="w-full py-3 bg-primary text-primary-foreground rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-primary-hover disabled:opacity-50 transition-all"
                 >
                     {#if isProcessing}
                         <RefreshCw size={14} class="animate-spin" /> Weaving Story...
@@ -131,10 +131,10 @@
                 <div>
                     <label
                         for="letter-tone-softener"
-                        class="flex items-center justify-between text-xs font-bold uppercase tracking-widest text-slate-400 mb-4"
+                        class="flex items-center justify-between text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4"
                     >
                         <span>Tone Softener</span>
-                        <span class="text-[#4A7C74]"
+                        <span class="text-primary"
                             >{sentimentValue}% Warmth</span
                         >
                     </label>
@@ -145,20 +145,20 @@
                         max="100"
                         bind:value={sentimentValue}
                         aria-label="Tone Softener"
-                        class="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-[#4A7C74]"
+                        class="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
                     />
                     <div
-                        class="flex justify-between text-[10px] font-bold text-slate-300 mt-2 uppercase"
+                        class="flex justify-between text-[10px] font-bold text-muted-foreground mt-2 uppercase"
                     >
                         <span>Direct</span>
                         <span>Poetic</span>
                     </div>
                 </div>
 
-                <div class="bg-indigo-50 p-4 rounded-xl flex items-start gap-3">
-                    <Feather size={16} class="text-indigo-500 mt-0.5" />
+                <div class="bg-primary-soft p-4 rounded-xl flex items-start gap-3">
+                    <Feather size={16} class="text-primary-hover mt-0.5" />
                     <p
-                        class="text-xs text-indigo-700 font-medium leading-relaxed"
+                        class="text-xs text-foreground font-medium leading-relaxed"
                     >
                         When you choose Polish & Soften, we'll offer a gentler
                         version of your draft, and your words stay yours to keep
@@ -169,7 +169,7 @@
                 <button
                     onclick={handleRefine}
                     disabled={isProcessing || !currentContent}
-                    class="w-full py-3 bg-[#4A7C74] text-white rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#3b635d] disabled:opacity-50 transition-all"
+                    class="w-full py-3 bg-primary text-primary-foreground rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-primary-hover disabled:opacity-50 transition-all"
                 >
                     {#if isProcessing}
                         <RefreshCw size={14} class="animate-spin" /> Refining...
@@ -182,24 +182,24 @@
 
         {#if suggestion}
             <div class="mt-6 space-y-3" data-testid="assistant-suggestion">
-                <p class="text-xs font-bold uppercase tracking-widest text-slate-400">
+                <p class="text-xs font-bold uppercase tracking-widest text-muted-foreground">
                     A version for you to consider
                 </p>
                 <div
-                    class="max-h-64 overflow-y-auto whitespace-pre-wrap bg-[#FDFBF7] border border-stone-200 rounded-xl p-4 text-sm text-stone-700 font-serif leading-relaxed"
+                    class="max-h-64 overflow-y-auto whitespace-pre-wrap bg-[#FDFBF7] border border-border rounded-xl p-4 text-sm text-slate-800 font-serif leading-relaxed"
                 >
                     {suggestion}
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <button
                         onclick={useSuggestion}
-                        class="py-2.5 bg-[#4A7C74] text-white rounded-xl font-bold text-xs hover:bg-[#3b635d] transition-all"
+                        class="py-2.5 bg-primary text-primary-foreground rounded-xl font-bold text-xs hover:bg-primary-hover transition-all"
                     >
                         Use this version
                     </button>
                     <button
                         onclick={() => (suggestion = null)}
-                        class="py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold text-xs hover:bg-slate-50 transition-all"
+                        class="py-2.5 bg-card border border-border text-muted-foreground rounded-xl font-bold text-xs hover:bg-muted transition-all"
                     >
                         Keep my words
                     </button>
@@ -207,7 +207,7 @@
             </div>
         {/if}
         {#if notice}
-            <p class="mt-4 text-xs text-slate-500" role="status">{notice}</p>
+            <p class="mt-4 text-xs text-muted-foreground" role="status">{notice}</p>
         {/if}
     </div>
 </div>

@@ -158,12 +158,12 @@
             class="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/90 text-white p-6 text-center"
             in:fade
         >
-            <CircleAlert size={48} class="text-rose-500 mb-4" />
+            <CircleAlert size={48} class="text-slate-300 mb-4" />
             <h3 class="font-bold text-xl mb-2 text-white">Your camera needs a moment</h3>
             <p class="text-slate-400">{error}</p>
             <button
                 on:click={startCamera}
-                class="mt-6 px-6 py-2 bg-indigo-600 rounded-full font-bold hover:bg-indigo-700 transition"
+                class="mt-6 px-6 py-2 bg-primary text-primary-foreground rounded-full font-bold hover:bg-primary-hover transition"
                 >Try Again</button
             >
         </div>
@@ -245,7 +245,7 @@
 
             <button
                 on:click={handleSave}
-                class="px-8 py-3 bg-emerald-500 text-white rounded-xl font-bold shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 transition flex items-center gap-2"
+                class="px-8 py-3 bg-primary text-primary-foreground rounded-xl font-bold shadow-lg shadow-primary/30 hover:bg-primary-hover transition flex items-center gap-2"
                 disabled={isSaving}
             >
                 {#if isSaving}

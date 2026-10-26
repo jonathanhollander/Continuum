@@ -235,7 +235,7 @@
                 class="px-5 py-2.5 rounded-full font-bold text-sm transition-all {activeTab ===
                 'reflections'
                     ? 'bg-primary text-primary-foreground shadow-lg transform -translate-y-0.5'
-                    : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'}"
+                    : 'bg-card text-muted-foreground hover:bg-muted border border-border'}"
             >
                 <span class="flex items-center gap-2">
                     <BookOpen size={16} />
@@ -247,7 +247,7 @@
                 class="px-5 py-2.5 rounded-full font-bold text-sm transition-all {activeTab ===
                 'will'
                     ? 'bg-primary text-primary-foreground shadow-lg transform -translate-y-0.5'
-                    : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'}"
+                    : 'bg-card text-muted-foreground hover:bg-muted border border-border'}"
             >
                 Ethical Will
             </button>
@@ -256,7 +256,7 @@
                 class="px-5 py-2.5 rounded-full font-bold text-sm transition-all {activeTab ===
                 'lessons'
                     ? 'bg-primary text-primary-foreground shadow-lg transform -translate-y-0.5'
-                    : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'}"
+                    : 'bg-card text-muted-foreground hover:bg-muted border border-border'}"
             >
                 Life Lessons
             </button>
@@ -265,7 +265,7 @@
                 class="px-5 py-2.5 rounded-full font-bold text-sm transition-all {activeTab ===
                 'accomplishments'
                     ? 'bg-primary text-primary-foreground shadow-lg transform -translate-y-0.5'
-                    : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'}"
+                    : 'bg-card text-muted-foreground hover:bg-muted border border-border'}"
             >
                 Accomplishments
             </button>
@@ -288,14 +288,14 @@
                         <div class="relative w-full md:w-80">
                             <Search
                                 size={18}
-                                class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                                class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                             />
                             <input
                                 type="text"
                                 bind:value={searchQuery}
                                 placeholder="Search your memories..."
                                 aria-label="Search your memories"
-                                class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                             />
                         </div>
                         <div class="flex items-center gap-3">
@@ -318,7 +318,7 @@
 
                         <!-- Sample Data / Ghost Rows -->
                         <div class="mt-8 space-y-3 max-w-2xl mx-auto">
-                            <p class="text-sm text-slate-500 text-center mb-4">
+                            <p class="text-sm text-muted-foreground text-center mb-4">
                                 Here are a few examples to spark an idea:
                             </p>
                             {#each sampleEntries as sample}
@@ -329,7 +329,7 @@
                                     onClick={() => prefillFromSample(sample)}
                                 >
                                     {#snippet icon()}
-                                        <Quote size={20} class="text-slate-400" />
+                                        <Quote size={20} class="text-muted-foreground" />
                                     {/snippet}
                                 </GhostRow>
                             {/each}
@@ -337,8 +337,8 @@
                     {:else if filteredItems.length === 0 && searchQuery}
                         <!-- No search results -->
                         <div class="text-center py-12">
-                            <Search size={48} class="mx-auto text-slate-300 mb-4" />
-                            <p class="text-slate-500">Try another word to find a reflection.</p>
+                            <Search size={48} class="mx-auto text-muted-foreground mb-4" />
+                            <p class="text-muted-foreground">Try another word to find a reflection.</p>
                             <button
                                 onclick={() => (searchQuery = "")}
                                 class="mt-4 text-primary hover:underline"
@@ -354,25 +354,25 @@
                                 {#each filteredItems as entry (entry.id)}
                                     <div
                                         in:fade={{ duration: 400 }}
-                                        class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden group relative"
+                                        class="bg-card rounded-2xl border border-border shadow-sm hover:shadow-md transition-all overflow-hidden group relative"
                                     >
                                         <!-- Decorative top bar -->
                                         <div class="h-2 bg-gradient-to-r from-primary/30 via-primary/50 to-primary/30"></div>
 
                                         <div class="p-5">
                                             <!-- Title -->
-                                            <h3 class="font-serif font-bold text-lg text-slate-800 mb-2 pr-20 break-words">
+                                            <h3 class="font-serif font-bold text-lg text-foreground mb-2 pr-20 break-words">
                                                 {entry.title || "Untitled Reflection"}
                                             </h3>
 
                                             <!-- Date -->
-                                            <div class="flex items-center gap-2 text-xs text-slate-400 mb-3">
+                                            <div class="flex items-center gap-2 text-xs text-muted-foreground mb-3">
                                                 <Calendar size={12} />
                                                 {formatDate(entry.created_at)}
                                             </div>
 
                                             <!-- Content preview -->
-                                            <p class="text-slate-600 text-sm leading-relaxed line-clamp-4 mb-4">
+                                            <p class="text-muted-foreground text-sm leading-relaxed line-clamp-4 mb-4">
                                                 {entry.content}
                                             </p>
 
@@ -380,7 +380,7 @@
                                             {#if entry.tags}
                                                 <div class="flex flex-wrap gap-1.5">
                                                     {#each entry.tags.split(",").slice(0, 3) as tag}
-                                                        <span class="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full">
+                                                        <span class="px-2 py-0.5 bg-primary-soft text-primary-hover text-xs rounded-full">
                                                             {tag.trim()}
                                                         </span>
                                                     {/each}
@@ -392,7 +392,7 @@
                                         <div class="absolute top-4 right-4 flex gap-1">
                                             <button
                                                 onclick={() => openEditModal(entry)}
-                                                class="p-2 bg-white/90 text-slate-500 hover:text-primary rounded-full shadow-sm transition-colors"
+                                                class="p-2 bg-card/90 text-muted-foreground hover:text-primary rounded-full shadow-sm transition-colors"
                                                 title="Edit"
                                                 aria-label="Edit these details"
                                             >
@@ -400,7 +400,7 @@
                                             </button>
                                             <button
                                                 onclick={() => entry.id && deleteEntry(entry.id)}
-                                                class="p-2 bg-white/90 text-slate-500 hover:text-red-500 rounded-full shadow-sm transition-colors"
+                                                class="p-2 bg-card/90 text-muted-foreground hover:text-foreground rounded-full shadow-sm transition-colors"
                                                 title="Remove"
                                             >
                                                 <Trash2 size={14} />
@@ -412,9 +412,9 @@
                                 <!-- Add new placeholder card -->
                                 <button
                                     onclick={openAddModal}
-                                    class="border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center text-slate-400 hover:border-primary hover:text-primary hover:bg-primary/5 transition-all min-h-[250px] group"
+                                    class="border-2 border-dashed border-border rounded-2xl flex flex-col items-center justify-center text-muted-foreground hover:border-primary hover:text-primary hover:bg-primary/5 transition-all min-h-[250px] group"
                                 >
-                                    <div class="w-14 h-14 rounded-full bg-slate-100 group-hover:bg-primary/10 flex items-center justify-center mb-3 transition-colors">
+                                    <div class="w-14 h-14 rounded-full bg-muted group-hover:bg-primary/10 flex items-center justify-center mb-3 transition-colors">
                                         <Plus size={28} />
                                     </div>
                                     <span class="font-bold">Write a new reflection</span>
@@ -422,48 +422,48 @@
                             </div>
                         {:else}
                             <!-- Table View -->
-                            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                            <div class="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
                                 <table class="w-full">
-                                    <thead class="bg-slate-50 border-b border-slate-200">
+                                    <thead class="bg-muted border-b border-border">
                                         <tr>
-                                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Title</th>
-                                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Preview</th>
-                                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Date</th>
-                                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Tags</th>
-                                            <th class="px-4 py-3 text-right text-xs font-bold uppercase text-slate-500">Actions</th>
+                                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Title</th>
+                                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Preview</th>
+                                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Date</th>
+                                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Tags</th>
+                                            <th class="px-4 py-3 text-right text-xs font-bold uppercase text-muted-foreground">Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="divide-y divide-slate-100">
+                                    <tbody class="divide-y divide-border">
                                         {#each filteredItems as entry (entry.id)}
-                                            <tr class="hover:bg-slate-50 transition-colors group">
+                                            <tr class="hover:bg-muted transition-colors group">
                                                 <td class="px-4 py-3">
-                                                    <span class="font-medium text-slate-800">{entry.title || "Untitled"}</span>
+                                                    <span class="font-medium text-foreground">{entry.title || "Untitled"}</span>
                                                 </td>
-                                                <td class="px-4 py-3 text-sm text-slate-600 max-w-xs truncate">
+                                                <td class="px-4 py-3 text-sm text-muted-foreground max-w-xs truncate">
                                                     {entry.content?.slice(0, 80)}...
                                                 </td>
-                                                <td class="px-4 py-3 text-sm text-slate-500">
+                                                <td class="px-4 py-3 text-sm text-muted-foreground">
                                                     {formatDate(entry.created_at)}
                                                 </td>
                                                 <td class="px-4 py-3">
                                                     {#if entry.tags}
-                                                        <span class="text-xs text-slate-400">{entry.tags}</span>
+                                                        <span class="text-xs text-muted-foreground">{entry.tags}</span>
                                                     {:else}
-                                                        <span class="text-xs text-slate-300">-</span>
+                                                        <span class="text-xs text-muted-foreground">-</span>
                                                     {/if}
                                                 </td>
                                                 <td class="px-4 py-3 text-right">
                                                     <div class="flex items-center justify-end gap-2 transition-opacity">
                                                         <button
                                                             onclick={() => openEditModal(entry)}
-                                                            class="p-1.5 text-slate-400 hover:text-primary transition-colors"
+                                                            class="p-1.5 text-muted-foreground hover:text-primary transition-colors"
                                                             title="Edit"
                                                         >
                                                             <Edit3 size={14} />
                                                         </button>
                                                         <button
                                                             onclick={() => entry.id && deleteEntry(entry.id)}
-                                                            class="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
+                                                            class="p-1.5 text-muted-foreground hover:text-foreground transition-colors"
                                                             title="Remove"
                                                         >
                                                             <Trash2 size={14} />
@@ -505,53 +505,53 @@
     <div class="space-y-4">
         <!-- Title -->
         <div>
-            <label for="entry-title" class="block text-xs font-bold uppercase text-slate-500 mb-1.5 tracking-wide">
+            <label for="entry-title" class="block text-xs font-bold uppercase text-muted-foreground mb-1.5 tracking-wide">
                 Give it a title (optional)
             </label>
             <input
                 id="entry-title"
                 type="text"
                 bind:value={newEntry.title}
-                class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                class="w-full px-4 py-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                 placeholder="e.g., The Day I Learned to Ride a Bike"
             />
         </div>
 
         <!-- Content -->
         <div>
-            <label for="entry-content" class="block text-xs font-bold uppercase text-slate-500 mb-1.5 tracking-wide">
+            <label for="entry-content" class="block text-xs font-bold uppercase text-muted-foreground mb-1.5 tracking-wide">
                 Your memory or reflection
             </label>
             <textarea
                 id="entry-content"
                 bind:value={newEntry.content}
-                class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none min-h-[200px]"
+                class="w-full px-4 py-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none min-h-[200px]"
                 placeholder="Write freely. Tell the story as you remember it..."
             ></textarea>
-            <p class="text-xs text-slate-400 mt-1.5">
+            <p class="text-xs text-muted-foreground mt-1.5">
                 Share as much or as little as you'd like. Your words are a gift.
             </p>
         </div>
 
         <!-- Tags -->
         <div>
-            <label for="entry-tags" class="block text-xs font-bold uppercase text-slate-500 mb-1.5 tracking-wide">
+            <label for="entry-tags" class="block text-xs font-bold uppercase text-muted-foreground mb-1.5 tracking-wide">
                 Tags (optional)
             </label>
             <div class="relative">
-                <Tag size={16} class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Tag size={16} class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <input
                     id="entry-tags"
                     type="text"
                     bind:value={newEntry.tags}
-                    class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    class="w-full pl-10 pr-4 py-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     placeholder="family, childhood, wisdom (comma separated)"
                 />
             </div>
         </div>
 
         <!-- Custom Fields -->
-        <div class="pt-4 mt-4 border-t border-slate-100">
+        <div class="pt-4 mt-4 border-t border-border">
             <CustomFieldsManager
                 entityType="journal_entry"
                 bind:data={parsedCustomAttributes}
@@ -560,10 +560,10 @@
     </div>
 
     <!-- Footer buttons -->
-    <div class="-mx-6 -mb-6 px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 mt-6">
+    <div class="-mx-6 -mb-6 px-6 py-4 bg-muted border-t border-border flex justify-end gap-3 mt-6">
         <button
             onclick={() => (showAddModal = false)}
-            class="px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-200 transition-colors"
+            class="px-6 py-2.5 rounded-xl font-semibold text-muted-foreground hover:bg-border transition-colors"
         >
             Maybe later
         </button>

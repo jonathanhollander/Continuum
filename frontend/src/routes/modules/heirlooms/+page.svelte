@@ -358,14 +358,14 @@
         <div class="relative w-full md:w-96">
             <Search
                 size={18}
-                class="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400"
+                class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
             />
             <input
                 type="text"
                 bind:value={searchQuery}
                 aria-label="Search by item, story, or recipient"
                 placeholder="Search by item, story, or recipient..."
-                class="w-full pl-10 pr-4 py-3 rounded-2xl border border-stone-200 focus:border-[#4A7C74] focus:ring-0 shadow-sm"
+                class="w-full pl-10 pr-4 py-3 rounded-2xl border border-border focus:border-primary focus:ring-0 shadow-sm"
             />
         </div>
     </div>
@@ -377,7 +377,7 @@
             whyMatters="Every object holds a story. That watch your grandfather wore every day, your wedding dress, the painting your mother loved. When you record their stories, you keep the emotional value that makes them irreplaceable, and your family will carry those stories forward."
             encouragement="Start with one meaningful object. Take a photo, write why it matters. The rest will follow naturally."
             icon={Gift}
-            iconClass="text-amber-500"
+            iconClass="text-primary"
             ctaLabel="Preserve your first treasure"
             onAction={() => openAddForm()}
         />
@@ -403,7 +403,7 @@
                     }}
                 >
                     {#snippet icon()}
-                        <Gift size={20} class="text-slate-400" />
+                        <Gift size={20} class="text-muted-foreground" />
                     {/snippet}
                 </GhostRow>
             {/each}
@@ -428,7 +428,7 @@
                         />
                         <button
                             onclick={() => openEditForm(heirloom)}
-                            class="absolute top-2 right-12 p-2 bg-white/90 text-primary rounded-full shadow-md transition-all hover:bg-primary/10"
+                            class="absolute top-2 right-12 p-2 bg-card/90 text-primary rounded-full shadow-md transition-all hover:bg-primary/10"
                             title="Edit these details"
                             aria-label="Edit these details"
                         >
@@ -436,7 +436,7 @@
                         </button>
                         <button
                             onclick={() => removeHeirloom(heirloom.id)}
-                            class="absolute top-2 right-2 p-2 bg-white/90 text-primary rounded-full shadow-md transition-all hover:bg-primary/10"
+                            class="absolute top-2 right-2 p-2 bg-card/90 text-primary rounded-full shadow-md transition-all hover:bg-primary/10"
                             title="Remove"
                             aria-label="Remove this item"
                         >
@@ -447,11 +447,11 @@
 
                 <!-- Add New Placeholder -->
                 <button
-                    class="border-2 border-dashed border-stone-200 rounded-2xl flex flex-col items-center justify-center text-stone-400 hover:border-[#4A7C74] hover:text-[#4A7C74] hover:bg-[#4A7C74]/5 transition-all min-h-[350px] group"
+                    class="border-2 border-dashed border-border rounded-2xl flex flex-col items-center justify-center text-muted-foreground hover:border-primary hover:text-primary hover:bg-primary/5 transition-all min-h-[350px] group"
                     onclick={() => openAddForm()}
                 >
                     <div
-                        class="w-16 h-16 rounded-full bg-stone-100 group-hover:bg-[#4A7C74]/10 flex items-center justify-center mb-4 transition-colors"
+                        class="w-16 h-16 rounded-full bg-muted group-hover:bg-primary/10 flex items-center justify-center mb-4 transition-colors"
                     >
                         <Plus size={32} />
                     </div>
@@ -460,47 +460,47 @@
             </div>
         {:else}
             <!-- Table View -->
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
                 <table class="w-full">
-                    <thead class="bg-slate-50 border-b border-slate-200">
+                    <thead class="bg-muted border-b border-border">
                         <tr>
-                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Item</th>
-                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Recipient</th>
-                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Story</th>
-                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Provenance</th>
-                            <th class="px-4 py-3 text-right text-xs font-bold uppercase text-slate-500">Actions</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Item</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Recipient</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Story</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Provenance</th>
+                            <th class="px-4 py-3 text-right text-xs font-bold uppercase text-muted-foreground">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100">
+                    <tbody class="divide-y divide-border">
                         {#each filteredItems as heirloom (heirloom.id)}
-                            <tr class="hover:bg-slate-50 transition-colors group">
+                            <tr class="hover:bg-muted transition-colors group">
                                 <td class="px-4 py-3">
                                     <div class="flex items-center gap-3">
                                         {#if heirloom.image}
                                             <HeirloomImage src={heirloom.image} alt={heirloom.name} class="w-10 h-10 rounded-lg object-cover" />
                                         {:else}
-                                            <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center text-amber-600">
+                                            <div class="w-10 h-10 bg-primary-soft rounded-lg flex items-center justify-center text-primary-hover">
                                                 <Gift size={18} />
                                             </div>
                                         {/if}
-                                        <span class="font-medium text-slate-800">{heirloom.name}</span>
+                                        <span class="font-medium text-foreground">{heirloom.name}</span>
                                     </div>
                                 </td>
-                                <td class="px-4 py-3 text-sm text-slate-600">{heirloom.recipient || '-'}</td>
-                                <td class="px-4 py-3 text-sm text-slate-600 max-w-xs truncate">{heirloom.story || '-'}</td>
-                                <td class="px-4 py-3 text-sm text-slate-600 max-w-xs truncate">{heirloom.ownershipDetails || '-'}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{heirloom.recipient || '-'}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground max-w-xs truncate">{heirloom.story || '-'}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground max-w-xs truncate">{heirloom.ownershipDetails || '-'}</td>
                                 <td class="px-4 py-3 text-right">
                                     <div class="flex items-center justify-end gap-2 transition-opacity">
                                         <button
                                             onclick={() => openQrModal(heirloom)}
-                                            class="p-1.5 text-slate-400 hover:text-primary transition-colors"
+                                            class="p-1.5 text-muted-foreground hover:text-primary transition-colors"
                                             title="Generate QR"
                                         >
                                             <QrCode size={14} />
                                         </button>
                                         <button
                                             onclick={() => openEditForm(heirloom)}
-                                            class="p-1.5 text-slate-400 hover:text-primary transition-colors"
+                                            class="p-1.5 text-muted-foreground hover:text-primary transition-colors"
                                             title="Edit these details"
                                             aria-label="Edit these details"
                                         >
@@ -508,7 +508,7 @@
                                         </button>
                                         <button aria-label="Remove this item"
                                             onclick={() => removeHeirloom(heirloom.id)}
-                                            class="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
+                                            class="p-1.5 text-muted-foreground hover:text-foreground transition-colors"
                                         >
                                             <X size={14} />
                                         </button>
@@ -528,12 +528,12 @@
             class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm print:bg-white print:p-0"
         >
             <div
-                class="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden print:shadow-none print:w-full print:max-w-none"
+                class="bg-card rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden print:shadow-none print:w-full print:max-w-none"
             >
                 <div class="p-8 text-center print:text-left print:p-0">
                     <div class="mb-4 print:hidden">
                         <span
-                            class="text-xs font-bold uppercase tracking-widest text-[#4A7C74] rounded-full bg-[#4A7C74]/10 px-3 py-1"
+                            class="text-xs font-bold uppercase tracking-widest text-primary-hover rounded-full bg-primary-soft px-3 py-1"
                         >
                             Printable Label
                         </span>
@@ -541,16 +541,16 @@
 
                     <!-- Printable Area -->
                     <div
-                        class="border-2 border-dashed border-stone-300 rounded-xl p-6 bg-stone-50 print:border-4 print:border-black print:bg-white print:rounded-none"
+                        class="border-2 border-dashed border-slate-300 rounded-xl p-6 bg-muted print:border-4 print:border-black print:bg-white print:rounded-none"
                     >
                         <h2
-                            class="font-serif font-bold text-2xl text-slate-900 mb-1"
+                            class="font-serif font-bold text-2xl text-foreground mb-1"
                         >
                             {qrTarget.name}
                         </h2>
                         {#if qrTarget.recipient}
                             <p
-                                class="text-xs text-stone-500 uppercase tracking-wide font-bold mb-4"
+                                class="text-xs text-muted-foreground uppercase tracking-wide font-bold mb-4"
                             >
                                 For {qrTarget.recipient}
                             </p>
@@ -566,7 +566,7 @@
                             />
                         </div>
 
-                        <p class="text-xs text-stone-400 font-mono">
+                        <p class="text-xs text-muted-foreground font-mono">
                             ID: {String(qrTarget.id).split("-")[0]} // Scan to view story
                         </p>
                     </div>
@@ -575,7 +575,7 @@
                     <div class="mt-8 flex gap-3 justify-center print:hidden">
                         <button
                             onclick={() => (showQrModal = false)}
-                            class="px-5 py-2 rounded-xl font-bold text-stone-500 hover:bg-stone-100"
+                            class="px-5 py-2 rounded-xl font-bold text-muted-foreground hover:bg-muted"
                         >
                             Go back
                         </button>
@@ -602,14 +602,14 @@
             <div>
                 <label
                     for="heirloom-name"
-                    class="block text-xs font-bold uppercase text-slate-500 mb-1"
+                    class="block text-xs font-bold uppercase text-muted-foreground mb-1"
                     >What Is It?</label
                 >
                 <input
                     id="heirloom-name"
                     type="text"
                     bind:value={newHeirloom.name}
-                    class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    class="w-full px-4 py-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     placeholder="e.g. Grandma's wedding ring"
                 />
             </div>
@@ -617,7 +617,7 @@
             <div>
                 <label
                     for="heirloom-recipient"
-                    class="block text-xs font-bold uppercase text-slate-500 mb-1"
+                    class="block text-xs font-bold uppercase text-muted-foreground mb-1"
                     >Who Should Have This?</label
                 >
                 {#if contacts.length > 0}
@@ -626,7 +626,7 @@
                         aria-label="Choose someone from your contacts"
                         bind:value={recipientContactId}
                         onchange={() => chooseRecipient(recipientContactId)}
-                        class="w-full mb-2 px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                        class="w-full mb-2 px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
                     >
                         <option value="">Choose someone from your contacts</option>
                         {#each contacts as contact (contact.id)}
@@ -642,10 +642,10 @@
                     id="heirloom-recipient"
                     type="text"
                     bind:value={newHeirloom.recipient}
-                    class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    class="w-full px-4 py-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     placeholder="The person who will cherish it"
                 />
-                <p class="text-xs text-slate-400 mt-1.5">
+                <p class="text-xs text-muted-foreground mt-1.5">
                     Think about who would treasure this item and honor
                     its meaning.
                 </p>
@@ -654,13 +654,13 @@
             <div>
                 <label
                     for="heirloom-story"
-                    class="block text-xs font-bold uppercase text-slate-500 mb-1"
+                    class="block text-xs font-bold uppercase text-muted-foreground mb-1"
                     >The Story Behind It</label
                 >
                 <textarea
                     id="heirloom-story"
                     bind:value={newHeirloom.story}
-                    class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all h-32"
+                    class="w-full px-4 py-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all h-32"
                     placeholder="Why is this meaningful? Where did it come from?"
                 ></textarea>
             </div>
@@ -673,19 +673,19 @@
                 <!-- A chosen photo is saved to the media store (older records may hold a data URL); a typed address stays editable here. -->
                 {#if !newHeirloom.image?.startsWith("data:") && mediaIdFromRef(newHeirloom.image) === null}
                     <div class="mt-2 text-center">
-                        <span class="text-xs text-stone-400">or</span>
+                        <span class="text-xs text-muted-foreground">or</span>
                     </div>
                     <div class="mt-2">
                         <label
                             for="heirloom-image-url"
-                            class="block text-xs font-bold uppercase text-slate-500 mb-1"
+                            class="block text-xs font-bold uppercase text-muted-foreground mb-1"
                             >Or paste a URL</label
                         >
                         <input
                             id="heirloom-image-url"
                             type="text"
                             bind:value={newHeirloom.image}
-                            class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                            class="w-full px-4 py-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
                             placeholder="https://..."
                         />
                     </div>
@@ -693,7 +693,7 @@
             </div>
 
             <!-- Custom Fields -->
-            <div class="pt-4 mt-4 border-t border-slate-100">
+            <div class="pt-4 mt-4 border-t border-border">
                 <CustomFieldsManager
                     entityType="heirloom"
                     bind:data={parsedCustomAttributes}
@@ -703,10 +703,10 @@
 
         <!-- Footer buttons -->
         <!-- Sticky so the save stays in view while the form scrolls inside the modal. -->
-        <div class="sticky -bottom-6 z-10 -mx-6 -mb-6 px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 mt-6">
+        <div class="sticky -bottom-6 z-10 -mx-6 -mb-6 px-6 py-4 bg-muted border-t border-border flex justify-end gap-3 mt-6">
             <button
                 onclick={closeForm}
-                class="px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-200 transition-colors"
+                class="px-6 py-2.5 rounded-xl font-semibold text-muted-foreground hover:bg-border transition-colors"
                 >Maybe later</button
             >
             <button

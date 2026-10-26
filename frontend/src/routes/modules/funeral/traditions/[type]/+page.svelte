@@ -43,7 +43,7 @@
 <div class="max-w-4xl mx-auto p-8 min-h-screen">
     <a
         href="/modules/funeral"
-        class="inline-flex items-center gap-2 text-stone-500 hover:text-[#304743] mb-8 font-bold transition-colors"
+        class="inline-flex items-center gap-2 text-muted-foreground hover:text-primary-deep dark:hover:text-primary-hover mb-8 font-bold transition-colors"
     >
         <ArrowLeft size={20} /> Back to Final Wishes
     </a>
@@ -51,16 +51,16 @@
     {#if tradition}
         <div
             in:fade
-            class="bg-white rounded-2xl p-10 shadow-sm border border-stone-100"
+            class="bg-card rounded-2xl p-10 shadow-sm border border-border"
         >
             <!-- Header -->
-            <div class="text-center mb-12 border-b border-stone-100 pb-10">
+            <div class="text-center mb-12 border-b border-border pb-10">
                 <div class="text-6xl mb-6">{tradition.icon}</div>
-                <h1 class="font-serif text-5xl text-[#304743] mb-4">
+                <h1 class="font-serif text-5xl text-primary-deep dark:text-primary-hover mb-4">
                     {tradition.title}
                 </h1>
                 <p
-                    class="text-xl text-stone-500 max-w-2xl mx-auto font-light leading-relaxed"
+                    class="text-xl text-muted-foreground max-w-2xl mx-auto font-light leading-relaxed"
                 >
                     {tradition.description}
                 </p>
@@ -72,7 +72,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <div class="md:col-span-1">
                             <h2
-                                class="text-2xl font-bold text-[#304743] mb-4 sticky top-8"
+                                class="text-2xl font-bold text-primary-deep dark:text-primary-hover mb-4 sticky top-8"
                             >
                                 {section.title}
                             </h2>
@@ -80,7 +80,7 @@
                         <div class="md:col-span-2 space-y-6">
                             {#each section.content as paragraph}
                                 <p
-                                    class="text-lg text-stone-700 leading-relaxed font-serif"
+                                    class="text-lg text-foreground leading-relaxed font-serif"
                                 >
                                     {paragraph}
                                 </p>
@@ -88,10 +88,10 @@
 
                             {#if section.checklist}
                                 <div
-                                    class="bg-[#F9FAFB] rounded-xl p-6 mt-6 border border-stone-200"
+                                    class="bg-muted rounded-xl p-6 mt-6 border border-border"
                                 >
                                     <h4
-                                        class="font-bold text-sm text-stone-400 uppercase tracking-wider mb-4"
+                                        class="font-bold text-sm text-muted-foreground uppercase tracking-wider mb-4"
                                     >
                                         Things to consider
                                     </h4>
@@ -99,11 +99,11 @@
                                         {#each section.checklist as item}
                                             <li class="flex items-start gap-4">
                                                 <CircleCheck
-                                                    class="text-[#4A7C74] shrink-0 mt-0.5"
+                                                    class="text-primary shrink-0 mt-0.5"
                                                     size={20}
                                                 />
                                                 <span
-                                                    class="text-stone-800 font-medium"
+                                                    class="text-foreground font-medium"
                                                     >{item}</span
                                                 >
                                             </li>
@@ -114,21 +114,21 @@
                         </div>
                     </div>
                     {#if section !== tradition.sections[tradition.sections.length - 1]}
-                        <hr class="border-stone-100" />
+                        <hr class="border-border" />
                     {/if}
                 {/each}
             </div>
         </div>
     {:else}
         <div class="text-center py-20 space-y-6">
-            <h2 class="text-2xl font-bold text-[#304743]">
+            <h2 class="text-2xl font-bold text-primary-deep dark:text-primary-hover">
                 Choose a tradition to see its details
             </h2>
             <div class="flex flex-wrap justify-center gap-3">
                 {#each Object.values(FUNERAL_TRADITIONS) as t}
                     <a
                         href="/modules/funeral/traditions/{t.key}"
-                        class="px-4 py-2 rounded-xl border border-stone-200 bg-white text-stone-700 font-bold text-sm hover:border-[#4A7C74] transition-colors"
+                        class="px-4 py-2 rounded-xl border border-border bg-card text-foreground font-bold text-sm hover:border-primary transition-colors"
                         >{t.name}</a
                     >
                 {/each}

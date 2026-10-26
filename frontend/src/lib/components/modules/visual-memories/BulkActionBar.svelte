@@ -32,7 +32,7 @@
     >
         <div class="flex items-center gap-3 border-r border-slate-700 pr-6">
             <span
-                class="bg-indigo-500 text-white text-xs font-bold px-2 py-1 rounded-full min-w-[24px] text-center"
+                class="bg-primary text-primary-foreground text-xs font-bold px-2 py-1 rounded-full min-w-[24px] text-center"
             >
                 {selectedCount}
             </span>
@@ -51,7 +51,7 @@
                         bind:value={newTag}
                         aria-label="Tag"
                         placeholder="Add a tag..."
-                        class="bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500 w-32 placeholder:text-slate-500"
+                        class="bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-primary w-32 placeholder:text-slate-400"
                         onkeydown={(e) => e.key === "Enter" && handleAddTag()}
                         autofocus
                     />
@@ -81,7 +81,7 @@
             {/if}
 
             <button
-                class="flex items-center gap-2 px-3 py-2 hover:bg-red-500/20 hover:text-red-400 rounded-lg transition-colors text-sm font-medium"
+                class="flex items-center gap-2 px-3 py-2 hover:bg-slate-800 rounded-lg transition-colors text-sm font-medium"
                 onclick={() => ondelete?.()}
             >
                 <Trash2 size={16} />
