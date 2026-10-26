@@ -44,6 +44,8 @@
         ) => void;
     }>();
 
+    const uid = $props.id();
+
     let dragging = $state(false);
     let processing = $state(false);
     let error: string | null = $state(null);
@@ -160,7 +162,7 @@
 
 <div class="space-y-2">
     {#if label}
-        <label class="block text-xs font-bold uppercase text-gray-500 mb-1"
+        <label for="{uid}-file" class="block text-xs font-bold uppercase text-gray-500 mb-1"
             >{label}</label
         >
     {/if}
@@ -189,6 +191,7 @@
                 </button>
             </div>
             <input
+                id="{uid}-file"
                 type="file"
                 bind:this={fileInput}
                 onchange={handleFileSelect}
@@ -212,6 +215,7 @@
             tabindex="0"
         >
             <input
+                id="{uid}-file"
                 type="file"
                 bind:this={fileInput}
                 onchange={handleFileSelect}

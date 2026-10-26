@@ -243,22 +243,22 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Name & Role -->
                 <div class="space-y-2">
-                    <label
+                    <label for="contact-name"
                         class="text-xs font-bold uppercase text-muted-foreground"
                         >Full Name</label
                     >
-                    <input
+                    <input id="contact-name"
                         bind:value={newContact.name}
                         class="w-full p-3 rounded-lg border border-border bg-white/50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
                         placeholder="e.g. John Doe"
                     />
                 </div>
                 <div class="space-y-2">
-                    <label
+                    <label for="contact-role"
                         class="text-xs font-bold uppercase text-muted-foreground"
                         >Role in your life</label
                     >
-                    <select
+                    <select id="contact-role"
                         bind:value={newContact.role}
                         class="w-full p-3 rounded-lg border border-border bg-white/50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
                     >
@@ -279,21 +279,21 @@
 
                 <!-- Contact Info -->
                 <div class="space-y-2">
-                    <label
+                    <label for="contact-email"
                         class="text-xs font-bold uppercase text-muted-foreground"
                         >Email</label
                     >
-                    <input
+                    <input id="contact-email"
                         bind:value={newContact.email}
                         class="w-full p-3 rounded-lg border border-border bg-white/50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
                     />
                 </div>
                 <div class="space-y-2">
-                    <label
+                    <label for="contact-phone"
                         class="text-xs font-bold uppercase text-muted-foreground"
                         >Phone</label
                     >
-                    <input
+                    <input id="contact-phone"
                         bind:value={newContact.phone}
                         class="w-full p-3 rounded-lg border border-border bg-white/50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
                     />
@@ -301,11 +301,11 @@
 
                 <!-- Org -->
                 <div class="col-span-full space-y-2">
-                    <label
+                    <label for="contact-organization"
                         class="text-xs font-bold uppercase text-muted-foreground"
                         >Organization / Firm</label
                     >
-                    <input
+                    <input id="contact-organization"
                         bind:value={newContact.organization}
                         class="w-full p-3 rounded-lg border border-border bg-white/50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
                         placeholder="e.g. Smith & Assoc."

@@ -57,9 +57,9 @@
     <div
         class="bg-slate-900/50 p-4 rounded-xl border border-slate-800 flex flex-wrap gap-4 items-center"
     >
-        <label
+        <span
             class="text-xs text-slate-500 font-bold uppercase tracking-widest"
-            >Filter By:</label
+            >Filter By:</span
         >
 
         <button

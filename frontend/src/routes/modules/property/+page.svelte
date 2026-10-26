@@ -1124,11 +1124,11 @@
                         class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
                     >
                         <div class="space-y-1.5">
-                            <label
+                            <label for="property-name"
                                 class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Asset Name</label
                             >
-                            <input
+                            <input id="property-name"
                                 type="text"
                                 bind:value={newItem.name}
                                 placeholder="e.g. Primary Residence"
@@ -1136,11 +1136,11 @@
                             />
                         </div>
                         <div class="space-y-1.5">
-                            <label
+                            <label for="property-type"
                                 class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Asset Type</label
                             >
-                            <select
+                            <select id="property-type"
                                 bind:value={newItem.type}
                                 class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800 appearance-none cursor-pointer"
                             >
@@ -1150,11 +1150,11 @@
                             </select>
                         </div>
                         <div class="space-y-1.5">
-                            <label
+                            <label for="property-location"
                                 class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Primary Location</label
                             >
-                            <input
+                            <input id="property-location"
                                 type="text"
                                 bind:value={newItem.location}
                                 placeholder="City, State / Full Address"
@@ -1175,7 +1175,7 @@
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div class="space-y-1.5">
-                            <label
+                            <label for="property-valuation"
                                 class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Current Valuation ($)</label
                             >
@@ -1184,7 +1184,7 @@
                                     size={16}
                                     class="absolute left-4 top-3.5 text-primary"
                                 />
-                                <input
+                                <input id="property-valuation"
                                     type="number"
                                     bind:value={newItem.valuation}
                                     class="w-full px-4 py-3 pl-10 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
@@ -1192,11 +1192,13 @@
                             </div>
                         </div>
                         <div class="space-y-1.5">
-                            <label
+                            <span id="property-status-label"
                                 class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
-                                >Current Status</label
+                                >Current Status</span
                             >
                             <div
+                                role="group"
+                                aria-labelledby="property-status-label"
                                 class="flex bg-white rounded-xl p-1 border border-slate-200"
                             >
                                 {#each ["Owned", "Mortgaged", "Leased"] as status}
@@ -1215,11 +1217,11 @@
                             </div>
                         </div>
                         <div class="space-y-1.5">
-                            <label
+                            <label for="property-purchase-date"
                                 class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Purchase/Acquisition Date</label
                             >
-                            <input
+                            <input id="property-purchase-date"
                                 type="date"
                                 bind:value={newItem.purchaseDate}
                                 class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800 cursor-pointer"
@@ -1237,11 +1239,11 @@
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="space-y-1.5">
-                            <label
+                            <label for="property-ownership-details"
                                 class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Title / Ownership Group</label
                             >
-                            <input
+                            <input id="property-ownership-details"
                                 type="text"
                                 bind:value={newItem.ownershipDetails}
                                 placeholder="e.g. Individual Title, Joint with Spouse"
@@ -1249,9 +1251,9 @@
                             />
                         </div>
                         <div class="space-y-1.5">
-                            <label
+                            <p
                                 class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
-                                >Critical Documents</label
+                                >Critical Documents</p
                             >
                             <UniversalUploader
                                 bind:value={newItem.documents}
@@ -1261,11 +1263,11 @@
                             />
                         </div>
                         <div class="space-y-1.5 md:col-span-2">
-                            <label
+                            <label for="property-notes"
                                 class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Inventory Notes</label
                             >
-                            <textarea
+                            <textarea id="property-notes"
                                 bind:value={newItem.notes}
                                 rows="4"
                                 placeholder="Additional details, disposal instructions, or historical significance..."
