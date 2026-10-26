@@ -3,6 +3,7 @@ import { API_BASE_URL } from "$lib/config";
 
 import { auth } from "../stores/auth.ts";
 import { activeAccountId } from "$lib/stores/keyringStore";
+import { currentProfileId } from "$lib/stores/profileContext";
 import { get } from "svelte/store";
 import { notifications } from "$lib/stores/notificationStore";
 
@@ -106,6 +107,10 @@ export class SyncManager<T extends { id: number | string }> {
     }
 
     private inflight: Promise<void> | null = null;
+    /** Bumped by reset(): a sync started before it belongs to the previous account. */
+    private generation = 0;
+    /** The current local-to-server upload; reset() leaves it, so the next one waits for it to stop. */
+    private uploading: Promise<unknown> = Promise.resolve();
     /** Account whose records are loaded; null after a logout clear. */
     loadedFor: string | null = null;
 
@@ -113,6 +118,7 @@ export class SyncManager<T extends { id: number | string }> {
      *  otherwise reload the records saved for the now-active account. */
     reset(clear = false) {
         this.inflight = null; // a sync still running belongs to the previous account
+        this.generation++;
         this.loadedFor = clear ? null : storageAccount();
         this.items = clear ? [] : getStored<T[]>(this.key, []);
         this.status = "idle";
@@ -138,6 +144,11 @@ export class SyncManager<T extends { id: number | string }> {
         // This prevents race conditions where reactive $state gets updated
         // before we can check for migration eligibility
         const localItemsSnapshot = [...this.items];
+        const generation = this.generation;
+        const account = storageAccount();
+        const profile = get(currentProfileId) || 'owner';
+        // Still the account (and the run) this sync started for.
+        const current = () => this.generation === generation && storageAccount() === account && !!get(auth).token;
 
         try {
             // Fetch Remote
@@ -163,9 +174,19 @@ export class SyncManager<T extends { id: number | string }> {
             // Logic: Up-Sync vs Down-Sync
             // If Remote is empty but Local has data -> Migration (Up-Sync)
             // Use captured snapshot to avoid race condition with reactive state
-            if (remoteItems.length === 0 && localItemsSnapshot.length > 0) {
-                console.log(`[Sync:${this.key}] Migrating ${localItemsSnapshot.length} local items to cloud...`);
-                await this.migrateUp(localItemsSnapshot);
+            // A stopped upload's last POST settles (and saves what is left) before this one reads it.
+            await this.uploading;
+            if (!current()) return;
+            // An upload an account switch interrupted resumes, though the server now holds its first items.
+            const pendingUpload = getStored<T[]>(this.uploadKey, []);
+            const toUpload = pendingUpload.length > 0 ? pendingUpload
+                : remoteItems.length === 0 ? localItemsSnapshot : [];
+            if (toUpload.length > 0) {
+                console.log(`[Sync:${this.key}] Migrating ${toUpload.length} local items to cloud...`);
+                // Stopped by an account switch: the rest waits on this device for this account.
+                const upload = this.migrateUp(toUpload, token, account, profile, current);
+                this.uploading = upload.catch(() => {});
+                if (!(await upload)) return;
                 // Re-fetch to get canon IDs
                 const res2 = await fetch(`${BASE_URL}${this.apiBase}/${this.endpoint}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -199,10 +220,64 @@ export class SyncManager<T extends { id: number | string }> {
         this.notify();
     }
 
-    private async migrateUp(items: T[]) {
-        for (const item of items) {
-            await this.create(item, true); // True = skip local update (we do it descending)
+    private get uploadKey() { return `${this.key}__pending_upload`; }
+
+    /** Upload local items one by one into `account`, always with that account's token. Stops as soon as
+     *  the person signs out, another account becomes active or the store is reset (false); the items not yet sent stay in
+     *  `account`'s saved upload list and are sent on its next sync. */
+    private async migrateUp(items: T[], token: string, account: string, profile: string,
+                            sameAccount: () => boolean): Promise<boolean> {
+        const left = [...items];
+        const save = () => setStored(this.uploadKey, left, profile, account);
+        save();
+        while (left.length > 0) {
+            if (!sameAccount()) return false;
+            try {
+                await this.post(left[0], token); // local copy is replaced by the server list afterwards
+            } catch (e) {
+                if (!sameAccount()) return false;
+                throw e;
+            }
+            left.shift();
+            save();
         }
+        return true;
+    }
+
+    /** POST one new item with the given token; returns it as the server stored it. */
+    private async post(data: Partial<T>, token: string | null) {
+        const payloadRaw = this.mapper ? this.mapper(data as any) : data;
+        const payload = toWire(payloadRaw);
+
+        // Clean ID for creation
+        if (payload.id && typeof payload.id === 'string' && payload.id.length > 10) {
+            delete payload.id;
+        }
+
+        const res = await fetch(`${BASE_URL}${this.apiBase}/${this.endpoint}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+            const errorBody = await res.text();
+            let errorDetail = `HTTP ${res.status}: ${res.statusText}`;
+            try {
+                const errorJson = JSON.parse(errorBody);
+                errorDetail = errorJson.detail || errorJson.message || errorJson.error?.message || errorBody;
+            } catch { errorDetail = errorBody || errorDetail; }
+            const error = new Error("Failed to save") as any;
+            error.technicalDetails = `${errorDetail}\n\nEndpoint: POST ${this.apiBase}/${this.endpoint}`;
+            throw error;
+        }
+
+        const raw = await res.json();
+        const newItemRaw = convertKeys(raw, toCamel);
+        return this.mapper ? this.mapper(newItemRaw) : newItemRaw;
     }
 
     // CRUD
@@ -211,39 +286,7 @@ export class SyncManager<T extends { id: number | string }> {
     async create(data: Partial<T>, skipLocal = false, quiet = false, onRetry?: () => Promise<unknown>) {
         if (!quiet && !skipLocal) { this.status = "syncing"; this.error = null; }
         try {
-            const payloadRaw = this.mapper ? this.mapper(data as any) : data;
-            const payload = toWire(payloadRaw);
-
-            // Clean ID for creation
-            if (payload.id && typeof payload.id === 'string' && payload.id.length > 10) {
-                delete payload.id;
-            }
-
-            const token = get(auth).token;
-            const res = await fetch(`${BASE_URL}${this.apiBase}/${this.endpoint}`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
-                body: JSON.stringify(payload)
-            });
-
-            if (!res.ok) {
-                const errorBody = await res.text();
-                let errorDetail = `HTTP ${res.status}: ${res.statusText}`;
-                try {
-                    const errorJson = JSON.parse(errorBody);
-                    errorDetail = errorJson.detail || errorJson.message || errorJson.error?.message || errorBody;
-                } catch { errorDetail = errorBody || errorDetail; }
-                const error = new Error("Failed to save") as any;
-                error.technicalDetails = `${errorDetail}\n\nEndpoint: POST ${this.apiBase}/${this.endpoint}`;
-                throw error;
-            }
-
-            const raw = await res.json();
-            const newItemRaw = convertKeys(raw, toCamel);
-            const newItem = this.mapper ? this.mapper(newItemRaw) : newItemRaw;
+            const newItem = await this.post(data, get(auth).token);
 
             if (!skipLocal) {
                 this.items = [...this.items, newItem];

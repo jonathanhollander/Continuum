@@ -24,10 +24,11 @@ export const getStored = <T>(key: string, def: T, profileId?: string): T => {
 };
 
 // Helper: Save data to LocalStorage with Account & Profile Namespace
-export const setStored = <T>(key: string, value: T, profileId?: string) => {
+// accountId: write into that account's namespace even after the active account changed.
+export const setStored = <T>(key: string, value: T, profileId?: string, accountId?: string) => {
     if (typeof localStorage === 'undefined') return;
 
-    const accId = get(activeAccountId) || 'anonymous';
+    const accId = accountId || get(activeAccountId) || 'anonymous';
     const pid = profileId || get(currentProfileId) || 'owner';
     const fullKey = `continuum_acc_${accId}_prof_${pid}_${key}`;
 
