@@ -1,6 +1,6 @@
 # Continuum — Recovery Execution Plan (subagent-run)
 
-**Last Updated:** 2026-10-26 04:10 EST
+**Last Updated:** 2026-10-26 04:30 EST
 
 The how and the order for [PROJECT_RECOVERY_PLAN.md](PROJECT_RECOVERY_PLAN.md) (phases A–F).
 Issue IDs (CU-0xx) and their evidence are in
@@ -188,6 +188,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | ID | Card | CU | Agent | Owns | Acceptance (A3 script plus one browser save) |
 |---|---|---|---|---|---|
 | B0 | Schema drift (from A3, verified on production) | 001 | `database-migration` | One new idempotent Alembic migration (adds only what's missing, checking the live columns first; never drops) | Production (read 2026-10-26, alembic head `817c6b026811`) has **no `custom_attributes` column on any table**, though 13 models declare it and migration `2d53606557e8` claims to add 7. So every generic-API create on those tables fails on a migrated DB. After the migration, on both a fresh Alembic DB and a copy of production's column list (`prod_schema.json`), every model column exists; A3's asset-table creates no longer fail on a missing column. Applied to production only at release, by `alembic upgrade head` (additive only) |
+| B0.1 | Production NOT NULL mismatches (from B0) | 001 | `database-migration` | One new idempotent migration after `a7c1b0e3d9f4` | Production `financial_accounts.institution` and `account_type` are NOT NULL while the model is nullable (migration `08fcd9308bab` never took effect there), so inserts without them fail. Relax NOT NULL wherever the live DB is stricter than the model, checking live columns first; never tighten, drop or touch data. Model-NOT-NULL-but-DB-nullable columns are reported, not changed. Proof on a simulated production schema |
 | B1 | Explicit field contracts | 001 | `api-contract-validator` | `frontend/src/lib/services/sync.svelte.ts` (key conversion), the Asset-family mappers in `frontend/src/lib/stores/{financialAssetsStore,propertyStore,digitalAssetsStore,subscriptionStore}.svelte.ts`, field aliases in `backend/estate_models.py` | Every displayed writable field on financial, property and subscription survives create, edit, re-fetch and reload, including 0 and empty values; custom-field keys are preserved. Also (A3): financial "Transfer Instructions" and statement upload persist (`AssetManager.svelte:195-211`, owned for this); `valueHistory` isn't reset on create (`financialAssetsStore.svelte.ts:55`); the digital-asset create sends the required `name` |
 | B2 | Category membership | 004 | `fastapi-development` | `backend/routers/estate_data.py`, and an Alembic migration adding a category column if needed | Each of properties, digital assets and generic heirlooms lists only its own rows after create, update and delete; existing mixed rows are reported, and **not migrated on production without an owner yes** |
 | B3 | Singleton vs. collection | 006, 011 | `fastapi-development` | `SingletonSyncManager` in `sync.svelte.ts`; `/api/estate/profile` in `backend/main.py`; the `funeral_data` and `advanced_assets` handling in `estate_data.py` | Repeated saves update one record; profile settings merge rather than replace each other; the UI always receives an object. Also (A3): the singleton update strips `id`/`user_id` (`sync.svelte.ts:440-450`); funeral wishes never get `"0"`/`"1"` keys or a double-encoded budget (`funeral/+page.svelte:71-74`, `funeralStore.svelte.ts:61-79`, owned for this) |
@@ -243,6 +244,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X7 | Auth error paths (A5 findings) | `get_current_user`/`optional_current_user` accept magic-link tokens as access tokens (`backend/auth.py:73-95`); an unrecognised stored hash makes login 500 not 401 (`auth.py:28`, `routers/auth.py:246`); magic-link verify 500s on a token with no `sub` (`routers/auth.py:625`) | `backend/auth.py`; the token and magic-link-verify handlers in `backend/routers/auth.py` (not the bypass block) | Reject tokens whose `type` isn't an access token; treat unknown hashes as a failed login; 401 for a token with no `sub` | Locally: a magic-link token is refused by a protected endpoint; a user with a non-hash stored value gets 401; a no-`sub` token gets 401; normal login and refresh still work |
 | X8 | Naive `datetime.utcnow()` defaults (A5 finding) | 41 uses in 15 backend files; deprecated, and the same family as the SQLModel 0.0.48 crash | Those files — **dispatched after Wave C merges**, because B/C cards own `estate_models.py` and `routers/media.py` | One helper; same naive-UTC values stored, so no migration | `grep utcnow backend` finds only the helper; seed, login and one save per touched model still work |
 | X9 | Magic-link and token-subject hardening (X7 findings) | Magic-link tokens are reusable for 15 min; `/magic-link/request` logs an auth success when it only sent an email; `sub` is passed to `session.get` as a string (`backend/auth.py:75`, `:91`); the passkey-login token path (`routers/auth.py:~517`) is unreviewed | `backend/auth.py`; the magic-link request/verify and passkey-login-finish handlers in `backend/routers/auth.py` (not the bypass block) | One-time magic links (a `jti` recorded on first use, smallest storage that works, migration only if needed); log the request as a request; cast `sub` to int safely; review and fix the passkey token path | A magic link works once and is refused the second time; normal login, refresh and passkey paths unchanged |
+| X10 | Slow `/api/ai/chat` error path (O1, Wave A) | p50 152 ms, p95 473 ms (max 1000) on the no-key 503 path, while other POSTs are ~9 ms; cause unproven (limiter on an async handler, the 503 path, echo logging); a new `httpx.AsyncClient` per call | `backend/routers/ai_proxy.py` | Find the cause with one targeted timing (echo off); reuse one AsyncClient | p95 ≤ 300 ms on the 503 path |
 | X6 | Rotate the OpenRouter key (was F1) | The key is public in shipped JS | Owner step at openrouter.ai (Claude may not create or copy API keys) | Create a new key, put it in the Railway variable X1 reads, revoke the old one | Done after X1 is live; the old key returns 401 |
 
 ---
@@ -271,7 +273,8 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | A2 | ☑ | 8d54a13 | Diff = the Pre-deploy line plus the footer; `.github/` absent |
 | A3 | ☑ | eb9aca7 | Ran on an Alembic-built DB: 3 PASS (journal create/edit, home access), 13 FAIL; reproduces CU-001 (subscription, letter), CU-002, CU-009; CU-001/004 for asset tables masked by a missing column (see B0). Ran twice: the first run had a false PASS, fixed |
 | A5 | ☑ | 151c77b | Fresh DB: seed + login 200; token exp = configured 15 min; legacy `$2b$` hash verifies (was broken: passlib 1.7.4 + bcrypt 5 raise ValueError) |
-| B0 | ▶ | | |
+| B0 | ☑ | 6f14c65 | Fresh DB, re-run, and simulated production schema: every model column present; second upgrade a no-op; smoke run: 0 "no column named" errors (5 PASS, 12 FAIL left for B1–C10). Also added 6 models missing from `alembic/env.py` |
+| B0.1 | ▶ | | |
 | B1 | ☐ | | |
 | B2 | ☐ | | |
 | B3 | ☐ | | |
@@ -308,7 +311,8 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X7 | ☑ | 8a5b462 | Fresh DB: login, /me, refresh 200; magic-link token on /me 401; "BYPASS_AUTH" stored value 401 (was 500); sub-less magic link 401 (was 500); valid magic link 200; jh@ bypass 200 |
 | X8 | ☐ (after Wave C) | | |
 | X9 | ▶ | | |
-| O1 — per wave (A–E) | ☐ | | |
+| X10 | ☐ (after X3, X4 merge: shares nothing, but waits on O1 re-time) | | |
+| O1 — per wave (A–E) | ▶ (A done: login p95 133, /me 4.8, refresh 19.2, ai/chat 503 path 473 → X10) | | |
 | O2 — per wave (A–E) | ☐ | | |
 | O1 — release table | ☐ | | |
 | O2 — release screenshots | ☐ | | |

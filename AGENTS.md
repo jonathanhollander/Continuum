@@ -121,3 +121,16 @@ Use the existing checkout or a suitable worktree when possible. Do not deploy, p
 ## Completion standard
 
 A recovery feature is complete when Jonathan can enter representative information, see exactly what is saved, reload it without losing fields, find it easily, and verify the same information in his son's view and the relevant handover output. Document what was tested, what remains open, and any limitation. Security and admin deferral must not become an excuse for a handover that loses information or cannot be used.
+
+<!-- OPENWIKI:START -->
+
+## OpenWiki
+
+This repository has a generated `openwiki/` evidence index. It is optional just-in-time context, not required startup reading.
+
+- Treat source code and tests as authoritative. A brief's unknowns and review items are verification gaps, not automatic requirements.
+- Prefer the narrowest quiet validation that proves the changed behavior. Preserve complete failure output.
+
+The scheduled OpenWiki GitHub Actions workflow refreshes the repository wiki. Do not hand-edit generated OpenWiki pages unless explicitly asked; prefer updating source code/docs and letting OpenWiki regenerate.
+
+<!-- OPENWIKI:END -->

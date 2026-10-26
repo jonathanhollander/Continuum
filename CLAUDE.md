@@ -168,3 +168,11 @@ Detailed guides exist for specific topics:
 ---
 
 _Last Updated: 2026-10-26 03:45 EST_
+
+<!-- OPENWIKI:START -->
+
+## OpenWiki
+
+See [AGENTS.md](AGENTS.md) for OpenWiki agent instructions.
+
+<!-- OPENWIKI:END -->
