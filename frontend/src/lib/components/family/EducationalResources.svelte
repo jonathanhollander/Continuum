@@ -118,7 +118,7 @@
                 {#each series.videos as video}
                     <button
                         class="text-left bg-slate-50 hover:bg-[#4A7C74]/5 border border-transparent hover:border-[#4A7C74]/20 rounded-xl p-4 transition-all group relative overflow-hidden"
-                        on:click={() => (activeVideo = video)}
+                        onclick={() => (activeVideo = video)}
                     >
                         <div
                             class="absolute top-3 right-3 bg-white/80 backdrop-blur px-2 py-0.5 rounded text-xs font-bold text-slate-500 group-hover:text-[#4A7C74]"
@@ -149,29 +149,13 @@
     <!-- Video Script Modal -->
     {#if activeVideo}
         <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => (activeVideo = null) }}
-            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
             transition:fade
         >
             <div
                 class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]"
                 in:slide={{ duration: 200, axis: "y" }}
             >
-                <!-- Video Player Placeholder -->
-                <div
-                    class="aspect-video bg-black flex items-center justify-center relative group cursor-pointer"
-                >
-                    <div class="text-center text-white/50">
-                        <PlayCircle
-                            size={64}
-                            class="mx-auto mb-2 opacity-50 group-hover:opacity-100 transition-opacity"
-                        />
-                        <p class="text-sm font-medium">Click to Play Demo</p>
-                    </div>
-                    <div class="absolute inset-x-0 bottom-0 h-1 bg-gray-800">
-                        <div class="w-1/3 h-full bg-[#4A7C74]"></div>
-                    </div>
-                </div>
-
                 <div class="p-6 flex-1 overflow-y-auto">
                     <div class="flex justify-between items-start mb-6">
                         <div>
@@ -185,7 +169,7 @@
                             </p>
                         </div>
                         <button aria-label="Close"
-                            on:click={() => (activeVideo = null)}
+                            onclick={() => (activeVideo = null)}
                             class="p-2 hover:bg-gray-100 rounded-full transition-colors"
                         >
                             <X size={20} class="text-gray-400" />
