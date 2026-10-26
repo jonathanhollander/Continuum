@@ -1,6 +1,7 @@
 <script lang="ts">
     import {
         familyStore,
+        contactSync,
         type FamilyMember,
     } from "$lib/stores/familyStore.svelte";
     import { Heart, Crown, Shield, Plus, X } from "lucide-svelte";
@@ -117,11 +118,37 @@
         };
     }
 
-    function save() {
-        if (!draft || !String(draft.name ?? "").trim()) return;
-        if (draft.id) familyStore.updateMember(draft.id, draft);
-        else familyStore.addMember(draft);
-        draft = null;
+    let saving = $state(false);
+    const saveVersions = new WeakMap<object, number>();
+    const recoveryIds = new WeakMap<object, string>();
+    async function save() {
+        if (saving || !draft || !String(draft.name ?? "").trim()) return;
+        const form = draft;
+        const submitted = JSON.parse(JSON.stringify(form));
+        const version = (saveVersions.get(form) ?? 0) + 1;
+        saveVersions.set(form, version);
+        let completed = false;
+        const attempt = async () => {
+            if (saving || completed || saveVersions.get(form) !== version) return;
+            saving = true;
+            try {
+                const saved = submitted.id
+                    ? await contactSync.update(submitted.id, submitted, true, attempt, recoveryIds.get(form))
+                    : await contactSync.create(submitted, false, false, attempt, recoveryIds.get(form));
+                completed = true;
+                recoveryIds.delete(form);
+                if (draft === form) {
+                    if (JSON.stringify(draft) === JSON.stringify(submitted)) draft = null;
+                    else draft.id = saved.id;
+                }
+            } catch (e) {
+                if (e && typeof e === "object" && "recoveryId" in e && typeof e.recoveryId === "string") recoveryIds.set(form, e.recoveryId);
+                // The shared notice offers Retry; the member's complete draft stays editable here.
+            } finally {
+                saving = false;
+            }
+        };
+        await attempt();
     }
 </script>
 
@@ -312,10 +339,11 @@
                 <div class="pt-3 border-t border-border">
                     <button
                         class="w-full py-3 bg-primary text-primary-foreground rounded-xl font-bold hover:bg-primary/90 hover:shadow-lg transition-transform active:scale-95 disabled:opacity-50"
-                        disabled={!String(draft.name ?? "").trim()}
+                        disabled={saving || !String(draft.name ?? "").trim()}
+                        aria-busy={saving}
                         onclick={save}
                     >
-                        Save Changes
+                        {saving ? "Saving..." : "Save Changes"}
                     </button>
                     {#if draft.id && draft.id !== "owner"}
                         <button

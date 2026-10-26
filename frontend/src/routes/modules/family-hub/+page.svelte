@@ -120,24 +120,56 @@
         },
     ];
 
-    function handleConciergeComplete(answers: Record<string, any>) {
+    let wizardSaving = $state(false);
+    let wizardRevision = 0;
+    let wizardDraft: { id?: number; version: number; recoveryId?: string } = { version: 0 };
+
+    function startWizard() {
+        wizardDraft = { version: 0 };
+        wizardRevision = 0;
+        viewMode = "concierge";
+    }
+
+    async function handleConciergeComplete(answers: Record<string, any>) {
+        if (wizardSaving) return;
         if (answers.intro === false) {
             viewMode = "dashboard";
             return;
         }
-
-        // Auto-create a memory from the concierge answer
-        if (answers.fav_memory) {
-            addFamilyMemory({
-                type: "quote",
-                title: "My Favorite Memory",
-                text: answers.fav_memory,
-                author: "Me",
-                is_favorite: false,
-            });
+        if (!answers.fav_memory) {
+            viewMode = "dashboard";
+            return;
         }
-
-        viewMode = "dashboard";
+        const form = wizardDraft;
+        const version = ++form.version;
+        const revision = wizardRevision;
+        const submitted = {
+            type: "quote" as const,
+            title: "My Favorite Memory",
+            text: String(answers.fav_memory),
+            author: "Me",
+            is_favorite: false,
+        };
+        let completed = false;
+        const attempt = async () => {
+            if (wizardSaving || completed || form.version !== version) return;
+            wizardSaving = true;
+            try {
+                const saved = form.id
+                    ? await updateFamilyMemory(form.id, submitted, attempt, form.recoveryId)
+                    : await addFamilyMemory(submitted, attempt, form.recoveryId);
+                form.id = saved.id;
+                form.recoveryId = undefined;
+                completed = true;
+                if (wizardDraft === form && wizardRevision === revision) viewMode = "dashboard";
+            } catch (e) {
+                if (e && typeof e === "object" && "recoveryId" in e && typeof e.recoveryId === "string") form.recoveryId = e.recoveryId;
+                // Keep the wizard mounted with its answers; Retry completes this same memory.
+            } finally {
+                wizardSaving = false;
+            }
+        };
+        await attempt();
     }
 
     async function saveMemory() {
@@ -481,13 +513,17 @@
 
     {#if viewMode === "concierge"}
         <div class="max-w-4xl mx-auto px-6 py-12" in:fade>
-            <ConciergeFlow
-                steps={wizardSteps}
-                oncomplete={handleConciergeComplete}
-            />
+            <fieldset disabled={wizardSaving} aria-busy={wizardSaving} oninput={() => wizardRevision++} class="min-w-0">
+                <ConciergeFlow
+                    steps={wizardSteps}
+                    oncomplete={handleConciergeComplete}
+                />
+            </fieldset>
+            {#if wizardSaving}<p role="status" class="text-center text-sm text-muted-foreground mt-4">Saving...</p>{/if}
             <div class="text-center mt-8">
                 <button
                     onclick={() => (viewMode = "dashboard")}
+                    disabled={wizardSaving}
                     class="text-muted-foreground hover:text-foreground underline text-sm"
                 >
                     Continue to your dashboard
@@ -561,7 +597,7 @@
                             <!-- GHOST ROWS -->
                             <div class="col-span-full flex justify-center mb-4">
                                 <button
-                                    onclick={() => (viewMode = "concierge")}
+                                    onclick={startWizard}
                                     class="text-sm font-bold text-primary-hover bg-primary-soft px-4 py-2 rounded-full hover:bg-primary/20 transition-colors flex items-center gap-2"
                                 >
                                     <Pencil size={16} />
@@ -771,8 +807,8 @@
                             <p
                                 class="text-white/80 text-sm mb-4 line-clamp-2"
                             >
-                                Our guide videos are here for you, whenever you want
-                                to learn more about your role.
+                                Written guides to help you find your way, whenever
+                                you're ready.
                             </p>
                         </div>
                     </button>
