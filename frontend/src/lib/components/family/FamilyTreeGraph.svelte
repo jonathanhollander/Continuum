@@ -69,8 +69,8 @@
         const nodeMap = new Map(nodes.map((n) => [String(n.id), n]));
         links = familyStore.relationships
             .map((r) => ({
-                source: nodeMap.get(String(r.source_id)),
-                target: nodeMap.get(String(r.target_id)),
+                source: nodeMap.get(String(r.sourceId)),
+                target: nodeMap.get(String(r.targetId)),
             }))
             .filter((l) => l.source && l.target) as SimLink[];
     }
@@ -248,11 +248,11 @@
                 {/if}
 
                 <!-- Role Icon Badge -->
-                {#if node.is_executor || (node as any).isExecutor || isSpouse(node)}
+                {#if node.isExecutor || isSpouse(node)}
                     <div
                         class="absolute bottom-0 right-0 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm"
                     >
-                        {#if node.is_executor || (node as any).isExecutor}<Shield
+                        {#if node.isExecutor}<Shield
                                 size={12}
                                 class="text-[#4A7C74]"
                             />{/if}
@@ -294,9 +294,9 @@
                     name: "New Member",
                     role: "Family",
                     relation: "Child",
-                    is_executor: false,
-                    is_beneficiary: false,
-                    is_emergency_contact: false,
+                    isExecutor: false,
+                    isBeneficiary: false,
+                    isEmergencyContact: false,
                 } as any)}
         >
             <Plus size={20} />
@@ -383,7 +383,7 @@
                     >
                         <input
                             type="checkbox"
-                            bind:checked={selectedNode.is_executor}
+                            bind:checked={selectedNode.isExecutor}
                             class="text-[#4A7C74] focus:ring-[#4A7C74]"
                         />
                         <span class="text-sm font-medium"
@@ -396,7 +396,7 @@
                     >
                         <input
                             type="checkbox"
-                            bind:checked={selectedNode.is_beneficiary}
+                            bind:checked={selectedNode.isBeneficiary}
                             class="text-[#4A7C74] focus:ring-[#4A7C74]"
                         />
                         <span class="text-sm font-medium">Beneficiary</span>

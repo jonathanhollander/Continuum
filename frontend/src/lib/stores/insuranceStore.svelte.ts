@@ -1,4 +1,5 @@
 import { registerSync } from "$lib/services/sync.svelte";
+import { oneSpelling } from "$lib/utils/oneSpelling";
 
 export interface InsurancePolicy {
     id: number | string;
@@ -14,7 +15,7 @@ export interface InsurancePolicy {
     claimsProcedure: string;
     policyDocuments: string;
     status: 'Active' | 'Inactive' | 'Pending';
-    expirationDate?: string;
+    expirationDate?: string | null;
     notes: string;
     custom_attributes?: string;
 }
@@ -24,32 +25,26 @@ const toDateInput = (v: unknown) => (typeof v === 'string' ? v.slice(0, 10) : ''
 
 const insuranceMapper = (item: any) => {
     if (!item) return item;
-    const expiration = item.expirationDate ?? item.expiration_date;
+    // One spelling per field (camel; the wire snake-cases it), newest value kept
+    const out = oneSpelling(item, {
+        policyName: 'policy_name', insuranceType: 'insurance_type', policyNumber: 'policy_number',
+        premiumAmount: 'premium_amount', premiumFrequency: 'premium_frequency', agentName: 'agent_name',
+        agentContact: 'agent_contact', claimsProcedure: 'claims_procedure', policyDocuments: 'policy_documents',
+        expirationDate: 'expiration_date',
+    });
     return {
-        ...item,
-        // Remote -> Local
-        policyName: item.policy_name ?? item.policyName ?? '',
-        insuranceType: item.insurance_type ?? item.insuranceType ?? 'Other',
-        policyNumber: item.policy_number ?? item.policyNumber ?? '',
-        premiumAmount: item.premium_amount ?? item.premiumAmount ?? 0,
-        premiumFrequency: item.premium_frequency ?? item.premiumFrequency ?? 'Monthly',
-        agentName: item.agent_name ?? item.agentName ?? '',
-        agentContact: item.agent_contact ?? item.agentContact ?? '',
-        claimsProcedure: item.claims_procedure ?? item.claimsProcedure ?? '',
-        policyDocuments: item.policy_documents ?? item.policyDocuments ?? '',
-        expirationDate: toDateInput(item.expiration_date ?? item.expirationDate),
-        // Local -> Remote
-        policy_name: item.policyName ?? item.policy_name,
-        insurance_type: item.insuranceType ?? item.insurance_type,
-        policy_number: item.policyNumber ?? item.policy_number,
-        premium_amount: item.premiumAmount ?? item.premium_amount,
-        premium_frequency: item.premiumFrequency ?? item.premium_frequency,
-        agent_name: item.agentName ?? item.agent_name,
-        agent_contact: item.agentContact ?? item.agent_contact,
-        claims_procedure: item.claimsProcedure ?? item.claims_procedure,
-        policy_documents: item.policyDocuments ?? item.policy_documents,
-        // An empty date input goes over the wire as null (the column is a nullable datetime).
-        expiration_date: toDateInput(expiration) || null
+        ...out,
+        policyName: out.policyName ?? '',
+        insuranceType: out.insuranceType ?? 'Other',
+        policyNumber: out.policyNumber ?? '',
+        premiumAmount: out.premiumAmount ?? 0,
+        premiumFrequency: out.premiumFrequency ?? 'Monthly',
+        agentName: out.agentName ?? '',
+        agentContact: out.agentContact ?? '',
+        claimsProcedure: out.claimsProcedure ?? '',
+        policyDocuments: out.policyDocuments ?? '',
+        // An empty date goes over the wire as null (the column is a nullable datetime).
+        expirationDate: toDateInput(out.expirationDate) || null
     };
 };
 

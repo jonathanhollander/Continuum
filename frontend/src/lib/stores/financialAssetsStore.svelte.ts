@@ -1,4 +1,5 @@
 import { registerSync } from "$lib/services/sync.svelte";
+import { oneSpelling } from "$lib/utils/oneSpelling";
 
 export type AssetType = 'Property' | 'Financial' | 'Business' | 'Vehicle' | 'Digital' | 'Debt' | 'Other';
 
@@ -61,11 +62,11 @@ function parseHistory(v: any): number[] {
 
 const financialAssetMapper = (item: any) => {
     if (!item) return item;
+    // One spelling per field: the pages read is_closed / closure_date; server rows arrive camel-cased.
+    const out = oneSpelling(item, { is_closed: 'isClosed', closure_date: 'closureDate' });
     return {
-        ...item,
-        // Remote (snake) -> Local (camel)
-        is_closed: item.is_closed ?? item.isClosed ?? false,
-        closure_date: item.closure_date ?? item.closureDate,
+        ...out,
+        is_closed: out.is_closed ?? false,
         // Wire is a JSON string (sync.svelte.ts stringifies on write); keep an array locally
         valueHistory: parseHistory(item.valueHistory)
     };

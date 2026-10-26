@@ -1,4 +1,5 @@
 import { registerSync } from "$lib/services/sync.svelte";
+import { oneSpelling } from "$lib/utils/oneSpelling";
 
 export type FamilyRole =
     | 'Family'
@@ -66,39 +67,30 @@ const contactMapper = (item: any) => {
     // (null or "" included) wins over the copy the server sent; "" and null both mean none.
     const callTier = (item.tier !== undefined ? item.tier : (item.callTier ?? item.call_tier)) || null;
 
+    // One spelling per field (camel; the wire snake-cases it), newest value kept
+    const out = oneSpelling(item, {
+        isExecutor: 'is_executor', isBeneficiary: 'is_beneficiary', isEmergencyContact: 'is_emergency_contact',
+        tierId: 'tier_id', notificationStatus: 'notification_status', callTier: 'call_tier',
+    });
     return {
-        ...item,
+        ...out,
         role: role || 'Other',
         relation: relation || '',
-
-        // Remote -> Local
-        isExecutor: item.is_executor ?? item.isExecutor ?? false,
-        isBeneficiary: item.is_beneficiary ?? item.isBeneficiary ?? false,
-        isEmergencyContact: item.is_emergency_contact ?? item.isEmergencyContact ?? false,
-        tierId: item.tier_id ?? item.tierId ?? null,
+        isExecutor: out.isExecutor ?? false,
+        isBeneficiary: out.isBeneficiary ?? false,
+        isEmergencyContact: out.isEmergencyContact ?? false,
+        tierId: out.tierId ?? null,
         tier: callTier ?? undefined,
-        notificationStatus: item.notificationStatus ?? item.notification_status ?? undefined,
-
-        // Local -> Remote
-        ['is_executor']: item.isExecutor ?? item.is_executor,
-        ['is_beneficiary']: item.isBeneficiary ?? item.is_beneficiary,
-        ['is_emergency_contact']: item.isEmergencyContact ?? item.is_emergency_contact,
-        ['tier_id']: item.tierId ?? item.tier_id,
-        ['callTier']: callTier
+        // Wire copy of `tier`, always derived from it above
+        callTier
     };
 };
 
 const relationshipMapper = (item: any) => {
     if (!item) return item;
-    return {
-        ...item,
-        // Remote -> Local
-        sourceId: String(item.source_id ?? item.sourceId),
-        targetId: String(item.target_id ?? item.targetId),
-        // Local -> Remote
-        ['source_id']: item.sourceId ?? item.source_id,
-        ['target_id']: item.targetId ?? item.target_id
-    };
+    // One spelling per field (camel; the wire snake-cases it), newest value kept
+    const out = oneSpelling(item, { sourceId: 'source_id', targetId: 'target_id' });
+    return { ...out, sourceId: String(out.sourceId), targetId: String(out.targetId) };
 };
 
 export const contactSync = registerSync<FamilyMember>('family_members', 'contacts', contactMapper, '/api').setAffirmationContext('contacts');

@@ -1,6 +1,7 @@
 import { derived } from 'svelte/store';
 import { registerSync } from "$lib/services/sync.svelte";
 import { mediaIdFromRef, type MediaFile } from "$lib/services/mediaService";
+import { oneSpelling } from "$lib/utils/oneSpelling";
 
 export type ReleaseTrigger = 'date' | 'milestone';
 
@@ -56,35 +57,24 @@ export function capsuleMedia(m: Pick<TimeCapsuleMessage, 'videoUrl' | 'custom_at
 
 const timeCapsuleMapper = (item: any) => {
     if (!item) return item;
-    // Server rows arrive camel-cased (customAttributes); the page reads custom_attributes.
-    const customAttributes = item.custom_attributes ?? item.customAttributes;
-    // One spelling for the chosen person, so clearing it (null) is never undone by a stale copy.
-    const { recipient_contact_id, ...rest } = item;
-    const recipientContactId = 'recipientContactId' in item ? item.recipientContactId : recipient_contact_id;
-    return {
-        ...rest,
-        recipientContactId: recipientContactId ?? null,
-        custom_attributes: customAttributes,
-        customAttributes,
-        // Remote -> Local
-        videoUrl: item.video_url ?? item.videoUrl,
-        audioUrl: item.audio_url ?? item.audioUrl,
-        mediaId: item.media_id ?? item.mediaId,
-        contentPreview: item.content_preview ?? item.contentPreview,
-        triggerType: item.trigger_type ?? item.triggerType,
-        triggerValue: item.trigger_value ?? item.triggerValue,
-        isReleased: item.is_released ?? item.isReleased ?? false,
-        createdAt: item.created_at ?? item.createdAt,
-        // Local -> Remote
-        video_url: item.videoUrl ?? item.video_url,
-        audio_url: item.audioUrl ?? item.audio_url,
-        media_id: item.mediaId ?? item.media_id,
-        content_preview: item.contentPreview ?? item.content_preview,
-        trigger_type: item.triggerType ?? item.trigger_type,
-        trigger_value: item.triggerValue ?? item.trigger_value,
-        is_released: item.isReleased ?? item.is_released,
-        created_at: item.createdAt ?? item.created_at
-    };
+    // One spelling per field (the page's), so an edit or a cleared field (null) is never undone
+    // by a stale copy. Server rows arrive camel-cased (customAttributes); the page and
+    // capsuleMedia() read custom_attributes.
+    const out = oneSpelling(item, {
+        recipientContactId: 'recipient_contact_id',
+        custom_attributes: 'customAttributes',
+        videoUrl: 'video_url',
+        audioUrl: 'audio_url',
+        mediaId: 'media_id',
+        contentPreview: 'content_preview',
+        triggerType: 'trigger_type',
+        triggerValue: 'trigger_value',
+        isReleased: 'is_released',
+        createdAt: 'created_at',
+    });
+    out.recipientContactId = out.recipientContactId ?? null;
+    out.isReleased = out.isReleased ?? false;
+    return out;
 };
 
 export const timeCapsuleSync = registerSync<TimeCapsuleMessage>('time_capsule', 'time_capsule', timeCapsuleMapper).setAffirmationContext('timeCapsule');

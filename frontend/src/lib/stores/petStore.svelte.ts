@@ -1,4 +1,5 @@
 import { registerSync } from "$lib/services/sync.svelte";
+import { oneSpelling } from "$lib/utils/oneSpelling";
 
 export interface PetEntry {
     id: string | number;
@@ -18,15 +19,19 @@ export interface PetEntry {
 
 const petMapper = (item: any) => {
     if (!item) return item;
+    // One spelling per field (camel; the wire snake-cases it), newest value kept
+    const out = oneSpelling(item, {
+        vetName: 'vet_name', vetPhone: 'vet_phone', foodInstructions: 'food_instructions',
+        medicalNeeds: 'medical_needs', microchipNumber: 'microchip_number',
+    });
     return {
-        ...item,
-        // Remote -> Local
-        vetName: item.vet_name ?? item.vetName ?? '',
-        vetPhone: item.vet_phone ?? item.vetPhone ?? '',
-        foodInstructions: item.food_instructions ?? item.foodInstructions ?? '',
-        medicalNeeds: item.medical_needs ?? item.medicalNeeds ?? '',
-        microchipNumber: item.microchip_number ?? item.microchipNumber ?? '',
-        documents: item.documents ?? ''
+        ...out,
+        vetName: out.vetName ?? '',
+        vetPhone: out.vetPhone ?? '',
+        foodInstructions: out.foodInstructions ?? '',
+        medicalNeeds: out.medicalNeeds ?? '',
+        microchipNumber: out.microchipNumber ?? '',
+        documents: out.documents ?? ''
     };
 };
 

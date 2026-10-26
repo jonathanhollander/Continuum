@@ -1,4 +1,5 @@
 import { registerSync } from "$lib/services/sync.svelte";
+import { oneSpelling } from "$lib/utils/oneSpelling";
 
 export type ClosurePreference = 'memorialize' | 'delete' | 'transfer' | 'none';
 
@@ -10,7 +11,7 @@ export interface DigitalAccount {
     instructions?: string;
     priority?: 'low' | 'medium' | 'high';
     isClosed?: boolean;
-    closureDate?: string;
+    closureDate?: string | null;
     description?: string; // From page usage
     type?: string;        // From page usage
 }
@@ -18,15 +19,10 @@ export interface DigitalAccount {
 const digitalAssetMapper = (item: any) => {
     if (!item) return item;
     return {
-        ...item,
+        // One spelling per field (camel; the wire snake-cases it), newest value kept
+        ...oneSpelling(item, { isClosed: 'is_closed', closureDate: 'closure_date' }),
         // Asset.name is required by the server; the digital UI only collects platform
-        name: item.name || item.platform || item.description || 'Digital account',
-        // Remote (snake) -> Local (camel)
-        isClosed: item.is_closed ?? item.isClosed,
-        closureDate: item.closure_date ?? item.closureDate,
-        // Local (camel) -> Remote (snake)
-        is_closed: item.isClosed ?? item.is_closed,
-        closure_date: item.closureDate ?? item.closure_date
+        name: item.name || item.platform || item.description || 'Digital account'
     };
 };
 
@@ -52,7 +48,7 @@ export const digitalAssetsStore = {
         if (item) {
             digitalAssetsSync.update(id, {
                 isClosed: !item.isClosed,
-                closureDate: !item.isClosed ? new Date().toISOString() : undefined
+                closureDate: !item.isClosed ? new Date().toISOString() : null // null clears it on the server
             });
         }
     },

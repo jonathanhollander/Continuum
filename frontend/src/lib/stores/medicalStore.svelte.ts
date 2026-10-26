@@ -1,6 +1,7 @@
 import { registerSync, registerSingletonSync } from "$lib/services/sync.svelte";
 import { deleteMedia, type MediaFile } from "$lib/services/mediaService";
 import { readCustom } from "$lib/utils/customFields";
+import { oneSpelling } from "$lib/utils/oneSpelling";
 
 export interface MedicalDirective {
     id: number | string;
@@ -35,31 +36,25 @@ export interface MedicalProfile {
 
 const profileMapper = (item: any) => {
     if (!item) return item;
-    return {
-        ...item,
-        // Remote -> Local
-        organDonor: item.organ_donor ?? item.organDonor ?? false,
-        bloodType: item.blood_type ?? item.bloodType ?? '',
-        // Local -> Remote
-        organ_donor: item.organDonor ?? item.organ_donor,
-        blood_type: item.bloodType ?? item.blood_type
-    };
+    // One spelling per field (camel; the wire snake-cases it), newest value kept
+    const out = oneSpelling(item, { organDonor: 'organ_donor', bloodType: 'blood_type' });
+    return { ...out, organDonor: out.organDonor ?? false, bloodType: out.bloodType ?? '' };
 };
 
 const directiveMapper = (item: any) => {
     if (!item) return item;
     // fileData/file_data: an older device-only field the server never kept; never sent.
     const { fileData, file_data, ...rest } = item;
+    // One spelling per field (camel; the wire snake-cases it), newest value kept
+    const out = oneSpelling(rest, {
+        locationOfOriginal: 'location_of_original', primaryContact: 'primary_contact',
+        contactPhone: 'contact_phone',
+    });
     return {
-        ...rest,
-        // Remote -> Local
-        locationOfOriginal: item.location_of_original ?? item.locationOfOriginal ?? '',
-        primaryContact: item.primary_contact ?? item.primaryContact ?? '',
-        contactPhone: item.contact_phone ?? item.contactPhone ?? '',
-        // Local -> Remote
-        location_of_original: item.locationOfOriginal ?? item.location_of_original,
-        primary_contact: item.primaryContact ?? item.primary_contact,
-        contact_phone: item.contactPhone ?? item.contact_phone
+        ...out,
+        locationOfOriginal: out.locationOfOriginal ?? '',
+        primaryContact: out.primaryContact ?? '',
+        contactPhone: out.contactPhone ?? ''
     };
 };
 

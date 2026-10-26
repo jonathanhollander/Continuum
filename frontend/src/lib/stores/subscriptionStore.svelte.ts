@@ -1,4 +1,5 @@
 import { registerSync } from "$lib/services/sync.svelte";
+import { oneSpelling } from "$lib/utils/oneSpelling";
 
 export interface Subscription {
     id?: number;
@@ -14,13 +15,15 @@ export interface Subscription {
     custom_attributes?: string; // JSON string of custom field values
 }
 
-const mapper = (data: any): Subscription => ({
-    ...data,
-    id: typeof data.id === 'string' && data.id.length > 10 ? undefined : Number(data.id) || data.id,
-    auto_renew: data.auto_renew ?? data.autoRenew ?? true,
-    renewal_date: data.renewal_date ?? data.renewalDate,
-    paymentMethod: data.paymentMethod ?? data.payment_method,
-});
+// One spelling per field (the page's; paymentMethod is a camel column), newest value kept.
+const mapper = (data: any): Subscription => {
+    const out = oneSpelling(data, { auto_renew: 'autoRenew', renewal_date: 'renewalDate', paymentMethod: 'payment_method' });
+    return {
+        ...out,
+        id: typeof out.id === 'string' && out.id.length > 10 ? undefined : Number(out.id) || out.id,
+        auto_renew: out.auto_renew ?? true,
+    };
+};
 
 // The one owner of 'subscriptions' (the subscriptions page uses it too).
 export const subscriptionsSync = registerSync<Subscription>('subscriptions', 'subscriptions', mapper, '/api/data')
