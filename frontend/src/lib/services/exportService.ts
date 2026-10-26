@@ -16,6 +16,7 @@ import { get } from 'svelte/store';
 import { API_BASE_URL } from '$lib/config';
 import { auth } from '$lib/stores/auth';
 import { estateTotals, isDebt } from '$lib/stores/financialAssetsStore.svelte';
+import { formatMoney } from '$lib/utils/money';
 import { fetchMediaBlob } from '$lib/services/mediaService';
 import { dateWords } from '$lib/utils/dateWords';
 
@@ -87,14 +88,7 @@ export async function fetchSnapshot(): Promise<Snapshot> {
 // Packet (the one readable model every output renders)
 // ---------------------------------------------------------------------------
 
-// Cents rounded half-up in decimal (3050.275 -> 3050.28), not on the binary float.
-const toCents = (v: any) => {
-    const n = Number((Number(v) || 0).toFixed(8)); // drop float noise first (6250.275 - 3200)
-    const r = Number(`${Math.round(Number(`${Math.abs(n)}e2`))}e-2`) * Math.sign(n);
-    return Number.isFinite(r) ? r : Math.round(n * 100) / 100;
-};
-const money = (v: any) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(toCents(v));
+const money = formatMoney;
 
 const has = (v: any) => v !== null && v !== undefined && v !== '' && !(typeof v === 'number' && Number.isNaN(v));
 
