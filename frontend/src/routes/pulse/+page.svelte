@@ -136,7 +136,7 @@
                             class="text-amber-600 flex items-center justify-center gap-2 font-medium"
                         >
                             <AlertTriangle class="w-4 h-4" />
-                            We haven't heard from you properly. Please check in.
+                            Whenever you're ready, a check-in lets your circle know you're well.
                         </p>
                     {:else}
                         <p class="text-slate-500">

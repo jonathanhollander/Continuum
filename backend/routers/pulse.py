@@ -81,7 +81,7 @@ def get_status(user: User = Depends(get_current_user), session: Session = Depend
     return {
         "status": "active" if (last_checkin and now < last_checkin.timestamp + freq) else "grace",
         "last_checkin": _utc_iso(last_checkin.timestamp) if last_checkin else None,
-        "next_nudge": next_time.strftime("%Y-%m-%d %H:%M"),
+        "next_nudge": _utc_iso(next_time),
         "guardian_checkin": {
             "at": _utc_iso(guardian.timestamp),
             "by": (guardian.note or "").rpartition(" by ")[2] or "A guardian",
@@ -92,18 +92,12 @@ def get_status(user: User = Depends(get_current_user), session: Session = Depend
 
 @router.get("/settings", summary="Retrieve Pulse settings", description="Gets the user's Pulse configuration, including frequency and current check-in token.")
 def get_settings(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    # A read never writes: with no saved row, return the defaults unsaved. The row (and its
+    # check-in token) is created when the person saves their settings.
     settings = session.get(PulseSettings, user.id)
-    if not settings:
-        settings = PulseSettings(user_id=user.id, checkin_token=secrets.token_urlsafe(16))
-        session.add(settings)
-        session.commit()
-    elif not settings.checkin_token:
-        settings.checkin_token = secrets.token_urlsafe(16)
-        session.add(settings)
-        session.commit()
-    return settings
+    return settings or PulseSettings(user_id=user.id)
 
-@router.post("/settings", summary="Update Pulse settings", description="Updates the user's Pulse configuration. Resets the check-in token if not provided.")
+@router.post("/settings", summary="Update Pulse settings", description="Saves the user's Pulse configuration, creating the row on first save. The check-in token is issued by the server on first save and kept.")
 @limiter.limit("10/minute")
 def update_settings(request: Request, new_settings: PulseSettings, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     settings = session.get(PulseSettings, user.id)
@@ -112,9 +106,13 @@ def update_settings(request: Request, new_settings: PulseSettings, user: User = 
         session.add(settings)
     
     settings_data = new_settings.dict(exclude_unset=True)
+    settings_data.pop("user_id", None)  # the row always belongs to the signed-in person
+    settings_data.pop("checkin_token", None)  # server-issued, kept once made
     for key, value in settings_data.items():
         setattr(settings, key, value)
-        
+    if not settings.checkin_token:
+        settings.checkin_token = secrets.token_urlsafe(16)
+
     session.add(settings)
     session.commit()
     return {"status": "updated"}
