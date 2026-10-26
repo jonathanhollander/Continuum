@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { directiveSync } from "$lib/stores/medicalStore.svelte";
+    import { formSaveAttempt } from "$lib/utils/formSaveAttempt";
     import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { readCustom } from "$lib/utils/customFields";
     import { fade, slide } from "svelte/transition";
@@ -108,6 +110,10 @@
         });
     }
 
+    const saveAttempt = formSaveAttempt(directiveSync);
+    // A failed attempt's uploaded document remains available after its form closes or changes.
+    const keptMedia = new Set<number>();
+
     // One save at a time: while it is open the button waits, so a second click sends nothing.
     let saving = $state(false);
     async function saveDirective() {
@@ -122,57 +128,31 @@
 
     async function saveDirectiveOnce() {
         if (!newDirective.title) return;
-
+        const form = newDirective;
+        const fields = JSON.stringify([form, parsedCustomAttributes, formMedia]);
+        const id = form.id;
+        const ownerName = estateProfile.current.ownerName || "User";
         const { [DIRECTIVE_MEDIA_KEY]: _ignored, ...customValues } = parsedCustomAttributes;
-        const attached = formMedia;
-        const replaced = savedMedia && savedMedia.id !== attached?.id ? savedMedia : null;
-        const customJson = JSON.stringify(
-            attached ? { ...customValues, [DIRECTIVE_MEDIA_KEY]: attached } : customValues,
-        );
-        const directiveData = {
-            ...newDirective,
-            // Both spellings: the record holds the server's camel-cased copy too.
-            custom_attributes: customJson,
-            customAttributes: customJson,
-        };
-
+        const attached = formMedia ? { ...formMedia } : null;
+        const replaced = savedMedia && savedMedia.id !== attached?.id ? { ...savedMedia } : null;
+        const customJson = JSON.stringify(attached ? { ...customValues, [DIRECTIVE_MEDIA_KEY]: attached } : customValues);
+        const payload = { ...form, custom_attributes: customJson, customAttributes: customJson };
+        if (attached) keptMedia.add(attached.id);
         try {
-        if (newDirective.id) {
-            await medicalStore.updateDirective(newDirective.id, directiveData);
-            activityLog.logEvent({
-                module: "Health & Medical",
-                action: "UPDATE",
-                entityType: "Medical Directive",
-                entityId: String(newDirective.id),
-                entityName: newDirective.title || "",
-                userContext: estateProfile.current.ownerName || "User",
-            });
-        } else {
-            const created = await medicalStore.addDirective(
-                directiveData as Omit<MedicalDirective, "id">,
-                saveDirective,
-            );
-            if (attached) {
-                updateMediaMetadata(attached.id, undefined, String(created.id)).catch(() => undefined);
-            }
-            activityLog.logEvent({
-                module: "Health & Medical",
-                action: "CREATE",
-                entityType: "Medical Directive",
-                entityId: String(created.id),
-                entityName: newDirective.title || "",
-                userContext: estateProfile.current.ownerName || "User",
-            });
-        }
-
-        // The directive now holds the new file; the one it replaced goes.
-        if (replaced) {
-            deleteMedia(replaced.id).catch((e) => console.warn("[medical] file removal paused", replaced.id, e));
-        }
-        savedMedia = attached;
-        resetForm();
+            await saveAttempt(form, payload, (saved) => {
+                if (attached) updateMediaMetadata(attached.id, undefined, String(saved.id)).catch(() => undefined);
+                if (replaced) deleteMedia(replaced.id).catch((e) => console.warn("[medical] file removal paused", replaced.id, e));
+                activityLog.logEvent({
+                    module: "Health & Medical", action: id ? "UPDATE" : "CREATE", entityType: "Medical Directive",
+                    entityId: String(saved.id), entityName: saved.title, userContext: ownerName,
+                });
+                if (newDirective !== form) return;
+                savedMedia = attached;
+                if (JSON.stringify([form, parsedCustomAttributes, formMedia]) === fields) resetForm();
+                else newDirective.id = saved.id;
+            }, id);
         } catch {
-            // The manager already showed the one gentle message; the form stays open with the draft.
+            // The captured attempt and its document stay available through Try Again.
         }
     }
 
@@ -193,7 +173,7 @@
 
     /** A file attached in this form but never saved on the directive. */
     function dropUnsavedFile() {
-        if (formMedia && formMedia.id !== savedMedia?.id) {
+        if (formMedia && formMedia.id !== savedMedia?.id && !keptMedia.has(formMedia.id)) {
             const id = formMedia.id;
             deleteMedia(id).catch((e) => console.warn("[medical] file removal paused", id, e));
         }

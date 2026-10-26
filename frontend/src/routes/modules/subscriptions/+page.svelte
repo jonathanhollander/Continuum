@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { formSaveAttempt } from "$lib/utils/formSaveAttempt";
     import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { focusTrap } from "$lib/actions/focusTrap";
     import { readCustom } from "$lib/utils/customFields";
@@ -110,6 +111,8 @@
 
     // save() removed (SyncManager handles persistence)
 
+    const saveAttempt = formSaveAttempt(subscriptionSync);
+
     // One save at a time: while it is open the button waits, so a second click sends nothing.
     let saving = $state(false);
     async function saveSubscription() {
@@ -124,69 +127,29 @@
 
     async function saveSubscriptionOnce() {
         if (!newSub.name) return;
-
+        const form = newSub;
+        const fields = JSON.stringify([form, parsedCustomAttributes]);
+        const ownerName = $estateProfile.ownerName || "User";
+        const id = form.id;
+        const payload = {
+            name: form.name, cost: Number(form.cost) || 0, cycle: form.cycle || "Monthly",
+            paymentMethod: form.paymentMethod || "", nextBilling: form.nextBilling || "",
+            difficulty: form.difficulty || "Medium", cancellationInstructions: form.cancellationInstructions || "",
+            loginUrl: form.loginUrl || "", notes: form.notes || "", auto_renew: !isClosed(form),
+            custom_attributes: JSON.stringify(parsedCustomAttributes),
+        };
         try {
-        if (newSub.id) {
-            // Edit Mode
-            await subscriptionSync.update(newSub.id, {
-                name: newSub.name,
-                cost: newSub.cost,
-                cycle: newSub.cycle,
-                paymentMethod: newSub.paymentMethod,
-                nextBilling: newSub.nextBilling,
-                difficulty: newSub.difficulty,
-                cancellationInstructions: newSub.cancellationInstructions,
-                loginUrl: newSub.loginUrl,
-                notes: newSub.notes,
-                auto_renew: !isClosed(newSub),
-                custom_attributes: JSON.stringify(parsedCustomAttributes),
-            });
-
-            // Log UPDATE handled by component manually for now, or move to SyncManager hooks?
-            // Existing logging logic:
-            const oldSub = subscriptions.find((s) => s.id === newSub.id);
-            // ... (Logging logic relies on oldSub, which is fine since we calculate it before update if we want exact diff,
-            // but for simplicity we'll keeping it simplified or just assume success logging)
-
-            activityLog.logEvent({
-                module: "Subscriptions",
-                action: "UPDATE",
-                entityType: "Subscription",
-                entityId: newSub.id,
-                entityName: newSub.name || "Unnamed Subscription",
-                changes: [], // omitting detailed changes for brevity/cleanliness in refactor
-                userContext: $estateProfile.ownerName || "User",
-            });
-        } else {
-            // Create Mode
-            const created = await subscriptionSync.create({
-                name: newSub.name || "Unknown Service",
-                cost: Number(newSub.cost) || 0,
-                cycle: newSub.cycle || "Monthly",
-                paymentMethod: newSub.paymentMethod || "",
-                nextBilling: newSub.nextBilling || "",
-                difficulty: newSub.difficulty || "Medium",
-                cancellationInstructions: newSub.cancellationInstructions || "",
-                loginUrl: newSub.loginUrl || "",
-                notes: newSub.notes || "",
-                auto_renew: !isClosed(newSub),
-                custom_attributes: JSON.stringify(parsedCustomAttributes),
-            }, false, false, saveSubscription);
-
-            // Log CREATE
-            activityLog.logEvent({
-                module: "Subscriptions",
-                action: "CREATE",
-                entityType: "Subscription",
-                entityId: created.id,
-                entityName: created.name || "Unknown Service",
-                userContext: $estateProfile.ownerName || "User",
-            });
-        }
-
-        resetForm();
+            await saveAttempt(form, payload, (saved) => {
+                activityLog.logEvent({
+                    module: "Subscriptions", action: id ? "UPDATE" : "CREATE", entityType: "Subscription",
+                    entityId: saved.id, entityName: saved.name, userContext: ownerName,
+                });
+                if (newSub !== form) return;
+                if (JSON.stringify([form, parsedCustomAttributes]) === fields) resetForm();
+                else newSub.id = saved.id;
+            }, id);
         } catch {
-            // The manager already showed the one gentle message; the form stays open with the draft.
+            // The captured attempt stays available through Try Again.
         }
     }
 

@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { petSync } from "$lib/stores/petStore.svelte";
+    import { formSaveAttempt } from "$lib/utils/formSaveAttempt";
     import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { readCustom } from "$lib/utils/customFields";
     import { fade, slide, scale } from "svelte/transition";
@@ -69,6 +71,10 @@
         notes: "",
     });
 
+    const saveAttempt = formSaveAttempt(petSync);
+    // A failed attempt's uploaded document remains available after its form closes or changes.
+    const keptMedia = new Set<number>();
+
     // One save at a time: while it is open the button waits, so a second click sends nothing.
     let saving = $state(false);
     async function savePet() {
@@ -83,54 +89,31 @@
 
     async function savePetOnce() {
         if (!newPet.name) return;
-
+        const form = newPet;
+        const fields = JSON.stringify([form, parsedCustomAttributes, formMedia]);
+        const id = form.id;
+        const ownerName = estateProfile.current.ownerName || "User";
         const { [PET_MEDIA_KEY]: _ignored, ...customValues } = parsedCustomAttributes;
-        const attached = formMedia;
-        const replaced = savedMedia && savedMedia.id !== attached?.id ? savedMedia : null;
-        const customJson = JSON.stringify(
-            attached ? { ...customValues, [PET_MEDIA_KEY]: attached } : customValues,
-        );
-        const petData = {
-            ...newPet,
-            // Both spellings: the record holds the server's camel-cased copy too.
-            custom_attributes: customJson,
-            customAttributes: customJson,
-        };
-
+        const attached = formMedia ? { ...formMedia } : null;
+        const replaced = savedMedia && savedMedia.id !== attached?.id ? { ...savedMedia } : null;
+        const customJson = JSON.stringify(attached ? { ...customValues, [PET_MEDIA_KEY]: attached } : customValues);
+        const payload = { ...form, custom_attributes: customJson, customAttributes: customJson };
+        if (attached) keptMedia.add(attached.id);
         try {
-        if (newPet.id) {
-            await petStore.updatePet(newPet.id, petData);
-            activityLog.logEvent({
-                module: "Pet Care",
-                action: "UPDATE",
-                entityType: "Pet",
-                entityId: newPet.id as string,
-                entityName: newPet.name,
-                userContext: $estateProfile.ownerName || "User",
-            });
-        } else {
-            const created = await petStore.addPet(petData as Omit<PetEntry, "id">, savePet);
-            if (attached) {
-                updateMediaMetadata(attached.id, undefined, String(created.id)).catch(() => undefined);
-            }
-            activityLog.logEvent({
-                module: "Pet Care",
-                action: "CREATE",
-                entityType: "Pet",
-                entityId: String(created.id),
-                entityName: newPet.name || "Unknown",
-                userContext: $estateProfile.ownerName || "User",
-            });
-        }
-
-        // The pet now holds the new document; the one it replaced goes.
-        if (replaced) {
-            deleteMedia(replaced.id).catch((e) => console.warn("[pets] file removal paused", replaced.id, e));
-        }
-        savedMedia = attached;
-        closeAndReset(); // the store shows the one affirmation
+            await saveAttempt(form, payload, (saved) => {
+                if (attached) updateMediaMetadata(attached.id, undefined, String(saved.id)).catch(() => undefined);
+                if (replaced) deleteMedia(replaced.id).catch((e) => console.warn("[pets] file removal paused", replaced.id, e));
+                activityLog.logEvent({
+                    module: "Pet Care", action: id ? "UPDATE" : "CREATE", entityType: "Pet",
+                    entityId: String(saved.id), entityName: saved.name, userContext: ownerName,
+                });
+                if (newPet !== form) return;
+                savedMedia = attached;
+                if (JSON.stringify([form, parsedCustomAttributes, formMedia]) === fields) closeAndReset();
+                else newPet.id = saved.id;
+            }, id);
         } catch {
-            // The manager already showed the one gentle message; the form stays open with the draft.
+            // The captured attempt and its document stay available through Try Again.
         }
     }
 
@@ -157,7 +140,7 @@
 
     /** A document attached in this form but never saved on the pet. */
     function dropUnsavedFile() {
-        if (formMedia && formMedia.id !== savedMedia?.id) {
+        if (formMedia && formMedia.id !== savedMedia?.id && !keptMedia.has(formMedia.id)) {
             const id = formMedia.id;
             deleteMedia(id).catch((e) => console.warn("[pets] file removal paused", id, e));
         }

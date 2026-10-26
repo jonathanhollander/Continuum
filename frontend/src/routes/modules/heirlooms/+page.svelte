@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { formSaveAttempt } from "$lib/utils/formSaveAttempt";
     import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { focusTrap } from "$lib/actions/focusTrap";
     import { readCustom } from "$lib/utils/customFields";
@@ -186,6 +187,8 @@
         showAddForm = true;
     }
 
+    const saveAttempt = formSaveAttempt(heirloomSync);
+
     // One save at a time: while it is open the button waits, so a second click sends nothing.
     let saving = $state(false);
     async function saveHeirloom() {
@@ -200,48 +203,36 @@
 
     async function saveHeirloomOnce() {
         if (!newHeirloom.name) return;
-
-        if (isEditing && editingId !== null) {
-            try {
-                await heirloomStore.updateItem(editingId, {
-                    name: newHeirloom.name,
-                    recipient: newHeirloom.recipient || "",
-                    story: newHeirloom.story || "",
-                    image: newHeirloom.image || "",
-                    ownershipDetails: newHeirloom.ownershipDetails || "",
-                    custom_attributes: JSON.stringify(parsedCustomAttributes),
-                });
-            } catch {
-                return; // the manager already showed the one gentle message; the form keeps the edits
-            }
-            showAddForm = false;
-            isEditing = false;
-            editingId = null;
-            return;
-        }
-
+        const form = newHeirloom;
+        const fields = JSON.stringify([form, parsedCustomAttributes]);
+        const id = isEditing && editingId !== null ? editingId : undefined;
+        const payload = {
+            name: form.name, recipient: form.recipient || "", story: form.story || "",
+            image: form.image || "", ownershipDetails: form.ownershipDetails || "",
+            custom_attributes: JSON.stringify(parsedCustomAttributes),
+        };
         try {
-            await heirloomSync.create({
-                name: newHeirloom.name || "Untitled treasure",
-                recipient: newHeirloom.recipient || "",
-                story: newHeirloom.story || "",
-                image: newHeirloom.image || "",
-                ownershipDetails: newHeirloom.ownershipDetails || "",
-                custom_attributes: JSON.stringify(parsedCustomAttributes),
-            }, false, false, saveHeirloom);
+            await saveAttempt(form, payload, async (saved) => {
+                if (newHeirloom !== form) return;
+                if (JSON.stringify([form, parsedCustomAttributes]) !== fields) {
+                    editingId = saved.id;
+                    isEditing = true;
+                    return;
+                }
+                showAddForm = false;
+                isEditing = false;
+                editingId = null;
+                newHeirloom = { name: "", recipient: "", story: "", image: "", ownershipDetails: "" };
+                parsedCustomAttributes = {};
+                if (id === undefined && wizardQueue.length > 0) {
+                    const [next, ...rest] = wizardQueue;
+                    await tick();
+                    openAddForm(next);
+                    wizardQueue = rest;
+                }
+            }, id);
         } catch {
-            return; // the manager already showed the one gentle message; the form keeps the draft
-        }
-
-        showAddForm = false;
-        newHeirloom = { name: "", recipient: "", story: "", image: "", ownershipDetails: "" };
-        parsedCustomAttributes = {};
-
-        if (wizardQueue.length > 0) {
-            const [next, ...rest] = wizardQueue;
-            await tick();
-            openAddForm(next);
-            wizardQueue = rest;
+            // The captured attempt stays available through Try Again.
         }
     }
 
