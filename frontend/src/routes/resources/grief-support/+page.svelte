@@ -229,7 +229,7 @@
                     class="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed"
                 >
                     A quiet space for reflection, guidance, and discovery. You
-                    don't have to carry the weight alone.
+                    can lean on others as you carry this.
                 </p>
             </header>
 
@@ -293,9 +293,9 @@
                         <p
                             class="text-sm text-rose-200/80 italic leading-relaxed"
                         >
-                            "If you are in immediate danger or experiencing a
-                            medical emergency, please call your local emergency
-                            services immediately."
+                            "If you are in danger or facing a medical
+                            emergency, please reach out to your local emergency
+                            services right away."
                         </p>
                     </div>
                 </aside>
@@ -446,9 +446,8 @@
                                 <div
                                     class="w-full p-8 border border-dashed border-white/10 rounded-2xl text-center text-slate-500 italic"
                                 >
-                                    We haven't found support in that area yet.
-                                    You might try a nearby city, or reach out to
-                                    us for help finding resources.
+                                    A nearby city may have more support. We're
+                                    glad to help you find resources.
                                 </div>
                             {/if}
                         </div>

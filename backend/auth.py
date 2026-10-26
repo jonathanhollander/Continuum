@@ -76,7 +76,7 @@ def _subject_to_user_id(sub) -> Optional[int]:
 def get_current_user(token: str = Depends(oauth2_scheme), session: Session = Depends(get_session)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
+        detail="Let's sign in again.",
         headers={"WWW-Authenticate": "Bearer"},
     )
     

@@ -13,6 +13,8 @@
         loadAttachmentFiles,
         buildDownloadCopy,
         saveBlob,
+        milestoneLabel,
+        isExecutorContact,
         type SnapshotAttachment,
     } from "$lib/services/exportService";
     import type { RecipientView } from "$lib/services/recipientService";
@@ -171,14 +173,16 @@
         const out: { title: string; body: string; href?: string }[] = [
             { title: "Take a moment for yourself", body: "There is time. This page stays here for you, and you can come back to it whenever you need." },
         ];
+        // "See below" only points at a section this page shows (card G4).
+        const toPeople = people.length ? "#people" : undefined;
         if (firstCalls.length)
-            out.push({ title: `Let ${names(firstCalls)} know`, body: `${OwnerName} asked that they hear first. Their numbers are below.`, href: "#people" });
+            out.push({ title: `Let ${names(firstCalls)} know`, body: `${OwnerName} asked that they hear first. Their numbers are below.`, href: toPeople });
         if (recipient.is_executor)
-            out.push({ title: "You are named as executor", body: "The originals of the important papers are listed below, with where each one is kept.", href: "#originals" });
+            out.push({ title: "You are named as executor", body: originals.length ? "The originals of the important papers are listed below, with where each one is kept." : "The important papers are in the full record at the end of this page.", href: originals.length ? "#originals" : "#record" });
         else if (otherExecutors.length)
-            out.push({ title: `${otherExecutors.join(" and ")} can help with the legal steps`, body: `${OwnerName} named them as executor.`, href: "#people" });
+            out.push({ title: `${otherExecutors.join(" and ")} can help with the legal steps`, body: `${OwnerName} named them as executor.`, href: otherExecutors.some((n) => people.some((c) => c.name === n)) ? toPeople : undefined });
         if (hasWishes)
-            out.push({ title: "Their final wishes are written down", body: "You can read them in the full record at the end of this page.", href: "#record" });
+            out.push({ title: packet.ownerName ? `${packet.ownerName}'s final wishes are written down` : "The final wishes are written down", body: "You can read them in the full record at the end of this page.", href: "#record" });
         if (pets.length)
             out.push({ title: `${names(pets)} will need care`, body: "Their routines, food and vet are in the full record.", href: "#record" });
         out.push({ title: "When you feel ready, a funeral home can guide the first arrangements", body: "You can lean on them for the practical steps." });
@@ -294,7 +298,7 @@
                             <div class="flex items-start justify-between gap-3">
                                 <div>
                                     <p class="font-semibold text-lg">{c.name}</p>
-                                    <p class="text-sm text-stone-500">{[c.relation, c.role].filter(Boolean).join(" · ")}{#if c.is_executor} · Executor{/if}</p>
+                                    <p class="text-sm text-stone-500">{[c.relation, c.role, isExecutorContact(c, snapshot.owner?.executor_name) && String(c.role ?? "").trim().toLowerCase() !== "executor" ? "Executor" : ""].filter(Boolean).join(" · ")}</p>
                                 </div>
                                 {#if TIERS[c.call_tier]}
                                     <span class="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-[#D4AF37]/15 text-[#7a6420]">{TIERS[c.call_tier][1]}</span>
@@ -341,7 +345,7 @@
                         <article class="bg-white rounded-2xl border border-stone-200 p-8 shadow-sm" data-letter={l.id}>
                             <h3 class="font-serif text-2xl text-stone-800">{l.title}</h3>
                             <p class="text-sm text-stone-500 mt-1">
-                                {[l.date ? `Written ${fmtDate(l.date)}` : "", l.triggerMilestone ? `For ${l.triggerMilestone}` : l.triggerDate ? `For ${fmtDate(l.triggerDate)}` : ""].filter(Boolean).join(" · ")}
+                                {[l.date ? `Written ${fmtDate(l.date)}` : "", l.triggerMilestone ? `For ${milestoneLabel(l.triggerMilestone)}` : l.triggerDate ? `For ${fmtDate(l.triggerDate)}` : ""].filter(Boolean).join(" · ")}
                             </p>
                             {#if open}
                                 <p class="font-serif text-lg leading-relaxed whitespace-pre-wrap mt-6" data-testid="letter-content">{l.content}</p>
@@ -371,7 +375,7 @@
                         <article class="bg-white rounded-2xl border border-stone-200 p-8" data-capsule={m.id}>
                             <h3 class="font-serif text-2xl">{m.title}</h3>
                             <p class="text-sm text-stone-500 mt-1">
-                                {m.trigger_type === "milestone" ? `For ${String(m.trigger_value).replace(/[_-]+/g, " ")}` : m.trigger_value ? `Opened ${fmtDate(m.trigger_value)}` : ""}
+                                {m.trigger_type === "milestone" ? `For ${milestoneLabel(m.trigger_value)}` : m.trigger_value ? `Opened ${fmtDate(m.trigger_value)}` : ""}
                             </p>
                             {#if m.content_preview}<p class="font-serif text-lg leading-relaxed whitespace-pre-wrap mt-5">{m.content_preview}</p>{/if}
                             {@render media(filesFor("time_capsule", m.id))}

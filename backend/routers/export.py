@@ -24,10 +24,10 @@ from sqlmodel import Session, select
 from backend.auth import get_current_user
 from backend.database import Estate, User, get_session
 from backend.estate_models import (
-    Asset, Document, FamilyMemory, FinancialAccount, FuneralData, HomeAccess,
-    InsurancePolicy, JournalEntry, Letter, LifeEvent, MedicalDirective,
-    MedicalProfile, Pet, Subscription, TimeCapsuleMessage, Utility, Vendor,
-    VisualMemory,
+    Asset, CalendarEvent, Document, ExternalArchive, FamilyMemory, FinancialAccount,
+    FuneralData, HomeAccess, InsurancePolicy, JournalEntry, Letter, LifeEvent,
+    MedicalDirective, MedicalProfile, Pet, Subscription, TimeCapsuleMessage, Utility,
+    Vendor, VisualMemory,
 )
 from backend.models.media import MediaFile
 from backend.pulse_models import PulseContact
@@ -47,7 +47,9 @@ SECTION_MODELS = [
     ("journal_entries", JournalEntry),
     ("time_capsule", TimeCapsuleMessage),
     ("visual_memories", VisualMemory),
+    ("external_archives", ExternalArchive),
     ("family_memories", FamilyMemory),
+    ("calendar_events", CalendarEvent),
     ("home_access", HomeAccess),
     ("utilities", Utility),
     ("vendors", Vendor),
@@ -70,6 +72,8 @@ PROFILE_KEYS = ("owner_name", "executor_name", "spouse_name", "primary_beneficia
 
 MEDIA_REF = re.compile(r"/api/media/(\d+)(?:/download)?(?:[?#].*)?$")
 DATA_URL = re.compile(r"^data:([\w.+-]+/[\w.+-]+)?(;[^,]*)?,", re.I)
+# A file kept inside custom_attributes (medical directive, pet care document, time capsule).
+CUSTOM_MEDIA_KEY = "_media"
 
 
 def asset_category(a: Asset) -> str:
@@ -142,6 +146,15 @@ def _attachments(sections: Dict[str, List[Dict[str, Any]]], media: Dict[int, Med
             rid = _record_id(section, row)
             for field, value in row.items():
                 ref = {"section": section, "id": rid, "field": field}
+                if field == "custom_attributes" and isinstance(value, str) and CUSTOM_MEDIA_KEY in value:
+                    try:
+                        held = json.loads(value).get(CUSTOM_MEDIA_KEY)
+                    except (ValueError, AttributeError):
+                        held = None
+                    mid = held.get("id") if isinstance(held, dict) else None
+                    if isinstance(mid, int) or (isinstance(mid, str) and mid.isdigit()):
+                        link_media(int(mid), ref)
+                    continue
                 if field == "media_id" and value not in (None, ""):
                     if str(value).isdigit():
                         link_media(int(value), ref)

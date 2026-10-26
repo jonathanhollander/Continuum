@@ -154,7 +154,7 @@
                 >
                     <ImageIcon size={32} />
                 </div>
-                <p class="text-slate-400 font-medium">Gallery is empty</p>
+                <p class="text-slate-400 font-medium">Photos you add will appear here.</p>
             </div>
         {:else}
             <div

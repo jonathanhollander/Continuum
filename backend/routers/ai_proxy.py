@@ -20,8 +20,8 @@ logger = get_logger(__name__)
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 ALLOWED_MODELS = {"google/gemini-2.0-flash-001"}
 UNAVAILABLE_MESSAGE = (
-    "AI help isn't available right now. Everything else is still here for you, "
-    "and you can come back to this whenever you're ready."
+    "AI help is resting right now. Everything else is here for you, "
+    "and you can come back whenever you're ready."
 )
 
 _client: Optional[httpx.AsyncClient] = None
@@ -59,7 +59,7 @@ async def ai_chat(
     if not api_key:
         raise HTTPException(status_code=503, detail=UNAVAILABLE_MESSAGE)
     if body.model not in ALLOWED_MODELS:
-        raise HTTPException(status_code=400, detail="That assistant isn't one we offer.")
+        raise HTTPException(status_code=400, detail="This space offers a different assistant.")
 
     payload = body.model_dump(exclude_none=True)
     headers = {

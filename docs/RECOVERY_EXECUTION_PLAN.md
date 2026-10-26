@@ -378,6 +378,8 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X4 | Frontend paths depend on the working directory (A4 finding 1) | `frontend/dist` paths in `backend/main.py` are relative | The static-mount and SPA-fallback lines in `backend/main.py` | Resolve from `Path(__file__).resolve().parent.parent` | The server started from `backend/` still serves the SPA when dist exists |
 | X214 | Dictionary labels and wording | `general-purpose` | `frontend/src/lib/stores/dictionary.ts` | Add `labelSpouse`, `labelPrimaryBeneficiary`, `labelLegalAddress` in all six languages (G1); positive wording for `exportDesc` ("never leaves your machine") and `encHidden` ("Zen Mode (Off)"). Proof: each language renders the three labels |
 | X215 | Email handoff from marketing | `general-purpose` | `routes/+layout.svelte` (handoff pickup only), `routes/login/+page.svelte`, `routes/signup/+page.svelte`, `routes/start/+page.svelte` | From G16: the layout turns any `?email` on any page into the active local account before sign-in — limit the pickup to `/start`; a returning keyring email goes to `/login?email=` with the field filled; carry the `/start` choice through signup via `redirect` (guided → concierge, expert → dashboard). Proof: three clicks, before/after URLs and field values |
+| X216 | Tone leftovers outside the G cards | `general-purpose` | `backend/templates/emails/base.html` (footer link only), `backend/routers/auth.py:431`, `backend/routers/estate_data.py:359,433`, `frontend/src/lib/data/registry.json`, `routes/modules/analytics/+page.svelte`, `scripts/pr-review/emotional_tone_checker.py` | From T1: footer link `continuum.im` → `https://continuum.estate`; raw `str(e)` details → logged plus gentle message; registry #5/#7 and analytics "Systems Optimal" per T0e; tone checker suggestion follows the no-negatives rule. Proof: API probe shows gentle text; rendered email link |
+| X217 | Store mapper defaults and prefill | `general-purpose` | `insuranceStore.svelte.ts`, `propertyStore.svelte.ts`, insurance wizard beneficiary prefill line in `routes/modules/insurance/+page.svelte`, Important Dates recurring toggle in `routes/modules/anniversary-manager/+page.svelte` | From G11: insurance mapper defaults `insurer`/`notes`, property mapper `location`/`name` to ""; insurance wizard leaves beneficiaries blank (same rule as G0b U-c). From G9: Important Dates edit form shows and saves `recurring` ("Every year"). Proof: null row renders; wizard row has empty beneficiaries; one-time row switched to yearly persists |
 | X5 | Remove the `jh@continuum.estate` bypass (was F5) | Passwordless login to production for anyone | The bypass block in `backend/routers/auth.py`; `CLAUDE.md` dev-login line | Delete the bypass | Dispatched **after** the release browser test (which signs in with it); merged once the owner has signed in once with a real password or passkey, so he is never locked out; then a targeted deploy; note (U43): admin is "user id 1" on server and client, and `/admin/*` routes have no admin check — security track; login page `goto(redirectUrl)` (lines ~31, 97, 181) uses `?redirect` unchecked — an absolute URL navigates off-site; reuse the X193 same-site check (X193) |
 | X7 | Auth error paths (A5 findings) | `get_current_user`/`optional_current_user` accept magic-link tokens as access tokens (`backend/auth.py:73-95`); an unrecognised stored hash makes login 500 not 401 (`auth.py:28`, `routers/auth.py:246`); magic-link verify 500s on a token with no `sub` (`routers/auth.py:625`) | `backend/auth.py`; the token and magic-link-verify handlers in `backend/routers/auth.py` (not the bypass block) | Reject tokens whose `type` isn't an access token; treat unknown hashes as a failed login; 401 for a token with no `sub` | Locally: a magic-link token is refused by a protected endpoint; a user with a non-hash stored value gets 401; a no-`sub` token gets 401; normal login and refresh still work |
 | X8 | Naive `datetime.utcnow()` defaults (A5 finding) | 41 uses in 15 backend files; deprecated, and the same family as the SQLModel 0.0.48 crash | Those files — **dispatched after Wave C merges**, because B/C cards own `estate_models.py` and `routers/media.py` | One helper; same naive-UTC values stored, so no migration | `grep utcnow backend` finds only the helper; seed, login and one save per touched model still work |
@@ -991,14 +993,15 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X214 | ▶ | | |
 | G2 | ▶ | | |
 | G3 | ▶ | | |
-| G4 | ▶ | | |
+| G4 | ☑ | 69c4ebb | Snapshot adds calendar events and photo archives; `_media` files attached; packet sections Important dates and Photo archives; one milestone label map; one executor test (flag, role, profile name) for packet and /for; no dead anchors; owner named in wishes step; preview sign-in keeps redirect. Proof 16 FAIL → 20/20 PASS. Caller notes HOLD |
 | G5 | ▶ | | |
 | G6 | ▶ | | |
 | G7 | ▶ | | |
 | G8 | ▶ | | |
-| G9 | ▶ | | |
+| G9 | ☑ | 0515c00 | One `EVENT_TYPES` list; Important Dates keeps custom fields on edit (`{}` → saved), month/day selects ("Invalid Date" → "OCT 24"), calendar AI context, holiday/ritual rows editable both pages, cross-links, save waits for the store; T0c wording. Page merge HOLD |
 | G10 | ▶ | | |
-| G11 | ▶ | | |
+| G11 | ☑ | 12547e8 | Insurance/property wizards save blank instead of placeholders; insurance cards and table show agent, contact, expiry, notes, document; filter/search with no match shows "Show all" instead of first-run; property hides empty ownership, $0, status; T0b wording; null-safe search |
+| X217 | ▶ | | |
 | G12 | ▶ | | |
 | G13 | ▶ | | |
 | G14 | ☑ | 81da0b2 | Contacts: Designated Executor checkbox (create sent `false` always), Start page badge; medical proxy picks from contacts and fills phone; family-hub remove copy truthful; T0c wording on all four files. Start-page badges 0 → 1; executor control 0 → 1 (server `is_executor` true, hub ring shows); negative strings 3 → 0; proxy list null → 2 names |
@@ -1007,7 +1010,8 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X215 | ▶ | | |
 | G17 | ▶ | | |
 | G18 | ▶ | | |
-| T1 | ▶ | | |
+| T1 | ☑ | 6ef293e | Shared tone across 44 files: errorHandler messages and titles, ConfirmModal "Maybe later", shared ui copy, ModuleContent priority chip removed, settings/data, ai-audit, help (unverifiable claim removed), grief-support, magic-link/welcome emails and backend messages; `estate_data.py:363` stops sending raw exception text. API probes return the gentle text; 0 page errors |
+| X216 | ▶ | | |
 | G19 | ☐ | | after G5–G18 |
 | T0 | ☑ | | All 6 reports in `docs/reviews/2026-10-26-T0-tone/`; page fixes join their G cards, the rest become T1… |
 | V0 | ☑ | | V0a–V0e in `docs/reviews/2026-10-26-V0-colour/`. Palette: teal default, tokens per V0e §3. Fix order V1-T1 → V1-C1…C7 → V1-P1…P6 |

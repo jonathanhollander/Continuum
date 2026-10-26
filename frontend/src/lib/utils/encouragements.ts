@@ -24,7 +24,7 @@ const encouragements: Record<EncouragementCategory, string[]> = {
         "One document down. You're building real peace of mind.",
         "Your family will thank you for this someday.",
         "This is exactly the kind of thing that matters most.",
-        "You're doing something most people put off forever. That takes courage.",
+        "You're doing something thoughtful and brave.",
     ],
     firstPulse: [
         "You've just created a safety net for your loved ones.",
@@ -131,14 +131,14 @@ export function getEmptyStateMessage(moduleType: string): { title: string; descr
         },
         letters: {
             title: "Words that will matter forever",
-            description: "Messages to loved ones, wisdom to share, stories only you can tell. There's no rush—write when you're ready.",
+            description: "Messages to loved ones, wisdom to share, stories only you can tell. Write when you're ready.",
         },
         heirlooms: {
             title: "Treasures with stories",
-            description: "The things that matter most aren't always valuable—they're meaningful. Share the stories behind what you want to pass on.",
+            description: "What matters most is meaning, more than value. Share the stories behind what you want to pass on.",
         },
         default: {
-            title: "Nothing here yet",
+            title: "This space is ready",
             description: "This is where you'll keep track of important information. Add your first item when you're ready.",
         },
     };

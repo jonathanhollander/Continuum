@@ -40,7 +40,7 @@ def create_family_memory(request: Request, memory: FamilyMemory, user: User = De
 def update_family_memory(memory_id: int, memory_data: FamilyMemory, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     db_memory = session.get(FamilyMemory, memory_id)
     if not db_memory or db_memory.user_id != user.id:
-        raise HTTPException(status_code=404, detail="Memory not found")
+        raise HTTPException(status_code=404, detail="That memory may have been moved.")
     
     # Update fields
     for key, value in memory_data.model_dump(exclude={"id", "user_id"}).items():
@@ -55,7 +55,7 @@ def update_family_memory(memory_id: int, memory_data: FamilyMemory, user: User =
 def delete_family_memory(request: Request, memory_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     db_memory = session.get(FamilyMemory, memory_id)
     if not db_memory or db_memory.user_id != user.id:
-        raise HTTPException(status_code=404, detail="Memory not found")
+        raise HTTPException(status_code=404, detail="That memory may have been moved.")
 
     # P1-High: Audit logging for family memory deletion
     log_deletion(
@@ -102,7 +102,7 @@ def create_visual_memory(request: Request, memory: VisualMemory, user: User = De
 def update_visual_memory(memory_id: int, memory_data: VisualMemory, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     db_memory = session.get(VisualMemory, memory_id)
     if not db_memory or db_memory.user_id != user.id:
-        raise HTTPException(status_code=404, detail="Visual memory not found")
+        raise HTTPException(status_code=404, detail="That visual memory may have been moved.")
     
     for key, value in memory_data.model_dump(exclude={"id", "user_id"}).items():
         setattr(db_memory, key, value)
@@ -116,7 +116,7 @@ def update_visual_memory(memory_id: int, memory_data: VisualMemory, user: User =
 def delete_visual_memory(request: Request, memory_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     db_memory = session.get(VisualMemory, memory_id)
     if not db_memory or db_memory.user_id != user.id:
-        raise HTTPException(status_code=404, detail="Visual memory not found")
+        raise HTTPException(status_code=404, detail="That visual memory may have been moved.")
 
     # P1-High: Audit logging for visual memory deletion
     log_deletion(
@@ -163,7 +163,7 @@ def create_external_archive(request: Request, archive: ExternalArchive, user: Us
 def update_external_archive(archive_id: int, archive_data: ExternalArchive, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     db_archive = session.get(ExternalArchive, archive_id)
     if not db_archive or db_archive.user_id != user.id:
-        raise HTTPException(status_code=404, detail="Archive not found")
+        raise HTTPException(status_code=404, detail="That archive may have been moved.")
     
     for key, value in archive_data.model_dump(exclude={"id", "user_id"}).items():
         setattr(db_archive, key, value)
@@ -177,7 +177,7 @@ def update_external_archive(archive_id: int, archive_data: ExternalArchive, user
 def delete_external_archive(request: Request, archive_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     db_archive = session.get(ExternalArchive, archive_id)
     if not db_archive or db_archive.user_id != user.id:
-        raise HTTPException(status_code=404, detail="Archive not found")
+        raise HTTPException(status_code=404, detail="That archive may have been moved.")
 
     # P1-High: Audit logging for external archive deletion
     log_deletion(

@@ -162,7 +162,7 @@ def signup(request: Request, signup_data: SignupRequest, session: Session = Depe
         log_auth_failure(session, request, signup_data.email, "signup", "Email already registered")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
+            detail="This email is already registered. Signing in will take you there."
         )
 
     # Create new user
@@ -200,7 +200,7 @@ def signup(request: Request, signup_data: SignupRequest, session: Session = Depe
         if result.status == "saved_local":
             warnings.append(WarningMessage(
                 code="EMAIL_LOCAL_ONLY",
-                message="Your account is ready! Email was saved locally (development mode). Check backend/outbox/ for the welcome email.",
+                message="Your account is ready! The welcome email was saved to backend/outbox/ (development mode).",
                 severity="info"
             ))
         elif result.status == "failed":
@@ -218,7 +218,7 @@ def signup(request: Request, signup_data: SignupRequest, session: Session = Depe
         # Don't fail signup if email fails - add warning instead
         warnings.append(WarningMessage(
             code="EMAIL_FAILED",
-            message="Your account was created successfully, but we couldn't send the welcome email. You can still log in. If you need assistance, please contact support.",
+            message="Your account is ready, and signing in works now. Your welcome email is taking a moment. We're here if you'd like help.",
             severity="warning"
         ))
 
@@ -263,7 +263,7 @@ def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), se
         log_auth_failure(session, request, form_data.username, "password", "Invalid credentials")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
+            detail="Let's check the email and password together.",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -303,7 +303,7 @@ def passkey_register_start(request: Request, signup_data: PasskeySignupRequest, 
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
+            detail="This email is already registered. Signing in will take you there."
         )
 
     # Create new user (without password)
@@ -347,7 +347,7 @@ def passkey_register_finish(request: Request, payload: PasskeyRegisterFinishPayl
 
     challenge_data = challenge_store.pop(str(user_id))
     if not challenge_data or challenge_data.get("type") != "registration":
-        raise HTTPException(status_code=400, detail="Challenge expired or not found")
+        raise HTTPException(status_code=400, detail="That passkey step paused. Start it again whenever you're ready.")
 
     try:
         # Verify the registration
@@ -503,18 +503,18 @@ def passkey_login_finish(request: Request, payload: PasskeyLoginFinishPayload, s
 
     challenge_data = challenge_store.pop(challenge_id)
     if not challenge_data or challenge_data.get("type") != "authentication":
-        raise HTTPException(status_code=400, detail="Challenge expired or not found")
+        raise HTTPException(status_code=400, detail="That passkey step paused. Start it again whenever you're ready.")
 
     try:
         # Get credential ID from response
         cred_id = credential_response.get("id")
         if not cred_id:
-            raise HTTPException(status_code=400, detail="Missing credential ID")
+            raise HTTPException(status_code=400, detail="We need the passkey once more; try again.")
 
         # Find credential in database
         credential = session.get(PulseCredential, cred_id)
         if not credential:
-            raise HTTPException(status_code=401, detail="Credential not found")
+            raise HTTPException(status_code=401, detail="Let's try your passkey again, or sign in another way.")
 
         # Verify the authentication
         verification = verify_authentication(
@@ -531,7 +531,7 @@ def passkey_login_finish(request: Request, payload: PasskeyLoginFinishPayload, s
 
         passkey_user = session.get(User, credential.user_id)
         if not passkey_user:
-            raise HTTPException(status_code=401, detail="Authentication failed")
+            raise HTTPException(status_code=401, detail="Let's try that again together.")
         log_auth_success(session, request, passkey_user.id, passkey_user.email, "passkey")
 
         # Generate JWT tokens
@@ -564,7 +564,7 @@ def passkey_login_finish(request: Request, payload: PasskeyLoginFinishPayload, s
             }},
             exc_info=True
         )
-        raise HTTPException(status_code=401, detail="Authentication failed")
+        raise HTTPException(status_code=401, detail="Let's try that again together.")
 
 class MagicLinkRequest(BaseModel):
     email: EmailStr
@@ -592,7 +592,7 @@ def send_magic_link(request: Request, link_data: MagicLinkRequest, session: Sess
         # Don't reveal if user exists or not (timing-safe response)
         # Still log the attempt for security monitoring
         log_auth_failure(session, request, link_data.email, "magic_link", "User not found")
-        return {"status": "sent", "message": "If this email is registered, you will receive a magic link"}
+        return {"status": "sent", "message": "If this email has a space, a sign-in link is on its way."}
 
     # Generate magic link JWT token with short expiration
     access_token = create_access_token(
@@ -655,7 +655,7 @@ def send_magic_link(request: Request, link_data: MagicLinkRequest, session: Sess
     # Return success (don't leak if email exists)
     return {
         "status": "sent",
-        "message": "If this email is registered, you will receive a magic link"
+        "message": "If this email has a space, a sign-in link is on its way."
     }
 
 @router.get("/magic-link/verify")
@@ -674,18 +674,18 @@ def verify_magic_link(request: Request, token: str, session: Session = Depends(g
 
         if token_type != "magic_link":
             log_auth_failure(session, request, "", "magic_link_verify", "Invalid token type")
-            raise HTTPException(status_code=401, detail="Invalid token type")
+            raise HTTPException(status_code=401, detail="Let's sign in again.")
 
         try:
             user_pk = int(user_id)
         except (TypeError, ValueError):
             log_auth_failure(session, request, "", "magic_link_verify", "Token missing valid subject")
-            raise HTTPException(status_code=401, detail="Invalid or expired token")
+            raise HTTPException(status_code=401, detail="This link has rested. A fresh one is a click away from the sign-in page.")
 
         user = session.get(User, user_pk)
         if not user:
             log_auth_failure(session, request, "", "magic_link_verify", "User not found")
-            raise HTTPException(status_code=401, detail="User not found")
+            raise HTTPException(status_code=401, detail="Let's check the email you used.")
 
         # One-time use: record the jti on first verify. Reuses refresh_tokens (unique token_hash,
         # revoked=True so it can never act as a refresh token). Tokens without a jti (issued before
@@ -693,7 +693,7 @@ def verify_magic_link(request: Request, token: str, session: Session = Depends(g
         jti = payload.get("jti")
         if not jti or not isinstance(jti, str):
             log_auth_failure(session, request, user.email, "magic_link_verify", "Token has no one-time id")
-            raise HTTPException(status_code=401, detail="Invalid or expired token")
+            raise HTTPException(status_code=401, detail="This link has rested. A fresh one is a click away from the sign-in page.")
         import hashlib
         from datetime import datetime
         from sqlalchemy.exc import IntegrityError
@@ -710,7 +710,7 @@ def verify_magic_link(request: Request, token: str, session: Session = Depends(g
         except IntegrityError:
             session.rollback()
             log_auth_failure(session, request, user.email, "magic_link_verify", "Token already used")
-            raise HTTPException(status_code=401, detail="Invalid or expired token")
+            raise HTTPException(status_code=401, detail="This link has rested. A fresh one is a click away from the sign-in page.")
 
         # Log successful magic link authentication
         log_auth_success(session, request, user.id, user.email, "magic_link")
@@ -731,7 +731,7 @@ def verify_magic_link(request: Request, token: str, session: Session = Depends(g
 
     except jwt.PyJWTError:
         log_auth_failure(session, request, "", "magic_link_verify", "Invalid or expired token")
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
+        raise HTTPException(status_code=401, detail="This link has rested. A fresh one is a click away from the sign-in page.")
 
 
 # --- Refresh Token Endpoints ---
@@ -749,7 +749,7 @@ def refresh_access_token(request: Request, token_request: RefreshTokenRequest, s
         log_auth_failure(session, request, "", "refresh", "Invalid or expired refresh token")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired refresh token",
+            detail="Please sign in again whenever you're ready.",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -779,10 +779,10 @@ def logout(request: Request, token_request: RefreshTokenRequest, session: Sessio
     This only affects the current device/session.
     """
     if revoke_refresh_token(token_request.refresh_token, session):
-        return {"status": "success", "message": "Logged out successfully"}
+        return {"status": "success", "message": "You're signed out. Take care."}
     else:
         # Don't reveal if token was already revoked or invalid
-        return {"status": "success", "message": "Logged out successfully"}
+        return {"status": "success", "message": "You're signed out. Take care."}
 
 
 @router.post("/logout-all", summary="Logout from all devices", description="Revoke all refresh tokens for the current user, logging out from all devices.")
@@ -793,7 +793,7 @@ def logout_all(request: Request, user: User = Depends(get_current_user), session
     Requires valid access token authentication.
     """
     count = revoke_all_user_tokens(user.id, session)
-    return {"status": "success", "message": f"Logged out from all devices ({count} sessions revoked)"}
+    return {"status": "success", "message": f"You're signed out everywhere ({count} sessions)."}
 
 
 @router.patch("/preferences", response_model=UserResponse)

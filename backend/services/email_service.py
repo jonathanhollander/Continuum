@@ -345,7 +345,7 @@ class EmailService:
         payload = self._build_payload(
             to_email=to_email,
             recipient_name=_name_from_email(to_email),
-            subject="Your Secure Continuum Login Link",
+            subject="Your way back into Continuum",
             template_name="magic_link",
             template_context={"magic_link_url": magic_link_url}
         )
@@ -401,7 +401,7 @@ class EmailService:
         payload = self._build_payload(
             to_email=to_email,
             recipient_name=_name_from_email(to_email),
-            subject="Welcome to Continuum - Your Digital Legacy is Protected",
+            subject="Welcome to Continuum",
             template_name="welcome",
             template_context={"dashboard_url": dashboard_url},
             user_id=user_id

@@ -102,9 +102,8 @@
                                 Professional Directory
                             </h2>
                             <p class="text-gray-500">
-                                Connect with vetted professionals who specialize
-                                in estate planning. These contacts have been
-                                verified for quality and reliability.
+                                Professionals who specialize in estate
+                                planning.
                             </p>
                         </div>
                         <ProfessionalDirectory />
@@ -114,7 +113,7 @@
                 <div class="max-w-4xl mx-auto">
                     <div class="text-center mb-12">
                         <h2 class="font-serif text-3xl text-[#304743] mb-4">
-                            Frequently Asked Questions
+                            Common questions
                         </h2>
                         <p class="text-gray-500">
                             Common questions about securing your legacy.
