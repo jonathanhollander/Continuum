@@ -23,7 +23,10 @@
       "Bash(git push -q)",
       "Bash(git diff:*)",
       "Bash(python3 -:*)",
-      "Agent"
+      "Agent",
+      "Bash(cd:*)",
+      "Bash(sed -i:*)",
+      "Bash(railway:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
