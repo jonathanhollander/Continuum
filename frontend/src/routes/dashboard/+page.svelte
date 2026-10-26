@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onMount, untrack } from "svelte";
     import HolographicGrid from "$lib/components/dashboard/HolographicGrid.svelte";
     import ExecutorHub from "$lib/components/executor/ExecutorHub.svelte";
     import ExecutorWelcome from "$lib/components/executor/ExecutorWelcome.svelte";
@@ -241,6 +241,12 @@
 
     // Sync status summary for color key
     let statusSummary = $derived(syncStatusStore.getSummary());
+    // The chips count first loads as "Saving" and empty stores as "0 Kept safe": they show the
+    // gentle cue until the audit stores have answered and no first load is still running.
+    let chipsAnswered = $state(false);
+    $effect(() => {
+        if (!auditLoading && statusSummary.saving === 0) chipsAnswered = true;
+    });
 
     // Formatter
     const currency = new Intl.NumberFormat("en-US", {
@@ -287,19 +293,28 @@
             }
         }
 
-        // Gentle typewriter effect
+        // The rest of the page waits for the greeting only when the greeting can be typed now;
+        // otherwise its tiles show their own cue meanwhile.
+        if (auditLoading) loading = false;
+        return () => clearInterval(typing);
+    });
+
+    // Gentle typewriter effect. The greeting is chosen once, after the audit stores have
+    // answered, so the loading score never picks it.
+    let typing: ReturnType<typeof setInterval> | undefined;
+    $effect(() => {
+        if (auditLoading || typing) return;
+        const text = untrack(() => fullGreeting);
         let i = 0;
-        const interval = setInterval(() => {
-            if (i < fullGreeting.length) {
-                greeting += fullGreeting[i];
+        typing = setInterval(() => {
+            if (i < text.length) {
+                greeting += text[i];
                 i++;
             } else {
-                clearInterval(interval);
+                clearInterval(typing);
                 loading = false;
             }
         }, 30);
-
-        return () => clearInterval(interval);
     });
 
     // Check for onboarding redirect
@@ -459,6 +474,12 @@
                 </div>
 
                 <!-- Status Key Cards (clickable to filter) -->
+                {#if !chipsAnswered}
+                    <div class="mb-6 flex items-center gap-2" role="status" data-testid="chips-loading">
+                        <Loader2 size={14} class="animate-spin text-primary" />
+                        <span class="text-xs text-slate-500">Gathering your records...</span>
+                    </div>
+                {:else}
                 <div
                     class="mb-6 flex flex-wrap items-center gap-2"
                     in:fly={{ y: 10, duration: 400, delay: 450 }}
@@ -558,6 +579,7 @@
                         </button>
                     {/if}
                 </div>
+                {/if}
 
                 <!-- Search Results -->
                 {#if searchResults !== null}

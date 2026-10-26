@@ -164,9 +164,11 @@
         previousDataWasPresent = hasData;
     });
 
-    // Trigger sync on mount to fetch from API (registerSync only loads from localStorage)
+    // Trigger sync on mount to fetch from API (registerSync only loads from localStorage).
+    // financial-accounts syncs financial_assets itself and mounts this only after that
+    // first answer, so a second fetch there would repeat it.
     onMount(() => {
-        assetSync.sync();
+        if (syncKey !== "financial_assets" || assetSync.lastSync === null) assetSync.sync();
     });
 
     function parseHistory(history: number[] | string | undefined): number[] {
