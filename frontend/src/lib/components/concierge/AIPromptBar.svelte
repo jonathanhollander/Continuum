@@ -18,14 +18,16 @@
         | "digital-guardian"
         | "visual-memories" = "obituary";
     export let prompts: string[] = [];
-    export let promptPool: string[] = []; // NEW: Dynamic pool support
+    // Accepted so existing callers keep compiling; this bar doesn't show a pool.
+    // svelte-ignore export_let_unused
+    export let promptPool: string[] = [];
 
     let prompt = "";
     let isGenerating = false;
     let isListening = false;
     let result = "";
     let isNotice = false; // gentle unavailable message: plain text, no draft framing
-    let visiblePrompts: string[] = [];
+    let copyStatus: "" | "copied" | "failed" = "";
 
     const quickPrompts: Record<string, string[]> = {
         obituary: [
@@ -90,30 +92,17 @@
         ],
     };
 
-    function shufflePrompts() {
-        if (promptPool.length === 0) return;
-        // Pick 3 random prompts
-        const shuffled = [...promptPool].sort(() => 0.5 - Math.random());
-        visiblePrompts = shuffled.slice(0, 3);
-    }
-
-    $: if (promptPool.length > 0 && visiblePrompts.length === 0) {
-        shufflePrompts();
-    }
-
     async function runPrompt(text: string) {
         prompt = text;
         isGenerating = true;
+        copyStatus = "";
         logInteraction("AI Prompt", `Context: ${context} | Prompt: ${text}`);
 
         try {
-            // chat() never throws; on failure it returns a gentle notice instead of a draft.
+            // chat() never throws; on failure it sets `failed` and returns a gentle notice.
             const response = await aiConciergeService.chat(text, [], context);
-            const notice =
-                response.content.startsWith("AI help isn't available") ||
-                response.content.startsWith("I'm having a little trouble connecting");
-            isNotice = notice;
-            result = notice
+            isNotice = response.failed === true;
+            result = isNotice
                 ? response.content
                 : `[Draft based on: "${text}"]\n\n${response.content}`;
         } finally {
@@ -151,10 +140,14 @@
         }, 50); // Typing speed
     }
 
-    function copyResult() {
-        navigator.clipboard.writeText(result);
-        logInteraction("AI Copy", context);
-        alert("Copied to clipboard!");
+    async function copyResult() {
+        try {
+            await navigator.clipboard.writeText(result);
+            copyStatus = "copied";
+            logInteraction("AI Copy", context);
+        } catch {
+            copyStatus = "failed";
+        }
     }
 </script>
 
@@ -234,16 +227,29 @@
             >
                 {result}
             </div>
-            <button
-                class="absolute top-2 right-2 p-2 bg-gray-100 text-gray-500 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary-100 hover:text-primary-600"
-                on:click={copyResult}
-                title="Copy to Clipboard"
-            >
-                <Copy size={16} />
-            </button>
+            {#if !isNotice}
+                <button
+                    class="absolute top-2 right-2 p-2 bg-gray-100 text-gray-500 rounded-lg opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity hover:bg-primary-100 hover:text-primary-600"
+                    on:click={copyResult}
+                    title="Copy to clipboard"
+                    aria-label="Copy to clipboard"
+                >
+                    <Copy size={16} />
+                </button>
+                {#if copyStatus}
+                    <p class="mt-2 text-xs text-gray-500" role="status">
+                        {copyStatus === "copied"
+                            ? "Copied."
+                            : "We couldn't copy that just now. You can select the text and copy it yourself."}
+                    </p>
+                {/if}
+            {/if}
             <button
                 class="block w-full text-center text-xs text-primary-400 mt-4 hover:text-primary-600 hover:underline"
-                on:click={() => (result = "")}
+                on:click={() => {
+                    result = "";
+                    copyStatus = "";
+                }}
             >
                 Start Over
             </button>

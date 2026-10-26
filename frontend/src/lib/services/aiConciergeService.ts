@@ -4,7 +4,7 @@ import { userRole } from '../stores/conciergeStore.svelte.ts';
 
 import { apiFetch } from '../api/client';
 
-const AI_UNAVAILABLE = "AI help isn't available right now. Everything else is still here for you, and you can come back to this whenever you're ready.";
+export const AI_UNAVAILABLE = "AI help isn't available right now. Everything else is still here for you, and you can come back to this whenever you're ready.";
 
 /**
  * Sends a chat request to our own server (which holds the AI key).
@@ -32,6 +32,8 @@ import { overwhelmState } from './overwhelmDetection';
 
 export interface AIResponse {
     content: string;
+    /** True when the AI couldn't be reached; `content` then holds a gentle notice, not a reply. */
+    failed?: boolean;
     extractedData?: any;
     intent?: string;
     resources?: Array<{
@@ -191,9 +193,12 @@ Example: { "message": "Sarah recorded as daughter—what a beautiful gift to hav
         }
     } catch (error) {
         console.error('AI Error:', error);
-        return { content: error instanceof Error && error.message === AI_UNAVAILABLE
-            ? AI_UNAVAILABLE
-            : "I'm having a little trouble connecting right now. Please try again in a moment." };
+        return {
+            failed: true,
+            content: error instanceof Error && error.message === AI_UNAVAILABLE
+                ? AI_UNAVAILABLE
+                : "I'm having a little trouble connecting right now. Please try again in a moment."
+        };
     }
 }
 
