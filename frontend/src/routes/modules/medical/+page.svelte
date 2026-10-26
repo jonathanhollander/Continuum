@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { readCustom } from "$lib/utils/customFields";
     import { fade, slide } from "svelte/transition";
     import { onMount } from "svelte";
@@ -217,11 +218,11 @@
         parsedCustomAttributes = {};
     }
 
-    function removeDirective(id: string | number) {
+    async function removeDirective(id: string | number) {
         if (
-            !confirm(
+            !(await askConfirm(
                 "Remove this directive? This should only be done if the document has been revoked.",
-            )
+            ))
         )
             return;
         medicalStore.removeDirective(id);

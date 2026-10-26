@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { focusTrap } from "$lib/actions/focusTrap";
     import { readCustom } from "$lib/utils/customFields";
     import { fade, fly } from "svelte/transition";
@@ -235,9 +236,9 @@
 
     async function removeHeirloom(id: string | number) {
         if (
-            !confirm(
+            !(await askConfirm(
                 "Remove this heirloom? Your story will be preserved in the activity log.",
-            )
+            ))
         )
             return;
         try {

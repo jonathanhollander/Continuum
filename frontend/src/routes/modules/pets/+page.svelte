@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { readCustom } from "$lib/utils/customFields";
     import { fade, slide, scale } from "svelte/transition";
     import { quintOut } from "svelte/easing";
@@ -205,11 +206,11 @@
         resetForm();
     }
 
-    function removePet(id: number) {
+    async function removePet(id: number) {
         if (
-            !confirm(
+            !(await askConfirm(
                 "Remove this family member from your list? This detail can always be added back later.",
-            )
+            ))
         )
             return;
         petStore.removePet(id);

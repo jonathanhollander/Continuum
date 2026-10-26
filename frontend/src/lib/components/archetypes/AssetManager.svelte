@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { onMount } from "svelte";
     import {
         Plus,
@@ -348,7 +349,7 @@
     }
 
     async function removeAsset(id: string) {
-        if (!confirm("Remove this asset? You can add it back later if needed."))
+        if (!(await askConfirm("Remove this asset? You can add it back later if needed.")))
             return;
         const asset = assets.find((a) => a.id === id);
 
