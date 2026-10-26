@@ -7,17 +7,9 @@
         Loader2,
     } from "lucide-svelte";
     import { fade, slide } from "svelte/transition";
-    import { estateAudit, AuditStore, hasFuneralWishes } from "$lib/stores/auditStore.svelte";
-    import { financialAssetsSync } from "$lib/stores/financialAssetsStore.svelte";
-    import { insuranceSync } from "$lib/stores/insuranceStore.svelte";
-    import { contactSync } from "$lib/stores/familyStore.svelte";
-    import { directiveSync } from "$lib/stores/medicalStore.svelte";
-    import { digitalAssetsSync } from "$lib/stores/digitalAssetsStore.svelte";
-    import { heirloomSync } from "$lib/stores/heirloomStore.svelte";
-    import { lettersSync } from "$lib/stores/letterStore.svelte";
-    import { funeralSync } from "$lib/stores/funeralStore.svelte";
-    import { timeCapsuleSync } from "$lib/stores/timeCapsuleStore.svelte";
-    import { getRegistry } from "$lib/services/sync.svelte";
+    import { estateAudit, AuditStore } from "$lib/stores/auditStore.svelte";
+    import { auditReadiness } from "$lib/utils/auditReadiness.svelte";
+    import AuditSourceStatus from "$lib/components/AuditSourceStatus.svelte";
 
     // One finding per audit issue, and one per area the audit scores in full
     interface AuditFinding {
@@ -61,24 +53,8 @@
         legacy: "Legacy",
     };
 
-    // Same cue as the readiness hub: wait for each store the audit reads to have its first answer
-    // (unless this device already holds its records). The journal and visual-memory managers are
-    // reached through the registry, where their stores registered them.
-    const awaiting = (m: { lastSync: Date | null; status: string } | undefined, held: boolean) =>
-        !!m && m.lastSync === null && m.status !== "error" && !held;
-    let scanning = $derived.by(() => {
-        const reg = getRegistry() as Record<string, any>;
-        const lists = [
-            financialAssetsSync, insuranceSync, contactSync, directiveSync, digitalAssetsSync,
-            heirloomSync, lettersSync, timeCapsuleSync, reg["journal_entries"], reg["visual_memories"],
-        ];
-        // Every store is read each time (no short-circuit), so each one counts as shown and syncs now
-        const waits = [
-            ...lists.map((m) => awaiting(m, (m?.items?.length ?? 0) > 0)),
-            awaiting(funeralSync, hasFuneralWishes(funeralSync.data?.wishes)),
-        ];
-        return waits.includes(true);
-    });
+    let auditSources = $derived(auditReadiness());
+    let scanning = $derived(!auditSources.canScore);
     let score = $derived(estateAudit.percentage);
     let findings = $derived.by((): AuditFinding[] => {
         const open = estateAudit.issues.map((issue, i) => {
@@ -138,24 +114,8 @@
         </p>
     </div>
 
-    {#if scanning}
-        <div
-            class="max-w-xl mx-auto bg-card rounded-2xl p-12 border border-border shadow-sm text-center"
-            in:fade
-        >
-            <div
-                class="w-full bg-muted rounded-full h-2 mb-8 overflow-hidden relative"
-            >
-                <div
-                    class="absolute inset-0 bg-primary animate-slide-right w-1/3"
-                ></div>
-            </div>
-            <p class="text-sm text-primary-hover flex items-center justify-center gap-2" role="status">
-                <Loader2 size={16} class="animate-spin" />
-                Gathering your records...
-            </p>
-        </div>
-    {:else}
+    <AuditSourceStatus state={auditSources} />
+    {#if !scanning}
         <div in:slide={{ duration: 400, axis: "y" }}>
             <!-- Score Card -->
             <div
