@@ -1008,7 +1008,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X23 | ☑ | a183ea1 | Header `connect-src 'self'` (API_URL origin added only when it differs from ORIGIN; no `*` fallback); dashboard and an AI prompt-bar request on contacts: 0 CSP violations at 1440×900. Production: the release sets ORIGIN and API_URL both to https://continuum.estate, so it is `'self'` only |
 | X13 | ☑ | 339d96f | Fresh DB: full date and recurring MM-DD events create, edit, re-fetch. PostgreSQL-only `ALTER ... TYPE VARCHAR USING to_char` not run locally. Also fixed: the page sent `isRecurring`/`wish`/`emailTemplate` the model lacks (silently dropped), and upcoming-events sorting. Migration re-parented onto B2 at merge (single head) |
 | X11 | ☑ | 1007f48 | `/api-guide` 200 html; `/api`, `/api/nope` 404 JSON; `/modules/x` 200; traversal no leak |
-| X292 | ▶ | | |
+| X292 | ◐ code merged; storage owner decision | | `file_storage.py`: empty endpoint/region → AWS default; startup log names the active provider. Production keys (`AWS_ACCESS_KEY_ID` "R1ST…", bucket continuum, us-east-1) fail with InvalidAccessKeyId against AWS — not AWS keys, and no endpoint is set. Uploads still land on the container disk (no volume) until the owner picks: Railway volume (recommended) or working S3 credentials/endpoint |
 | X293 | ▶ | | |
 | X294 | ▶ | | |
 | X295 | ▶ | | |
