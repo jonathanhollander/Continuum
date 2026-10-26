@@ -1020,7 +1020,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X298 | ☑ | merged | Simulator POA check also counts a Health & Medical healthcare_proxy ("Healthcare proxy saved in Health & Medical."); Financial Accounts subtitle "Bank accounts, investments and debts, gathered in one place." |
 | X299 | ☑ | merged | Directive check counts living_will/dnr/palliative_care/other only (proxy → POA only); Vault fallback no longer matches any "health" name; POA line covers proxy; no "Manage" subtitles left |
 | X300 | ▶ | | |
-| X5 | ☐ | | |
+| X5 | ▶ | | |
 | X6 | ☐ (owner) | | |
 | X7 | ☑ | 8a5b462 | Fresh DB: login, /me, refresh 200; magic-link token on /me 401; "BYPASS_AUTH" stored value 401 (was 500); sub-less magic link 401 (was 500); valid magic link 200; jh@ bypass 200 |
 | X8 | ☑ | d8d2f95 | `backend/utils/clock.py` `utc_now()` (same naive-UTC value) replaces every `utcnow` in 16 files, incl. `auth.py`'s private copy. Fresh SQLite to d9e4f7a2b6c1, dev user seeds, login 200; one row per touched table (15 tables, 16 default columns) stored naive UTC in the old format with utcnow warnings set to raise; no utcnow in the server log. Remaining deprecations: passlib `crypt`, FastAPI `on_event` (`main.py:164,201`) → X79 |
