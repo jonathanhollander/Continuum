@@ -7,6 +7,7 @@ import { currentProfileId } from "$lib/stores/profileContext";
 import { get } from "svelte/store";
 import { untrack } from "svelte";
 import { notifications, type AffirmationContext } from "$lib/stores/notificationStore";
+import { captureSession, isCurrentSession, sessionToken, SessionChangedError, type SessionOwnership } from "$lib/services/sessionOwnership";
 
 const toCamel = (str: string) => str.replace(/([-_][a-z])/g, group => group.toUpperCase().replace('-', '').replace('_', ''));
 const toSnake = (str: string) => str.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
@@ -66,6 +67,45 @@ const BASE_URL = API_BASE_URL;
 
 // The account whose saved records a store currently holds (the getStored namespace).
 const storageAccount = () => get(activeAccountId) || 'anonymous';
+
+type OperationOwner = { session: SessionOwnership; account: string; profile: string };
+const captureOwner = (): OperationOwner => ({
+    session: captureSession(), account: storageAccount(), profile: get(currentProfileId) || 'owner'
+});
+const sameNamespace = (owner: OperationOwner) =>
+    storageAccount() === owner.account && (get(currentProfileId) || 'owner') === owner.profile;
+const currentOwner = (owner: OperationOwner) => sameNamespace(owner) && isCurrentSession(owner.session);
+const cloneData = <V>(value: V): V => JSON.parse(JSON.stringify(value)) as V;
+const recoveryMemory = new Map<string, unknown>();
+const namespaceKey = (key: string, owner: OperationOwner) => `continuum_acc_${owner.account}_prof_${owner.profile}_${key}`;
+/** Recovery reads must stay in the initiating account, even while another account is active. */
+function storedFor<V>(key: string, fallback: V, owner: OperationOwner): V {
+    const scoped = namespaceKey(key, owner);
+    if (recoveryMemory.has(scoped)) return recoveryMemory.get(scoped) as V;
+    if (typeof localStorage === 'undefined') return fallback;
+    let raw: string | null;
+    try { raw = localStorage.getItem(scoped); } catch { return fallback; }
+    if (raw === null) return fallback;
+    try { return JSON.parse(raw) as V; } catch { return raw as V; }
+}
+const saveFor = <V>(key: string, value: V, owner: OperationOwner) => {
+    const scoped = namespaceKey(key, owner);
+    try { setStored(key, value, owner.profile, owner.account); recoveryMemory.delete(scoped); }
+    catch (e) {
+        // Keeping recovery state must never turn a confirmed server result into another POST.
+        recoveryMemory.set(scoped, value);
+        console.warn('[sync] Earlier-session recovery is held in memory', e);
+    }
+};
+const ACCOUNT_CHANGED = new SessionChangedError();
+type RecoveredWrite<V> = {
+    key: string; kind: 'create' | 'update' | 'delete'; id?: string | number; data?: Partial<V>;
+    skipLocal?: boolean; quiet?: boolean; affirm?: boolean; requiresFollowUp?: boolean;
+};
+/** Opaque request identity lets an editor retry/release its own draft without content deduplication. */
+export type SaveFailure = Error & { recoveryId?: string };
+const identifiedFailure = (error: unknown, recoveryId: string): SaveFailure =>
+    Object.assign(error instanceof Error ? error : new Error(errMessage(error) || 'Failed to save'), { recoveryId });
 
 export type SyncStatus = "idle" | "syncing" | "error" | "synced";
 
@@ -173,6 +213,7 @@ export class SyncManager<T extends { id: number | string }> {
     private inflight: Promise<void> | null = null;
     /** Bumped by reset(): a sync started before it belongs to the previous account. */
     private generation = 0;
+    private readEpoch = 0;
     /** The current local-to-server upload; reset() leaves it, so the next one waits for it to stop. */
     private uploading: Promise<unknown> = Promise.resolve();
     /** Account whose records are loaded; null after a logout clear. */
@@ -189,6 +230,104 @@ export class SyncManager<T extends { id: number | string }> {
     /** Rows whose delete is in flight: an update to the row that settles meanwhile lands here, so a
      *  failed delete restores the row as it now is. */
     private removing = new Map<string, { generation: number; row: T }>();
+    /** Confirmed backend removals also filter reads that started before the removal. */
+    private confirmedRemoved = new Set<string>();
+    private activeWrites = new Map<string, { owner: OperationOwner; write: RecoveredWrite<T> }>();
+    private operationNotices = new Set<string>();
+    private recoveryNotices = new Set<string>();
+    private releasedRecoveries = new Set<string>();
+    private writeNotices = new Map<string, string>();
+    private trackNotice(key: string, id: string) {
+        const old = this.writeNotices.get(key);
+        if (old) { notifications.dismiss(old); this.operationNotices.delete(old); }
+        this.writeNotices.set(key, id);
+        this.operationNotices.add(id);
+    }
+
+    private get recoveryKey() { return `${this.key}__account_recovery`; }
+    private remember(owner: OperationOwner, write: RecoveredWrite<T>) {
+        const pending = storedFor<RecoveredWrite<T>[]>(this.recoveryKey, [], owner);
+        saveFor(this.recoveryKey, [...pending.filter(p => p.key !== write.key), write], owner);
+    }
+    private forget(owner: OperationOwner, key: string) {
+        this.activeWrites.delete(key);
+        this.releasedRecoveries.add(key);
+        const notice = this.writeNotices.get(key);
+        if (notice) { notifications.dismiss(notice); this.operationNotices.delete(notice); this.writeNotices.delete(key); }
+        const pending = storedFor<RecoveredWrite<T>[]>(this.recoveryKey, [], owner);
+        if (pending.some(p => p.key === key)) saveFor(this.recoveryKey, pending.filter(p => p.key !== key), owner);
+    }
+    /** A caller may release only a draft it explicitly completed or abandoned in this session. */
+    releaseRecovery(recoveryId: string, owner: SessionOwnership = captureSession()): void {
+        if (!isCurrentSession(owner)) return;
+        this.forget(captureOwner(), recoveryId);
+    }
+    private keepCreated(owner: OperationOwner, item: T) {
+        const items = storedFor<T[]>(this.key, [], owner);
+        saveFor(this.key, [...items.filter(i => String(i.id) !== String(item.id)), item], owner);
+        const sent = storedFor<string[]>(this.sentKey, [], owner);
+        saveFor(this.sentKey, [...new Set([...sent, String(item.id)])], owner);
+    }
+    private keepRemoved(owner: OperationOwner, id: string | number) {
+        const key = String(id);
+        saveFor(this.key, storedFor<T[]>(this.key, [], owner).filter(i => String(i.id) !== key), owner);
+        const sent = storedFor<string[] | null>(this.sentKey, null, owner);
+        if (sent) saveFor(this.sentKey, sent.filter(i => String(i) !== key), owner);
+        saveFor(this.uploadKey, storedFor<T[]>(this.uploadKey, [], owner).filter(i => String(i.id) !== key), owner);
+        saveFor(this.recoveryKey, storedFor<RecoveredWrite<T>[]>(this.recoveryKey, [], owner).filter(w => String(w.id) !== key), owner);
+    }
+    private resumeRecovered(owner: OperationOwner): Promise<void> {
+        // A sent write whose answer was lost may already exist on the server. Recovery
+        // is an explicit action after a fresh read, never a blind replay on account return.
+        for (const write of storedFor<RecoveredWrite<T>[]>(this.recoveryKey, [], owner)) {
+            if (!currentOwner(owner)) break;
+            if (this.recoveryNotices.has(write.key)) continue;
+            this.recoveryNotices.add(write.key);
+            const fromRecord = write.kind === 'delete' && write.requiresFollowUp;
+            this.trackNotice(write.key, notifications.showError({
+                message: fromRecord
+                    ? 'Your earlier removal is ready to review. You can continue from the item in your list.'
+                    : 'Your earlier draft is kept. Review your saved list, then choose Try Again to apply that change.',
+                code: 'DATABASE_ERROR'
+            }, fromRecord ? undefined : () => {
+                if (!currentOwner(owner) || this.releasedRecoveries.has(write.key)) return;
+                const attempt = write.kind === 'create'
+                    ? this.create(write.data || {}, !!write.skipLocal, !!write.quiet, undefined, write.key)
+                    : write.kind === 'update' ? this.update(write.id!, write.data, write.affirm, undefined, write.key)
+                    : this.delete(write.id!, undefined, write.key);
+                attempt.catch(() => {});
+            }));
+        }
+        return Promise.resolve();
+    }
+
+    /** Reconcile rows removed by an atomic backend operation; sends no DELETE requests.
+     *  Pass the parent's captured session so a late completion cannot change another account. */
+    confirmRemoved(ids: (string | number)[], owner: SessionOwnership = captureSession()): void {
+        if (!isCurrentSession(owner)) return;
+        this.readEpoch++;
+        this.inflight = null; // A fresh graph read must not join a pre-removal GET.
+        const keys = new Set(ids.map(String));
+        for (const key of keys) {
+            this.confirmedRemoved.add(key);
+            this.rowWrites.delete(key);
+            this.removing.delete(key);
+        }
+        this.items = this.items.filter(i => !keys.has(String(i.id)));
+        setStored(this.key, this.items);
+        const sent = getStored<string[] | null>(this.sentKey, null);
+        if (sent) setStored(this.sentKey, sent.filter(id => !keys.has(String(id))));
+        const pending = getStored<T[]>(this.uploadKey, []);
+        if (pending.length) setStored(this.uploadKey, pending.filter(i => !keys.has(String(i.id))));
+        const recovery = getStored<RecoveredWrite<T>[]>(this.recoveryKey, []);
+        const context = captureOwner();
+        for (const write of recovery) if (write.id != null && keys.has(String(write.id))) this.forget(context, write.key);
+        for (const [key, active] of this.activeWrites) if (active.write.id != null && keys.has(String(active.write.id))) this.forget(context, key);
+        this.status = 'synced';
+        this.error = null;
+        this.lastSync = new Date();
+        this.notify();
+    }
 
     /** Replace a row (in the list, or held by its in-flight delete); nothing after an account switch. */
     private setRow(id: number | string, generation: number, next: (row: T) => T) {
@@ -210,6 +349,16 @@ export class SyncManager<T extends { id: number | string }> {
     reset(clear = false) {
         this.inflight = null; // a sync still running belongs to the previous account
         this.generation++;
+        this.rowWrites.clear();
+        this.removing.clear();
+        this.confirmedRemoved.clear();
+        this.activeWrites.forEach(({ owner, write }) => this.remember(owner, write));
+        this.activeWrites.clear();
+        this.operationNotices.forEach(id => notifications.dismiss(id));
+        this.operationNotices.clear();
+        this.recoveryNotices.clear();
+        this.releasedRecoveries.clear();
+        this.writeNotices.clear();
         loadAnswered(this.key);
         this.loadedFor = clear ? null : storageAccount();
         this.items = clear ? [] : getStored<T[]>(this.key, []);
@@ -229,6 +378,8 @@ export class SyncManager<T extends { id: number | string }> {
     }
 
     private async runSync() {
+        const owner = captureOwner();
+        if (!currentOwner(owner)) return;
         this.status = "syncing";
         this.error = null;
 
@@ -237,16 +388,16 @@ export class SyncManager<T extends { id: number | string }> {
         // before we can check for migration eligibility
         const localItemsSnapshot = [...this.items];
         const generation = this.generation;
+        const readEpoch = this.readEpoch;
         const baseMark = this.baseCounter;
-        const account = storageAccount();
-        const profile = get(currentProfileId) || 'owner';
+        const { account, profile } = owner;
         // Still the account (and the run) this sync started for.
-        const current = () => this.generation === generation && storageAccount() === account && !!get(auth).token;
+        const current = () => this.generation === generation && this.readEpoch === readEpoch && currentOwner(owner);
         let answered = false; // the server returned the list (a later failure is an upload's)
 
         try {
             // Fetch Remote
-            const token = get(auth).token;
+            const token = sessionToken(owner.session);
             if (!token) {
                 console.warn(`[Sync:${this.key}] No auth token, skipping sync`);
                 this.status = "idle";
@@ -260,7 +411,7 @@ export class SyncManager<T extends { id: number | string }> {
 
             const rawItems: unknown[] = await res.json();
             // The account changed while this was in flight: these records belong to someone else.
-            if (get(auth).token !== token) return;
+            if (!current()) return;
             answered = true;
             loadAnswered(this.key);
             const remoteItems = rawItems.map(item => {
@@ -297,7 +448,7 @@ export class SyncManager<T extends { id: number | string }> {
                 });
                 if (res2.ok) {
                     const raw2 = await res2.json();
-                    if (get(auth).token !== token) return;
+                    if (!current()) return;
                     const wrapped2 = raw2.map((i: unknown) => {
                         const camel = convertKeys(i, toCamel);
                         return this.mapper ? this.mapper(camel) : camel as unknown as T;
@@ -311,7 +462,9 @@ export class SyncManager<T extends { id: number | string }> {
 
             this.status = "synced";
             this.lastSync = new Date();
+            await this.resumeRecovered(owner);
         } catch (e: unknown) {
+            if (!current()) return;
             console.error(`[Sync:${this.key}] Error:`, e);
             this.status = "error";
             this.error = errMessage(e) ?? null;
@@ -327,6 +480,7 @@ export class SyncManager<T extends { id: number | string }> {
      *  server copy (so a failure reverts to it), unless an update's answer arrived after this sync
      *  started; the open updates' fields stay laid over it on screen until their answers come back. */
     private withOpenUpdates(data: T[], generation: number, baseMark: number): T[] {
+        data = data.filter(i => !this.confirmedRemoved.has(String(i.id)));
         if (generation !== this.generation || this.rowWrites.size === 0) return data;
         return data.map(item => {
             const entry = this.rowWrites.get(String(item.id));
@@ -356,10 +510,11 @@ export class SyncManager<T extends { id: number | string }> {
     private async migrateUp(items: T[], token: string, account: string, profile: string,
                             sameAccount: () => boolean): Promise<boolean> {
         const left = [...items];
-        const save = () => setStored(this.uploadKey, left, profile, account);
+        const save = () => setStored(this.uploadKey, left.filter(i => !this.confirmedRemoved.has(String(i.id))), profile, account);
         save();
         while (left.length > 0) {
             if (!sameAccount()) return false;
+            if (this.confirmedRemoved.has(String(left[0].id))) { left.shift(); save(); continue; }
             try {
                 await this.post(left[0], token); // local copy is replaced by the server list afterwards
             } catch (e) {
@@ -413,41 +568,61 @@ export class SyncManager<T extends { id: number | string }> {
     // CRUD
     // quiet: background bookkeeping (activity log). Failures are logged to the console only,
     // never shown to the user, and never change this manager's status.
-    async create(data: Partial<T>, skipLocal = false, quiet = false, onRetry?: () => Promise<unknown>) {
+    async create(data: Partial<T>, skipLocal = false, quiet = false, onRetry?: () => Promise<unknown>, recoveryId?: string) {
+        const owner = captureOwner();
+        const generation = this.generation;
+        const current = () => generation === this.generation && currentOwner(owner);
+        if (!current()) throw ACCOUNT_CHANGED;
+        const draft = cloneData(data);
+        const operation: RecoveredWrite<T> = { key: recoveryId || crypto.randomUUID(), kind: 'create', data: draft, skipLocal, quiet };
+        if (!quiet) this.activeWrites.set(operation.key, { owner, write: operation });
+        let confirmed: T | undefined;
         if (!quiet && !skipLocal) { this.status = "syncing"; this.error = null; }
         try {
-            const newItem = await this.post(data, get(auth).token);
-
+            confirmed = await this.post(draft, sessionToken(owner.session));
+            if (!current()) {
+                if (!skipLocal) this.keepCreated(owner, confirmed);
+                this.forget(owner, operation.key);
+                throw ACCOUNT_CHANGED;
+            }
+            const newItem = confirmed;
             if (!skipLocal) {
                 this.items = [...this.items, newItem];
                 setStored(this.key, this.items);
                 const sentIds = getStored<string[] | null>(this.sentKey, null);
                 if (sentIds) setStored(this.sentKey, [...sentIds, String(newItem.id)]);
                 this.notify();
-
-                // Affirm only a save the person made (quiet = background bookkeeping).
-                if (this.affirmationContext && !quiet) {
-                    notifications.showAffirmation(this.affirmationContext, 'create');
-                }
+                if (this.affirmationContext && !quiet) notifications.showAffirmation(this.affirmationContext, 'create');
             }
+            this.forget(owner, operation.key);
             if (!quiet && !skipLocal) { this.status = "synced"; this.lastSync = new Date(); }
             return newItem;
         } catch (e: unknown) {
+            if (!current()) {
+                if (!confirmed) this.remember(owner, operation);
+                throw ACCOUNT_CHANGED;
+            }
             console.error("Create failed", e);
             if (quiet) throw e;
             if (!skipLocal) { this.status = "error"; this.error = errMessage(e) || "Failed to save"; }
-            // One gentle message. Nothing was added locally, so the caller's draft is untouched.
-            notifications.showError({
+            this.trackNotice(operation.key, notifications.showError({
                 message: 'Your draft is kept. We can save it again whenever you\'re ready.',
-                code: 'DATABASE_ERROR',
-                technicalDetails: errTechnical(e)
-            }, () => { (onRetry ? onRetry() : this.create(data, skipLocal)).catch(() => {}); });
-            throw e;
+                code: 'DATABASE_ERROR', technicalDetails: errTechnical(e)
+            }, () => {
+                if (!current() || this.releasedRecoveries.has(operation.key)) return;
+                this.activeWrites.delete(operation.key);
+                (onRetry ? onRetry() : this.create(draft, skipLocal, quiet, undefined, operation.key)).catch(() => {});
+            }));
+            throw identifiedFailure(e, operation.key);
         }
     }
 
     // affirm=false: a small setting saved in place (no affirmation); failures still show the gentle error.
-    async update(idOrData: T | number | string, partialData?: Partial<T>, affirm = true) {
+    async update(idOrData: T | number | string, partialData?: Partial<T>, affirm = true, onRetry?: () => Promise<unknown>, recoveryId?: string) {
+        const owner = captureOwner();
+        const generation = this.generation;
+        const owned = () => generation === this.generation && currentOwner(owner);
+        if (!owned()) throw ACCOUNT_CHANGED;
         let id: number | string;
         let updates: Partial<T>;
 
@@ -459,6 +634,10 @@ export class SyncManager<T extends { id: number | string }> {
             updates = partialData || {};
         }
 
+        updates = cloneData(updates);
+        const operation: RecoveredWrite<T> = { key: recoveryId || crypto.randomUUID(), kind: 'update', id, data: updates, affirm };
+        const current = () => owned() && !this.confirmedRemoved.has(String(id));
+        let confirmed: T | undefined;
         // Optimistic Update
         const index = this.items.findIndex(i => String(i.id) === String(id));
         if (index === -1) {
@@ -471,12 +650,12 @@ export class SyncManager<T extends { id: number | string }> {
             throw new Error(`Item ${id} not found`);
         }
 
+        this.activeWrites.set(operation.key, { owner, write: operation });
         this.status = "syncing";
         this.error = null;
         const currentItem = this.items[index];
         const updatedItem = { ...currentItem, ...updates };
         const seq = ++this.updateCounter;
-        const generation = this.generation;
         const key = String(id);
         let row = this.rowWrites.get(key);
         if (!row || row.generation !== generation) {
@@ -501,9 +680,10 @@ export class SyncManager<T extends { id: number | string }> {
         };
 
         try {
-            const token = get(auth).token;
             // The previous update to this row reaches the server first, so the newest one is kept there.
             await before;
+            if (!current()) throw ACCOUNT_CHANGED;
+            const token = sessionToken(owner.session);
             const payloadRaw = this.mapper ? this.mapper(updatedItem) : updatedItem;
             const payload = toWire(payloadRaw);
 
@@ -536,6 +716,12 @@ export class SyncManager<T extends { id: number | string }> {
             const raw = await res.json();
             const remoteItemRaw = convertKeys(raw, toCamel);
             const remoteItem = this.mapper ? this.mapper(remoteItemRaw) : remoteItemRaw as unknown as T;
+            confirmed = remoteItem;
+            if (!current()) {
+                if (!(generation === this.generation && this.confirmedRemoved.has(key))) this.keepCreated(owner, remoteItem);
+                this.forget(owner, operation.key);
+                throw ACCOUNT_CHANGED;
+            }
 
             // The server's row, with any newer update still in flight laid over it (those values
             // stay on screen until their own answer comes back).
@@ -556,8 +742,14 @@ export class SyncManager<T extends { id: number | string }> {
                 notifications.showAffirmation(this.affirmationContext, 'update');
             }
 
+            this.forget(owner, operation.key);
             return remoteItem;
         } catch (e: unknown) {
+            if (!current()) {
+                close();
+                if (!confirmed && !(generation === this.generation && this.confirmedRemoved.has(key))) this.remember(owner, operation);
+                throw ACCOUNT_CHANGED;
+            }
             console.error("Update failed, rolling back", e);
             // A newer update to this row is still open: it carries the whole row, so its answer
             // decides. Otherwise every field these updates touched goes back to the server's
@@ -579,21 +771,30 @@ export class SyncManager<T extends { id: number | string }> {
             this.error = errMessage(e) || "Failed to save";
             // Rollback restores the saved record; the caller's form still holds the typed draft,
             // and Try Again re-applies exactly those edits.
-            notifications.showError({
+            this.trackNotice(operation.key, notifications.showError({
                 message: 'Your draft is kept. We can save it again whenever you\'re ready.',
                 code: 'DATABASE_ERROR',
                 technicalDetails: errTechnical(e)
-            }, () => { this.update(id, updates, affirm).catch(() => {}); });
-            throw e;
+            }, () => {
+                if (!current() || this.releasedRecoveries.has(operation.key)) return;
+                this.activeWrites.delete(operation.key);
+                (onRetry ? onRetry() : this.update(id, updates, affirm, undefined, operation.key)).catch(() => {});
+            }));
+            throw identifiedFailure(e, operation.key);
         }
     }
 
     // onRemoved: runs once the server no longer has the record (first try, a 404, or Try Again).
-    async delete(id: number | string, onRemoved?: () => Promise<unknown> | void) {
+    async delete(id: number | string, onRemoved?: () => Promise<unknown> | void, recoveryId?: string) {
+        const owner = captureOwner();
+        const generation = this.generation;
+        const current = () => generation === this.generation && currentOwner(owner);
+        if (!current()) return;
+        const operation: RecoveredWrite<T> = { key: recoveryId || crypto.randomUUID(), kind: 'delete', id, requiresFollowUp: !!onRemoved };
+        this.activeWrites.set(operation.key, { owner, write: operation });
         // Optimistic
         const index = this.items.findIndex(i => String(i.id) === String(id));
         const removed = index === -1 ? null : this.items[index];
-        const generation = this.generation;
         const key = String(id);
         // An update to this row that settles while the delete is in flight changes this copy.
         const held = removed ? { generation, row: removed } : null;
@@ -606,7 +807,7 @@ export class SyncManager<T extends { id: number | string }> {
         this.notify();
 
         try {
-            const token = get(auth).token;
+            const token = sessionToken(owner.session);
             const res = await writeFetch(`${BASE_URL}${this.apiBase}/${this.endpoint}/${id}`, {
                 method: "DELETE",
                 headers: { 'Authorization': `Bearer ${token}` }
@@ -624,16 +825,21 @@ export class SyncManager<T extends { id: number | string }> {
                 throw error;
             }
             release();
-            // Gone from the server: a later sync neither keeps its id as sent nor uploads it again.
-            const sentIds = getStored<string[] | null>(this.sentKey, null);
-            if (sentIds) setStored(this.sentKey, sentIds.filter(s => s !== String(id)));
-            const pending = getStored<T[]>(this.uploadKey, []);
-            if (pending.some(i => String(i.id) === String(id))) {
-                setStored(this.uploadKey, pending.filter(i => String(i.id) !== String(id)));
+            if (!current()) {
+                this.keepRemoved(owner, id);
+                this.forget(owner, operation.key);
+                return;
             }
+            this.confirmRemoved([id], owner.session);
+            this.forget(owner, operation.key);
             this.status = "synced";
             this.lastSync = new Date();
         } catch (e: unknown) {
+            if (!current()) {
+                release();
+                this.remember(owner, operation);
+                return;
+            }
             // Rollback
             console.error("Delete failed, rolling back", e);
             // Put back only the removed record, at its place (the end if the list is now shorter),
@@ -649,27 +855,36 @@ export class SyncManager<T extends { id: number | string }> {
             }
             this.status = "error";
             this.error = errMessage(e) || "Failed to remove";
-            notifications.showError({
+            this.trackNotice(operation.key, notifications.showError({
                 message: 'It is still in your list. We can remove it again whenever you\'re ready.',
                 code: 'DATABASE_ERROR',
                 technicalDetails: errTechnical(e)
-            }, () => { this.delete(id, onRemoved).catch(() => {}); });
+            }, () => {
+                if (!current() || this.releasedRecoveries.has(operation.key)) return;
+                this.activeWrites.delete(operation.key);
+                this.delete(id, onRemoved, operation.key).catch(() => {});
+            }));
             return;
         }
         // Outside the try: a failing follow-up must never roll back a record the server removed.
-        if (onRemoved) {
+        if (onRemoved && current()) {
             try { await onRemoved(); } catch (e) { console.warn('[sync] follow-up after remove paused', id, e); }
         }
     }
 
     async audit() {
+        const owner = captureOwner();
+        const generation = this.generation;
+        const current = () => generation === this.generation && currentOwner(owner);
+        if (!current()) throw ACCOUNT_CHANGED;
         try {
-            const token = get(auth).token;
+            const token = sessionToken(owner.session);
             const res = await fetch(`${BASE_URL}${this.apiBase}/${this.endpoint}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!res.ok) throw new Error("Audit fetch failed");
             const rawItems: unknown[] = await res.json();
+            if (!current()) throw ACCOUNT_CHANGED;
             const remoteItems = rawItems.map(i => {
                 const camel = convertKeys(i, toCamel);
                 return this.mapper ? this.mapper(camel) : camel;
@@ -694,6 +909,7 @@ export class SyncManager<T extends { id: number | string }> {
                 }
             };
         } catch (e) {
+            if (!current()) throw ACCOUNT_CHANGED;
             console.error("Audit error", e);
             throw e;
         }
@@ -722,8 +938,8 @@ function sharedGet(url: string, token: string): Promise<unknown> {
 
 // Every store that read the same GET reaches this in the same microtask run, so a 0 ms timer
 // collects all of them before the one POST is sent.
-function sharedUpload(url: string, token: string, payload: Record<string, unknown>): Promise<unknown> {
-    const k = `${token}|${url}`;
+function sharedUpload(url: string, token: string, payload: Record<string, unknown>, owner: OperationOwner): Promise<unknown> {
+    const k = `${owner.session.generation}|${owner.account}|${owner.profile}|${url}`;
     let batch = _pendingUploads.get(k);
     if (!batch) {
         const b = { payload: {} as Record<string, unknown>, waiters: [] as { resolve: (v: unknown) => void; reject: (e: unknown) => void }[] };
@@ -731,6 +947,8 @@ function sharedUpload(url: string, token: string, payload: Record<string, unknow
         _pendingUploads.set(k, b);
         setTimeout(() => {
             _pendingUploads.delete(k);
+            if (!currentOwner(owner)) { b.waiters.forEach(w => w.reject(ACCOUNT_CHANGED)); return; }
+            token = sessionToken(owner.session)!;
             fetch(url, {
                 method: "POST",
                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
@@ -746,9 +964,9 @@ function sharedUpload(url: string, token: string, payload: Record<string, unknow
 }
 
 const isEmptyRecord = (r: unknown) => !r || typeof r !== 'object' || Object.keys(r).length === 0;
-const ACCOUNT_CHANGED = new Error("account changed before this save was sent");
 
-type ProfileBatch = { token: string; payload: Record<string, unknown>; waiters: { resolve: () => void; reject: (e: unknown) => void }[] };
+type ProfileBatch = { key: string; sequence: number; owner: OperationOwner; payload: Record<string, unknown>; waiters: { resolve: () => void; reject: (e: unknown) => void }[] };
+type RecoveredProfile = { key: string; sequence: number; payload: Record<string, unknown> };
 
 /** What the shared record needs from each store that owns a slice of it. */
 interface ProfileSlice {
@@ -757,6 +975,7 @@ interface ProfileSlice {
     hasLocalData(): boolean;
     wirePayloadOfData(): Record<string, unknown>;
     applyRemote(record: Record<string, unknown>): void;
+    cacheRemoteFor(record: Record<string, unknown>, owner: OperationOwner): void;
     syncFailed(e: unknown): void;
 }
 
@@ -774,8 +993,47 @@ class SharedRecord {
     synced = false;
     epoch = 0;
     loadedFor: string | null = storageAccount();
+    private loadedSession = captureSession().generation;
+    private loadedProfile = get(currentProfileId) || 'owner';
 
     constructor(private url: string) {}
+
+    private recoveryNotices = new Set<string>();
+    private noticeIds = new Set<string>();
+    private writeSequence = 0;
+    private get recoveryKey() { return `record:${this.url}__account_recovery`; }
+    private remember(batch: ProfileBatch) {
+        const pending = storedFor<RecoveredProfile[]>(this.recoveryKey, [], batch.owner);
+        const confirmed = storedFor<Record<string, number>>(this.recoveryKey + '__confirmed_fields', {}, batch.owner);
+        const payload = Object.fromEntries(Object.entries(batch.payload).filter(([k]) => (confirmed[k] || 0) < batch.sequence));
+        if (Object.keys(payload).length) saveFor(this.recoveryKey, [...pending.filter(p => p.key !== batch.key), { key: batch.key, sequence: batch.sequence, payload }], batch.owner);
+    }
+    private forget(batch: ProfileBatch) {
+        const confirmed = storedFor<Record<string, number>>(this.recoveryKey + '__confirmed_fields', {}, batch.owner);
+        for (const k of Object.keys(batch.payload)) confirmed[k] = Math.max(confirmed[k] || 0, batch.sequence);
+        saveFor(this.recoveryKey + '__confirmed_fields', confirmed, batch.owner);
+        const pending = storedFor<RecoveredProfile[]>(this.recoveryKey, [], batch.owner);
+        const left = pending.flatMap(p => {
+            const payload = Object.fromEntries(Object.entries(p.payload).filter(([k]) => (confirmed[k] || 0) < p.sequence));
+            return Object.keys(payload).length ? [{ ...p, payload }] : [];
+        });
+        if (pending.length) saveFor(this.recoveryKey, left, batch.owner);
+    }
+    private offerRecovery(owner: OperationOwner) {
+        for (const pending of storedFor<RecoveredProfile[]>(this.recoveryKey, [], owner)) {
+            if (this.recoveryNotices.has(pending.key)) continue;
+            this.recoveryNotices.add(pending.key);
+            this.noticeIds.add(notifications.showError({
+                message: 'Your earlier profile changes are kept. Review your saved details, then choose Try Again to apply them.',
+                code: 'DATABASE_ERROR'
+            }, () => {
+                if (!currentOwner(owner)) return;
+                this.write(pending.payload, owner, pending.key).then(() => {
+                    if (currentOwner(owner)) this.slices.forEach(s => s.applyRemote(this.current));
+                }).catch(() => {});
+            }));
+        }
+    }
 
     /** This record's place in the shared load notice. */
     private get noticeKey() { return `record:${this.url}`; }
@@ -789,10 +1047,18 @@ class SharedRecord {
         return out;
     }
 
-    /** Account change (clear: logout). Saves not yet sent belong to the old account and are dropped. */
+    /** Account change (clear: logout). Retain earlier writes for explicit same-owner recovery. */
     reset(clear: boolean) {
         const account = clear ? null : storageAccount();
-        if (!clear && this.loadedFor === account) return; // still this account: keep the record and any sync
+        const session = captureSession().generation;
+        const profile = get(currentProfileId) || 'owner';
+        if (!clear && this.loadedFor === account && this.loadedSession === session && this.loadedProfile === profile) return;
+        for (const batch of [this.sending, ...this.queue]) if (batch) this.remember(batch);
+        this.sending?.waiters.forEach(w => w.reject(ACCOUNT_CHANGED));
+        this.sending = null;
+        this.noticeIds.forEach(id => notifications.dismiss(id));
+        this.noticeIds.clear();
+        this.recoveryNotices.clear();
         this.epoch++;
         this.synced = false;
         this.inflight = null;
@@ -800,18 +1066,22 @@ class SharedRecord {
         this.server = {};
         this.queue.splice(0).forEach(b => b.waiters.forEach(w => w.reject(ACCOUNT_CHANGED)));
         this.loadedFor = account;
+        this.loadedSession = session;
+        this.loadedProfile = profile;
     }
 
     /** Bring one store up to date: joins the session's single GET, or reads the record already held. */
     async syncSlice(slice: ProfileSlice) {
+        if (this.loadedSession !== captureSession().generation) this.reset(false);
         this.attach(slice);
         if (!this.synced) return this.sync();
         // A store that registers after the first load and holds this device's earlier data uploads it
         // only while the account's record is still empty (as its own first load would have).
         if (isEmptyRecord(this.current) && slice.hasLocalData()) {
             const epoch = this.epoch;
-            try { await this.write(slice.wirePayloadOfData()); } catch (e) { if (e !== ACCOUNT_CHANGED) slice.syncFailed(e); return; }
-            if (epoch !== this.epoch) return;
+            const owner = captureOwner();
+            try { await this.write(slice.wirePayloadOfData(), owner); } catch (e) { if (e !== ACCOUNT_CHANGED && currentOwner(owner)) slice.syncFailed(e); return; }
+            if (epoch !== this.epoch || !currentOwner(owner)) return;
         }
         slice.applyRemote(this.current);
     }
@@ -824,7 +1094,8 @@ class SharedRecord {
     }
 
     private async run(epoch: number) {
-        const token = get(auth).token;
+        const owner = captureOwner();
+        const token = sessionToken(owner.session);
         if (!token) { this.slices.forEach(s => { s.status = "idle"; }); return; }
         this.slices.forEach(s => { s.status = "syncing"; s.error = null; });
         let answered = false; // the server returned the record (a later failure is an upload's)
@@ -832,7 +1103,7 @@ class SharedRecord {
             const res = await fetch(this.url, { headers: { 'Authorization': `Bearer ${token}` } });
             if (!res.ok) throw new Error("Failed to fetch remote data");
             const raw = await res.json();
-            if (epoch !== this.epoch || get(auth).token !== token) return; // account changed mid-flight
+            if (epoch !== this.epoch || !currentOwner(owner)) return; // account changed mid-flight
             answered = true;
             loadAnswered(this.noticeKey);
             this.server = convertKeys(raw, toCamel) || {};
@@ -844,30 +1115,38 @@ class SharedRecord {
                 this.slices.forEach(s => { if (s.hasLocalData()) Object.assign(upload, s.wirePayloadOfData()); });
                 if (!isEmptyRecord(upload)) {
                     console.log(`[Sync:${this.url}] Migrating local profile to cloud...`);
-                    await this.write(upload, token);
-                    if (epoch !== this.epoch) return;
+                    await this.write(upload, owner);
+                    if (epoch !== this.epoch || !currentOwner(owner)) return;
                 }
             }
             this.synced = true;
             const current = this.current;
             this.slices.forEach(s => s.applyRemote(current));
+            this.offerRecovery(owner);
         } catch (e: unknown) {
-            if (e === ACCOUNT_CHANGED || epoch !== this.epoch) return;
+            if (e === ACCOUNT_CHANGED || epoch !== this.epoch || !currentOwner(owner)) return;
             this.slices.forEach(s => s.syncFailed(e));
             // The first read of the record did not answer: each store keeps its device copy, and the
             // shared notice (one for every store) offers to load it again.
-            if (!answered && get(auth).token === token) {
-                loadFailed(this.noticeKey, () => { this.sync().catch(() => {}); }, errTechnical(e));
+            if (!answered && currentOwner(owner)) {
+                loadFailed(this.noticeKey, () => { if (currentOwner(owner)) this.sync().catch(() => {}); }, errTechnical(e));
             }
         }
     }
 
-    /** Queue a save of some keys (snake_case). Resolves once the server holds them. */
-    write(payload: Record<string, unknown>, token: string | null = get(auth).token): Promise<void> {
-        const t = token || '';
+    /** Queue only within the session/account that initiated these profile changes. */
+    write(payload: Record<string, unknown>, owner: OperationOwner = captureOwner(), recoveryId?: string): Promise<void> {
+        if (!currentOwner(owner)) return Promise.reject(ACCOUNT_CHANGED);
+        const recovered = storedFor<RecoveredProfile[]>(this.recoveryKey, [], owner);
+        const confirmed = storedFor<Record<string, number>>(this.recoveryKey + '__confirmed_fields', {}, owner);
+        this.writeSequence = Math.max(this.writeSequence, ...recovered.map(p => p.sequence), ...Object.values(confirmed)) + 1;
         let b = this.queue[this.queue.length - 1];
-        if (!b || b.token !== t) { b = { token: t, payload: {}, waiters: [] }; this.queue.push(b); }
-        Object.assign(b.payload, payload); // later save of the same key wins
+        if (!b || b.owner.session.generation !== owner.session.generation || !sameNamespace(b.owner) || recoveryId) {
+            b = { key: recoveryId || crypto.randomUUID(), sequence: this.writeSequence, owner, payload: {}, waiters: [] };
+            this.queue.push(b);
+        }
+        b.sequence = this.writeSequence;
+        Object.assign(b.payload, cloneData(payload));
         const batch = b;
         const done = new Promise<void>((resolve, reject) => batch.waiters.push({ resolve, reject }));
         this.pump();
@@ -877,24 +1156,40 @@ class SharedRecord {
     private pump() {
         if (this.sending || this.queue.length === 0) return;
         const b = this.queue.shift()!;
+        if (!currentOwner(b.owner)) {
+            this.remember(b);
+            b.waiters.forEach(w => w.reject(ACCOUNT_CHANGED));
+            this.pump();
+            return;
+        }
         this.sending = b;
         const epoch = this.epoch;
         fetch(this.url, {
             method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${b.token}` },
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${sessionToken(b.owner.session)}` },
             body: JSON.stringify(b.payload)
         })
             .then(res => { if (!res.ok) throw new Error("Update failed"); return res.json(); })
             .then(raw => {
-                if (epoch === this.epoch) this.server = convertKeys(raw, toCamel) || {};
-                this.sending = null;
-                b.waiters.forEach(w => w.resolve());
+                const saved = convertKeys<Record<string, unknown>>(raw, toCamel) || {};
+                this.forget(b);
+                if (epoch !== this.epoch || !currentOwner(b.owner)) {
+                    this.slices.forEach(s => s.cacheRemoteFor(saved, b.owner));
+                    b.waiters.forEach(w => w.reject(ACCOUNT_CHANGED));
+                } else {
+                    this.server = saved;
+                    b.waiters.forEach(w => w.resolve());
+                }
             }, e => {
-                this.sending = null;
-                b.waiters.forEach(w => w.reject(e));
+                this.remember(b);
+                b.waiters.forEach(w => w.reject(epoch === this.epoch && currentOwner(b.owner) ? e : ACCOUNT_CHANGED));
             })
-            .finally(() => this.pump());
+            .finally(() => {
+                if (this.sending === b) this.sending = null;
+                this.pump();
+            });
     }
+
 }
 
 /** Singleton stores whose page reports its own failed load (pulse settings: a page notice with its
@@ -961,8 +1256,39 @@ export class SingletonSyncManager<T extends object> {
     /** See SyncManager.loadedFor. */
     loadedFor: string | null = null;
 
+    private generation = 0;
+    private activeWrites = new Map<string, { owner: OperationOwner; key: string; data: Partial<T>; quiet: boolean }>();
+    private operationNotices = new Set<string>();
+    private recoveryNotices = new Set<string>();
+    private get recoveryKey() { return `${this.key}__account_recovery`; }
+    private remember(write: { owner: OperationOwner; key: string; data: Partial<T>; quiet: boolean }) {
+        const saved = storedFor<{ key: string; data: Partial<T>; quiet: boolean }[]>(this.recoveryKey, [], write.owner);
+        saveFor(this.recoveryKey, [...saved.filter(p => p.key !== write.key), { key: write.key, data: write.data, quiet: write.quiet }], write.owner);
+    }
+    private forget(owner: OperationOwner, key: string) {
+        this.activeWrites.delete(key);
+        const saved = storedFor<{ key: string; data: Partial<T>; quiet: boolean }[]>(this.recoveryKey, [], owner);
+        if (saved.some(p => p.key === key)) saveFor(this.recoveryKey, saved.filter(p => p.key !== key), owner);
+    }
+    private offerRecovery(owner: OperationOwner) {
+        for (const saved of storedFor<{ key: string; data: Partial<T>; quiet: boolean }[]>(this.recoveryKey, [], owner)) {
+            if (this.recoveryNotices.has(saved.key)) continue;
+            this.recoveryNotices.add(saved.key);
+            this.operationNotices.add(notifications.showError({
+                message: 'Your earlier changes are kept. Review your saved details, then choose Try Again to apply them.',
+                code: 'DATABASE_ERROR'
+            }, () => { if (currentOwner(owner)) this.update(saved.data, saved.quiet, saved.key).catch(() => {}); }));
+        }
+    }
+
     /** Account change: see SyncManager.reset. */
     reset(clear = false) {
+        this.activeWrites.forEach(write => this.remember(write));
+        this.activeWrites.clear();
+        this.operationNotices.forEach(id => notifications.dismiss(id));
+        this.operationNotices.clear();
+        this.recoveryNotices.clear();
+        this.generation++;
         this.inflight = null;
         loadAnswered(this.noticeKey);
         this.record?.reset(clear);
@@ -991,16 +1317,20 @@ export class SingletonSyncManager<T extends object> {
     }
 
     private async runSync() {
+        const owner = captureOwner();
+        const generation = this.generation;
+        const current = () => generation === this.generation && currentOwner(owner);
+        if (!current()) return;
         this.status = "syncing";
         this.error = null;
-        const token = get(auth).token;
+        const token = sessionToken(owner.session);
         let answered = false; // the server returned the record (a later failure is an upload's)
         try {
             if (!token) { this.status = "idle"; return; }
 
             const url = `${BASE_URL}${this.apiBase}/${this.endpoint}`;
             const raw = await sharedGet(url, token);
-            if (get(auth).token !== token) return; // account changed mid-flight
+            if (!current()) return; // account changed mid-flight
             answered = true;
             loadAnswered(this.noticeKey);
             const remoteDataRaw = convertKeys(raw, toCamel);
@@ -1012,8 +1342,8 @@ export class SingletonSyncManager<T extends object> {
 
             if (isRemoteEmpty && this.hasLocalData()) {
                 console.log(`[Sync:${this.key}] Migrating local singleton to cloud...`);
-                const saved = convertKeys(await sharedUpload(url, token, this.wirePayload(this.data!)), toCamel);
-                if (get(auth).token !== token) return;
+                const saved = convertKeys(await sharedUpload(url, token, this.wirePayload(this.data!), owner), toCamel);
+                if (!current()) return;
                 this.updateLocal(this.mapper ? this.mapper(saved) : saved as unknown as T);
             } else {
                 this.updateLocal(remoteData);
@@ -1021,14 +1351,16 @@ export class SingletonSyncManager<T extends object> {
 
             this.status = "synced";
             this.lastSync = new Date();
+            this.offerRecovery(owner);
         } catch (e: unknown) {
+            if (!current()) return;
             console.error(`[Sync:${this.key}] Error:`, e);
             this.status = "error";
             this.error = errMessage(e) ?? null;
             // First read failed: the shared notice offers to load it again (see SyncManager.runSync),
             // unless this store's page shows its own notice for it.
-            if (!answered && !this.#lastSync && token && get(auth).token === token && !OWN_LOAD_NOTICE.has(this.key)) {
-                loadFailed(this.noticeKey, () => { this.sync().catch(() => {}); }, errTechnical(e));
+            if (!answered && !this.#lastSync && token && current() && !OWN_LOAD_NOTICE.has(this.key)) {
+                loadFailed(this.noticeKey, () => { if (current()) this.sync().catch(() => {}); }, errTechnical(e));
             }
         }
     }
@@ -1063,6 +1395,12 @@ export class SingletonSyncManager<T extends object> {
         this.lastSync = new Date();
     }
 
+    /** Keep an earlier account's confirmed profile response out of the active store. */
+    cacheRemoteFor(record: Record<string, unknown>, owner: OperationOwner) {
+        const saved = (this.mapper ? this.mapper(record) : record) as T;
+        saveFor(this.key, saved, owner);
+    }
+
     syncFailed(e: unknown) {
         console.error(`[Sync:${this.key}] Error:`, e);
         this.status = "error";
@@ -1070,7 +1408,15 @@ export class SingletonSyncManager<T extends object> {
     }
 
     // quiet: a background write — no affirmation, failures go to the console only.
-    async update(newData: Partial<T>, quiet = false) {
+    async update(newData: Partial<T>, quiet = false, recoveryId?: string) {
+        const owner = captureOwner();
+        const generation = this.generation;
+        const current = () => generation === this.generation && currentOwner(owner);
+        if (!current()) throw ACCOUNT_CHANGED;
+        newData = cloneData(newData);
+        const operation = { owner, key: recoveryId || crypto.randomUUID(), data: newData, quiet };
+        if (!this.record) this.activeWrites.set(operation.key, operation);
+        let confirmed: T | undefined;
         const original = this.data;
         this.status = "syncing";
         this.error = null;
@@ -1078,10 +1424,10 @@ export class SingletonSyncManager<T extends object> {
         setStored(this.key, this.data);
         this.notify();
 
-        if (this.record) return this.updateShared(newData, original, quiet);
+        if (this.record) return this.updateShared(newData, original, quiet, owner, generation);
 
         try {
-            const token = get(auth).token;
+            const token = sessionToken(owner.session);
             const payload = this.wirePayload(this.data);
 
             const res = await writeFetch(`${BASE_URL}${this.apiBase}/${this.endpoint}`, {
@@ -1097,6 +1443,12 @@ export class SingletonSyncManager<T extends object> {
             const raw = await res.json();
             const savedRaw = convertKeys(raw, toCamel);
             const saved = this.mapper ? this.mapper(savedRaw) : savedRaw as unknown as T;
+            confirmed = saved;
+            if (!current()) {
+                saveFor(this.key, saved, owner);
+                this.forget(owner, operation.key);
+                throw ACCOUNT_CHANGED;
+            }
 
             this.updateLocal(saved);
             this.status = "synced";
@@ -1107,27 +1459,32 @@ export class SingletonSyncManager<T extends object> {
                 notifications.showAffirmation(this.affirmationContext, 'update');
             }
 
+            this.forget(owner, operation.key);
             return saved;
         } catch (e) {
+            if (!current()) {
+                if (!confirmed) this.remember(operation);
+                throw ACCOUNT_CHANGED;
+            }
             console.error(`[Sync:${this.key}] Update failed, rolling back`, e);
             this.data = original;
             setStored(this.key, original);
             this.notify();
             this.status = "error";
             this.error = (e as { message?: string } | null)?.message || "Failed to save";
-            if (quiet) throw e; // background upload: console only, like a quiet create
-            notifications.showError({
+            if (quiet) { this.activeWrites.delete(operation.key); throw e; } // Existing autosave rollback policy.
+            this.operationNotices.add(notifications.showError({
                 message: 'Your draft is kept. We can save it again whenever you\'re ready.',
                 code: 'DATABASE_ERROR',
                 technicalDetails: (e as { message?: string } | null)?.message || String(e)
-            }, () => { this.update(newData).catch(() => {}); });
+            }, () => { if (current()) this.update(newData, quiet, operation.key).catch(() => {}); }));
             throw e;
         }
     }
 
     /** A save into the shared record: only the keys this save changed are sent, so it never
      *  rewrites a key with a value this device read before another save. */
-    private async updateShared(newData: Partial<T>, original: T | null, quiet: boolean) {
+    private async updateShared(newData: Partial<T>, original: T | null, quiet: boolean, owner: OperationOwner, generation: number) {
         const record = this.record!;
         const epoch = record.epoch;
         const full = this.wirePayload(this.data!);
@@ -1135,8 +1492,8 @@ export class SingletonSyncManager<T extends object> {
         const payload: Record<string, unknown> = {};
         for (const k of Object.keys(full || {})) if (changed.has(k)) payload[k] = full[k];
         try {
-            await record.write(isEmptyRecord(payload) ? full : payload);
-            if (epoch !== record.epoch) return; // signed out or switched account meanwhile
+            await record.write(isEmptyRecord(payload) ? full : payload, owner);
+            if (epoch !== record.epoch || generation !== this.generation || !currentOwner(owner)) throw ACCOUNT_CHANGED; // signed out or switched account meanwhile
             const saved = (this.mapper ? this.mapper(record.current) : record.current) as T;
             this.updateLocal(saved);
             this.status = "synced";
@@ -1144,7 +1501,7 @@ export class SingletonSyncManager<T extends object> {
             if (this.affirmationContext && !quiet) notifications.showAffirmation(this.affirmationContext, 'update');
             return saved;
         } catch (e) {
-            if (e === ACCOUNT_CHANGED || epoch !== record.epoch) return;
+            if (e === ACCOUNT_CHANGED || epoch !== record.epoch || generation !== this.generation || !currentOwner(owner)) throw ACCOUNT_CHANGED;
             console.error(`[Sync:${this.key}] Update failed, rolling back`, e);
             // Back to what the server holds, keeping saves still waiting to be sent.
             const rolled = (this.mapper ? this.mapper(record.current) : { ...(original || {}), ...record.current }) as T;
@@ -1152,11 +1509,11 @@ export class SingletonSyncManager<T extends object> {
             this.status = "error";
             this.error = (e as { message?: string } | null)?.message || "Failed to save";
             if (quiet) throw e;
-            notifications.showError({
+            this.operationNotices.add(notifications.showError({
                 message: 'Your draft is kept. We can save it again whenever you\'re ready.',
                 code: 'DATABASE_ERROR',
                 technicalDetails: (e as { message?: string } | null)?.message || String(e)
-            }, () => { this.update(newData).catch(() => {}); });
+            }, () => { if (generation === this.generation && currentOwner(owner)) this.update(newData).catch(() => {}); }));
             throw e;
         }
     }
@@ -1310,6 +1667,15 @@ if (browser) {
         Object.values(getRegistry()).forEach(m => {
             if (m.loadedFor !== null && m.loadedFor !== id) m.reset(false);
         });
+    });
+    let profile = get(currentProfileId) || 'owner';
+    currentProfileId.subscribe(id => {
+        const next = id || 'owner';
+        if (next === profile) return;
+        profile = next;
+        Object.values(getRegistry()).forEach(m => m.reset(false));
+        // Profiles still use this user's server estate; only the device namespace changes.
+        if (_sessionActive && isCurrentSession(captureSession())) void syncAll();
     });
 }
 
