@@ -1012,7 +1012,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X293 | ▶ | | |
 | X294 | ▶ | | |
 | X295 | ▶ | | |
-| X296 | ▶ | | |
+| X296 | ☑ | merged | `est_time` defaults to 0 (no migration; model_validate fills it); `estTime` removed from client and 38 seed rows; first tick POST 200 without it |
 | X297 | ▶ | | |
 | X5 | ☐ | | |
 | X6 | ☐ (owner) | | |
