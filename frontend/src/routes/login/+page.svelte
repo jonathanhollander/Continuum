@@ -2,7 +2,8 @@
     import { onMount } from "svelte";
     import { goto } from "$app/navigation";
     import { page } from "$app/stores";
-    import { auth } from "$lib/stores/auth";
+    import { auth, storeTokens } from "$lib/stores/auth";
+    import { beginSession, captureSession, isCurrentSession } from "$lib/services/sessionOwnership";
     import { apiPost } from "$lib/api/client";
     import { notifications } from "$lib/stores/notificationStore";
     import { startAuthentication } from "@simplewebauthn/browser";
@@ -64,6 +65,7 @@
     });
 
     async function handlePasskeyLogin() {
+        let owner = beginSession();
         isLoading = true;
 
         try {
@@ -73,12 +75,14 @@
                 "/api/auth/passkey/login/start",
                 magicLinkEmail ? { email: magicLinkEmail } : {},
             );
+            if (!isCurrentSession(owner, true)) return;
 
             const { challenge_id, options } = startResult;
 
             // Step 2: Show browser passkey prompt
             // Note: v11+ API requires { optionsJSON: options } format
             const credential = await startAuthentication({ optionsJSON: options });
+            if (!isCurrentSession(owner, true)) return;
 
             // Step 3: Verify credential and get JWT
             const finishResult = await apiPost(
@@ -89,22 +93,15 @@
                 },
             );
 
-            // Store token and fetch user info
-            if (typeof localStorage !== "undefined") {
-                localStorage.setItem(
-                    "continuum_auth_token",
-                    finishResult.access_token,
-                );
-                if (finishResult.refresh_token)
-                    localStorage.setItem("continuum_refresh_token", finishResult.refresh_token);
-            }
+            if (!storeTokens(finishResult.access_token, finishResult.refresh_token, owner)) return;
+            owner = captureSession();
+            await auth.init();
+            if (!isCurrentSession(owner, true) || !isCurrentSession(captureSession())) return;
 
             notifications.showSuccess(
                 "Welcome back! Taking you to your vault...",
                 "Welcome back",
             );
-
-            await auth.init();
 
             // Store email for "Remember Me" and register account context
             if ($auth.user?.email && typeof localStorage !== "undefined") {
@@ -114,6 +111,7 @@
 
             goto(redirectUrl);
         } catch (e: any) {
+            if (!isCurrentSession(owner, true)) return;
             console.error("Passkey login failed:", e);
 
             if (e.name === "NotAllowedError") {
