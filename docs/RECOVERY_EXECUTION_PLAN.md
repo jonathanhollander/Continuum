@@ -634,10 +634,10 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X153 | ☑ | 73abf0f | Pulse settings GET returns the 3 datetimes with `Z` (`_utc_iso`); `_check_settings_fields` 422s bad booleans, frequency 1–365, grace 0–720, biometric 1–168, text ≤2000, lat/lon ranges. Ghost until 03:30Z shows 11/1 in New York; 8 bad bodies 422; GET→POST round-trip 200; 0 tracebacks. Finding → X159 |
 | X154 | ☐ (owner decision) | | |
 | X155 | ▶ | | |
-| X156 | ▶ | | |
+| X156 | ☐ (queued: 20-agent limit; worktree ready) | | |
 | X157 | ☐ (queued: 20-agent limit) | | |
 | X158 | ☐ (queued: 20-agent limit) | | |
-| X159 | ▶ | | |
+| X159 | ☐ (queued: 20-agent limit; worktree ready) | | |
 | X160 | ☐ (queued: 20-agent limit) | | |
 | X138 | ☑ | c5a7077 | Toolbar Download (insurance, property) saves the stored files of every record shown (follows search; disabled when none; cached files reused); subscriptions Filter chips by the difficulty words already shown (Easy/Medium/Hard), clear on reclick or close; `aiGriefService` uses `contextStore.isExecutor` (store holds `executor` after X118 — the old check never matched). Downloads byte-identical, executor/planner personas checked with the AI call intercepted; 0 errors |
 | X114 | ☑ | fdd80b5 | `routers/pets.py`, `heirlooms.py`, `insurance.py` removed (no caller: the app uses `/api/data/pets`, `/heirlooms` → Asset, `/insurance_policies`; `heirlooms.py` wrote the unused `Heirloom` table). TestClient: before `200 {}`; after 405/404, the `/api/data/*` paths create and list; server starts clean |
