@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     /**
      * Role Switcher (header)
      *
@@ -18,11 +19,11 @@
         { value: 'advisor', label: 'Advisor', icon: Users, color: 'emerald' }
     ] as const;
 
-    function selectRole(role: 'planning' | 'executor' | 'family' | 'advisor') {
+    async function selectRole(role: 'planning' | 'executor' | 'family' | 'advisor') {
         isOpen = false;
         if (contextStore.role === role) return;
         const label = roles.find((r) => r.value === role)?.label ?? role;
-        if (!confirm(`Change your perspective to ${label}? You can switch back here anytime.`)) return;
+        if (!(await askConfirm(`Change your perspective to ${label}? You can switch back here anytime.`, "Change my perspective"))) return;
         contextStore.setRole(role);
     }
 </script>

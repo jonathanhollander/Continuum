@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { fade, fly, slide, scale } from "svelte/transition";
     import { quintOut } from "svelte/easing";
     import {
@@ -187,9 +188,9 @@
 
     async function deleteLetter(id: number | string, name: string) {
         if (
-            !confirm(
+            !(await askConfirm(
                 `Remove the letter to "${name}"? You can always start over if you feel like it later.`,
-            )
+            ))
         )
             return;
         await letterSync.delete(id);

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { onMount } from "svelte";
     import {
         activityLog,
@@ -147,9 +148,9 @@
 
     async function clearLog() {
         if (
-            !confirm(
+            !(await askConfirm(
                 "Remove every entry in your activity log from your account? This is permanent.",
-            )
+            ))
         )
             return;
         await activityLog.clear();
