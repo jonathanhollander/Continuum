@@ -16,7 +16,7 @@ const mapper = (data: any): JournalEntry => ({
     created_at: data.created_at ?? data.createdAt,
 });
 
-const manager = registerSync<JournalEntry>('journal_entries', 'journal_entries', mapper, '/api/data')
+const manager = registerSync<JournalEntry & { id: number }>('journal_entries', 'journal_entries', mapper, '/api/data')
     .setAffirmationContext('general');
 
 export const journalStore = {
