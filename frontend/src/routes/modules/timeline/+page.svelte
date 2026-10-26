@@ -51,7 +51,8 @@
     // LifeEvent imported from store
 
     let getContactById = $derived((id: string | number | undefined) =>
-        familyStore.members.find((m) => m.id === id),
+        // The server keeps the contact id as text; contact ids are numbers.
+        id == null ? undefined : familyStore.members.find((m) => String(m.id) === String(id)),
     );
 
     let showMemento = $state(false);
@@ -602,9 +603,11 @@
                                     <button
                                         onclick={(e) => {
                                             e.stopPropagation();
-                                            alert(
-                                                `Mock Notification: Email sent to ${contact.email} regarding "${trophy.label}"`,
-                                            );
+                                            // Opens the person's own mail app, prefilled; nothing is sent from here.
+                                            const body = [trophy.label, trophy.year, trophy.description]
+                                                .filter(Boolean)
+                                                .join("\n\n");
+                                            window.location.href = `mailto:${contact.email}?subject=${encodeURIComponent(trophy.label)}&body=${encodeURIComponent(body)}`;
                                         }}
                                         class="p-2 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-colors shadow-sm"
                                         title="Notify via Email"
