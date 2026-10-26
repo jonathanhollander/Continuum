@@ -982,40 +982,73 @@ class SharedRecord {
 
     constructor(private url: string) {}
 
-    private recoveryNotices = new Set<string>();
+    private recoveryNotices = new Map<string, string>();
     private noticeIds = new Set<string>();
     private writeSequence = 0;
     private get recoveryKey() { return `record:${this.url}__account_recovery`; }
+    /** A newer edit replaces only the fields it names, across every slice of this record. */
+    private retained(owner: OperationOwner): RecoveredProfile[] {
+        const pending = storedFor<RecoveredProfile[]>(this.recoveryKey, [], owner);
+        const confirmed = storedFor<Record<string, number>>(this.recoveryKey + '__confirmed_fields', {}, owner);
+        const latest = { ...confirmed };
+        const note = (batch: Pick<ProfileBatch, 'sequence' | 'payload'>) => {
+            for (const key of Object.keys(batch.payload)) latest[key] = Math.max(latest[key] || 0, batch.sequence);
+        };
+        pending.forEach(note);
+        for (const batch of [this.sending, ...this.queue]) {
+            if (batch && batch.owner.account === owner.account && batch.owner.profile === owner.profile) note(batch);
+        }
+        const left = pending.flatMap(p => {
+            const payload = Object.fromEntries(Object.entries(p.payload).filter(([key]) =>
+                (confirmed[key] || 0) < p.sequence && (latest[key] || 0) <= p.sequence));
+            return Object.keys(payload).length ? [{ ...p, payload }] : [];
+        });
+        if (JSON.stringify(left) !== JSON.stringify(pending)) saveFor(this.recoveryKey, left, owner);
+        if (currentOwner(owner)) {
+            const keys = new Set(left.map(p => p.key));
+            for (const [key, id] of this.recoveryNotices) if (!keys.has(key)) {
+                notifications.dismiss(id);
+                this.noticeIds.delete(id);
+                this.recoveryNotices.delete(key);
+            }
+        }
+        return left;
+    }
     private remember(batch: ProfileBatch) {
         const pending = storedFor<RecoveredProfile[]>(this.recoveryKey, [], batch.owner);
         const confirmed = storedFor<Record<string, number>>(this.recoveryKey + '__confirmed_fields', {}, batch.owner);
         const payload = Object.fromEntries(Object.entries(batch.payload).filter(([k]) => (confirmed[k] || 0) < batch.sequence));
         if (Object.keys(payload).length) saveFor(this.recoveryKey, [...pending.filter(p => p.key !== batch.key), { key: batch.key, sequence: batch.sequence, payload }], batch.owner);
+        this.retained(batch.owner);
     }
     private forget(batch: ProfileBatch) {
         const confirmed = storedFor<Record<string, number>>(this.recoveryKey + '__confirmed_fields', {}, batch.owner);
         for (const k of Object.keys(batch.payload)) confirmed[k] = Math.max(confirmed[k] || 0, batch.sequence);
         saveFor(this.recoveryKey + '__confirmed_fields', confirmed, batch.owner);
-        const pending = storedFor<RecoveredProfile[]>(this.recoveryKey, [], batch.owner);
-        const left = pending.flatMap(p => {
-            const payload = Object.fromEntries(Object.entries(p.payload).filter(([k]) => (confirmed[k] || 0) < p.sequence));
-            return Object.keys(payload).length ? [{ ...p, payload }] : [];
-        });
-        if (pending.length) saveFor(this.recoveryKey, left, batch.owner);
+        this.retained(batch.owner);
     }
-    private offerRecovery(owner: OperationOwner) {
-        for (const pending of storedFor<RecoveredProfile[]>(this.recoveryKey, [], owner)) {
+    offerRecovery(owner: OperationOwner, failedKey?: string, failure?: unknown) {
+        const epoch = this.epoch;
+        for (const pending of this.retained(owner)) {
+            if (failedKey && pending.key !== failedKey) continue;
             if (this.recoveryNotices.has(pending.key)) continue;
-            this.recoveryNotices.add(pending.key);
-            this.noticeIds.add(notifications.showError({
-                message: 'Your earlier profile changes are kept. Review your saved details, then choose Try Again to apply them.',
-                code: 'DATABASE_ERROR'
+            const id = notifications.showError({
+                message: failedKey ? 'Your draft is kept. We can save it again whenever you\'re ready.'
+                    : 'Your earlier profile changes are kept. Review your saved details, then choose Try Again to apply them.',
+                code: 'DATABASE_ERROR',
+                technicalDetails: failure ? errMessage(failure) || String(failure) : undefined
             }, () => {
-                if (!currentOwner(owner)) return;
-                this.write(pending.payload, owner, pending.key).then(() => {
-                    if (currentOwner(owner)) this.slices.forEach(s => s.applyRemote(this.current));
-                }).catch(() => {});
-            }));
+                if (epoch !== this.epoch || !currentOwner(owner)) return;
+                const remaining = this.retained(owner).find(p => p.key === pending.key);
+                if (!remaining) return;
+                this.write(remaining.payload, owner, pending.key).then(() => {
+                    if (epoch === this.epoch && currentOwner(owner)) this.slices.forEach(s => s.applyRemote(this.current));
+                }).catch(e => {
+                    if (epoch === this.epoch && currentOwner(owner)) this.offerRecovery(owner, pending.key, e);
+                });
+            });
+            this.recoveryNotices.set(pending.key, id);
+            this.noticeIds.add(id);
         }
     }
 
@@ -1131,6 +1164,7 @@ class SharedRecord {
         }
         b.sequence = this.writeSequence;
         Object.assign(b.payload, cloneData(payload));
+        this.retained(owner);
         const batch = b;
         const done = new Promise<void>((resolve, reject) => batch.waiters.push({ resolve, reject }));
         this.pump();
@@ -1166,7 +1200,8 @@ class SharedRecord {
                 }
             }, e => {
                 this.remember(b);
-                b.waiters.forEach(w => w.reject(epoch === this.epoch && currentOwner(b.owner) ? e : ACCOUNT_CHANGED));
+                const failure = epoch === this.epoch && currentOwner(b.owner) ? identifiedFailure(e, b.key) : ACCOUNT_CHANGED;
+                b.waiters.forEach(w => w.reject(failure));
             })
             .finally(() => {
                 if (this.sending === b) this.sending = null;
@@ -1565,11 +1600,10 @@ export class SingletonSyncManager<T extends object> {
             this.status = "error";
             this.error = (e as { message?: string } | null)?.message || "Failed to save";
             if (quiet) throw e;
-            this.operationNotices.add(notifications.showError({
-                message: 'Your draft is kept. We can save it again whenever you\'re ready.',
-                code: 'DATABASE_ERROR',
-                technicalDetails: (e as { message?: string } | null)?.message || String(e)
-            }, () => { if (generation === this.generation && currentOwner(owner)) this.update(newData).catch(() => {}); }));
+            // The shared batch owns its notice. A retry reads its remaining fields at click
+            // time instead of replaying this slice's older captured patch over newer saves.
+            const failedKey = (e as SaveFailure).recoveryId;
+            if (failedKey) record.offerRecovery(owner, failedKey, e);
             throw e;
         }
     }
