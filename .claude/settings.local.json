@@ -13,7 +13,17 @@
       "mcp__chrome-devtools__take_snapshot",
       "mcp__chrome-devtools__list_console_messages",
       "mcp__chrome-devtools__take_screenshot",
-      "mcp__chrome-devtools__list_network_requests"
+      "mcp__chrome-devtools__list_network_requests",
+      "Bash(git merge:*)",
+      "Bash(git worktree add:*)",
+      "Bash(git worktree remove:*)",
+      "Bash(git clean -fdXq:*)",
+      "Bash(git branch -d:*)",
+      "Bash(git commit:*)",
+      "Bash(git push -q)",
+      "Bash(git diff:*)",
+      "Bash(python3 -:*)",
+      "Agent"
     ]
   },
   "enableAllProjectMcpServers": true,
