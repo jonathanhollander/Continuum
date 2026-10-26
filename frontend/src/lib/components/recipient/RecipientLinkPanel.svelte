@@ -71,7 +71,8 @@
             if (!keepDraft && note === draft) note = saved.note;
             if (operation === operationSeq) message = done;
         } catch {
-            if (isCurrent(current, version) && operation === operationSeq) message = "Your sharing settings are just as they were. You can try again whenever you're ready.";
+            // Note failures have one service-owned retry notice, including after this panel closes.
+            if (kind !== "note" && isCurrent(current, version) && operation === operationSeq) message = "Your sharing settings are just as they were. You can try again whenever you're ready.";
         } finally {
             if (requestedNote === noteRequest) requestedNote = null;
             if (isCurrent(current, version) && operation === operationSeq) busy = null;

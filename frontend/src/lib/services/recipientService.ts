@@ -89,7 +89,6 @@ function mutateRecipient(contactId: number | string, method: 'PUT' | 'POST' | 'D
         if (notice) notifications.dismiss(notice);
         retryNotices.delete(key);
     }
-    const queuedNote = note !== null && mutationTails.has(key);
     // This closure keeps the original owner/contact/payload even when its panel has closed.
     const send = (): Promise<RecipientLinkState> => {
         const previous = mutationTails.get(key) ?? Promise.resolve();
@@ -110,9 +109,9 @@ function mutateRecipient(contactId: number | string, method: 'PUT' | 'POST' | 'D
             }
             return saved;
         }).catch((error: unknown) => {
-            // A queued note can fail after unmount: keep an account-bound retry outside the panel.
+            // Any requested note can fail after unmount: keep its account-bound retry outside the panel.
             // A later note supersedes this retry, so old words cannot overwrite a newer save.
-            if (queuedNote && isCurrentSession(owner) && latestNotes.get(key) === note) {
+            if (note !== null && isCurrentSession(owner) && latestNotes.get(key) === note) {
                 retryNotices.set(key, notifications.showError({ message: 'Your note is ready for another save.', code: 'DATABASE_ERROR' }, () => {
                     if (isCurrentSession(owner) && latestNotes.get(key) === note) void send().catch(() => {});
                 }));
