@@ -7,6 +7,8 @@
         type ReleaseTrigger,
         isCapsuleReleased,
         timeCapsuleSync,
+        capsuleMedia,
+        CAPSULE_MEDIA_KEY,
     } from "$lib/stores/timeCapsuleStore.svelte";
     import {
         Lock,
@@ -158,6 +160,15 @@
             const saved = await uploadMedia(file, "time_capsules", editingId ?? undefined);
             newMessage.videoUrl = saved.download_url;
             newMessage.mediaId = undefined;
+            parsedCustomAttributes = {
+                ...parsedCustomAttributes,
+                [CAPSULE_MEDIA_KEY]: {
+                    id: saved.id,
+                    mime_type: saved.mime_type,
+                    filename: saved.filename,
+                    file_size: saved.file_size,
+                },
+            };
         } catch (e: any) {
             formNote = e?.message || "Your video is taking a moment to save. Record again when you're ready.";
         } finally {
@@ -749,7 +760,7 @@
                 </div>
                 {#if activeCapsule.videoUrl}
                     <div class="rounded-2xl overflow-hidden border border-slate-100">
-                        <MediaView src={activeCapsule.videoUrl} />
+                        <MediaView src={activeCapsule.videoUrl} record={capsuleMedia(activeCapsule)} />
                     </div>
                 {:else if legacyVideoUrl}
                     <div class="rounded-2xl overflow-hidden bg-black aspect-video">

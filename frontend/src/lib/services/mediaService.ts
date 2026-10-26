@@ -8,7 +8,7 @@
  *       (e.g. "/api/media/12/download") or `response.id` on the record.
  *   getMediaBlobUrl(ref)  -> object URL for <img>/<audio>/<video> (ref = id or download_url)
  *   fetchMediaBlob(ref)   -> Blob
- *   downloadMedia(ref, filename?) -> saves the file in the browser
+ *   downloadMedia(ref, filename?, objectUrl?) -> saves the file in the browser (reuses objectUrl when given)
  *   getMedia(ref)         -> metadata (filename, mime_type, file_size, ...)
  *   mediaIdFromRef(ref)   -> numeric id, or null when ref is something else (data URL, blob URL)
  *
@@ -286,9 +286,15 @@ export async function getMediaBlobUrl(ref: MediaRef): Promise<string> {
 }
 
 /**
- * Save the stored file to this computer.
+ * Save the stored file to this computer. Pass `objectUrl` when the file is
+ * already in memory (MediaView's cache): it is reused, not fetched again, and
+ * left for its owner to revoke.
  */
-export async function downloadMedia(ref: MediaRef, filename?: string): Promise<void> {
+export async function downloadMedia(
+    ref: MediaRef,
+    filename?: string,
+    objectUrl?: string | Promise<string>
+): Promise<void> {
     let name = filename;
     if (!name) {
         try {
@@ -297,14 +303,26 @@ export async function downloadMedia(ref: MediaRef, filename?: string): Promise<v
             name = `file-${requireId(ref)}`;
         }
     }
-    const url = await getMediaBlobUrl(ref);
+    let url: string | undefined;
+    if (objectUrl) {
+        try {
+            url = await objectUrl;
+        } catch {
+            url = undefined;
+        }
+    }
+    const owned = !url;
+    if (!url) url = await getMediaBlobUrl(ref);
     const a = document.createElement('a');
     a.href = url;
     a.download = name;
     document.body.appendChild(a);
     a.click();
     a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    if (owned) {
+        const made = url;
+        setTimeout(() => URL.revokeObjectURL(made), 60_000);
+    }
 }
 
 /**

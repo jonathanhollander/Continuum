@@ -15,6 +15,7 @@
         formatFileSize,
         isValidMediaType,
         ACCEPT_ATTRIBUTE,
+        mediaIdFromRef,
     } from "$lib/services/mediaService";
     import MediaView from "./MediaView.svelte";
 
@@ -43,6 +44,9 @@
     let error: string | null = $state(null);
     let fileInput: HTMLInputElement | undefined = $state();
     let uploadProgress = $state(0);
+    /** The last upload's record, passed to the preview while it is still the file shown. */
+    let uploaded = $state<MediaUploadResponse | null>(null);
+    let shownId = $derived(mediaIdFromRef(mediaId ?? value));
 
     let acceptAttr = $derived(
         mode === "image" ? "image/*" : mode === "document" ? ".pdf,.txt,.csv" : ACCEPT_ATTRIBUTE,
@@ -121,6 +125,7 @@
             );
 
             // Update State
+            uploaded = response;
             value = response.download_url;
             mediaId = response.id;
 
@@ -137,6 +142,7 @@
     function clearFile() {
         value = "";
         mediaId = null;
+        uploaded = null;
         if (onchange) onchange("", undefined);
         if (fileInput) fileInput.value = "";
     }
@@ -153,7 +159,7 @@
         <div
             class="relative rounded-xl overflow-hidden bg-white border border-gray-200 group transition-all hover:shadow-md"
         >
-            <MediaView src={mediaId ?? value} />
+            <MediaView src={mediaId ?? value} record={uploaded && uploaded.id === shownId ? uploaded : undefined} />
 
             <!-- Overlay Actions -->
             <div class="bg-gray-50 p-2 flex justify-end gap-2 border-t border-gray-100">

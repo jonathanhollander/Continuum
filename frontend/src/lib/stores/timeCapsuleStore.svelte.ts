@@ -1,5 +1,6 @@
 import { derived } from 'svelte/store';
 import { registerSync } from "$lib/services/sync.svelte";
+import { mediaIdFromRef, type MediaFile } from "$lib/services/mediaService";
 
 export type ReleaseTrigger = 'date' | 'milestone';
 
@@ -32,10 +33,34 @@ export interface TimeCapsuleMessage {
     custom_attributes?: string; // JSON string of custom field values
 }
 
+/**
+ * The uploaded video's media record, kept under this key in `custom_attributes`
+ * (no column of its own), so the reader fetches the file with no metadata request.
+ */
+export const CAPSULE_MEDIA_KEY = '_media';
+
+export type CapsuleMedia = Pick<MediaFile, 'id' | 'mime_type' | 'filename' | 'file_size'>;
+
+/** The stored media record for this capsule's video, when it matches `videoUrl`. */
+export function capsuleMedia(m: Pick<TimeCapsuleMessage, 'videoUrl' | 'custom_attributes'>): CapsuleMedia | undefined {
+    const id = mediaIdFromRef(m.videoUrl);
+    if (id === null || !m.custom_attributes) return undefined;
+    try {
+        const media = JSON.parse(m.custom_attributes)?.[CAPSULE_MEDIA_KEY];
+        return media && media.id === id && media.mime_type ? media : undefined;
+    } catch {
+        return undefined;
+    }
+}
+
 const timeCapsuleMapper = (item: any) => {
     if (!item) return item;
+    // Server rows arrive camel-cased (customAttributes); the page reads custom_attributes.
+    const customAttributes = item.custom_attributes ?? item.customAttributes;
     return {
         ...item,
+        custom_attributes: customAttributes,
+        customAttributes,
         // Remote -> Local
         videoUrl: item.video_url ?? item.videoUrl,
         audioUrl: item.audio_url ?? item.audioUrl,
