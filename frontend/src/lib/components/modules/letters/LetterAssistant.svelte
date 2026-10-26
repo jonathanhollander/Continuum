@@ -126,6 +126,7 @@
             <div class="space-y-6">
                 <div>
                     <label
+                        for="letter-tone-softener"
                         class="flex items-center justify-between text-xs font-bold uppercase tracking-widest text-slate-400 mb-4"
                     >
                         <span>Tone Softener</span>
@@ -134,6 +135,7 @@
                         >
                     </label>
                     <input
+                        id="letter-tone-softener"
                         type="range"
                         min="0"
                         max="100"

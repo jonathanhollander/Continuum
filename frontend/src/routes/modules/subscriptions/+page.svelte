@@ -673,11 +673,11 @@
 
                 <div class="p-6 space-y-4 flex-1 overflow-y-auto">
                     <div>
-                        <label
+                        <label for="subscription-name"
                             class="block text-xs font-bold uppercase text-gray-500 mb-1"
                             >What Service?</label
                         >
-                        <input
+                        <input id="subscription-name"
                             type="text"
                             bind:value={newSub.name}
                             class="w-full px-4 py-3 rounded-xl border border-gray-200"
@@ -688,11 +688,11 @@
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label
+                            <label for="subscription-cost"
                                 class="block text-xs font-bold uppercase text-gray-500 mb-1"
                                 >Cost</label
                             >
-                            <input
+                            <input id="subscription-cost"
                                 type="number"
                                 bind:value={newSub.cost}
                                 class="w-full px-4 py-3 rounded-xl border border-gray-200"
@@ -701,11 +701,11 @@
                             />
                         </div>
                         <div>
-                            <label
+                            <label for="subscription-cycle"
                                 class="block text-xs font-bold uppercase text-gray-500 mb-1"
                                 >Cycle</label
                             >
-                            <select
+                            <select id="subscription-cycle"
                                 bind:value={newSub.cycle}
                                 class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white"
                             >
@@ -716,11 +716,15 @@
                     </div>
 
                     <div>
-                        <label
+                        <span id="subscription-difficulty-label"
                             class="block text-xs font-bold uppercase text-gray-500 mb-1"
-                            >Difficulty to Cancel</label
+                            >Difficulty to Cancel</span
                         >
-                        <div class="flex gap-2">
+                        <div
+                            class="flex gap-2"
+                            role="group"
+                            aria-labelledby="subscription-difficulty-label"
+                        >
                             {#each ["Easy", "Medium", "Hard"] as diff}
                                 <button
                                     class="px-4 py-2 rounded-lg border text-sm font-bold transition-all {newSub.difficulty ===
@@ -740,11 +744,11 @@
                     </div>
 
                     <div>
-                        <label
+                        <label for="subscription-cancellation-instructions"
                             class="block text-xs font-bold uppercase text-gray-500 mb-1"
                             >Cancellation Instructions</label
                         >
-                        <textarea
+                        <textarea id="subscription-cancellation-instructions"
                             bind:value={newSub.cancellationInstructions}
                             class="w-full px-4 py-3 rounded-xl border border-gray-200 h-24"
                             placeholder="How do we turn this off?"
@@ -752,11 +756,11 @@
                     </div>
 
                     <div>
-                        <label
+                        <label for="subscription-payment-method"
                             class="block text-xs font-bold uppercase text-gray-500 mb-1"
                             >Payment Method (Optional)</label
                         >
-                        <input
+                        <input id="subscription-payment-method"
                             type="text"
                             bind:value={newSub.paymentMethod}
                             class="w-full px-4 py-3 rounded-xl border border-gray-200"

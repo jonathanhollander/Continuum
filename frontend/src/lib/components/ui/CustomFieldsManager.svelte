@@ -191,10 +191,11 @@
             <!-- List of existing definitions to allow deletion -->
             {#if definitions.length > 0}
                 <div class="border-t border-indigo-200/50 pt-3 mt-2">
-                    <label
+                    <p
                         class="text-[10px] uppercase font-bold text-indigo-400 mb-2 block"
-                        >Existing Fields</label
                     >
+                        Existing Fields
+                    </p>
                     <div class="space-y-1">
                         {#each definitions as def}
                             <div

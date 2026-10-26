@@ -403,11 +403,11 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div class="space-y-4">
-                            <label
+                            <label for="funeral-wizard-venue"
                                 class="text-xs font-bold uppercase tracking-widest text-stone-400"
                                 >Venue</label
                             >
-                            <input
+                            <input id="funeral-wizard-venue"
                                 type="text"
                                 value={wishes.venue || ""}
                                 on:change={(e) =>
@@ -421,12 +421,12 @@
                         </div>
 
                         <div class="space-y-4">
-                            <label
+                            <label for="funeral-wizard-officiant"
                                 class="text-xs font-bold uppercase tracking-widest text-stone-400"
                                 >Officiant ({activeTradition.terminology
                                     .officiant})</label
                             >
-                            <input
+                            <input id="funeral-wizard-officiant"
                                 type="text"
                                 value={wishes.ceremonyDetails?.officiant || ""}
                                 on:change={(e) =>
@@ -606,11 +606,11 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="space-y-4">
-                            <label
+                            <label for="funeral-wizard-charity-donations"
                                 class="text-xs font-bold uppercase tracking-widest text-stone-400"
                                 >Charity Donations</label
                             >
-                            <input
+                            <input id="funeral-wizard-charity-donations"
                                 type="text"
                                 value={wishes.legacy?.charity || ""}
                                 on:change={(e) =>
