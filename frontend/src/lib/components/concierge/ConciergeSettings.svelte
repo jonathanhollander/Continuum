@@ -98,6 +98,7 @@
     // (estateProfile has no set, so binding $estateProfile.x directly threw on every keystroke.)
     const profileKeys = [
         "ownerName",
+        "ownerPhone",
         "executorName",
         "dateOfDeath",
         "last4SSN",
@@ -249,6 +250,19 @@
                             type="text"
                             bind:value={draft.ownerName}
                             placeholder={$dict.placeholderName}
+                            class="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm"
+                        />
+                    </div>
+                    <div class="grid grid-cols-1 gap-1.5">
+                        <label for="cs-phone"
+                            class="text-[10px] font-bold text-slate-400 uppercase"
+                            >Your phone</label
+                        >
+                        <input
+                            id="cs-phone"
+                            type="tel"
+                            autocomplete="tel"
+                            bind:value={draft.ownerPhone}
                             class="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm"
                         />
                     </div>

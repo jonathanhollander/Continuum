@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { pulse } from "$lib/stores/pulse.svelte";
+    import { pulse, pulseStatus } from "$lib/stores/pulse.svelte";
     import { estateAudit } from "$lib/stores/auditStore.svelte";
     import { apiGet, apiPost } from "$lib/api/client";
     import { onMount } from "svelte";
@@ -116,6 +116,12 @@
     }
 
     let now = $state(Date.now());
+
+    // /api/pulse/status: the highest tier alerted since the owner's own last check-in, and when
+    const tierContacted = $derived.by(() => {
+        const s = pulseStatus.current as any;
+        return s?.escalationTier ? { tier: s.escalationTier as number, at: s.escalationAt as string | null } : null;
+    });
 
     const statusLabels: Record<string, string> = {
         active: "Heartbeat Active",
@@ -246,6 +252,13 @@
                     {pulse.guardianCheckin.by} checked on you on {new Date(
                         pulse.guardianCheckin.at,
                     ).toLocaleString()}.
+                </p>
+            {/if}
+            {#if tierContacted}
+                <p class="text-amber-300 text-sm max-w-sm mx-auto" data-testid="pulse-tier-contacted">
+                    Tier {tierContacted.tier} was contacted{tierContacted.at
+                        ? ` on ${new Date(tierContacted.at).toLocaleString()}`
+                        : ""}; your check-in lets them know you're well.
                 </p>
             {/if}
             <div class="flex items-center justify-center gap-6 pt-4 text-sm">
