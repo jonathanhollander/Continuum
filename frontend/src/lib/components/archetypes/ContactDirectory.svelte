@@ -135,7 +135,7 @@
     }
 
     function designateExecutor(name: string) {
-        estateProfile.update((p) => ({ ...p, executorName: name }));
+        estateProfile.update({ executorName: name }); // update takes the changed keys
     }
 
     // Role Styling Helper

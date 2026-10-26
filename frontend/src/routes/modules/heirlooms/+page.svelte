@@ -19,7 +19,6 @@
     import type { AnalyzedHeirloom } from "$lib/services/visionService";
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
-    import Affirmation from "$lib/components/Affirmation.svelte";
     import { onMount } from "svelte";
     import {
         heirloomSync,
@@ -42,7 +41,6 @@
     let showAddModal = $state(false);
     let viewMode = $state<ViewMode>('card');
     let parsedCustomAttributes = $state<Record<string, any>>({});
-    let showAffirmation = $state(false);
     let isEditing = $state(false);
     let selectedImage = $state<string | null>(null);
     let showWizard = $state(false);
@@ -249,7 +247,6 @@
         }
 
         showAddForm = false;
-        showAffirmation = true;
         newHeirloom = {
             image: "",
         };
@@ -355,8 +352,6 @@
     </div>
 {:else}
 <div class="max-w-7xl mx-auto p-8 animate-in fade-in duration-500">
-    <!-- Affirmation Message -->
-    <Affirmation module="heirlooms" bind:show={showAffirmation} />
 
     <!-- AI Prompt Injection -->
     <div class="max-w-3xl mx-auto mb-12">

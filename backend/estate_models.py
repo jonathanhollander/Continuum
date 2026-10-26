@@ -2,6 +2,7 @@ from typing import Optional
 from sqlalchemy import Index
 from sqlmodel import Field, SQLModel
 from datetime import datetime
+from uuid import uuid4
 
 # --- CUSTOM FIELDS SCHEMA ---
 class UserCustomFieldDefinition(SQLModel, table=True):
@@ -371,7 +372,8 @@ class LifeEvent(SQLModel, table=True):
 # --- TIME CAPSULE ---
 class TimeCapsuleMessage(SQLModel, table=True):
     """Model for scheduled future messages or milestone-triggered recordings."""
-    id: Optional[str] = Field(default=None, primary_key=True)
+    # Text key with no autoincrement, and clients may not send an id: the server makes one.
+    id: Optional[str] = Field(default_factory=lambda: str(uuid4()), primary_key=True)
     user_id: int = Field(foreign_key="users.id", index=True)
     title: str
     recipient: str
@@ -382,7 +384,7 @@ class TimeCapsuleMessage(SQLModel, table=True):
     trigger_type: str  # date, milestone
     trigger_value: str
     is_released: bool = Field(default=False)
-    created_at: str
+    created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())  # server-set: clients may not send it
     custom_attributes: Optional[str] = Field(default="{}")
 
 # --- FUNERAL ---

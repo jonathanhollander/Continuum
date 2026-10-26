@@ -38,7 +38,6 @@
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
-    import Affirmation from "$lib/components/Affirmation.svelte";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
 
     // Concierge Imports
@@ -52,7 +51,6 @@
     let showAddModal = $state(false);
     let isLoading = $state(true);
     let viewMode = $state<ViewMode>('card');
-    let showAffirmation = $state(false);
 
     onMount(async () => {
         await propertyStore.sync?.();
@@ -257,7 +255,6 @@
             });
         }
 
-        showAffirmation = true;
         resetForm();
         } catch {
             // The manager already showed the one gentle message; the form stays open with the draft.
@@ -391,8 +388,6 @@
         </div>
     {/if}
 
-    <!-- Affirmation Message -->
-    <Affirmation module="property" bind:show={showAffirmation} />
 
     <!-- Filter Controls -->
     <div class="flex flex-wrap items-center gap-3">

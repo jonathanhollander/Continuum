@@ -442,6 +442,51 @@ export class SyncManager<T extends { id: number | string }> {
     }
 }
 
+// Several singleton stores keep their keys in one server record (estate/profile: estate, scenario,
+// tone, onboarding, concierge, complexity). Within one sync round they share one GET, and their
+// first-load uploads go out together as one POST (the server merges the posted keys).
+const _sharedGets = new Map<string, Promise<any>>();
+const _pendingUploads = new Map<string, { payload: Record<string, any>; waiters: { resolve: (v: any) => void; reject: (e: any) => void }[] }>();
+
+function sharedGet(url: string, token: string): Promise<any> {
+    const k = `${token}|${url}`;
+    let p = _sharedGets.get(k);
+    if (!p) {
+        p = fetch(url, { headers: { 'Authorization': `Bearer ${token}` } }).then(res => {
+            if (!res.ok) throw new Error("Failed to fetch remote data");
+            return res.json();
+        });
+        _sharedGets.set(k, p);
+        p.catch(() => {}).finally(() => _sharedGets.delete(k));
+    }
+    return p;
+}
+
+// Every store that read the same GET reaches this in the same microtask run, so a 0 ms timer
+// collects all of them before the one POST is sent.
+function sharedUpload(url: string, token: string, payload: Record<string, any>): Promise<any> {
+    const k = `${token}|${url}`;
+    let batch = _pendingUploads.get(k);
+    if (!batch) {
+        const b = { payload: {} as Record<string, any>, waiters: [] as { resolve: (v: any) => void; reject: (e: any) => void }[] };
+        batch = b;
+        _pendingUploads.set(k, b);
+        setTimeout(() => {
+            _pendingUploads.delete(k);
+            fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+                body: JSON.stringify(b.payload)
+            })
+                .then(res => { if (!res.ok) throw new Error("Update failed"); return res.json(); })
+                .then(raw => b.waiters.forEach(w => w.resolve(raw)), e => b.waiters.forEach(w => w.reject(e)));
+        }, 0);
+    }
+    Object.assign(batch.payload, payload);
+    const target = batch;
+    return new Promise((resolve, reject) => target.waiters.push({ resolve, reject }));
+}
+
 export class SingletonSyncManager<T extends object> {
     data = $state<T | null>(null);
     status = $state<SyncStatus>("idle");
@@ -506,23 +551,21 @@ export class SingletonSyncManager<T extends object> {
             const token = get(auth).token;
             if (!token) { this.status = "idle"; return; }
 
-            const res = await fetch(`${BASE_URL}${this.apiBase}/${this.endpoint}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (!res.ok) throw new Error("Failed to fetch remote data");
-
-            const raw = await res.json();
+            const url = `${BASE_URL}${this.apiBase}/${this.endpoint}`;
+            const raw = await sharedGet(url, token);
             if (get(auth).token !== token) return; // account changed mid-flight
             const remoteDataRaw = convertKeys(raw, toCamel);
             const remoteData = this.mapper ? this.mapper(remoteDataRaw) : remoteDataRaw;
 
-            // Simple migration: if remote is empty but local has data
+            // Simple migration: if remote is empty but this device holds real data, upload it
+            // (quietly: background bookkeeping, no affirmation).
             const isRemoteEmpty = !remoteDataRaw || Object.keys(remoteDataRaw).length === 0; // raw: a mapper may add defaults
-            const isLocalPopulated = this.data && Object.keys(this.data).length > 0;
 
-            if (isRemoteEmpty && isLocalPopulated) {
+            if (isRemoteEmpty && this.hasLocalData()) {
                 console.log(`[Sync:${this.key}] Migrating local singleton to cloud...`);
-                await this.update(this.data!, true); // background upload: no affirmation
+                const saved = convertKeys(await sharedUpload(url, token, this.wirePayload(this.data!)), toCamel);
+                if (get(auth).token !== token) return;
+                this.updateLocal(this.mapper ? this.mapper(saved) : saved);
             } else {
                 this.updateLocal(remoteData);
             }
@@ -536,7 +579,26 @@ export class SingletonSyncManager<T extends object> {
         }
     }
 
-    // quiet: a background write (the sync-time local-to-cloud upload) — no affirmation.
+    /** True when the raw device copy (before mapping) holds more than the mapper's defaults:
+     *  a mapper fills defaults, and defaults are never uploaded. */
+    private hasLocalData(): boolean {
+        const stored = getStored<any>(this.key, null);
+        if (!stored || typeof stored !== 'object' || Object.keys(stored).length === 0) return false;
+        if (!this.mapper) return true;
+        return JSON.stringify(this.mapper(stored)) !== JSON.stringify(this.mapper({}));
+    }
+
+    /** The record as sent: mapped, snake_case, without the fields the server owns. */
+    private wirePayload(data: T): any {
+        const payload = convertKeys(this.mapper ? this.mapper(data) : data, toSnake);
+        // Server-owned fields; the server rejects them (422) if sent back.
+        if (payload && typeof payload === 'object') {
+            for (const k of ['id', 'user_id', 'created_at', 'updated_at']) delete payload[k];
+        }
+        return payload;
+    }
+
+    // quiet: a background write — no affirmation, failures go to the console only.
     async update(newData: Partial<T>, quiet = false) {
         const original = this.data;
         this.status = "syncing";
@@ -547,12 +609,7 @@ export class SingletonSyncManager<T extends object> {
 
         try {
             const token = get(auth).token;
-            const payloadRaw = this.mapper ? this.mapper(this.data) : this.data;
-            const payload = convertKeys(payloadRaw, toSnake);
-            // Server-owned fields; the server rejects them (422) if sent back.
-            if (payload && typeof payload === 'object') {
-                for (const k of ['id', 'user_id', 'created_at', 'updated_at']) delete payload[k];
-            }
+            const payload = this.wirePayload(this.data);
 
             const res = await fetch(`${BASE_URL}${this.apiBase}/${this.endpoint}`, {
                 method: "POST",

@@ -36,7 +36,6 @@
     import * as registryRaw from "$lib/data/registry.json";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
-    import Affirmation from "$lib/components/Affirmation.svelte";
 
     // Registry Data Handling
     const registryData = (registryRaw as any).default || registryRaw;
@@ -51,7 +50,6 @@
     });
     let parsedCustomAttributes = $state<Record<string, any>>({});
     let isLoading = $state(true);
-    let showAffirmation = $state(false);
     let viewMode = $state<ViewMode>('card');
 
     onMount(async () => {
@@ -157,7 +155,6 @@
                 userContext: $estateProfile.ownerName || "User",
             });
         }
-        showAffirmation = true;
         resetExpenseForm();
     }
 
@@ -272,8 +269,6 @@
             <GriefSupportBanner compact={true} />
         </div>
 
-        <!-- Affirmation Message -->
-        <Affirmation module="funeral" bind:show={showAffirmation} />
     </div>
 
     <!-- Tabs -->

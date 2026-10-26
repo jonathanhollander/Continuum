@@ -20,7 +20,6 @@
     import Modal from "$lib/components/ui/Modal.svelte";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
-    import Affirmation from "$lib/components/Affirmation.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
@@ -40,7 +39,6 @@
     let activeTab = $state<"reflections" | "will" | "lessons" | "accomplishments">("reflections");
     let isLoading = $state(true);
     let showAddModal = $state(false);
-    let showAffirmation = $state(false);
     let viewMode = $state<ViewMode>('card');
     let searchQuery = $state("");
     let editingEntry = $state<JournalEntry | null>(null);
@@ -140,7 +138,6 @@
         }
 
         showAddModal = false;
-        showAffirmation = true;
         newEntry = { type: "reflection", title: "", content: "", tags: "" };
         parsedCustomAttributes = {};
         editingEntry = null;
@@ -199,8 +196,6 @@
     </div>
 {:else}
     <div class="max-w-6xl mx-auto p-6 md:p-8 animate-in fade-in duration-500">
-        <!-- Affirmation Message -->
-        <Affirmation module="journal" bind:show={showAffirmation} />
 
         <!-- Tab Navigation -->
         <div class="flex justify-center gap-2 mb-8 flex-wrap">

@@ -67,8 +67,7 @@ export const timeCapsuleStore = {
         return timeCapsuleSync.create({
             ...message,
             id: crypto.randomUUID(),
-            isReleased: false,
-            createdAt: new Date().toISOString()
+            isReleased: false // created_at is set by the server (it rejects it on create)
         } as TimeCapsuleMessage);
     },
 

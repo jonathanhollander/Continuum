@@ -33,12 +33,10 @@
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
     import * as registryRaw from "$lib/data/registry.json";
-    import Affirmation from "$lib/components/Affirmation.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
 
     let dataViewMode = $state<ViewMode>('card');
     let customAttributes = $state<Record<string, any>>({});
-    let showAffirmation = $state(false);
 
     // Registry Data Handling
     const registryData = (registryRaw as any).default || registryRaw;
@@ -170,7 +168,6 @@
             });
         }
 
-        showAffirmation = true;
         resetForm();
         } catch {
             // The manager already showed the one gentle message; the form stays open with the draft.
@@ -285,9 +282,7 @@
     </div>
 {:else}
 <div class="min-h-screen bg-[#FDFBF7]">
-    <!-- Affirmation Message -->
     <div class="max-w-6xl mx-auto px-8 pt-8">
-        <Affirmation module="heirlooms" bind:show={showAffirmation} />
     </div>
 
     <!-- Add Memory Modal -->

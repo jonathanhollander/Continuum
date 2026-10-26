@@ -18,7 +18,6 @@
     import { onMount } from "svelte";
     import ContactRow from "$lib/components/modules/contacts/ContactRow.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
-    import Affirmation from "$lib/components/Affirmation.svelte";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
@@ -57,7 +56,6 @@
     let contacts = $derived(familyStore.members);
 
     let showAddModal = $state(false);
-    let showAffirmation = $state(false);
 
 
     // Form State
@@ -162,7 +160,6 @@
         showAddModal = false;
         newContact = { role: "Family", notes: "", relation: "" };
         parsedCustomAttributes = {};
-        showAffirmation = true;
     }
 
     async function deleteContact(id: number | string) {
@@ -217,8 +214,6 @@
         </button>
     </div>
 
-    <!-- Affirmation Message -->
-    <Affirmation module="contacts" bind:show={showAffirmation} />
 
     <!-- AI Prompt Bar -->
     <div class="max-w-3xl mx-auto mb-8">

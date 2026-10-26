@@ -33,6 +33,7 @@ def create_family_memory(request: Request, memory: FamilyMemory, user: User = De
         resource_type="family_memory",
         resource_id=str(memory.id)
     )
+    session.refresh(memory)  # the audit commit expires it; otherwise the response is {}
     return memory
 
 @router.put("/family/{memory_id}", response_model=FamilyMemory)
@@ -94,6 +95,7 @@ def create_visual_memory(request: Request, memory: VisualMemory, user: User = De
         resource_type="visual_memory",
         resource_id=str(memory.id)
     )
+    session.refresh(memory)  # the audit commit expires it; otherwise the response is {}
     return memory
 
 @router.put("/visual/{memory_id}", response_model=VisualMemory)
@@ -154,6 +156,7 @@ def create_external_archive(request: Request, archive: ExternalArchive, user: Us
         resource_type="external_archive",
         resource_id=str(archive.id)
     )
+    session.refresh(archive)  # the audit commit expires it; otherwise the response is {}
     return archive
 
 @router.put("/archives/{archive_id}", response_model=ExternalArchive)
