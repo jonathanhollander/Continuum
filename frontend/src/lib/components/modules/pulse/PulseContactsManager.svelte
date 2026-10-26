@@ -87,15 +87,27 @@
         showAddGuardianModal = true;
     }
 
+    // Takes the person off Pulse only: their Family & Contacts entry stays. A Pulse tier comes from
+    // tier_id or, failing that, the call tier 1-3 (pulseTierNumber), so both are cleared; "Kept
+    // private" stays as it is. Saved through the shared contacts SyncManager, so the contacts page
+    // shows it at once; on failure that store rolls back and shows its own gentle message.
     async function deleteContact(contactId: number) {
         if (!confirm("Remove this contact from your Pulse network? You can add them back later.")) return;
-        // Through the shared contacts SyncManager, so its saved copy drops this person too;
-        // otherwise its next sync would see the server empty and upload them again.
-        // On failure it shows its own gentle message and keeps the person listed.
-        await contactSync.delete(contactId);
-        if (contactSync.status !== "error") {
-            contacts = contacts.filter((c) => c.id !== contactId);
+        const contact = contacts.find((c) => c.id === contactId);
+        const updates: Record<string, unknown> = { tierId: null };
+        if (contact?.call_tier && contact.call_tier !== "4_DNR") updates.tier = null;
+        try {
+            if (!contactSync.items.some((c) => String(c.id) === String(contactId))) await contactSync.sync();
+            await contactSync.update(contactId, updates);
+        } catch (e) {
+            console.error(e);
+            return;
         }
+        contacts = contacts.map((c) =>
+            c.id === contactId
+                ? { ...c, tier_id: null, call_tier: "tier" in updates ? null : c.call_tier }
+                : c,
+        );
     }
 
     function getContactsForTier(tierNumber: number) {

@@ -6,7 +6,8 @@
     import { Check, X } from "lucide-svelte";
     import { focusTrap } from "$lib/actions/focusTrap";
     import { portal } from "$lib/actions/portal";
-    import { apiGet, apiPut } from "$lib/api/client";
+    import { apiGet } from "$lib/api/client";
+    import { contactSync } from "$lib/stores/familyStore.svelte";
     import { pulseTierNumber } from "./pulseTiers";
 
     let {
@@ -51,14 +52,16 @@
         saving = true;
         error = null;
         try {
-            await apiPut(`/api/contacts/${selectedContactId}`, {
-                tier_id: targetTierId,
-            });
+            // Through the shared contacts SyncManager, so Family & Contacts shows the tier at once.
+            // On failure it rolls back and shows its own gentle message; the dialog stays open.
+            if (!contactSync.items.some((c) => String(c.id) === String(selectedContactId))) {
+                await contactSync.sync();
+            }
+            await contactSync.update(selectedContactId, { tierId: targetTierId });
             await onsaved();
             onclose();
         } catch (e) {
             console.error(e);
-            error = gentleRetry;
         } finally {
             saving = false;
         }
