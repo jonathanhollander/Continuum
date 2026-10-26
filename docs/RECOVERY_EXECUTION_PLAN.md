@@ -1022,7 +1022,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X298 | ☑ | merged | Simulator POA check also counts a Health & Medical healthcare_proxy ("Healthcare proxy saved in Health & Medical."); Financial Accounts subtitle "Bank accounts, investments and debts, gathered in one place." |
 | X299 | ☑ | merged | Directive check counts living_will/dnr/palliative_care/other only (proxy → POA only); Vault fallback no longer matches any "health" name; POA line covers proxy; no "Manage" subtitles left |
 | X300 | ☑ | merged | Links carry their destination's heading: "The Life Timeline →", "Trusted Contacts", "Your Check-in Settings"; old labels 0; 0 console errors |
-| X302 | ▶ | | |
+| X302 | ☑ | 2a3b02b (live 9a8d252) | Passkey challenges stored as base64 in the Postgres challenge store; live `POST /api/auth/passkey/login/start` for continuum@sincuerda.com 500 → 200 with rpId continuum.estate and the stored credential |
 | X5 | ◐ ready on card/X5 6258dee; merge held for owner sign-in | | Bypass removed (backend login + login page magic-link branch, verify_auth.py, CLAUDE.md line); `?redirect` already same-site via X224 `sameSitePath()`. Local proof: jh@ + "x" → 401 (no auto-create), real hash → 200, dev → 200; external redirect → /dashboard. Production 2026-10-26: jh@continuum.estate (id 39) has no password and no passkey → after merge it signs in by magic link only; continuum@sincuerda.com (id 38) has a passkey |
 | X301 | ☐ (after X5 merge) | | |
 | X6 | ☐ (owner) | | |
