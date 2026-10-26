@@ -48,6 +48,14 @@ export const setStored = <T>(key: string, value: T, profileId?: string, accountI
     */
 };
 
+// Helper: Remove one key from an account's namespace (defaults: active account, current profile)
+export const removeStored = (key: string, profileId?: string, accountId?: string) => {
+    if (typeof localStorage === 'undefined') return;
+    const accId = accountId || get(activeAccountId) || 'anonymous';
+    const pid = profileId || get(currentProfileId) || 'owner';
+    localStorage.removeItem(`continuum_acc_${accId}_prof_${pid}_${key}`);
+};
+
 // Helper: Get legacy non-namespaced data for migration
 export const getLegacy = (key: string): string | null => {
     if (typeof localStorage === 'undefined') return null;

@@ -212,6 +212,7 @@ class JournalEntry(SQLModel, table=True):
     title: Optional[str] = None
     content: str
     tags: Optional[str] = None
+    custom_attributes: Optional[str] = Field(default="{}")
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 # --- LOGISTICS ---

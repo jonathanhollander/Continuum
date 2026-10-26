@@ -276,17 +276,8 @@
                     </p>
 
                     <div
-                        class="flex justify-between items-center pt-4 border-t border-stone-100"
+                        class="flex justify-end items-center pt-4 border-t border-stone-100"
                     >
-                        <div class="flex -space-x-2">
-                            <!-- Placeholder for "Shared With" faces -->
-                            <div
-                                class="w-6 h-6 rounded-full bg-stone-200 border-2 border-white"
-                            ></div>
-                            <div
-                                class="w-6 h-6 rounded-full bg-stone-300 border-2 border-white"
-                            ></div>
-                        </div>
                         <span
                             class="text-xs font-bold text-[#4A7C74] group-hover:underline"
                             >Open lesson →</span
