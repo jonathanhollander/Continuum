@@ -20,7 +20,7 @@
         Zap,
         ExternalLink,
     } from "lucide-svelte";
-    import { createEventDispatcher, tick } from "svelte";
+    import { createEventDispatcher, tick, untrack } from "svelte";
     import { slide } from "svelte/transition";
     import logo from "$lib/assets/logo.png";
     import { logout } from "$lib/stores/keyringStore";
@@ -120,6 +120,39 @@
             if (link) link.scrollIntoView({ block: "nearest" });
         }, 350);
         return () => clearTimeout(t);
+    });
+
+    // "Building your foundation" teaser: shown whole or kept just below the
+    // fold, never cut in half by the profile footer. When it fits under the
+    // list it sits there; otherwise a spacer pushes its top to the nav's
+    // bottom edge so it appears only once the list is scrolled.
+    let teaserWrap = $state<HTMLElement | null>(null);
+    let teaserSpacer = $state(0);
+    $effect(() => {
+        // Re-run when rows come and go (Pulse sub-nav, recipient preview).
+        $page.url.pathname;
+        previewItem;
+        if (!navEl || !teaserWrap) return;
+        const nav = navEl;
+        const wrap = teaserWrap;
+        const place = () => {
+            const top =
+                wrap.getBoundingClientRect().top -
+                nav.getBoundingClientRect().top +
+                nav.scrollTop;
+            const height = wrap.offsetHeight - teaserSpacer;
+            const room = nav.clientHeight;
+            const next =
+                height <= 0 || top + height <= room
+                    ? 0
+                    : Math.max(0, Math.ceil(room - top));
+            if (next !== teaserSpacer) teaserSpacer = next;
+        };
+        const ro = new ResizeObserver(place);
+        ro.observe(nav);
+        for (const child of nav.children) ro.observe(child);
+        untrack(place);
+        return () => ro.disconnect();
     });
 
     // Filter Pulse sub-nav
@@ -341,7 +374,7 @@
                                     >
                                     {#if item.isPreview}
                                         <span
-                                            class="shrink-0 whitespace-nowrap text-[10px] font-medium leading-none px-1 py-1 rounded bg-white/10 text-primary-foreground/70"
+                                            class="shrink-0 -ml-2 whitespace-nowrap text-[10px] font-medium leading-none px-1 py-1 rounded bg-white/10 text-primary-foreground/70"
                                             data-testid="preview-tag"
                                             >Early preview</span
                                         >
@@ -430,7 +463,9 @@
         {/each}
 
         <!-- Getting Started Progress (shows until core actions complete) -->
-        <GettingStartedTracker variant="sidebar" />
+        <div bind:this={teaserWrap} style="padding-top: {teaserSpacer}px">
+            <GettingStartedTracker variant="sidebar" />
+        </div>
     </nav>
 
     <!-- Sidebar Footer: Profile Switcher -->
