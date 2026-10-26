@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from sqlmodel import Session
 from backend.config import settings
 from backend.database import engine, create_db_and_tables, get_session, User, Estate
-from backend.security import get_registration_options, verify_registration, get_authentication_options, verify_authentication
+from backend.security import verify_registration, get_authentication_options, verify_authentication
 from backend.auth import create_access_token, get_current_user, ACCESS_TOKEN_EXPIRE_MINUTES
 from backend.pulse_scheduler import start_scheduler, stop_scheduler
 from fastapi.security import OAuth2PasswordRequestForm
@@ -239,13 +239,6 @@ async def general_exception_handler(request: Request, exc: Exception):
     )
 
 # --- Models ---
-class ChallengeRequest(BaseModel):
-    email: str
-
-class RegistrationResponse(BaseModel):
-    email: str
-    response: dict
-
 
 # --- Pydantic Validation Models (P1-High Security) ---
 from typing import Any, Dict
@@ -347,27 +340,6 @@ async def health_check(session: Session = Depends(get_session)):
         return JSONResponse(status_code=503, content=health)
     
     return health
-
-@app.post("/api/auth/register/challenge")
-def register_challenge(request: ChallengeRequest):
-    # WebAuthn challenge endpoint (legacy - kept for compatibility)
-    user_id = "user-" + request.email
-    options = get_registration_options(user_id, request.email)
-    return options
-
-@app.post("/api/auth/register/verify")
-def register_verify(request: RegistrationResponse, session: Session = Depends(get_session)):
-    # WebAuthn verification endpoint (legacy - kept for compatibility)
-    return {"status": "success"}
-
-@app.post("/api/auth/magic-link")
-def send_magic_link(request: ChallengeRequest):
-    # Magic link endpoint (future feature)
-    logger.info(
-        "Magic link requested (legacy endpoint)",
-        extra={"context": {"email": request.email}}
-    )
-    return {"status": "sent", "email": request.email}
 
 @app.get("/api/estate")
 def get_estate(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
