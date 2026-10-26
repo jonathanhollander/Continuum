@@ -52,7 +52,7 @@
 
     let activeTab = $state("call-list");
     let parsedCustomAttributes = $state<Record<string, any>>({});
-    let viewMode = $state<ViewMode>('card');
+    let viewMode = $derived<ViewMode>(userPreferencesStore.getViewMode('contacts'));
     let isLoading = $state(true);
 
     // Use familyStore as source of truth
@@ -314,7 +314,7 @@
 {:else}
 <div class="max-w-6xl mx-auto p-6 md:p-8 animate-in fade-in duration-500">
     <div class="flex justify-end items-center gap-4 mb-8">
-        <DataViewToggle module="contacts" onchange={(mode) => viewMode = mode} />
+        <DataViewToggle module="contacts" />
         <button
             onclick={openAdd}
             class="px-5 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"

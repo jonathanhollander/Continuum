@@ -66,12 +66,12 @@
             } else {
                 state.actionError =
                     res.status === 401 || res.status === 404
-                        ? "We couldn't record that just now. This link may have expired; please try again in a little while."
-                        : "We couldn't record that just now. Please try again in a little while.";
+                        ? "This link may have expired or been replaced. The person who shared it can send you a new one."
+                        : "Let's try that again in a little while.";
             }
         } catch (e) {
             state.actionError =
-                "We couldn't record that just now. Please try again in a little while.";
+                "Let's try that again in a little while.";
         }
     }
 </script>
@@ -136,7 +136,8 @@
                             appears in their check-in history.
                         {:else}
                             Thank you for looking in on {state.data.user_name}.
-                            It means a great deal to have you close.
+                            It means a great deal to have you close. This
+                            appears in their messages.
                         {/if}
                     </p>
                 </div>

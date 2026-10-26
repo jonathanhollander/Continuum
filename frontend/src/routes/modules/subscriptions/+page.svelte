@@ -66,7 +66,7 @@
         difficultyFilter && difficultyChoices.includes(difficultyFilter)
             ? subscriptions.filter((s) => s.difficulty === difficultyFilter) : subscriptions,
     );
-    let viewMode = $state<ViewMode>('card');
+    let viewMode = $derived<ViewMode>(userPreferencesStore.getViewMode('subscriptions'));
 
     onMount(async () => {
         await subscriptionSync.init();
@@ -385,7 +385,7 @@
     whyMatters="A short list of your subscriptions gives your family the names and steps to close each one, one less thing for them to carry."
 >
     <div class="flex items-center gap-4">
-        <DataViewToggle module="subscriptions" onchange={(mode) => viewMode = mode} />
+        <DataViewToggle module="subscriptions" />
         <button
             class="px-4 py-2.5 bg-primary text-primary-foreground font-semibold rounded-xl flex items-center gap-2 hover:opacity-90 transition-all shadow-sm group"
             onclick={() => (showAddForm = true)}

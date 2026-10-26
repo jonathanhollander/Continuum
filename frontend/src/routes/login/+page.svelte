@@ -22,8 +22,20 @@
     let magicLinkEmail = $state("");
     let magicLinkSent = $state(false);
 
+    // Same-site relative path only (as on /auth/verify); anything else is dropped
+    function sameSitePath(value: string | null): string | null {
+        return value &&
+            value.startsWith("/") &&
+            !value.startsWith("//") &&
+            !value.includes("\\") &&
+            !value.includes("://")
+            ? value
+            : null;
+    }
+
     // Get redirect URL from query params or default to dashboard
-    let redirectUrl = $derived($page.url.searchParams.get("redirect") || "/dashboard");
+    let safeRedirect = $derived(sameSitePath($page.url.searchParams.get("redirect")));
+    let redirectUrl = $derived(safeRedirect || "/dashboard");
 
     // Redirect if already logged in
     onMount(() => {
@@ -191,7 +203,7 @@
 
             await apiPost("/api/auth/magic-link", {
                 email: magicLinkEmail,
-                redirect: $page.url.searchParams.get("redirect") || undefined,
+                redirect: safeRedirect || undefined,
             });
 
             // Store email for "Remember Me" early
@@ -409,8 +421,8 @@
                 <p class="text-slate-400 text-lg">
                     New here?
                     <a
-                        href={$page.url.searchParams.get("redirect")
-                            ? `/signup?redirect=${encodeURIComponent($page.url.searchParams.get("redirect") ?? "")}`
+                        href={safeRedirect
+                            ? `/signup?redirect=${encodeURIComponent(safeRedirect)}`
                             : "/signup"}
                         class="text-teal-400 hover:text-teal-300 font-bold transition-colors"
                     >

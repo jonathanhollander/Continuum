@@ -44,7 +44,7 @@
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
 
     let showAddModal = $state(false);
-    let viewMode = $state<ViewMode>('card');
+    let viewMode = $derived<ViewMode>(userPreferencesStore.getViewMode('heirlooms'));
     let parsedCustomAttributes = $state<Record<string, any>>({});
     let isEditing = $state(false);
     let editingId = $state<string | number | null>(null);
@@ -319,7 +319,7 @@
     whyMatters="Every object holds a story. That watch your grandfather wore every day, your wedding dress, the painting your mother loved. When you record their stories, you keep the emotional value that makes them irreplaceable, and your family will carry those stories forward."
 >
     <div class="flex items-center gap-3">
-        <DataViewToggle module="heirlooms" onchange={(mode) => viewMode = mode} />
+        <DataViewToggle module="heirlooms" />
         <button
             onclick={() => (showWizard = true)}
             class="flex items-center gap-2 px-5 py-3 border border-primary/20 text-primary font-bold rounded-2xl hover:bg-primary/5 transition-colors"

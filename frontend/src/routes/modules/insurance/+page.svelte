@@ -60,7 +60,7 @@
     import { downloadMedia, mediaIdFromRef } from "$lib/services/mediaService";
 
     let showAddModal = $state(false);
-    let viewMode = $state<ViewMode>('card');
+    let viewMode = $derived<ViewMode>(userPreferencesStore.getViewMode('insurance'));
     let isEditing = $state(false);
     let searchQuery = $state("");
     let filterType = $state("All");
@@ -442,7 +442,7 @@
     whyMatters="Cataloging your policies here helps every benefit reach the people you love."
 >
     <div class="flex flex-wrap items-center gap-3">
-        <DataViewToggle module="insurance" onchange={(mode) => viewMode = mode} />
+        <DataViewToggle module="insurance" />
         <button
             onclick={() => (showWizard = true)}
             class="flex items-center gap-2 px-5 py-3 border border-primary/10 text-primary font-bold rounded-2xl hover:bg-primary/5 transition-colors"

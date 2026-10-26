@@ -197,10 +197,6 @@
             pipWindow.close();
         } else {
             conciergeEngine.popIn();
-            // If we are in the standalone concierge window, close it
-            if (browser && window.location.pathname === "/concierge-window") {
-                window.close();
-            }
         }
     }
 
@@ -267,7 +263,7 @@
     <!-- Clicking the dimmed area closes the panel; the panel has its own close button. -->
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
     <div
-        class="fixed inset-0 bg-black/10 backdrop-blur-sm z-40 transition-all duration-500"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 transition-all duration-500"
         onclick={onClose}
         transition:fade={{ duration: 200 }}
     ></div>

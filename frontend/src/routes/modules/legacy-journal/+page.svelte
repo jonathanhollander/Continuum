@@ -35,13 +35,13 @@
     import { journalStore, type JournalEntry } from "$lib/stores/journalStore.svelte";
     import { REFLECTION_POOLS } from "$lib/data/reflectionPools";
     import { language } from "$lib/stores/localization";
-    import type { ViewMode } from "$lib/stores/userPreferencesStore.svelte";
+    import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
 
     // State
     let activeTab = $state<"reflections" | "will" | "lessons" | "accomplishments">("reflections");
     let isLoading = $state(true);
     let showAddModal = $state(false);
-    let viewMode = $state<ViewMode>('card');
+    let viewMode = $derived<ViewMode>(userPreferencesStore.getViewMode('legacy-journal'));
     let searchQuery = $state("");
     let editingEntry = $state<JournalEntry | null>(null);
     let parsedCustomAttributes = $state<Record<string, any>>({});
@@ -299,7 +299,7 @@
                             />
                         </div>
                         <div class="flex items-center gap-3">
-                            <DataViewToggle module="legacy-journal" onchange={(mode) => viewMode = mode} />
+                            <DataViewToggle module="legacy-journal" />
                         </div>
                     </div>
 
