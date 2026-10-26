@@ -3,32 +3,46 @@
     import { fetchMediaBlob } from "$lib/services/mediaService";
     import { auth } from "$lib/stores/auth";
     import { activeAccountId } from "$lib/stores/keyringStore";
+    import { assertCurrentSession, captureSession, isCurrentSession, type SessionOwnership } from "$lib/services/sessionOwnership";
 
     /**
      * One object URL per media id for the page's life, shared by every MediaView,
      * so the same file shown twice is fetched once. Emptied (and revoked) when the
      * signed-in account changes or signs out, so one account never sees another's file.
      */
-    const blobUrls = new Map<number, Promise<string>>();
+    const blobUrls = new Map<number, { owner: SessionOwnership; url: Promise<string> }>();
 
     export function blobUrlFor(id: number): Promise<string> {
-        let url = blobUrls.get(id);
-        if (!url) {
-            url = fetchMediaBlob(id).then((blob) => URL.createObjectURL(blob));
-            url.catch(() => blobUrls.delete(id));
-            blobUrls.set(id, url);
-        }
+        const owner = captureSession();
+        assertCurrentSession(owner);
+        const existing = blobUrls.get(id);
+        if (existing && isCurrentSession(existing.owner)) return existing.url.then((u) => {
+            assertCurrentSession(existing.owner);
+            return u;
+        });
+        if (existing) existing.url.then((u) => URL.revokeObjectURL(u), () => undefined);
+        const url = fetchMediaBlob(id, owner).then((blob) => {
+            assertCurrentSession(owner);
+            return URL.createObjectURL(blob);
+        });
+        const entry = { owner, url };
+        url.catch(() => { if (blobUrls.get(id) === entry) blobUrls.delete(id); });
+        blobUrls.set(id, entry);
         return url;
     }
 
     /** The object URL already made (or being made) for this id, if any. */
     export function cachedBlobUrl(id: number): Promise<string> | undefined {
-        return blobUrls.get(id);
+        const entry = blobUrls.get(id);
+        return entry && isCurrentSession(entry.owner) ? entry.url.then((u) => {
+            assertCurrentSession(entry.owner);
+            return u;
+        }) : undefined;
     }
 
     function forgetBlobUrls() {
-        for (const url of blobUrls.values()) {
-            url.then((u) => URL.revokeObjectURL(u), () => undefined);
+        for (const entry of blobUrls.values()) {
+            entry.url.then((u) => URL.revokeObjectURL(u), () => undefined);
         }
         blobUrls.clear();
     }
