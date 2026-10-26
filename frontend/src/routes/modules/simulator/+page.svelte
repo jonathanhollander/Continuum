@@ -2,7 +2,7 @@
     import { fade, slide } from "svelte/transition";
     import {
         TriangleAlert,
-        Siren,
+        Compass,
         CreditCard,
         Stethoscope,
         Ghost,
@@ -33,7 +33,7 @@
         },
         {
             id: "medical",
-            title: " Sudden Hospitalization",
+            title: "Sudden Hospitalization",
             icon: Stethoscope,
             color: "text-primary-hover",
             bg: "bg-primary-soft",
@@ -167,7 +167,7 @@
         <div
             class="bg-primary-soft text-primary-hover px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2"
         >
-            <Siren size={18} /> Fire Drill Mode
+            <Compass size={18} /> Practice walkthrough
         </div>
     </div>
 
@@ -197,7 +197,7 @@
                     <div
                         class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground group-hover:text-primary-hover"
                     >
-                        Run Simulation <ArrowRight size={14} />
+                        Walk through this moment <ArrowRight size={14} />
                     </div>
                 </button>
             {/each}
@@ -221,7 +221,7 @@
                         ← Back
                     </button>
                     <h2 class="font-bold text-xl flex items-center gap-2">
-                        Simulating: <span class="text-primary-hover"
+                        Moment: <span class="text-primary-hover"
                             >{scenarios.find((s) => s.id === activeScenario)
                                 ?.title}</span
                         >
@@ -231,7 +231,7 @@
                     <div
                         class="flex items-center gap-2 text-primary font-bold animate-pulse"
                     >
-                        <Siren size={18} /> Running Checks...
+                        <Compass size={18} /> Looking over your plan…
                     </div>
                 {/if}
             </div>
@@ -246,11 +246,11 @@
                         ></div>
                         <div class="space-y-2 text-center">
                             <p class="text-lg font-bold text-foreground">
-                                Audit in Progress
+                                Looking over your plan
                             </p>
                             <p class="text-muted-foreground">
-                                Checking Vault... scanning Assets... verifying
-                                Roles...
+                                Reading your Document Vault, Financial Accounts
+                                and Medical records…
                             </p>
                         </div>
                     </div>
@@ -329,7 +329,7 @@
                             <button
                                 on:click={reset}
                                 class="text-primary font-bold hover:underline"
-                                >Run Another Simulation</button
+                                >Walk through another moment</button
                             >
                         </div>
                     </div>
