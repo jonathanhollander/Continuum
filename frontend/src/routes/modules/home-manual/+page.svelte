@@ -466,7 +466,6 @@
 
 <div class="max-w-6xl mx-auto p-6 md:p-8 animate-in fade-in duration-500">
     <!-- Header -->
-    <div class="[&_.container]:px-0">
     <LivingBlueprintHeader
         title="The Home Operating Manual"
         subtitle="The instruction manual for your physical house"
@@ -474,7 +473,6 @@
         detailedDescription="Document your trusted vendors, access codes, and utility shutoff locations. Don't leave your family guessing how to turn off the water or who to call when something breaks."
         whyMatters="In a crisis, your family needs immediate access to critical home information. Without these details, simple tasks become overwhelming challenges during an already difficult time."
     />
-    </div>
 
     <!-- AI Concierge Drafting Assistant -->
     <AIPromptBar
