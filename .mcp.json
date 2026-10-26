@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "openwiki": {
+      "command": "openwiki",
+      "args": ["mcp", "--host", "claude"]
+    }
+  }
+}

@@ -1,0 +1,13 @@
+# /jhupdate3: raw tool output dumps, test-email outbox, generated/placeholder images
+frontend/*_output*.txt
+frontend/*check*.txt
+frontend/final_verification.txt
+frontend/svelte_check_baseline.txt
+build_logs_full.txt
+grep_output.txt
+backend/outbox/
+*.png
+*.svg
+legacy_nextjs_archive/public/
+.agent/agents/
+.agent/skills/

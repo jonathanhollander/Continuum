@@ -48,3 +48,8 @@ next-env.d.ts
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Local knowledge indexes (/jhupdate3)
+.codegraph/
+graphify-out/
+openwiki/.run.json
