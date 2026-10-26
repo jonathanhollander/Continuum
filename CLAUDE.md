@@ -2,7 +2,6 @@
 
 ## Critical Info
 
-- **Dev login**: Use email `jh@continuum.estate` (dev bypass) when testing in browser
 - **Tech Stack**: SvelteKit 5 (runes: $state, $derived) + FastAPI + SQLModel + Alembic
 - **Database**: PostgreSQL (Railway prod) / SQLite (local dev)
 - **Auth**: JWT + WebAuthn/Passkeys
@@ -175,7 +174,7 @@ Detailed guides exist for specific topics:
 
 ---
 
-_Last Updated: 2026-10-26 07:13 EST_
+_Last Updated: 2026-10-26 13:30 EST_
 
 <!-- OPENWIKI:START -->
 
