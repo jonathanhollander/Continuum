@@ -1,52 +1,59 @@
 <script lang="ts">
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
-
-    import MechanicalIcon from "$lib/components/MechanicalIcon.svelte";
-    import * as registryRaw from "$lib/data/registry.json";
     import { Search, Grid, List as ListIcon } from "lucide-svelte";
-    import { navGroups, catalogCategories } from "$lib/config/navigation";
+    import { navGroups, catalogCategories, type NavItem } from "$lib/config/navigation";
+    import { dict, userRole, language } from "$lib/stores/conciergeStore.svelte";
 
-    // Robustly extract the array from the import, handling potential default export wrappers
-    const registryData = (registryRaw as any).default || registryRaw;
+    // Card X127: every module from the sidebar (navGroups) and the catalog categories,
+    // each once (by href), grouped like the sidebar. Catalog-only items join the group
+    // the data settings page gives them (legacy -> My Legacy, tools -> Extras).
+    const SELF = "/catalog";
+    const catalogGroup: Record<string, string> = { legacy: "groupMyLegacy", tools: "groupExtras" };
+    const selfItem = navGroups.flatMap((g) => g.items).find((i) => i.href === SELF);
 
-    // Ensure registry is an array
-    const registry = Array.isArray(registryData)
-        ? registryData
-        : Object.values(registryData).filter((x) => typeof x === "object");
+    // Same rule as the sidebar: English shows the label, other languages read the dictionary.
+    const text = (key: string, fallback: string) =>
+        $language === "en" ? fallback : ($dict as Record<string, string>)[key] || fallback;
 
-    // Modules marked isPreview in navigation.ts carry an "Early preview" tag (card E2).
-    const previewHrefs = new Set(
-        [...navGroups.flatMap((g) => g.items), ...catalogCategories.flatMap((c) => c.items)]
-            .filter((item) => item.isPreview)
-            .map((item) => item.href),
-    );
-    const isPreview = (module: any) => previewHrefs.has(`/modules/${module.id}`);
+    let groups = $derived.by(() => {
+        const role = $userRole;
+        const seen = new Set<string>([SELF]);
+        const out = navGroups.map((g) => ({ group: g, items: [] as NavItem[] }));
+        const add = (groupKey: string, item: NavItem) => {
+            if (seen.has(item.href) || !item.allowedRoles.includes(role)) return;
+            const target = out.find((x) => x.group.groupKey === groupKey);
+            if (!target) return;
+            seen.add(item.href);
+            target.items.push(item);
+        };
+        for (const g of navGroups) for (const item of g.items) add(g.groupKey, item);
+        for (const c of catalogCategories) for (const item of c.items) add(catalogGroup[c.id], item);
+        return out.filter((x) => x.items.length > 0);
+    });
 
-    let searchQuery = "";
-    let viewMode: "grid" | "list" = "grid";
-    // FIX: Initialize with data, not empty array
-    let filteredModules = registry;
+    let searchQuery = $state("");
+    let viewMode = $state<"grid" | "list">("grid");
 
-    $: {
-        if (searchQuery.trim() === "") {
-            filteredModules = registry;
-        } else {
-            filteredModules = registry.filter(
-                (m) =>
-                    m.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    (m.description &&
-                        m.description
-                            .toLowerCase()
-                            .includes(searchQuery.toLowerCase())),
-            );
-        }
-    }
+    let shownGroups = $derived.by(() => {
+        const q = searchQuery.trim().toLowerCase();
+        if (!q) return groups;
+        return groups
+            .map((x) => ({
+                ...x,
+                items: x.items.filter(
+                    (i) =>
+                        text(i.key, i.label).toLowerCase().includes(q) ||
+                        (i.tooltip ?? "").toLowerCase().includes(q),
+                ),
+            }))
+            .filter((x) => x.items.length > 0);
+    });
 </script>
 
 <div class="min-h-screen bg-background pb-20">
     <LivingBlueprintHeader
-        title="Explore All Features"
-        subtitle={`${registry.length} System Components Loaded`}
+        title={text("catalog", selfItem?.label ?? "")}
+        subtitle={selfItem?.tooltip}
         tier="preparation"
     />
 
@@ -62,7 +69,7 @@
                 <input
                     type="text"
                     bind:value={searchQuery}
-                    placeholder="Search components..."
+                    placeholder="Find what you need..."
                     class="w-full bg-card border border-border rounded pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-primary transition-colors"
                 />
             </div>
@@ -71,13 +78,15 @@
                 class="flex items-center gap-2 border border-border rounded p-1 bg-card"
             >
                 <button
-                    on:click={() => (viewMode = "grid")}
+                    onclick={() => (viewMode = "grid")}
+                    aria-label="Grid"
                     class={`p-2 rounded ${viewMode === "grid" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent"}`}
                 >
                     <Grid size={16} />
                 </button>
                 <button
-                    on:click={() => (viewMode = "list")}
+                    onclick={() => (viewMode = "list")}
+                    aria-label="List"
                     class={`p-2 rounded ${viewMode === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent"}`}
                 >
                     <ListIcon size={16} />
@@ -85,102 +94,92 @@
             </div>
         </div>
 
-        <!-- Grid View -->
-        {#if viewMode === "grid"}
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {#each filteredModules as module (module.id)}
-                    <a
-                        href={`/modules/${module.id}`}
-                        class="block group h-full"
-                    >
-                        <div
-                            class="bg-card border border-border p-6 rounded-lg h-full hover:border-primary/50 transition-all hover:shadow-lg relative overflow-hidden group-hover:-translate-y-1"
-                        >
-                            <div class="flex items-start justify-between mb-4">
-                                <div
-                                    class="size-10 rounded bg-primary/5 flex items-center justify-center text-xl"
-                                >
-                                    {module.icon}
-                                </div>
-                                <span
-                                    class="text-xs font-blueprint uppercase text-muted-foreground px-2 py-1 bg-secondary/10 rounded"
-                                >
-                                    {module.role}
-                                </span>
-                            </div>
-                            <h3
-                                class="text-lg font-serif mb-2 group-hover:text-primary transition-colors"
-                            >
-                                {module.title}
-                            </h3>
-                            {#if isPreview(module)}
-                                <span
-                                    class="inline-block mb-2 text-xs font-medium px-2 py-0.5 rounded-md bg-secondary/10 text-muted-foreground"
-                                    data-testid="preview-tag">Early preview</span
-                                >
-                            {/if}
-                            <p
-                                class="text-sm text-muted-foreground line-clamp-2"
-                            >
-                                {module.description}
+        <div class="space-y-12">
+            {#each shownGroups as { group, items } (group.groupKey)}
+                <section data-testid="catalog-group">
+                    <div class="mb-5 border-b border-border/50 pb-3">
+                        <h2 class="text-xl font-serif">
+                            {text(group.groupKey, group.groupLabel)}
+                        </h2>
+                        {#if group.groupDescription}
+                            <p class="text-sm text-muted-foreground mt-1">
+                                {group.groupDescription}
                             </p>
-                            <div
-                                class="mt-4 pt-4 border-t border-border/50 flex justify-between items-center text-xs text-muted-foreground font-blueprint opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                                <span class="uppercase tracking-wider"
-                                    >Access Module</span
-                                >
-                                <span>→</span>
-                            </div>
-                        </div>
-                    </a>
-                {/each}
-            </div>
-        {/if}
+                        {/if}
+                    </div>
 
-        <!-- List View -->
-        {#if viewMode === "list"}
-            <div class="space-y-2">
-                {#each filteredModules as module (module.id)}
-                    <a
-                        href={`/modules/${module.id}`}
-                        class="flex items-center gap-4 p-4 bg-card border border-border rounded hover:border-primary/50 transition-colors group"
-                    >
+                    {#if viewMode === "grid"}
                         <div
-                            class="size-8 rounded bg-primary/5 flex items-center justify-center text-lg"
+                            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
                         >
-                            {module.icon}
+                            {#each items as item (item.href)}
+                                <a href={item.href} class="block group h-full">
+                                    <div
+                                        class="bg-card border border-border p-6 rounded-lg h-full hover:border-primary/50 transition-all hover:shadow-lg relative overflow-hidden group-hover:-translate-y-1"
+                                    >
+                                        <div
+                                            class="size-10 mb-4 rounded bg-primary/5 flex items-center justify-center text-primary"
+                                        >
+                                            <svelte:component this={item.icon} size={20} />
+                                        </div>
+                                        <h3
+                                            class="text-lg font-serif mb-2 group-hover:text-primary transition-colors"
+                                        >
+                                            {text(item.key, item.label)}
+                                        </h3>
+                                        {#if item.isPreview}
+                                            <span
+                                                class="inline-block mb-2 text-xs font-medium px-2 py-0.5 rounded-md bg-secondary/10 text-muted-foreground"
+                                                data-testid="preview-tag">Early preview</span
+                                            >
+                                        {/if}
+                                        {#if item.tooltip}
+                                            <p
+                                                class="text-sm text-muted-foreground line-clamp-2"
+                                            >
+                                                {item.tooltip}
+                                            </p>
+                                        {/if}
+                                    </div>
+                                </a>
+                            {/each}
                         </div>
-                        <div class="flex-1 min-w-0">
-                            <h3
-                                class="font-medium truncate group-hover:text-primary transition-colors"
-                            >
-                                {module.title}
-                            </h3>
-                            {#if isPreview(module)}
-                                <span
-                                    class="inline-block mt-0.5 text-xs font-medium px-2 py-0.5 rounded-md bg-secondary/10 text-muted-foreground"
-                                    data-testid="preview-tag">Early preview</span
+                    {:else}
+                        <div class="space-y-2">
+                            {#each items as item (item.href)}
+                                <a
+                                    href={item.href}
+                                    class="flex items-center gap-4 p-4 bg-card border border-border rounded hover:border-primary/50 transition-colors group"
                                 >
-                            {/if}
-                            <p class="text-xs text-muted-foreground truncate">
-                                {module.description}
-                            </p>
+                                    <div
+                                        class="size-8 rounded bg-primary/5 flex items-center justify-center text-primary"
+                                    >
+                                        <svelte:component this={item.icon} size={16} />
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <h3
+                                            class="font-medium truncate group-hover:text-primary transition-colors"
+                                        >
+                                            {text(item.key, item.label)}
+                                        </h3>
+                                        {#if item.isPreview}
+                                            <span
+                                                class="inline-block mt-0.5 text-xs font-medium px-2 py-0.5 rounded-md bg-secondary/10 text-muted-foreground"
+                                                data-testid="preview-tag">Early preview</span
+                                            >
+                                        {/if}
+                                        {#if item.tooltip}
+                                            <p class="text-xs text-muted-foreground truncate">
+                                                {item.tooltip}
+                                            </p>
+                                        {/if}
+                                    </div>
+                                </a>
+                            {/each}
                         </div>
-                        <div
-                            class="text-xs font-blueprint text-muted-foreground uppercase px-2"
-                        >
-                            {module.role}
-                        </div>
-                    </a>
-                {/each}
-            </div>
-        {/if}
-
-        {#if filteredModules.length === 0}
-            <div class="text-center py-20 text-muted-foreground">
-                <p>No modules found matching "{searchQuery}"</p>
-            </div>
-        {/if}
+                    {/if}
+                </section>
+            {/each}
+        </div>
     </div>
 </div>
