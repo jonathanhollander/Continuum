@@ -117,7 +117,7 @@
             <!-- packetHTML escapes every recorded value -->
             {@html html}
         {:else if !note}
-            <div class="binder-empty p-20 flex items-center justify-center min-h-[600px]">
+            <div class="p-20 flex items-center justify-center min-h-[600px]">
                 <EmptyStateGuide type="binder" onAdd={() => goto("/")} />
             </div>
         {/if}
@@ -125,13 +125,6 @@
 </div>
 
 <style>
-    /* The empty state's call to action takes the binder's own primary colour. */
-    :global(.binder-empty button.bg-indigo-600) {
-        background-color: #304743;
-    }
-    :global(.binder-empty button.bg-indigo-600:hover) {
-        background-color: #2a3f3b;
-    }
     @media print {
         @page {
             margin: 12mm;
