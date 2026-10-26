@@ -47,12 +47,26 @@
     // Derived flags
     const isActuallyPoppedOut = $derived($conciergeEngine.isPoppedOut);
     const popOutMode = $derived($conciergeEngine.popOutMode);
-    const floatingPos = $derived(
-        $conciergeEngine.floatingPosition || { x: 50, y: 50 },
-    );
     const floatingSize = $derived(
         $conciergeEngine.floatingSize || { width: 340, height: 580 },
     );
+    // Default opens top-right, below the 80px desktop header and clear of the sidebar.
+    // The store's untouched default is { x: 50, y: 50 }; a dragged position is kept.
+    // Either way the panel is kept inside the window.
+    let winW = $state(0);
+    let winH = $state(0);
+    const floatingPos = $derived.by(() => {
+        const saved = $conciergeEngine.floatingPosition;
+        const isDefault = !saved || (saved.x === 50 && saved.y === 50);
+        if (!winW || !winH) return saved || { x: 50, y: 50 };
+        const pos = isDefault
+            ? { x: winW - floatingSize.width - 24, y: 104 }
+            : saved;
+        return {
+            x: Math.max(0, Math.min(pos.x, winW - floatingSize.width)),
+            y: Math.max(0, Math.min(pos.y, winH - floatingSize.height)),
+        };
+    });
 
     let input = $state("");
     let scrollContainer = $state<HTMLElement | null>(null);
@@ -257,6 +271,8 @@
         });
     }
 </script>
+
+<svelte:window bind:innerWidth={winW} bind:innerHeight={winH} />
 
 {#if isOpen && !isActuallyPoppedOut}
     <!-- Backdrop: Only show in sidebar mode, not in floating/pip -->
