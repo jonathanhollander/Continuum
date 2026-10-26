@@ -1,50 +1,41 @@
 # Orchestrator Handoff — RECOVERY_EXECUTION_PLAN
 
-**Last Updated:** 2026-10-26 14:25 EST
+**Last Updated:** 2026-10-26 14:45 EST
 
 This document is for an agent taking over as orchestrator of `docs/RECOVERY_EXECUTION_PLAN.md` (the plan, the only task board). Read this file, then the plan's "Owner decisions", "Orchestration loop", "Section status" and "Card status" sections. Source code and git win over anything written here.
 
 ---
 
-## 1. Where things stand (2026-10-26 13:05 EST)
+## 1. Where things stand (2026-10-26 14:45 EST)
 
-**Done (✅ in Section status):** Waves A, B, C, D, E, U, G, T, V; O1/O2 for every wave; R0 (local rehearsal, 22/23, findings X275/X276 fixed).
+**Done (✅ in Section status):** Waves A, B, C, D, E, U, G, T, V; O1/O2 for every wave and for the release; R0; **Release** (browser test `docs/reviews/2026-10-26-release/BROWSER-TEST.md`; its defects X292 uploads → Railway volume, X293 Full Record edit, X294 timeline heading all fixed and verified live).
 
-**Open:**
+**Only Wave X remains open.** Everything is merged and pushed; local main = origin/main; no uncommitted work. Every X card is ☑ except:
 
-| Item | State | What finishes it |
+| Card | State | What finishes it |
 |---|---|---|
-| **Release** | ▶ — step 9 done (production variables set, `ENVIRONMENT=production`, verified live). Step 10 full browser test is **running** (see §2). O1 release table ☑, O2 release screenshots ☑ (`docs/reviews/2026-10-26-release/O2-RELEASE.md`). | Browser test report saved to `docs/reviews/2026-10-26-release/`, every proven defect carded and fixed, deploy verified live → mark Release ☑ in Card status and ✅ in Section status. |
-| **Wave X** | ▶ | X279, X285–X288 running (§2); then X5; owner items X6, X141, X154. |
-| **Push status** | Owner asked 2026-10-26 to push to origin; main was pushed (deploying) while the browser test was still running — re-check any browser-test failure against the new deploy before carding it. |
+| **X302** | Fix committed and pushed as `2a3b02b` (deploy started 14:45). Passkey sign-in crashed in production: `PostgresChallengeStore.set` → `TypeError: Object of type bytes is not JSON serializable` (production mode since release step 9 uses the Postgres store; WebAuthn challenges are bytes). `backend/challenge_store.py` now stores bytes as base64. Local proof: round trip equal for dict and bare bytes. | Wait for deploy `2a3b02b` (§5), then `curl -s -X POST https://continuum.estate/api/auth/passkey/login/start -H 'Content-Type: application/json' -d '{"email":"continuum@sincuerda.com"}' -o /dev/null -w "%{http_code}"` → 200 (was 500). Tick X302. Tell the owner to try the passkey sign-in again. Also check `railway logs` for any other `TypeError` in `challenge_store`. |
+| **X5** | ◐ Code ready on `card/X5` (`6258dee`, worktree `.worktrees/X5`): removes the jh@continuum.estate password bypass (backend login + login-page magic-link branch, `backend/verify_auth.py`, CLAUDE.md dev-login line). **Merge held** until the owner has signed in once with a real password or passkey (plan rule). Production users: jh@continuum.estate (id 39) has no password and no passkey → after merge it can sign in only by email link; continuum@sincuerda.com (id 38) has 1 passkey. | Owner confirms a successful passkey sign-in → `git merge card/X5`, remove worktree/branch, push, wait for deploy, verify live: `jh@continuum.estate` + password `x` → 401. Then dispatch **X301**. |
+| **X301** | ☐ after X5 merge | Smoke-test fallback to the bypass (`scripts/smoke_test.py:434`) removed; untrack `backend/logs/continuum.log.1`. |
+| **X6** | Owner | Owner rotates the OpenRouter key. Report only. |
+| **X141** | Owner | Owner runs `railway config apply` (plan row has the CLI workaround). Branch `card/X141` 1955d51 not merged. |
+| **X154** | Owner decision | Recommend yes (plan row). |
 
-**Merged locally, not yet deployed** (merge commit `ba55e5a`, plus plan commits, HEAD `c1b50f5`): X277 (owner-save rate limits 10→600/min incl. medical directives), X278 (estate writes: audit row in same commit, fewer queries), X280 (traditions/module wording), X281 (home/marketing claims, "Open my plan" header), X282 (hub steps link to real modules, watermark, time-capsule contrast), X283 (orphan pages linked, calm icons), X284 (just/simple wording). Build OK; svelte-check 0 errors / 0 warnings / 4248 files.
+**After X5 merges, live proof scripts can no longer sign in** (they use the jh@ bypass). Live verification then needs a real test account the owner provides; do not create credentials yourself.
 
-## 2. Agents in flight (dispatched by the previous orchestrator session)
+**When X302, X5 and X301 are ☑:** mark Wave X ✅ (owner items reported, not waited on), verify against `git log` and live `/api/health` (`environment: production`), delete the loop cron if you own one (the previous session's cron is `522facdb`; it only exists in that session), and send the owner the final report with the open owner items (§8).
 
-These agents report back to the **previous** session, not to you. Detect their completion by looking for a new commit on their branch: `git log --oneline main..card/<ID>`. Their worktree is `.worktrees/<ID>`.
+## 2. Agents in flight
 
-| Card | Branch / worktree | Port | Owns |
-|---|---|---|---|
-| Release full browser test | (no branch; read-only on production) | — | Writes results to `$S/release/` (see §6 for `$S`). If the previous session is gone, re-run it (§4). |
-| X279 | card/X279 | 35759 | `backend/routers/contacts.py`, `memories.py`, `media.py`, `medical.py` write paths — audit in same commit (`commit=False`) |
-| X285 | card/X285 | 35760 | `routes/modules/builders-console/+page.svelte` |
-| X286 | card/X286 | 35761 | `routes/tools/ai-audit/+page.ts`, `routes/pulse/respond/[token]/+page.svelte`, `routes/auth/verify/+page.svelte` |
-| X287 | card/X287 | 35762 | `routes/marketing2/+page.svelte`, `lib/components/layout/MarketingLayout.svelte` |
-| X288 | card/X288 | 35763 | `routes/modules/simulator/+page.svelte` |
+None. (X5's agent finished; its branch is waiting for the owner.)
 
-If a branch has no new commit and the old session is gone, re-dispatch that card into its existing worktree (§4). Next free port: **35764**.
+## 3. Production facts learned this session
 
-## 3. Next steps, in order
-
-1. **When the browser test reports** (or immediately, if it is clearly dead):
-   - Save its table as `docs/reviews/2026-10-26-release/BROWSER-TEST.md` (with the timestamp line).
-   - `timeout 60 git push -q` (deploys).
-   - Wait for the deploy (§5), then verify live: 20× `GET /api/pulse/vault` returns 20×200 through the signed-in page; spot-check `/` signed in shows "Open my plan", `/modules/preparation-hub` steps link, `/modules/funeral/traditions/jewish` new wording.
-   - Turn every browser-test failure into a new X card (number from **X289** up), dispatch.
-2. **Review and merge X279, X285–X288** as they finish (§4 merge flow), push, verify each live with its proof script (live copy, §5).
-3. **X5** — remove the `jh@continuum.estate` dev bypass at `backend/routers/auth.py:247` (check line). Do this **last**: every live proof script signs in with it. After X5, live proofs need a real account.
-4. When every X row is ☑ except owner items, and the browser test is green: mark Release ☑/✅, Wave X ✅, verify against `git log` and live `/api/health` (`environment: production`), delete the loop cron if you own one, and report to the owner with the open owner items (§8).
+- `ENVIRONMENT=production` is set (release step 9): CSRF enforced, Postgres challenge store (X302), new JWT/SECRET keys.
+- Uploads: Railway volume `continuum-volume` at `/data`, `UPLOAD_DIR=/data/uploads`, `S3_ENABLED=false` (owner chose the volume, X292). The S3 keys in Railway (`AWS_ACCESS_KEY_ID` "R1ST…") are not valid AWS keys; leave S3 off. Media ids 1–3 from the browser test point at files lost before the fix.
+- Backups: `$S/backups/continuum-prod-pre-release-v18.dump`, `$S/backups/continuum-prod-pre-volume.dump` (pg_dump 18 against Postgres 17).
+- Live proof helpers: `$S/pw/rllib.mjs` (sign-in + context), `$S/pw/x292vol.mjs up|check` (upload survives redeploy), `$S/pw/x277live.mjs` (20× vault GET). Writes must go through the page (`page.evaluate(fetch…)`), since hooks.client adds the CSRF header.
+- `railway logs` (no flags) prints recent logs; `--deployment` printed nothing useful.
 
 ## 4. Card workflow (exact commands)
 
