@@ -21,13 +21,15 @@ def check_and_escalate_all(session: Session):
     all_settings = session.exec(statement).all()
 
     for settings in all_settings:
+        user_id = settings.user_id
         try:
             process_user_pulse(session, settings)
         except Exception as e:
+            session.rollback()  # a DB error must not stop the other users' checks
             logger.error(
-                f"Error processing Pulse check for user {settings.user_id}",
+                f"Error processing Pulse check for user {user_id}",
                 extra={"context": {
-                    "user_id": settings.user_id,
+                    "user_id": user_id,
                     "error": str(e),
                     "error_type": type(e).__name__
                 }},
@@ -138,6 +140,9 @@ def trigger_escalation(session: Session, user_id: int, tier_number: int, referen
         triggered_at=datetime.utcnow()
     )
     session.add(log_entry)
+    # Committed before any send, so a DB error inside a send can't roll it back
+    # (an uncommitted row would let the same tier re-trigger every tick with no cap).
+    session.commit()
     
     # 2. Notify Contacts (tier pick is deterministic: lowest id wins if two tiers share a number)
     tier_id_sq = select(PulseEscalationTier.id).where(
@@ -151,7 +156,7 @@ def trigger_escalation(session: Session, user_id: int, tier_number: int, referen
         )
     ).all()
 
-    # The log row is committed with the sends, so a failing send is not retried every tick.
+    # A failing send is recorded as a failed message row; retry_failed_tier_sends caps retries.
     for contact in contacts:
         try:
             send_notification(session, contact, tier_number)
@@ -250,6 +255,28 @@ from backend.config import settings
 from backend.database import User
 import os
 
+def tier_alert_context(session: Session, contact: PulseContact, tier_number: int) -> dict:
+    """Template context for a tier alert email: user_name, portal_url, and the
+    check-in timeline for tier 2+. Shared by send_notification and the admin resend."""
+    user = session.get(User, contact.user_id)
+    context = {
+        "user_name": user.email.split('@')[0].title() if user else "the user",
+        "portal_url": f"{settings.get_frontend_url()}/portal/{contact.portal_token}",
+    }
+    if tier_number >= 2:
+        last_checkin = session.exec(
+            select(PulseCheckin)
+            .where(PulseCheckin.user_id == contact.user_id)
+            .order_by(PulseCheckin.timestamp.desc())
+        ).first()
+        if last_checkin:
+            context.update({
+                "last_checkin_date": last_checkin.timestamp.strftime("%B %d, %Y at %I:%M %p UTC"),
+                "expected_checkin_date": "See Guardian Portal for details",
+                "escalation_date": datetime.utcnow().strftime("%B %d, %Y at %I:%M %p UTC")
+            })
+    return context
+
 def send_notification(session: Session, contact: PulseContact, tier_number: int):
     """
     Send escalation notification to guardian contact.
@@ -265,32 +292,7 @@ def send_notification(session: Session, contact: PulseContact, tier_number: int)
         }}
     )
 
-    # Get user information for personalization
-    user = session.get(User, contact.user_id)
-    user_name = user.email.split('@')[0].title() if user else "the user"
-
-    # Generate guardian portal link
-    frontend_url = settings.get_frontend_url()
-    portal_url = f"{frontend_url}/portal/{contact.portal_token}"
-
-    # Additional context for templates
-    additional_context = {}
-    if tier_number >= 2:
-        # Add timeline information for tier 2+
-        from backend.pulse_models import PulseCheckin
-        from sqlmodel import select
-        last_checkin = session.exec(
-            select(PulseCheckin)
-            .where(PulseCheckin.user_id == contact.user_id)
-            .order_by(PulseCheckin.timestamp.desc())
-        ).first()
-
-        if last_checkin:
-            additional_context.update({
-                "last_checkin_date": last_checkin.timestamp.strftime("%B %d, %Y at %I:%M %p UTC"),
-                "expected_checkin_date": "See Guardian Portal for details",
-                "escalation_date": datetime.utcnow().strftime("%B %d, %Y at %I:%M %p UTC")
-            })
+    context = tier_alert_context(session, contact, tier_number)
 
     # Send email using new service with templates and logging.
     # A raising sender is treated as a failed result, so the failed row is written and
@@ -301,16 +303,17 @@ def send_notification(session: Session, contact: PulseContact, tier_number: int)
             recipient_name=contact.name,
             tier_number=tier_number,
             user_id=contact.user_id,
-            user_name=user_name,
-            portal_url=portal_url,
-            additional_context=additional_context,
+            user_name=context.pop("user_name"),
+            portal_url=context.pop("portal_url"),
+            additional_context=context,
             db_session=session
         )
     except Exception as e:
+        # Roll back first: after a failed flush the session can't even load contact.id.
+        # Safe because the tier log row and earlier contacts' rows are already committed.
+        session.rollback()
         logger.error(f"Tier {tier_number} alert to contact {contact.id} raised "
                      f"{type(e).__name__}: {e}", exc_info=True)
-        if not session.is_active:  # a DB error left the transaction unusable
-            session.rollback()
         result = EmailResult(status="failed", provider=email_service.provider,
                              error=f"{type(e).__name__}: {e}")
 
@@ -326,3 +329,4 @@ def send_notification(session: Session, contact: PulseContact, tier_number: int)
     if result.status == "failed":
         logger.error(f"Tier {tier_number} alert to contact {contact.id} failed: {result.error}")
     session.add(log_msg)
+    session.commit()  # each contact's row is durable before the next send
