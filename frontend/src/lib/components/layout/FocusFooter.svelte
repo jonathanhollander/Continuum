@@ -15,7 +15,7 @@
         <span
             class="text-xs font-bold uppercase tracking-widest text-slate-500"
         >
-            Focus Mode Active
+            A quiet space for you
         </span>
     </div>
 
@@ -25,7 +25,7 @@
             class="flex items-center gap-2 px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-sm transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
         >
             <CircleCheck size={16} />
-            <span>Complete & Return</span>
+            <span>Return to my dashboard</span>
         </button>
     </div>
 </div>

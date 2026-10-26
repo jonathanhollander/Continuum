@@ -35,7 +35,7 @@ export async function parseApiError(response: Response): Promise<ErrorDetails> {
     try {
         const data: ApiErrorResponse = await response.json();
         return {
-            message: data.error?.message || 'Something went wrong. Please try again.',
+            message: data.error?.message || 'Something unexpected happened. We can try again whenever you\'re ready.',
             code: data.error?.code,
             details: data.error?.details,
             timestamp: data.error?.timestamp,
@@ -56,25 +56,25 @@ export async function parseApiError(response: Response): Promise<ErrorDetails> {
 function getGenericErrorMessage(status: number): string {
     switch (status) {
         case 400:
-            return `There was an issue with your request. Please check your information and try again.`;
+            return `A little more information will help here. Take a look whenever you're ready.`;
         case 401:
-            return `Your session has expired. Please sign in again.`;
+            return `Please sign in again whenever you're ready.`;
         case 403:
-            return `You don't have permission to do that.`;
+            return `That belongs to another account's access. The person who set up this space can open it for you.`;
         case 404:
-            return `We couldn't find what you're looking for.`;
+            return `That may have moved. The dashboard is a good place to look.`;
         case 409:
-            return `This already exists. Please try a different name.`;
+            return `That name is already here. A different name will make it its own.`;
         case 413:
-            return `The file you're trying to upload is too large.`;
+            return `A smaller copy of this file will fit.`;
         case 429:
-            return `You're doing that too quickly. Take your time—we're here when you're ready.`;
+            return `Take your time. We're here when you're ready.`;
         case 500:
-            return `We encountered an unexpected issue. Our team has been notified.`;
+            return `Something unexpected happened on our side. Our team has been told.`;
         case 503:
-            return `We're having trouble connecting right now. Please try again in a moment.`;
+            return `Connecting is taking a moment. We can try again shortly.`;
         default:
-            return `Something unexpected happened. Please try again or contact support.`;
+            return `Something unexpected happened. We can try again together, or support is here to help.`;
     }
 }
 
@@ -86,7 +86,7 @@ export function handleFetchError(error: unknown): ErrorDetails {
 
     if (error instanceof TypeError && error.message.includes('fetch')) {
         return {
-            message: `We're having trouble connecting. Please check your internet connection and try again.`,
+            message: `Connecting is taking a moment. Once your internet connection is back, we can try again.`,
             code: 'NETWORK_ERROR'
         };
     }
@@ -97,7 +97,7 @@ export function handleFetchError(error: unknown): ErrorDetails {
     }
 
     return {
-        message: `Something unexpected happened. Please try again.`,
+        message: `Something unexpected happened. We can try again whenever you're ready.`,
         code: 'UNKNOWN_ERROR',
         details: { originalError: String(error) }
     };
@@ -144,37 +144,37 @@ export function getErrorTitle(code?: string): string {
     switch (code) {
         case 'AUTH_FAILED':
         case 'TOKEN_EXPIRED':
-            return 'Session Expired';
+            return 'Time to sign in again';
 
         case 'NOT_AUTHORIZED':
             return 'Permission Needed';
 
         case 'NOT_FOUND':
-            return 'Not Found';
+            return 'That may have moved';
 
         case 'VALIDATION_ERROR':
-            return 'Please Check Your Information';
+            return 'A bit more information';
 
         case 'NETWORK_ERROR':
-            return 'Connection Issue';
+            return 'Connecting';
 
         case 'SERVICE_UNAVAILABLE':
-            return 'Temporarily Unavailable';
+            return 'Taking a moment';
 
         case 'FILE_TOO_LARGE':
-            return 'File Too Large';
+            return 'A smaller copy will fit';
 
         case 'INVALID_FILE_TYPE':
-            return 'File Type Not Supported';
+            return 'A different file type will fit';
 
         case 'RATE_LIMITED':
             return 'Take Your Time';
 
         case 'DATABASE_ERROR':
-            return 'Having Trouble Saving';
+            return 'Saving is taking a moment';
 
         default:
-            return 'Something Went Wrong';
+            return 'Something unexpected happened';
     }
 }
 

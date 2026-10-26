@@ -85,7 +85,7 @@ class AuthenticationError(ContinuumException):
     def __init__(self, message: str = "Authentication failed", details: Optional[Dict[str, Any]] = None):
         super().__init__(
             message=message,
-            user_message="We couldn't verify your identity. Please try signing in again.",
+            user_message="Let's try signing in again together.",
             status_code=status.HTTP_401_UNAUTHORIZED,
             error_code="AUTH_FAILED",
             details=details
@@ -98,7 +98,7 @@ class AuthorizationError(ContinuumException):
     def __init__(self, resource: str = "this resource", details: Optional[Dict[str, Any]] = None):
         super().__init__(
             message=f"User not authorized to access {resource}",
-            user_message=f"You don't have permission to access {resource}. If you believe this is an error, please contact support.",
+            user_message=f"This {resource} belongs to another account. If you think it should be yours, we're here to help.",
             status_code=status.HTTP_403_FORBIDDEN,
             error_code="NOT_AUTHORIZED",
             details=details
@@ -111,7 +111,7 @@ class TokenExpiredError(ContinuumException):
     def __init__(self):
         super().__init__(
             message="Authentication token expired",
-            user_message="Your session has expired. Please sign in again to continue.",
+            user_message="Please sign in again whenever you're ready.",
             status_code=status.HTTP_401_UNAUTHORIZED,
             error_code="TOKEN_EXPIRED"
         )
@@ -129,7 +129,7 @@ class ResourceNotFoundError(ContinuumException):
 
         super().__init__(
             message=f"{resource_type} not found: {resource_id}",
-            user_message=f"We couldn't find that {resource_type}. It may have been moved or deleted.",
+            user_message=f"That {resource_type} may have been moved.",
             status_code=status.HTTP_404_NOT_FOUND,
             error_code="NOT_FOUND",
             details=details
@@ -144,9 +144,9 @@ class ResourceAlreadyExistsError(ContinuumException):
         if field:
             details["field"] = field
 
-        user_msg = f"This {resource_type} already exists."
+        user_msg = f"You already have this {resource_type}."
         if field:
-            user_msg = f"A {resource_type} with this {field} already exists."
+            user_msg = f"You already have a {resource_type} with this {field}."
 
         super().__init__(
             message=f"Duplicate {resource_type}: {field}",
@@ -169,7 +169,7 @@ class ValidationError(ContinuumException):
 
         super().__init__(
             message=f"Validation failed for {field}: {reason}",
-            user_message=f"Please check the {field} field. {reason}",
+            user_message=f"Let's look at {field} together. {reason}",
             status_code=status.HTTP_400_BAD_REQUEST,
             error_code="VALIDATION_ERROR",
             details=error_details
@@ -186,7 +186,7 @@ class InvalidDataTypeError(ContinuumException):
 
         super().__init__(
             message=f"Invalid data type: {data_type}",
-            user_message="We encountered an issue with your request. Please try again or contact support.",
+            user_message="Something unexpected happened. Try once more whenever you're ready, or reach out and we'll help.",
             status_code=status.HTTP_400_BAD_REQUEST,
             error_code="INVALID_TYPE",
             details=details
@@ -205,7 +205,7 @@ class DatabaseError(ContinuumException):
 
         super().__init__(
             message=f"Database error during {operation}: {original_error}",
-            user_message="We're having trouble saving your changes right now. Please try again in a moment.",
+            user_message="Saving is taking a moment. Your words are kept here; try again shortly.",
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             error_code="DATABASE_ERROR",
             details=details
@@ -224,7 +224,7 @@ class EmailSendError(ContinuumException):
 
         super().__init__(
             message=f"Failed to send email to {recipient}: {original_error}",
-            user_message="We couldn't send that email right now. We'll retry automatically, or you can contact support if this persists.",
+            user_message="That email is waiting its turn, and we'll send it again soon. Support is here if you'd like help.",
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             error_code="EMAIL_FAILED",
             details=details
@@ -241,7 +241,7 @@ class ExternalServiceError(ContinuumException):
 
         super().__init__(
             message=f"{service_name} service error: {original_error}",
-            user_message=f"We're having trouble connecting to {service_name}. Please try again in a moment.",
+            user_message=f"{service_name} is taking a moment. Try again shortly.",
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             error_code="SERVICE_UNAVAILABLE",
             details=details
@@ -260,7 +260,7 @@ class FileUploadError(ContinuumException):
 
         super().__init__(
             message=f"File upload failed: {reason}",
-            user_message=f"We couldn't upload your file. {reason}",
+            user_message=f"This file paused on its way up. {reason}",
             status_code=status.HTTP_400_BAD_REQUEST,
             error_code="UPLOAD_FAILED",
             details=details
@@ -280,7 +280,7 @@ class FileTooLargeError(ContinuumException):
 
         super().__init__(
             message=f"File too large: {size_mb:.1f}MB (max: {max_mb:.1f}MB)",
-            user_message=f"This file is too large ({size_mb:.1f}MB). Please choose a file under {max_mb:.1f}MB.",
+            user_message=f"This space holds files up to {max_mb:.1f} MB, and this one is {size_mb:.1f} MB. A smaller copy will fit.",
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
             error_code="FILE_TOO_LARGE",
             details=details
@@ -297,7 +297,7 @@ class InvalidFileTypeError(ContinuumException):
 
         super().__init__(
             message=f"Invalid file type: {file_type}",
-            user_message=f"This file type isn't supported. Please use one of: {', '.join(allowed_types)}",
+            user_message=f"This space keeps these file types: {', '.join(allowed_types)}",
             status_code=status.HTTP_400_BAD_REQUEST,
             error_code="INVALID_FILE_TYPE",
             details=details
@@ -316,11 +316,11 @@ class RateLimitError(ContinuumException):
 
         retry_msg = ""
         if retry_after:
-            retry_msg = f" Please try again in {retry_after} seconds."
+            retry_msg = f" We'll be ready again in {retry_after} seconds."
 
         super().__init__(
             message=f"Rate limit exceeded (retry after {retry_after}s)",
-            user_message=f"You're doing that too quickly.{retry_msg} Take your time—we're here when you're ready.",
+            user_message=f"Let's pause for a moment.{retry_msg} Take your time—we're here when you're ready.",
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             error_code="RATE_LIMITED",
             details=details
@@ -352,7 +352,7 @@ def handle_exception(exc: Exception, context: str = "operation") -> ErrorRespons
     if isinstance(exc, HTTPException):
         return ErrorResponse(
             message=f"HTTP {exc.status_code}: {exc.detail}",
-            user_message=exc.detail if isinstance(exc.detail, str) else "Something went wrong. Please try again.",
+            user_message=exc.detail if isinstance(exc.detail, str) else "Something unexpected happened. Try again whenever you're ready.",
             status_code=exc.status_code,
             error_code="HTTP_ERROR"
         )
@@ -364,7 +364,7 @@ def handle_exception(exc: Exception, context: str = "operation") -> ErrorRespons
 
     return ErrorResponse(
         message=f"Unhandled exception: {str(exc)}",
-        user_message="We encountered an unexpected issue. Our team has been notified. Please try again or contact support if this persists.",
+        user_message="Something unexpected happened, and our team knows. Try again whenever you're ready, or reach out and we'll help.",
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         error_code="INTERNAL_ERROR",
         details={"context": context}

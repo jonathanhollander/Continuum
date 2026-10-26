@@ -245,16 +245,16 @@ def create_custom_field_definition(field_def: CustomFieldDefCreate, user: User =
         return db_def
     except Exception as e:
         logger.error(f"Failed to create custom field definition: {e}", exc_info=True)
-        raise HTTPException(status_code=400, detail="Could not create field definition")
+        raise HTTPException(status_code=400, detail="Saving that field paused; try again whenever you're ready.")
 
 @router.delete("/custom-fields/{field_id}", summary="Delete custom field definition")
 def delete_custom_field_definition(field_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     """Delete a custom field definition."""
     db_def = session.get(UserCustomFieldDefinition, field_id)
     if not db_def:
-        raise HTTPException(status_code=404, detail="Field definition not found")
+        raise HTTPException(status_code=404, detail="That field may have been moved.")
     if db_def.user_id != user.id:
-        raise HTTPException(status_code=403, detail="Not authorized")
+        raise HTTPException(status_code=403, detail="This belongs to another account.")
 
     session.delete(db_def)
     session.commit()
@@ -269,7 +269,7 @@ def get_items(data_type: str, user: User = Depends(get_current_user), session: S
     """
     model = MODEL_MAP.get(data_type)
     if not model:
-        raise HTTPException(status_code=400, detail=f"Invalid type: {data_type}")
+        raise HTTPException(status_code=400, detail="Let's pick one of the kinds this space keeps.")
     
     statement = select(model).where(model.user_id == user.id)
     if data_type in SINGLETON_TYPES:
@@ -308,7 +308,7 @@ def create_item(
     """
     model = MODEL_MAP.get(data_type)
     if not model:
-        raise HTTPException(status_code=400, detail=f"Invalid type: {data_type}")
+        raise HTTPException(status_code=400, detail="Let's pick one of the kinds this space keeps.")
 
     try:
         # Support both raw body and wrapped { data: {...} } format for backwards compatibility
@@ -360,7 +360,7 @@ def create_item(
     except Exception as e:
         logger.error(f"Failed to create {data_type} item: {e}", exc_info=True)
         # Include detailed error for debugging (TODO: limit this to dev mode)
-        raise HTTPException(status_code=400, detail=f"Could not create item: {str(e)}")
+        raise HTTPException(status_code=400, detail="Saving that paused; try again whenever you're ready.")
 
 @router.put("/{data_type}/{item_id}", summary="Update estate item")
 # 600/minute per client IP (slowapi key_func=get_remote_address): a first upload of
@@ -380,16 +380,16 @@ def update_item(
     """
     model = MODEL_MAP.get(data_type)
     if not model:
-        raise HTTPException(status_code=400, detail="Invalid data type")
+        raise HTTPException(status_code=400, detail="Let's pick one of the kinds this space keeps.")
 
     try:
         db_item = session.get(model, _pk(model, item_id))
         if not db_item:
-            raise HTTPException(status_code=404, detail="Item not found")
+            raise HTTPException(status_code=404, detail="That item may have been moved.")
         if getattr(db_item, "user_id") != user.id:
-            raise HTTPException(status_code=403, detail="Not authorized")
+            raise HTTPException(status_code=403, detail="This belongs to another account.")
         if model is Asset and not _in_category(session, data_type, db_item):
-            raise HTTPException(status_code=404, detail="Item not found")
+            raise HTTPException(status_code=404, detail="That item may have been moved.")
 
         # Support both raw body and wrapped { data: {...} } format for backwards compatibility
         if "data" in body and isinstance(body["data"], dict) and len(body) == 1:
@@ -433,7 +433,7 @@ def update_item(
         raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
         logger.error(f"Failed to update {data_type} item {item_id}: {e}", exc_info=True)
-        raise HTTPException(status_code=400, detail="Could not update item")
+        raise HTTPException(status_code=400, detail="Saving that paused; try again whenever you're ready.")
 
 @router.delete("/{data_type}/{item_id}")
 # 600/minute per client IP (slowapi key_func=get_remote_address): a first upload of
@@ -445,16 +445,16 @@ def delete_item(request: Request, data_type: str, item_id: str, user: User = Dep
     """
     model = MODEL_MAP.get(data_type)
     if not model:
-        raise HTTPException(status_code=400, detail="Invalid data type")
+        raise HTTPException(status_code=400, detail="Let's pick one of the kinds this space keeps.")
     
     try:
         db_item = session.get(model, _pk(model, item_id))
         if not db_item:
-            raise HTTPException(status_code=404, detail="Item not found")
+            raise HTTPException(status_code=404, detail="That item may have been moved.")
         if getattr(db_item, "user_id") != user.id:
-            raise HTTPException(status_code=403, detail="Not authorized")
+            raise HTTPException(status_code=403, detail="This belongs to another account.")
         if model is Asset and not _in_category(session, data_type, db_item):
-            raise HTTPException(status_code=404, detail="Item not found")
+            raise HTTPException(status_code=404, detail="That item may have been moved.")
 
         log_deletion(
             session=session,
@@ -472,4 +472,4 @@ def delete_item(request: Request, data_type: str, item_id: str, user: User = Dep
         raise
     except Exception as e:
         logger.error(f"Failed to delete {data_type} item {item_id}: {e}", exc_info=True)
-        raise HTTPException(status_code=400, detail="Could not delete item")
+        raise HTTPException(status_code=400, detail="Removing that paused; try again whenever you're ready.")

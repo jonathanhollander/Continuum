@@ -38,7 +38,7 @@
             color: "bg-orange-400",
             bgColor: "bg-orange-400/20",
             label: "Needs attention",
-            tooltip: "We couldn't save just now. Your words are still here."
+            tooltip: "Saving is taking a moment. Your words are still here, and we'll try again."
         },
         ready: {
             color: "bg-slate-400",

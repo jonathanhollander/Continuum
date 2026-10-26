@@ -49,7 +49,7 @@
             type="button"
             onclick={() => answer(false)}
             class="px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-black/5 rounded-lg transition-colors"
-            >Not right now</button
+            >Maybe later</button
         >
         <button
             type="button"

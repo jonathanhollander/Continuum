@@ -163,24 +163,24 @@ export function getEmptyStateMessage(moduleType: string): string {
     const messages: Record<string, MessageVariants> = {
         contacts: {
             planning: 'Start building your trusted circle. Add the people who matter most.',
-            executor: 'No contacts have been recorded yet. You may need to gather this information from other sources.',
-            family: 'Contact information hasn\'t been added yet. This will be helpful when it\'s available.'
+            executor: 'Contacts can be gathered here when you\'re ready. Other sources can help.',
+            family: 'Contact information will appear here as it\'s added.'
         },
         documents: {
             planning: 'Your important documents are safe here when you\'re ready to add them.',
-            executor: 'No documents have been uploaded yet. Check for physical copies or other digital storage.',
+            executor: 'Documents can be added here. Physical copies or other digital storage may help.',
             family: 'Documents will appear here as they\'re added to the estate.'
         },
         memories: {
             planning: 'Preserve the moments that matter. Add memories when the time feels right.',
-            executor: 'No memories have been recorded. This section honors their life and legacy.',
+            executor: 'Memories can be added here. This section honors their life and legacy.',
             family: 'Memories and stories can be added here to honor their life.'
         }
     };
 
     const variants = messages[moduleType];
     if (!variants) {
-        return 'Nothing here yet. Content will appear as it\'s added.';
+        return 'This space is ready for what you add.';
     }
 
     return getContextualMessage(variants);
@@ -345,9 +345,9 @@ export function getNavigationLabel(moduleId: string): string {
 export function getEncouragementMessage(): string {
     const messages = [
         "You're doing meaningful work. Take your time.",
-        "Every step forward matters, no matter how small.",
+        "Every step forward matters, however small.",
         "This is difficult work. Be gentle with yourself.",
-        "Progress isn't linear. Rest when you need to.",
+        "Progress comes in its own time. Rest whenever you need to.",
         "You're handling this with grace. One day at a time."
     ];
 

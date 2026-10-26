@@ -76,7 +76,7 @@
 			{#if notification.canRetry && onRetry}
 				<button class="retry-button" onclick={onRetry}>Try Again</button>
 			{/if}
-			<button class="dismiss-button" onclick={onDismiss}>Dismiss</button>
+			<button class="dismiss-button" onclick={onDismiss}>Close for now</button>
 		</div>
 	</div>
 
