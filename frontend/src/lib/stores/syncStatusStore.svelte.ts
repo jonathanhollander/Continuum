@@ -18,6 +18,7 @@ import { propertySync } from "$lib/stores/propertyStore.svelte";
 import { digitalAssetsSync } from "$lib/stores/digitalAssetsStore.svelte";
 import { financialAssetsSync } from "$lib/stores/financialAssetsStore.svelte";
 import { heirloomSync } from "$lib/stores/heirloomStore.svelte";
+import { visualMemories } from "$lib/stores/visualMemoryStore.svelte";
 import { documentStore } from "$lib/stores/documentStore.svelte";
 import { letterStore } from "$lib/stores/letterStore.svelte";
 import { subscriptionStore } from "$lib/stores/subscriptionStore.svelte";
@@ -76,6 +77,7 @@ export const moduleSyncKeys: Record<string, readonly string[]> = {
     property: ["properties"],
     guardian: ["digital_assets", "digital_guardian"], // digital_guardian: registered by its page
     heirlooms: ["heirlooms"],
+    "visual-memories": ["visual_memories"],
     // The legal-documents page saves through DocumentVault's own manager (registered on its mount).
     documents: ["documents", "docs_legal-vault"],
     subscriptions: ["subscriptions"],
@@ -139,6 +141,7 @@ const moduleMapping: Record<string, ModuleSyncInfo> = {
     property: fromKeys("property", () => propertySync.items.length > 0),
     guardian: fromKeys("guardian", () => digitalAssetsSync.items.length > 0),
     heirlooms: fromKeys("heirlooms", () => heirloomSync.items.length > 0),
+    "visual-memories": fromKeys("visual-memories", () => visualMemories.items.length > 0),
     documents: fromKeys("documents", () => documentStore.items.length > 0),
     subscriptions: fromKeys("subscriptions", () => subscriptionStore.items.length > 0),
     letters: fromKeys("letters", () => letterStore.items.length > 0),
