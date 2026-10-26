@@ -166,7 +166,11 @@ def get_portal_view(request: Request, token: str, session: Session = Depends(get
     last_checkin = session.exec(user_checkin_stmt).first()
     
     # Check active escalation for sensitive data
-    escalation_stmt = select(PulseEscalationLog).where(PulseEscalationLog.user_id == user_id).order_by(PulseEscalationLog.id.desc())
+    # Tier-0 rows are safety-timer alerts, not welfare tiers; they must not mask the tier already reached
+    from backend.pulse_logic import SAFETY_TIMER_LOG_TIER
+    escalation_stmt = select(PulseEscalationLog).where(
+        PulseEscalationLog.user_id == user_id, PulseEscalationLog.tier_number != SAFETY_TIMER_LOG_TIER
+    ).order_by(PulseEscalationLog.id.desc())
     last_escalation = session.exec(escalation_stmt).first()
     
     tier = session.get(PulseEscalationTier, contact.tier_id) if contact.tier_id else None
@@ -195,7 +199,11 @@ def get_portal_vault(request: Request, token: str, session: Session = Depends(ge
         raise HTTPException(status_code=401, detail="Token expired")
 
     # Same rule as the portal view: only once escalation has reached this guardian's tier
-    last_escalation = session.exec(select(PulseEscalationLog).where(PulseEscalationLog.user_id == contact.user_id).order_by(PulseEscalationLog.id.desc())).first()
+    # Tier-0 rows are safety-timer alerts, not welfare tiers; they must not mask the tier already reached
+    from backend.pulse_logic import SAFETY_TIMER_LOG_TIER
+    last_escalation = session.exec(select(PulseEscalationLog).where(
+        PulseEscalationLog.user_id == contact.user_id, PulseEscalationLog.tier_number != SAFETY_TIMER_LOG_TIER
+    ).order_by(PulseEscalationLog.id.desc())).first()
     tier = session.get(PulseEscalationTier, contact.tier_id) if contact.tier_id else None
     if not (last_escalation and tier and last_escalation.tier_number >= tier.tier_number):
         return []
