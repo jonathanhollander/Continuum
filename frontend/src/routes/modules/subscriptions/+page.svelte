@@ -257,6 +257,102 @@
         selectedSubForLetter = null;
     }
 
+    // The letter body as written in the modal (edits included); the rest is the same text the sheet shows.
+    let letterBody = $state<HTMLDivElement | null>(null);
+    const esc = (v: string) =>
+        v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    function letterParts(sub: Subscription) {
+        return {
+            date: `Date: ${new Date().toLocaleDateString()}`,
+            to: `To: ${sub.name} Billing Department`,
+            subject: `Subject: Account Cancellation Request - ${sub.name}`,
+            signer: $estateProfile.executorName || "[Executor Name Not Set]",
+            role: `Executor of the Estate of ${$estateProfile.ownerName || ""}`,
+        };
+    }
+
+    // Print: the letter alone, in a hidden frame, through the browser's own print dialog.
+    function printLetter() {
+        const sub = selectedSubForLetter;
+        if (!sub) return;
+        const l = letterParts(sub);
+        document.getElementById("letter-print-frame")?.remove();
+        const frame = document.createElement("iframe");
+        frame.id = "letter-print-frame";
+        frame.setAttribute("aria-hidden", "true");
+        frame.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden";
+        frame.srcdoc = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(sub.name)} cancellation letter</title><style>
+            @page { margin: 1in; }
+            body { font-family: Georgia, "Times New Roman", serif; font-size: 12pt; line-height: 1.5; color: #1e293b; margin: 0; }
+            p { margin: 0 0 0.8em; } ul { margin: 0 0 0.8em; padding-left: 1.4em; }
+            .bold { font-weight: bold; } .head p { margin: 0; } .head { margin-bottom: 2em; }
+            .sig { margin-top: 2.5em; } .sig p { margin: 0; } .line { width: 12em; height: 3em; border-bottom: 1px solid #94a3b8; margin-bottom: 0.3em; }
+            .role { font-size: 10pt; font-style: italic; color: #64748b; }
+        </style></head><body>
+            <div class="head"><p class="bold">${esc(l.date)}</p><p>${esc(l.to)}</p></div>
+            <p class="bold">${esc(l.subject)}</p>
+            ${letterBody?.innerHTML ?? customLetterContent}
+            <div class="sig"><p>Sincerely,</p><div class="line"></div><p class="bold">${esc(l.signer)}</p><p class="role">${esc(l.role)}</p></div>
+        </body></html>`;
+        frame.onload = () => {
+            frame.contentWindow?.focus();
+            frame.contentWindow?.print();
+        };
+        document.body.appendChild(frame);
+    }
+
+    // Download PDF: the same letter as a PDF file, written with the jsPDF library the export packet uses.
+    let pdfBusy = $state(false);
+    async function downloadLetterPDF() {
+        const sub = selectedSubForLetter;
+        if (!sub || pdfBusy) return;
+        pdfBusy = true;
+        try {
+            const [{ default: jsPDF }, { saveBlob }] = await Promise.all([
+                import("jspdf"),
+                import("$lib/services/exportService"),
+            ]);
+            const l = letterParts(sub);
+            const doc = new jsPDF({ unit: "pt", format: "letter" });
+            const W = doc.internal.pageSize.getWidth();
+            const H = doc.internal.pageSize.getHeight();
+            const M = 72;
+            let y = M;
+            // jsPDF's built-in fonts cover Latin-1; common typography is mapped so words stay readable.
+            const latin1 = (s: string) =>
+                s.replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/[–—]/g, "-")
+                    .replace(/…/g, "...").replace(/[^\x00-\xFF\n]/g, "?");
+            const write = (s: string, opts: { bold?: boolean; italic?: boolean; size?: number; gap?: number } = {}) => {
+                const size = opts.size ?? 11;
+                doc.setFont("times", opts.bold ? "bold" : opts.italic ? "italic" : "normal");
+                doc.setFontSize(size);
+                const lh = size * 1.45;
+                for (const line of doc.splitTextToSize(latin1(s), W - 2 * M) as string[]) {
+                    if (y + lh > H - M) { doc.addPage(); y = M; }
+                    doc.text(line, M, y + size);
+                    y += lh;
+                }
+                y += opts.gap ?? 0;
+            };
+            write(l.date, { bold: true });
+            write(l.to, { gap: 20 });
+            write(l.subject, { bold: true, gap: 10 });
+            const body = (letterBody?.innerText ?? "").split(/\n+/).map((t) => t.trim()).filter(Boolean);
+            for (const para of body) write(para, { gap: 6 });
+            y += 18;
+            write("Sincerely,", { gap: 30 });
+            doc.setDrawColor(148, 163, 184);
+            doc.line(M, y, M + 170, y);
+            y += 6;
+            write(l.signer, { bold: true });
+            write(l.role, { italic: true, size: 9 });
+            const file = `${sub.name || "Subscription"} cancellation letter`.replace(/[\\/:*?"<>|]+/g, " ").trim();
+            saveBlob(doc.output("blob"), `${file}.pdf`);
+        } finally {
+            pdfBusy = false;
+        }
+    }
+
     // Derived stats
     // Totals summed in whole cents; a yearly cost's month is its twelfth, rounded once.
     let totalMonthly = $derived(
@@ -750,6 +846,7 @@
 
                             <div
                                 contenteditable="true"
+                                bind:this={letterBody}
                                 bind:innerHTML={customLetterContent}
                                 class="prose prose-sm max-w-none focus:outline-none focus:ring-2 focus:ring-indigo-100 rounded-lg p-2 -m-2 transition-all min-h-[200px]"
                             ></div>
@@ -781,12 +878,16 @@
                         Reset to Default
                     </button>
                     <button
+                        onclick={printLetter}
                         class="px-5 py-2.5 rounded-xl font-bold text-slate-500 hover:bg-slate-100 flex items-center gap-2 transition-all"
                     >
                         <Printer size={16} /> Print
                     </button>
                     <button
-                        class="px-6 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl shadow-lg hover:shadow-primary/20 hover:opacity-90 flex items-center gap-2 transition-all"
+                        onclick={downloadLetterPDF}
+                        disabled={pdfBusy}
+                        aria-busy={pdfBusy}
+                        class="px-6 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl shadow-lg hover:shadow-primary/20 hover:opacity-90 disabled:opacity-50 flex items-center gap-2 transition-all"
                     >
                         <Download size={16} /> Download PDF
                     </button>
