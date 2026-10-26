@@ -1,6 +1,6 @@
 import { get } from 'svelte/store';
 import { activeAccountId } from '../stores/keyringStore';
-import { userRole, type UserRole } from '../stores/conciergeStore.svelte.ts';
+import { userRole } from '../stores/conciergeStore.svelte.ts';
 
 import { apiFetch } from '../api/client';
 
@@ -207,7 +207,7 @@ Example: { "message": "Sarah recorded as daughter—what a beautiful gift to hav
  * Can be enhanced with actual role detection logic from user profile.
  */
 export function detectUserRole(): 'owner' | 'executor' | 'family' {
-    const role = get(userRole) as UserRole;
+    const role = get(userRole);
     return role.toLowerCase() as 'owner' | 'executor' | 'family';
 }
 
