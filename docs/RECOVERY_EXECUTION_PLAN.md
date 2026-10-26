@@ -302,6 +302,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | U17 | Final Wishes: cost tab shows flowers, dead toggle, empty values (U0a-26/27) | `ui-standards-enforcer` / `general-purpose` | `routes/modules/funeral/+page.svelte` | Financial Care empty state uses music/flower title, copy and examples (:362-375); Cards/Table `viewMode` never read (:56,277); summary shows "Valued Member", "None Designated", "Not Set" for empty values (:314,332,350). Fix: Cost tab empty state about costs (existing estimate wording); toggle works or left out; empty values left out | Before/after 1440×900 summary and Financial Care tab; 0 errors |
 | U18 | Legacy journal: header add on every tab, tab colour, search names (U0a-28) | `ui-standards-enforcer` / `general-purpose` | `routes/modules/legacy-journal/+page.svelte` | "Share a memory" stays on Ethical Will, Life Lessons and Accomplishments but always makes a Reflection; Accomplishments active tab orange; long titles run into the edit icon; searches unlabelled (:279 and the wisdom/accomplishment searches). Fix: Header add matches the open tab (or shows on Reflections only); one active-tab style; titles wrap clear of icons; searches named | Each tab: header add creates that tab's item; before/after 1440×900; 0 errors |
 | U19 | Video Start before the camera is ready (C5 seed) | `ui-standards-enforcer` / `general-purpose` | `lib/components/media/VideoRecorder.svelte` | `media/VideoRecorder.svelte:175-178` Start enabled with no stream; a click does nothing. Fix: Start disabled until the stream is ready (existing wording) | 4 s camera delay: Start disabled then works; 0 errors |
+| U20 | Heirloom search filters nothing; uploader and custom fields unnamed (U12) | Heirlooms search box (now named) does not filter the list; the `VisionUploader` file input and `CustomFieldsManager` fields have no accessible names (shared components) | `routes/modules/heirlooms/+page.svelte` (search), `lib/components/VisionUploader.svelte` and `CustomFieldsManager.svelte` (names only; find their paths) | Search filters by item, story and recipient; uploader input and custom fields named with existing visible labels | Search narrows the list and clears; every page using the two components shows 0 unnamed fields; 0 errors |
 
  (decision 12; parallel track, approved by orchestrator diff review)
 
@@ -707,14 +708,15 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | U9 | ▶ | | |
 | U10 | ▶ | | |
 | U11 | ▶ | | |
-| U12 | ▶ | | |
+| U12 | ☑ | fe78e41 | Heirlooms header button one row (244×65 → 272×45, icon inline); edit modal title "Edit these details"; modal footer sticky (save y 1352 → 790, clickable on add and edit); 4 labels linked; search named. 0 errors. Findings → U20 |
 | U13 | ▶ | | |
 | U14 | ▶ | | |
 | U15 | ▶ | | |
 | U16 | ▶ | | |
 | U17 | ▶ | | |
-| U18 | ☐ (queued: 20-agent limit) | | |
+| U18 | ▶ | | |
 | U19 | ☐ (queued: 20-agent limit) | | |
+| U20 | ☐ (queued: 20-agent limit) | | |
 | G0 | ☐ (after Wave U) | | |
 | T0 | ☐ (after Wave U, with G0) | | |
 | V0 | ☐ (after Wave U, with G0 and T0) | | |
