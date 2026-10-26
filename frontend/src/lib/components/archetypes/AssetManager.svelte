@@ -553,7 +553,7 @@
             {#if $userRole !== "Family"}
                 <button
                     onclick={() => (showAddForm = true)}
-                    class="px-4 py-2 rounded-lg bg-[#4A7C74] text-white text-sm font-bold hover:bg-[#3b635d] transition-colors flex items-center gap-2 shadow-lg shadow-[#4A7C74]/20"
+                    class="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 transition-all flex items-center gap-2 shadow-lg shadow-primary/20"
                 >
                     <Plus size={16} /> Add Asset
                 </button>
@@ -908,10 +908,10 @@
             {@const sparkline = getSparklinePoints(asset.valueHistory)}
             <div
                 transition:scale={{ duration: 300 }}
-                class="group bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all border border-transparent hover:border-[#4A7C74]/20 relative overflow-hidden"
+                class="group bg-white rounded-xl p-6 pb-14 shadow-sm hover:shadow-md transition-all border border-transparent hover:border-[#4A7C74]/20 relative overflow-hidden"
             >
                 <div
-                    class="absolute top-2 right-2 flex gap-1 z-20 opacity-0 group-hover:opacity-100 transition-opacity"
+                    class="absolute bottom-3 right-3 flex gap-1 z-20"
                 >
                     <button
                         onclick={() => editAsset(asset)}
@@ -1130,7 +1130,7 @@
                             {/if}
                         </td>
                         <td class="px-4 py-3 text-right">
-                            <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div class="flex items-center justify-end gap-1">
                                 <button
                                     onclick={() => editAsset(asset)}
                                     class="p-1 hover:bg-slate-100 text-slate-400 hover:text-[#4A7C74] rounded transition-colors"

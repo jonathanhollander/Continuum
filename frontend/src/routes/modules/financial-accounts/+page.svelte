@@ -135,8 +135,7 @@
     />
 </Modal>
 
-<div class="max-w-6xl mx-auto p-8">
-    <LivingBlueprintHeader
+<LivingBlueprintHeader
         title={$t("assets")}
         subtitle="Manage bank accounts, investments, and liabilities"
         tier="financial"
@@ -145,12 +144,14 @@
     >
         <button
             onclick={() => (showWizard = true)}
-            class="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
+            class="flex items-center gap-2 px-5 py-3 border border-primary/10 text-primary font-bold rounded-2xl hover:bg-primary/5 transition-colors"
         >
-            <Sparkles size={16} />
+            <Sparkles size={18} />
             {$t("wizard.start")}
         </button>
     </LivingBlueprintHeader>
+
+<div class="max-w-6xl mx-auto p-8">
 
 
     <!-- AI Prompt Bar -->
