@@ -1061,7 +1061,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | V0 | ☑ | | V0a–V0e in `docs/reviews/2026-10-26-V0-colour/`. Palette: teal default, tokens per V0e §3. Fix order V1-T1 → V1-C1…C7 → V1-P1…P6 |
 | V1-T1 | ☑ | 51aa435 | V0e token set in app.css with dark values; `@custom-variant dark` → `body.theme-dark`; per-accent passing values and foregrounds; tone rules live (teal only); default accent carbon → teal. ~110 pairs computed, 0 below 4.5; default primary #0f172a → #4a7c74; dark primary invisible → #7fb5ab, gradient removed. Known: dark-mode sidebar is white on light teal until V1-C5 |
 | V1-C | ▶ | | Shared component colour C1–C7 dispatched |
-| V1-C1 | ▶ | | |
+| V1-C1 | ☑ | a456abf | SaveButton follows the accent (saved 3.30 → 6.12, failed = soft warning), ConfirmModal remove = `danger`, toasts and error notice on tokens (amber, never red; emoji → line icons; dark = slate cards), media notice teal; 28 pairs × 2 themes pass (min 4.74); SaveButton rethrow fixed |
 | V1-C2 | ☑ | 7822b45 | Command Center, BreakOffer, Modal close, Concierge backdrop on tokens; backdrops slate-900/60; failing pairs 25 → 0 of 81 (placeholder 1.49 → ≥4.5, break buttons 3.67 → 4.74/7.74); follows dark theme |
 | V1-C8 | ☑ | 95544dd | TakeBreakButton on BreakOffer's tokens: primary 3.67 → 4.74/7.74, hover 3.52 → 5.79/7.63; `dark:` variants removed |
 | V1-C3 | ☑ | f5943d2 | Form kit on tokens: indigo → primary, validation red → warning, required marker → primary-hover, opacity tricks removed (example grid ~2.2 → ≥4.5); EmptyStateGuide/BlueprintCard dark cards; all changed pairs ≥ 4.97 |
