@@ -7,6 +7,7 @@
         ThumbsDown,
     } from "lucide-svelte";
     import { fade, fly } from "svelte/transition";
+    import { createEventDispatcher } from "svelte";
     import { t } from "$lib/stores/localization";
     let {
         steps = [],
@@ -28,6 +29,12 @@
         }[];
         oncomplete?: (answers: Record<string, any>) => void;
         onanswer?: (detail: { id: string; value: any }) => void;
+    }>();
+
+    // Pages listen either with the `oncomplete` prop or with `on:complete`; both are served.
+    const dispatch = createEventDispatcher<{
+        complete: Record<string, any>;
+        answer: { id: string; value: any };
     }>();
 
     let currentStepIndex = $state(0);
@@ -61,6 +68,7 @@
         // Save Answer
         answers[currentStep.id] = currentInput;
         onanswer?.({ id: currentStep.id, value: currentInput });
+        dispatch("answer", { id: currentStep.id, value: currentInput });
 
         // Logic Implementation
         let nextId = null;
@@ -80,7 +88,8 @@
 
         // Navigate
         if (nextId) {
-            if (nextId === "EXIT") {
+            // A step that leads back to itself (financial-accounts' last step) ends the flow.
+            if (nextId === "EXIT" || nextId === currentStep.id) {
                 complete();
                 return;
             }
@@ -131,7 +140,12 @@
     }
 
     function complete() {
-        oncomplete?.(answers);
+        const result: Record<string, any> = { ...answers };
+        // Some `oncomplete` handlers read the answers directly, others read `event.detail`
+        // (written for the event form); a hidden `detail` pointing at the answers serves both.
+        Object.defineProperty(result, "detail", { value: result, enumerable: false });
+        oncomplete?.(result);
+        dispatch("complete", { ...answers });
     }
 
     function handleKeydown(e: KeyboardEvent) {

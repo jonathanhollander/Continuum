@@ -149,6 +149,13 @@ export const dictionary = {
             // Property
             property_main: "Do you own your primary residence?",
             property_vehicle: "Do you own any vehicles?",
+            property_real: "Do you own a home or other real estate?",
+            property_personal: "Do you have valuables, such as jewelry, art or collections, you would like to record?",
+            // Heirlooms
+            heirloom_start: "Shall we walk through a few treasured belongings together, at your own pace?",
+            heirloom_watch: "Is there a watch you would love to pass along?",
+            heirloom_jewelry: "Is there a ring or other piece of jewelry that carries a family story?",
+            heirloom_furniture: "Is there a desk, table or other piece of furniture your family treasures?",
             // Family
             family_emergency: "Who is your primary Emergency Contact?",
             family_doctor: "Who is your primary Doctor?",
