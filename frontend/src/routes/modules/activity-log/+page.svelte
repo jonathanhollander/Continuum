@@ -139,17 +139,18 @@
         showAffirmation = true;
     }
 
-    function clearLog() {
+    async function clearLog() {
         if (
             !confirm(
-                "Clear the entire activity log? This action is permanent and cannot be undone.",
+                "Remove every entry in your activity log from your account? This is permanent.",
             )
         )
             return;
-        activityLog.clear();
-        entries = [];
-        filteredEntries = [];
-        todayCount = 0;
+        await activityLog.clear();
+        // The store holds what the server still holds (a failed removal is rolled back).
+        entries = activityLog.getAll();
+        filteredEntries = entries;
+        todayCount = activityLog.getTodayCount();
     }
 
     function resetFilters() {

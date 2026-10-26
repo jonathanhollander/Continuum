@@ -57,9 +57,14 @@ export const activityLog = {
      */
     logEvent(entry: Omit<ActivityLogEntry, 'id' | 'timestamp'>): void {
         // The server generates the id. Failures are bookkeeping only: console, never the user.
+        // entity_type, entity_id, entity_name and module are required columns: a caller that has
+        // no value for one still sends a string, so the row saves instead of returning 422.
         const newEntry = {
             ...entry,
+            module: String(entry.module ?? ''),
+            entityType: String(entry.entityType ?? ''),
             entityId: String(entry.entityId ?? ''),
+            entityName: String(entry.entityName ?? ''),
             timestamp: new Date().toISOString(),
         };
         manager.create(newEntry as any, false, true).catch((e) => {
@@ -121,13 +126,33 @@ export const activityLog = {
     },
 
     /**
-     * Clear all activity entries
+     * Remove every entry of this person's log from the server, one DELETE each through the
+     * manager. Deletes run one at a time (a delete's rollback restores the list as it stood when
+     * that delete began) and stay within the server's 600 writes/minute: after 500 in a minute the
+     * next waits for that minute to end. The first one that fails stops the run; the manager has
+     * rolled it back and shown its one gentle message, so the list still holds exactly what the
+     * server holds. Returns how many were removed and how many are still there.
      */
-    async clear() {
-        // Since it's a collection, we'd need to delete individual items or have a bulk delete
-        // For activity log, we usually don't want mass deletion via simple API
-        // For now, we'll just log that clear was attempted locally.
-        console.warn('Activity log clearing is restricted to per-item deletion in sync mode.');
+    async clear(): Promise<{ removed: number; remaining: number }> {
+        const PER_MINUTE = 500;
+        const ids = manager.items.map((e) => e.id);
+        let removed = 0;
+        let windowStart = Date.now();
+        let inWindow = 0;
+        for (const id of ids) {
+            if (inWindow >= PER_MINUTE) {
+                const wait = 60_000 - (Date.now() - windowStart);
+                if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+                windowStart = Date.now();
+                inWindow = 0;
+            }
+            inWindow++;
+            await manager.delete(id);
+            // manager.delete catches its own failure: rolled back, status "error", message shown.
+            if (manager.items.some((e) => String(e.id) === String(id))) break;
+            removed++;
+        }
+        return { removed, remaining: manager.items.length };
     },
 
     /**
