@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { goto } from "$app/navigation";
+    import { page } from "$app/stores";
     import { auth } from "$lib/stores/auth";
     import { API_BASE_URL } from "$lib/config";
     import { apiPost } from "$lib/api/client";
@@ -118,7 +119,10 @@
         if (typeof localStorage !== "undefined" && email) {
             localStorage.setItem("continuum_last_email", email);
         }
-        goto("/login?method=email");
+        const params = new URLSearchParams({ method: "email" });
+        const redirect = $page.url.searchParams.get("redirect");
+        if (redirect) params.set("redirect", redirect);
+        goto(`/login?${params}`);
     }
 
     async function handlePasskeyRegistration(options: any) {
