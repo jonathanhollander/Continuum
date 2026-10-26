@@ -44,7 +44,7 @@
             ]);
 
             settings = settingsData;
-            pulse.update((s) => ({ ...s, enabled: settings.enabled }));
+            pulse.showEnabled(settings.enabled);
             tiers = tiersData;
         } catch (e) {
             console.error(e);
@@ -57,7 +57,7 @@
         saving = true;
         try {
             await apiPost("/api/pulse/settings", settings);
-            pulse.update((s) => ({ ...s, enabled: settings.enabled }));
+            pulse.showEnabled(settings.enabled);
             pulse.init();
         } catch (e) {
             console.error(e);
