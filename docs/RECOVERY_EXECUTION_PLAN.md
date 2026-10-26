@@ -566,11 +566,11 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X142 | ▶ | | |
 | X143 | ☑ | f2e1cd7 | Property covers fetch through `use:coverInView` (IntersectionObserver, 200 px, as X104) via the same `blobUrlFor` cache; removal media deletes run together (`Promise.allSettled`) after the record is gone. 201 covers: 0 fetched at load, 8/16/24 as you scroll; 3-photo removal → all 404; `x128` passes; 0 errors. Finding → U0 |
 | X144 | ▶ | | |
-| X145 | ▶ | | |
+| X145 | ☑ | 930a7f0 | `analyticsStore` exports `findExecutorName(profile, members)` (profile name first, else the Executor contact) and `estateExecutorName`; Digital Guardian, Final Wishes and Future Scenarios (card, "{name} knows their role.", `hasExecutor`) read it. Executor contact with no profile name → all three show it; with neither unchanged; 0 errors |
 | X146 | ▶ | | |
 | X147 | ▶ | | |
 | X148 | ▶ | | |
-| X149 | ☐ (after X145, X147, X148) | | |
+| X149 | ☐ (after X147, X148) | | |
 | X150 | ▶ | | |
 | X138 | ☑ | c5a7077 | Toolbar Download (insurance, property) saves the stored files of every record shown (follows search; disabled when none; cached files reused); subscriptions Filter chips by the difficulty words already shown (Easy/Medium/Hard), clear on reclick or close; `aiGriefService` uses `contextStore.isExecutor` (store holds `executor` after X118 — the old check never matched). Downloads byte-identical, executor/planner personas checked with the AI call intercepted; 0 errors |
 | X114 | ☑ | fdd80b5 | `routers/pets.py`, `heirlooms.py`, `insurance.py` removed (no caller: the app uses `/api/data/pets`, `/heirlooms` → Asset, `/insurance_policies`; `heirlooms.py` wrote the unused `Heirloom` table). TestClient: before `200 {}`; after 405/404, the `/api/data/*` paths create and list; server starts clean |
