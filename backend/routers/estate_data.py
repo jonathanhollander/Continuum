@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Body
 from backend.limiter import limiter
-from sqlmodel import Session, select
+from sqlmodel import Session, select, func, and_, or_
 from typing import List, Any, Dict, Optional
 from pydantic import BaseModel, field_validator, model_validator
 import json
@@ -135,6 +135,40 @@ MODEL_MAP = {
     "automation_rules": AutomationRule
 }
 
+# CU-004: these data types share the Asset table; each owns the rows whose `category` equals it.
+ASSET_CATEGORIES = {"properties", "digital_assets", "heirlooms"}
+
+
+def _has(col):
+    return func.coalesce(col, "") != ""
+
+
+def _category_clause(data_type: str):
+    """SQL membership test for one Asset-backed list, or None (no extra filter).
+
+    Rows with a NULL category (created before the column existed) are not
+    migrated; they list under exactly one category, chosen read-time:
+    platform/username -> digital_assets, else recipient/story -> heirlooms,
+    else properties. "assets" lists every row of the user.
+    """
+    if data_type not in ASSET_CATEGORIES:
+        return None
+    digital = or_(_has(Asset.platform), _has(Asset.username))
+    heirloom = or_(_has(Asset.recipient), _has(Asset.story))
+    legacy = {
+        "digital_assets": digital,
+        "heirlooms": and_(~digital, heirloom),
+        "properties": and_(~digital, ~heirloom),
+    }[data_type]
+    return or_(Asset.category == data_type, and_(Asset.category.is_(None), legacy))
+
+
+def _in_category(session: Session, data_type: str, item) -> bool:
+    clause = _category_clause(data_type)
+    if clause is None:
+        return True
+    return session.exec(select(Asset.id).where(Asset.id == item.id, clause)).first() is not None
+
 # --- CUSTOM FIELD DEFINITIONS ---
 # NOTE: These routes must be declared BEFORE the generic /{data_type} routes
 # so that FastAPI matches them correctly.
@@ -196,6 +230,9 @@ def get_items(data_type: str, user: User = Depends(get_current_user), session: S
         raise HTTPException(status_code=400, detail=f"Invalid type: {data_type}")
     
     statement = select(model).where(model.user_id == user.id)
+    clause = _category_clause(data_type)
+    if clause is not None:
+        statement = statement.where(clause)
     return session.exec(statement).all()
 
 def _log_estate_action(session: Session, request: Request, action: str, user: User, data_type: str, resource_id: Any):
@@ -241,6 +278,8 @@ def create_item(
 
         # Add user_id
         validated_data["user_id"] = user.id
+        if model is Asset:
+            validated_data["category"] = data_type  # server-owned; client value ignored
 
         # Serialize custom_attributes if provided as dict
         if "custom_attributes" in validated_data and isinstance(validated_data["custom_attributes"], dict):
@@ -285,6 +324,8 @@ def update_item(
             raise HTTPException(status_code=404, detail="Item not found")
         if getattr(db_item, "user_id") != user.id:
             raise HTTPException(status_code=403, detail="Not authorized")
+        if model is Asset and not _in_category(session, data_type, db_item):
+            raise HTTPException(status_code=404, detail="Item not found")
 
         # Support both raw body and wrapped { data: {...} } format for backwards compatibility
         if "data" in body and isinstance(body["data"], dict) and len(body) == 1:
@@ -301,6 +342,8 @@ def update_item(
             if key == "custom_attributes" and isinstance(value, dict):
                 value = json.dumps(value)
 
+            if key == "category":
+                continue  # membership is set on create only
             if hasattr(db_item, key):
                 setattr(db_item, key, value)
 
@@ -335,6 +378,8 @@ def delete_item(request: Request, data_type: str, item_id: int, user: User = Dep
             raise HTTPException(status_code=404, detail="Item not found")
         if getattr(db_item, "user_id") != user.id:
             raise HTTPException(status_code=403, detail="Not authorized")
+        if model is Asset and not _in_category(session, data_type, db_item):
+            raise HTTPException(status_code=404, detail="Item not found")
 
         log_deletion(
             session=session,
