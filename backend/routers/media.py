@@ -183,14 +183,15 @@ async def upload_media(
 
 
 @router.get("/{media_id}/download")
-async def download_media(
+def download_media(
     media_id: int,
     user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
     """
     Download a media file by ID.
-    Redirects to S3 presigned URL or serves local file.
+    Redirects to S3 presigned URL or serves local file. A plain def (card X104): the sync
+    session runs in the threadpool, off the event loop.
     """
     media = get_owned_media(session, media_id, user)
     return serve_media_file(media)
@@ -222,7 +223,7 @@ def serve_media_file(media: MediaFile):
 
 
 @router.get("/shared/{token}/{media_id}")
-async def download_shared_media(
+def download_shared_media(
     token: str,
     media_id: int,
     session: Session = Depends(get_session)
@@ -231,10 +232,12 @@ async def download_shared_media(
     A file on a recipient's start page (card D2), opened with that page's link instead of a
     sign-in. Only files the recipient view itself shows are served: the owner's own, undeleted
     files attached to a record in that view (held letters and unreleased capsules are left out).
+    A plain def (card X104): the sync session runs in the threadpool, off the event loop. The
+    link is checked fresh every time; the set of files it shows is kept briefly per token.
     """
-    from backend.routers.recipient import contact_for_token, recipient_snapshot
+    from backend.routers.recipient import contact_for_token, shown_media_ids
     contact = contact_for_token(session, token)
-    shown = {a.get("media_id") for a in recipient_snapshot(session, contact)["attachments"] if a.get("source") == "media"}
+    shown = shown_media_ids(session, contact, token)
     media = session.get(MediaFile, media_id)
     if media_id not in shown or not media or media.deleted_at is not None or media.user_id != contact.user_id:
         raise HTTPException(status_code=404, detail=NOT_FOUND)
