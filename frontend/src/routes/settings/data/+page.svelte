@@ -1,7 +1,11 @@
 <script lang="ts">
     import { getRegistry, type SyncManager } from "$lib/services/sync.svelte";
     import { onMount } from "svelte";
-    import { navGroups } from "$lib/config/navigation";
+    import { navGroups, catalogCategories, type NavItem } from "$lib/config/navigation";
+    import { userRole } from "$lib/stores/conciergeStore.svelte";
+    import { auth } from "$lib/stores/auth";
+    import { API_BASE_URL } from "$lib/config";
+    import { get } from "svelte/store";
     import {
         RefreshCw,
         Database,
@@ -42,7 +46,67 @@
             testDataFactory.ensureInitialized();
             refreshTestRegistry();
         }
+
+        // Register every module's own store so a direct load counts them all.
+        await Promise.allSettled(OWNING_STORES.map((load) => load()));
+        countComponentKeys();
     });
+
+    // Stores behind the module cards; loading one registers (and syncs) its managers.
+    const OWNING_STORES = [
+        () => import("$lib/stores/financialAssetsStore.svelte"),
+        () => import("$lib/stores/insuranceStore.svelte"),
+        () => import("$lib/stores/familyStore.svelte"),
+        () => import("$lib/stores/medicalStore.svelte"),
+        () => import("$lib/stores/pulse.svelte"),
+        () => import("$lib/stores/subscriptionStore.svelte"),
+        () => import("$lib/stores/petStore.svelte"),
+        () => import("$lib/stores/propertyStore.svelte"),
+        () => import("$lib/stores/digitalGuardianStore.svelte"),
+        () => import("$lib/stores/digitalAssetsStore.svelte"),
+        () => import("$lib/stores/letterStore.svelte"),
+        () => import("$lib/stores/heirloomStore.svelte"),
+        () => import("$lib/stores/estateStore.svelte"),
+        () => import("$lib/stores/toneStore.svelte"),
+        () => import("$lib/stores/onboardingStore.svelte"),
+        () => import("$lib/stores/visualMemoryStore.svelte"),
+        () => import("$lib/stores/calendarStore.svelte"),
+        () => import("$lib/stores/advancedAssetStore.svelte"),
+        () => import("$lib/stores/acceptanceStore.svelte"),
+        () => import("$lib/stores/journalStore.svelte"),
+        () => import("$lib/stores/timeCapsuleStore.svelte"),
+        () => import("$lib/stores/timelineStore.svelte"),
+        () => import("$lib/stores/funeralStore.svelte"),
+        () => import("$lib/stores/scenarioStore.svelte"),
+        () => import("$lib/stores/activityLog.svelte"),
+    ];
+
+    // Keys a page component registers (with its own mapper). Until that page has been opened,
+    // the card reads the saved count straight from the same endpoint instead.
+    const COMPONENT_KEYS: Record<string, string> = {
+        "docs_legal-vault": "/api/data/vault_documents",
+        home_vendors: "/api/data/vendors",
+        home_access: "/api/data/home_access",
+        home_utilities: "/api/data/utilities",
+    };
+    let componentCounts = $state<Record<string, number>>({});
+
+    async function countComponentKeys() {
+        const token = get(auth).token;
+        if (!token) return;
+        await Promise.allSettled(
+            Object.entries(COMPONENT_KEYS)
+                .filter(([key]) => !syncRegistry[key])
+                .map(async ([key, path]) => {
+                    const res = await fetch(`${API_BASE_URL}${path}`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                    });
+                    if (!res.ok) return;
+                    const body = await res.json();
+                    if (Array.isArray(body)) componentCounts[key] = body.length;
+                }),
+        );
+    }
 
     function refreshTestRegistry() {
         if (testDataFactory) {
@@ -106,11 +170,48 @@
         purgingTest = false;
     }
 
-    // List managers hold `items`; singleton managers hold one `data` record (counted once when filled).
+    // List managers hold `items`; a singleton holds one `data` record, counted once only when it
+    // carries something the person saved: compared with what its mapper makes from an empty record,
+    // leaving out server-owned fields and blank values.
+    const SERVER_FIELDS = new Set(["id", "userId", "user_id", "createdAt", "created_at", "updatedAt", "updated_at"]);
+    function meaningful(v: any): any {
+        // false and empty JSON text ("{}", "[]") are what an untouched record holds.
+        if (v === null || v === undefined || v === "" || v === false || v === "{}" || v === "[]") return undefined;
+        if (Array.isArray(v)) {
+            const a = v.map(meaningful).filter((x) => x !== undefined);
+            return a.length ? a : undefined;
+        }
+        if (typeof v === "object") {
+            const out: Record<string, any> = {};
+            for (const k of Object.keys(v).sort()) {
+                if (SERVER_FIELDS.has(k)) continue;
+                const m = meaningful(v[k]);
+                if (m !== undefined) out[k] = m;
+            }
+            return Object.keys(out).length ? out : undefined;
+        }
+        return v;
+    }
+    // Singletons the server fills with its own defaults on first read: saved means switched on.
+    const SAVED_WHEN: Record<string, (d: any) => boolean> = {
+        pulse_settings: (d) => d.enabled === true,
+    };
     function rowsOf(manager: any): any[] {
-        if (Array.isArray(manager?.items)) return manager.items;
-        const d = manager?.data;
-        return d && typeof d === "object" && Object.keys(d).length > 0 ? [d] : [];
+        if (!manager) return [];
+        if (Array.isArray(manager.items)) return manager.items;
+        const d = manager.data;
+        if (!d || typeof d !== "object") return [];
+        const savedWhen = SAVED_WHEN[manager.key];
+        if (savedWhen) return savedWhen(d) ? [d] : [];
+        const mapper = manager.mapper; // SingletonSyncManager's own mapper (TS-private, readable at runtime)
+        let empty: any = {};
+        try {
+            empty = typeof mapper === "function" ? mapper({}) : {};
+        } catch {
+            empty = {};
+        }
+        const saved = JSON.stringify(meaningful(d) ?? null) !== JSON.stringify(meaningful(empty) ?? null);
+        return saved ? [d] : [];
     }
 
     // Helper: isTestRow
@@ -118,32 +219,97 @@
         return testRegistry[moduleKey]?.includes(String(id));
     }
 
-    // Nav Grouping Logic
-    // Group keys must match navGroups (navigation.ts); unknown ones fall into "Other Modules".
-    const syncGroupMap: Record<string, string> = {
-        financial_assets: "groupEssentials",
-        documents: "groupEssentials",
-        properties: "groupSecondary",
-        subscriptions: "groupSecondary",
-        letters: "groupLegacy",
-        calendar_events: "groupExtras",
+    // Module cards come from the navigation (navGroups, plus the catalog modules reached from
+    // "Explore All Features"), so every module is listed whether or not its store has registered.
+    // Each card sums the sync registry keys its page owns.
+    const moduleKeys: Record<string, string[]> = {
+        financial: ["financial_assets"],
+        insurance: ["insurance_policies"],
+        contacts: ["family_members", "family_relationships"],
+        documents: ["docs_legal-vault"],
+        medical: ["medical_profile", "medical_directives"],
+        "home-manual": ["home_vendors", "home_access", "home_utilities"],
+        pulse: ["pulse_settings"],
+        subscriptions: ["subscriptions"],
+        pets: ["pets"],
+        property: ["properties"],
+        guardian: ["digital_guardian", "digital_assets"],
+        letters: ["letters"],
+        heirlooms: ["heirlooms"],
+        settings: ["estate_profile", "app_tone", "concierge_settings", "onboarding_settings"],
+        "family-hub": ["family_memories"],
+        calendar: ["calendar_events"],
+        "advanced-registry": ["advanced_assets"],
+        builders: ["acceptance_tasks", "estate_complexity"],
+        journal: ["journal_entries", "ethical_will", "life_lessons"],
+        "visual-memories": ["visual_memories", "external_archives"],
+        capsule: ["time_capsule"],
+        timeline: ["timeline_events"],
+        funeral: ["funeral_data"],
+        executor: ["scenario_settings"],
+        activity: ["activity_log"],
+        anniversary: ["calendar_events"],
     };
+    // Hubs that show other modules' data rather than holding their own.
+    const hubKeys = new Set(["dashboard", "catalog", "binder"]);
+    // Catalog categories join the nav group they belong to.
+    const catalogGroup: Record<string, string> = { legacy: "groupLegacy", tools: "groupExtras" };
 
-    function getGroupKey(syncKey: string) {
-        if (syncKey.startsWith("docs_")) return "groupEssentials";
-        return syncGroupMap[syncKey] || "Other";
+    type ModuleCard = { id: string; label: string; keys: string[] };
+
+    let moduleGroups = $derived.by(() => {
+        const role = $userRole;
+        const seen = new Set<string>();
+        const groups = navGroups.map((g) => ({ group: g, cards: [] as ModuleCard[] }));
+        const add = (groupKey: string, item: NavItem) => {
+            if (hubKeys.has(item.key) || seen.has(item.key)) return;
+            if (!item.allowedRoles.includes(role)) return;
+            const target = groups.find((x) => x.group.groupKey === groupKey);
+            if (!target) return;
+            seen.add(item.key);
+            target.cards.push({ id: item.key, label: item.label, keys: moduleKeys[item.key] ?? [] });
+        };
+        for (const g of navGroups) for (const item of g.items) add(g.groupKey, item);
+        for (const c of catalogCategories) for (const item of c.items) add(catalogGroup[c.id], item);
+        return groups.filter((x) => x.cards.length > 0);
+    });
+
+    let cardsById = $derived(
+        Object.fromEntries(moduleGroups.flatMap((g) => g.cards).map((c) => [c.id, c])),
+    );
+
+    function cardCount(card: ModuleCard) {
+        return card.keys.reduce(
+            (n, k) => n + (syncRegistry[k] ? rowsOf(syncRegistry[k]).length : (componentCounts[k] ?? 0)),
+            0,
+        );
+    }
+    function cardManagers(card: ModuleCard) {
+        return card.keys.filter((k) => syncRegistry[k]).map((k) => [k, syncRegistry[k]] as const);
+    }
+    function cardStatus(card: ModuleCard) {
+        const ms = cardManagers(card).map(([, m]) => m.status);
+        if (ms.includes("syncing")) return "syncing";
+        if (ms.includes("error")) return "error";
+        return "idle";
+    }
+    // Cloud count: known once every registered list store of the card has been audited.
+    function cardAudit(card: ModuleCard) {
+        const audited = cardManagers(card)
+            .map(([k]) => auditResults[k])
+            .filter((a) => a && !a.error);
+        if (audited.length === 0) return null;
+        return {
+            remoteCount: audited.reduce((n, a) => n + (a.remoteCount ?? 0), 0),
+            matches: audited.every((a) => a.matches),
+        };
     }
 
-    // Derived state for Other Modules (replacing illegal @const)
-    let otherModules = $derived(
-        Object.entries(syncRegistry).filter(([key]) => {
-            const groupKey = getGroupKey(key);
-            return (
-                groupKey === "Other" ||
-                !navGroups.find((g) => g.groupKey === groupKey)
-            );
-        }),
-    );
+    // Registered stores no card owns (pulse_status is the server's own check-in state).
+    let otherModules = $derived.by(() => {
+        const owned = new Set([...Object.values(moduleKeys).flat(), "pulse_status"]);
+        return Object.entries(syncRegistry).filter(([key]) => !owned.has(key));
+    });
 </script>
 
 <div
@@ -240,11 +406,7 @@
 
     <!-- Module Grid -->
     <div class="space-y-12">
-        {#each navGroups as group}
-            {@const groupModules = Object.entries(syncRegistry).filter(
-                ([key]) => getGroupKey(key) === group.groupKey,
-            )}
-            {#if groupModules.length > 0}
+        {#each moduleGroups as { group, cards }}
                 <section>
                     <div
                         class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4"
@@ -260,9 +422,11 @@
                     <div
                         class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
                     >
-                        {#each groupModules as [key, manager]}
-                            {@const audit = auditResults[key]}
-                            {@const isTest = testRegistry[key]?.length > 0}
+                        {#each cards as card (card.id)}
+                            {@const key = card.id}
+                            {@const audit = cardAudit(card)}
+                            {@const status = cardStatus(card)}
+                            {@const isTest = card.keys.some((k) => testRegistry[k]?.length > 0)}
 
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -280,11 +444,9 @@
                                 >
                                     <div class="flex items-center gap-3">
                                         <h3
-                                            class="font-bold text-slate-800 capitalize text-lg"
+                                            class="font-bold text-slate-800 text-lg"
                                         >
-                                            {key
-                                                .replace("home_", "")
-                                                .replace("_", " ")}
+                                            {card.label}
                                         </h3>
                                         {#if isTest}
                                             <span
@@ -294,12 +456,12 @@
                                         {/if}
                                     </div>
                                     <div class="flex items-center gap-2">
-                                        {#if manager.status === "syncing"}
+                                        {#if status === "syncing"}
                                             <RefreshCw
                                                 size={16}
                                                 class="text-indigo-500 animate-spin"
                                             />
-                                        {:else if manager.status === "error"}
+                                        {:else if status === "error"}
                                             <AlertTriangle
                                                 size={16}
                                                 class="text-rose-500"
@@ -328,7 +490,7 @@
                                         <div
                                             class="text-2xl font-mono text-slate-700 font-bold"
                                         >
-                                            {rowsOf(manager).length}
+                                            {cardCount(card)}
                                         </div>
                                     </div>
                                     <div class="p-4 text-center bg-slate-50/30">
@@ -358,7 +520,6 @@
                         {/each}
                     </div>
                 </section>
-            {/if}
         {/each}
 
         <!-- Other / Unassigned Modules -->
@@ -379,7 +540,7 @@
                             class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 text-center"
                         >
                             <h3 class="font-bold text-slate-800 capitalize">
-                                {key.replace("_", " ")}
+                                {key.replaceAll("_", " ")}
                             </h3>
                             <p class="text-sm text-slate-500">
                                 {rowsOf(manager).length} items
@@ -392,9 +553,9 @@
     </div>
 
     <!-- Drill Down View -->
-    {#if selectedModule && syncRegistry[selectedModule]}
-        {@const manager = syncRegistry[selectedModule]}
-        {@const audit = auditResults[selectedModule]}
+    {#if selectedModule && cardsById[selectedModule]}
+        {@const card = cardsById[selectedModule]}
+        {@const managers = cardManagers(card)}
 
         <div
             transition:slide
@@ -407,7 +568,7 @@
                     class="font-bold text-xl text-slate-800 flex items-center gap-2"
                 >
                     <Database size={20} class="text-slate-400" />
-                    {selectedModule} Records
+                    {card.label} Records
                 </h3>
                 <div class="text-sm text-slate-500">
                     Showing merged view of Local & Cloud State
@@ -429,8 +590,10 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
+                        {#each managers as [mkey, manager]}
+                        {@const audit = auditResults[mkey]}
                         {#each rowsOf(manager) as item}
-                            {@const isTest = isTestRow(selectedModule, item.id)}
+                            {@const isTest = isTestRow(mkey, item.id)}
                             {@const inCloud = audit?.details?.remoteItems?.find(
                                 (r: any) => String(r.id) === String(item.id),
                             )}
@@ -506,12 +669,13 @@
                                 </tr>
                             {/each}
                         {/if}
-                        {#if rowsOf(manager).length === 0 && (!audit?.details?.onlyRemote || audit.details.onlyRemote.length === 0)}
+                        {/each}
+                        {#if cardCount(card) === 0 && !managers.some(([mkey]) => auditResults[mkey]?.details?.onlyRemote?.length)}
                             <tr
                                 ><td
                                     colspan="5"
                                     class="p-12 text-center text-slate-400 italic"
-                                    >No records found in this module.</td
+                                    >What you save in {card.label} will appear here.</td
                                 ></tr
                             >
                         {/if}
