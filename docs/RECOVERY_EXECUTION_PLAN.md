@@ -355,7 +355,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X15 | ☑ | f63a12b | 1440×900, no key: the prompt bar shows the gentle notice as plain text (no draft prefix or monospace); the grief chat shows its own fallback. Screenshots in scratchpad/x15 |
 | X19 | ☑ | cba8a86 | 1440×900: a failure shows the notice with 0 copy buttons; a stubbed draft copies with inline "Copied."; a refused clipboard shows the gentle line; no dialogs; svelte-check = baseline |
 | X21 | ☑ | 07d9e18 | 1440×900: journal and heirlooms show 3 of their own prompt ideas, "Show other ideas" changes all 3, clicking fills the input; contacts 0-pixel diff; svelte-check 287 (baseline 288) |
-| X28 | ☐ | | |
+| X28 | ▶ | | |
 | X22 | ☑ | e95faf8 | Fresh DB: PUT funeral_data with object `wishes` and list `budget` → GET returns JSON text that parses back to the same values |
 | X24 | ▶ | | |
 | X25 | ▶ | | |
@@ -365,7 +365,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X17 | ☑ | 5b8e66c | Before: 2 CSP errors, 0 font faces; after: no console errors, Inter and EB Garamond loaded; 1440×900 diff 3.02% of pixels, text only (headings now EB Garamond, body Inter) |
 | X18 | ☑ | bb6da02 | Header now has `base-uri 'self'; frame-ancestors 'none'; object-src 'none'`; onboarding and concierge-window load at 1440×900 with 0 CSP console lines (the app never frames itself) |
 | X20 | ☑ | 9e878ea | `curl -I /dashboard` 200 (was 405); `frame-src 'self' blob:`; `script-src` carries the sha256 of the build's one inline script (computed from `dist/index.html` at startup) instead of `'unsafe-inline'`; dashboard, onboarding, concierge-window, export preview: 0 CSP violations at 1440×900; the PDF shows in the preview. R0 must confirm the page boots on the Railway build |
-| X23 | ▶ | | |
+| X23 | ☑ | a183ea1 | Header `connect-src 'self'` (API_URL origin added only when it differs from ORIGIN; no `*` fallback); dashboard and an AI prompt-bar request on contacts: 0 CSP violations at 1440×900. Production: the release sets ORIGIN and API_URL both to https://continuum.estate, so it is `'self'` only |
 | X13 | ☑ | 339d96f | Fresh DB: full date and recurring MM-DD events create, edit, re-fetch. PostgreSQL-only `ALTER ... TYPE VARCHAR USING to_char` not run locally. Also fixed: the page sent `isRecurring`/`wish`/`emailTemplate` the model lacks (silently dropped), and upcoming-events sorting. Migration re-parented onto B2 at merge (single head) |
 | X11 | ☑ | 1007f48 | `/api-guide` 200 html; `/api`, `/api/nope` 404 JSON; `/modules/x` 200; traversal no leak |
 | X5 | ☐ | | |
