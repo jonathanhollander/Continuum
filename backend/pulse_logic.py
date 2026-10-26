@@ -7,6 +7,7 @@ from backend.pulse_models import (
     PulseContact, PulseEscalationLog, PulseMessage
 )
 from backend.utils.logger import get_logger
+from backend.pulse_tiers import pulse_tier_expression, pulse_tier_number
 
 logger = get_logger(__name__)
 
@@ -185,16 +186,12 @@ def trigger_escalation(session: Session, user_id: int, tier_number: int, referen
     # (an uncommitted row would let the same tier re-trigger every tick with no cap).
     session.commit()
     
-    # 2. Notify Contacts (tier pick is deterministic: lowest id wins if two tiers share a number)
-    tier_id_sq = select(PulseEscalationTier.id).where(
-        PulseEscalationTier.user_id == user_id,
-        PulseEscalationTier.tier_number == tier_number
-    ).order_by(PulseEscalationTier.id).limit(1).scalar_subquery()
+    # 2. Notify the same contacts this tier lists on the Pulse pages.
     # Contacts with their own wait (individual_delay_hours) are sent by send_individual_alerts
     contacts = session.exec(
         select(PulseContact).where(
             PulseContact.user_id == user_id,
-            PulseContact.tier_id == tier_id_sq,
+            pulse_tier_expression() == tier_number,
             PulseContact.individual_delay_hours == None,  # noqa: E711
         )
     ).all()
@@ -244,10 +241,7 @@ def retry_failed_tier_sends(session: Session, log: PulseEscalationLog):
     contacts = session.exec(select(PulseContact).where(
             PulseContact.user_id == log.user_id,
             PulseContact.individual_delay_hours == None,  # noqa: E711 (send_individual_alerts retries those)
-            PulseContact.tier_id == select(PulseEscalationTier.id).where(
-                PulseEscalationTier.user_id == log.user_id,
-                PulseEscalationTier.tier_number == log.tier_number
-            ).order_by(PulseEscalationTier.id).limit(1).scalar_subquery())).all()
+            pulse_tier_expression() == log.tier_number)).all()
     # One query for every contact's tier rows (a send only adds rows for its own contact)
     by_contact = _messages_by_contact(session, [c.id for c in contacts],
                                       PulseMessage.sent_at >= log.triggered_at,
@@ -330,6 +324,12 @@ import os
 def tier_alert_context(session: Session, contact: PulseContact, tier_number: int) -> dict:
     """Template context for a tier alert email: user_name, portal_url, and the
     check-in timeline for tier 2+. Shared by send_notification and the admin resend."""
+    # Existing call-tier contacts predate automatic portal-link issuance. Persist the link before
+    # sending, so a successful alert always opens the guardian's own view, including after reload.
+    if not contact.portal_token:
+        contact.portal_token = secrets.token_urlsafe(32)
+        session.add(contact)
+        session.commit()
     context = {
         "user_name": owner_display_name(session, contact.user_id),
         "portal_url": f"{settings.get_frontend_url()}/portal/{contact.portal_token}",
@@ -506,23 +506,18 @@ def send_individual_alerts(session: Session, user_id: int, since: datetime,
     """A guardian with individual_delay_hours is alerted that many hours after their tier's start
     (tier 1: the end of the grace period; tier N: when tier N-1 was reached), in place of the
     tier's own wait. Failed sends are retried here up to TIER_MAX_ATTEMPTS."""
-    contacts = session.exec(select(PulseContact).where(
+    contacts = session.exec(select(PulseContact, pulse_tier_expression()).where(
         PulseContact.user_id == user_id,
-        PulseContact.tier_id != None,  # noqa: E711
+        pulse_tier_expression().is_not(None),
         PulseContact.individual_delay_hours != None,  # noqa: E711
     )).all()
     if not contacts:
         return
-    tier_numbers = dict(session.exec(select(PulseEscalationTier.id, PulseEscalationTier.tier_number)
-                                     .where(PulseEscalationTier.user_id == user_id)).all())
     reached = _outage_tier_times(session, user_id, since)
-    by_contact = _messages_by_contact(session, [c.id for c in contacts],
+    by_contact = _messages_by_contact(session, [c.id for c, _ in contacts],
                                       PulseMessage.sent_at > since,
                                       col(PulseMessage.message).startswith("[System Alert Tier "))
-    for contact in contacts:
-        n = tier_numbers.get(contact.tier_id)
-        if not n:
-            continue
+    for contact, n in contacts:
         start = hard_deadline if n == 1 else reached.get(n - 1)
         if start is None or now < start + timedelta(hours=max(0, contact.individual_delay_hours)):
             continue
@@ -537,23 +532,21 @@ def contact_reach(session: Session, contact: PulseContact) -> Optional[int]:
     """Up to which tier this guardian's portal opens the owner's notes in this outage, or None.
     Open once the outage has reached their tier, or once they were sent their own tier alert
     (a guardian with an individual wait can be told before or after the tier itself)."""
-    if not contact.tier_id:
-        return None
-    tier = session.get(PulseEscalationTier, contact.tier_id)
-    if not tier:
+    tier_number = pulse_tier_number(session, contact)
+    if tier_number is None:
         return None
     last = owner_last_checkin(session, contact.user_id)
     since = last.timestamp if last else datetime.min
     esc = current_escalation(session, contact.user_id, since)
-    if esc and esc.tier_number >= tier.tier_number:
+    if esc and esc.tier_number >= tier_number:
         return esc.tier_number
     if contact.individual_delay_hours is not None:
         sent = session.exec(select(PulseMessage.id).where(
             PulseMessage.contact_id == contact.id,
             PulseMessage.sent_at > since,
-            PulseMessage.message == tier_sent_text(tier.tier_number))).first()
+            PulseMessage.message == tier_sent_text(tier_number))).first()
         if sent:
-            return tier.tier_number
+            return tier_number
     return None
 
 

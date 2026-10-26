@@ -6,6 +6,7 @@ from typing import Annotated, List, Literal, Optional
 from backend.database import get_session, User
 from backend.auth import get_current_user
 from backend.pulse_models import PulseContact, PulseEscalationTier
+from backend.pulse_tiers import CALL_TIER_NUMBER
 from backend.estate_models import ContactRelationship
 from backend.utils.audit import log_audit, log_deletion
 from backend.utils.table_body import validated_new
@@ -61,9 +62,10 @@ def _apply(contact: PulseContact, data: dict, user: User, session: Session) -> N
                                    "notify_on_safety_timer"):
             continue
         setattr(contact, key, val)
-    # A guardian (a Pulse tier, or the safety-timer reach-out) needs a portal link for their
+    # A guardian (a Pulse/call tier, or the safety-timer reach-out) needs a portal link for their
     # alert emails; issue one the first time, keep it after (links already sent stay valid).
-    if not contact.portal_token and (contact.tier_id or contact.notify_on_safety_timer):
+    if not contact.portal_token and (contact.tier_id or contact.call_tier in CALL_TIER_NUMBER
+                                     or contact.notify_on_safety_timer):
         contact.portal_token = secrets.token_urlsafe(32)
 
 @router.get("", response_model=List[PulseContact])
