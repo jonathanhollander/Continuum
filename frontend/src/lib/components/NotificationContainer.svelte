@@ -12,10 +12,46 @@
 	const MIN_WIDTH = 280;
 	let placement = $state('');
 
+	let container: HTMLDivElement;
+
+	// With no dialog open, the stack sits top right below the header. When it would sit on the
+	// middle of a button, link, field or switch on the page, it moves to the bottom right if that
+	// spot covers fewer, so the page stays usable while a notice is showing.
+	function pagePlacement(): string {
+		if (!container || container.childElementCount === 0 || window.innerWidth < 1024) return '';
+		const w = container.offsetWidth;
+		const h = container.offsetHeight;
+		const right = window.innerWidth - GAP;
+		const covered = (top: number) =>
+			Array.from(
+				document.querySelectorAll<HTMLElement>(
+					'#main-content :is(button, a[href], input, select, textarea, [role="switch"])',
+				),
+			).filter((el) => {
+				const r = el.getBoundingClientRect();
+				const x = r.left + r.width / 2;
+				const y = r.top + r.height / 2;
+				return r.width > 0 && x > right - w && x < right && y > top && y < top + h;
+			}).length;
+		const atTop = covered(96);
+		if (atTop === 0) return '';
+		return covered(window.innerHeight - GAP - h) < atTop ? `top:auto;bottom:${GAP}px;` : '';
+	}
+
+	let queued = false;
+	function schedulePlacement() {
+		if (queued) return;
+		queued = true;
+		requestAnimationFrame(() => {
+			queued = false;
+			updatePlacement();
+		});
+	}
+
 	function updatePlacement() {
 		const dialog = document.querySelector('[aria-modal="true"]');
 		if (!dialog) {
-			placement = '';
+			placement = pagePlacement();
 			return;
 		}
 		const panel =
@@ -42,17 +78,19 @@
 
 	onMount(() => {
 		updatePlacement();
-		const observer = new MutationObserver(updatePlacement);
+		const observer = new MutationObserver(schedulePlacement);
 		observer.observe(document.body, { childList: true, subtree: true });
-		window.addEventListener('resize', updatePlacement);
+		window.addEventListener('resize', schedulePlacement);
+		window.addEventListener('scroll', schedulePlacement, true);
 		return () => {
 			observer.disconnect();
-			window.removeEventListener('resize', updatePlacement);
+			window.removeEventListener('resize', schedulePlacement);
+			window.removeEventListener('scroll', schedulePlacement, true);
 		};
 	});
 </script>
 
-<div class="notification-container" style={placement}>
+<div class="notification-container" style={placement} bind:this={container}>
 	{#each notificationList as notification (notification.id)}
 		{#if notification.type === 'error'}
 			<ErrorNotification

@@ -21,7 +21,7 @@
     import { contactSync } from "$lib/stores/familyStore.svelte";
     import { pulseTierNumber } from "$lib/components/modules/pulse/pulseTiers";
 
-    const gentleRetry = "Let's try that once more in a moment.";
+    const gentleRetry = "You can try again whenever you're ready.";
 
     // Guardians (a Pulse tier) and the people told when a safety timer ends, from the shared
     // contacts store (notifyOnSafetyTimer is the "Told when I start a timer" switch on the

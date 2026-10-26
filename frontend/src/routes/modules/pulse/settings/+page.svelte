@@ -82,7 +82,7 @@
         } catch (e) {
             console.error(e);
             undo?.();
-            notifications.showError("Let's try that once more in a moment.");
+            notifications.showError("You can try again whenever you're ready.");
         } finally {
             saving = false;
         }
@@ -145,7 +145,7 @@
                 </p>
             </div>
             <button
-                class="relative inline-flex h-8 w-14 items-center rounded-full transition-colors {settings.enabled
+                class="relative inline-flex h-8 w-14 items-center rounded-full transition-colors disabled:opacity-50 {settings.enabled
                     ? 'bg-primary'
                     : 'bg-slate-700'}"
                 role="switch"
@@ -157,11 +157,13 @@
                     saveSettings(() => (settings.enabled = !settings.enabled));
                 }}
             >
-                <span
-                    class="translate-x-1 inline-block h-6 w-6 transform rounded-full bg-white transition-transform {settings.enabled
-                        ? 'translate-x-7'
-                        : 'translate-x-1'}"
-                ></span>
+                {#if loaded}
+                    <span
+                        class="translate-x-1 inline-block h-6 w-6 transform rounded-full bg-white transition-transform {settings.enabled
+                            ? 'translate-x-7'
+                            : 'translate-x-1'}"
+                    ></span>
+                {/if}
             </button>
         </div>
 
@@ -180,7 +182,7 @@
                         min="1"
                         max="365"
                         step="1"
-                        value={settings.frequency_days}
+                        value={loaded ? settings.frequency_days : ""}
                         disabled={!loaded}
                         onchange={(e) => saveNumber("frequency_days", e.currentTarget.value, 1, 365)}
                         class="w-24 bg-slate-950/60 border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
@@ -199,7 +201,7 @@
                         min="0"
                         max="720"
                         step="1"
-                        value={settings.grace_period_hours}
+                        value={loaded ? settings.grace_period_hours : ""}
                         disabled={!loaded}
                         onchange={(e) => saveNumber("grace_period_hours", e.currentTarget.value, 0, 720)}
                         class="w-24 bg-slate-950/60 border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
@@ -313,7 +315,7 @@
                         Automatic Release
                     </div>
                     <button
-                        class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors {settings.location_vault_enabled
+                        class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 {settings.location_vault_enabled
                             ? 'bg-indigo-500'
                             : 'bg-slate-700'}"
                         role="switch"
@@ -330,11 +332,13 @@
                             );
                         }}
                     >
-                        <span
-                            class="translate-x-1 inline-block h-4 w-4 transform rounded-full bg-white transition-transform {settings.location_vault_enabled
-                                ? 'translate-x-6'
-                                : 'translate-x-1'}"
-                        ></span>
+                        {#if loaded}
+                            <span
+                                class="translate-x-1 inline-block h-4 w-4 transform rounded-full bg-white transition-transform {settings.location_vault_enabled
+                                    ? 'translate-x-6'
+                                    : 'translate-x-1'}"
+                            ></span>
+                        {/if}
                     </button>
                 </div>
             </div>
