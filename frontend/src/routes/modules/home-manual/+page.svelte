@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { fade, slide } from "svelte/transition";
     import Modal from "$lib/components/ui/Modal.svelte";
     import {
@@ -124,7 +125,7 @@
 
     async function deleteVendor(id: number | undefined) {
         if (id == null) return;
-        if (!confirm("Remove this item? You can add it back anytime.")) return;
+        if (!(await askConfirm("Remove this item? You can add it back anytime."))) return;
         await vendorSync.delete(id);
     }
 
@@ -168,7 +169,7 @@
 
     async function deleteCode(id: number | undefined) {
         if (id == null) return;
-        if (!confirm("Remove this item? You can add it back anytime.")) return;
+        if (!(await askConfirm("Remove this item? You can add it back anytime."))) return;
         await accessSync.delete(id);
     }
 
@@ -212,7 +213,7 @@
 
     async function deleteUtility(id: number | undefined) {
         if (id == null) return;
-        if (!confirm("Remove this item? You can add it back anytime.")) return;
+        if (!(await askConfirm("Remove this item? You can add it back anytime."))) return;
         await utilitySync.delete(id);
     }
 </script>

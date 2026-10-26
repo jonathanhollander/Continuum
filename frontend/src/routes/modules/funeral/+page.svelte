@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { focusTrap } from "$lib/actions/focusTrap";
     import { readCustom } from "$lib/utils/customFields";
     import { fade, scale } from "svelte/transition";
@@ -166,8 +167,8 @@
         showAddExpense = false;
     }
 
-    function removeExpense(id: string) {
-        if (!confirm("Remove this expense? You can add it back later.")) return;
+    async function removeExpense(id: string) {
+        if (!(await askConfirm("Remove this expense? You can add it back later."))) return;
         funeralStore.update((data) => ({
             ...data,
             budget: data.budget.filter((i) => i.id !== id),
@@ -205,11 +206,12 @@
             { name: "Memorial Printed Package", cost: 183, estimated: 183 },
     ];
 
-    function prefillEstimates() {
+    async function prefillEstimates() {
         if (
-            !confirm(
+            !(await askConfirm(
                 "This will add standard industry average costs (2021 NFDA) to your budget. Continue?",
-            )
+                "Add these costs",
+            ))
         )
             return;
 

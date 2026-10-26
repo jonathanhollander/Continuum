@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { onMount } from "svelte";
     import { apiGet, apiPost, apiPut, apiDelete } from "$lib/api/client";
     import {
@@ -96,7 +97,7 @@
     }
 
     async function deleteItem(id: number) {
-        if (!confirm("Remove these instructions from the vault? This action is permanent."))
+        if (!(await askConfirm("Remove these instructions from the vault? This action is permanent.")))
             return;
         listError = "";
         try {

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { fade, slide } from "svelte/transition";
     import {
         Users,
@@ -259,9 +260,9 @@
 
     async function deleteContact(id: number | string) {
         if (
-            !confirm(
+            !(await askConfirm(
                 "Remove this contact? You can always add them back later if needed.",
-            )
+            ))
         )
             return;
         familyStore.removeMember(id);

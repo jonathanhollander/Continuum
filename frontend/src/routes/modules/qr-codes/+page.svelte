@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { fade, fly, slide, scale } from "svelte/transition";
     import { quintOut } from "svelte/easing";
     import {
@@ -82,11 +83,11 @@
         });
     }
 
-    function deleteAssetQR(id: string, name: string) {
+    async function deleteAssetQR(id: string, name: string) {
         if (
-            !confirm(
+            !(await askConfirm(
                 `Remove the QR label for "${name}"? You can create a new one anytime.`,
-            )
+            ))
         )
             return;
         qrStore.removeAssetQR(id);

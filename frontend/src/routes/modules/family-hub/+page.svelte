@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { focusTrap } from "$lib/actions/focusTrap";
     import {
         Heart,
@@ -225,12 +226,12 @@
         };
     }
 
-    function deleteMemory(id: number | undefined) {
+    async function deleteMemory(id: number | undefined) {
         if (id === undefined) return;
         if (
-            !confirm(
+            !(await askConfirm(
                 "Remove this memory? It will be preserved in your activity log.",
-            )
+            ))
         )
             return;
         removeFamilyMemory(id);

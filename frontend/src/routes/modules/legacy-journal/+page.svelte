@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { readCustom } from "$lib/utils/customFields";
     import { fade, fly } from "svelte/transition";
     import {
@@ -160,7 +161,7 @@
     }
 
     async function deleteEntry(id: number) {
-        if (!confirm("Remove this reflection? Your words will be preserved in the activity log.")) return;
+        if (!(await askConfirm("Remove this reflection? Your words will be preserved in the activity log."))) return;
         await journalStore.delete(id);
     }
 

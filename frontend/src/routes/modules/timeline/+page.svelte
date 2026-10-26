@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { focusTrap } from "$lib/actions/focusTrap";
     import { readCustom } from "$lib/utils/customFields";
     import { fade, fly, slide, scale } from "svelte/transition";
@@ -118,8 +119,8 @@
         parsedCustomAttributes = {};
     }
 
-    function removeEvent(id: string | number) {
-        if (!confirm("Remove this event from your timeline?")) return;
+    async function removeEvent(id: string | number) {
+        if (!(await askConfirm("Remove this event from your timeline?"))) return;
         timelineStore.removeEvent(id);
     }
 

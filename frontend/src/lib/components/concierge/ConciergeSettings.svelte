@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import {
         encouragementMode,
         userRole,
@@ -50,10 +51,10 @@
     ];
 
     // The perspective is saved with the account, so it changes only after a confirm
-    function choosePerspective(role: (typeof roles)[number]) {
+    async function choosePerspective(role: (typeof roles)[number]) {
         if ($userRole === role.id) return;
         const label = $dict[role.key] || role.id;
-        if (!confirm(`Change your perspective to ${label}? You can switch back here anytime.`)) return;
+        if (!(await askConfirm(`Change your perspective to ${label}? You can switch back here anytime.`, "Change my perspective"))) return;
         userRole.set(role.id as any);
     }
 

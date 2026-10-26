@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { readCustom } from "$lib/utils/customFields";
     import { fade, slide } from "svelte/transition";
     import { focusTrap } from "$lib/actions/focusTrap";
@@ -198,8 +199,8 @@
         showAddForm = true;
     }
 
-    function removeEvent(id: string) {
-        if (!confirm("Remove this event? You can create it again if needed.")) return;
+    async function removeEvent(id: string) {
+        if (!(await askConfirm("Remove this event? You can create it again if needed."))) return;
         calendarSync.delete(id);
     }
 

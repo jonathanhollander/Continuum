@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { getRegistry, type SyncManager } from "$lib/services/sync.svelte";
     import { onMount } from "svelte";
     import { navGroups, catalogCategories, type NavItem } from "$lib/config/navigation";
@@ -138,7 +139,7 @@
 
     async function purgeTestData() {
         if (!testDataFactory) return;
-        if (!confirm("Remove all test data? This will clean up sample content from your account.")) return;
+        if (!(await askConfirm("Remove all test data? This will clean up sample content from your account."))) return;
 
         purgingTest = true;
         await testDataFactory.purge();

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { focusTrap } from "$lib/actions/focusTrap";
     import { readCustom } from "$lib/utils/customFields";
     import {
@@ -357,7 +358,7 @@
 
     async function deletePolicy(id: string | number, name: string) {
         if (
-            confirm(
+            await askConfirm(
                 `Remove the policy "${name}"? You can add it back later if needed.`,
             )
         ) {

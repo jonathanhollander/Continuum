@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import {
         calendarStore,
         upcomingEvents,
@@ -106,8 +107,8 @@
         }
     }
 
-    function removeEvent(id: string | number) {
-        if (!confirm("Remove this item?")) return;
+    async function removeEvent(id: string | number) {
+        if (!(await askConfirm("Remove this item?"))) return;
         calendarStore.removeEvent(id);
     }
 
