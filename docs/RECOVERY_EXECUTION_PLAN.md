@@ -1,6 +1,6 @@
 # Continuum — Recovery Execution Plan (subagent-run)
 
-**Last Updated:** 2026-10-26 02:05 EST
+**Last Updated:** 2026-10-26 02:15 EST
 
 The how and the order for [PROJECT_RECOVERY_PLAN.md](PROJECT_RECOVERY_PLAN.md) (phases A–F).
 Issue IDs (CU-0xx) and their evidence are in
@@ -44,6 +44,20 @@ board, and it is the live checklist** (decision 9).
     - **The orchestrator's diff review** reads the code around each diff too (callers, callees, both sides of the data path) to catch side effects, without re-running the agent's work.
     - **Never assume something works** because a doc, comment or "COMPLETE" file says so.
 
+11. **Tests: pinpointed, targeted, never endless. The owner prefers no tests.**
+    - **Default: write no tests.** No test files, test scripts, fixtures or suites.
+    - **Any written test** must be pinpointed at one defect or contract, ponytail-sized, and **approved by the orchestrator before it is written**. The approval carries a full justification: what it checks, why a single manual proof run isn't enough, and when it will be run. It is recorded in the Test register.
+    - **After it is written**, its Test register entry is completed with the file, a full explanation of why it was needed, how to run it, and whether to keep or remove it.
+    - **Running checks:** each card is verified by **one** targeted run of its proof scenario. No repeated runs until something passes, no whole-suite sweeps, and no re-testing finished cards without new evidence. O1 measures only the endpoints a wave touched. R0 runs once. The release browser test runs once, plus targeted re-checks of fixed defects only.
+
+## Test register (decision 11)
+
+Every written test is listed here: approved before it is written, and completed after. There are no other tests.
+
+| ID | File | Approved by / when | What it checks (one thing) | Full justification: why it's needed and why a manual proof isn't enough | How and when it's run | Keep or remove |
+|---|---|---|---|---|---|---|
+| T-A3 | `scripts/smoke_test.py` (to be written in card A3) | Orchestrator, 2026-10-26 (planned; confirm at A3) | For each completion-scenario record type, the UI's real payload survives a save and re-fetch, field by field | The review proved that fields silently disappear after a "successful" save (CU-001), and that endpoints reject the UI's payload while model-shaped probes pass (CU-002, CU-009). Waves B and C all change that shared save path. Without one script, every card would re-probe by hand, which is more testing, not less, and inconsistent. It reuses the review's existing `reproduce_api_probes.py` rather than adding new code. Run by hand only; never wired into commit or deploy. | By hand: once per B or C card that touches the save path, and once in R0 | Keep until the release pass is green, then decide |
+
 ## Progress tracking (decision 9)
 
 | Mark | Meaning | Who sets it |
@@ -73,6 +87,7 @@ board, and it is the live checklist** (decision 9).
 - **No feature removal.** Code may be moved, forwarded or labelled; every feature stays reachable.
 - **Synthetic data only** in tests, in throwaway databases.
 - **Desktop only.** Keep DB and API calls fast.
+- **Tests (decision 11):** none by default. A written test needs prior orchestrator approval and a Test register entry. Verify with one targeted proof run.
 
 ## Orchestration loop
 
@@ -83,7 +98,7 @@ board, and it is the live checklist** (decision 9).
    - Dispatch the agent with that path as its working directory. Run each wave's parallel cards in one message, following the wave order below.
    - Mark the card **▶**.
 3. Each agent runs its own local proof scenario on synthetic data and reports its files and proof. Mark the card **◐**.
-4. **Review by diff only.** Read `git -C .worktrees/<card-id> diff main` against the card: scope, owned files, the acceptance conditions it claims, no feature removed. **Also read the code around each hunk** (callers, callees, both sides of the data path) for side effects and bugs the change exposes (decision 10). Check the agent's surrounding-code findings, and turn the larger ones into cards. Merge if it's good. If not, send it back citing the specific diff lines (the card stays ◐).
+4. **Review by diff only.** Reject any test file that has no approved Test register entry. Read `git -C .worktrees/<card-id> diff main` against the card: scope, owned files, the acceptance conditions it claims, no feature removed. **Also read the code around each hunk** (callers, callees, both sides of the data path) for side effects and bugs the change exposes (decision 10). Check the agent's surrounding-code findings, and turn the larger ones into cards. Merge if it's good. If not, send it back citing the specific diff lines (the card stays ◐).
 5. Commit with the card ID and push. Then:
    - **Clean up:** `git worktree remove .worktrees/<card-id>`, `git branch -d card/<card-id>`, and `git worktree prune` at the end of each wave.
    - **Mark the card ☑** with its commit and proof, and commit this file.
@@ -139,10 +154,11 @@ You own: <exact file paths, plus a migration if listed>. Edit nothing else. Do n
 Smallest change: <what>.
 Acceptance (prove all in one scenario): <conditions>.
 Trust no existing code (decision 10): before changing anything, read in full the files you change and the code around them (callers, callees, the store/mapper/endpoint/model on both sides of the data path, the components that render it), and check it all for bugs. Fix small bugs on this card's path and list them. Report bigger ones, or ones in files you don't own, as new-card findings. Don't trust docs, comments or COMPLETE files.
+Tests (decision 11): the owner prefers NO tests. Do not write any test file, script or fixture unless the orchestrator approved it beforehand with full justification. If you believe one is essential, stop and ask, giving: what it checks (one thing), why one manual proof run isn't enough, and when it runs. Verify your card with ONE targeted run of its proof scenario. No repeated runs, no suite sweeps, no endless testing.
 Ponytail: smallest change, one proof scenario, stop. No gates/hooks/CI. No feature removal. Synthetic data only.
 Desktop UI only (1280px+); don't add or change phone/tablet layouts. Keep DB/API calls fast: no queries in loops, filter on indexed columns, no unbounded lists.
 If it's bigger than this card, stop and report.
-Report: files changed, proof output, surrounding code read (list), surrounding bugs fixed, surrounding bugs reported as new cards, done or stopped (why).
+Report: files changed, proof output (the one run), any test written (with its approval reference), surrounding code read (list), surrounding bugs fixed, surrounding bugs reported as new cards, done or stopped (why).
 ```
 
 ---
@@ -154,7 +170,7 @@ Report: files changed, proof output, surrounding code read (list), surrounding b
 | A0 | Worktree folder | orchestrator | `.gitignore` | Add `.worktrees/`. | `git check-ignore .worktrees/x` matches |
 | A1 | Pin the full backend set | `general-purpose` | `backend/requirements.txt`, `nixpacks.toml` | Pin production's full `pip freeze`; keep `python311`. | A fresh 3.11 venv installs, the dev user seeds, login returns 200 |
 | A2 | Stale CI line | `general-purpose` | `CLAUDE.md` (Deployment) | "Run `npm run check` and `npm run build` by hand." | One-line diff |
-| A3 | UI-payload smoke script | `general-purpose` | `scripts/smoke_test.py` (new) | Reuse `docs/reviews/.../evidence/reproduce_api_probes.py`. Send each store's real payload (after `toSnake`), re-fetch, and diff every field. Cover every completion-scenario record type. | It reproduces CU-001, CU-002, CU-004 and CU-009 as failures, and journal/home-access as passes |
+| A3 | UI-payload smoke script (written test T-A3; see Test register) | `general-purpose` | `scripts/smoke_test.py` (new) | Reuse `docs/reviews/.../evidence/reproduce_api_probes.py`. Send each store's real payload (after `toSnake`), re-fetch, and diff every field. Cover every completion-scenario record type. | It reproduces CU-001, CU-002, CU-004 and CU-009 as failures, and journal/home-access as passes |
 
 ## Wave B — Shared contracts (one at a time: B1 → B2 → B3 → B4 → B5)
 
