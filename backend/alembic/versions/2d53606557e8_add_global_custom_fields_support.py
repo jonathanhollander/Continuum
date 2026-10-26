@@ -9,7 +9,6 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-import sqlmodel
 
 
 # revision identifiers, used by Alembic.
@@ -18,46 +17,52 @@ down_revision: Union[str, Sequence[str], None] = '57c5130143b3'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
+CUSTOM_ATTRIBUTE_TABLES = (
+    'funeraldata', 'heirlooms', 'letters', 'lifeevent',
+    'pulse_contacts', 'subscriptions', 'timecapsulemessage',
+)
+CUSTOM_FIELD_TABLE = 'user_custom_field_definitions'
+CUSTOM_FIELD_INDEXES = (
+    ('ix_user_custom_field_definitions_entity_type', 'entity_type'),
+    ('ix_user_custom_field_definitions_user_id', 'user_id'),
+)
+
 
 def upgrade() -> None:
     """Upgrade schema - add custom_attributes to tables that need it."""
-    # SQLite doesn't support ALTER COLUMN, so we only add new columns
-    # and create new indexes. Existing columns with custom_attributes
-    # already work fine.
+    inspector = sa.inspect(op.get_bind())
+    tables = set(inspector.get_table_names())
+    for table in CUSTOM_ATTRIBUTE_TABLES:
+        if table in tables and 'custom_attributes' not in {
+            column['name'] for column in inspector.get_columns(table)
+        }:
+            op.add_column(table, sa.Column(
+                'custom_attributes', sa.String(), nullable=True, server_default='{}'
+            ))
 
-    # Add custom_attributes column to tables that don't have it
-    op.add_column('funeraldata', sa.Column('custom_attributes', sa.String(), nullable=True, server_default='{}'))
-    op.add_column('heirlooms', sa.Column('custom_attributes', sa.String(), nullable=True, server_default='{}'))
-    op.add_column('letters', sa.Column('custom_attributes', sa.String(), nullable=True, server_default='{}'))
-    op.add_column('lifeevent', sa.Column('custom_attributes', sa.String(), nullable=True, server_default='{}'))
-    op.add_column('pulse_contacts', sa.Column('custom_attributes', sa.String(), nullable=True, server_default='{}'))
-    op.add_column('subscriptions', sa.Column('custom_attributes', sa.String(), nullable=True, server_default='{}'))
-    op.add_column('timecapsulemessage', sa.Column('custom_attributes', sa.String(), nullable=True, server_default='{}'))
-
-    # Create indexes for user_custom_field_definitions (if table exists)
-    # Using batch mode to handle SQLite limitations
-    try:
-        op.create_index(op.f('ix_user_custom_field_definitions_entity_type'), 'user_custom_field_definitions', ['entity_type'], unique=False)
-        op.create_index(op.f('ix_user_custom_field_definitions_user_id'), 'user_custom_field_definitions', ['user_id'], unique=False)
-    except Exception:
-        # Indexes may already exist
-        pass
+    # Some historical schemas have this optional table only after B0's repair.
+    # Check before issuing DDL: catching a missing-table/duplicate-index error
+    # would leave a PostgreSQL migration transaction aborted.
+    if CUSTOM_FIELD_TABLE in tables:
+        columns = {column['name'] for column in inspector.get_columns(CUSTOM_FIELD_TABLE)}
+        indexes = {index['name'] for index in inspector.get_indexes(CUSTOM_FIELD_TABLE)}
+        for name, column in CUSTOM_FIELD_INDEXES:
+            if name not in indexes and column in columns:
+                op.create_index(op.f(name), CUSTOM_FIELD_TABLE, [column], unique=False)
 
 
 def downgrade() -> None:
     """Downgrade schema."""
-    # Drop indexes
-    try:
-        op.drop_index(op.f('ix_user_custom_field_definitions_user_id'), table_name='user_custom_field_definitions')
-        op.drop_index(op.f('ix_user_custom_field_definitions_entity_type'), table_name='user_custom_field_definitions')
-    except Exception:
-        pass
+    inspector = sa.inspect(op.get_bind())
+    tables = set(inspector.get_table_names())
+    if CUSTOM_FIELD_TABLE in tables:
+        indexes = {index['name'] for index in inspector.get_indexes(CUSTOM_FIELD_TABLE)}
+        for name, _ in reversed(CUSTOM_FIELD_INDEXES):
+            if name in indexes:
+                op.drop_index(op.f(name), table_name=CUSTOM_FIELD_TABLE)
 
-    # Drop custom_attributes columns from tables we added them to
-    op.drop_column('timecapsulemessage', 'custom_attributes')
-    op.drop_column('subscriptions', 'custom_attributes')
-    op.drop_column('pulse_contacts', 'custom_attributes')
-    op.drop_column('lifeevent', 'custom_attributes')
-    op.drop_column('letters', 'custom_attributes')
-    op.drop_column('heirlooms', 'custom_attributes')
-    op.drop_column('funeraldata', 'custom_attributes')
+    for table in reversed(CUSTOM_ATTRIBUTE_TABLES):
+        if table in tables and 'custom_attributes' in {
+            column['name'] for column in inspector.get_columns(table)
+        }:
+            op.drop_column(table, 'custom_attributes')
