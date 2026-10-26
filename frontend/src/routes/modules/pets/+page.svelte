@@ -245,32 +245,8 @@
                 >
                     <!-- Pet Header -->
                     <div
-                        class="h-32 bg-gradient-to-br from-orange-100 to-amber-50 relative p-6 group"
+                        class="min-h-32 bg-gradient-to-br from-orange-100 to-amber-50 relative p-6 group"
                     >
-                        <div
-                            class="absolute top-4 left-4 flex gap-2 z-20"
-                        >
-                            <button
-                                onclick={(e) => {
-                                    e.stopPropagation();
-                                    editPet(pet);
-                                }}
-                                class="p-2 bg-white/50 hover:bg-white text-primary/60 hover:text-primary rounded-full"
-                                title="Edit Pet"
-                            >
-                                <Pencil size={16} />
-                            </button>
-                            <button
-                                onclick={(e) => {
-                                    e.stopPropagation();
-                                    removePet(pet.id as number);
-                                }}
-                                class="p-2 bg-white/50 hover:bg-white text-red-400 hover:text-red-600 rounded-full"
-                                title="Remove Pet"
-                            >
-                                <Trash2 size={16} />
-                            </button>
-                        </div>
                         <div class="absolute right-4 top-4 opacity-10">
                             {#if pet.type === "cat"}
                                 <Cat size={120} />
@@ -278,9 +254,33 @@
                                 <Dog size={120} />
                             {/if}
                         </div>
-                        <h3 class="text-3xl font-serif font-bold text-slate-900">
-                            {pet.name}
-                        </h3>
+                        <div class="relative flex items-start justify-between gap-3">
+                            <h3 class="min-w-0 break-words text-3xl font-serif font-bold text-slate-900">
+                                {pet.name}
+                            </h3>
+                            <div class="flex shrink-0 gap-2 z-20">
+                                <button
+                                    onclick={(e) => {
+                                        e.stopPropagation();
+                                        editPet(pet);
+                                    }}
+                                    class="p-2 bg-white/70 hover:bg-white text-primary/70 hover:text-primary rounded-full"
+                                    aria-label="Edit these details"
+                                >
+                                    <Pencil size={16} />
+                                </button>
+                                <button
+                                    onclick={(e) => {
+                                        e.stopPropagation();
+                                        removePet(pet.id as number);
+                                    }}
+                                    class="p-2 bg-white/70 hover:bg-white text-red-400 hover:text-red-600 rounded-full"
+                                    aria-label="Remove this item"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                            </div>
+                        </div>
                         <p class="text-amber-800 font-medium">{pet.breed}</p>
                     </div>
 
