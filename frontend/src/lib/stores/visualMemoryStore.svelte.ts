@@ -66,9 +66,7 @@ const familyMapper = (data: any): FamilyMemory => ({
 
 // --- Sync Managers ---
 
-// The 'memories' affirmations live in affirmations.ts; the context lists in sync.svelte.ts and
-// notificationStore.ts were written before that set, so the name is passed through untyped.
-const MEMORIES = 'memories' as never;
+const MEMORIES = 'memories' as const;
 
 // Visual memories affirm themselves (affirmMemories): one message per upload batch or bulk tag.
 const visualManager = registerSync<VisualMemory>('visual_memories', 'visual', visualMapper, '/api/memories');

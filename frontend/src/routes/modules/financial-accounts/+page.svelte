@@ -111,7 +111,7 @@
                     "We couldn't save that just yet. Your words are still here \u2014 try again when you're ready.",
                 code: "DATABASE_ERROR",
                 technicalDetails: reason.reason?.technicalDetails || reason.reason?.message || String(reason.reason),
-            } as any,
+            },
             () => {
                 saveAccounts(failed).then(() => reloadKey++);
             },

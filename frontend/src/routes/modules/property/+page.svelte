@@ -140,7 +140,7 @@
                     "Your answers are safe here. We can save them again whenever you're ready.",
                 code: "DATABASE_ERROR",
                 technicalDetails: reason.reason?.technicalDetails || reason.reason?.message || String(reason.reason),
-            } as any,
+            },
             () => saveWizardItems(waiting),
         );
     }

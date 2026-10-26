@@ -1013,7 +1013,7 @@ export class SingletonSyncManager<T extends object> {
 
             // Affirm only a save the person made.
             if (this.affirmationContext && !quiet) {
-                notifications.showAffirmation(this.affirmationContext);
+                notifications.showAffirmation(this.affirmationContext, 'update');
             }
 
             return saved;
@@ -1029,7 +1029,7 @@ export class SingletonSyncManager<T extends object> {
                 message: 'We couldn\'t save that just yet. Your words are still here \u2014 try again when you\'re ready.',
                 code: 'DATABASE_ERROR',
                 technicalDetails: (e as any)?.message || String(e)
-            } as any, () => { this.update(newData).catch(() => {}); });
+            }, () => { this.update(newData).catch(() => {}); });
             throw e;
         }
     }
@@ -1050,7 +1050,7 @@ export class SingletonSyncManager<T extends object> {
             this.updateLocal(saved);
             this.status = "synced";
             this.lastSync = new Date();
-            if (this.affirmationContext && !quiet) notifications.showAffirmation(this.affirmationContext);
+            if (this.affirmationContext && !quiet) notifications.showAffirmation(this.affirmationContext, 'update');
             return saved;
         } catch (e) {
             if (e === ACCOUNT_CHANGED || epoch !== record.epoch) return;
@@ -1065,7 +1065,7 @@ export class SingletonSyncManager<T extends object> {
                 message: 'We couldn\'t save that just yet. Your words are still here \u2014 try again when you\'re ready.',
                 code: 'DATABASE_ERROR',
                 technicalDetails: (e as any)?.message || String(e)
-            } as any, () => { this.update(newData).catch(() => {}); });
+            }, () => { this.update(newData).catch(() => {}); });
             throw e;
         }
     }
