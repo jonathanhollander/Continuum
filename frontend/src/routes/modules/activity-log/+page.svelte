@@ -21,6 +21,7 @@
     } from "lucide-svelte";
     import { fade, slide } from "svelte/transition";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
+    import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
     import Affirmation from "$lib/components/Affirmation.svelte";
     import { pluralWord } from "$lib/utils/plural";
@@ -200,6 +201,9 @@
 
     <!-- Affirmation Message -->
     <Affirmation module="general" bind:show={showAffirmation} />
+
+    <!-- AI Concierge Drafting Assistant (the log itself stays on this page; chips ask about the plan) -->
+    <AIPromptBar context="activity-log" />
 
     <!-- Filters & Actions -->
     <div
