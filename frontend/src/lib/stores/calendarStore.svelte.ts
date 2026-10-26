@@ -60,6 +60,33 @@ const calendarMapper = (item: any) => {
 
 export const calendarSync = registerSync<AnniversaryEvent>('calendar_events', 'calendar_events', calendarMapper).setAffirmationContext('general');
 
+// Stored records always hold both names of a pair with the same value, and the mapper only sees the
+// merged record, so it cannot tell which name an update changed. Every update (store or calendar page)
+// therefore copies the changed name onto its partner first: the field that changed wins.
+const ALIAS_PAIRS: [keyof AnniversaryEvent, keyof AnniversaryEvent][] = [['wish', 'description'], ['isRecurring', 'recurring']];
+function pairAliases(id: string | number, updates: Partial<AnniversaryEvent>): Partial<AnniversaryEvent> {
+    const out: any = { ...updates };
+    const current: any = calendarSync.items.find(i => String(i.id) === String(id)) ?? {};
+    for (const [a, b] of ALIAS_PAIRS) {
+        const hasA = a in out, hasB = b in out;
+        if (hasA && !hasB) out[b] = out[a];
+        else if (hasB && !hasA) out[a] = out[b];
+        else if (hasA && hasB && out[a] !== out[b]) {
+            // Both sent and different (a whole record with one stale name): keep the one that moved.
+            if (out[a] === current[a] || out[a] === current[b]) out[a] = out[b];
+            else out[b] = out[a];
+        }
+    }
+    // Free-text ritual instructions sent alone replace the stored email template rather than lose to it.
+    if ('ritualInstructions' in out && !('emailTemplate' in out)) out.emailTemplate = parseTemplate(out.ritualInstructions);
+    return out;
+}
+const syncUpdate = calendarSync.update.bind(calendarSync);
+calendarSync.update = ((idOrData: any, partialData?: Partial<AnniversaryEvent>) =>
+    typeof idOrData === 'object' && idOrData !== null
+        ? syncUpdate(pairAliases(idOrData.id, idOrData) as AnniversaryEvent)
+        : syncUpdate(idOrData, pairAliases(idOrData, partialData || {}))) as typeof calendarSync.update;
+
 export const calendarStore = {
     get items() { return calendarSync.items; },
     get status() { return calendarSync.status; },
