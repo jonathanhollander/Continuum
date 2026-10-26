@@ -28,6 +28,8 @@
         switchAccount,
     } from "$lib/stores/keyringStore";
     import { get } from "svelte/store";
+    import { auth } from "$lib/stores/auth";
+    import { dictionary } from "$lib/stores/dictionary";
 
     // Core state
     let scrollY = $state(0);
@@ -526,12 +528,14 @@
                     {/if}
                 </div>
 
-                <!-- Login button with glow -->
+                <!-- Login button with glow; Open my plan when signed in -->
                 <a
-                    href="/login"
+                    href={$auth.token ? "/dashboard" : "/login"}
                     class="text-sm px-4 py-2 rounded-full border border-white/20 text-white/80 hover:text-white hover:border-white/40 transition-all duration-300 hover:shadow-[0_0_20px_color-mix(in_srgb,var(--color-gold)_20%,transparent)]"
                 >
-                    {$m2t.navLogin}
+                    {$auth.token
+                        ? dictionary[$m2Language].marketing.openMyPlan
+                        : $m2t.navLogin}
                 </a>
             </div>
         </div>
@@ -882,7 +886,7 @@
         </section>
 
         <!-- Section 7: The Invitation & Signup -->
-        <section class="py-32 px-6 min-h-[80vh] flex items-center">
+        <section class="pt-16 pb-32 px-6">
             <div class="max-w-2xl mx-auto w-full reveal-section" use:reveal>
                 {#if signupStep === 0}
                     <div class="text-center" in:fade={{ duration: 400 }}>
