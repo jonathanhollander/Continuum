@@ -3,7 +3,6 @@
     import { goto } from "$app/navigation";
     import { page } from "$app/stores";
     import { auth } from "$lib/stores/auth";
-    import { API_BASE_URL } from "$lib/config";
     import { apiPost } from "$lib/api/client";
     import { notifications } from "$lib/stores/notificationStore";
     import { startAuthentication } from "@simplewebauthn/browser";
@@ -148,59 +147,6 @@
         isLoading = true;
 
         try {
-            // DEVELOPER BYPASS
-            if (magicLinkEmail === "jh@continuum.estate") {
-                const params = new URLSearchParams();
-                params.append("username", magicLinkEmail);
-                params.append("password", "bypass");
-
-                const response = await fetch(`${API_BASE_URL}/api/auth/token`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/x-www-form-urlencoded",
-                    },
-                    body: params,
-                });
-
-                if (!response.ok) {
-                    const errText = await response.text();
-                    console.error("Bypass failed:", response.status, errText);
-                    throw new Error(
-                        `Bypass failed: ${response.status} ${errText}`,
-                    );
-                }
-
-                const data = await response.json();
-
-                if (typeof localStorage !== "undefined") {
-                    localStorage.setItem(
-                        "continuum_auth_token",
-                        data.access_token,
-                    );
-                    if (data.refresh_token)
-                        localStorage.setItem("continuum_refresh_token", data.refresh_token);
-                }
-
-                await auth.init();
-
-                // Store email for "Remember Me" and Register account context
-                if ($auth.user?.email && typeof localStorage !== "undefined") {
-                    localStorage.setItem(
-                        "continuum_last_email",
-                        $auth.user.email,
-                    );
-                    registerAccount($auth.user.email);
-                }
-
-                notifications.showSuccess(
-                    "Developer Mode Enabled",
-                    "Bypass Successful",
-                );
-
-                goto(redirectUrl);
-                return;
-            }
-
             await apiPost("/api/auth/magic-link", {
                 email: magicLinkEmail,
                 redirect: safeRedirect || undefined,

@@ -245,22 +245,7 @@ def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), se
     # Find user by email (username field in OAuth2 form)
     user = session.exec(select(User).where(User.email == form_data.username)).first()
 
-    # DEBUG BYPASS: jh@continuum.estate bypasses security
-    if form_data.username == "jh@continuum.estate":
-        logger.warning(f"SECURITY BYPASS: jh@continuum.estate accessing the system without password verification")
-        
-        if not user:
-            logger.info("BYPASS: Creating user jh@continuum.estate as it does not exist")
-            user = User(
-                email="jh@continuum.estate",
-                external_id="user-jh-bypass",
-                hashed_password="BYPASS_AUTH",
-                public_key=""
-            )
-            session.add(user)
-            session.commit()
-            session.refresh(user)
-    elif not user or not user.hashed_password or not verify_password(form_data.password, user.hashed_password):
+    if not user or not user.hashed_password or not verify_password(form_data.password, user.hashed_password):
         log_auth_failure(session, request, form_data.username, "password", "Invalid credentials")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
