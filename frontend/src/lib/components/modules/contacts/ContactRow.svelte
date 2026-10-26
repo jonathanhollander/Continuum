@@ -37,7 +37,7 @@
             <h3 class="font-bold text-slate-800">{contact.name}</h3>
             <div class="text-xs text-slate-500 flex flex-wrap gap-2">
                 <span class="font-semibold">{contact.relation}</span>
-                <span class="text-slate-300">|</span>
+                <span aria-hidden="true" class="w-px self-stretch bg-slate-300"></span>
                 <span class="flex items-center gap-1"
                     ><Phone size={10} /> {contact.phone}</span
                 >

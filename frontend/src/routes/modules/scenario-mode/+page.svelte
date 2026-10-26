@@ -20,7 +20,7 @@
             id: "sudden_disability",
             title: "Scenario: Sudden Disability",
             description:
-                "You are hospitalized and unable to communicate. Who takes over and what can they find?",
+                "You are in hospital and someone you trust decides for you. Who takes over and what can they find?",
             icon: Activity,
             color: "text-info",
             bg: "bg-info/10",
@@ -207,13 +207,12 @@
                                     <CircleX class="text-warning" size={24} />
                                     <div>
                                         <p class="font-bold text-foreground">
-                                            No Executor Named
+                                            Choosing an Executor
                                         </p>
                                         <p
                                             class="text-xs text-warning font-medium"
                                         >
-                                            CRITICAL: The estate will be
-                                            intestate.
+                                            An executor carries out your wishes.
                                         </p>
                                     </div>
                                 {/if}
@@ -243,12 +242,12 @@
                                     <CircleX class="text-warning" size={24} />
                                     <div>
                                         <p class="font-bold text-foreground">
-                                            Medical Proxy Missing
+                                            Healthcare Proxy
                                         </p>
                                         <p
                                             class="text-xs text-warning font-medium"
                                         >
-                                            Hospitals will default to state law.
+                                            A proxy lets someone you trust decide.
                                         </p>
                                     </div>
                                 {/if}
@@ -282,7 +281,7 @@
                                         >
                                             {readiness.hasDigital
                                                 ? "Active: Instructions for all accounts"
-                                                : "Inactive: Passwords will be lost"}
+                                                : "Listing your digital accounts lets your family find each one."}
                                         </p>
                                     </div>
                                 </div>
@@ -317,7 +316,7 @@
                                         >
                                             {readiness.hasHeirlooms
                                                 ? "Verified: Pet & Object care instructions found"
-                                                : "Missing: Directives not detected"}
+                                                : "Listing your heirlooms lets your family care for each one."}
                                         </p>
                                     </div>
                                 </div>

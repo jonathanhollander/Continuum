@@ -5,15 +5,21 @@
     /**
      * Tailwind only builds classes it sees written out in full, so every colour an executor
      * surface uses is spelled out here (a class built from a string at runtime gets no style).
+     * The keys stay as the pages name them; each one reads from a V0e token, so on `.surface-dark`
+     * it takes the dark value and keeps the person's accent. Four calm families, no alarm reds.
      */
+    const PRIMARY = { tile: 'bg-primary/10', icon: 'text-primary', bar: 'bg-primary', border: 'hover:border-primary/30', borderStrong: 'hover:border-primary/50', link: 'bg-primary/20 text-primary hover:bg-primary/30' };
+    const INFO = { tile: 'bg-info/10', icon: 'text-info', bar: 'bg-info', border: 'hover:border-info/30', borderStrong: 'hover:border-info/50', link: 'bg-info/20 text-info hover:bg-info/30' };
+    const SUCCESS = { tile: 'bg-success/10', icon: 'text-success', bar: 'bg-success', border: 'hover:border-success/30', borderStrong: 'hover:border-success/50', link: 'bg-success/20 text-success hover:bg-success/30' };
+    const GOLD = { tile: 'bg-gold-text/10', icon: 'text-gold-text', bar: 'bg-gold-text', border: 'hover:border-gold-text/30', borderStrong: 'hover:border-gold-text/50', link: 'bg-gold-text/20 text-gold-text hover:bg-gold-text/30' };
     export const TONES = {
-        rose: { tile: 'bg-rose-500/10', icon: 'text-rose-400', bar: 'bg-rose-500', border: 'hover:border-rose-500/30', borderStrong: 'hover:border-rose-500/50', link: 'bg-rose-500/20 text-rose-400 hover:bg-rose-500/30' },
-        indigo: { tile: 'bg-indigo-500/10', icon: 'text-indigo-400', bar: 'bg-indigo-500', border: 'hover:border-indigo-500/30', borderStrong: 'hover:border-indigo-500/50', link: 'bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30' },
-        emerald: { tile: 'bg-emerald-500/10', icon: 'text-emerald-400', bar: 'bg-emerald-500', border: 'hover:border-emerald-500/30', borderStrong: 'hover:border-emerald-500/50', link: 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30' },
-        amber: { tile: 'bg-amber-500/10', icon: 'text-amber-400', bar: 'bg-amber-500', border: 'hover:border-amber-500/30', borderStrong: 'hover:border-amber-500/50', link: 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30' },
-        cyan: { tile: 'bg-cyan-500/10', icon: 'text-cyan-400', bar: 'bg-cyan-500', border: 'hover:border-cyan-500/30', borderStrong: 'hover:border-cyan-500/50', link: 'bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30' },
-        purple: { tile: 'bg-purple-500/10', icon: 'text-purple-400', bar: 'bg-purple-500', border: 'hover:border-purple-500/30', borderStrong: 'hover:border-purple-500/50', link: 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30' },
-        blue: { tile: 'bg-blue-500/10', icon: 'text-blue-400', bar: 'bg-blue-500', border: 'hover:border-blue-500/30', borderStrong: 'hover:border-blue-500/50', link: 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30' },
+        rose: PRIMARY,
+        indigo: INFO,
+        emerald: SUCCESS,
+        amber: GOLD,
+        cyan: PRIMARY,
+        purple: INFO,
+        blue: INFO,
     } as const;
     export type Tone = keyof typeof TONES;
 
@@ -57,24 +63,24 @@
     });
 
     const STATUS = {
-        slate: { pct: 'text-slate-400', fill: 'from-slate-500 to-slate-400', pulse: 'bg-slate-400/30' },
-        amber: { pct: 'text-amber-400', fill: 'from-amber-500 to-amber-400', pulse: 'bg-amber-400/30' },
-        indigo: { pct: 'text-indigo-400', fill: 'from-indigo-500 to-indigo-400', pulse: 'bg-indigo-400/30' },
-        emerald: { pct: 'text-emerald-400', fill: 'from-emerald-500 to-emerald-400', pulse: 'bg-emerald-400/30' },
+        start: { pct: 'text-muted-foreground', fill: 'from-muted-foreground to-muted-foreground', pulse: 'bg-muted-foreground/30' },
+        steady: { pct: 'text-primary', fill: 'from-primary to-primary-hover', pulse: 'bg-primary/30' },
+        most: { pct: 'text-info', fill: 'from-info to-primary', pulse: 'bg-info/30' },
+        done: { pct: 'text-success', fill: 'from-success to-success', pulse: 'bg-success/30' },
     };
 
     let status = $derived(
-        completion < 30 ? STATUS.slate : completion < 60 ? STATUS.amber : completion < 90 ? STATUS.indigo : STATUS.emerald
+        completion < 30 ? STATUS.start : completion < 60 ? STATUS.steady : completion < 90 ? STATUS.most : STATUS.done
     );
 </script>
 
-<div class="p-6 rounded-2xl bg-slate-800/40 border border-slate-700/50" in:fade>
+<div class="p-6 rounded-2xl bg-card/40 border border-border/50" in:fade>
     <div class="flex items-start justify-between mb-4">
         <div>
-            <h3 class="text-lg font-semibold text-white mb-1">
+            <h3 class="text-lg font-semibold text-foreground mb-1">
                 Estate Settlement Progress
             </h3>
-            <p class="text-sm text-slate-400">
+            <p class="text-sm text-muted-foreground">
                 {statusMessage}
             </p>
         </div>
@@ -84,7 +90,7 @@
     </div>
 
     <!-- Progress Bar -->
-    <div class="relative w-full h-3 bg-slate-700 rounded-full overflow-hidden mb-4">
+    <div class="relative w-full h-3 bg-border rounded-full overflow-hidden mb-4">
         <div
             class="absolute inset-y-0 left-0 bg-gradient-to-r {status.fill}
                    transition-all duration-700 ease-out rounded-full"
@@ -99,8 +105,8 @@
         {/if}
     </div>
 
-    <p class="text-xs text-slate-400" data-testid="executor-steps-count">
+    <p class="text-xs text-muted-foreground" data-testid="executor-steps-count">
         {progress.done} of {progress.total} steps finished in the
-        <a href="/modules/executor-toolkit" class="underline hover:text-white transition-colors">Executor Guide</a>
+        <a href="/modules/executor-toolkit" class="underline hover:text-foreground transition-colors">Executor Guide</a>
     </p>
 </div>
