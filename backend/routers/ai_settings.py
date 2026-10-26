@@ -59,8 +59,10 @@ def save_settings(body: SettingInput, session: Session = Depends(get_session),
         row.updated_at = utc_now()
         row.updated_by = admin.id
         session.add(row)
+        session.flush()
+        saved = settings_view(session)
         session.commit()
-        return settings_view(session)
+        return saved
     except SQLAlchemyError:
         session.rollback()
         raise HTTPException(status_code=503, detail=SAVE_PAUSED) from None
@@ -72,8 +74,10 @@ def reset_settings(body: SettingScope, session: Session = Depends(get_session)):
         row = session.get(AISetting, (body.purpose, body.variant))
         if row is not None:
             session.delete(row)
-            session.commit()
-        return settings_view(session)
+        session.flush()
+        saved = settings_view(session)
+        session.commit()
+        return saved
     except SQLAlchemyError:
         session.rollback()
         raise HTTPException(status_code=503, detail=SAVE_PAUSED) from None
