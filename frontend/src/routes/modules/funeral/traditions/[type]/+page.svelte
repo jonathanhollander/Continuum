@@ -1,11 +1,43 @@
 <script lang="ts">
     import { page } from "$app/stores";
     import { culturalTraditions } from "$lib/data/culturalTraditions";
+    import { FUNERAL_TRADITIONS } from "$lib/data/funeralTraditions";
     import { ArrowLeft, CircleCheck } from "lucide-svelte";
     import { fade } from "svelte/transition";
 
-    $: type = $page.params.type as keyof typeof culturalTraditions;
-    $: tradition = culturalTraditions[type];
+    type Guide = {
+        title: string;
+        description: string;
+        icon: string;
+        sections: { title: string; content: string[]; checklist?: string[] }[];
+    };
+
+    // The long guide where one is written; otherwise a short one built from the
+    // same tradition data the Final Wishes wizard uses, so every wizard choice opens here.
+    function guideFor(type: string): Guide | undefined {
+        const long = (culturalTraditions as Record<string, Guide>)[type];
+        if (long) return long;
+        const t = FUNERAL_TRADITIONS[type];
+        if (!t) return undefined;
+        return {
+            title: `${t.name} Traditions`,
+            description: `The ${t.terminology.service} is usually led by the ${t.terminology.officiant}.`,
+            icon: "🕊️",
+            sections: [
+                {
+                    title: "Common rituals",
+                    content: [`Many families include these in a ${t.terminology.service}.`],
+                    checklist: t.commonRituals,
+                },
+                {
+                    title: "Preparation",
+                    content: [`Preparation is often called ${t.terminology.bodyPreparation}.`],
+                },
+            ],
+        };
+    }
+
+    let tradition = $derived(guideFor($page.params.type ?? ""));
 </script>
 
 <div class="max-w-4xl mx-auto p-8 min-h-screen">
@@ -13,7 +45,7 @@
         href="/modules/funeral"
         class="inline-flex items-center gap-2 text-stone-500 hover:text-[#304743] mb-8 font-bold transition-colors"
     >
-        <ArrowLeft size={20} /> Back to Funeral Planner
+        <ArrowLeft size={20} /> Back to Final Wishes
     </a>
 
     {#if tradition}
@@ -61,7 +93,7 @@
                                     <h4
                                         class="font-bold text-sm text-stone-400 uppercase tracking-wider mb-4"
                                     >
-                                        Checklist Items
+                                        Things to consider
                                     </h4>
                                     <ul class="space-y-3">
                                         {#each section.checklist as item}
@@ -88,10 +120,19 @@
             </div>
         </div>
     {:else}
-        <div class="text-center py-20">
-            <h2 class="text-2xl font-bold text-gray-300">
-                Tradition not found
+        <div class="text-center py-20 space-y-6">
+            <h2 class="text-2xl font-bold text-[#304743]">
+                Choose a tradition to see its details
             </h2>
+            <div class="flex flex-wrap justify-center gap-3">
+                {#each Object.values(FUNERAL_TRADITIONS) as t}
+                    <a
+                        href="/modules/funeral/traditions/{t.key}"
+                        class="px-4 py-2 rounded-xl border border-stone-200 bg-white text-stone-700 font-bold text-sm hover:border-[#4A7C74] transition-colors"
+                        >{t.name}</a
+                    >
+                {/each}
+            </div>
         </div>
     {/if}
 </div>

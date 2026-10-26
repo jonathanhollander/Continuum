@@ -61,7 +61,7 @@ export const FUNERAL_TRADITIONS: Record<string, TraditionConfig> = {
         dispositionPreference: 'burial',
         forbidden: ['cremation', 'embalming', 'open_casket'],
         smartTextareaPrompts: {
-            atmosphere: ["Solemn and respectful", "Plain pine casket", "No flowers (Charity instead)"],
+            atmosphere: ["Solemn and respectful", "Plain pine casket", "Charity gifts in place of flowers"],
             legacy: ["Torah values", "Acts of Chesed (Kindness)", "Zionism/Community"],
             foundation: ["Tikkun Olam (Repairing the World)", "Family heritage", "Modesty and dignity"]
         }
@@ -69,7 +69,7 @@ export const FUNERAL_TRADITIONS: Record<string, TraditionConfig> = {
     muslim: {
         name: "Muslim",
         key: 'muslim',
-        commonRituals: ["Janazah Prayer", "Prompt Burial (24h)", "Facing Qibla", "3-Day Mourning"],
+        commonRituals: ["Janazah Prayer", "Burial within 24 hours", "Facing Qibla", "3-Day Mourning"],
         terminology: {
             service: "Janazah Prayer",
             officiant: "Imam",
@@ -86,7 +86,7 @@ export const FUNERAL_TRADITIONS: Record<string, TraditionConfig> = {
     hindu: {
         name: "Hindu",
         key: 'hindu',
-        commonRituals: ["Antyesti (Last Sacrifice)", "Garlanding the Body", "Kapal Kriya", "Immersion of Ashes", "13-Day Mourning"],
+        commonRituals: ["Antyesti (Last Sacrifice)", "Garlanding your loved one", "Kapal Kriya", "Immersion of Ashes", "13-Day Mourning"],
         terminology: {
             service: "Antyesti",
             officiant: "Pandit/Priest",
@@ -131,4 +131,11 @@ export const FUNERAL_TRADITIONS: Record<string, TraditionConfig> = {
             foundation: ["Personal truth", "Connection to nature", "Love"]
         }
     }
+};
+
+// Ritual names that were renamed. Saved wishes may still hold the old name,
+// so it counts as the new one (shown chosen; unchosen together).
+export const RENAMED_RITUALS: Record<string, string> = {
+    "Prompt Burial (24h)": "Burial within 24 hours",
+    "Garlanding the Body": "Garlanding your loved one",
 };
