@@ -8,6 +8,7 @@ from backend.auth import get_current_user
 from backend.pulse_models import PulseContact, PulseEscalationTier
 from backend.estate_models import ContactRelationship
 from backend.utils.audit import log_audit, log_deletion
+from backend.utils.table_body import validated_new
 
 router = APIRouter(prefix="/api/contacts", tags=["contacts"])
 
@@ -142,7 +143,7 @@ def get_relationships(user: User = Depends(get_current_user), session: Session =
 
 @router.post("/relationships", response_model=ContactRelationship)
 def create_relationship(rel: ContactRelationship, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
-    rel.user_id = user.id
+    rel = validated_new(ContactRelationship, rel, user.id)
     session.add(rel)
     session.commit()
     session.refresh(rel)

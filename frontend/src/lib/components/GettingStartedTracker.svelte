@@ -9,7 +9,7 @@
 
     // Props
     interface Props {
-        variant?: "sidebar" | "card" | "minimal";
+        variant?: "sidebar" | "card";
         onDismiss?: () => void;
     }
 
@@ -71,6 +71,12 @@
 
     // Find next incomplete step
     let nextStep = $derived(steps.find((s) => !s.complete));
+
+    // Step text in the active language (English lives in the dictionary too).
+    const stepLabel = (step: { id: string; label: string }) =>
+        ($dict.gsStep as Record<string, string>)[step.id] ?? step.label;
+    const stepDesc = (step: { id: string; description: string }) =>
+        ($dict.gsStepDesc as Record<string, string>)[step.id] ?? step.description;
 </script>
 
 {#if !dismissed && !allComplete}
@@ -109,8 +115,8 @@
                         <nextStep.icon size={16} />
                     </div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-white truncate">
-                            {($dict.gsStep as Record<string, string>)[nextStep.id] ?? nextStep.label}
+                        <p class="text-sm font-medium text-white leading-snug break-words">
+                            {stepLabel(nextStep)}
                         </p>
                     </div>
                     <ArrowRight
@@ -142,9 +148,9 @@
                             <Sparkles class="w-5 h-5 text-primary" />
                         </div>
                         <div>
-                            <h3 class="font-bold text-foreground">Building Your Foundation</h3>
+                            <h3 class="font-bold text-foreground">{$dict.gsTitle}</h3>
                             <p class="text-sm text-muted-foreground">
-                                Small steps that make a meaningful difference
+                                {$dict.gsSubtitle}
                             </p>
                         </div>
                     </div>
@@ -152,7 +158,7 @@
                         onclick={dismiss}
                         class="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
                     >
-                        Explore on my own
+                        {$dict.gsDismiss}
                     </button>
                 </div>
 
@@ -193,10 +199,10 @@
                                 class="font-medium
                                     {step.complete ? 'text-muted-foreground line-through' : 'text-foreground'}"
                             >
-                                {step.label}
+                                {stepLabel(step)}
                             </p>
                             <p class="text-sm text-muted-foreground">
-                                {step.description}
+                                {stepDesc(step)}
                             </p>
                         </div>
 
@@ -208,26 +214,6 @@
             </div>
         </div>
 
-    {:else}
-        <!-- Minimal inline version -->
-        <div class="flex items-center gap-3 text-sm" transition:fade>
-            <div class="flex gap-1">
-                {#each steps as step}
-                    <div
-                        class="w-2 h-2 rounded-full transition-colors
-                            {step.complete ? 'bg-primary' : 'bg-border'}"
-                    ></div>
-                {/each}
-            </div>
-            <span class="text-muted-foreground">
-                {completedCount}/{steps.length} steps complete
-            </span>
-            {#if nextStep}
-                <a href={nextStep.href} class="text-primary-hover hover:underline">
-                    Next: {nextStep.label}
-                </a>
-            {/if}
-        </div>
     {/if}
 {:else if allComplete && !dismissed}
     <!-- Completion state - affirming without celebrating -->
@@ -237,16 +223,16 @@
     >
         <div class="text-2xl mb-2">✨</div>
         <p class="text-sm font-medium text-gold">
-            You've laid a strong foundation
+            {$dict.gsDone}
         </p>
         <p class="text-xs text-white/70 mt-1">
-            This is meaningful work. Continue when you're ready.
+            {$dict.gsDoneNote}
         </p>
         <button
             onclick={dismiss}
             class="mt-3 text-xs text-white/70 hover:text-white"
         >
-            Continue exploring
+            {$dict.gsContinue}
         </button>
     </div>
 {/if}

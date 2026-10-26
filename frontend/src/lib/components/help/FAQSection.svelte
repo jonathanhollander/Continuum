@@ -12,10 +12,10 @@
 <div class="space-y-4 max-w-3xl mx-auto">
     {#each faqs as faq, i}
         <div
-            class="bg-white rounded-xl border border-gray-100 overflow-hidden transition-all duration-200 {openIndex ===
+            class="bg-card rounded-xl border border-border overflow-hidden transition-all duration-200 {openIndex ===
             i
-                ? 'shadow-md border-[#4A7C74]/30'
-                : 'hover:border-gray-300'}"
+                ? 'shadow-md border-primary/30'
+                : 'hover:border-primary/40'}"
         >
             <button
                 class="w-full flex items-center justify-between p-5 text-left focus:outline-none"
@@ -24,31 +24,31 @@
                 <div class="flex items-center gap-4">
                     <span
                         class="p-2 rounded-lg {openIndex === i
-                            ? 'bg-[#4A7C74] text-white'
-                            : 'bg-gray-100 text-gray-500'} transition-colors"
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted text-muted-foreground'} transition-colors"
                     >
                         <HelpCircle size={20} />
                     </span>
                     <div>
                         <span
-                            class="text-xs font-bold text-[#D4AF37] uppercase tracking-wider mb-1 block"
+                            class="text-xs font-bold text-gold-text uppercase tracking-wider mb-1 block"
                             >{faq.category}</span
                         >
-                        <h3 class="font-medium text-lg text-[#304743]">
+                        <h3 class="font-medium text-lg text-primary-deep dark:text-primary-hover">
                             {faq.question}
                         </h3>
                     </div>
                 </div>
                 {#if openIndex === i}
-                    <ChevronUp size={20} class="text-[#4A7C74]" />
+                    <ChevronUp size={20} class="text-primary" />
                 {:else}
-                    <ChevronDown size={20} class="text-gray-400" />
+                    <ChevronDown size={20} class="text-muted-foreground" />
                 {/if}
             </button>
 
             {#if openIndex === i}
                 <div class="px-5 pb-5 pl-[4.5rem]">
-                    <p class="text-gray-600 leading-relaxed text-lg">
+                    <p class="text-muted-foreground leading-relaxed text-lg">
                         {faq.answer}
                     </p>
                 </div>

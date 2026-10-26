@@ -1,24 +1,15 @@
 <script lang="ts">
-    import { onMount } from "svelte";
-    import {
-        analyzeEstateHealth,
-        type ModuleStatus,
-    } from "$lib/utils/readiness";
+    import { analyzeEstateHealth } from "$lib/utils/readiness";
     import { plural } from "$lib/utils/plural";
-    import { CircleCheck, CircleDotDashed, CircleDashed } from "lucide-svelte";
+    import { CircleCheck, CircleDashed } from "lucide-svelte";
 
-    let modules: ModuleStatus[] = [];
-    let overallHealth = 0;
-
-    onMount(() => {
-        modules = analyzeEstateHealth();
-        const healthyCount = modules.filter(
-            (m) => m.health === "healthy",
-        ).length;
-        overallHealth = modules.length
-            ? Math.round((healthyCount / modules.length) * 100)
-            : 0;
-    });
+    // Follows each module's store as it syncs, so records saved from another browser show here too
+    let modules = $derived(analyzeEstateHealth());
+    let overallHealth = $derived(
+        modules.length
+            ? Math.round((modules.filter((m) => m.health === "healthy").length / modules.length) * 100)
+            : 0,
+    );
 </script>
 
 <div class="bg-card rounded-2xl border border-border shadow-sm p-8">
@@ -47,18 +38,12 @@
                 class="p-4 rounded-xl border flex items-center justify-between transition-all hover:shadow-md
                 {mod.health === 'healthy'
                     ? 'bg-primary-soft border-primary/20'
-                    : mod.health === 'partial'
-                      ? 'bg-warning-soft border-warning/20'
-                      : 'bg-muted border-border'}"
+                    : 'bg-muted border-border'}"
             >
                 <div class="flex items-center gap-3">
                     {#if mod.health === "healthy"}
                         <div class="p-2 bg-card text-success rounded-lg">
                             <CircleCheck size={20} />
-                        </div>
-                    {:else if mod.health === "partial"}
-                        <div class="p-2 bg-card text-warning rounded-lg">
-                            <CircleDotDashed size={20} />
                         </div>
                     {:else}
                         <div class="p-2 bg-card text-muted-foreground rounded-lg">

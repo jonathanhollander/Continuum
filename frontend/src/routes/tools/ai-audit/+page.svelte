@@ -112,24 +112,24 @@
 
     function getColor(severity: string) {
         return severity === "pass"
-            ? "text-green-500 bg-green-50 border-green-100"
-            : "text-amber-500 bg-amber-50 border-amber-100";
+            ? "text-success bg-success/10 border-success/20"
+            : "text-warning bg-warning-soft border-warning/20";
     }
 </script>
 
 <div class="max-w-4xl mx-auto p-8 min-h-screen">
     <div class="mb-12 text-center">
         <div
-            class="inline-flex items-center justify-center p-4 bg-indigo-50 text-indigo-600 rounded-full mb-6 relative"
+            class="inline-flex items-center justify-center p-4 bg-primary-soft text-primary-hover rounded-full mb-6 relative"
         >
             <BrainCircuit size={40} />
             {#if scanning}
                 <span
-                    class="absolute top-0 right-0 w-3 h-3 bg-indigo-500 rounded-full animate-ping"
+                    class="absolute top-0 right-0 w-3 h-3 bg-primary rounded-full animate-ping"
                 ></span>
             {/if}
         </div>
-        <h1 class="font-serif font-bold text-4xl text-[#304743] mb-4">
+        <h1 class="font-serif font-bold text-4xl text-primary-deep dark:text-primary-hover mb-4">
             Plan Check-in
         </h1>
         <p class="text-lg text-muted-foreground max-w-xl mx-auto">
@@ -140,17 +140,17 @@
 
     {#if scanning}
         <div
-            class="max-w-xl mx-auto bg-white rounded-2xl p-12 border border-gray-100 shadow-sm text-center"
+            class="max-w-xl mx-auto bg-card rounded-2xl p-12 border border-border shadow-sm text-center"
             in:fade
         >
             <div
-                class="w-full bg-gray-100 rounded-full h-2 mb-8 overflow-hidden relative"
+                class="w-full bg-muted rounded-full h-2 mb-8 overflow-hidden relative"
             >
                 <div
-                    class="absolute inset-0 bg-indigo-500 animate-slide-right w-1/3"
+                    class="absolute inset-0 bg-primary animate-slide-right w-1/3"
                 ></div>
             </div>
-            <p class="text-sm text-indigo-600 flex items-center justify-center gap-2" role="status">
+            <p class="text-sm text-primary-hover flex items-center justify-center gap-2" role="status">
                 <Loader2 size={16} class="animate-spin" />
                 Gathering your records...
             </p>
@@ -159,18 +159,18 @@
         <div in:slide={{ duration: 400, axis: "y" }}>
             <!-- Score Card -->
             <div
-                class="bg-[#304743] text-white rounded-2xl p-10 mb-12 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8 shadow-xl"
+                class="bg-primary-deep text-white rounded-2xl p-10 mb-12 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8 shadow-xl"
             >
                 <div class="relative z-10">
                     <h2
-                        class="font-bold text-xl text-emerald-300 uppercase tracking-widest mb-2"
+                        class="font-bold text-xl text-white/80 uppercase tracking-widest mb-2"
                     >
                         How well covered
                     </h2>
                     <div class="text-6xl font-serif font-bold mb-4">
                         {score}/100
                     </div>
-                    <p class="text-emerald-100/70 max-w-sm">
+                    <p class="text-white/70 max-w-sm">
                         {score === 0
                             ? "Ready when you are."
                             : score < 100
@@ -181,7 +181,7 @@
 
                 <!-- Circular Chart Visualization (CSS only) -->
                 <div
-                    class="w-32 h-32 rounded-full border-8 border-emerald-900 relative flex items-center justify-center"
+                    class="w-32 h-32 rounded-full border-8 border-white/15 relative flex items-center justify-center"
                 >
                     <div class="text-2xl font-bold">{score}%</div>
                     <svg class="absolute inset-0 w-full h-full -rotate-90">
@@ -192,7 +192,7 @@
                             stroke="currentColor"
                             stroke-width="8"
                             fill="transparent"
-                            class="text-emerald-400"
+                            class="text-gold"
                             stroke-dasharray="351"
                             stroke-dashoffset={351 - (351 * score) / 100}
                         />
@@ -203,7 +203,7 @@
             <!-- Findings List -->
             <div class="space-y-4">
                 <h3
-                    class="font-bold text-gray-400 text-sm uppercase tracking-wider mb-6 ml-2"
+                    class="font-bold text-muted-foreground text-sm uppercase tracking-wider mb-6 ml-2"
                 >
                     Gentle next steps
                 </h3>
@@ -211,7 +211,7 @@
                 {#each findings as finding (finding.id)}
                     {@const Icon = getIcon(finding.severity)}
                     <div
-                        class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-6 items-start md:items-center hover:shadow-md transition-all group"
+                        class="bg-card p-6 rounded-xl border border-border shadow-sm flex flex-col md:flex-row gap-6 items-start md:items-center hover:shadow-md transition-all group"
                     >
                         <div
                             class="p-3 rounded-full shrink-0 {getColor(
@@ -225,23 +225,23 @@
                             {#if finding.category}
                                 <div class="flex items-center gap-2 mb-1">
                                     <span
-                                        class="text-xs font-bold text-gray-400 uppercase"
+                                        class="text-xs font-bold text-muted-foreground uppercase"
                                         >{finding.category}</span
                                     >
                                 </div>
                             {/if}
-                            <h4 class="font-bold text-lg text-gray-800">
+                            <h4 class="font-bold text-lg text-foreground">
                                 {finding.title}
                             </h4>
-                            {#if finding.desc}<p class="text-gray-500 text-sm">{finding.desc}</p>{/if}
+                            {#if finding.desc}<p class="text-muted-foreground text-sm">{finding.desc}</p>{/if}
                         </div>
 
                         {#if finding.actionUrl}
                             <a
                                 href={finding.actionUrl}
-                                class="px-5 py-2 bg-gray-50 text-gray-600 font-bold rounded-lg text-sm group-hover:bg-[#304743] group-hover:text-white transition-colors flex items-center gap-2"
+                                class="px-5 py-2 bg-muted text-foreground font-bold rounded-lg text-sm group-hover:bg-primary-deep group-hover:text-white transition-colors flex items-center gap-2"
                             >
-                                Fix Now <ArrowRight size={16} />
+                                Take a look <ArrowRight size={16} />
                             </a>
                         {/if}
                     </div>

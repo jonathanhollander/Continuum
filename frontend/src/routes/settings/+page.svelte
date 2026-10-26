@@ -7,22 +7,22 @@
 <div
     class="max-w-4xl px-6 py-6 md:py-10 space-y-8 animate-in fade-in duration-500"
 >
-    <div class="flex items-center gap-4 border-b border-slate-200 pb-6">
-        <div class="p-3 bg-slate-100 text-slate-600 rounded-2xl">
+    <div class="flex items-center gap-4 border-b border-border pb-6">
+        <div class="p-3 bg-muted text-muted-foreground rounded-2xl">
             <Settings size={32} />
         </div>
         <div>
-            <h1 class="font-serif text-3xl font-bold text-slate-900">
+            <h1 class="font-serif text-3xl font-bold text-foreground">
                 {$dict.settingsTitle}
             </h1>
-            <p class="text-slate-500 font-medium">
+            <p class="text-muted-foreground font-medium">
                 {$dict.settingsDesc}
             </p>
         </div>
     </div>
 
     <div
-        class="bg-white rounded-[2rem] border border-slate-200 shadow-sm p-6 md:p-8"
+        class="bg-card rounded-[2rem] border border-border shadow-sm p-6 md:p-8"
     >
         <ConciergeSettings />
     </div>

@@ -47,12 +47,26 @@
     // Derived flags
     const isActuallyPoppedOut = $derived($conciergeEngine.isPoppedOut);
     const popOutMode = $derived($conciergeEngine.popOutMode);
-    const floatingPos = $derived(
-        $conciergeEngine.floatingPosition || { x: 50, y: 50 },
-    );
     const floatingSize = $derived(
         $conciergeEngine.floatingSize || { width: 340, height: 580 },
     );
+    // Default opens top-right, below the 80px desktop header and clear of the sidebar.
+    // The store's untouched default is { x: 50, y: 50 }; a dragged position is kept.
+    // Either way the panel is kept inside the window.
+    let winW = $state(0);
+    let winH = $state(0);
+    const floatingPos = $derived.by(() => {
+        const saved = $conciergeEngine.floatingPosition;
+        const isDefault = !saved || (saved.x === 50 && saved.y === 50);
+        if (!winW || !winH) return saved || { x: 50, y: 50 };
+        const pos = isDefault
+            ? { x: winW - floatingSize.width - 24, y: 104 }
+            : saved;
+        return {
+            x: Math.max(0, Math.min(pos.x, winW - floatingSize.width)),
+            y: Math.max(0, Math.min(pos.y, winH - floatingSize.height)),
+        };
+    });
 
     let input = $state("");
     let scrollContainer = $state<HTMLElement | null>(null);
@@ -70,7 +84,7 @@
 
     const contrastClass = $derived(
         $accessibilityStore.highContrast
-            ? "border-indigo-500 border-2"
+            ? "border-primary border-2"
             : "border-white/10",
     );
 
@@ -258,6 +272,8 @@
     }
 </script>
 
+<svelte:window bind:innerWidth={winW} bind:innerHeight={winH} />
+
 {#if isOpen && !isActuallyPoppedOut}
     <!-- Backdrop: Only show in sidebar mode, not in floating/pip -->
     <!-- Clicking the dimmed area closes the panel; the panel has its own close button. -->
@@ -277,50 +293,52 @@
         aria-label="AI Concierge"
         aria-modal={!isActuallyPoppedOut}
         use:sidebarTrap={!isActuallyPoppedOut}
-        class="fixed bg-slate-900 shadow-2xl z-50 flex flex-col overflow-hidden transition-all duration-300 pointer-events-auto"
+        class="concierge-shell fixed bg-background shadow-2xl z-50 flex flex-col overflow-hidden transition-all duration-300 pointer-events-auto {contrastClass}"
         transition:fly={{ x: 400, duration: 400, opacity: 1 }}
         class:h-full={!popOutMode}
         class:border-l={!popOutMode}
         class:rounded-2xl={popOutMode === "floating"}
         class:border={popOutMode === "floating"}
         style={popOutMode === "floating"
-            ? `width: ${floatingSize.width}px; height: ${floatingSize.height}px; left: ${floatingPos.x}px; top: ${floatingPos.y}px; ${contrastClass}`
+            ? `width: ${floatingSize.width}px; height: ${floatingSize.height}px; left: ${floatingPos.x}px; top: ${floatingPos.y}px;`
             : popOutMode === "pip"
               ? `width: 100%; height: 100%; top: 0; left: 0;`
-              : `top: 0; right: 0; width: 480px; ${contrastClass}`}
+              : `top: 0; right: 0; width: 480px;`}
     >
         <div
-            class="p-6 border-b border-white/10 bg-black/20 backdrop-blur flex items-center justify-between {popOutMode ===
+            class="border-b border-white/10 bg-black/20 backdrop-blur flex items-center justify-between gap-2 {popOutMode ===
             'floating'
-                ? 'cursor-move active:cursor-grabbing'
-                : ''}"
+                ? 'px-4 py-5 cursor-move active:cursor-grabbing'
+                : 'p-6'}"
             onpointerdown={onPointerDown}
             onpointermove={onPointerMove}
             onpointerup={onPointerUp}
         >
-            <div class="flex items-center gap-3">
-                <div class="p-2 bg-primary/20 rounded-xl text-primary-soft dark:text-primary">
+            <div class="flex items-center gap-3 min-w-0">
+                <div class="p-2 bg-primary/20 rounded-xl text-primary shrink-0">
                     <Sparkles size={20} />
                 </div>
-                <div>
+                <div class="min-w-0">
                     <h2 class="text-xl font-bold text-white tracking-tight">
                         AI Concierge
                     </h2>
-                    <div class="flex items-center gap-2">
-                        <span
-                            class="w-1.5 h-1.5 rounded-full bg-primary-soft dark:bg-primary animate-pulse"
-                        ></span>
-                        <span
-                            class="text-[10px] uppercase tracking-widest text-white/40 font-bold"
-                            >Active Assistant</span
-                        >
+                    <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <span class="flex items-center gap-2 whitespace-nowrap">
+                            <span
+                                class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"
+                            ></span>
+                            <span
+                                class="text-[10px] uppercase tracking-widest text-white/40 font-bold"
+                                >Active Assistant</span
+                            >
+                        </span>
                         {#if $conciergeEngine.currentContextName}
                             <div
                                 class="flex items-center gap-1.5 px-2 py-0.5 bg-primary/20 rounded-full border border-primary/30"
                             >
-                                <Target size={10} class="text-primary-soft dark:text-primary" />
+                                <Target size={10} class="text-primary" />
                                 <span
-                                    class="text-[9px] font-bold uppercase tracking-wider text-primary-soft dark:text-primary-hover"
+                                    class="text-[9px] font-bold uppercase tracking-wider text-primary-hover"
                                     >{$conciergeEngine.currentContextName}</span
                                 >
                             </div>
@@ -328,7 +346,7 @@
                     </div>
                 </div>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 shrink-0">
                 <button
                     onclick={() => conciergeEngine.clearHistory()}
                     class="p-2 text-white/40 hover:text-white hover:bg-white/5 rounded-full transition-colors"
@@ -352,14 +370,17 @@
                 {:else}
                     <button
                         onclick={handlePopIn}
-                        class="p-1.5 px-3 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 rounded-full transition-colors flex items-center gap-1.5 border border-indigo-500/30"
+                        class="p-1.5 px-3 bg-primary/20 text-primary-hover hover:bg-primary/30 rounded-full transition-colors flex items-center gap-1.5 border border-primary/30"
                         title="Pop In"
+                        aria-label="Pop In"
                     >
                         <Minimize2 size={14} />
-                        <span
-                            class="text-[10px] uppercase font-bold tracking-wider"
-                            >Pop In</span
-                        >
+                        {#if popOutMode !== "floating"}
+                            <span
+                                class="text-[10px] uppercase font-bold tracking-wider"
+                                >Pop In</span
+                            >
+                        {/if}
                     </button>
                 {/if}
                 <button aria-label="Close"
@@ -387,8 +408,8 @@
                         <div
                             class="p-4 rounded-2xl {msg.role === 'user'
                                 ? msg.isDictated
-                                    ? 'bg-amber-500/10 border border-amber-500/30 text-amber-50'
-                                    : 'bg-indigo-600 text-white'
+                                    ? 'bg-warning-soft border border-warning/30 text-foreground'
+                                    : 'bg-primary text-primary-foreground'
                                 : 'bg-white/5 border border-white/10 text-slate-200'}"
                         >
                             <p class="{fontSizeClass} leading-relaxed">
@@ -438,15 +459,15 @@
                     >
                         <div class="flex gap-1">
                             <span
-                                class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce"
+                                class="w-1.5 h-1.5 rounded-full bg-primary animate-bounce"
                                 style="animation-delay: 0s"
                             ></span>
                             <span
-                                class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce"
+                                class="w-1.5 h-1.5 rounded-full bg-primary animate-bounce"
                                 style="animation-delay: 0.1s"
                             ></span>
                             <span
-                                class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce"
+                                class="w-1.5 h-1.5 rounded-full bg-primary animate-bounce"
                                 style="animation-delay: 0.2s"
                             ></span>
                         </div>
@@ -458,10 +479,10 @@
             {#if $conciergeEngine.lastExtractedData}
                 <div class="mt-4" transition:slide>
                     <div
-                        class="bg-indigo-500/10 border border-indigo-500/20 rounded-2xl p-5 space-y-4"
+                        class="bg-primary-soft border border-primary/20 rounded-2xl p-5 space-y-4"
                     >
                         <div
-                            class="flex items-center gap-2 text-indigo-300 font-bold text-sm uppercase tracking-wide"
+                            class="flex items-center gap-2 text-primary-hover font-bold text-sm uppercase tracking-wide"
                         >
                             <CheckCircle2 size={16} />
                             <span>Extracted Details</span>
@@ -510,7 +531,7 @@
                             <button
                                 onclick={() =>
                                     conciergeEngine.confirmExtractedData()}
-                                class="flex-1 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-500 transition-colors"
+                                class="flex-1 py-2 bg-primary text-primary-foreground rounded-lg text-xs font-bold hover:bg-primary-hover transition-colors"
                             >
                                 Yes, Confirm
                             </button>
@@ -536,7 +557,7 @@
                 >
                     {#each Array(8) as _, i}
                         <div
-                            class="w-1 bg-primary-soft/60 dark:bg-primary/60 rounded-full animate-pulse"
+                            class="w-1 bg-primary/60 rounded-full animate-pulse"
                             style="height: {20 +
                                 Math.random() * 60}%; animation-delay: {i *
                                 0.1}s"
@@ -550,7 +571,7 @@
                     onclick={toggleVoice}
                     class="p-4 rounded-2xl transition-all shadow-lg {$conciergeEngine.isListening
                         ? 'bg-primary text-primary-foreground animate-pulse shadow-primary/20'
-                        : 'bg-slate-800 text-primary-soft dark:text-primary hover:bg-slate-700 shadow-black/20'}"
+                        : 'bg-slate-800 text-primary hover:bg-slate-700 shadow-black/20'}"
                 >
                     {#if $conciergeEngine.isListening}
                         <MicOff size={24} />
@@ -567,13 +588,13 @@
                         placeholder={$conciergeEngine.isListening
                             ? "Listening..."
                             : "Provide your details here..."}
-                        class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-5 pr-12 {fontSizeClass} text-white focus:outline-none focus:border-indigo-500/50 transition-all resize-none min-h-[60px] max-h-[120px]"
+                        class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-5 pr-12 {fontSizeClass} text-white focus:outline-none focus:border-primary transition-all resize-none min-h-[60px] max-h-[120px]"
                         disabled={$conciergeEngine.isListening}
                     ></textarea>
                     <button aria-label="Send"
                         onclick={handleSend}
                         disabled={!input.trim() || $conciergeEngine.isThinking}
-                        class="absolute right-3 bottom-3 p-2 text-indigo-400 hover:text-white disabled:opacity-30 transition-colors"
+                        class="absolute right-3 bottom-3 p-2 text-primary hover:text-white disabled:opacity-30 transition-colors"
                     >
                         <Send size={20} />
                     </button>
@@ -601,7 +622,7 @@
                 onpointerup={onPointerUp}
             >
                 <div
-                    class="w-1.5 h-1.5 border-r-2 border-b-2 border-white/20 group-hover:border-indigo-400 transition-colors rounded-br-sm"
+                    class="w-1.5 h-1.5 border-r-2 border-b-2 border-white/20 group-hover:border-primary transition-colors rounded-br-sm"
                 ></div>
             </div>
         {/if}
@@ -609,6 +630,76 @@
 {/if}
 
 <style>
+    /* The panel is always dark, in either app theme, so it carries the dark token values itself
+       (same idea as .admin-shell). Tokens then resolve without dark: pairs. Values from V0e §3 and
+       the dark accent rules in app.css; the class stays on the element when it moves into a PiP window. */
+    .concierge-shell {
+        color-scheme: dark;
+        --color-background: #0f172a;
+        --color-foreground: #f8fafc;
+        --color-card: #1e293b;
+        --color-card-foreground: #f8fafc;
+        --color-muted: #1e293b;
+        --color-muted-foreground: #A3B1C6;
+        --color-border: #334155;
+        --color-input: #334155;
+        --color-primary: #7FB5AB;
+        --color-primary-foreground: #0f172a;
+        --color-primary-hover: #9CC9C0;
+        --color-primary-soft: rgba(127, 181, 171, 0.14);
+        --color-info: #8DB8E8;
+        --color-success: #7BD1A1;
+        --color-warning: #F0C36A;
+        --color-warning-soft: rgba(240, 195, 106, 0.14);
+        --color-danger: #F2A6A0;
+        --color-danger-soft: rgba(242, 166, 160, 0.14);
+        --color-gold-text: #E0C15A;
+    }
+
+    /* The person's accent, in its dark form. */
+    :global(body.theme-color-indigo) .concierge-shell {
+        --color-primary: #A5B4FC;
+        --color-primary-hover: #C7D2FE;
+        --color-primary-soft: rgba(165, 180, 252, 0.14);
+    }
+    :global(body.theme-color-emerald) .concierge-shell {
+        --color-primary: #6EE7B7;
+        --color-primary-hover: #A7F3D0;
+        --color-primary-soft: rgba(110, 231, 183, 0.14);
+    }
+    :global(body.theme-color-rose) .concierge-shell {
+        --color-primary: #FDA4AF;
+        --color-primary-hover: #FECDD3;
+        --color-primary-soft: rgba(253, 164, 175, 0.14);
+    }
+    :global(body.theme-color-amber) .concierge-shell {
+        --color-primary: #FCD34D;
+        --color-primary-hover: #FDE68A;
+        --color-primary-soft: rgba(252, 211, 77, 0.14);
+    }
+    :global(body.theme-color-carbon) .concierge-shell {
+        --color-primary: #E2E8F0;
+        --color-primary-hover: #F8FAFC;
+        --color-primary-soft: rgba(226, 232, 240, 0.14);
+    }
+    /* Tones change the default teal only, as in app.css. */
+    :global(body.tone-grief:where(.theme-color-teal)) .concierge-shell {
+        --color-primary: #A5B4D6;
+        --color-primary-hover: #C3CDE6;
+        --color-primary-soft: rgba(165, 180, 214, 0.14);
+    }
+    :global(body.tone-executor:where(.theme-color-teal)) .concierge-shell {
+        --color-primary: #CBD5E1;
+        --color-primary-hover: #E2E8F0;
+        --color-primary-soft: rgba(203, 213, 225, 0.14);
+    }
+    /* High contrast last, so it wins over the accent. */
+    :global(body.accessibility-high-contrast) .concierge-shell {
+        --color-primary: #ffffff;
+        --color-primary-foreground: #000000;
+        --color-primary-hover: #ffffff;
+    }
+
     /* Spectral Pulse Custom Scrollbar */
     div::-webkit-scrollbar {
         width: 4px;

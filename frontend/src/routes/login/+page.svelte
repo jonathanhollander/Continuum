@@ -248,29 +248,29 @@
 </svelte:head>
 
 <div
-    class="min-h-screen bg-[#0F1115] flex items-center justify-center p-6 font-sans"
+    class="min-h-screen surface-dark bg-background text-foreground flex items-center justify-center p-6 font-sans"
 >
     <div class="max-w-2xl w-full" in:fade={{ duration: 600 }}>
         <!-- Header -->
         <div class="text-center mb-12">
             <div
-                class="inline-flex p-5 rounded-3xl bg-teal-500/10 text-teal-400 mb-8 border border-teal-500/20 shadow-2xl shadow-teal-500/10"
+                class="inline-flex p-5 rounded-3xl bg-primary/10 text-primary mb-8 border border-primary/20 shadow-2xl shadow-primary/10"
             >
                 <Shield size={56} />
             </div>
             <h1
-                class="text-6xl font-serif font-black tracking-tighter text-white mb-3"
+                class="text-6xl font-serif font-black tracking-tighter text-foreground mb-3"
             >
                 Welcome Back
             </h1>
-            <p class="text-slate-400 text-xl font-medium">
-                Continue securing your legacy with courage.
+            <p class="text-muted-foreground text-xl font-medium">
+                Everything you've saved is right where you left it.
             </p>
         </div>
 
         <!-- Main Login Card -->
         <div
-            class="bg-slate-900/50 border border-slate-800 rounded-3xl p-10 backdrop-blur-sm space-y-6"
+            class="bg-card/50 border border-border rounded-3xl p-10 backdrop-blur-sm space-y-6"
         >
             {#if !showMagicLink}
                 <!-- Passkey Login (Primary) -->
@@ -278,7 +278,7 @@
                     <button
                         onclick={handlePasskeyLogin}
                         disabled={isLoading}
-                        class="w-full bg-gradient-to-r from-teal-500 to-teal-400 hover:from-teal-400 hover:to-teal-300 text-slate-950 font-black py-6 px-8 rounded-2xl transition-all text-2xl disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl shadow-teal-500/20 flex items-center justify-center gap-4 group relative overflow-hidden"
+                        class="w-full bg-primary hover:bg-primary-hover text-primary-foreground font-black py-6 px-8 rounded-2xl transition-all text-2xl disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl shadow-primary/20 flex items-center justify-center gap-4 group relative overflow-hidden"
                     >
                         <div
                             class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"
@@ -292,7 +292,7 @@
                     <!-- Help Text for Passkeys -->
                     <button
                         onclick={() => (showHelp = !showHelp)}
-                        class="w-full text-slate-400 hover:text-teal-400 text-sm flex items-center justify-center gap-2 transition-colors"
+                        class="w-full text-muted-foreground hover:text-primary text-sm flex items-center justify-center gap-2 transition-colors"
                     >
                         <Info size={16} />
                         What is a passkey?
@@ -300,23 +300,23 @@
 
                     {#if showHelp}
                         <div
-                            class="bg-indigo-500/5 border border-indigo-500/20 rounded-2xl p-6 space-y-3"
+                            class="bg-primary/5 border border-primary/20 rounded-2xl p-6 space-y-3"
                             in:fly={{ y: -10, duration: 300 }}
                         >
-                            <h3 class="text-white font-bold text-lg flex items-center gap-2">
-                                <Info size={20} class="text-teal-400" />
+                            <h3 class="text-foreground font-bold text-lg flex items-center gap-2">
+                                <Info size={20} class="text-primary" />
                                 What is a Passkey?
                             </h3>
-                            <p class="text-slate-300 text-base leading-relaxed">
+                            <p class="text-foreground text-base leading-relaxed">
                                 A Passkey is a safe way to log in using what's
                                 already on your device—like your fingerprint,
                                 your face, or the code you use to unlock your
                                 screen.
                             </p>
-                            <div class="bg-slate-950/40 rounded-xl p-4">
-                                <p class="text-slate-300 text-sm">
+                            <div class="bg-background/40 rounded-xl p-4">
+                                <p class="text-foreground text-sm">
                                     It's much safer than a password, and best of
-                                    all: <strong class="text-white">
+                                    all: <strong class="text-foreground">
                                         a way to sign in with what's already on your device.
                                     </strong>
                                 </p>
@@ -326,17 +326,17 @@
 
                     <!-- Divider -->
                     <div class="flex items-center gap-4 my-8">
-                        <div class="flex-1 h-px bg-slate-800"></div>
-                        <span class="text-slate-500 text-sm font-bold uppercase tracking-widest">
+                        <div class="flex-1 h-px bg-border"></div>
+                        <span class="text-muted-foreground text-sm font-bold uppercase tracking-widest">
                             Or
                         </span>
-                        <div class="flex-1 h-px bg-slate-800"></div>
+                        <div class="flex-1 h-px bg-border"></div>
                     </div>
 
                     <!-- Magic Link Option -->
                     <button
                         onclick={() => (showMagicLink = true)}
-                        class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-5 px-6 rounded-2xl transition-all text-lg flex items-center justify-center gap-3 border border-slate-700"
+                        class="w-full bg-card hover:bg-border text-foreground font-bold py-5 px-6 rounded-2xl transition-all text-lg flex items-center justify-center gap-3 border border-border"
                     >
                         <Mail size={24} />
                         Use Email Link Instead
@@ -350,7 +350,7 @@
                             <div>
                                 <label
                                     for="email"
-                                    class="block text-lg font-bold text-white mb-3"
+                                    class="block text-lg font-bold text-foreground mb-3"
                                 >
                                     Email Address
                                 </label>
@@ -360,7 +360,7 @@
                                     bind:value={magicLinkEmail}
                                     onkeydown={handleKeydown}
                                     placeholder="you@example.com"
-                                    class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-6 py-5 text-white text-xl placeholder-slate-500 focus:border-teal-500 focus:outline-none transition-colors"
+                                    class="w-full bg-background border border-border rounded-2xl px-6 py-5 text-foreground text-xl placeholder:text-muted-foreground focus:border-primary focus:outline-none transition-colors"
                                     disabled={isLoading}
                                 />
                             </div>
@@ -368,7 +368,7 @@
                             <button
                                 onclick={handleMagicLink}
                                 disabled={isLoading || !magicLinkEmail}
-                                class="w-full bg-gradient-to-r from-teal-500 to-teal-400 hover:from-teal-400 hover:to-teal-300 text-slate-950 font-black py-6 px-8 rounded-2xl transition-all text-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl shadow-teal-500/20 flex items-center justify-center gap-4 group relative overflow-hidden"
+                                class="w-full bg-primary hover:bg-primary-hover text-primary-foreground font-black py-6 px-8 rounded-2xl transition-all text-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl shadow-primary/20 flex items-center justify-center gap-4 group relative overflow-hidden"
                             >
                                 <div
                                     class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"
@@ -381,7 +381,7 @@
 
                             <button
                                 onclick={backToPasskey}
-                                class="w-full text-slate-400 hover:text-white font-medium py-3 transition-colors text-base"
+                                class="w-full text-muted-foreground hover:text-foreground font-medium py-3 transition-colors text-base"
                             >
                                 Back to Passkey Login
                             </button>
@@ -389,26 +389,26 @@
                     {:else}
                         <!-- Magic Link Sent Confirmation -->
                         <div
-                            class="bg-teal-500/10 border border-teal-500/30 rounded-2xl p-8 text-center"
+                            class="bg-primary/10 border border-primary/30 rounded-2xl p-8 text-center"
                             in:fly={{ y: 20, duration: 300 }}
                         >
-                            <Mail size={48} class="text-teal-400 mx-auto mb-4" />
-                            <h3 class="text-white font-bold text-2xl mb-3">
+                            <Mail size={48} class="text-primary mx-auto mb-4" />
+                            <h3 class="text-foreground font-bold text-2xl mb-3">
                                 Check Your Email
                             </h3>
-                            <p class="text-slate-300 text-lg leading-relaxed mb-6">
-                                We've sent a secure sign-in link to <strong class="text-white">
+                            <p class="text-foreground text-lg leading-relaxed mb-6">
+                                We've sent a secure sign-in link to <strong class="text-foreground">
                                     {magicLinkEmail}
                                 </strong>
                             </p>
-                            <p class="text-slate-400 text-base">
+                            <p class="text-muted-foreground text-base">
                                 Your link is on its way. Open it from your email to continue; it stays open for 15 minutes.
                             </p>
                         </div>
 
                         <button
                             onclick={() => (magicLinkSent = false)}
-                            class="w-full text-slate-400 hover:text-white font-medium py-3 transition-colors text-base"
+                            class="w-full text-muted-foreground hover:text-foreground font-medium py-3 transition-colors text-base"
                         >
                             Use a different email
                         </button>
@@ -417,14 +417,14 @@
             {/if}
 
             <!-- Sign Up Link -->
-            <div class="text-center pt-6 border-t border-slate-800">
-                <p class="text-slate-400 text-lg">
+            <div class="text-center pt-6 border-t border-border">
+                <p class="text-muted-foreground text-lg">
                     New here?
                     <a
                         href={safeRedirect
                             ? `/signup?redirect=${encodeURIComponent(safeRedirect)}`
                             : "/signup"}
-                        class="text-teal-400 hover:text-teal-300 font-bold transition-colors"
+                        class="text-primary hover:text-primary-hover font-bold transition-colors"
                     >
                         Create one
                     </a>
@@ -434,15 +434,10 @@
 
         <!-- Footer Info -->
         <div class="mt-8 text-center">
-            <p class="text-slate-600 text-sm">
+            <p class="text-muted-foreground text-sm">
                 Your data is encrypted and secured with industry-standard protection
             </p>
         </div>
     </div>
 </div>
 
-<style>
-    :global(body) {
-        background-color: #0f1115;
-    }
-</style>

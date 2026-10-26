@@ -6,6 +6,7 @@ from backend.database import get_session, User
 from backend.auth import get_current_user
 from backend.estate_models import MedicalProfile, MedicalDirective
 from backend.utils.audit import log_audit, log_deletion
+from backend.utils.table_body import validated_new, validated_changes
 
 router = APIRouter(prefix="/api/medical", tags=["medical"])
 
@@ -44,9 +45,10 @@ def update_medical_profile(request: Request, updated: MedicalProfile, user: User
         profile = MedicalProfile(user_id=user.id)
 
     data = updated.dict(exclude_unset=True)
-    for key, val in data.items():
-        if key == "user_id" or (key == "organ_donor" and val is None):
-            continue  # organ_donor is NOT NULL: an explicit null keeps the row's value
+    data.pop("user_id", None)
+    if data.get("organ_donor", False) is None:
+        del data["organ_donor"]  # organ_donor is NOT NULL: an explicit null keeps the row's value
+    for key, val in validated_changes(MedicalProfile, profile, data).items():
         setattr(profile, key, val)
 
     session.add(profile)
@@ -76,7 +78,7 @@ def get_medical_directives(user: User = Depends(get_current_user), session: Sess
 @limiter.limit("20/minute")
 def create_medical_directive(request: Request, directive: MedicalDirective, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     _check_directive({"type": getattr(directive, "type", None), "title": getattr(directive, "title", None)})
-    directive.user_id = user.id
+    directive = validated_new(MedicalDirective, directive, user.id)
     session.add(directive)
     session.commit()
     session.refresh(directive)
@@ -103,9 +105,10 @@ def update_medical_directive(request: Request, directive_id: int, updated: Medic
     
     data = updated.dict(exclude_unset=True)
     _check_directive(data, directive)
-    for key, val in data.items():
-        if key != "id" and key != "user_id":
-            setattr(directive, key, val)
+    data.pop("id", None)
+    data.pop("user_id", None)
+    for key, val in validated_changes(MedicalDirective, directive, data).items():
+        setattr(directive, key, val)
     
     session.add(directive)
     session.commit()

@@ -17,6 +17,7 @@ from backend.pulse_models import (
 from backend.utils.logger import get_logger
 from backend.routers.contacts import ContactCreate, ContactUpdate, _apply as apply_contact_fields
 from backend.challenge_store import challenge_store
+from backend.utils.table_body import validated_changes
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/api/pulse", tags=["pulse"])
@@ -605,11 +606,14 @@ def update_tier(tier_id: int, updated: PulseEscalationTier, user: User = Depends
     if not tier or tier.user_id != user.id:
         raise HTTPException(status_code=404, detail="That tier may have been moved.")
     
-    tier.delay_hours = updated.delay_hours
-    tier.notification_method = updated.notification_method
-    
+    # Only these two are the owner's to change; an omitted one keeps its saved value.
+    changes = updated.model_dump(exclude_unset=True, include={"delay_hours", "notification_method"})
+    for key, val in validated_changes(PulseEscalationTier, tier, changes).items():
+        setattr(tier, key, val)
+
     session.add(tier)
     session.commit()
+    session.refresh(tier)  # the commit expires it; otherwise the response is {}
     return tier
 
 from backend.security import get_registration_options, verify_registration

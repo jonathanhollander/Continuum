@@ -218,29 +218,29 @@
 </svelte:head>
 
 <div
-    class="min-h-screen bg-[#0F1115] flex items-center justify-center p-6 font-sans"
+    class="min-h-screen surface-dark bg-background text-foreground flex items-center justify-center p-6 font-sans"
 >
     <div class="max-w-2xl w-full" in:fade={{ duration: 600 }}>
         <!-- Header -->
         <div class="text-center mb-12">
             <div
-                class="inline-flex p-5 rounded-3xl bg-teal-500/10 text-teal-400 mb-8 border border-teal-500/20 shadow-2xl shadow-teal-500/10"
+                class="inline-flex p-5 rounded-3xl bg-primary/10 text-primary mb-8 border border-primary/20 shadow-2xl shadow-primary/10"
             >
                 <Shield size={56} />
             </div>
             <h1
-                class="text-6xl font-serif font-black tracking-tighter text-white mb-3"
+                class="text-6xl font-serif font-black tracking-tighter text-foreground mb-3"
             >
                 Create Account
             </h1>
-            <p class="text-slate-400 text-xl">
+            <p class="text-muted-foreground text-xl">
                 Set up your secure digital vault
             </p>
         </div>
 
         <!-- Main Signup Card -->
         <div
-            class="bg-slate-900/50 border border-slate-800 rounded-3xl p-10 backdrop-blur-sm space-y-6"
+            class="bg-card/50 border border-border rounded-3xl p-10 backdrop-blur-sm space-y-6"
         >
             {#if step === "email"}
                 <!-- Step 1: Email Entry -->
@@ -248,7 +248,7 @@
                     <div>
                         <label
                             for="email"
-                            class="block text-lg font-bold text-white mb-3"
+                            class="block text-lg font-bold text-foreground mb-3"
                         >
                             Email Address
                         </label>
@@ -258,18 +258,18 @@
                             bind:value={email}
                             on:keydown={handleKeydown}
                             placeholder="you@example.com"
-                            class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-6 py-5 text-white text-xl placeholder-slate-500 focus:border-teal-500 focus:outline-none transition-colors"
+                            class="w-full bg-background border border-border rounded-2xl px-6 py-5 text-foreground text-xl placeholder:text-muted-foreground focus:border-primary focus:outline-none transition-colors"
                             disabled={isLoading}
                         />
-                        <p class="text-slate-500 text-sm mt-3">
+                        <p class="text-muted-foreground text-sm mt-3">
                             We'll use this to set up your account and passkey
                         </p>
                         {#if alreadyHere}
-                            <p class="text-slate-300 text-base mt-3">
+                            <p class="text-foreground text-base mt-3">
                                 Welcome back. This email already has a space here.
                                 <a
                                     href={loginHref}
-                                    class="text-teal-400 hover:text-teal-300 font-bold transition-colors"
+                                    class="text-primary hover:text-primary-hover font-bold transition-colors"
                                 >
                                     Sign in
                                 </a>
@@ -280,7 +280,7 @@
                     <button
                         on:click={handleEmailSubmit}
                         disabled={isLoading || !email}
-                        class="w-full bg-gradient-to-r from-teal-500 to-teal-400 hover:from-teal-400 hover:to-teal-300 text-slate-950 font-black py-6 px-8 rounded-2xl transition-all text-2xl disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl shadow-teal-500/20 flex items-center justify-center gap-4 group relative overflow-hidden"
+                        class="w-full bg-primary hover:bg-primary-hover text-primary-foreground font-black py-6 px-8 rounded-2xl transition-all text-2xl disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl shadow-primary/20 flex items-center justify-center gap-4 group relative overflow-hidden"
                     >
                         <div
                             class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"
@@ -294,20 +294,20 @@
 
                     <!-- Info Box -->
                     <div
-                        class="bg-slate-950/50 border border-slate-800 rounded-2xl p-6 space-y-3"
+                        class="bg-background/50 border border-border rounded-2xl p-6 space-y-3"
                     >
                         <h3
-                            class="text-white font-bold text-lg flex items-center gap-2"
+                            class="text-foreground font-bold text-lg flex items-center gap-2"
                         >
-                            <Fingerprint size={20} class="text-teal-400" />
+                            <Fingerprint size={20} class="text-primary" />
                             You'll create a passkey next
                         </h3>
-                        <p class="text-slate-300 text-base leading-relaxed">
+                        <p class="text-foreground text-base leading-relaxed">
                             After entering your email, we'll help you set up a
                             passkey using your fingerprint, face, or device PIN.
                             This is faster and more secure than passwords.
                         </p>
-                        <p class="text-slate-400 text-sm italic">
+                        <p class="text-muted-foreground text-sm italic">
                             Your passkey is all you'll use to sign in
                         </p>
                     </div>
@@ -321,21 +321,21 @@
                     in:fly={{ y: 20, duration: 300 }}
                 >
                     <div class="space-y-3">
-                        <h3 class="text-white font-bold text-2xl">
+                        <h3 class="text-foreground font-bold text-2xl">
                             Your account is ready for a passkey
                         </h3>
-                        <p class="text-slate-300 text-lg leading-relaxed max-w-md mx-auto">
+                        <p class="text-foreground text-lg leading-relaxed max-w-md mx-auto">
                             When you're ready, you can try again, or sign in with an email link instead.
                         </p>
                     </div>
                     <div class="flex flex-col sm:flex-row gap-3 justify-center">
                         <button
                             on:click={retryPasskeyRegistration}
-                            class="bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold py-3 px-6 rounded-2xl transition-colors"
+                            class="bg-primary hover:bg-primary-hover text-primary-foreground font-bold py-3 px-6 rounded-2xl transition-colors"
                         >Try again</button>
                         <button
                             on:click={goToEmailLink}
-                            class="border border-slate-600 hover:border-teal-400 text-white font-bold py-3 px-6 rounded-2xl transition-colors"
+                            class="border border-border hover:border-primary text-foreground font-bold py-3 px-6 rounded-2xl transition-colors"
                         >Use an email link instead</button>
                     </div>
                 </div>
@@ -345,14 +345,14 @@
                     in:fly={{ y: 20, duration: 300 }}
                 >
                     <div
-                        class="w-20 h-20 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto"
+                        class="w-20 h-20 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"
                     ></div>
                     <div class="space-y-3">
-                        <h3 class="text-white font-bold text-2xl">
+                        <h3 class="text-foreground font-bold text-2xl">
                             Setting up your passkey...
                         </h3>
                         <p
-                            class="text-slate-300 text-lg leading-relaxed max-w-md mx-auto"
+                            class="text-foreground text-lg leading-relaxed max-w-md mx-auto"
                         >
                             Your device will guide you to create your passkey
                             with your fingerprint, face, or PIN.
@@ -367,16 +367,16 @@
                     in:fly={{ y: 20, duration: 300 }}
                 >
                     <div
-                        class="w-20 h-20 bg-teal-500/20 rounded-full flex items-center justify-center mx-auto border border-teal-500/30"
+                        class="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mx-auto border border-primary/30"
                     >
-                        <CheckCircle2 size={48} class="text-teal-400" />
+                        <CheckCircle2 size={48} class="text-primary" />
                     </div>
                     <div class="space-y-3">
-                        <h3 class="text-white font-bold text-3xl">
+                        <h3 class="text-foreground font-bold text-3xl">
                             Welcome to Continuum!
                         </h3>
                         <p
-                            class="text-slate-300 text-lg leading-relaxed max-w-md mx-auto"
+                            class="text-foreground text-lg leading-relaxed max-w-md mx-auto"
                         >
                             Your account is ready. Taking you to your vault...
                         </p>
@@ -386,12 +386,12 @@
 
             <!-- Sign In Link -->
             {#if step === "email"}
-                <div class="text-center pt-6 border-t border-slate-800">
-                    <p class="text-slate-400 text-lg">
+                <div class="text-center pt-6 border-t border-border">
+                    <p class="text-muted-foreground text-lg">
                         Already have an account?
                         <a
                             href={loginHref}
-                            class="text-teal-400 hover:text-teal-300 font-bold transition-colors"
+                            class="text-primary hover:text-primary-hover font-bold transition-colors"
                         >
                             Sign in
                         </a>
@@ -402,15 +402,10 @@
 
         <!-- Footer Info -->
         <div class="mt-8 text-center">
-            <p class="text-slate-600 text-sm">
-                Your data is encrypted end-to-end with military-grade security
+            <p class="text-muted-foreground text-sm">
+                Your information stays private to your account and travels over a secure connection
             </p>
         </div>
     </div>
 </div>
 
-<style>
-    :global(body) {
-        background-color: #0f1115;
-    }
-</style>
