@@ -12,6 +12,12 @@
     --color-primary-deep: #304743;
     --color-primary-soft: #E8F0EE;
 
+    /* The primary family as it reads on an always-dark surface (.surface-dark below). The accent,
+       tone and high-contrast rules re-set these, so a dark surface keeps the person's choice. */
+    --color-primary-on-dark: #7FB5AB;
+    --color-primary-hover-on-dark: #9CC9C0;
+    --color-primary-soft-on-dark: rgba(127, 181, 171, 0.14);
+
     /* Status colours (V0e section 3). Each passes 4.5:1 for its own use, light and dark. */
     --color-info: #2F5D8A;
     --color-success: #1F6F4A;
@@ -76,6 +82,9 @@
     /* --- Theme: Color Accents (light) ---
        Every accent has a paired foreground, hover and soft tint that pass 4.5:1. */
     body.theme-color-teal {
+        --color-primary-on-dark: #7FB5AB;
+        --color-primary-hover-on-dark: #9CC9C0;
+        --color-primary-soft-on-dark: rgba(127, 181, 171, 0.14);
         --color-primary: #4A7C74;
         --color-primary-foreground: #ffffff;
         --color-primary-hover: #3B635D;
@@ -83,6 +92,9 @@
     }
 
     body.theme-color-indigo {
+        --color-primary-on-dark: #A5B4FC;
+        --color-primary-hover-on-dark: #C7D2FE;
+        --color-primary-soft-on-dark: rgba(165, 180, 252, 0.14);
         --color-primary: #4F46E5;
         --color-primary-foreground: #ffffff;
         --color-primary-hover: #4338CA;
@@ -90,6 +102,9 @@
     }
 
     body.theme-color-emerald {
+        --color-primary-on-dark: #6EE7B7;
+        --color-primary-hover-on-dark: #A7F3D0;
+        --color-primary-soft-on-dark: rgba(110, 231, 183, 0.14);
         --color-primary: #047857;
         --color-primary-foreground: #ffffff;
         --color-primary-hover: #065F46;
@@ -97,6 +112,9 @@
     }
 
     body.theme-color-rose {
+        --color-primary-on-dark: #FDA4AF;
+        --color-primary-hover-on-dark: #FECDD3;
+        --color-primary-soft-on-dark: rgba(253, 164, 175, 0.14);
         --color-primary: #E11D48;
         --color-primary-foreground: #ffffff;
         --color-primary-hover: #BE123C;
@@ -104,6 +122,9 @@
     }
 
     body.theme-color-amber {
+        --color-primary-on-dark: #FCD34D;
+        --color-primary-hover-on-dark: #FDE68A;
+        --color-primary-soft-on-dark: rgba(252, 211, 77, 0.14);
         --color-primary: #B45309;
         --color-primary-foreground: #ffffff;
         --color-primary-hover: #92400E;
@@ -111,6 +132,9 @@
     }
 
     body.theme-color-carbon {
+        --color-primary-on-dark: #E2E8F0;
+        --color-primary-hover-on-dark: #F8FAFC;
+        --color-primary-soft-on-dark: rgba(226, 232, 240, 0.14);
         --color-primary: #0f172a;
         --color-primary-foreground: #ffffff;
         --color-primary-hover: #020617;
@@ -198,6 +222,9 @@
     }
 
     body.tone-grief:where(.theme-color-teal) {
+        --color-primary-on-dark: #A5B4D6;
+        --color-primary-hover-on-dark: #C3CDE6;
+        --color-primary-soft-on-dark: rgba(165, 180, 214, 0.14);
         --color-primary: #5A6B8F;
         --color-primary-hover: #465577;
         --color-primary-soft: #ECEFF6;
@@ -209,6 +236,9 @@
     }
 
     body.tone-executor:where(.theme-color-teal) {
+        --color-primary-on-dark: #CBD5E1;
+        --color-primary-hover-on-dark: #E2E8F0;
+        --color-primary-soft-on-dark: rgba(203, 213, 225, 0.14);
         --color-primary: #1E293B;
         --color-primary-hover: #0f172a;
         --color-primary-soft: #E8ECF2;
@@ -235,6 +265,8 @@
 
     /* --- Accessibility Overrides (Specifics) --- */
     body.accessibility-high-contrast {
+        --color-primary-on-dark: #ffffff;
+        --color-primary-hover-on-dark: #ffffff;
         --color-primary: #000000;
         --color-primary-foreground: #ffffff;
         --color-primary-hover: #000000;
@@ -253,6 +285,39 @@
         --color-background: #000000;
         --color-foreground: #ffffff;
         --color-border: #ffffff;
+    }
+
+    /* --- Dark surface scope ---
+       A region that is always dark, whatever theme the person picked (the admin suite today).
+       Its components read the dark values of the shared tokens; primary is the person's accent
+       in its dark form (the -on-dark tokens above). Same values as .concierge-shell. */
+    .surface-dark {
+        color-scheme: dark;
+        --color-background: #0f172a;
+        --color-foreground: #f8fafc;
+        --color-card: #1e293b;
+        --color-card-foreground: #f8fafc;
+        --color-popover: #1e293b;
+        --color-popover-foreground: #f8fafc;
+        --color-muted: #1e293b;
+        --color-muted-foreground: #A3B1C6;
+        --color-border: #334155;
+        --color-input: #334155;
+        --color-primary: var(--color-primary-on-dark);
+        --color-primary-foreground: #0f172a;
+        --color-primary-hover: var(--color-primary-hover-on-dark);
+        --color-primary-soft: var(--color-primary-soft-on-dark);
+        --color-info: #8DB8E8;
+        --color-success: #7BD1A1;
+        --color-warning: #F0C36A;
+        --color-warning-soft: rgba(240, 195, 106, 0.14);
+        --color-danger: #F2A6A0;
+        --color-danger-soft: rgba(242, 166, 160, 0.14);
+        --color-gold-text: #E0C15A;
+    }
+
+    body.accessibility-high-contrast .surface-dark {
+        --color-primary-foreground: #000000;
     }
 
     /* Tone and contrast filters sit on the root element, which (unlike body) does not become the
@@ -301,6 +366,12 @@
     h5,
     h6 {
         @apply font-serif tracking-tight text-foreground transition-colors duration-1000;
+    }
+
+    /* Inside a dark surface a heading takes its container's colour (a light note box keeps its
+       dark heading); a heading's own text-* class still wins, since utilities come later. */
+    .surface-dark :is(h1, h2, h3, h4, h5, h6) {
+        color: inherit;
     }
 }
 
