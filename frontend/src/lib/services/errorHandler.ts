@@ -214,6 +214,7 @@ export interface ErrorNotification {
     code?: string;
     canRetry: boolean;
     timestamp: Date;
+    technicalDetails?: string;
 }
 
 /**

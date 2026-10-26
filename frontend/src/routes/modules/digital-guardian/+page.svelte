@@ -317,7 +317,7 @@
     function openEdit(asset: DigitalAccount) {
         editingId = String(asset.id);
         draft = {
-            platform: asset.platform || (asset as any).name || "",
+            platform: asset.platform || asset.name || "",
             username: asset.username ?? "",
             type: asset.type ?? "",
             description: asset.description ?? "",
@@ -1168,7 +1168,7 @@
                                 </div>
                                 <div>
                                     <div class="font-bold text-slate-800">
-                                        {asset.platform || (asset as any).name}
+                                        {asset.platform || asset.name}
                                     </div>
                                     <div
                                         class="text-xs text-slate-500 uppercase tracking-wider"
@@ -1213,7 +1213,7 @@
                             <tbody class="divide-y divide-slate-100">
                                 {#each assets as asset (asset.id)}
                                     <tr class="hover:bg-slate-50 transition-colors">
-                                        <td class="px-4 py-3 font-medium text-slate-800">{asset.platform || (asset as any).name}</td>
+                                        <td class="px-4 py-3 font-medium text-slate-800">{asset.platform || asset.name}</td>
                                         <td class="px-4 py-3 text-slate-600">{asset.username}</td>
                                         <td class="px-4 py-3">
                                             <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-medium">
