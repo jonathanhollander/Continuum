@@ -98,11 +98,11 @@
                         href="/modules/timeline"
                         class="inline-block px-6 py-2 bg-amber-600 text-white font-bold rounded-full hover:bg-amber-700 transition-colors shadow-lg"
                     >
-                        Go to Timeline to Add
+                        Add on your Timeline
                     </a>
                 {:else}
                     <p class="text-stone-400 text-sm">
-                        No matches found. Try clearing filters.
+                        Clear the filters to see everything you've gathered.
                     </p>
                 {/if}
             </div>
@@ -139,7 +139,7 @@
                     <p
                         class="text-stone-500 text-sm leading-relaxed mb-6 flex-grow line-clamp-3"
                     >
-                        {acc.description || "No description provided."}
+                        {acc.description || ""}
                     </p>
 
                     {#if acc.reflection}

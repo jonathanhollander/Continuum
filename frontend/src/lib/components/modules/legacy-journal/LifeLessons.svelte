@@ -324,7 +324,7 @@
                 </div>
                 <h3 class="font-bold text-lg mb-1">Add a New Lesson</h3>
                 <p class="text-sm text-stone-400 max-w-[200px]">
-                    Capture a thought, a quote, or a story before it fades.
+                    Capture a thought, a quote, or a story to keep it close.
                 </p>
             </button>
         </div>

@@ -50,7 +50,7 @@
                         type="text"
                         bind:value={newTag}
                         aria-label="Tag"
-                        placeholder="Enter tag..."
+                        placeholder="Add a tag..."
                         class="bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500 w-32 placeholder:text-slate-500"
                         onkeydown={(e) => e.key === "Enter" && handleAddTag()}
                         autofocus
@@ -92,7 +92,7 @@
         <button
             class="ml-2 hover:bg-slate-800 p-2 rounded-full transition-colors"
             onclick={() => onclear?.()}
-            title="Clear Selection"
+            title="Start over"
         >
             <X size={16} />
         </button>

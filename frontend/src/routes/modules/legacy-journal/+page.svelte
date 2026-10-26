@@ -78,12 +78,12 @@
         },
         {
             title: "What I Learned from Mom's Kitchen",
-            content: "The most important lessons I learned weren't in school. They were standing beside Mom...",
+            content: "The most important lessons I learned were beside Mom in the kitchen...",
             tags: "mom, wisdom, cooking",
         },
         {
             title: "My Philosophy on Hard Work",
-            content: "I've always believed that hard work isn't just about the outcome...",
+            content: "I've always believed that hard work has always been about more than the outcome...",
             tags: "values, work ethic",
         },
     ];
@@ -161,7 +161,7 @@
     }
 
     async function deleteEntry(id: number) {
-        if (!(await askConfirm("Remove this reflection? Your words will be preserved in the activity log."))) return;
+        if (!(await askConfirm("Remove this reflection? You can always start over if you feel like it later."))) return;
         await journalStore.delete(id);
     }
 
@@ -195,7 +195,7 @@
     title="Legacy Journal"
     subtitle="Your Story, Your Legacy"
     detailedDescription="Your life is filled with stories worth telling - moments of joy, lessons learned, values discovered. This journal is your space to preserve those treasures for the people who matter most."
-    whyMatters="The stories we carry shape generations. Without a place to write them down, precious memories fade and wisdom goes unshared. Your words here become a lasting gift - a window into your heart that your loved ones can return to again and again."
+    whyMatters="The stories we carry shape generations. A place to write them down keeps precious memories close and shares your wisdom. Your words here become a lasting gift - a window into your heart that your loved ones can return to again and again."
 >
     {#if activeTab === "accomplishments"}
         <a
@@ -203,7 +203,7 @@
             class="w-fit px-5 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
         >
             <Plus size={18} />
-            Go to Timeline to Add
+            Add on your Timeline
         </a>
     {:else}
         <button
@@ -216,7 +216,7 @@
             class="px-5 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
         >
             <Plus size={18} />
-            {activeTab === "will" ? "Add Value" : activeTab === "lessons" ? "Add a lesson" : "Share a memory"}
+            {activeTab === "will" ? "Add a value" : activeTab === "lessons" ? "Add a lesson" : "Share a memory"}
         </button>
     {/if}
 </LivingBlueprintHeader>
@@ -308,7 +308,7 @@
                         <!-- Empty State -->
                         <EmptyState
                             title="Your story is waiting to be told"
-                            whyMatters="<strong>Every memory you hold is a gift waiting to be given.</strong> The stories of your life - your triumphs, your lessons, your laughter - deserve to be preserved. Without writing them down, these precious moments may fade with time.<br/><br/>Your reflections become a legacy. When you share your memories here, you're creating something your loved ones will treasure forever."
+                            whyMatters="<strong>Every memory you hold is a gift waiting to be given.</strong> The stories of your life - your triumphs, your lessons, your laughter - deserve to be preserved.<br/><br/>Your reflections become a legacy. When you share your memories here, you're creating something your loved ones will treasure forever."
                             encouragement="Start with one memory. A moment that made you smile. A lesson you learned. Your words matter more than you know."
                             icon={BookOpen}
                             iconClass="text-primary"
@@ -319,7 +319,7 @@
                         <!-- Sample Data / Ghost Rows -->
                         <div class="mt-8 space-y-3 max-w-2xl mx-auto">
                             <p class="text-sm text-slate-500 text-center mb-4">
-                                Need inspiration? Click an example below to get started:
+                                Here are a few examples to spark an idea:
                             </p>
                             {#each sampleEntries as sample}
                                 <GhostRow
@@ -338,7 +338,7 @@
                         <!-- No search results -->
                         <div class="text-center py-12">
                             <Search size={48} class="mx-auto text-slate-300 mb-4" />
-                            <p class="text-slate-500">No reflections match "{searchQuery}"</p>
+                            <p class="text-slate-500">Showing reflections that match "{searchQuery}"</p>
                             <button
                                 onclick={() => (searchQuery = "")}
                                 class="mt-4 text-primary hover:underline"
@@ -499,7 +499,7 @@
 <Modal
     bind:open={showAddModal}
     title={editingEntry ? "Continue your reflection" : "Capture a memory"}
-    description="Your stories matter. Take your time - there's no right or wrong way to share what's in your heart."
+    description="Your stories matter. Take your time. Share what is in your heart in your own way."
     maxWidth="max-w-lg"
 >
     <div class="space-y-4">
@@ -565,7 +565,7 @@
             onclick={() => (showAddModal = false)}
             class="px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-200 transition-colors"
         >
-            Not right now
+            Maybe later
         </button>
         <button
             onclick={saveEntry}
