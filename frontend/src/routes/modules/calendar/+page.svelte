@@ -78,10 +78,38 @@
 
     import { registerSync } from "$lib/services/sync.svelte";
 
+    // The server stores `recurring`, `description` and `ritual_instructions`;
+    // the page works with isRecurring, wish and emailTemplate. Runs both ways
+    // and is safe to apply twice.
+    function calendarMapper(item: any) {
+        if (!item) return item;
+        const out = { ...item };
+        const recurring = 'isRecurring' in item ? item.isRecurring : item.recurring;
+        out.isRecurring = !!recurring;
+        out.recurring = !!recurring;
+        const wish = 'wish' in item ? item.wish : item.description;
+        out.wish = wish ?? '';
+        out.description = wish ?? '';
+        let tpl = item.emailTemplate;
+        if (!('emailTemplate' in item)) {
+            try { tpl = item.ritualInstructions ? JSON.parse(item.ritualInstructions) : undefined; } catch { tpl = undefined; }
+        }
+        out.emailTemplate = tpl && typeof tpl === 'object' ? tpl : undefined;
+        out.ritualInstructions = out.emailTemplate ? JSON.stringify(out.emailTemplate) : '';
+        return out;
+    }
+
+    // Stored dates are "MMDD" / "YYYYMMDD" (older rows may be "MM-DD" / "YYYY-MM-DD").
+    function normDate(d: string, recurring: boolean) {
+        const digits = (d || "").replace(/-/g, "");
+        return recurring ? digits.slice(-4) : digits;
+    }
+
     // Register Sync
     const calendarSync = registerSync<CalendarEvent>(
         "calendar_events",
         "calendar_events",
+        calendarMapper,
     );
     let events = $derived(calendarSync.items);
     let isLoading = $state(true);
@@ -182,14 +210,16 @@
         // For recurring (MMDD), we'll just fake the current year for the input
         if (evt.isRecurring) {
             const currentYear = new Date().getFullYear();
-            const m = evt.date.substring(0, 2);
-            const d = evt.date.substring(2, 4);
+            const nd = normDate(evt.date, true);
+            const m = nd.substring(0, 2);
+            const d = nd.substring(2, 4);
             formDate = `${currentYear}-${m}-${d}`;
         } else {
             // YYYYMMDD
-            const y = evt.date.substring(0, 4);
-            const m = evt.date.substring(4, 6);
-            const d = evt.date.substring(6, 8);
+            const nd = normDate(evt.date, false);
+            const y = nd.substring(0, 4);
+            const m = nd.substring(4, 6);
+            const d = nd.substring(6, 8);
             formDate = `${y}-${m}-${d}`;
         }
 
@@ -253,6 +283,7 @@
             "Dec",
         ];
 
+        dateStr = normDate(dateStr, isRecurring);
         if (isRecurring) {
             const m = parseInt(dateStr.substring(0, 2)) - 1;
             const d = parseInt(dateStr.substring(2, 4));

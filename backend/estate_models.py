@@ -227,7 +227,7 @@ class CalendarEvent(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="users.id", index=True)
     title: str
-    date: str # "YYYY-MM-DD" or "MM-DD"
+    date: str # text: "MMDD"/"YYYYMMDD" from the calendar page, or "MM-DD"/"YYYY-MM-DD"
     type: str = "event" # birthday, tax, maintenance, ritual
     description: Optional[str] = None
     ritual_instructions: Optional[str] = None

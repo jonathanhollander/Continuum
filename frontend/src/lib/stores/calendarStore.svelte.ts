@@ -67,11 +67,12 @@ export const upcomingEvents = derived(calendarSync, ($sync) => {
     const currentYear = now.getFullYear();
 
     return items.map(event => {
-        const dateParts = event.date.split('-');
-        if (dateParts.length < 2) return { ...event, nextDate: new Date(8640000000000000) };
+        // Accepts "MM-DD", "YYYY-MM-DD" and the calendar page's "MMDD" / "YYYYMMDD".
+        const digits = (event.date || '').replace(/-/g, '');
+        if (digits.length < 4) return { ...event, nextDate: new Date(8640000000000000) };
 
-        const month = Number(dateParts[dateParts.length - 2]);
-        const day = Number(dateParts[dateParts.length - 1]);
+        const month = Number(digits.slice(-4, -2));
+        const day = Number(digits.slice(-2));
 
         const eventDate = new Date(currentYear, month - 1, day);
 
