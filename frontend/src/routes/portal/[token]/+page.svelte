@@ -12,6 +12,11 @@
   let actionLoading = $state(false);
   let actionMessage = $state("");
 
+  // The API sends UTC with "Z"; a time without a zone is still read as UTC, never local
+  function parseUtc(ts: string): Date {
+    return new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(ts) ? ts : ts + "Z");
+  }
+
   onMount(async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/api/pulse/portal/${token}`);
@@ -133,14 +138,14 @@
           >
         </div>
 
-        <div>
-          <p class="text-slate-400 text-sm mb-1">LAST CONFIRMED CHECK-IN</p>
-          <p class="text-2xl font-mono text-white">
-            {data.last_checkin
-              ? new Date(data.last_checkin).toLocaleString()
-              : "Never"}
-          </p>
-        </div>
+        {#if data.last_checkin}
+          <div>
+            <p class="text-slate-400 text-sm mb-1">LAST CONFIRMED CHECK-IN</p>
+            <p class="text-2xl font-mono text-white">
+              {parseUtc(data.last_checkin).toLocaleString()}
+            </p>
+          </div>
+        {/if}
 
         <div class="w-full bg-slate-700/50 p-4 rounded-xl text-left">
           <p

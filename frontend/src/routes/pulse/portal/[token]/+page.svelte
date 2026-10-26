@@ -24,7 +24,7 @@
         vaultItems: [] as any[],
     });
 
-    // The API sends naive UTC timestamps (no "Z"); read them as UTC, not local time
+    // The API sends UTC with "Z"; a time without a zone is still read as UTC, never local
     function parseUtc(ts: string): Date {
         return new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(ts) ? ts : ts + "Z");
     }

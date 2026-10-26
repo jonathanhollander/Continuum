@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlmodel import Session, select
 from backend.limiter import limiter
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from backend.database import get_session, User
 from backend.auth import get_current_user
 import secrets
@@ -148,6 +148,30 @@ def delete_contact(contact_id: int, user: User = Depends(get_current_user), sess
 # --- Guardian Portal (Public Access) ---
 # Rate limiting on public endpoints to prevent abuse
 
+# --- Guardian portal helpers ---
+
+# A guardian's "I've confirmed they are OK" is stored as a PulseCheckin with this method so the
+# scheduler (pulse_logic.process_user_pulse reads any check-in) restarts the owner's timer. It is
+# a guardian action, not the owner's own check-in, so the portal ignores it for status, the shown
+# time and vault access; one guardian's snooze leaves every other guardian's access as it was.
+GUARDIAN_SNOOZE_METHOD = "guardian_snooze"
+
+
+def _owner_last_checkin(session: Session, user_id: int):
+    return session.exec(select(PulseCheckin).where(
+        PulseCheckin.user_id == user_id,
+        PulseCheckin.method != GUARDIAN_SNOOZE_METHOD,
+    ).order_by(PulseCheckin.timestamp.desc())).first()
+
+
+def _utc_iso(ts: datetime):
+    """Stored times are naive UTC; send them as aware ISO with "Z" so browsers read them as UTC."""
+    if ts is None:
+        return None
+    ts = ts.replace(tzinfo=timezone.utc) if ts.tzinfo is None else ts.astimezone(timezone.utc)
+    return ts.isoformat().replace("+00:00", "Z")
+
+
 @router.get("/portal/{token}")
 @limiter.limit("30/minute")  # P1-High: Rate limit public portal
 def get_portal_view(request: Request, token: str, session: Session = Depends(get_session)):
@@ -162,8 +186,7 @@ def get_portal_view(request: Request, token: str, session: Session = Depends(get
     # 2. Get User Status
     user_id = contact.user_id
     user = session.get(User, user_id)
-    user_checkin_stmt = select(PulseCheckin).where(PulseCheckin.user_id == user_id).order_by(PulseCheckin.timestamp.desc())
-    last_checkin = session.exec(user_checkin_stmt).first()
+    last_checkin = _owner_last_checkin(session, user_id)
     
     # Check active escalation for sensitive data: only this outage counts (rows after the last
     # check-in, as pulse_logic.process_user_pulse does), so a check-in closes access again.
@@ -179,12 +202,20 @@ def get_portal_view(request: Request, token: str, session: Session = Depends(get
     tier = session.get(PulseEscalationTier, contact.tier_id) if contact.tier_id else None
     show_sensitive = bool(last_escalation and tier and last_escalation.tier_number >= tier.tier_number)
 
+    # "active" while the owner is inside their own check-in window (same soft deadline as
+    # pulse_logic.process_user_pulse: last check-in + frequency_days); past it, "grace"
+    pulse_settings = session.get(PulseSettings, user_id)
+    frequency_days = pulse_settings.frequency_days if pulse_settings else PulseSettings().frequency_days
+    user_status = "active" if (
+        last_checkin and datetime.utcnow() < last_checkin.timestamp + timedelta(days=frequency_days)
+    ) else "grace"
+
     return {
         "contact_name": contact.name,
         "contact_tier": tier.tier_number if tier else None,
         "user_name": user.email.split('@')[0].capitalize() if user else "Estate Owner",
-        "user_status": "active" if (last_checkin and last_checkin.timestamp > datetime.utcnow() - timedelta(hours=48)) else "grace",
-        "last_checkin": last_checkin.timestamp if last_checkin else None,
+        "user_status": user_status,
+        "last_checkin": _utc_iso(last_checkin.timestamp) if last_checkin else None,
         "show_sensitive": show_sensitive,
         "sensitive_data": {
              "medical_proxy": "Active" if show_sensitive else "Locked",
@@ -204,9 +235,7 @@ def get_portal_vault(request: Request, token: str, session: Session = Depends(ge
     # Same rule as the portal view: only once this outage's escalation (rows after the owner's
     # last check-in) has reached this guardian's tier. Tier-0 safety-timer rows don't count.
     from backend.pulse_logic import SAFETY_TIMER_LOG_TIER
-    last_checkin = session.exec(select(PulseCheckin).where(
-        PulseCheckin.user_id == contact.user_id
-    ).order_by(PulseCheckin.timestamp.desc())).first()
+    last_checkin = _owner_last_checkin(session, contact.user_id)
     last_escalation = session.exec(select(PulseEscalationLog).where(
         PulseEscalationLog.user_id == contact.user_id,
         PulseEscalationLog.tier_number != SAFETY_TIMER_LOG_TIER,
@@ -238,7 +267,9 @@ def guardian_respond(request: Request, token: str, action: str, session: Session
         raise HTTPException(status_code=401, detail="Token expired")
         
     if action == "snooze":
-        checkin_rec = PulseCheckin(user_id=contact.user_id, method="guardian_snooze", note=f"Snoozed by {contact.name}")
+        # Restarts the owner's check-in timer (the scheduler reads every check-in); the portal
+        # routes skip this method, so other guardians' access stays as it was
+        checkin_rec = PulseCheckin(user_id=contact.user_id, method=GUARDIAN_SNOOZE_METHOD, note=f"Marked OK by {contact.name}")
         session.add(checkin_rec)
         session.commit()
         return {"status": "snoozed"}
