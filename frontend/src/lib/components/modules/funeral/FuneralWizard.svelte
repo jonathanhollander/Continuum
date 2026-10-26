@@ -17,7 +17,11 @@
         Droplets,
         Leaf,
     } from "lucide-svelte";
-    import { funeralStore } from "$lib/stores/funeralStore.svelte";
+    import { onDestroy } from "svelte";
+    import {
+        funeralStore,
+        type FuneralWishes,
+    } from "$lib/stores/funeralStore.svelte";
     import {
         FUNERAL_TRADITIONS,
         type TraditionConfig,
@@ -39,8 +43,16 @@
     let currentStep = 1;
     let direction = 1;
 
+    // Unsaved changes live in `draft` (shown at once) and are saved together
+    // ~500 ms after the last one, one save at a time, the latest state winning.
+    // The manager keeps the saved value, so a failed save drops the draft and
+    // the screen returns to what was really saved (the manager shows the line).
+    let draft: FuneralWishes | null = null;
+    let saveTimer: ReturnType<typeof setTimeout> | null = null;
+    let saving = false;
+
     // Derived State
-    $: wishes = $funeralStore.wishes;
+    $: wishes = draft ?? ($funeralStore?.wishes || funeralStore.wishes);
     $: activeTradition =
         FUNERAL_TRADITIONS[wishes.religiousTradition || "secular"];
 
@@ -60,52 +72,69 @@
         questions = { ...questions, [category]: newQ };
     }
 
+    // Apply a change to the draft (never to the saved data) and queue a save.
+    function edit(fn: (w: FuneralWishes) => FuneralWishes) {
+        draft = fn(draft ?? funeralStore.wishes);
+        if (saveTimer) clearTimeout(saveTimer);
+        saveTimer = setTimeout(flush, 500);
+    }
+
+    async function flush() {
+        if (saveTimer) clearTimeout(saveTimer);
+        saveTimer = null;
+        if (saving || !draft) return; // the save in flight picks up the newer draft
+        const sent = draft;
+        saving = true;
+        try {
+            await funeralStore.update((data) => ({ ...data, wishes: sent }));
+            if (draft === sent) draft = null; // saved: show the server's copy
+        } catch {
+            // the manager rolled back and shows the gentle retry line
+            draft = null;
+            if (saveTimer) clearTimeout(saveTimer);
+            saveTimer = null;
+        } finally {
+            saving = false;
+        }
+        if (draft && !saveTimer) flush(); // changes made while that save ran
+    }
+
+    onDestroy(() => {
+        if (saveTimer) flush();
+    });
+
     // Actions
     function setTradition(key: string) {
-        funeralStore.update((data) => ({
-            ...data,
-            wishes: { ...data.wishes, religiousTradition: key },
-        })).catch(() => {}); // the manager rolls back and shows the gentle retry line
+        edit((w) => ({ ...w, religiousTradition: key }));
     }
 
     function setDisposition(type: string) {
-        funeralStore.update((data) => ({
-            ...data,
-            wishes: { ...data.wishes, disposition: type },
-        })).catch(() => {}); // the manager rolls back and shows the gentle retry line
+        edit((w) => ({ ...w, disposition: type }));
     }
 
     function toggleRitual(ritual: string) {
-        const current = wishes.ceremonyDetails?.rituals || [];
-        const newRituals = current.includes(ritual)
-            ? current.filter((r) => r !== ritual)
-            : [...current, ritual];
-
-        funeralStore.update((data) => ({
-            ...data,
-            wishes: {
-                ...data.wishes,
-                ceremonyDetails: {
-                    ...data.wishes.ceremonyDetails,
-                    rituals: newRituals,
-                },
-            },
-        })).catch(() => {}); // the manager rolls back and shows the gentle retry line
+        edit((w) => {
+            const current = w.ceremonyDetails?.rituals || [];
+            const rituals = current.includes(ritual)
+                ? current.filter((r) => r !== ritual)
+                : [...current, ritual];
+            return { ...w, ceremonyDetails: { ...w.ceremonyDetails, rituals } };
+        });
     }
 
     function updateField(path: string[], value: any) {
         // Copy each object along the path, so the saved data stays untouched
         // and a failed save rolls back to the value that was really saved.
-        funeralStore.update((data) => {
-            const wishes: any = { ...data.wishes };
+        edit((w) => {
+            const wishes: any = { ...w };
             let current: any = wishes;
             for (let i = 0; i < path.length - 1; i++) {
                 current[path[i]] = { ...(current[path[i]] || {}) };
                 current = current[path[i]];
             }
             current[path[path.length - 1]] = value;
-            return { ...data, wishes };
-        }).catch(() => {}); // the manager rolls back and shows the gentle retry line
+            return wishes;
+        });
     }
 
     function nextStep() {
