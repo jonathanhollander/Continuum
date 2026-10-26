@@ -595,7 +595,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X149 | ☑ | de131ac | No shared save button in use (`ui/SaveButton.svelte` has the guard but no callers), so each form's save is wrapped: in-flight guard, `disabled`/`aria-busy`, existing "Saving..." label; Try Again goes through the same guard. 16 files (subscriptions, pets, heirlooms, calendar, insurance, property, contacts, home-manual, legacy-journal, medical, letters, digital-guardian, DocumentVault, AssetManager, EthicalWill, LifeLessons). Held POST ×3 clicks on subscriptions, pets, heirlooms, calendar → 1 POST, item once; failed → toast, draft kept; 0 errors. The other 12 forms unrun → O1/O2 release sweep |
 | X150 | ☑ | 630a4ae | `medical.py` `_check_directive`: missing/unknown `type` or blank `title` → 422 with a gentle message (create always; update only for fields sent, older stored types still savable); profile `organ_donor: null` keeps the stored value. Before: 500 ×2, unknown type stored; after: 422/200 as expected, page add and edit 200, 0 tracebacks |
 | X151 | ☑ | 7d1599d | `pulse.py` `_parse_settings_datetime` for `ghost_mode_until`, `safety_timer_active_until`, `last_known_location_time`: ISO (incl. `Z`/offsets) → naive UTC, `null` clears, anything else 422 with a gentle message. ISO 500 → 200 and stored; junk → 422; tracebacks 16 → 0. Findings → X152, X153 |
-| X152 | ☐ (queued: 20-agent limit; worktree ready) | | |
+| X152 | ▶ | | |
 | X153 | ☐ (queued: 20-agent limit) | | |
 | X138 | ☑ | c5a7077 | Toolbar Download (insurance, property) saves the stored files of every record shown (follows search; disabled when none; cached files reused); subscriptions Filter chips by the difficulty words already shown (Easy/Medium/Hard), clear on reclick or close; `aiGriefService` uses `contextStore.isExecutor` (store holds `executor` after X118 — the old check never matched). Downloads byte-identical, executor/planner personas checked with the AI call intercepted; 0 errors |
 | X114 | ☑ | fdd80b5 | `routers/pets.py`, `heirlooms.py`, `insurance.py` removed (no caller: the app uses `/api/data/pets`, `/heirlooms` → Asset, `/insurance_policies`; `heirlooms.py` wrote the unused `Heirloom` table). TestClient: before `200 {}`; after 405/404, the `/api/data/*` paths create and list; server starts clean |
@@ -702,7 +702,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | U4 | ▶ | | |
 | U5 | ▶ | | |
 | U6 | ▶ | | |
-| U7 | ▶ | | |
+| U7 | ☑ | 57cb390 | `GriefSupportBanner` title, message and button use theme tokens (`text-foreground`, `/75`, `bg-card border-border`), so light and `theme-dark` both read: light title 1.14 → 10.7–11.1:1, button 1.13 → 14.4:1, message 2.1 → 5.6:1 on executor-toolkit, letters, medical, funeral; dark unchanged or better; button still opens grief support; 0 errors |
 | U8 | ▶ | | |
 | U9 | ▶ | | |
 | U10 | ▶ | | |
