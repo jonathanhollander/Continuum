@@ -1,6 +1,9 @@
 <script lang="ts">
     import { fly, fade, slide } from "svelte/transition";
     import { estateAnalytics } from "$lib/stores/analyticsStore";
+    import { auditReadiness } from "$lib/utils/auditReadiness.svelte";
+    import AuditSourceStatus from "$lib/components/AuditSourceStatus.svelte";
+    let auditSources = $derived(auditReadiness());
     import {
         Activity,
         Shield,
@@ -78,7 +81,7 @@
                 <div class="text-xs font-bold uppercase text-muted-foreground mb-1">
                     The Pulse
                 </div>
-                <div class="flex items-baseline justify-end gap-2">
+                {#if auditSources.canScore}<div class="flex items-baseline justify-end gap-2">
                     <span
                         class={`text-6xl font-sans font-bold ${getHealthColor(health)}`}
                         data-testid="analytics-readiness"
@@ -86,10 +89,12 @@
                         {health}
                     </span>
                     <span class="text-muted-foreground text-xl">%</span>
-                </div>
+                </div>{/if}
             </div>
         </header>
 
+        <AuditSourceStatus state={auditSources} />
+        {#if auditSources.canScore}
         <!-- Pillars Grid -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
             <!-- Legal Pillar -->
@@ -252,6 +257,7 @@
             </div>
         </div>
 
+        {/if}
         <!-- Next steps, written as invitations -->
         {#if gaps.length > 0}
             <div in:slide={{ duration: 400 }}>
@@ -294,7 +300,7 @@
                     {/each}
                 </div>
             </div>
-        {:else if $estateAnalytics.guardians.loaded}
+        {:else if $estateAnalytics.guardians.loaded && auditSources.confirmed}
             <div
                 in:slide={{ duration: 400 }}
                 class="bg-success/10 border border-success/20 p-8 rounded-2xl text-center"

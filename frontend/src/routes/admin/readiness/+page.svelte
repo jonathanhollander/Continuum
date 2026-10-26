@@ -2,11 +2,8 @@
     import { onMount } from "svelte";
     import { estateAudit, AuditStore } from "$lib/stores/auditStore.svelte";
     import { CircleCheck, Circle, ArrowRight, Loader2 } from "lucide-svelte";
-    import { financialAssetsSync } from "$lib/stores/financialAssetsStore.svelte";
-    import { insuranceSync } from "$lib/stores/insuranceStore.svelte";
-    import { contactSync } from "$lib/stores/familyStore.svelte";
-    import { directiveSync } from "$lib/stores/medicalStore.svelte";
-    import { digitalAssetsSync } from "$lib/stores/digitalAssetsStore.svelte";
+    import { auditReadiness } from "$lib/utils/auditReadiness.svelte";
+    import AuditSourceStatus from "$lib/components/AuditSourceStatus.svelte";
 
     onMount(() => {
         estateAudit.runAudit();
@@ -16,13 +13,8 @@
     let ringColor = $derived(
         audit.percentage === 100 ? "stroke-success" : "stroke-info",
     );
-    // A gentle cue, not 0% and 0 pts, until every store the audit reads has its first server
-    // answer (a store this device already holds records for counts as answered).
-    let isLoading = $derived(
-        [financialAssetsSync, insuranceSync, contactSync, directiveSync, digitalAssetsSync].some(
-            (m) => m.lastSync === null && m.status !== "error" && m.items.length === 0,
-        ),
-    );
+    let auditSources = $derived(auditReadiness());
+    let isLoading = $derived(!auditSources.canScore);
 
     // Each area's page; every id the audit scores has one
     const modulePath: Record<string, string> = {
@@ -70,30 +62,27 @@
                 stroke-dashoffset={2 *
                     Math.PI *
                     60 *
-                    (1 - audit.percentage / 100)}
+                    (1 - (auditSources.canScore ? audit.percentage : 0) / 100)}
             />
         </svg>
         <div class="absolute inset-0 flex flex-col items-center justify-center">
             {#if isLoading}
-                <Loader2 size={28} class="animate-spin text-info" />
+                {#if auditSources.hasErrors}<span class="text-3xl text-muted-foreground">—</span>
+                {:else}<Loader2 size={28} class="animate-spin text-info" />{/if}
             {:else}
                 <span class="text-3xl font-bold text-white"
                     >{audit.percentage}%</span
                 >
                 <span class="text-[10px] uppercase tracking-widest text-muted-foreground"
-                    >Ready</span
+                    >{auditSources.confirmed ? "Ready" : "Provisional"}</span
                 >
             {/if}
         </div>
     </div>
 </div>
 
-{#if isLoading}
-    <div class="flex flex-col items-center justify-center gap-3 py-16" role="status" data-testid="readiness-loading">
-        <Loader2 class="w-8 h-8 animate-spin text-info" />
-        <p class="text-sm text-slate-400">Gathering your records...</p>
-    </div>
-{:else}
+<AuditSourceStatus state={auditSources} />
+{#if !isLoading}
 <!-- Module Grid -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     {#each Object.entries(audit.moduleScores) as [id, score], i}

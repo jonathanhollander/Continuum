@@ -1,6 +1,9 @@
 <script lang="ts">
     import { pulse, pulseStatus } from "$lib/stores/pulse.svelte";
     import { estateAudit } from "$lib/stores/auditStore.svelte";
+    import { auditReadiness } from "$lib/utils/auditReadiness.svelte";
+    import AuditSourceStatus from "$lib/components/AuditSourceStatus.svelte";
+    let auditSources = $derived(auditReadiness());
     import { apiGet, apiPost } from "$lib/api/client";
     import { onMount } from "svelte";
     import { slide } from "svelte/transition";
@@ -457,11 +460,12 @@
             >
                 Estate Readiness
             </h3>
-            {#if estateAudit.percentage > 0}
+            <AuditSourceStatus state={auditSources} />
+            {#if auditSources.canScore && estateAudit.percentage > 0}
                 <div class="text-5xl md:text-7xl font-serif text-foreground mb-2" data-testid="pulse-readiness">
                     {estateAudit.percentage}<span class="text-primary">%</span>
                 </div>
-            {:else}
+            {:else if auditSources.canScore}
                 <div class="text-3xl md:text-4xl font-serif text-foreground mb-2" data-testid="pulse-readiness">
                     Ready when you are
                 </div>

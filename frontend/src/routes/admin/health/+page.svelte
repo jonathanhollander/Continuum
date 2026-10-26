@@ -1,6 +1,8 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { estateAudit } from "$lib/stores/auditStore.svelte";
+    import { auditReadiness } from "$lib/utils/auditReadiness.svelte";
+    import AuditSourceStatus from "$lib/components/AuditSourceStatus.svelte";
     import { TriangleAlert, Activity, ShieldAlert } from "lucide-svelte";
 
     onMount(() => {
@@ -8,6 +10,7 @@
     });
 
     let audit = $derived($estateAudit);
+    let auditSources = $derived(auditReadiness());
     // The level box takes the level's colour (it was red even at Low)
     const tones = {
         High: { box: "bg-danger-soft border-danger/30", icon: "text-danger", label: "text-danger" },
@@ -32,7 +35,7 @@
                 A look at how current each record is.
             </p>
         </div>
-        <div
+        {#if auditSources.canScore}<div
             class="flex items-center gap-3 px-4 py-2 rounded-lg border {levelTone.box}"
         >
             <ShieldAlert class={levelTone.icon} size={24} />
@@ -44,9 +47,11 @@
                     {level}
                 </div>
             </div>
-        </div>
+        </div>{/if}
     </div>
 
+    <AuditSourceStatus state={auditSources} />
+    {#if auditSources.canScore}
     <!-- Red Flags Grid -->
     <div class="grid grid-cols-1 gap-6">
         <section class="bg-slate-900 border border-slate-800 rounded-xl p-6">
@@ -80,6 +85,7 @@
         </section>
 
     </div>
+    {/if}
 
     <!-- JSON Inspector (Developer Tool) -->
     <section
@@ -92,7 +98,7 @@
         </h3>
         <pre
             class="text-xs text-success font-mono overflow-x-auto p-4 bg-slate-900 rounded-lg border border-slate-800 max-h-64">
-{JSON.stringify(audit, null, 2)}
+{JSON.stringify({ ...(auditSources.canScore ? audit : {}), sourceReadiness: auditSources }, null, 2)}
         </pre>
     </section>
 </div>
