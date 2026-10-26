@@ -82,7 +82,7 @@
                     href: "/modules/pets",
                     icon: Dog,
                     keywords: ["pet", "dog", "cat", p.breed],
-                    type: "family",
+                    type: "pet",
                     description: [p.type, p.breed].filter(Boolean).join(" - "),
                 })),
                 ...(medicalStore.directives || []).map((c: any) => ({
@@ -90,7 +90,7 @@
                     href: "/modules/medical",
                     icon: Heart,
                     keywords: ["doctor", "medical", c.type],
-                    type: "contact",
+                    type: "directive",
                     description: c.summary || c.type,
                 })),
             ].filter((i) => canOpen(i.href));

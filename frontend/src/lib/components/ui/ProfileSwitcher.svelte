@@ -107,7 +107,7 @@
                 >
                     {activeProfile.name === "Me" ||
                     activeProfile.name === "New User"
-                        ? "Secure Your Legacy"
+                        ? $dict.secureLegacy
                         : $dict.planningFor}
                 </p>
                 <p class="text-sm font-bold text-white truncate">

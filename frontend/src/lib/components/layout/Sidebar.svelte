@@ -395,7 +395,7 @@
                                         <span
                                             class="shrink-0 -ml-2 whitespace-nowrap text-[10px] font-medium leading-none px-1 py-1 rounded bg-white/10 text-primary-foreground/70"
                                             data-testid="preview-tag"
-                                            >Early preview</span
+                                            >{$dict.earlyPreview}</span
                                         >
                                     {/if}
                                     {#if item.isExternal}
