@@ -51,6 +51,11 @@
     let editingId = $state<string | number | null>(null);
     let showWizard = $state(false);
     let isLoading = $state(true);
+    let photoUploading = $state(false);
+    let photoUploadFailed = $state(false);
+    let photoUploader: { replaceWithAddress: (address: string) => void } | undefined = $state();
+    // Selection counts as newer editing before an upload has a saved address.
+    let photoRevision = 0;
 
     let newHeirloom: Partial<Heirloom> = $state({
         name: "",
@@ -156,7 +161,19 @@
 
     let showAddForm = $state(false);
 
+    function resetPhotoState() {
+        photoUploading = false;
+        photoUploadFailed = false;
+        photoRevision = 0;
+    }
+
+    function setFormOpen(open: boolean) {
+        if (open) showAddForm = true;
+        else closeForm();
+    }
+
     function openAddForm(name = "") {
+        resetPhotoState();
         wizardQueue = [];
         isEditing = false;
         editingId = null;
@@ -167,11 +184,13 @@
     }
 
     function closeForm() {
+        resetPhotoState();
         wizardQueue = [];
         showAddForm = false;
     }
 
     function openEditForm(item: Heirloom) {
+        resetPhotoState();
         wizardQueue = [];
         recipientContactId = "";
         isEditing = true;
@@ -192,7 +211,7 @@
     // One save at a time: while it is open the button waits, so a second click sends nothing.
     let saving = $state(false);
     async function saveHeirloom() {
-        if (saving) return;
+        if (saving || photoUploading || photoUploadFailed) return;
         saving = true;
         try {
             await saveHeirloomOnce();
@@ -202,9 +221,9 @@
     }
 
     async function saveHeirloomOnce() {
-        if (!newHeirloom.name) return;
+        if (!newHeirloom.name || photoUploading || photoUploadFailed) return;
         const form = newHeirloom;
-        const fields = JSON.stringify([form, parsedCustomAttributes]);
+        const fields = JSON.stringify([form, parsedCustomAttributes, photoRevision]);
         const id = isEditing && editingId !== null ? editingId : undefined;
         const payload = {
             name: form.name, recipient: form.recipient || "", story: form.story || "",
@@ -214,7 +233,7 @@
         try {
             await saveAttempt(form, payload, async (saved) => {
                 if (newHeirloom !== form) return;
-                if (JSON.stringify([form, parsedCustomAttributes]) !== fields) {
+                if (JSON.stringify([form, parsedCustomAttributes, photoRevision]) !== fields) {
                     editingId = saved.id;
                     isEditing = true;
                     return;
@@ -584,7 +603,7 @@
 
     <!-- Add Form Modal -->
     <Modal
-        bind:open={showAddForm}
+        bind:open={() => showAddForm, setFormOpen}
         title={isEditing ? "Edit these details" : "Preserve a Treasure"}
         description="This object holds a story that only you can tell. By documenting it here, you're ensuring that story survives—transforming an object into an heirloom that connects generations."
         maxWidth="max-w-lg"
@@ -657,10 +676,16 @@
             </div>
 
             <div>
-                <VisionUploader
-                    bind:imageUrl={newHeirloom.image}
-                    bind:provenance={newHeirloom.ownershipDetails}
-                />
+                {#key newHeirloom}
+                    <VisionUploader
+                        bind:this={photoUploader}
+                        bind:imageUrl={newHeirloom.image}
+                        bind:provenance={newHeirloom.ownershipDetails}
+                        bind:uploading={photoUploading}
+                        bind:uploadFailed={photoUploadFailed}
+                        onselect={() => photoRevision++}
+                    />
+                {/key}
                 <!-- A chosen photo is saved to the media store (older records may hold a data URL); a typed address stays editable here. -->
                 {#if !newHeirloom.image?.startsWith("data:") && mediaIdFromRef(newHeirloom.image) === null}
                     <div class="mt-2 text-center">
@@ -676,6 +701,10 @@
                             id="heirloom-image-url"
                             type="text"
                             bind:value={newHeirloom.image}
+                            oninput={(event) => {
+                                photoRevision++;
+                                photoUploader?.replaceWithAddress(event.currentTarget.value);
+                            }}
                             class="w-full px-4 py-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
                             placeholder="https://..."
                         />
@@ -702,11 +731,13 @@
             >
             <button
                 onclick={saveHeirloom}
-                disabled={!newHeirloom.name || saving}
-                aria-busy={saving}
+                disabled={!newHeirloom.name || saving || photoUploading || photoUploadFailed}
+                aria-busy={saving || photoUploading}
                 class="px-6 py-2.5 rounded-xl font-semibold bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 transition-all shadow-lg shadow-primary/20"
             >
-                {saving
+                {photoUploading
+                    ? "Saving your photo…"
+                    : saving
                     ? "Saving..."
                     : isEditing
                     ? "Save these details"
