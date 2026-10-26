@@ -14,6 +14,7 @@
     import {
         financialAssetsStore,
         estateTotals,
+        isDebt,
     } from "$lib/stores/financialAssetsStore.svelte";
     import { preferenceStore } from "$lib/stores/preferenceStore";
     import {
@@ -44,6 +45,8 @@
 
     import { notifications } from "$lib/stores/notificationStore";
     import Tooltip from "$lib/components/ui/Tooltip.svelte";
+    import { documentStore } from "$lib/stores/documentStore.svelte";
+    import { pluralWord } from "$lib/utils/plural";
 
     // Executor mode welcome state
     let showExecutorWelcome = $state(false);
@@ -109,15 +112,14 @@
                     inProgress:
                         scores["family"] > 0 || familyStore.members.length > 0,
                     count: familyStore.members.length,
-                    label: "people",
+                    label: pluralWord(familyStore.members.length, "person", "people"),
                 };
             case "financial":
+                // A debt is recorded here too, but it is no account; the audit's "financial" score reads property
                 return {
-                    inProgress:
-                        scores["financial"] > 0 ||
-                        financialAssetsStore.items.length > 0,
-                    count: financialAssetsStore.items.length,
-                    label: "accounts",
+                    inProgress: financialAssetsStore.items.length > 0,
+                    count: accountCount,
+                    label: pluralWord(accountCount, "account"),
                 };
             case "insurance":
                 return {
@@ -125,13 +127,13 @@
                         scores["insurance"] > 0 ||
                         insuranceStore.policies.length > 0,
                     count: insuranceStore.policies.length,
-                    label: "policies",
+                    label: pluralWord(insuranceStore.policies.length, "policy", "policies"),
                 };
             case "documents":
                 return {
-                    inProgress: scores["financial"] > 0,
-                    count: 0,
-                    label: "",
+                    inProgress: documentStore.items.length > 0,
+                    count: documentStore.items.length,
+                    label: pluralWord(documentStore.items.length, "document"),
                 };
             case "medical":
                 return {
@@ -139,7 +141,7 @@
                         scores["medical"] > 0 ||
                         medicalStore.directives.length > 0,
                     count: medicalStore.directives.length,
-                    label: "directives",
+                    label: pluralWord(medicalStore.directives.length, "directive"),
                 };
             case "subscriptions":
             case "guardian":
@@ -148,13 +150,13 @@
                         scores["digital"] > 0 ||
                         digitalAssetsStore.items.length > 0,
                     count: digitalAssetsStore.items.length,
-                    label: "accounts",
+                    label: pluralWord(digitalAssetsStore.items.length, "account"),
                 };
             case "property":
                 return {
                     inProgress: propertyStore.items.length > 0,
                     count: propertyStore.items.length,
-                    label: "properties",
+                    label: pluralWord(propertyStore.items.length, "property", "properties"),
                 };
             default:
                 return { inProgress: false, count: 0, label: "" };
@@ -217,8 +219,10 @@
     // Concrete progress counts for stats row
     let contactCount = $derived(familyStore.members.length);
     let policyCount = $derived(insuranceStore.policies.length);
+    // Open accounts only: a debt is something owed, so it is no account
     let accountCount = $derived(
-        financialAssetsStore.items.filter((a) => !a.is_closed).length,
+        financialAssetsStore.items.filter((a) => !a.is_closed && !isDebt(a))
+            .length,
     );
     let medicalCount = $derived(medicalStore.directives.length);
 
@@ -327,7 +331,7 @@
                 </div>
                 {#if totalValue > 0}
                     <div class="text-sm text-emerald-400/80">
-                        {currency.format(totalValue)} in documented assets
+                        {currency.format(totalValue)} net across your documented accounts
                     </div>
                 {/if}
             </div>
@@ -348,7 +352,9 @@
                         <div class="text-2xl font-bold text-white">
                             {contactCount}
                         </div>
-                        <div class="text-sm text-slate-400">Contacts</div>
+                        <div class="text-sm text-slate-400">
+                            {pluralWord(contactCount, "Contact")}
+                        </div>
                     </a>
                     <a
                         href="/modules/insurance"
@@ -360,10 +366,12 @@
                         <div class="text-2xl font-bold text-white">
                             {policyCount}
                         </div>
-                        <div class="text-sm text-slate-400">Policies</div>
+                        <div class="text-sm text-slate-400">
+                            {pluralWord(policyCount, "Policy", "Policies")}
+                        </div>
                     </a>
                     <a
-                        href="/modules/subscriptions"
+                        href="/modules/financial-accounts"
                         class="bg-white/5 border border-white/10 rounded-xl p-4 text-center hover:bg-white/10 hover:border-primary/30 hover:scale-[1.02] transition-all cursor-pointer block"
                     >
                         <div class="flex items-center justify-center mb-2">
@@ -372,7 +380,9 @@
                         <div class="text-2xl font-bold text-white">
                             {accountCount}
                         </div>
-                        <div class="text-sm text-slate-400">Accounts</div>
+                        <div class="text-sm text-slate-400">
+                            {pluralWord(accountCount, "Account")}
+                        </div>
                     </a>
                     <a
                         href="/modules/medical"

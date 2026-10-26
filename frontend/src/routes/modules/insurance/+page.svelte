@@ -50,6 +50,7 @@
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
+    import { plural } from "$lib/utils/plural";
 
     let showAddModal = $state(false);
     let viewMode = $state<ViewMode>('card');
@@ -175,6 +176,20 @@
     );
 
     const stats = $derived(insuranceStore.getTotalPremiums());
+    // Share of the key details recorded across every policy (0 with none)
+    const completionRate = $derived.by(() => {
+        if (policies.length === 0) return 0;
+        const filled = (v: unknown) => String(v ?? "").trim() !== "" && String(v).trim() !== "TBD";
+        let done = 0;
+        for (const p of policies) {
+            if (filled(p.insurer)) done++;
+            if (filled(p.policyNumber)) done++;
+            if (filled(p.beneficiaries)) done++;
+            if (Number(p.premiumAmount) > 0) done++;
+            if (filled(p.agentName) || filled(p.agentContact)) done++;
+        }
+        return Math.round((done / (policies.length * 5)) * 100);
+    });
     const types = [
         "All",
         "Life",
@@ -512,7 +527,7 @@
                 Completion Rate
             </p>
             <p class="text-3xl font-black text-slate-900 tracking-tight">
-                100%
+                {completionRate}%
             </p>
         </div>
     </div>
@@ -533,7 +548,7 @@
         <div class="flex items-center gap-2">
             <span
                 class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-                >Showing {filteredPolicies.length} Policies</span
+                >Showing {plural(filteredPolicies.length, "Policy", "Policies")}</span
             >
             <button
                 class="p-3 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-primary transition-colors shadow-sm"

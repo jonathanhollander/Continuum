@@ -21,9 +21,9 @@
     } from "lucide-svelte";
     import { fade, slide } from "svelte/transition";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
-    import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
     import Affirmation from "$lib/components/Affirmation.svelte";
+    import { pluralWord } from "$lib/utils/plural";
 
     let viewMode = $state<ViewMode>('card');
     let showAffirmation = $state(false);
@@ -192,7 +192,7 @@
                     class="px-4 py-2 bg-indigo-50 text-indigo-700 rounded-xl font-bold text-sm"
                 >
                     {todayCount}
-                    {todayCount === 1 ? "event" : "events"} today
+                    {pluralWord(todayCount, "event")} today
                 </div>
             {/if}
         </div>
@@ -200,17 +200,6 @@
 
     <!-- Affirmation Message -->
     <Affirmation module="general" bind:show={showAffirmation} />
-
-    <!-- AI Concierge Drafting Assistant -->
-    <AIPromptBar
-        context="executor"
-        prompts={[
-            "Summarize my recent activity across all modules...",
-            "Find changes made to my financial accounts...",
-            "List all updates from the past week...",
-            "Help me understand what was modified recently..."
-        ]}
-    />
 
     <!-- Filters & Actions -->
     <div
@@ -267,6 +256,7 @@
                 Reset Filters
             </button>
             <div class="flex-1"></div>
+            {#if entries.length > 0}
             <button
                 onclick={exportAsJSON}
                 class="px-4 py-2 text-sm font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors flex items-center gap-2"
@@ -288,6 +278,7 @@
                 <Trash2 size={16} />
                 Clear Log
             </button>
+            {/if}
         </div>
     </div>
 
@@ -432,7 +423,7 @@
             >
             of
             <span class="font-bold text-slate-900">{entries.length}</span> total
-            events
+            {pluralWord(entries.length, "event")}
         </div>
     {/if}
 </div>

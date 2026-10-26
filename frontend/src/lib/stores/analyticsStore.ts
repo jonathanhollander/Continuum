@@ -8,10 +8,11 @@ import { estateAudit } from './auditStore.svelte';
 import { heirloomStore } from './heirloomStore.svelte';
 import { funeralStore } from './funeralStore.svelte';
 import { pulse } from './pulse.svelte';
+import { financialAssetsStore, estateTotals, isDebt } from './financialAssetsStore.svelte';
 
 export const estateAnalytics = derived(
-    [estateProfile, petStore, medicalStore, advancedAssetStore, digitalAssetsStore, estateAudit, heirloomStore, funeralStore, pulse],
-    ([$profile, $pets, $medical, $advanced, $digital, $audit, $heirlooms, $funeral, $pulse]) => {
+    [estateProfile, petStore, medicalStore, advancedAssetStore, digitalAssetsStore, estateAudit, heirloomStore, funeralStore, pulse, financialAssetsStore],
+    ([$profile, $pets, $medical, $advanced, $digital, $audit, $heirlooms, $funeral, $pulse, $accounts]) => {
 
 
         // --- 1. Legal Readiness ---
@@ -25,8 +26,10 @@ export const estateAnalytics = derived(
         if (hasLivingWill) legalScore += 30;
 
         // --- 2. Financial Clarity ---
-        const assetValue = $profile?.totalValue || 0;
-        const hasAssets = assetValue > 0 || ($advanced?.maintenance || []).length > 0;
+        // The financial page's net (open assets less open debts); estateProfile.totalValue is never set
+        const openAccounts = ($accounts || []).filter((a: any) => a && !a.is_closed && !isDebt(a));
+        const assetValue = estateTotals($accounts || []).net;
+        const hasAssets = openAccounts.length > 0 || ($advanced?.maintenance || []).length > 0;
         const hasBeneficiary = !!$profile?.primaryBeneficiary;
 
         let financialScore = 0;
@@ -37,7 +40,8 @@ export const estateAnalytics = derived(
         const heirloomCount = $heirlooms ? $heirlooms.length : 0;
         const wishesDefined = $funeral?.wishes ?
             !!($funeral.wishes.disposition || $funeral.wishes.venue || $funeral.wishes.music?.length > 0) : false;
-        const petGuardians = ($pets || []).every((p: any) => p.guardian);
+        // Points only when there are pets and each has a guardian ([].every is true for no pets)
+        const petGuardians = ($pets || []).length > 0 && ($pets || []).every((p: any) => p.guardian);
 
         let legacyScore = 0;
         if (heirloomCount > 0) legacyScore += 40;
