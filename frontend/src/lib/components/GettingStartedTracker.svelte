@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { browserStorage } from "$lib/services/browserStorage";
     import { Check, Users, Files, Heart, ArrowRight, Sparkles } from "lucide-svelte";
     import { fade, slide } from "svelte/transition";
     import { familyStore } from "$lib/stores/familyStore.svelte";
@@ -57,13 +58,13 @@
 
     $effect(() => {
         if (browser) {
-            dismissed = localStorage.getItem("continuum_getting_started_dismissed") === "true";
+            dismissed = browserStorage.getItem("continuum_getting_started_dismissed") === "true";
         }
     });
 
     function dismiss() {
         if (browser) {
-            localStorage.setItem("continuum_getting_started_dismissed", "true");
+            browserStorage.setItem("continuum_getting_started_dismissed", "true");
         }
         dismissed = true;
         onDismiss?.();

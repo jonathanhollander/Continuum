@@ -1,3 +1,4 @@
+import { browserStorage } from "$lib/services/browserStorage";
 import { writable, get } from 'svelte/store';
 import { activeAccountId } from './keyringStore';
 
@@ -14,9 +15,9 @@ export interface Profile {
 
 // Internal helper for namespaced storage
 const getAccStored = (key: string, def: any) => {
-    if (typeof localStorage === 'undefined') return def;
+    if (typeof window === 'undefined') return def;
     const accId = get(activeAccountId) || 'anonymous';
-    const stored = localStorage.getItem(`continuum_acc_${accId}_${key}`);
+    const stored = browserStorage.getItem(`continuum_acc_${accId}_${key}`);
     return stored || JSON.stringify(def);
 };
 
@@ -39,32 +40,41 @@ const safeParse = (json: string | null, fallback: any) => {
 };
 
 // Syncing logic
-if (typeof localStorage !== 'undefined') {
+if (typeof window !== 'undefined') {
+    let loadingStored = false;
     // 1. React to Account Changes
     activeAccountId.subscribe(accId => {
         const id = accId || 'anonymous';
-        const storedPid = localStorage.getItem(`continuum_acc_${id}_currentProfileId`) || 'owner';
-        const storedProfs = localStorage.getItem(`continuum_acc_${id}_profiles`);
+        const storedPid = browserStorage.getItem(`continuum_acc_${id}_currentProfileId`) || 'owner';
+        const storedProfs = browserStorage.getItem(`continuum_acc_${id}_profiles`);
 
         // Fallback to global if acc-specific doesn't exist (Migration support)
         const finalProfs = storedProfs
             ? safeParse(storedProfs, defaultProfiles)
-            : safeParse(localStorage.getItem('continuum_global_profiles'), defaultProfiles);
+            : safeParse(browserStorage.getItem('continuum_global_profiles'), defaultProfiles);
 
+        loadingStored = true;
         currentProfileId.set(storedPid);
         profiles.set(finalProfs);
+        loadingStored = false;
     });
 
     // 2. Persist profile changes to the current account namespace
+    let firstProfile = true;
     currentProfileId.subscribe(pid => {
+        if (firstProfile) { firstProfile = false; return; }
+        if (loadingStored) return;
         const accId = get(activeAccountId) || 'anonymous';
-        localStorage.setItem(`continuum_acc_${accId}_currentProfileId`, pid);
+        browserStorage.setItem(`continuum_acc_${accId}_currentProfileId`, pid);
     });
 
+    let firstProfiles = true;
     profiles.subscribe(profs => {
+        if (firstProfiles) { firstProfiles = false; return; }
+        if (loadingStored) return;
         const accId = get(activeAccountId) || 'anonymous';
         if (profs.length > 0) {
-            localStorage.setItem(`continuum_acc_${accId}_profiles`, JSON.stringify(profs));
+            browserStorage.setItem(`continuum_acc_${accId}_profiles`, JSON.stringify(profs));
         }
     });
 }

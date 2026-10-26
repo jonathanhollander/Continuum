@@ -1,3 +1,4 @@
+import { browserStorage } from "$lib/services/browserStorage";
 import { browser } from '$app/environment';
 import { user } from '$lib/stores/auth';
 import type { CustomFieldDefinition } from '$lib/types/customFields';
@@ -17,7 +18,7 @@ class CustomFieldStore {
 
         this.loading = true;
         try {
-            const token = localStorage.getItem('continuum_auth_token');
+            const token = browserStorage.getItem('continuum_auth_token');
             const res = await fetch(`${API_BASE_URL}/api/data/custom-fields/${entityType}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -52,7 +53,7 @@ class CustomFieldStore {
         if (!browser) return;
         this.loading = true;
         try {
-            const token = localStorage.getItem('continuum_auth_token');
+            const token = browserStorage.getItem('continuum_auth_token');
             const res = await fetch(`${API_BASE_URL}/api/data/custom-fields`, {
                 method: 'POST',
                 headers: {
@@ -82,7 +83,7 @@ class CustomFieldStore {
         if (!browser) return;
         this.loading = true;
         try {
-            const token = localStorage.getItem('continuum_auth_token');
+            const token = browserStorage.getItem('continuum_auth_token');
             const res = await fetch(`${API_BASE_URL}/api/data/custom-fields/${id}`, {
                 method: 'DELETE',
                 headers: {

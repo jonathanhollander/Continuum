@@ -1,3 +1,4 @@
+import { browserStorage } from "$lib/services/browserStorage";
 import { writable } from 'svelte/store';
 import { browser } from '$app/environment';
 
@@ -21,7 +22,11 @@ function createAccessibilityStore() {
         color: 'teal'
     };
 
-    const initial: AccessibilityState = browser ? (JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || defaults) : defaults;
+    let initial = { ...defaults };
+    if (browser) {
+        try { initial = { ...defaults, ...JSON.parse(browserStorage.getItem(STORAGE_KEY) || 'null') }; }
+        catch { /* An unreadable preference leaves the page's familiar defaults usable. */ }
+    }
 
     // Ensure backwards compatibility by merging defaults if keys are missing
     if (browser && !initial.theme) {
@@ -32,8 +37,10 @@ function createAccessibilityStore() {
     const { subscribe, set, update } = writable<AccessibilityState>(initial);
 
     if (browser) {
+        let initialValue = true;
         subscribe(value => {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+            if (!initialValue) browserStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+            initialValue = false;
 
             // Apply to body classes
             const body = document.body;

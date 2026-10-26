@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { subscribeTemporaryStorage } from "$lib/services/browserStorage";
 	import favicon from "$lib/assets/favicon.svg";
 	import logo from "$lib/assets/logo.png";
 	import "../app.css";
@@ -89,6 +90,8 @@
 	let { children } = $props();
 
 	let isSidebarOpen = $state(false);
+	let temporaryStorage = $state(false);
+	onMount(() => subscribeTemporaryStorage(value => { temporaryStorage = value; }));
 
 	// Breadcrumb: the page's name as the sidebar shows it (English names from
 	// navigation.ts, other languages from the dictionary), else the page's own
@@ -333,6 +336,14 @@
 	<title>Continuum</title>
 </svelte:head>
 
+{#snippet storageNotice()}
+    {#if temporaryStorage}
+        <aside role="status" class="m-4 rounded-xl border border-warning/30 bg-warning-soft px-4 py-3 text-sm text-foreground">
+            Temporary browser storage is in use. Keep this page open for unsaved drafts. Saved account records can be loaded after signing in again.
+        </aside>
+    {/if}
+{/snippet}
+
 <!-- Global Notification Container (appears on ALL pages, including auth) -->
 <NotificationContainer />
 
@@ -358,6 +369,7 @@
 	</div>
 {:else if isFullScreenRoute || isMarketingRoute || isAuthRoute}
 	<!-- Wizard/Marketing Mode: Full exclusion of standard layout -->
+	{@render storageNotice()}
 	{@render children()}
 {:else}
 	<!-- Standard Application Layout -->
@@ -557,6 +569,7 @@
 					</header>
 
 				<main id="main-content" tabindex="-1" class="flex-1 overflow-x-hidden outline-none pb-20 lg:pb-6">
+					{@render storageNotice()}
 					<div
 						class="animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-full"
 					>

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { browserStorage } from "$lib/services/browserStorage";
     import { onMount } from "svelte";
     import { goto } from "$app/navigation";
     import { page } from "$app/stores";
@@ -51,8 +52,8 @@
         }
 
         // Remember Me: pre-fill last used email
-        if (typeof localStorage !== "undefined") {
-            const lastEmail = localStorage.getItem("continuum_last_email");
+        if (typeof window !== "undefined") {
+            const lastEmail = browserStorage.getItem("continuum_last_email");
             if (lastEmail) {
                 magicLinkEmail = lastEmail;
             }
@@ -105,8 +106,8 @@
             );
 
             // Store email for "Remember Me" and register account context
-            if ($auth.user?.email && typeof localStorage !== "undefined") {
-                localStorage.setItem("continuum_last_email", $auth.user.email);
+            if ($auth.user?.email && typeof window !== "undefined") {
+                browserStorage.setItem("continuum_last_email", $auth.user.email);
                 registerAccount($auth.user.email);
             }
 
@@ -155,8 +156,8 @@
             if (!isCurrentSession(owner, true)) return;
 
             // Store email for "Remember Me" early
-            if (typeof localStorage !== "undefined") {
-                localStorage.setItem("continuum_last_email", email);
+            if (typeof window !== "undefined") {
+                browserStorage.setItem("continuum_last_email", email);
             }
 
             magicLinkRequested = true;
