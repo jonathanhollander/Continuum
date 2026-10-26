@@ -161,7 +161,7 @@
                 Practice Run
             </h1>
             <p class="text-lg text-muted-foreground">
-                Stress-test your estate plan against real-world events.
+                See how your saved plan answers real-life moments.
             </p>
         </div>
         <div

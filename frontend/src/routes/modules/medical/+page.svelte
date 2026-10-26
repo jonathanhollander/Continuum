@@ -574,7 +574,7 @@
                 <EmptyState
                     title="Your healthcare wishes matter"
                     whyMatters="<strong>With advance directives, doctors and family know what you would want, and your loved ones feel the ease of honoring your choices.</strong><br/><br/>Documenting your healthcare wishes—whether it's a healthcare proxy, living will, or DNR—gives them clarity, legal authority, and peace of mind."
-                    encouragement="When you're ready, start with just one directive. You can always add more later."
+                    encouragement="When you're ready, start with one directive. You can always add more later."
                     icon={Shield}
                     iconClass="text-primary"
                     ctaLabel="Share my wishes"

@@ -50,7 +50,7 @@
         {
             role: "assistant",
             content:
-                "I'm here. If you'd like to talk, or just need a quiet place to reflect, I'm sitting with you.",
+                "I'm here. If you'd like to talk, or need a quiet place to reflect, I'm sitting with you.",
         },
     ]);
 
