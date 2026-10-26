@@ -221,14 +221,32 @@ def _messages_by_contact(session: Session, contact_ids: list, *conditions) -> di
 
 TIER_FAIL_TEXT = "This alert is waiting to be sent again to"  # owner-facing; the technical reason is logged only
 LEGACY_TIER_FAIL_TEXT = "We couldn't deliver this alert to"  # rows written before G2
+TIER_LOCAL_TEXT = "This alert is prepared in the local outbox."
+TIER_ACCEPTED_TEXT = "An email provider accepted this alert for sending."
 TIER_MAX_ATTEMPTS = 3
 
 def tier_prefix(tier_number: int) -> str:
     return f"[System Alert Tier {tier_number}] "
 
 def tier_sent_text(tier_number: int) -> str:
-    """Owner-facing PulseMessage text for a delivered tier alert (send_notification, admin resend)."""
-    return f"{tier_prefix(tier_number)}This alert reached them by email."
+    """Provider-accepted tier alert text, shared by normal sends and admin resend."""
+    return f"{tier_prefix(tier_number)}{TIER_ACCEPTED_TEXT}"
+
+def tier_accepted_texts(tier_number: int) -> tuple[str, ...]:
+    """Recognize existing accepted-message records without rewriting historical rows."""
+    return (tier_sent_text(tier_number),
+            f"{tier_prefix(tier_number)}This alert reached them by email.")
+
+def is_tier_accepted(message: str, tier_number: int) -> bool:
+    return message in tier_accepted_texts(tier_number) or message.startswith(
+        f"{tier_prefix(tier_number)}Escalation notification sent")
+
+def tier_result_text(result: "EmailResult", tier_number: int, contact_name: str) -> str:
+    if result.provider_accepted:
+        return tier_sent_text(tier_number)
+    if result.delivery_state == "saved_local":
+        return f"{tier_prefix(tier_number)}{TIER_LOCAL_TEXT}"
+    return f"{tier_prefix(tier_number)}{TIER_FAIL_TEXT} {contact_name}."
 
 def is_tier_fail(message: str, tier_number: int) -> bool:
     p = tier_prefix(tier_number)
@@ -264,14 +282,18 @@ def _timer_marker(timer_id: int, what: str) -> str:
 def trigger_safety_timer_alert(session: Session, timer) -> bool:
     """Alert only contacts with notify_on_safety_timer, with a timer-specific message.
     Each contact gets at most SAFETY_TIMER_MAX_ATTEMPTS tries (recorded as PulseMessage rows).
-    Returns True once every flagged contact is sent or out of attempts (timer can be closed)."""
+    Returns True once each contact's alert is accepted, prepared locally or out of attempts.
+    Local preparations stay in the outbox; completion of preparation is distinct from sending."""
     contacts = session.exec(
         select(PulseContact).where(
             PulseContact.user_id == timer.user_id,
             PulseContact.notify_on_safety_timer == True
         )
     ).all()
-    sent_msg, fail_msg = _timer_marker(timer.id, "alert sent"), _timer_marker(timer.id, "send failed")
+    sent_msg = _timer_marker(timer.id, "alert accepted by email provider")
+    local_msg = _timer_marker(timer.id, "prepared in local outbox")
+    legacy_sent_msg = _timer_marker(timer.id, "alert sent")
+    fail_msg = _timer_marker(timer.id, "send failed")
     # One query for every contact's rows for this timer (a send only adds rows for its own contact)
     by_contact = _messages_by_contact(session, [c.id for c in contacts],
                                       PulseMessage.user_id == timer.user_id,
@@ -279,12 +301,12 @@ def trigger_safety_timer_alert(session: Session, timer) -> bool:
     done = True
     for contact in contacts:
         msgs = by_contact.get(contact.id, [])
-        if any(m.startswith(sent_msg) for m in msgs):
+        if any(m.startswith((sent_msg, local_msg, legacy_sent_msg)) for m in msgs):
             continue
         fails = sum(1 for m in msgs if m.startswith(fail_msg))
         if fails >= SAFETY_TIMER_MAX_ATTEMPTS:
             continue
-        ok, err = False, None
+        outcome, err = "failed", None
         try:
             user_name = owner_display_name(session, timer.user_id)
             result = email_service.send_email(EmailPayload(
@@ -299,12 +321,13 @@ def trigger_safety_timer_alert(session: Session, timer) -> bool:
                 },
                 user_id=timer.user_id
             ), db_session=session)
-            ok, err = result.status != "failed", result.error
+            outcome, err = result.delivery_state, result.error
         except Exception as e:
             err = str(e)
-        if ok:
+        if outcome in ("provider_accepted", "saved_local"):
             session.add(PulseMessage(user_id=timer.user_id, contact_id=contact.id,
-                                     direction="user_to_contact", message=sent_msg))
+                                     direction="user_to_contact",
+                                     message=sent_msg if outcome == "provider_accepted" else local_msg))
         else:
             session.rollback()
             session.add(PulseMessage(user_id=timer.user_id, contact_id=contact.id,
@@ -388,11 +411,9 @@ def send_notification(session: Session, contact: PulseContact, tier_number: int)
         user_id=contact.user_id,
         contact_id=contact.id,
         direction="user_to_contact",  # System acting on behalf of user
-        message=(tier_sent_text(tier_number)
-                 if result.status != "failed" else
-                 f"{tier_prefix(tier_number)}{TIER_FAIL_TEXT} {contact.name}.")
+        message=tier_result_text(result, tier_number, contact.name)
     )
-    if result.status == "failed":
+    if result.delivery_state == "failed":
         logger.error(f"Tier {tier_number} alert to contact {contact.id} failed: {result.error}")
     session.add(log_msg)
     session.commit()  # each contact's row is durable before the next send
@@ -524,7 +545,7 @@ def send_individual_alerts(session: Session, user_id: int, since: datetime,
         msgs = [m for m in by_contact.get(contact.id, []) if m.startswith(tier_prefix(n))]
         fails = sum(1 for m in msgs if is_tier_fail(m, n))
         if fails < len(msgs) or fails >= TIER_MAX_ATTEMPTS:
-            continue  # already reached them, or out of attempts
+            continue  # accepted/prepared already, or out of failed attempts
         send_notification(session, contact, n)
 
 
@@ -544,7 +565,7 @@ def contact_reach(session: Session, contact: PulseContact) -> Optional[int]:
         sent = session.exec(select(PulseMessage.id).where(
             PulseMessage.contact_id == contact.id,
             PulseMessage.sent_at > since,
-            PulseMessage.message == tier_sent_text(tier_number))).first()
+            col(PulseMessage.message).in_(tier_accepted_texts(tier_number)))).first()
         if sent:
             return tier_number
     return None
@@ -569,7 +590,7 @@ ALL_CLEAR_PREFIX = tier_prefix(0)  # shown by the messages page as a system line
 def send_all_clear(session: Session, user_id: int, since: datetime) -> int:
     """Called right after an owner check-in. If the outage that check-in closes (escalation rows
     after `since`, the previous owner check-in) alerted guardians, tell each one the owner is
-    well. Returns how many were told. Never raises (a check-in must always succeed)."""
+    well. Returns the number accepted by an external email provider. Never raises."""
     try:
         if not current_escalation(session, user_id, since):
             return 0
@@ -578,11 +599,11 @@ def send_all_clear(session: Session, user_id: int, since: datetime) -> int:
             PulseMessage.sent_at > since,
             col(PulseMessage.message).startswith("[System Alert Tier "))).all()
             if not msg.startswith(ALL_CLEAR_PREFIX)
-            and ("reached them" in msg or "Escalation notification sent" in msg)}
+            and any(is_tier_accepted(msg, n) for n in range(1, 5))}
         if not alerted:
             return 0
         name = owner_display_name(session, user_id)
-        told = 0
+        accepted_count = 0
         for contact in session.exec(select(PulseContact).where(col(PulseContact.id).in_(alerted))).all():
             payload = email_service._build_payload(
                 to_email=contact.email, recipient_name=contact.name,
@@ -593,13 +614,18 @@ def send_all_clear(session: Session, user_id: int, since: datetime) -> int:
                 user_id=user_id)
             result = payload if isinstance(payload, EmailResult) else \
                 email_service.send_email(payload=payload, db_session=session)
-            ok = result.status != "failed"
-            told += ok
+            accepted = result.provider_accepted
+            accepted_count += accepted
+            if accepted:
+                message = f"{ALL_CLEAR_PREFIX}An email provider accepted the all-clear note for {contact.name}."
+            elif result.delivery_state == "saved_local":
+                message = f"{ALL_CLEAR_PREFIX}The all-clear note for {contact.name} is prepared in the local outbox."
+            else:
+                message = f"{ALL_CLEAR_PREFIX}Your all-clear note to {contact.name} is waiting to be sent."
             session.add(PulseMessage(user_id=user_id, contact_id=contact.id, direction="user_to_contact",
-                                     message=f"{ALL_CLEAR_PREFIX}{contact.name} heard that you checked in and are well."
-                                     if ok else f"{ALL_CLEAR_PREFIX}Your all-clear note to {contact.name} is waiting to be sent."))
+                                     message=message))
             session.commit()
-        return told
+        return accepted_count
     except Exception:
         session.rollback()
         logger.error(f"All-clear for user {user_id} failed", exc_info=True)
