@@ -406,7 +406,7 @@
                     <span
                         class="text-[10px] font-bold text-primary-foreground/60 uppercase tracking-widest"
                     >
-                        Pulse Navigation
+                        {navText("pulseNavigation", "Pulse Navigation")}
                     </span>
                 </div>
                 <div class="space-y-1">
@@ -432,7 +432,7 @@
                                         ? 'text-white'
                                         : 'text-primary-foreground/50'}"
                                 />
-                                <span class="text-sm flex-1">{item.label}</span>
+                                <span class="text-sm flex-1">{navText(item.key, item.label)}</span>
                             </a>
                         </Tooltip>
                     {/each}

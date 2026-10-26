@@ -45,7 +45,7 @@
             icon: Ghost,
             color: "text-stone-600",
             bg: "bg-stone-200",
-            desc: "The unthinkable happens today.",
+            desc: "Your family steps in today to carry out your wishes.",
         },
     ];
 
@@ -134,7 +134,10 @@
             checks.push({
                 check: "Beneficiaries",
                 status: benCov > 0.8,
-                msg: `Beneficiaries named on ${Math.round(benCov * 100)}% of assets.`,
+                msg:
+                    benCov > 0
+                        ? `Beneficiaries named on ${Math.round(benCov * 100)}% of assets.`
+                        : "Naming a beneficiary on each asset lets it pass straight to the people you choose.",
             });
             overallStatus =
                 (hasWill || hasTrust) && benCov > 0.8 ? "pass" : "fail";

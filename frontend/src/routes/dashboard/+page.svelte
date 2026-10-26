@@ -730,7 +730,7 @@
                                                         >
                                                             {navText(item.key, item.label)}
                                                         </h3>
-                                                        {#if item.isPreview}<span class="inline-block text-xs font-medium px-2 py-0.5 rounded-md bg-white/10 text-slate-300" data-testid="preview-tag">Early preview</span>{/if}
+                                                        {#if item.isPreview}<span class="inline-block text-xs font-medium px-2 py-0.5 rounded-md bg-white/10 text-slate-300" data-testid="preview-tag">{$dict.earlyPreview}</span>{/if}
                                                         {#if status.count > 0}
                                                             <p
                                                                 class="text-sm text-emerald-400/80"
@@ -837,7 +837,7 @@
                                                                     >
                                                                         {navText(item.key, item.label)}
                                                                     </h3>
-                                                                    {#if item.isPreview}<span class="inline-block text-xs font-medium px-2 py-0.5 rounded-md bg-white/10 text-slate-300" data-testid="preview-tag">Early preview</span>{/if}
+                                                                    {#if item.isPreview}<span class="inline-block text-xs font-medium px-2 py-0.5 rounded-md bg-white/10 text-slate-300" data-testid="preview-tag">{$dict.earlyPreview}</span>{/if}
 {#if status.inProgress && status.count > 0}
                                                                         <p
                                                                             class="text-sm text-emerald-400/80 mt-0.5"
@@ -1004,7 +1004,7 @@
                                                                 >
                                                                     {navText(item.key, item.label)}
                                                                 </h3>
-                                                                {#if item.isPreview}<span class="inline-block text-xs font-medium px-2 py-0.5 rounded-md bg-white/10 text-slate-300" data-testid="preview-tag">Early preview</span>{/if}
+                                                                {#if item.isPreview}<span class="inline-block text-xs font-medium px-2 py-0.5 rounded-md bg-white/10 text-slate-300" data-testid="preview-tag">{$dict.earlyPreview}</span>{/if}
 {#if status.inProgress && status.count > 0}
                                                                     <p
                                                                         class="text-sm text-emerald-400/80 mt-0.5"
