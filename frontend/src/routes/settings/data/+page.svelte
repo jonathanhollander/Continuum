@@ -322,8 +322,15 @@
             </p>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3 shrink-0 whitespace-nowrap">
             {#if isAdmin}
+            <a
+                href="/admin"
+                class="px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl flex items-center gap-2 font-semibold hover:bg-slate-50 transition-all shadow-sm"
+            >
+                <ShieldCheck size={18} />
+                Admin
+            </a>
             <button
                 onclick={runAudit}
                 disabled={isAuditing}

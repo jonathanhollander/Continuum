@@ -37,7 +37,7 @@
             icon: Stethoscope,
             color: "text-rose-600",
             bg: "bg-rose-100",
-            desc: "You are incapacitated and cannot make decisions.",
+            desc: "You are in hospital and someone you trust decides for you.",
         },
         {
             id: "passing",
@@ -77,14 +77,14 @@
                 status: hasIDs,
                 msg: hasIDs
                     ? "Passport/ID copies found in Vault."
-                    : "CRITICAL: No backup IDs found.",
+                    : "A copy of your passport or ID in the Vault keeps you covered.",
             });
             checks.push({
                 check: "Card List",
                 status: hasCards,
                 msg: hasCards
                     ? "Financial accounts listed."
-                    : "WARNING: No card numbers recorded.",
+                    : "Listing your cards in Financial Accounts makes them quick to replace.",
             });
             overallStatus = hasIDs && hasCards ? "pass" : "fail";
         }
@@ -103,14 +103,14 @@
                 status: hasHealth,
                 msg: hasHealth
                     ? "Healthcare Directive found."
-                    : "CRITICAL: Doctors don't know your wishes.",
+                    : "A healthcare directive lets your doctors follow your wishes.",
             });
             checks.push({
                 check: "Power of Attorney",
                 status: hasPOA,
                 msg: hasPOA
                     ? "POA found."
-                    : "CRITICAL: No one can pay your bills.",
+                    : "A power of attorney lets someone you trust pay your bills.",
             });
             overallStatus = hasHealth && hasPOA ? "pass" : "fail";
         }
@@ -129,7 +129,7 @@
                 msg:
                     hasWill || hasTrust
                         ? "Legal structure found."
-                        : "CRITICAL: Estate is Intestate (Court decides).",
+                        : "A will or trust lets you decide where your estate goes.",
             });
             checks.push({
                 check: "Beneficiaries",
@@ -270,7 +270,14 @@
                                     Your estate is prepared for this event.
                                 </p>
                             {:else}
-                                <!-- Warn case if needed -->
+                                <h1
+                                    class="font-serif font-bold text-3xl text-[#304743]"
+                                >
+                                    Room to Strengthen
+                                </h1>
+                                <p class="text-muted-foreground mt-2">
+                                    A few additions will prepare your estate for this event.
+                                </p>
                             {/if}
                         </div>
 

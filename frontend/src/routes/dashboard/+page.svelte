@@ -57,7 +57,6 @@
     import { timeCapsuleStore } from "$lib/stores/timeCapsuleStore.svelte";
     import { timelineStore } from "$lib/stores/timelineStore.svelte";
 
-    import { notifications } from "$lib/stores/notificationStore";
     import Tooltip from "$lib/components/ui/Tooltip.svelte";
     import { documentStore } from "$lib/stores/documentStore.svelte";
     import { pluralWord } from "$lib/utils/plural";
@@ -344,21 +343,6 @@
             collapsedSections.add(groupKey);
         }
         collapsedSections = new Set(collapsedSections); // Trigger reactivity
-    }
-
-    function handleNavigation(event: MouseEvent, item: any) {
-        if (item.behaviour === "background-tab") {
-            event.preventDefault();
-            const newWindow = window.open(item.href, "_blank");
-            if (newWindow) {
-                newWindow.blur();
-                window.focus();
-            }
-            notifications.showInfo(
-                "We've opened the Treasure Hunt in a new tab so your place here is kept.",
-                "Treasure Hunt Opened",
-            );
-        }
     }
 
     onMount(() => {
@@ -714,8 +698,6 @@
                                         <a
                                             href={item.href}
                                             class="block h-full group"
-                                            onclick={(e) =>
-                                                handleNavigation(e, item)}
                                             in:fly={{
                                                 y: 20,
                                                 duration: 400,
@@ -821,11 +803,6 @@
                                                     <a
                                                         href={item.href}
                                                         class="block h-full group"
-                                                        onclick={(e) =>
-                                                            handleNavigation(
-                                                                e,
-                                                                item,
-                                                            )}
                                                         in:fly={{
                                                             y: 15,
                                                             duration: 400,
@@ -990,11 +967,6 @@
                                                 <a
                                                     href={item.href}
                                                     class="block h-full group"
-                                                    onclick={(e) =>
-                                                        handleNavigation(
-                                                            e,
-                                                            item,
-                                                        )}
                                                     in:fly={{
                                                         y: 15,
                                                         duration: 400,

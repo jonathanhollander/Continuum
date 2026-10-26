@@ -378,7 +378,7 @@
                     <Search size={40} />
                 </div>
                 <h3 class="text-xl font-bold text-slate-900 mb-2">
-                    No checkpoints found
+                    Try a different search
                 </h3>
                 <p class="text-slate-500">
                     Adjust your search or filters to see more tasks.

@@ -29,7 +29,6 @@
     import ProfileSwitcher from "$lib/components/ui/ProfileSwitcher.svelte";
     import { contextStore } from "$lib/stores/contextStore.svelte";
     import GettingStartedTracker from "$lib/components/GettingStartedTracker.svelte";
-    import { notifications } from "$lib/stores/notificationStore";
     import Tooltip from "$lib/components/ui/Tooltip.svelte";
 
     // Props
@@ -227,23 +226,6 @@
         isOpen = false;
     }
 
-    function handleNavigation(event: MouseEvent, item: any) {
-        if (item.behaviour === "background-tab") {
-            event.preventDefault();
-            const newWindow = window.open(item.href, "_blank");
-            if (newWindow) {
-                newWindow.blur();
-                window.focus();
-            }
-            notifications.showInfo(
-                "Treasure Hunt opened in a new tab. Return here when you're ready to continue.",
-                "External Site Opened",
-            );
-            handleClose();
-        } else {
-            handleClose();
-        }
-    }
 </script>
 
 <aside
@@ -375,7 +357,7 @@
                                         : ''}
                                     {group.isPrimary ? 'py-3' : ''}"
                                     aria-current={isActive ? "page" : undefined}
-                                    onclick={(e) => handleNavigation(e, item)}
+                                    onclick={handleClose}
                                 >
                                     {#if isActive}
                                         <div
@@ -438,7 +420,7 @@
                                     ? 'bg-white/20 text-white shadow-lg shadow-black/5 font-semibold'
                                     : 'text-primary-foreground/80 hover:text-white hover:bg-white/10'}"
                                 aria-current={isActive ? "page" : undefined}
-                                onclick={(e) => handleNavigation(e, item)}
+                                onclick={handleClose}
                             >
                                 {#if isActive}
                                     <div

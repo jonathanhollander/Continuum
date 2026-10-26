@@ -197,10 +197,6 @@
             pipWindow.close();
         } else {
             conciergeEngine.popIn();
-            // If we are in the standalone concierge window, close it
-            if (browser && window.location.pathname === "/concierge-window") {
-                window.close();
-            }
         }
     }
 
