@@ -623,7 +623,13 @@ function buildFields(def: SectionDef, r: any, snapshot: Snapshot, title = ''): P
             }
         }
         const b = parseJSON(r.budget);
-        if (Array.isArray(b) && b.length) out.push({ label: 'Budget', value: b.map(text).join('\n'), long: true });
+        if (Array.isArray(b) && b.length) out.push({ label: 'Budget', value: b.map((item) => {
+            if (!item || typeof item !== 'object' || Array.isArray(item)) return text(item);
+            const raw = item.cost;
+            const entered = (typeof raw === 'number' || typeof raw === 'string') && !(typeof raw === 'string' && !raw.trim());
+            const cost = entered && Number.isFinite(Number(raw)) ? money(Number(raw)) : 'Unknown';
+            return text({ ...item, cost });
+        }).join('\n'), long: true });
     }
     // Everything else the record holds, so no entered detail is left out of the packet.
     for (const [k, v] of Object.entries(r)) {
