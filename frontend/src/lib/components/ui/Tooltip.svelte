@@ -85,7 +85,7 @@
 </script>
 
 <div
-    class="relative inline-block"
+    class="relative block"
     on:mouseenter={handleMouseEnter}
     on:mouseleave={handleMouseLeave}
     role="tooltip"
