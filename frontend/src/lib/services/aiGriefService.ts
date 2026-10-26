@@ -1,5 +1,4 @@
-import { get } from 'svelte/store';
-import { userRole } from '../stores/conciergeStore.svelte.ts';
+import { contextStore } from '../stores/contextStore.svelte';
 
 import { callAiProxy } from './aiConciergeService';
 
@@ -14,7 +13,7 @@ export interface GriefAIResponse {
  * Focused on deep emotional support, contemplative guidance, and resource discovery.
  */
 async function chat(content: string, history: any[]): Promise<GriefAIResponse> {
-    const role = get(userRole);
+    const role = contextStore.role;
 
     let roleContext = '';
     if (role === 'executor') {

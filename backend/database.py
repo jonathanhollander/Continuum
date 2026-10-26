@@ -118,7 +118,7 @@ def migrate_db():
             # Add user_role for context-aware messaging
             if "user_role" not in user_columns:
                 logger.info("Migrating: Adding user_role to users table")
-                session.execute(text("ALTER TABLE users ADD COLUMN user_role TEXT DEFAULT 'owner'"))
+                session.execute(text("ALTER TABLE users ADD COLUMN user_role TEXT DEFAULT 'planning'"))
                 session.commit()
             # Add emotional_context for grief-aware features
             if "emotional_context" not in user_columns:
