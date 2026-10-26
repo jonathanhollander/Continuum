@@ -20,7 +20,7 @@
     } from "lucide-svelte";
     import { onMount } from "svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
-    // import { getStored, setStored } from "$lib/stores/persistence"; // REMOVED
+    import { getStored, setStored } from "$lib/stores/persistence";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
@@ -38,7 +38,6 @@
     let showAffirmation = $state(false);
 
     // Sync Integration
-    import { registerSync } from "$lib/services/sync.svelte";
     import {
         digitalAssetsSync,
         digitalAssetsStore,
@@ -56,10 +55,10 @@
         linkedin: boolean;
         passwordManager: boolean;
     }
-    const statusSync = registerSync<GuardianStatus>(
-        "digital_guardian_status",
-        "digital_guardian_status",
-    );
+    // Setup status and fire drill have no backend table: they are kept on this device only
+    // (localStorage, namespaced per account and profile) so a toggle never hits a missing endpoint.
+    const STATUS_KEY = "digital_guardian_status";
+    const DRILL_KEY = "digital_guardian_drill";
 
     // Default Status
     const DEFAULT_STATUS = {
@@ -71,9 +70,10 @@
         passwordManager: false,
     };
 
-    let setupStatus = $derived(
-        statusSync.items.find((i) => i.id === "main") || DEFAULT_STATUS,
-    );
+    let setupStatus = $state<GuardianStatus>({
+        ...DEFAULT_STATUS,
+        ...(getStored<GuardianStatus[]>(STATUS_KEY, []).find((i) => i.id === "main") ?? {}),
+    });
 
     // --- FIRE DRILL SYNC ---
     interface FireDrill {
@@ -85,11 +85,6 @@
         email: boolean;
         will: boolean;
     }
-    const drillSync = registerSync<FireDrill>(
-        "digital_guardian_drill",
-        "digital_guardian_drill",
-    );
-
     const DEFAULT_DRILL = {
         id: "main",
         key: false,
@@ -100,9 +95,10 @@
         will: false,
     };
 
-    let fireDrill = $derived(
-        drillSync.items.find((i) => i.id === "main") || DEFAULT_DRILL,
-    );
+    let fireDrill = $state<FireDrill>({
+        ...DEFAULT_DRILL,
+        ...(getStored<FireDrill[]>(DRILL_KEY, []).find((i) => i.id === "main") ?? {}),
+    });
 
     // --- ASSETS SYNC ---
     // Use the unified store's sync instance
@@ -111,24 +107,8 @@
     let isLoading = $state(true);
 
     onMount(async () => {
-        await Promise.all([
-            statusSync.init(),
-            drillSync.init(),
-            digitalAssetsSync.init()
-        ]);
+        await digitalAssetsSync.init();
         isLoading = false;
-    });
-
-    // Initialization Logic
-    $effect(() => {
-        // Initialize Status if empty
-        if (statusSync.status === "synced" && statusSync.items.length === 0) {
-            statusSync.create(DEFAULT_STATUS).catch(() => {});
-        }
-        // Initialize Drill if empty
-        if (drillSync.status === "synced" && drillSync.items.length === 0) {
-            drillSync.create(DEFAULT_DRILL).catch(() => {});
-        }
     });
 
     const wizardSteps = [
@@ -179,20 +159,12 @@
         showWizard = false;
     }
 
-    // Helper to update status safely
-    async function updateStatus(
+    function updateStatus(
         key: keyof Omit<GuardianStatus, "id">,
         value: boolean,
     ) {
-        try {
-            if (statusSync.items.length > 0) {
-                await statusSync.update("main", { [key]: value });
-            } else {
-                await statusSync.create({ ...DEFAULT_STATUS, [key]: value });
-            }
-        } catch {
-            // the manager already showed the one gentle message
-        }
+        setupStatus[key] = value;
+        setStored(STATUS_KEY, [$state.snapshot(setupStatus)]);
     }
 
     async function addAsset(platform: string, username: string, type: string) {
@@ -245,17 +217,9 @@
         }
     }
 
-    async function toggleDrill(step: keyof Omit<FireDrill, "id">) {
-        const current = fireDrill[step];
-        try {
-            if (drillSync.items.length > 0) {
-                await drillSync.update("main", { [step]: !current });
-            } else {
-                await drillSync.create({ ...DEFAULT_DRILL, [step]: !current });
-            }
-        } catch {
-            // the manager already showed the one gentle message
-        }
+    function toggleDrill(step: keyof Omit<FireDrill, "id">) {
+        fireDrill[step] = !fireDrill[step];
+        setStored(DRILL_KEY, [$state.snapshot(fireDrill)]);
     }
 </script>
 
