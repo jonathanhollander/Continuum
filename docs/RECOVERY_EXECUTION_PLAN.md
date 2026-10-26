@@ -694,7 +694,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | U0 | ▶ | | 4 read-only reviewers on main: U0a legacy and letters, U0b finances and estate, U0c family, contacts, recipient and Pulse, U0d dashboard, navigation, settings, tools; U0a done → U9–U19 (banner → U7); shared: Modal footer slot (contacts, heirlooms) and breadcrumb fallback to `catalogCategories` (`+layout.svelte:110`) wait for U0d; open for G0: calendar vs Important Dates both edit `calendar_events`; letters has no header add; letters "Draft Ethical Will" separate from Legacy Journal's |
 | U1 | ▶ | | |
 | U2 | ▶ | | |
-| U3 | ▶ | | |
+| U3 | ☑ | 2a5d5f6 | `/pulse` → `/modules/pulse` (307 in `+page.ts` `load`, query kept; old daisyUI page emptied); `/pulse/respond|portal|verify/[token]` untouched; nothing linked to bare `/pulse` (emails use `/portal/{token}`). Back does not loop; 0 errors |
 | U4 | ▶ | | |
 | U5 | ▶ | | |
 | U6 | ▶ | | |
@@ -709,8 +709,8 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | U15 | ▶ | | |
 | U16 | ▶ | | |
 | U17 | ▶ | | |
-| U18 | ▶ | | |
-| U19 | ▶ | | |
+| U18 | ☐ (queued: 20-agent limit) | | |
+| U19 | ☐ (queued: 20-agent limit) | | |
 | G0 | ☐ (after Wave U) | | |
 | T0 | ☐ (after Wave U, with G0) | | |
 | V0 | ☐ (after Wave U, with G0 and T0) | | |
