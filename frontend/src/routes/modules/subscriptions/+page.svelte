@@ -316,28 +316,24 @@
         if (!sub || pdfBusy) return;
         pdfBusy = true;
         try {
-            const [{ default: jsPDF }, { saveBlob }] = await Promise.all([
-                import("jspdf"),
+            const [{ createUnicodePDF, PDF_FONT, splitPDFText, writePDFLine }, { saveBlob }] = await Promise.all([
+                import("$lib/services/unicodePDF"),
                 import("$lib/services/exportService"),
             ]);
             const l = letterParts(sub);
-            const doc = new jsPDF({ unit: "pt", format: "letter" });
+            const doc = await createUnicodePDF();
             const W = doc.internal.pageSize.getWidth();
             const H = doc.internal.pageSize.getHeight();
             const M = 72;
             let y = M;
-            // jsPDF's built-in fonts cover Latin-1; common typography is mapped so words stay readable.
-            const latin1 = (s: string) =>
-                s.replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/[–—]/g, "-")
-                    .replace(/…/g, "...").replace(/[^\x00-\xFF\n]/g, "?");
             const write = (s: string, opts: { bold?: boolean; italic?: boolean; size?: number; gap?: number } = {}) => {
                 const size = opts.size ?? 11;
-                doc.setFont("times", opts.bold ? "bold" : opts.italic ? "italic" : "normal");
+                doc.setFont(PDF_FONT, opts.bold ? "bold" : opts.italic ? "italic" : "normal");
                 doc.setFontSize(size);
                 const lh = size * 1.45;
-                for (const line of doc.splitTextToSize(latin1(s), W - 2 * M) as string[]) {
+                for (const line of splitPDFText(doc, s, W - 2 * M)) {
                     if (y + lh > H - M) { doc.addPage(); y = M; }
-                    doc.text(line, M, y + size);
+                    writePDFLine(doc, line, M, y + size, W - 2 * M);
                     y += lh;
                 }
                 y += opts.gap ?? 0;
