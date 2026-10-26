@@ -1,6 +1,6 @@
 # Continuum — Recovery Execution Plan (subagent-run)
 
-**Last Updated:** 2026-10-26 02:15 EST
+**Last Updated:** 2026-10-26 02:50 EST
 
 The how and the order for [PROJECT_RECOVERY_PLAN.md](PROJECT_RECOVERY_PLAN.md) (phases A–F).
 Issue IDs (CU-0xx) and their evidence are in
@@ -231,7 +231,7 @@ Listed so nothing is lost:
 
 | Section | Status | Verified on | Notes |
 |---|---|---|---|
-| Wave A — Stable ground | ☐ | | |
+| Wave A — Stable ground | ▶ | | |
 | Wave B — Shared contracts | ☐ | | |
 | Wave C — Scenario records | ☐ | | |
 | Wave D — Handover | ☐ | | |
@@ -245,10 +245,10 @@ Listed so nothing is lost:
 
 | Card | Status | Commit | Proof verified |
 |---|---|---|---|
-| A0 | ☐ | | |
-| A1 | ☐ | | |
-| A2 | ☐ | | |
-| A3 | ☐ | | |
+| A0 | ☑ | 0444175 | `git check-ignore -v .worktrees/x` → `.gitignore:58` |
+| A1 | ▶ | | |
+| A2 | ▶ | | |
+| A3 | ▶ | | |
 | B1 | ☐ | | |
 | B2 | ☐ | | |
 | B3 | ☐ | | |
