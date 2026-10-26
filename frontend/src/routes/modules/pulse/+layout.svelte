@@ -11,7 +11,7 @@
 </script>
 
 <div
-    class="min-h-screen bg-slate-950 text-slate-100 relative overflow-hidden font-sans"
+    class="surface-dark min-h-screen bg-slate-950 text-foreground relative overflow-hidden font-sans"
 >
     <!-- Warm Technology Atmosphere -->
     <LivingMesh status={getMeshStatus(pulse.status)} />

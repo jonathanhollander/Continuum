@@ -69,23 +69,23 @@
 
 <div class="max-w-4xl mx-auto p-4 md:p-8 space-y-8">
     <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-serif text-slate-100 flex items-center gap-2">
-            <Clock class="text-teal-400" />
+        <h1 class="text-2xl font-serif text-foreground flex items-center gap-2">
+            <Clock class="text-primary" />
             Check-in History
         </h1>
         <a
             href="/modules/pulse"
-            class="text-sm text-teal-400 hover:text-teal-300 transition-colors"
+            class="text-sm text-primary hover:text-primary-hover transition-colors"
             >Back to Wellness Check-in</a
         >
     </div>
 
     <!-- Filters -->
     <div
-        class="bg-slate-900/50 p-4 rounded-xl border border-slate-800 flex flex-wrap gap-4 items-center"
+        class="bg-background/50 p-4 rounded-xl border border-slate-800 flex flex-wrap gap-4 items-center"
     >
         <span
-            class="text-xs text-slate-500 font-bold uppercase tracking-widest"
+            class="text-xs text-muted-foreground font-bold uppercase tracking-widest"
             >Show:</span
         >
 
@@ -94,8 +94,8 @@
                 onclick={() => (filterMethod = f.id)}
                 class="px-3 py-1 rounded-full text-xs font-medium transition-colors {filterMethod ===
                 f.id
-                    ? 'bg-teal-500 text-white'
-                    : 'bg-slate-800 text-slate-400 hover:text-white'}"
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-card text-muted-foreground hover:text-foreground'}"
             >
                 {f.label}
             </button>
@@ -106,7 +106,7 @@
         <div class="space-y-4">
             {#each Array(3) as _}
                 <div
-                    class="h-16 bg-slate-900/50 rounded-xl animate-pulse"
+                    class="h-16 bg-background/50 rounded-xl animate-pulse"
                 ></div>
             {/each}
         </div>
@@ -115,31 +115,31 @@
             {#each getFilteredHistory() as checkin (checkin.id)}
                 {@const Icon = getMethodIcon(checkin.method)}
                 <div
-                    class="bg-slate-900/50 border border-slate-800 rounded-xl p-4 flex items-center justify-between hover:bg-slate-800/80 transition-colors"
+                    class="bg-background/50 border border-slate-800 rounded-xl p-4 flex items-center justify-between hover:bg-card/80 transition-colors"
                     in:fade
                 >
                     <div class="flex items-center gap-4">
                         <div
-                            class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center {isGuardian(
+                            class="w-10 h-10 rounded-full bg-card flex items-center justify-center {isGuardian(
                                 checkin.method,
                             )
-                                ? 'text-teal-400'
-                                : 'text-slate-400'}"
+                                ? 'text-primary'
+                                : 'text-muted-foreground'}"
                         >
                             <Icon
                                 class="w-5 h-5"
                             />
                         </div>
                         <div>
-                            <div class="text-slate-200 font-medium">
+                            <div class="text-foreground font-medium">
                                 {getLabel(checkin)}
                             </div>
                             {#if getNote(checkin)}
-                                <div class="text-sm text-slate-400">
+                                <div class="text-sm text-muted-foreground">
                                     Note: {getNote(checkin)}
                                 </div>
                             {/if}
-                            <div class="text-xs text-slate-500 font-mono">
+                            <div class="text-xs text-muted-foreground font-mono">
                                 {new Date(checkin.timestamp).toLocaleString(
                                     undefined,
                                     { dateStyle: "full", timeStyle: "short" },
@@ -148,7 +148,7 @@
                         </div>
                     </div>
                     <div
-                        class="text-xs font-bold text-teal-500 uppercase tracking-wider bg-teal-500/10 px-3 py-1 rounded-full border border-teal-500/20"
+                        class="text-xs font-bold text-primary uppercase tracking-wider bg-primary/10 px-3 py-1 rounded-full border border-primary/20"
                     >
                         Received
                     </div>
@@ -157,7 +157,7 @@
         </div>
     {:else}
         <div
-            class="text-center py-12 text-slate-500 bg-slate-900/30 rounded-2xl border border-slate-800/50 dashed"
+            class="text-center py-12 text-muted-foreground bg-background/30 rounded-2xl border border-slate-800/50 dashed"
         >
             <Clock class="w-8 h-8 mx-auto mb-2 opacity-50" />
             <p>Your check-ins will gather here.</p>

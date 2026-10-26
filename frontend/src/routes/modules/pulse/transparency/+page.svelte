@@ -7,7 +7,6 @@
         FileText,
         Activity,
         Clock,
-        AlertTriangle,
     } from "lucide-svelte";
     import { fade } from "svelte/transition";
     import { onMount } from "svelte";
@@ -51,19 +50,19 @@
                 name: "Active",
                 delay: "Always",
                 icon: Shield,
-                color: "text-teal-400",
-                bg: "bg-teal-500/10",
-                border: "border-teal-500/20",
+                color: "text-primary",
+                bg: "bg-primary/10",
+                border: "border-primary/20",
                 access: always,
                 hidden: notes.map((n) => n.name),
             },
         ];
 
         const colors = [
-            { c: "text-amber-400", bg: "bg-amber-500/10", b: "border-amber-500/20", i: Users },
-            { c: "text-orange-400", bg: "bg-orange-500/10", b: "border-orange-500/20", i: Users },
-            { c: "text-rose-400", bg: "bg-rose-500/10", b: "border-rose-500/20", i: AlertTriangle },
-            { c: "text-purple-400", bg: "bg-purple-500/10", b: "border-purple-500/20", i: AlertTriangle },
+            { c: "text-warning", bg: "bg-warning/10", b: "border-warning/20", i: Users },
+            { c: "text-info", bg: "bg-info/10", b: "border-info/20", i: Users },
+            { c: "text-indigo-300", bg: "bg-indigo-500/10", b: "border-indigo-500/20", i: Lock },
+            { c: "text-foreground", bg: "bg-foreground/10", b: "border-foreground/20", i: Lock },
         ];
 
         [...backendTiers]
@@ -91,18 +90,18 @@
     <div class="flex items-center justify-between mb-8">
         <div>
             <h1
-                class="text-2xl font-serif text-slate-100 flex items-center gap-2"
+                class="text-2xl font-serif text-foreground flex items-center gap-2"
             >
-                <Eye class="text-teal-400" />
+                <Eye class="text-primary" />
                 What your guardians can see
             </h1>
-            <p class="text-slate-400 text-sm mt-1">
+            <p class="text-muted-foreground text-sm mt-1">
                 See exactly what is shared, and when.
             </p>
         </div>
         <a
             href="/modules/pulse"
-            class="text-sm text-teal-400 hover:text-teal-300 transition-colors"
+            class="text-sm text-primary hover:text-primary-hover transition-colors"
             >Back to Wellness Check-in</a
         >
     </div>
@@ -115,7 +114,7 @@
                     class="w-full text-left p-4 rounded-xl border transition-all duration-300 relative overflow-hidden group {activeTier ===
                     i
                         ? `${tier.bg} ${tier.border} border-l-4`
-                        : 'bg-slate-900/40 border-slate-800 hover:bg-slate-800/60'}"
+                        : 'bg-background/40 border-slate-800 hover:bg-card/60'}"
                     onclick={() => (activeTier = i)}
                 >
                     <div class="flex items-center gap-3 relative z-10">
@@ -127,11 +126,11 @@
                             />
                         </div>
                         <div>
-                            <div class="font-medium text-slate-200 text-sm">
+                            <div class="font-medium text-foreground text-sm">
                                 {tier.name}
                             </div>
                             <div
-                                class="text-xs text-slate-500 font-mono mt-0.5"
+                                class="text-xs text-muted-foreground font-mono mt-0.5"
                             >
                                 {tier.delay}
                             </div>
@@ -144,17 +143,17 @@
         <!-- Detail View -->
         <div class="md:col-span-8">
             <div
-                class="bg-slate-900/60 backdrop-blur-md rounded-2xl border border-slate-800 p-8 min-h-[400px]"
+                class="bg-background/60 backdrop-blur-md rounded-2xl border border-slate-800 p-8 min-h-[400px]"
             >
                 {#if tiers.length > 0 && tiers[activeTier]}
                     {#key activeTier}
                         <div in:fade={{ duration: 300 }}>
                             <div class="flex items-center gap-3 mb-6">
                                 <span
-                                    class="text-xs font-mono text-slate-500 uppercase tracking-widest"
+                                    class="text-xs font-mono text-muted-foreground uppercase tracking-widest"
                                     >Access Level</span
                                 >
-                                <div class="h-px bg-slate-800 flex-1"></div>
+                                <div class="h-px bg-card flex-1"></div>
                                 <span
                                     class="{tiers[activeTier]
                                         .color} font-bold text-sm tracking-wide"
@@ -168,19 +167,19 @@
                                     <h3
                                         class="text-sm font-medium text-slate-300 mb-3 flex items-center gap-2"
                                     >
-                                        <Eye class="w-4 h-4 text-teal-400" /> Visible
+                                        <Eye class="w-4 h-4 text-primary" /> Visible
                                         Data
                                     </h3>
                                     <div class="grid gap-3">
                                         {#each tiers[activeTier].access as item}
                                             <div
-                                                class="flex items-center gap-3 p-3 rounded-lg bg-teal-500/5 border border-teal-500/10"
+                                                class="flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/10"
                                             >
                                                 <item.icon
-                                                    class="w-4 h-4 text-teal-400"
+                                                    class="w-4 h-4 text-primary"
                                                 />
                                                 <span
-                                                    class="text-slate-200 text-sm"
+                                                    class="text-foreground text-sm"
                                                     >{item.name}</span
                                                 >
                                             </div>
@@ -194,16 +193,16 @@
                                         class="pt-4 border-t border-slate-800/50"
                                     >
                                         <h3
-                                            class="text-sm font-medium text-slate-400 mb-3 flex items-center gap-2"
+                                            class="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2"
                                         >
                                             <Lock
-                                                class="w-4 h-4 text-slate-500"
+                                                class="w-4 h-4 text-muted-foreground"
                                             /> Kept private
                                         </h3>
                                         <div class="grid sm:grid-cols-2 gap-2">
                                             {#each tiers[activeTier].hidden as hiddenItem}
                                                 <div
-                                                    class="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-950/30 border border-slate-800 text-slate-500 text-xs"
+                                                    class="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-950/30 border border-slate-800 text-muted-foreground text-xs"
                                                 >
                                                     <Lock
                                                         class="w-3 h-3 opacity-50"
@@ -219,7 +218,7 @@
                     {/key}
                 {:else}
                     <div
-                        class="flex items-center justify-center h-full text-slate-500"
+                        class="flex items-center justify-center h-full text-muted-foreground"
                     >
                         Gathering this for you...
                     </div>

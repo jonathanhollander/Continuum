@@ -106,13 +106,13 @@
 
 <div class="max-w-4xl mx-auto p-4 md:p-8 pb-32">
     <div class="flex items-center justify-between mb-8">
-        <h1 class="text-2xl font-serif text-slate-100 flex items-center gap-2">
-            <Activity class="text-teal-400" />
+        <h1 class="text-2xl font-serif text-foreground flex items-center gap-2">
+            <Activity class="text-primary" />
             Your Check-in Settings
         </h1>
         <a
             href="/modules/pulse"
-            class="text-sm text-teal-400 hover:text-teal-300 transition-colors"
+            class="text-sm text-primary hover:text-primary-hover transition-colors"
             >Back to Wellness Check-in</a
         >
     </div>
@@ -120,17 +120,17 @@
     <div class="space-y-8">
         <!-- GLOBAL STATUS -->
         <div
-            class="bg-slate-900/50 p-6 rounded-2xl border border-slate-700/50 flex items-center justify-between backdrop-blur-sm"
+            class="bg-background/50 p-6 rounded-2xl border border-border/50 flex items-center justify-between backdrop-blur-sm"
         >
             <div>
-                <h3 class="text-lg font-medium text-white">Active Heartbeat</h3>
-                <p class="text-slate-400 text-sm">
+                <h3 class="text-lg font-medium text-foreground">Active Heartbeat</h3>
+                <p class="text-muted-foreground text-sm">
                     Turn on gentle wellness check-ins.
                 </p>
             </div>
             <button
                 class="relative inline-flex h-8 w-14 items-center rounded-full transition-colors {settings.enabled
-                    ? 'bg-teal-500'
+                    ? 'bg-primary'
                     : 'bg-slate-700'}"
                 role="switch"
                 aria-checked={settings.enabled}
@@ -150,11 +150,11 @@
 
         <!-- HOW OFTEN: frequency_days and grace_period_hours (pulse_logic reads both) -->
         <div
-            class="bg-slate-900/50 p-6 rounded-2xl border border-slate-700/50 grid md:grid-cols-2 gap-6 backdrop-blur-sm"
+            class="bg-background/50 p-6 rounded-2xl border border-border/50 grid md:grid-cols-2 gap-6 backdrop-blur-sm"
         >
             <div class="space-y-2">
-                <label for="pulse-frequency" class="text-sm font-medium text-white flex items-center gap-2">
-                    <Clock class="w-4 h-4 text-teal-400" /> How often we check in
+                <label for="pulse-frequency" class="text-sm font-medium text-foreground flex items-center gap-2">
+                    <Clock class="w-4 h-4 text-primary" /> How often we check in
                 </label>
                 <div class="flex items-center gap-2">
                     <input
@@ -165,14 +165,14 @@
                         step="1"
                         value={settings.frequency_days}
                         onchange={(e) => saveNumber("frequency_days", e.currentTarget.value, 1, 365)}
-                        class="w-24 bg-slate-950/60 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-teal-500/50"
+                        class="w-24 bg-slate-950/60 border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
                     />
-                    <span class="text-sm text-slate-400">days</span>
+                    <span class="text-sm text-muted-foreground">days</span>
                 </div>
             </div>
             <div class="space-y-2">
-                <label for="pulse-grace" class="text-sm font-medium text-white flex items-center gap-2">
-                    <Clock class="w-4 h-4 text-teal-400" /> Grace period
+                <label for="pulse-grace" class="text-sm font-medium text-foreground flex items-center gap-2">
+                    <Clock class="w-4 h-4 text-primary" /> Grace period
                 </label>
                 <div class="flex items-center gap-2">
                     <input
@@ -183,9 +183,9 @@
                         step="1"
                         value={settings.grace_period_hours}
                         onchange={(e) => saveNumber("grace_period_hours", e.currentTarget.value, 0, 720)}
-                        class="w-24 bg-slate-950/60 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-teal-500/50"
+                        class="w-24 bg-slate-950/60 border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
                     />
-                    <span class="text-sm text-slate-400">hours</span>
+                    <span class="text-sm text-muted-foreground">hours</span>
                 </div>
             </div>
         </div>
@@ -194,25 +194,25 @@
         <div class="space-y-4" id="contacts-section">
             <div class="flex items-center justify-between">
                 <h3
-                    class="text-lg font-medium text-slate-200 flex items-center gap-2"
+                    class="text-lg font-medium text-foreground flex items-center gap-2"
                 >
-                    <Users class="w-5 h-5 text-slate-400" />
+                    <Users class="w-5 h-5 text-muted-foreground" />
                     Who we reach out to
                 </h3>
             </div>
 
             <div
-                class="bg-slate-900/50 p-6 rounded-2xl border border-slate-700/50 flex items-center justify-between gap-4 backdrop-blur-sm"
+                class="bg-background/50 p-6 rounded-2xl border border-border/50 flex items-center justify-between gap-4 backdrop-blur-sm"
             >
                 <a
                     href="/modules/pulse/escalation"
-                    class="text-sm text-teal-400 hover:text-teal-300 transition-colors font-bold"
+                    class="text-sm text-primary hover:text-primary-hover transition-colors font-bold"
                     >Escalation Plan</a
                 >
                 <button
                     onclick={() => (showGuardianPicker = true)}
                     disabled={tiers.length === 0}
-                    class="text-xs text-teal-500 hover:text-teal-400 flex items-center gap-1 font-bold"
+                    class="text-xs text-primary hover:text-primary-hover flex items-center gap-1 font-bold"
                 >
                     <Plus class="w-3 h-3" /> Add Guardian
                 </button>
@@ -230,20 +230,20 @@
         <!-- SPECIAL MODES -->
         <div class="grid md:grid-cols-2 gap-6 pb-20">
             <div
-                class="bg-slate-900/50 p-6 rounded-2xl border border-slate-700/50 flex flex-col justify-between backdrop-blur-sm relative overflow-hidden"
+                class="bg-background/50 p-6 rounded-2xl border border-border/50 flex flex-col justify-between backdrop-blur-sm relative overflow-hidden"
             >
                 <div class="flex items-center gap-2 mb-4 relative z-10">
                     <Ghost
                         class="w-5 h-5 {settings.ghost_mode_until
                             ? 'text-purple-400'
-                            : 'text-slate-400'}"
+                            : 'text-muted-foreground'}"
                     />
-                    <h3 class="text-lg font-medium text-slate-200">
+                    <h3 class="text-lg font-medium text-foreground">
                         Rest Mode
                     </h3>
                 </div>
                 <p
-                    class="text-sm text-slate-400 mb-6 relative z-10 leading-relaxed"
+                    class="text-sm text-muted-foreground mb-6 relative z-10 leading-relaxed"
                 >
                     Rest for 7 days. Your circle is told you are resting, and
                     alerts wait until you return.
@@ -264,7 +264,7 @@
                     onclick={toggleGhostMode}
                     class="w-full py-2.5 rounded-xl border transition-all text-sm font-bold relative z-10 {settings.ghost_mode_until
                         ? 'bg-purple-900/30 border-purple-500/50 text-purple-200 scale-[0.98]'
-                        : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:border-slate-600'}"
+                        : 'bg-card border-border text-slate-300 hover:bg-slate-700 hover:border-slate-600'}"
                 >
                     {settings.ghost_mode_until
                         ? "Return from rest"
@@ -273,23 +273,23 @@
             </div>
 
             <div
-                class="bg-slate-900/50 p-6 rounded-2xl border border-slate-700/50 space-y-4 backdrop-blur-sm"
+                class="bg-background/50 p-6 rounded-2xl border border-border/50 space-y-4 backdrop-blur-sm"
             >
                 <div class="flex items-center gap-2">
                     <Shield class="w-5 h-5 text-indigo-400" />
-                    <h3 class="text-lg font-medium text-slate-200">
+                    <h3 class="text-lg font-medium text-foreground">
                         Notes for your guardians
                     </h3>
                 </div>
-                <p class="text-sm text-slate-400 leading-relaxed">
-                    Share the notes in <a href="/modules/pulse/vault" class="text-teal-400 hover:text-teal-300">your vault</a>
+                <p class="text-sm text-muted-foreground leading-relaxed">
+                    Share the notes in <a href="/modules/pulse/vault" class="text-primary hover:text-primary-hover">your vault</a>
                     with your guardians once an escalation reaches the tier you
                     set for each one.
                 </p>
                 <div
                     class="flex items-center justify-between p-3 rounded-xl bg-slate-950/40 border border-slate-800"
                 >
-                    <div class="text-xs text-slate-400 font-medium">
+                    <div class="text-xs text-muted-foreground font-medium">
                         Automatic Release
                     </div>
                     <button
