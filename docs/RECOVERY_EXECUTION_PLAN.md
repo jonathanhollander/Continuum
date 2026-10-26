@@ -1019,7 +1019,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X297 | ☑ | merged | Simulator checks: "A copy of your passport or ID saved in your Vault.", "Your accounts and cards saved in Financial Accounts.", directive line names the page that matched |
 | X298 | ☑ | merged | Simulator POA check also counts a Health & Medical healthcare_proxy ("Healthcare proxy saved in Health & Medical."); Financial Accounts subtitle "Bank accounts, investments and debts, gathered in one place." |
 | X299 | ☑ | merged | Directive check counts living_will/dnr/palliative_care/other only (proxy → POA only); Vault fallback no longer matches any "health" name; POA line covers proxy; no "Manage" subtitles left |
-| X300 | ▶ | | |
+| X300 | ☑ | merged | Links carry their destination's heading: "The Life Timeline →", "Trusted Contacts", "Your Check-in Settings"; old labels 0; 0 console errors |
 | X5 | ▶ | | |
 | X6 | ☐ (owner) | | |
 | X7 | ☑ | 8a5b462 | Fresh DB: login, /me, refresh 200; magic-link token on /me 401; "BYPASS_AUTH" stored value 401 (was 500); sub-less magic link 401 (was 500); valid magic link 200; jh@ bypass 200 |
