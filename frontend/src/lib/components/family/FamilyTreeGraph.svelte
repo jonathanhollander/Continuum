@@ -232,19 +232,19 @@
             </div>
 
             <div class="space-y-3">
-                <label class="block text-xs font-bold uppercase text-slate-400">
+                <label class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1">
                     Name
                     <input
                         bind:value={draft.name}
-                        class="mt-1 w-full p-2 text-sm normal-case font-normal text-slate-800 border rounded-lg focus:border-[#4A7C74] outline-none"
+                        class="mt-1.5 w-full px-4 py-3 text-sm normal-case font-normal tracking-normal text-slate-800 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     />
                 </label>
 
-                <label class="block text-xs font-bold uppercase text-slate-400">
+                <label class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1">
                     Type
                     <select
                         bind:value={draft.role}
-                        class="mt-1 w-full p-2 text-sm normal-case font-normal text-slate-800 border rounded-lg focus:border-[#4A7C74] outline-none"
+                        class="mt-1.5 w-full px-4 py-3 text-sm normal-case font-normal tracking-normal text-slate-800 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     >
                         <option value="Family">Family Member</option>
                         <option value="Friend">Friend</option>
@@ -256,24 +256,24 @@
                     </select>
                 </label>
 
-                <label class="block text-xs font-bold uppercase text-slate-400">
+                <label class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1">
                     Relationship / Title
                     <input
                         bind:value={draft.relation}
                         placeholder={draft.role === "Family"
                             ? "e.g. Spouse, Son, Mother"
                             : "e.g. Cardiologist, Best Friend"}
-                        class="mt-1 w-full p-2 text-sm normal-case font-normal text-slate-800 border rounded-lg focus:border-[#4A7C74] outline-none"
+                        class="mt-1.5 w-full px-4 py-3 text-sm normal-case font-normal tracking-normal text-slate-800 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     />
                 </label>
 
-                <label class="block text-xs font-bold uppercase text-slate-400">
+                <label class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1">
                     Email Address
                     <input
                         type="email"
                         bind:value={draft.email}
                         placeholder="email@example.com"
-                        class="mt-1 w-full p-2 text-sm normal-case font-normal text-slate-800 border rounded-lg focus:border-[#4A7C74] outline-none"
+                        class="mt-1.5 w-full px-4 py-3 text-sm normal-case font-normal tracking-normal text-slate-800 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     />
                 </label>
 
