@@ -129,8 +129,11 @@ export class SyncManager<T extends { id: number | string }> {
      *  before the first of them), each open update's fields by sequence, every field they touched,
      *  and the last request, which the next update to that row waits for (the server applies them
      *  in order). */
-    private rowWrites = new Map<string, { generation: number; base: any; open: Map<number, Partial<T>>; keys: Set<string>; last: Promise<unknown> }>();
+    private rowWrites = new Map<string, { generation: number; base: any; baseSeq: number; open: Map<number, Partial<T>>; keys: Set<string>; last: Promise<unknown> }>();
     private updateCounter = 0;
+    /** Bumped each time an update's answer becomes a row's server copy (its `baseSeq`): a sync that
+     *  started before that answer leaves the newer copy alone. */
+    private baseCounter = 0;
     /** Rows whose delete is in flight: an update to the row that settles meanwhile lands here, so a
      *  failed delete restores the row as it now is. */
     private removing = new Map<string, { generation: number; row: T }>();
@@ -181,6 +184,7 @@ export class SyncManager<T extends { id: number | string }> {
         // before we can check for migration eligibility
         const localItemsSnapshot = [...this.items];
         const generation = this.generation;
+        const baseMark = this.baseCounter;
         const account = storageAccount();
         const profile = get(currentProfileId) || 'owner';
         // Still the account (and the run) this sync started for.
@@ -242,11 +246,11 @@ export class SyncManager<T extends { id: number | string }> {
                         const camel = convertKeys(i, toCamel);
                         return this.mapper ? this.mapper(camel) : camel;
                     });
-                    this.updateLocal(wrapped2);
+                    this.updateLocal(this.withOpenUpdates(wrapped2, generation, baseMark));
                 }
             } else {
                 // Standard Mirror (Down-Sync) - Server is Truth
-                this.updateLocal(remoteItems);
+                this.updateLocal(this.withOpenUpdates(remoteItems, generation, baseMark));
             }
 
             this.status = "synced";
@@ -256,6 +260,21 @@ export class SyncManager<T extends { id: number | string }> {
             this.status = "error";
             this.error = e.message;
         }
+    }
+
+    /** A synced list meeting rows with updates in flight: the synced row becomes each such row's
+     *  server copy (so a failure reverts to it), unless an update's answer arrived after this sync
+     *  started; the open updates' fields stay laid over it on screen until their answers come back. */
+    private withOpenUpdates(data: T[], generation: number, baseMark: number): T[] {
+        if (generation !== this.generation || this.rowWrites.size === 0) return data;
+        return data.map(item => {
+            const entry = this.rowWrites.get(String(item.id));
+            if (!entry || entry.generation !== generation || entry.open.size === 0) return item;
+            if (entry.baseSeq <= baseMark) entry.base = { ...item };
+            const next: any = { ...entry.base };
+            for (const s of [...entry.open.keys()].sort((a, b) => a - b)) Object.assign(next, entry.open.get(s));
+            return next;
+        });
     }
 
     /** Mirror the server's list (server truth): the device keeps it and the ids the server holds. */
@@ -399,7 +418,7 @@ export class SyncManager<T extends { id: number | string }> {
         const key = String(id);
         let row = this.rowWrites.get(key);
         if (!row || row.generation !== generation) {
-            row = { generation, base: { ...currentItem }, open: new Map(), keys: new Set(), last: Promise.resolve() };
+            row = { generation, base: { ...currentItem }, baseSeq: 0, open: new Map(), keys: new Set(), last: Promise.resolve() };
             this.rowWrites.set(key, row);
         }
         const entry = row;
@@ -459,6 +478,7 @@ export class SyncManager<T extends { id: number | string }> {
             // The server's row, with any newer update still in flight laid over it (those values
             // stay on screen until their own answer comes back).
             entry.base = remoteItem;
+            entry.baseSeq = ++this.baseCounter;
             close();
             if (entry.open.size === 0) entry.keys.clear();
             this.setRow(id, generation, () => {
