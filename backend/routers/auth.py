@@ -70,6 +70,19 @@ class TokenResponse(BaseModel):
 class RefreshTokenRequest(BaseModel):
     refresh_token: str
 
+VALID_USER_ROLES = ("planning", "executor", "family", "advisor")
+
+
+def _check_user_role(role: Any) -> str:
+    """Accept only the four roles the app reads (X125); 422 otherwise."""
+    if role not in VALID_USER_ROLES:
+        raise HTTPException(
+            status_code=422,
+            detail="Choose one of these roles: planning, executor, family or advisor.",
+        )
+    return role
+
+
 class UserResponse(BaseModel):
     id: int
     email: str
@@ -780,7 +793,7 @@ def update_preferences(
         current_user.overwhelm_muted = prefs["overwhelm_muted"]
 
     if "user_role" in prefs:
-        current_user.user_role = prefs["user_role"]
+        current_user.user_role = _check_user_role(prefs["user_role"])
 
     if "emotional_context" in prefs:
         current_user.emotional_context = prefs["emotional_context"]
@@ -913,7 +926,7 @@ def update_onboarding(
         updated_fields.append("display_name")
 
     if onboarding_data.user_role is not None:
-        current_user.user_role = onboarding_data.user_role
+        current_user.user_role = _check_user_role(onboarding_data.user_role)
         updated_fields.append("user_role")
 
     if onboarding_data.emotional_context is not None:
