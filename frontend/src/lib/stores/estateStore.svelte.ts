@@ -33,7 +33,7 @@ const DEFAULT_PROFILE: EstateProfile = {
  * Only this profile's own keys are sent, so saving it never rewrites the tone, onboarding,
  * scenario, concierge or complexity keys other stores keep in the same record.
  */
-const estateMapper = (data: any): EstateProfile => {
+const estateMapper = (data: Record<string, unknown>): EstateProfile => {
     const src = data && typeof data === 'object' ? data : {};
     const out: any = { ...DEFAULT_PROFILE };
     for (const k of Object.keys(DEFAULT_PROFILE)) {

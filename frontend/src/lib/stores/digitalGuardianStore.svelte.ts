@@ -11,7 +11,7 @@ const toMap = (v: any): GuardianChecks | undefined => {
 };
 
 // Keeps only the two maps, so "nothing saved yet" stays {} (no row is uploaded for an untouched page).
-const guardianMapper = (data: any): DigitalGuardianData => {
+const guardianMapper = (data: Record<string, unknown>): DigitalGuardianData => {
     const out: DigitalGuardianData = {};
     if (!data || typeof data !== 'object' || Array.isArray(data)) return out;
     const status = toMap(data.setupStatus);

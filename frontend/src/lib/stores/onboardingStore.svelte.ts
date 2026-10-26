@@ -14,7 +14,7 @@ interface OnboardingState {
     isDemoMode: boolean;
 }
 
-const manager = registerProfileSlice<OnboardingState>('onboarding_settings', (data: any) => ({
+const manager = registerProfileSlice<OnboardingState>('onboarding_settings', (data: Record<string, unknown>) => ({
     hasSeenWelcome: data.hasSeenWelcome === true,
     isDemoMode: data.isDemoMode === true
 }));

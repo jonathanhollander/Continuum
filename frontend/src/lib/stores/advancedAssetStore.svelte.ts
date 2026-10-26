@@ -54,7 +54,7 @@ const parseList = (v: any): any[] => {
     try { const p = JSON.parse(v); return Array.isArray(p) ? p : []; } catch { return []; }
 };
 
-const betterMapper = (data: any) => {
+const betterMapper = (data: Record<string, unknown>) => {
     if (!data || typeof data !== 'object' || Array.isArray(data)) return { ...DEFAULT_ADVANCED_STATE };
     return {
         ...data,

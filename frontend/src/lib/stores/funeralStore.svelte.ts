@@ -65,7 +65,7 @@ const parseJson = (v: any, fallback: any) => {
     try { return JSON.parse(v || JSON.stringify(fallback)); } catch { return fallback; }
 };
 
-const funeralMapper = (data: any) => {
+const funeralMapper = (data: Record<string, unknown>) => {
     if (!data || typeof data !== 'object' || Array.isArray(data)) return { wishes: {}, budget: [] };
     return {
         ...data,

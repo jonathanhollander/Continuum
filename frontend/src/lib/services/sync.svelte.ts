@@ -97,12 +97,12 @@ export class SyncManager<T extends { id: number | string }> {
 
     private key: string;
     private endpoint: string;
-    private mapper?: (local: any) => T;
+    private mapper?: (local: Record<string, unknown>) => T;
     private apiBase: string;
     private subscriptions = new Set<(value: T[]) => void>();
     private affirmationContext?: AffirmationContext;
 
-    constructor(key: string, endpoint: string, mapper?: (local: any) => T, apiBase: string = "/api/data") {
+    constructor(key: string, endpoint: string, mapper?: (local: Record<string, unknown>) => T, apiBase: string = "/api/data") {
         this.key = key;
         this.endpoint = endpoint;
         this.mapper = mapper;
@@ -148,7 +148,7 @@ export class SyncManager<T extends { id: number | string }> {
      *  before the first of them), each open update's fields by sequence, every field they touched,
      *  and the last request, which the next update to that row waits for (the server applies them
      *  in order). */
-    private rowWrites = new Map<string, { generation: number; base: any; baseSeq: number; open: Map<number, Partial<T>>; keys: Set<string>; last: Promise<unknown> }>();
+    private rowWrites = new Map<string, { generation: number; base: T; baseSeq: number; open: Map<number, Partial<T>>; keys: Set<string>; last: Promise<unknown> }>();
     private updateCounter = 0;
     /** Bumped each time an update's answer becomes a row's server copy (its `baseSeq`): a sync that
      *  started before that answer leaves the newer copy alone. */
@@ -223,7 +223,7 @@ export class SyncManager<T extends { id: number | string }> {
             });
             if (!res.ok) throw new Error("Failed to fetch remote data");
 
-            const rawItems: any[] = await res.json();
+            const rawItems: unknown[] = await res.json();
             // The account changed while this was in flight: these records belong to someone else.
             if (get(auth).token !== token) return;
             const remoteItems = rawItems.map(item => {
@@ -261,7 +261,7 @@ export class SyncManager<T extends { id: number | string }> {
                 if (res2.ok) {
                     const raw2 = await res2.json();
                     if (get(auth).token !== token) return;
-                    const wrapped2 = raw2.map((i: any) => {
+                    const wrapped2 = raw2.map((i: unknown) => {
                         const camel = convertKeys(i, toCamel);
                         return this.mapper ? this.mapper(camel) : camel;
                     });
@@ -290,7 +290,7 @@ export class SyncManager<T extends { id: number | string }> {
             const entry = this.rowWrites.get(String(item.id));
             if (!entry || entry.generation !== generation || entry.open.size === 0) return item;
             if (entry.baseSeq <= baseMark) entry.base = { ...item };
-            const next: any = { ...entry.base };
+            const next: T = { ...entry.base };
             for (const s of [...entry.open.keys()].sort((a, b) => a - b)) Object.assign(next, entry.open.get(s));
             return next;
         });
@@ -502,7 +502,7 @@ export class SyncManager<T extends { id: number | string }> {
             close();
             if (entry.open.size === 0) entry.keys.clear();
             this.setRow(id, generation, () => {
-                const next: any = { ...remoteItem };
+                const next: T = { ...remoteItem };
                 for (const s of [...entry.open.keys()].sort((a, b) => a - b)) Object.assign(next, entry.open.get(s));
                 return next;
             });
@@ -525,12 +525,12 @@ export class SyncManager<T extends { id: number | string }> {
                 const keys = [...entry.keys];
                 entry.keys.clear();
                 this.setRow(id, generation, (r) => {
-                    const reverted: any = { ...r };
+                    const reverted = { ...r } as Record<string, unknown>;
                     for (const k of keys) {
-                        if (k in entry.base) reverted[k] = entry.base[k];
+                        if (k in entry.base) reverted[k] = (entry.base as Record<string, unknown>)[k];
                         else delete reverted[k];
                     }
-                    return reverted;
+                    return reverted as T;
                 });
             }
             this.status = "error";
@@ -627,7 +627,7 @@ export class SyncManager<T extends { id: number | string }> {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!res.ok) throw new Error("Audit fetch failed");
-            const rawItems: any[] = await res.json();
+            const rawItems: unknown[] = await res.json();
             const remoteItems = rawItems.map(i => {
                 const camel = convertKeys(i, toCamel);
                 return this.mapper ? this.mapper(camel) : camel;
@@ -661,10 +661,10 @@ export class SyncManager<T extends { id: number | string }> {
 // Singleton stores registered on the same endpoint share one GET per sync round, and their first-load
 // uploads go out together as one POST (the server merges the posted keys). The estate profile's
 // stores go further and share one manager (SharedRecord, below).
-const _sharedGets = new Map<string, Promise<any>>();
-const _pendingUploads = new Map<string, { payload: Record<string, unknown>; waiters: { resolve: (v: any) => void; reject: (e: unknown) => void }[] }>();
+const _sharedGets = new Map<string, Promise<unknown>>();
+const _pendingUploads = new Map<string, { payload: Record<string, unknown>; waiters: { resolve: (v: unknown) => void; reject: (e: unknown) => void }[] }>();
 
-function sharedGet(url: string, token: string): Promise<any> {
+function sharedGet(url: string, token: string): Promise<unknown> {
     const k = `${token}|${url}`;
     let p = _sharedGets.get(k);
     if (!p) {
@@ -680,11 +680,11 @@ function sharedGet(url: string, token: string): Promise<any> {
 
 // Every store that read the same GET reaches this in the same microtask run, so a 0 ms timer
 // collects all of them before the one POST is sent.
-function sharedUpload(url: string, token: string, payload: Record<string, unknown>): Promise<any> {
+function sharedUpload(url: string, token: string, payload: Record<string, unknown>): Promise<unknown> {
     const k = `${token}|${url}`;
     let batch = _pendingUploads.get(k);
     if (!batch) {
-        const b = { payload: {} as Record<string, unknown>, waiters: [] as { resolve: (v: any) => void; reject: (e: unknown) => void }[] };
+        const b = { payload: {} as Record<string, unknown>, waiters: [] as { resolve: (v: unknown) => void; reject: (e: unknown) => void }[] };
         batch = b;
         _pendingUploads.set(k, b);
         setTimeout(() => {
@@ -859,12 +859,12 @@ export class SingletonSyncManager<T extends object> {
 
     private key: string;
     private endpoint: string;
-    private mapper?: (local: any) => T;
+    private mapper?: (local: Record<string, unknown>) => T;
     private apiBase: string;
     /** Set when this store is one slice of a record other stores share (see SharedRecord). */
     private record?: SharedRecord;
 
-    constructor(key: string, endpoint: string, mapper?: (local: any) => T, apiBase: string = "/api", shared = false) {
+    constructor(key: string, endpoint: string, mapper?: (local: Record<string, unknown>) => T, apiBase: string = "/api", shared = false) {
         this.key = key;
         this.endpoint = endpoint;
         this.mapper = mapper;
@@ -876,7 +876,7 @@ export class SingletonSyncManager<T extends object> {
 
         // Load Initial & Map legacy local data if needed
         const raw = getStored<T>(key, {} as T);
-        this.data = mapper ? mapper(raw) : raw;
+        this.data = mapper ? mapper(raw as Record<string, unknown>) : raw;
         this.loadedFor = storageAccount();
     }
 
@@ -899,7 +899,7 @@ export class SingletonSyncManager<T extends object> {
         this.record?.reset(clear);
         this.loadedFor = clear ? null : storageAccount();
         const raw = clear ? ({} as T) : getStored<T>(this.key, {} as T);
-        this.data = this.mapper ? this.mapper(raw) : raw;
+        this.data = this.mapper ? this.mapper(raw as Record<string, unknown>) : raw;
         this.status = "idle";
         this.error = null;
         this.lastSync = null;
@@ -956,15 +956,15 @@ export class SingletonSyncManager<T extends object> {
     /** True when the raw device copy (before mapping) holds more than the mapper's defaults:
      *  a mapper fills defaults, and defaults are never uploaded. */
     hasLocalData(): boolean {
-        const stored = getStored<any>(this.key, null);
+        const stored = getStored<Record<string, unknown> | null>(this.key, null);
         if (!stored || typeof stored !== 'object' || Object.keys(stored).length === 0) return false;
         if (!this.mapper) return true;
         return JSON.stringify(this.mapper(stored)) !== JSON.stringify(this.mapper({}));
     }
 
     /** The record as sent: mapped, snake_case, without the fields the server owns. */
-    wirePayload(data: T): any {
-        const payload = convertKeys(this.mapper ? this.mapper(data) : data, toSnake);
+    wirePayload(data: T): Record<string, unknown> {
+        const payload = convertKeys(this.mapper ? this.mapper(data as Record<string, unknown>) : data, toSnake);
         // Server-owned fields; the server rejects them (422) if sent back.
         if (payload && typeof payload === 'object') {
             for (const k of ['id', 'user_id', 'created_at', 'updated_at']) delete payload[k];
@@ -1101,12 +1101,12 @@ import { browser } from '$app/environment';
 
 // Helper Class to validly use Runes
 class RegistryContainer {
-    data = $state<Record<string, SyncManager<any>>>({});
+    data = $state<Record<string, SyncManager<{ id: number | string }>>>({});
 }
 
 // Internal singleton reference
 let _container: RegistryContainer | undefined;
-let _plainRegistry: Record<string, SyncManager<any>> = {};
+let _plainRegistry: Record<string, SyncManager<{ id: number | string }>> = {};
 
 // True once a signed-in session has started syncing. Stores registered after that point
 // (lazily loaded modules) fetch themselves as soon as they are created.
@@ -1124,14 +1124,14 @@ export function getRegistry() {
 }
 
 function registerManager<M extends { sync(): Promise<void> }>(key: string, endpoint: string, apiBase: string | undefined, make: () => M): M {
-    const reg = getRegistry() as Record<string, any>;
+    const reg = getRegistry() as unknown as Record<string, (M & { endpoint?: string; apiBase?: string }) | undefined>;
     const existing = reg[key];
     if (existing) {
         // One owner per key: a second registration must describe the same endpoint.
         if (existing.endpoint !== endpoint || (apiBase !== undefined && existing.apiBase !== apiBase)) {
             console.warn(`[Sync] "${key}" is already registered for ${existing.apiBase}/${existing.endpoint}; ignoring ${apiBase ?? ''}/${endpoint}`);
         }
-        return existing as M;
+        return existing;
     }
     const manager = make();
     reg[key] = manager;
