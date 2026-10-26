@@ -1,4 +1,4 @@
-<script context="module" lang="ts">
+<script module lang="ts">
     export interface GalleryItem {
         id: string;
         url: string;
@@ -24,30 +24,42 @@
         Trash2,
         Image as ImageIcon,
     } from "lucide-svelte";
-    import { createEventDispatcher } from "svelte";
     import { fade } from "svelte/transition";
 
-    export let items: GalleryItem[] = [];
-    export let viewMode: "grid" | "carousel" = "grid";
-    export let selectedIds: string[] = [];
-    export let isSelectionMode = false;
-    export let allowFavorites = true;
-    export let allowDelete = false;
-
-    const dispatch = createEventDispatcher<{
-        selectionChange: string[];
-        viewChange: "grid" | "carousel";
-        toggleFavorite: string;
-        delete: string;
-        setCover: string;
-    }>();
+    let {
+        items = [],
+        viewMode = $bindable("grid"),
+        selectedIds = $bindable([]),
+        isSelectionMode = false,
+        allowFavorites = true,
+        allowDelete = false,
+        onselectionchange,
+        onviewchange,
+        ontogglefavorite,
+        ondelete,
+        onsetcover,
+    }: {
+        items?: GalleryItem[];
+        viewMode?: "grid" | "carousel";
+        selectedIds?: string[];
+        isSelectionMode?: boolean;
+        allowFavorites?: boolean;
+        allowDelete?: boolean;
+        onselectionchange?: (ids: string[]) => void;
+        onviewchange?: (mode: "grid" | "carousel") => void;
+        ontogglefavorite?: (id: string) => void;
+        ondelete?: (id: string) => void;
+        onsetcover?: (id: string) => void;
+    } = $props();
 
     // Carousel State
-    let activeIndex = 0;
+    let activeIndex = $state(0);
 
-    $: if (viewMode === "carousel" && items.length > 0) {
-        activeIndex = Math.min(activeIndex, items.length - 1);
-    }
+    $effect(() => {
+        if (viewMode === "carousel" && items.length > 0) {
+            activeIndex = Math.min(activeIndex, items.length - 1);
+        }
+    });
 
     function toggleSelection(id: string, e: Event) {
         e.stopPropagation();
@@ -56,7 +68,7 @@
         } else {
             selectedIds = [...selectedIds, id];
         }
-        dispatch("selectionChange", selectedIds);
+        onselectionchange?.(selectedIds);
     }
 
     function handleCardClick(item: GalleryItem) {
@@ -65,7 +77,7 @@
         } else {
             viewMode = "carousel";
             activeIndex = items.indexOf(item);
-            dispatch("viewChange", "carousel");
+            onviewchange?.("carousel");
         }
     }
 
@@ -79,19 +91,19 @@
 
     function toggleFavorite(id: string, e: Event) {
         e.stopPropagation();
-        dispatch("toggleFavorite", id);
+        ontogglefavorite?.(id);
     }
 
     async function handleDelete(id: string, e: Event) {
         e.stopPropagation();
         if (await askConfirm("Remove this item? You can upload it again if needed.")) {
-            dispatch("delete", id);
+            ondelete?.(id);
         }
     }
 
     function handleSetCover(item: GalleryItem, e: Event) {
         e.stopPropagation();
-        dispatch("setCover", item.id);
+        onsetcover?.(item.id);
     }
 </script>
 
@@ -107,9 +119,9 @@
                 class="p-2 rounded-md transition-all {viewMode === 'grid'
                     ? 'bg-white text-[#4A7C74] shadow-sm'
                     : 'text-slate-400 hover:text-slate-600'}"
-                on:click={() => {
+                onclick={() => {
                     viewMode = "grid";
-                    dispatch("viewChange", "grid");
+                    onviewchange?.("grid");
                 }}
                 title="Grid View"
             >
@@ -119,9 +131,9 @@
                 class="p-2 rounded-md transition-all {viewMode === 'carousel'
                     ? 'bg-white text-[#4A7C74] shadow-sm'
                     : 'text-slate-400 hover:text-slate-600'}"
-                on:click={() => {
+                onclick={() => {
                     viewMode = "carousel";
-                    dispatch("viewChange", "carousel");
+                    onviewchange?.("carousel");
                 }}
                 title="Carousel View"
                 disabled={items.length === 0}
@@ -158,8 +170,8 @@
                         )
                             ? 'ring-4 ring-indigo-500 ring-offset-2'
                             : ''}"
-                        on:click={() => handleCardClick(item)}
-                        on:keydown={(e) => {
+                        onclick={() => handleCardClick(item)}
+                        onkeydown={(e) => {
                             if (e.key === "Enter" || e.key === " ") {
                                 e.preventDefault();
                                 handleCardClick(item);
@@ -239,7 +251,7 @@
                                     {#if allowFavorites}
                                         <button
                                             class="p-1.5 bg-white/80 backdrop-blur rounded-full hover:bg-white text-slate-500 hover:text-red-500 transition-colors"
-                                            on:click={(e) =>
+                                            onclick={(e) =>
                                                 toggleFavorite(item.id, e)}
                                             title="Favorite"
                                         >
@@ -254,7 +266,7 @@
                                     {#if allowDelete}
                                         <button
                                             class="p-1.5 bg-white/80 backdrop-blur rounded-full hover:bg-white text-slate-500 hover:text-rose-500 transition-colors"
-                                            on:click={(e) =>
+                                            onclick={(e) =>
                                                 handleDelete(item.id, e)}
                                             title="Delete"
                                         >
@@ -269,7 +281,7 @@
                                     >
                                         <button
                                             class="text-[10px] bg-white/20 backdrop-blur px-2 py-0.5 rounded-full text-white hover:bg-white/40"
-                                            on:click={(e) =>
+                                            onclick={(e) =>
                                                 handleSetCover(item, e)}
                                         >
                                             Set Cover
@@ -312,7 +324,7 @@
             <!-- Controls -->
             <button aria-label="Previous"
                 class="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/40 text-white hover:bg-black/60 disabled:opacity-30 backdrop-blur transition-all z-20"
-                on:click={prevImage}
+                onclick={prevImage}
                 disabled={activeIndex === 0}
             >
                 <ChevronLeft size={24} />
@@ -320,7 +332,7 @@
 
             <button aria-label="Next"
                 class="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/40 text-white hover:bg-black/60 disabled:opacity-30 backdrop-blur transition-all z-20"
-                on:click={nextImage}
+                onclick={nextImage}
                 disabled={activeIndex === items.length - 1}
             >
                 <ChevronRight size={24} />
@@ -346,7 +358,7 @@
                         {#if allowDelete}
                             <button aria-label="Remove this item"
                                 class="p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
-                                on:click={(e) =>
+                                onclick={(e) =>
                                     handleDelete(items[activeIndex].id, e)}
                             >
                                 <Trash2 size={20} class="text-rose-400" />
@@ -355,11 +367,8 @@
                         {#if allowFavorites}
                             <button aria-label="Favorite" aria-pressed={!!items[activeIndex].isFavorite}
                                 class="p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
-                                on:click={() =>
-                                    dispatch(
-                                        "toggleFavorite",
-                                        items[activeIndex].id,
-                                    )}
+                                onclick={() =>
+                                    ontogglefavorite?.(items[activeIndex].id)}
                             >
                                 <Heart
                                     size={20}
@@ -382,7 +391,7 @@
                             activeIndex
                                 ? 'border-white opacity-100 scale-105'
                                 : 'border-transparent opacity-50 hover:opacity-80'}"
-                            on:click={() => (activeIndex = i)}
+                            onclick={() => (activeIndex = i)}
                         >
                             {#if item.type === "video"}
                                 <div
@@ -407,7 +416,7 @@
             <!-- Close Carousel -->
             <button aria-label="Close"
                 class="absolute top-4 right-4 p-2 bg-black/20 hover:bg-black/40 rounded-full text-white backdrop-blur transition-colors z-30"
-                on:click={() => (viewMode = "grid")}
+                onclick={() => (viewMode = "grid")}
             >
                 <X size={20} />
             </button>

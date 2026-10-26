@@ -91,12 +91,12 @@
         }
     }
 
-    function handleDelete(e: CustomEvent<string>) {
-        evidence = evidence.filter((i) => String(i.id) !== String(e.detail));
+    function handleDelete(id: string) {
+        evidence = evidence.filter((i) => String(i.id) !== String(id));
     }
 
-    function handleSetCover(e: CustomEvent<string>) {
-        onsetCover?.(Number(e.detail));
+    function handleSetCover(id: string) {
+        onsetCover?.(Number(id));
     }
 
     // EvidenceItem -> GalleryItem, once its file has opened
@@ -177,8 +177,8 @@
             items={galleryItems}
             allowDelete={true}
             allowFavorites={false}
-            on:delete={handleDelete}
-            on:setCover={handleSetCover}
+            ondelete={handleDelete}
+            onsetcover={handleSetCover}
         />
     {/if}
 </div>
