@@ -58,8 +58,6 @@
         --color-primary: #5A6B8F;
         /* Soft Blue/Grave */
         --color-background: #F4F6FB;
-        filter: saturate(0.85);
-        /* Slightly desaturate for somber tone */
     }
 
     body.tone-executor {
@@ -132,7 +130,6 @@
         --color-border: #000000;
         --color-text-main: #000000;
         --color-text-muted: #222222;
-        filter: contrast(1.2);
     }
 
     /* High Contrast Dark Mode Override */
@@ -141,6 +138,21 @@
         --color-background: #000000;
         --color-foreground: #ffffff;
         --color-border: #ffffff;
+    }
+
+    /* Tone and contrast filters sit on the root element, which (unlike body) does not become the
+       containing block for `position: fixed` descendants, so overlays still cover the viewport.
+       Same order as the body rules they replace: high contrast overrides the grief saturate. */
+    html:has(> body.tone-grief) {
+        /* Slightly desaturate for somber tone */
+        filter: saturate(0.85);
+    }
+
+    html:has(> body.accessibility-high-contrast) {
+        filter: contrast(1.2);
+    }
+
+    html:has(> body.theme-dark.accessibility-high-contrast) {
         filter: contrast(1.3);
     }
 
@@ -257,17 +269,56 @@
     }
 }
 
-/* `.animate-in` is given its fadeIn animation by :global rules in several page <style> blocks
-   (letters, qr-codes, property, insurance), which stay loaded for the rest of the session.
-   Their `forwards` fill keeps the last keyframe's transform on the element after the entrance,
-   and any transform makes the element the containing block for its `position: fixed`
-   descendants, so every `fixed inset-0` overlay under the layout or page wrapper was laid out
-   inside the wrapper instead of the viewport. `backwards` still holds the first frame before the
-   animation starts and drops back to `transform: none` when it ends (the last frame matches the
-   element's own style, so nothing visibly changes). Unlayered and `html .animate-in` so it wins
-   over the page rules' `animation` shorthand. */
-html .animate-in {
+/* Entrance animation: `animate-in` plus the modifiers the app uses (`fade-in`, `slide-in-from-*`,
+   `zoom-in-95`), defined once here because no Tailwind animate plugin is installed. Duration and
+   easing come from the element's own `duration-*` / `ease-*` classes when it has them.
+   The keyframe sets only `from`, so the animation runs toward the element's own style, and
+   `backwards` fill (no `forwards`) drops back to `transform: none` when it ends. Any retained
+   transform would make the wrapper the containing block for every `position: fixed` overlay
+   inside it, laying `fixed inset-0` modals out inside the wrapper instead of the viewport (X82).
+   `.animate-in` resets the modifier variables so a nested wrapper never inherits its parent's
+   slide; the modifier rules come after it so they win on the same element. */
+@keyframes enter {
+    from {
+        opacity: var(--tw-enter-opacity, 1);
+        transform: translate3d(var(--tw-enter-translate-x, 0), var(--tw-enter-translate-y, 0), 0)
+            scale(var(--tw-enter-scale, 1));
+    }
+}
+
+.animate-in {
+    --tw-enter-opacity: initial;
+    --tw-enter-translate-x: initial;
+    --tw-enter-translate-y: initial;
+    --tw-enter-scale: initial;
+    animation-name: enter;
+    animation-duration: var(--tw-duration, 150ms);
+    animation-timing-function: var(--tw-ease, cubic-bezier(0.16, 1, 0.3, 1));
     animation-fill-mode: backwards;
+}
+
+.fade-in {
+    --tw-enter-opacity: 0;
+}
+
+.zoom-in-95 {
+    --tw-enter-scale: 0.95;
+}
+
+.slide-in-from-bottom-4 {
+    --tw-enter-translate-y: 1rem;
+}
+
+.slide-in-from-top-2 {
+    --tw-enter-translate-y: -0.5rem;
+}
+
+.slide-in-from-right-4 {
+    --tw-enter-translate-x: 1rem;
+}
+
+.slide-in-from-right {
+    --tw-enter-translate-x: 100%;
 }
 
 /* A full-screen overlay that sits inside a `space-y-*` wrapper picks up that wrapper's
