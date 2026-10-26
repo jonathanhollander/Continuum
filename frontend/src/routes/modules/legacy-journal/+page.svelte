@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { readCustom } from "$lib/utils/customFields";
     import { fade, fly } from "svelte/transition";
     import {
         BookOpen,
@@ -116,12 +117,7 @@
     function openEditModal(entry: JournalEntry) {
         editingEntry = entry;
         newEntry = { ...entry };
-        try {
-            const parsed = JSON.parse(entry.custom_attributes || "{}");
-            parsedCustomAttributes = parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
-        } catch {
-            parsedCustomAttributes = {};
-        }
+        parsedCustomAttributes = readCustom(entry);
         showAddModal = true;
     }
 

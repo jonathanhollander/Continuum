@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { readCustom } from "$lib/utils/customFields";
     import { fade, slide, scale } from "svelte/transition";
     import { quintOut } from "svelte/easing";
     import {
@@ -108,11 +109,7 @@
             notes: pet.notes || "",
         };
         // Parse custom attributes for editing
-        try {
-            parsedCustomAttributes = JSON.parse(pet.custom_attributes || "{}");
-        } catch {
-            parsedCustomAttributes = {};
-        }
+        parsedCustomAttributes = readCustom(pet);
         showAddForm = true;
     }
 

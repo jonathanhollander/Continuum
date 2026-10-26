@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { readCustom } from "$lib/utils/customFields";
     import { fade, scale } from "svelte/transition";
     import {
         Music,
@@ -160,11 +161,7 @@
 
     function editExpense(item: FuneralBudgetItem) {
         newExpense = { ...item };
-        try {
-            parsedCustomAttributes = JSON.parse(item.custom_attributes || "{}");
-        } catch {
-            parsedCustomAttributes = {};
-        }
+        parsedCustomAttributes = readCustom(item);
         showAddExpense = true;
     }
 

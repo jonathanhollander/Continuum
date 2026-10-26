@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { readCustom } from "$lib/utils/customFields";
     import { fade, fly, slide, scale } from "svelte/transition";
     import {
         Calendar,
@@ -92,11 +93,7 @@
 
     function editEvent(event: LifeEvent) {
         newEvent = { ...event };
-        try {
-            parsedCustomAttributes = JSON.parse(event.custom_attributes || "{}");
-        } catch {
-            parsedCustomAttributes = {};
-        }
+        parsedCustomAttributes = readCustom(event);
         showAddModal = true;
     }
 

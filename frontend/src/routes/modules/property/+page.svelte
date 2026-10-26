@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { readCustom } from "$lib/utils/customFields";
     import {
         propertyStore,
         propertySync,
@@ -284,11 +285,7 @@
 
     function editItem(item: PropertyItem) {
         newItem = { ...item };
-        try {
-            parsedCustomAttributes = JSON.parse(item.custom_attributes || "{}");
-        } catch {
-            parsedCustomAttributes = {};
-        }
+        parsedCustomAttributes = readCustom(item);
         isEditing = true;
         showAddModal = true;
     }
