@@ -8,9 +8,18 @@
 
     interface Props {
         variant?: "primary" | "subtle" | "icon-only";
+        // dark: the header above this page is dark (layout's isDarkHeader), so the icon goes light.
+        dark?: boolean;
     }
 
-    let { variant = "subtle" }: Props = $props();
+    let { variant = "subtle", dark = false }: Props = $props();
+
+    // Colour classes for the subtle and icon-only variants (written out in full for Tailwind).
+    let tone = $derived(
+        dark
+            ? "text-white/80 hover:text-white hover:bg-white/10"
+            : "text-muted-foreground hover:text-primary-hover hover:bg-primary-soft",
+    );
 
     function handleClick() {
         overwhelmDetector.requestBreak();
@@ -20,7 +29,7 @@
 {#if variant === "icon-only"}
     <button
         onclick={handleClick}
-        class="p-2 text-muted-foreground hover:text-primary-hover hover:bg-primary-soft rounded-lg transition-colors"
+        class="p-2 {tone} rounded-lg transition-colors"
         title="Take a mindful break"
         aria-label="Take a mindful break"
     >
@@ -38,7 +47,7 @@
     <!-- subtle variant (default) -->
     <button
         onclick={handleClick}
-        class="flex items-center gap-2 px-3 py-1.5 text-sm text-muted-foreground hover:text-primary-hover hover:bg-primary-soft rounded-lg transition-colors"
+        class="flex items-center gap-2 px-3 py-1.5 text-sm {tone} rounded-lg transition-colors"
     >
         <Pause class="w-4 h-4" />
         <span class="hidden sm:inline">Take a break</span>

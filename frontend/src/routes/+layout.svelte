@@ -76,11 +76,7 @@
 	import { magicTrigger } from "$lib/stores/magicStore";
 	import SuccessParticles from "$lib/components/ui/SuccessParticles.svelte";
 
-	import { genesisStore } from "$lib/stores/genesisStore";
-	import TheArchitect from "$lib/components/wizard/TheArchitect.svelte";
-	import GodModeToggle from "$lib/components/wizard/GodModeToggle.svelte";
 	import Sidebar from "$lib/components/layout/Sidebar.svelte";
-	import FocusFooter from "$lib/components/layout/FocusFooter.svelte";
 	import MobileBottomNav from "$lib/components/layout/MobileBottomNav.svelte";
 	import { navGroups, pulseSubNav, catalogCategories } from "$lib/config/navigation";
 	import { compassStore } from "$lib/stores/compassStore";
@@ -114,16 +110,7 @@
 	let isCompassOpen = $state(false);
 	let showCommandCenter = $state(false);
 
-	// Derived: Are we in Focus Mode? (Active Block + NOT God Mode)
-	// Note: We also exclude the actual /wizard route from this logic as it has its own layout
-	let isFocusMode = $derived(
-		$genesisStore.activeBlock &&
-			!$genesisStore.isGodMode &&
-			($page.url.pathname as string) !== "/wizard",
-	);
-
-	// Sync Compass Content to Architect
-	// When route changes, compassStore updates. We use that for The Architect's data.
+	// When route changes, compassStore updates its page context.
 	let previousPath = $state<string>("");
 	$effect(() => {
 		if ($page.url.pathname) {
@@ -394,26 +381,10 @@
 			{/if}
 
 			<!-- Sidebar (Standard) -->
-			{#if !isFocusMode}
-				<Sidebar
-					bind:isOpen={isSidebarOpen}
-					onClose={() => (isSidebarOpen = false)}
-				/>
-			{:else}
-				<!-- Focus Mode: The Architect -->
-				<div
-					class="hidden lg:block h-screen sticky top-0 z-30 shadow-2xl"
-				>
-					<TheArchitect
-						title={$compassStore.title}
-						blueprint={$compassStore.mission}
-						why={$compassStore.human_impact}
-						tip={$compassStore.pro_tips?.[0] ||
-							"Take it one step at a time."}
-						backLink="/"
-					/>
-				</div>
-			{/if}
+			<Sidebar
+				bind:isOpen={isSidebarOpen}
+				onClose={() => (isSidebarOpen = false)}
+			/>
 
 			<!-- Main Content Wrapper -->
 			<div
@@ -454,7 +425,6 @@
 				</header>
 
 				<!-- Glass Header (Desktop) -->
-				{#if !isFocusMode}
 					<header
 						class="hidden lg:flex sticky top-0 z-40 h-20 px-8 items-center justify-between border-b transition-all {isDarkHeader
 							? 'bg-primary-deep border-white/10'
@@ -491,13 +461,7 @@
 						<!-- Header Actions -->
 						<div class="flex items-center gap-6">
 							<!-- Take a Break Button (on the dark header its icon goes light) -->
-							<span
-								class="contents {isDarkHeader
-									? '[&>button]:text-white/80 [&>button:hover]:text-white [&>button:hover]:bg-white/10'
-									: ''}"
-							>
-								<TakeBreakButton variant="icon-only" />
-							</span>
+							<TakeBreakButton variant="icon-only" dark={isDarkHeader} />
 
 							<!-- Context-Aware Role Switcher -->
 							<RoleSwitcher dark={isDarkHeader} />
@@ -584,24 +548,6 @@
 							/>
 						</div>
 					</header>
-				{:else}
-					<!-- Focus Mode Header -->
-					<header
-						class="hidden lg:flex sticky top-0 z-40 h-20 px-8 items-center justify-between bg-slate-900/90 backdrop-blur-xl border-b border-white/5 transition-all"
-					>
-						<div class="flex items-center gap-3">
-							<div
-								class="text-[10px] font-bold uppercase tracking-[0.2em] text-gold"
-							>
-								Construction Active
-							</div>
-							<div
-								class="h-1 w-1 rounded-full bg-gold animate-pulse"
-							></div>
-						</div>
-						<GodModeToggle />
-					</header>
-				{/if}
 
 				<main id="main-content" tabindex="-1" class="flex-1 overflow-x-hidden outline-none pb-20 lg:pb-6">
 					<div
@@ -610,17 +556,11 @@
 						{@render children()}
 					</div>
 				</main>
-
-				{#if isFocusMode}
-					<FocusFooter />
-				{/if}
 			</div>
 		</div>
 
 		<!-- Mobile Bottom Navigation -->
-		{#if !isFocusMode}
-			<MobileBottomNav />
-		{/if}
+		<MobileBottomNav />
 	</div>
 {/if}
 
