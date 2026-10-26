@@ -1076,6 +1076,7 @@ export class SingletonSyncManager<T extends object> {
     }
 
     subscribe(run: (value: T | null) => void) {
+        shownBy(this, true);
         run(this.data);
         this.subscriptions.add(run);
         return () => this.subscriptions.delete(run);
@@ -1152,8 +1153,9 @@ let _sessionRun = 0;
 /** How long the page's own stores have the network to themselves before the rest begin. */
 const REST_AFTER_MS = 2000;
 
-function shownBy(m: { sync(): Promise<void> }) {
-    if (!browser || !$effect.tracking()) return;
+function shownBy(m: { sync(): Promise<void> }, subscribed = false) {
+    // A `$store` subscription is made untracked by Svelte, so a subscriber counts without the tracking check.
+    if (!browser || (!subscribed && !$effect.tracking())) return;
     _shown.add(m);
     // Out of the read: a sync sets state, which a template or derived value may not do.
     if (_later.delete(m)) queueMicrotask(() => { m.sync().catch(() => {}); });
