@@ -1106,7 +1106,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | V1-C12 | ☑ | 0a09d27 | ConciergePanel `.concierge-shell` dark scope (keeps the chosen accent and high contrast); all indigo and the amber dictated bubble on tokens; textarea focus 1.87 → 7.53; light = dark 0 px; `contrastClass` moved from style into class |
 | X240 | ☑ | 5b87321 | Floating Concierge header fits 338/338 px (was 409): Pop In icon-only with label kept, status row wraps; Pop In and Close inside and clickable at 1440 and 390 |
 | X243 | ☑ | e1e79b8 | Floating Concierge opens top-right below the header (1440: 50,50 → 1076,104; 390: 26,104); saved positions kept and clamped on screen (off-screen 2000,1500 → inside) |
-| X247 | ▶ | | |
+| X247 | ☑ | 1ccbb3d | Concierge floating position defaults to unset (`null`); an old stored 50,50 is cleared once (version marker); a drag to 50,50 now stays after reload (was snapping back) |
 | V1-C5 | ☑ | 56562c5 | Sidebar on `primary-deep` in every accent and theme (dark: white on #7FB5AB → white/70 on #304743 5.85); sidebar text ≥ /70; gold 4.74; profile avatars calm; header breadcrumb title dark-mode 17.06 (was invisible); header, Focus header, mobile nav on tokens; Concierge backdrop now covers the sidebar. Failing pairs per page 31–51 → 0 in these files |
 | V1-C6 | ☑ | 1b71fb8 | GriefResourceCard, RoleSwitcher, export scope: interpolated classes → token maps (Counseling badge unstyled → 8.39); role menu follows dark theme (heading 2.63 → 5.44); meta text 3.29 → 5.96 |
 | V1-C7 | ☑ | 7dc1b4c | Admin shell scoped to dark tokens; automation, webhook, activity log, ScenarioMode on tokens (red glow → warning-soft); 96 pairs, 0 below 4.5 (lowest 5.18) |
