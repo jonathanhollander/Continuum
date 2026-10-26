@@ -217,13 +217,74 @@
 
             <!-- Main Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
-                <!-- Library Section -->
+                <!-- Checklist -->
                 <div class="lg:col-span-2 space-y-8">
                     <!-- Gentle Guidance Checklist -->
                     <div in:fade={{ delay: 200, duration: 800 }}>
                         <GriefChecklist />
                     </div>
 
+                </div>
+
+                <!-- Crisis Center Sidebar -->
+                <aside
+                    in:fly={{ x: 20, delay: 600, duration: 600 }}
+                    class="p-8 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 h-fit sticky top-8"
+                >
+                    <div class="flex items-center justify-between gap-3 mb-8">
+                        <div class="flex items-center gap-3">
+                            <LucidePhone class="w-6 h-6 text-rose-400" />
+                            <h2 class="text-xl font-medium text-slate-100">Crisis Center</h2>
+                        </div>
+
+                        <select
+                            aria-label="Country"
+                            bind:value={selectedCountry}
+                            class="bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-xs text-slate-400 focus:outline-none focus:ring-1 focus:ring-rose-500/50"
+                        >
+                            {#each countries as country}
+                                <option value={country.code}
+                                    >{country.code}</option
+                                >
+                            {/each}
+                        </select>
+                    </div>
+
+                    <div class="space-y-6">
+                        {#each emergencyNumbers as item}
+                            <div
+                                class="p-5 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors"
+                            >
+                                <p
+                                    class="text-xs text-slate-500 uppercase tracking-widest mb-1"
+                                >
+                                    {item.label}
+                                </p>
+                                <p
+                                    class="text-2xl font-mono text-white tracking-wider"
+                                >
+                                    {item.number}
+                                </p>
+                            </div>
+                        {/each}
+                    </div>
+
+                    <div
+                        class="mt-8 p-6 rounded-2xl bg-rose-500/10 border border-rose-500/20"
+                    >
+                        <p
+                            class="text-sm text-rose-200/80 italic leading-relaxed"
+                        >
+                            "If you are in immediate danger or experiencing a
+                            medical emergency, please call your local emergency
+                            services immediately."
+                        </p>
+                    </div>
+                </aside>
+            </div>
+
+            <!-- Library Section (full width below the checklist and Crisis Center) -->
+            <div class="space-y-8 mb-16">
                     <!-- Filter Bar -->
                     <div
                         class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide"
@@ -242,7 +303,7 @@
                     </div>
 
                     <!-- Resources Grid -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {#each filteredResources as resource, i (resource.id)}
                             {#if resource.type === "guide"}
                                 <button
@@ -269,7 +330,7 @@
                         <div
                             in:fly={{ y: 20, delay: 500, duration: 600 }}
                             class="p-8 rounded-2xl bg-gradient-to-br from-indigo-500/10 to-rose-500/10 backdrop-blur-xl border border-white/10 flex flex-col items-start text-left group transition-all duration-500 {showDiscovery
-                                ? 'md:col-span-2'
+                                ? 'md:col-span-2 lg:col-span-3'
                                 : ''}"
                         >
                             <div
@@ -303,7 +364,9 @@
                             <div
                                 class="flex w-full max-w-md flex-col items-start gap-3 group mb-8"
                             >
+                                <label for="grief-city-search" class="sr-only">City or zip code</label>
                                 <input
+                                    id="grief-city-search"
                                     type="text"
                                     bind:value={searchLocation}
                                     placeholder="Enter your city or zip code..."
@@ -432,7 +495,9 @@
                             </div>
 
                             <div class="relative group">
+                                <label for="grief-chat-input" class="sr-only">Share what's on your heart</label>
                                 <input
+                                    id="grief-chat-input"
                                     type="text"
                                     bind:value={chatInput}
                                     placeholder="Share what's on your heart..."
@@ -451,63 +516,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Crisis Center Sidebar -->
-                <aside
-                    in:fly={{ x: 20, delay: 600, duration: 600 }}
-                    class="p-8 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 h-fit sticky top-8"
-                >
-                    <div class="flex items-center justify-between gap-3 mb-8">
-                        <div class="flex items-center gap-3">
-                            <LucidePhone class="w-6 h-6 text-rose-400" />
-                            <h2 class="text-xl font-medium text-slate-100">Crisis Center</h2>
-                        </div>
-
-                        <select
-                            aria-label="Country"
-                            bind:value={selectedCountry}
-                            class="bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-xs text-slate-400 focus:outline-none focus:ring-1 focus:ring-rose-500/50"
-                        >
-                            {#each countries as country}
-                                <option value={country.code}
-                                    >{country.code}</option
-                                >
-                            {/each}
-                        </select>
-                    </div>
-
-                    <div class="space-y-6">
-                        {#each emergencyNumbers as item}
-                            <div
-                                class="p-5 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors"
-                            >
-                                <p
-                                    class="text-xs text-slate-500 uppercase tracking-widest mb-1"
-                                >
-                                    {item.label}
-                                </p>
-                                <p
-                                    class="text-2xl font-mono text-white tracking-wider"
-                                >
-                                    {item.number}
-                                </p>
-                            </div>
-                        {/each}
-                    </div>
-
-                    <div
-                        class="mt-8 p-6 rounded-2xl bg-rose-500/10 border border-rose-500/20"
-                    >
-                        <p
-                            class="text-sm text-rose-200/80 italic leading-relaxed"
-                        >
-                            "If you are in immediate danger or experiencing a
-                            medical emergency, please call your local emergency
-                            services immediately."
-                        </p>
-                    </div>
-                </aside>
-            </div>
         </div>
     {/if}
 
