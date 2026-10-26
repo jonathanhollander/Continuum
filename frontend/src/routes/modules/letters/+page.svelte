@@ -56,18 +56,12 @@
     import GriefSupportBanner from "$lib/components/GriefSupportBanner.svelte";
     import { lettersSync, type Letter } from "$lib/stores/letterStore.svelte";
     import { contactSync } from "$lib/stores/familyStore.svelte";
+    import { milestoneLabel } from "$lib/services/exportService";
 
     // One owner for the letters table: the store's 'letters' manager.
     const letterSync = lettersSync;
     let savedLetters = $derived(letterSync.items);
     let contacts = $derived(contactSync.items);
-
-    const MILESTONE_LABELS: Record<string, string> = {
-        grad: "College Graduation",
-        wedding: "Wedding Day",
-        parent: "Becoming a Parent",
-        home: "First Home",
-    };
 
     let searchQuery = $state("");
     // A gentle cue until the first server answer, unless this device already holds letters.
@@ -737,7 +731,7 @@
                                                 {new Date(letter.triggerDate + "T00:00:00").toLocaleDateString()}
                                             {/if}
                                             {#if letter.triggerMilestone}
-                                                {letter.triggerDate ? " · " : ""}{MILESTONE_LABELS[letter.triggerMilestone] ?? letter.triggerMilestone}
+                                                {letter.triggerDate ? " · " : ""}{milestoneLabel(letter.triggerMilestone)}
                                             {/if}
                                         </td>
                                         <td class="px-5 py-3">
@@ -802,7 +796,7 @@
                             {/if}
                             {#if letter.triggerMilestone}
                                 <p class="text-xs text-slate-500">
-                                    {MILESTONE_LABELS[letter.triggerMilestone] ?? letter.triggerMilestone}
+                                    {milestoneLabel(letter.triggerMilestone)}
                                     · Saved with your chosen milestone
                                 </p>
                             {/if}
