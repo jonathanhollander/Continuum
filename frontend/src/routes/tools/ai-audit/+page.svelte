@@ -1,103 +1,93 @@
 <script lang="ts">
-    import { onMount } from "svelte";
     import {
         CircleCheck,
-        TriangleAlert,
         Shield,
         ArrowRight,
         BrainCircuit,
+        Loader2,
     } from "lucide-svelte";
     import { fade, slide } from "svelte/transition";
+    import { estateAudit, AuditStore } from "$lib/stores/auditStore.svelte";
+    import { financialAssetsSync } from "$lib/stores/financialAssetsStore.svelte";
+    import { insuranceSync } from "$lib/stores/insuranceStore.svelte";
+    import { contactSync } from "$lib/stores/familyStore.svelte";
+    import { directiveSync } from "$lib/stores/medicalStore.svelte";
+    import { digitalAssetsSync } from "$lib/stores/digitalAssetsStore.svelte";
 
-    // Mock finding types
+    // One finding per audit issue, and one per area the audit scores in full
     interface AuditFinding {
         id: string;
-        severity: "critical" | "warning" | "pass";
-        category: "Legal" | "Financial" | "Digital" | "Contacts";
+        severity: "warning" | "pass";
+        category: string;
         title: string;
         desc: string;
         actionUrl?: string;
     }
 
-    let findings: AuditFinding[] = [];
-    let scanning = true;
-    let score = 0;
+    // The audit's issue prefix -> the page that resolves it
+    const issuePath: Record<string, string> = {
+        Assets: "/modules/financial-accounts",
+        Insurance: "/modules/insurance",
+        Network: "/modules/contacts",
+        Logistics: "/modules/medical",
+        Digital: "/modules/digital-guardian",
+    };
+    // Legacy issues each name their own page
+    const legacyPath = (text: string) =>
+        /heirloom/i.test(text) ? "/modules/heirlooms"
+            : /letter/i.test(text) ? "/modules/letters"
+                : /funeral/i.test(text) ? "/modules/funeral"
+                    : "/modules/legacy-journal";
+    const areaLabel: Record<string, string> = {
+        financial: "Financial Accounts",
+        insurance: "Insurance",
+        family: "Contacts",
+        medical: "Medical Wishes",
+        digital: "Digital Accounts",
+        legacy: "Legacy",
+    };
 
-    // Simulation of scanning logic
-    onMount(() => {
-        setTimeout(() => {
-            // In a real app, this would read from your Svelte stores or localStorage
-            // For now, we simulate a scan based on typical missing items
-            const mockFindings: AuditFinding[] = [
-                {
-                    id: "1",
-                    severity: "critical",
-                    category: "Legal",
-                    title: "Missing Will & Testament",
-                    desc: 'No document tagged as "Will" was found in the Legal Vault.',
-                    actionUrl: "/modules/legal-documents",
-                },
-                {
-                    id: "2",
-                    severity: "critical",
-                    category: "Financial",
-                    title: "No Life Insurance Policy",
-                    desc: "You have listed dependents but no active life insurance policy.",
-                    actionUrl: "/modules/insurance",
-                },
-                {
-                    id: "3",
-                    severity: "warning",
-                    category: "Digital",
-                    title: "Password Manager Unlinked",
-                    desc: 'Your "Digital Guardian" module has no entries for password management.',
-                    actionUrl: "/modules/digital-guardian",
-                },
-                {
-                    id: "4",
-                    severity: "pass",
-                    category: "Contacts",
-                    title: "Executor Designated",
-                    desc: "Primary executor contact information is complete.",
-                },
-                {
-                    id: "5",
-                    severity: "pass",
-                    category: "Financial",
-                    title: "Bank Accounts Listed",
-                    desc: "3 bank accounts found in the ledger.",
-                },
-            ];
-
-            findings = mockFindings;
-            const passCount = findings.filter(
-                (f) => f.severity === "pass",
-            ).length;
-            score = Math.round((passCount / findings.length) * 100);
-            scanning = false;
-        }, 2000);
+    // Same cue as the readiness hub: wait for each store the audit reads to have its first answer
+    let scanning = $derived(
+        [financialAssetsSync, insuranceSync, contactSync, directiveSync, digitalAssetsSync].some(
+            (m) => m.lastSync === null && m.status !== "error" && m.items.length === 0,
+        ),
+    );
+    let score = $derived(estateAudit.percentage);
+    let findings = $derived.by((): AuditFinding[] => {
+        const open = estateAudit.issues.map((issue, i) => {
+            const m = issue.match(/^\[(\w+)\]\s*(.*)$/);
+            const category = m ? m[1] : "Estate";
+            const text = m ? m[2] : issue;
+            return {
+                id: `issue-${i}`,
+                severity: "warning" as const,
+                category,
+                title: text,
+                desc: "",
+                actionUrl: category === "Legacy" ? legacyPath(text) : issuePath[category],
+            };
+        });
+        const done = Object.entries(estateAudit.moduleScores)
+            .filter(([id, s]) => s >= (AuditStore.maxScores[id] ?? Infinity))
+            .map(([id]) => ({
+                id: `pass-${id}`,
+                severity: "pass" as const,
+                category: areaLabel[id] ?? id,
+                title: areaLabel[id] ?? id,
+                desc: "Well covered.",
+            }));
+        return [...open, ...done];
     });
 
     function getIcon(severity: string) {
-        switch (severity) {
-            case "critical":
-                return TriangleAlert;
-            case "warning":
-                return Shield;
-            case "pass":
-                return CircleCheck;
-        }
+        return severity === "pass" ? CircleCheck : Shield;
     }
 
     function getColor(severity: string) {
-        switch (severity) {
-            case "critical":
-                return "text-red-500 bg-red-50 border-red-100";
-            case "warning":
-                return "text-amber-500 bg-amber-50 border-amber-100";
-            case "pass":
-                return "text-green-500 bg-green-50 border-green-100";
-        }
+        return severity === "pass"
+            ? "text-green-500 bg-green-50 border-green-100"
+            : "text-amber-500 bg-amber-50 border-amber-100";
     }
 </script>
 
@@ -134,11 +124,9 @@
                     class="absolute inset-0 bg-indigo-500 animate-slide-right w-1/3"
                 ></div>
             </div>
-            <p class="font-mono text-sm text-indigo-600 animate-pulse">
-                Scanning Legal Vault...
-            </p>
-            <p class="font-mono text-sm text-gray-400 mt-2">
-                Analyzing Financial Relations...
+            <p class="text-sm text-indigo-600 flex items-center justify-center gap-2" role="status">
+                <Loader2 size={16} class="animate-spin" />
+                Gathering your records...
             </p>
         </div>
     {:else}
@@ -157,11 +145,11 @@
                         {score}/100
                     </div>
                     <p class="text-emerald-100/70 max-w-sm">
-                        {score < 50
-                            ? "Critical gaps detected. Your estate is vulnerable."
-                            : score < 80
-                              ? "Good progress, but key protections are missing."
-                              : "Excellent. Your estate plan is robust."}
+                        {score === 0
+                            ? "Ready when you are."
+                            : score < 100
+                              ? "A good start."
+                              : "Well covered."}
                     </p>
                 </div>
 
@@ -194,7 +182,8 @@
                     Action Items
                 </h3>
 
-                {#each findings.sort( (a, b) => (a.severity === "critical" ? -1 : 1), ) as finding}
+                {#each findings as finding (finding.id)}
+                    {@const Icon = getIcon(finding.severity)}
                     <div
                         class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-6 items-start md:items-center hover:shadow-md transition-all group"
                     >
@@ -203,10 +192,7 @@
                                 finding.severity,
                             )}"
                         >
-                            <svelte:component
-                                this={getIcon(finding.severity)}
-                                size={24}
-                            />
+                            <Icon size={24} />
                         </div>
 
                         <div class="flex-1">
@@ -215,17 +201,11 @@
                                     class="text-xs font-bold text-gray-400 uppercase"
                                     >{finding.category}</span
                                 >
-                                {#if finding.severity === "critical"}
-                                    <span
-                                        class="text-xs font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-full"
-                                        >URGENT</span
-                                    >
-                                {/if}
                             </div>
                             <h4 class="font-bold text-lg text-gray-800">
                                 {finding.title}
                             </h4>
-                            <p class="text-gray-500 text-sm">{finding.desc}</p>
+                            {#if finding.desc}<p class="text-gray-500 text-sm">{finding.desc}</p>{/if}
                         </div>
 
                         {#if finding.actionUrl}
