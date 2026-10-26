@@ -66,7 +66,7 @@ export const medicalStore = {
     },
 
     updateProfile: (data: Partial<MedicalProfile>) => profileSync.update(data as MedicalProfile),
-    addDirective: (dir: Omit<MedicalDirective, 'id'>) => directiveSync.create({ ...dir, id: crypto.randomUUID() }),
+    addDirective: (dir: Omit<MedicalDirective, 'id'>, onRetry?: () => Promise<unknown>) => directiveSync.create({ ...dir, id: crypto.randomUUID() }, false, false, onRetry),
     updateDirective: (id: string | number, updates: Partial<MedicalDirective>) => directiveSync.update(id, updates),
     removeDirective: (id: string | number) => directiveSync.delete(id),
 

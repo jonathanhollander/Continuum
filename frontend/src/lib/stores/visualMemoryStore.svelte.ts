@@ -1,4 +1,5 @@
 import { registerSync } from "$lib/services/sync.svelte";
+import { notifications } from "$lib/stores/notificationStore";
 
 // --- Types ---
 
@@ -149,4 +150,10 @@ export const removeFamilyMemory = (id: number) => familyManager.delete(id);
 export const updateFamilyMemory = (id: number, updates: Partial<FamilyMemory>) => {
     const item = familyManager.items.find(m => m.id === id);
     if (item) return familyManager.update(id, { ...item, ...updates });
+    notifications.showError({
+        message: 'We couldn\'t find that memory to save. It may have been moved \u2014 please refresh and try again when you\'re ready.',
+        code: 'NOT_FOUND',
+        technicalDetails: `updateFamilyMemory: no item with id ${id}`
+    } as any);
+    throw new Error(`Memory ${id} not found`);
 };

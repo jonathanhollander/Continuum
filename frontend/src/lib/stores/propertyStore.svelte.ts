@@ -65,21 +65,21 @@ export const propertyStore = {
     // items is a getter to access the reactive state
     get items() { return propertySync.items; },
 
-    addItem: (item: Omit<PropertyItem, 'id'>) => {
+    addItem: (item: Omit<PropertyItem, 'id'>, onRetry?: () => Promise<unknown>) => {
         // SyncManager.create expects a partial item and handles ID generation if not present
         // But for strict typing, we ensure it matches
         return propertySync.create({
             ...item,
             id: crypto.randomUUID()
-        });
+        }, false, false, onRetry);
     },
 
     updateItem: (id: string, updates: Partial<PropertyItem>) => {
-        propertySync.update(id, updates);
+        return propertySync.update(id, updates);
     },
 
     deleteItem: (id: string) => {
-        propertySync.delete(id);
+        return propertySync.delete(id);
     },
 
     getItem: (id: string) => {

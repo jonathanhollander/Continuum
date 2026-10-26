@@ -70,8 +70,12 @@
         });
     });
 
-    function saveProfile() {
-        medicalStore.updateProfile(tempProfile);
+    async function saveProfile() {
+        try {
+            await medicalStore.updateProfile(tempProfile);
+        } catch {
+            return; // the manager already showed the one gentle message
+        }
         showProfileEdit = false;
         showAffirmation = true;
         activityLog.logEvent({
@@ -84,7 +88,7 @@
         });
     }
 
-    function saveDirective() {
+    async function saveDirective() {
         if (!newDirective.title) return;
 
         const directiveData = {
@@ -92,8 +96,9 @@
             custom_attributes: JSON.stringify(parsedCustomAttributes),
         };
 
+        try {
         if (newDirective.id) {
-            medicalStore.updateDirective(newDirective.id, directiveData);
+            await medicalStore.updateDirective(newDirective.id, directiveData);
             activityLog.logEvent({
                 module: "Health & Medical",
                 action: "UPDATE",
@@ -103,14 +108,15 @@
                 userContext: estateProfile.current.ownerName || "User",
             });
         } else {
-            medicalStore.addDirective(
+            const created = await medicalStore.addDirective(
                 directiveData as Omit<MedicalDirective, "id">,
+                saveDirective,
             );
             activityLog.logEvent({
                 module: "Health & Medical",
                 action: "CREATE",
                 entityType: "Medical Directive",
-                entityId: crypto.randomUUID(),
+                entityId: String(created.id),
                 entityName: newDirective.title || "",
                 userContext: estateProfile.current.ownerName || "User",
             });
@@ -118,6 +124,9 @@
 
         showAffirmation = true;
         resetForm();
+        } catch {
+            // The manager already showed the one gentle message; the form stays open with the draft.
+        }
     }
 
     function editDirective(dir: MedicalDirective) {

@@ -196,7 +196,7 @@
         isEditing = false;
     }
 
-    function handleAddItem() {
+    async function handleAddItem() {
         if (!newItem.name || !newItem.location) return;
 
         const itemData = {
@@ -204,6 +204,7 @@
             custom_attributes: JSON.stringify(parsedCustomAttributes),
         };
 
+        try {
         if (isEditing && newItem.id) {
             const oldItem = propertyStore.getItem(newItem.id);
             const changes = [];
@@ -229,7 +230,7 @@
                     });
             }
 
-            propertyStore.updateItem(newItem.id, itemData);
+            await propertyStore.updateItem(newItem.id, itemData);
 
             activityLog.logEvent({
                 module: "Property",
@@ -241,8 +242,9 @@
                 userContext: $estateProfile.ownerName || "User",
             });
         } else {
-            const created = propertyStore.addItem(
+            const created = await propertyStore.addItem(
                 itemData as Omit<PropertyItem, "id">,
+                handleAddItem,
             );
 
             activityLog.logEvent({
@@ -257,6 +259,9 @@
 
         showAffirmation = true;
         resetForm();
+        } catch {
+            // The manager already showed the one gentle message; the form stays open with the draft.
+        }
     }
 
     function editItem(item: PropertyItem) {
@@ -270,13 +275,18 @@
         showAddModal = true;
     }
 
-    function deleteItem(id: string, name: string) {
+    async function deleteItem(id: string, name: string) {
         if (
             confirm(
                 `Remove "${name}" from your property list? You can add it back anytime.`,
             )
         ) {
-            propertyStore.deleteItem(id);
+            try {
+                await propertyStore.deleteItem(id);
+            } catch {
+                return;
+            }
+            if (propertyStore.items.some((i) => String(i.id) === String(id))) return;
 
             activityLog.logEvent({
                 module: "Property",

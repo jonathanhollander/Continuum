@@ -130,7 +130,9 @@
     }
 
     async function addWizardPolicy(name: string, type: any, insurer = "TBD") {
-        const created = await insuranceStore.addPolicy({
+        let created;
+        try {
+        created = await insuranceStore.addPolicy({
             policyName: name,
             insuranceType: type,
             insurer: insurer,
@@ -145,6 +147,9 @@
             policyDocuments: "",
             notes: "Added via Concierge Wizard",
         });
+        } catch {
+            return; // the manager already showed the one gentle message
+        }
 
         activityLog.logEvent({
             module: "Insurance",
@@ -210,6 +215,7 @@
             custom_attributes: JSON.stringify(parsedCustomAttributes)
         };
 
+        try {
         if (isEditing && newPolicy.id) {
             const oldPolicy = insuranceStore.getPolicy(newPolicy.id);
             const changes = [];
@@ -235,7 +241,7 @@
                     });
             }
 
-            insuranceStore.updatePolicy(newPolicy.id, policyData);
+            await insuranceStore.updatePolicy(newPolicy.id, policyData);
 
             activityLog.logEvent({
                 module: "Insurance",
@@ -249,6 +255,7 @@
         } else {
             const created = await insuranceStore.addPolicy(
                 policyData as Omit<InsurancePolicy, "id">,
+                handleAddPolicy,
             );
 
             activityLog.logEvent({
@@ -263,6 +270,9 @@
 
         showAffirmation = true;
         resetForm();
+        } catch {
+            // The manager already showed the one gentle message; the form stays open with the draft.
+        }
     }
 
     function editPolicy(policy: InsurancePolicy) {
@@ -277,13 +287,18 @@
         showAddModal = true;
     }
 
-    function deletePolicy(id: string | number, name: string) {
+    async function deletePolicy(id: string | number, name: string) {
         if (
             confirm(
                 `Remove the policy "${name}"? You can add it back later if needed.`,
             )
         ) {
-            insuranceStore.deletePolicy(id);
+            try {
+                await insuranceStore.deletePolicy(id);
+            } catch {
+                return;
+            }
+            if (insuranceStore.policies.some((p) => String(p.id) === String(id))) return;
 
             activityLog.logEvent({
                 module: "Insurance",
