@@ -187,6 +187,7 @@
         <input
             type="text"
             bind:value={prompt}
+            aria-label="Ask the Concierge Drafting Assistant"
             placeholder="Ask me to draft, summarize, or explain..."
             class="w-full p-4 pr-14 rounded-xl border transition-all shadow-sm border-primary/20 focus:outline-none focus:ring-2 focus:ring-primary"
             on:keydown={(e) => e.key === "Enter" && runPrompt(prompt)}
