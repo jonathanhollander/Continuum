@@ -78,6 +78,7 @@
         claimsProcedure: "",
         status: "Active",
         policyDocuments: "",
+        expirationDate: "",
         notes: "",
     });
 
@@ -134,7 +135,7 @@
             policyName: name,
             insuranceType: type,
             insurer: insurer,
-            policyNumber: "PENDING",
+            policyNumber: "",
             premiumAmount: 0,
             premiumFrequency: "Monthly",
             beneficiaries: estateProfile.current.primaryBeneficiary || "",
@@ -197,6 +198,8 @@
             agentContact: "",
             claimsProcedure: "",
             status: "Active",
+            policyDocuments: "",
+            expirationDate: "",
             notes: "",
         };
         showAddModal = false;
@@ -657,6 +660,7 @@
 
                     <!-- Details Section -->
                     <div class="space-y-4 mb-6">
+                        {#if policy.beneficiaries}
                         <div class="flex items-center gap-4 text-slate-600">
                             <div
                                 class="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400"
@@ -672,11 +676,12 @@
                                 <p
                                     class="text-sm font-bold text-slate-700 truncate max-w-[180px]"
                                 >
-                                    {policy.beneficiaries ||
-                                        "No beneficiary specified"}
+                                    {policy.beneficiaries}
                                 </p>
                             </div>
                         </div>
+                        {/if}
+                        {#if policy.policyNumber}
                         <div class="flex items-center gap-4 text-slate-600">
                             <div
                                 class="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400"
@@ -692,10 +697,11 @@
                                 <p
                                     class="text-sm font-bold text-slate-700 tracking-wider font-mono uppercase"
                                 >
-                                    {policy.policyNumber || "MISSING-ID"}
+                                    {policy.policyNumber}
                                 </p>
                             </div>
                         </div>
+                        {/if}
                     </div>
                 </div>
 
@@ -954,6 +960,33 @@
                                 class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
                             />
                         </div>
+                        <div class="space-y-1.5">
+                            <label
+                                for="insurance-policy-number"
+                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                                >Policy Number</label
+                            >
+                            <input
+                                id="insurance-policy-number"
+                                type="text"
+                                bind:value={newPolicy.policyNumber}
+                                placeholder="As printed on the policy"
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                            />
+                        </div>
+                        <div class="space-y-1.5">
+                            <label
+                                for="insurance-expiration-date"
+                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                                >Expiration Date</label
+                            >
+                            <input
+                                id="insurance-expiration-date"
+                                type="date"
+                                bind:value={newPolicy.expirationDate}
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                            />
+                        </div>
                     </div>
 
                     <!-- Policy Document Upload -->
@@ -1093,6 +1126,20 @@
                                 class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
                             />
                         </div>
+                        <div class="space-y-1.5">
+                            <label
+                                for="insurance-agent-contact"
+                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                                >Agent Phone or Email</label
+                            >
+                            <input
+                                id="insurance-agent-contact"
+                                type="text"
+                                bind:value={newPolicy.agentContact}
+                                placeholder="How to reach them"
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                            />
+                        </div>
                         <div class="space-y-1.5 md:col-span-2">
                             <label
                                 class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1 flex items-center gap-2"
@@ -1107,6 +1154,20 @@
                                 bind:value={newPolicy.claimsProcedure}
                                 rows="4"
                                 placeholder="Detailed step-by-step for the family..."
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800 resize-none"
+                            ></textarea>
+                        </div>
+                        <div class="space-y-1.5 md:col-span-2">
+                            <label
+                                for="insurance-notes"
+                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                                >Notes</label
+                            >
+                            <textarea
+                                id="insurance-notes"
+                                bind:value={newPolicy.notes}
+                                rows="3"
+                                placeholder="Anything else your family may find helpful"
                                 class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800 resize-none"
                             ></textarea>
                         </div>
