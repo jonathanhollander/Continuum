@@ -103,8 +103,9 @@ def update_visual_memory(memory_id: int, memory_data: VisualMemory, user: User =
     db_memory = session.get(VisualMemory, memory_id)
     if not db_memory or db_memory.user_id != user.id:
         raise HTTPException(status_code=404, detail="That visual memory may have been moved.")
-    
-    for key, value in memory_data.model_dump(exclude={"id", "user_id"}).items():
+
+    # Only the fields the client sent (card X223): a favorite toggle must not blank the rest.
+    for key, value in memory_data.model_dump(exclude_unset=True, exclude={"id", "user_id"}).items():
         setattr(db_memory, key, value)
     
     session.add(db_memory)

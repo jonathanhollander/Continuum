@@ -1,7 +1,7 @@
 <script lang="ts">
     import { focusTrap } from "$lib/actions/focusTrap";
     import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
-    import { milestoneLabel } from "$lib/services/exportService";
+    import { milestoneLabel } from "$lib/utils/milestones";
     import { activeAccountId } from "$lib/stores/keyringStore";
     import { get } from "svelte/store";
     import { readCustom } from "$lib/utils/customFields";
@@ -222,7 +222,7 @@
         }
     }
 
-    async function handleSaveVideo(event: CustomEvent<{ blob: Blob; duration: number }>) {
+    async function handleSaveVideo(event: CustomEvent<{ blob: Blob; duration: number; done?: () => void }>) {
         const blob = event.detail.blob;
         isUploading = true;
         formNote = null;
@@ -242,11 +242,13 @@
                     file_size: saved.file_size,
                 },
             };
+            isRecording = false;
         } catch (e: any) {
+            // The recorder stays open with this recording, so Save Memory can try again (X223).
             formNote = e?.message || "Your video is taking a moment to save. Record again when you're ready.";
         } finally {
             isUploading = false;
-            isRecording = false;
+            event.detail.done?.();
         }
     }
 

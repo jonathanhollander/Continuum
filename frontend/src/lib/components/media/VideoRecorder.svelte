@@ -121,7 +121,9 @@
     function handleSave() {
         if (!recordedBlob) return;
         isSaving = true;
-        dispatch("save", { blob: recordedBlob, duration });
+        // The parent uploads; it calls done() when that finishes (card X223), so a failed
+        // upload leaves the recording here with Save Memory ready to try again.
+        dispatch("save", { blob: recordedBlob, duration, done: () => (isSaving = false) });
     }
 
     onMount(() => {

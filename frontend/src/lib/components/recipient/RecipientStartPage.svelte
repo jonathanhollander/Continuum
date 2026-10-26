@@ -13,10 +13,10 @@
         loadAttachmentFiles,
         buildDownloadCopy,
         saveBlob,
-        milestoneLabel,
         isExecutorContact,
         type SnapshotAttachment,
     } from "$lib/services/exportService";
+    import { milestoneLabel } from "$lib/utils/milestones";
     import type { RecipientView } from "$lib/services/recipientService";
 
     let {

@@ -108,23 +108,9 @@ function humanize(key: string): string {
 // Stored values such as "active" or "needs_review" read as words: "Active", "Needs review".
 const words = (v: any) => humanize(String(v));
 
-/**
- * Milestone ids as words (card G4): one map for letters (triggerMilestone) and time capsules
- * (trigger_value), from the time capsule's COMMON_MILESTONES and the letters page's labels.
- * An id the owner typed themselves reads as words ("first_job" -> "First job").
- */
-export const MILESTONE_LABELS: Record<string, string> = {
-    grad: 'College Graduation',
-    wedding: 'Wedding Day',
-    parent: 'Becoming a Parent',
-    home: 'First Home',
-    career: 'Major Career Achievement',
-    anniv_10: '10th Marriage Anniversary'
-};
-export const milestoneLabel = (id: any): string => {
-    const k = String(id ?? '').trim();
-    return MILESTONE_LABELS[k] ?? (k ? humanize(k.replace(/[-]+/g, '_')) : '');
-};
+// Milestone labels live in $lib/utils/milestones (card X223) so pages that only need them skip jsPDF.
+import { milestoneLabel } from '$lib/utils/milestones';
+export { MILESTONE_LABELS, milestoneLabel } from '$lib/utils/milestones';
 
 /**
  * One executor test for the packet and the recipient page (card G4; the server's

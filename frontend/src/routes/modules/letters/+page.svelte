@@ -56,7 +56,7 @@
     import GriefSupportBanner from "$lib/components/GriefSupportBanner.svelte";
     import { lettersSync, type Letter } from "$lib/stores/letterStore.svelte";
     import { contactSync } from "$lib/stores/familyStore.svelte";
-    import { milestoneLabel } from "$lib/services/exportService";
+    import { milestoneLabel } from "$lib/utils/milestones";
 
     // One owner for the letters table: the store's 'letters' manager.
     const letterSync = lettersSync;
