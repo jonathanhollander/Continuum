@@ -127,7 +127,9 @@
         bottom: 2rem;
         right: 2rem;
         max-width: 400px;
-        background: white;
+        /* Palette tokens from app.css, so both themes follow (V0e section 3). */
+        background: var(--color-card);
+        border: 1px solid var(--color-border);
         border-radius: 12px;
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
         z-index: 1000;
@@ -159,7 +161,7 @@
     .info-icon {
         width: 24px;
         height: 24px;
-        color: #4299e1;
+        color: var(--color-primary);
         flex-shrink: 0;
     }
 
@@ -167,11 +169,11 @@
         margin: 0;
         font-size: 1.125rem;
         font-weight: 600;
-        color: #2d3748;
+        color: var(--color-foreground);
     }
 
     .notice-text {
-        color: #4a5568;
+        color: var(--color-muted-foreground);
         line-height: 1.5;
         margin-bottom: 1.5rem;
     }
@@ -192,21 +194,22 @@
     }
 
     .btn-primary {
-        background-color: #4299e1;
-        color: white;
+        background-color: var(--color-primary);
+        color: var(--color-primary-foreground);
     }
 
     .btn-primary:hover {
-        background-color: #3182ce;
+        background-color: var(--color-primary-hover);
     }
 
     .btn-secondary {
-        background-color: #edf2f7;
-        color: #4a5568;
+        background-color: var(--color-muted);
+        color: var(--color-foreground);
+        border: 1px solid var(--color-border);
     }
 
     .btn-secondary:hover {
-        background-color: #e2e8f0;
+        background-color: var(--color-border);
     }
 
     .migration-progress {
@@ -215,13 +218,13 @@
 
     .progress-label {
         font-weight: 500;
-        color: #2d3748;
+        color: var(--color-foreground);
         margin-bottom: 0.5rem;
     }
 
     .progress-bar {
         height: 8px;
-        background-color: #e2e8f0;
+        background-color: var(--color-muted);
         border-radius: 4px;
         overflow: hidden;
         margin-bottom: 0.5rem;
@@ -229,7 +232,7 @@
 
     .progress-fill {
         height: 100%;
-        background-color: #4299e1;
+        background-color: var(--color-primary);
         transition: width 0.3s ease;
     }
 
@@ -243,15 +246,16 @@
     }
 
     .success-message {
-        background-color: #f0fff4;
-        border: 1px solid #9ae6b4;
-        color: #2f855a;
+        background-color: color-mix(in srgb, var(--color-success) 8%, var(--color-card));
+        border: 1px solid color-mix(in srgb, var(--color-success) 30%, var(--color-card));
+        color: var(--color-success);
     }
 
+    /* Some files are still waiting in this browser: a gentle "needs a look", not an alarm. */
     .retry-message {
-        background-color: #ebf8ff;
-        border: 1px solid #bee3f8;
-        color: #2c5282;
+        background-color: var(--color-warning-soft);
+        border: 1px solid color-mix(in srgb, var(--color-warning) 30%, var(--color-card));
+        color: var(--color-warning);
         margin-bottom: 1rem;
     }
 
