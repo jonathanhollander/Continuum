@@ -26,6 +26,8 @@ interface UserPreferencesState {
 let preferences = $state<ViewPreferences>({});
 let isInitialized = $state(false);
 let isLoading = $state(false);
+// The sign-in the loaded preferences belong to; a different account loads its own.
+let loadedForToken: string | null = null;
 
 /**
  * Get authentication headers for API requests
@@ -49,9 +51,13 @@ function getAuthHeaders(): HeadersInit {
  * Initialize preferences from backend
  */
 async function init(): Promise<void> {
-    if (!browser || isInitialized || isLoading) return;
+    if (!browser || isLoading) return;
+    const token = localStorage.getItem('continuum_auth_token');
+    if (isInitialized && token === loadedForToken) return;
 
     isLoading = true;
+    if (token !== loadedForToken) preferences = {};
+    loadedForToken = token;
 
     try {
         const response = await apiGet<UserPreferencesState>('/api/auth/me/preferences');
@@ -107,6 +113,7 @@ async function setViewMode(module: string, mode: ViewMode): Promise<void> {
 function reset(): void {
     preferences = {};
     isInitialized = false;
+    loadedForToken = null;
 }
 
 // Export the store as an object with reactive getters
