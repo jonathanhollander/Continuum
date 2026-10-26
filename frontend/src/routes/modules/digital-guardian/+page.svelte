@@ -1,3 +1,10 @@
+<script module lang="ts">
+    type ConfirmedChecks = { account: string; profile: string; id: string; recoveryIds: string[] };
+    // A save may finish after its page unmounts. A remounted page observes only the
+    // exact confirmed draft, without an old component writing into its newer UI.
+    const confirmedChecks = new Set<(confirmation: ConfirmedChecks) => void>();
+</script>
+
 <script lang="ts">
     import { focusTrap } from "$lib/actions/focusTrap";
     import { fade, slide } from "svelte/transition";
@@ -94,9 +101,11 @@
         && owner.account === get(activeAccountId) && owner.profile === (get(currentProfileId) || "owner");
     const PENDING_KEY = "digital_guardian_pending";
     const RECOVERY_IDS_KEY = "digital_guardian_pending_recovery_ids";
+    const PENDING_ID_KEY = "digital_guardian_pending_id";
     let pageOwner: Owner | null = null;
     let pending = $state<Checks | null>(null);
     let recoveryIds: string[] = [];
+    let pendingId: string | null = null;
     let recoveryNotice: string | null = null;
     let saveTimer: ReturnType<typeof setTimeout> | undefined;
     let saving = false;
@@ -106,6 +115,7 @@
         try {
             setStored(PENDING_KEY, pending ? $state.snapshot(pending) : null, owner.profile, owner.account);
             setStored(RECOVERY_IDS_KEY, recoveryIds, owner.profile, owner.account);
+            setStored(PENDING_ID_KEY, pendingId, owner.profile, owner.account);
         } catch (e) { console.warn("[guardian] Keeping the pending checks in memory", e); }
     }
 
@@ -136,6 +146,7 @@
         pageOwner = null;
         pending = null;
         recoveryIds = [];
+        pendingId = null;
         saving = false;
         editingId = null;
         draft = { ...EMPTY_DRAFT };
@@ -156,6 +167,8 @@
         adoptLegacy();
         pending = getStored<Checks | null>(PENDING_KEY, null, owner.profile);
         recoveryIds = getStored<string[]>(RECOVERY_IDS_KEY, [], owner.profile);
+        pendingId = pending ? getStored<string | null>(PENDING_ID_KEY, null, owner.profile) || crypto.randomUUID() : null;
+        keepChecks(owner);
         await Promise.all([digitalGuardianSync.sync(), digitalAssetsSync.sync()]);
         if (!samePage(owner)) return;
         isLoading = false;
@@ -167,9 +180,37 @@
         untrack(() => { void activateOwner(captureOwner()); });
     });
 
+    const observeConfirmedChecks = (confirmation: ConfirmedChecks) => {
+        const owner = pageOwner;
+        if (!owner || !samePage(owner) || owner.account !== confirmation.account || owner.profile !== confirmation.profile) return;
+        recoveryIds = recoveryIds.filter(id => !confirmation.recoveryIds.includes(id));
+        if (pendingId === confirmation.id) {
+            pending = null;
+            pendingId = null;
+            if (recoveryNotice) notifications.dismiss(recoveryNotice);
+            recoveryNotice = null;
+        }
+    };
+    confirmedChecks.add(observeConfirmedChecks);
+
+    function retireConfirmedChecks(owner: Owner, id: string, ids: string[]) {
+        if (!currentOwner(owner)) return;
+        releaseChecks(owner, ids);
+        // A newer page may already have replaced the pending maps; compare identity,
+        // never content, before removing the captured namespace's confirmed draft.
+        if (getStored<string | null>(PENDING_ID_KEY, null, owner.profile, owner.account) === id) {
+            setStored(PENDING_KEY, null, owner.profile, owner.account);
+            setStored(PENDING_ID_KEY, null, owner.profile, owner.account);
+        }
+        const storedIds = getStored<string[]>(RECOVERY_IDS_KEY, [], owner.profile, owner.account);
+        setStored(RECOVERY_IDS_KEY, storedIds.filter(key => !ids.includes(key)), owner.profile, owner.account);
+        confirmedChecks.forEach(observe => observe({ account: owner.account, profile: owner.profile, id, recoveryIds: ids }));
+    }
+
     onDestroy(() => {
         // Ordinary navigation can finish its own checks; an account switch only retains them.
         if (pageOwner && currentOwner(pageOwner) && pending && !saving) void flushChecks(pageOwner);
+        confirmedChecks.delete(observeConfirmedChecks);
         suspendOwner();
     });
 
@@ -177,6 +218,7 @@
         const owner = pageOwner;
         if (!owner || !samePage(owner)) return;
         pending = { ...(pending ?? {}), ...next };
+        pendingId = crypto.randomUUID();
         keepChecks(owner);
         clearTimeout(saveTimer);
         saveTimer = setTimeout(() => { void flushChecks(owner); }, 500);
@@ -185,24 +227,17 @@
     async function flushChecks(owner = pageOwner) {
         if (!owner || !samePage(owner) || !pending) return;
         if (saving) { saveTimer = setTimeout(() => { void flushChecks(owner); }, 500); return; }
-        const sentPending = pending;
+        const sentId = pendingId || crypto.randomUUID();
+        pendingId = sentId;
         const sent = $state.snapshot(pending);
         const key = crypto.randomUUID();
         recoveryIds = [...recoveryIds, key];
+        const sentIds = [...recoveryIds];
         keepChecks(owner);
         saving = true;
         try {
             await digitalGuardianSync.update(sent, false, key);
-            if (!samePage(owner)) return;
-            if (pending === sentPending) {
-                releaseChecks(owner);
-                pending = null;
-                recoveryIds = [];
-            } else {
-                releaseChecks(owner, [key]);
-                recoveryIds = recoveryIds.filter(id => id !== key);
-            }
-            keepChecks(owner);
+            retireConfirmedChecks(owner, sentId, sentIds);
         } catch {
             if (!samePage(owner)) return;
             // Keep one retry for the latest combined maps, rather than an older interrupted save.

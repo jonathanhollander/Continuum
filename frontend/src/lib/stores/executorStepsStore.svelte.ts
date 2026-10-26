@@ -100,14 +100,14 @@ function release(owner: Owner, ids: string[]) {
     ids.forEach(id => stepSync.releaseRecovery(id, owner.session));
 }
 
-function offerRecovered(owner: Owner) {
-    if (!currentOwner(owner) || stepSync.status !== 'synced') return;
+function offerRecovered(owner: Owner, message = 'Your earlier draft is kept. Review your saved list, then choose Try Again to apply that change.') {
+    if (!currentOwner(owner)) return;
     for (const [stepId, draft] of Object.entries(pendingFor(owner))) {
         const key = `${namespace(owner)}:${stepId}`;
         if (chains.has(key) || recoveryNotices.has(key)) continue;
         release(owner, draft.recoveryIds);
         const id = notifications.showError({
-            message: 'Your earlier draft is kept. Review your saved list, then choose Try Again to apply that change.',
+            message,
             code: 'DATABASE_ERROR'
         }, () => { void retryStep(owner, stepId).catch(() => {}); });
         recoveryNotices.set(key, { id, owner });
@@ -126,6 +126,12 @@ async function retryStep(owner: Owner, stepId: string) {
     // A prior create may have reached the server before its reply was interrupted.
     await stepSync.sync();
     if (!currentOwner(owner)) throw new SessionChangedError();
+    // sync() retains the device copy and resolves on a failed GET. It is not permission
+    // to create another row while the result of an earlier create is still unknown.
+    if (stepSync.status !== 'synced' || !stepSync.lastSync) {
+        offerRecovered(owner, "Your draft is kept. We couldn't load your saved list, so no changes were sent. Choose Try Again when you're connected.");
+        return;
+    }
     return save(stepId, pending.changes);
 }
 
