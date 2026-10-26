@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { tagList, type VisualMemory } from "$lib/stores/visualMemoryStore.svelte";
+    import { tagList, removeMemory, type VisualMemory } from "$lib/stores/visualMemoryStore.svelte";
     import {
         Grid,
         LayoutTemplate,
@@ -8,6 +8,7 @@
         ChevronRight,
         Heart,
         Play,
+        Trash2,
     } from "lucide-svelte";
     import { fade, fly } from "svelte/transition";
     import { onDestroy } from "svelte";
@@ -73,6 +74,8 @@
     $effect(() => {
         if (viewMode === "carousel" && memories.length > 0) {
             activeIndex = Math.min(activeIndex, memories.length - 1);
+        } else if (viewMode === "carousel") {
+            viewMode = "grid";
         }
     });
 
@@ -102,6 +105,13 @@
 
     function prevImage() {
         if (activeIndex > 0) activeIndex--;
+    }
+
+    function handleRemove(id: string, e?: Event) {
+        e?.stopPropagation();
+        if (confirm("Remove this item? You can upload it again if needed.")) {
+            removeMemory(Number(id));
+        }
     }
 
     function toggleFavorite(id: string, e: Event) {
@@ -256,6 +266,14 @@
                                         : ""}
                                 />
                             </button>
+                            <button
+                                class="p-2 bg-white/80 backdrop-blur rounded-full hover:bg-white text-slate-500 hover:text-red-500 transition-colors"
+                                onclick={(e) => handleRemove(String(memory.id), e)}
+                                aria-label="Remove this item"
+                                title="Remove this item"
+                            >
+                                <Trash2 size={14} />
+                            </button>
                         </div>
                     {/if}
                 </div>
@@ -313,7 +331,7 @@
             >
                 <div class="flex justify-between items-end">
                     <div>
-                        <h2 class="text-xl font-bold mb-2">
+                        <h2 class="text-xl font-bold mb-2 text-white">
                             {memories[activeIndex].name}
                         </h2>
                         <div class="flex gap-2 mb-4">
@@ -330,8 +348,17 @@
                         </p>
                     </div>
 
+                    <div class="flex gap-2 mb-1">
                     <button
-                        class="p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors mb-1"
+                        class="p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+                        onclick={() => handleRemove(String(memories[activeIndex].id))}
+                        aria-label="Remove this item"
+                        title="Remove this item"
+                    >
+                        <Trash2 size={20} />
+                    </button>
+                    <button
+                        class="p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
                         onclick={() =>
                             onToggleFavorite?.(String(memories[activeIndex].id))}
                         aria-label="Favorite"
@@ -345,6 +372,7 @@
                                 : ""}
                         />
                     </button>
+                    </div>
                 </div>
 
                 <!-- Thumbnails Strip -->
