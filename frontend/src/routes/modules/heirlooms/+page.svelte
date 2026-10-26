@@ -128,7 +128,7 @@
         );
         const waiting = wanted.filter((_, i) => results[i].status === "rejected");
         if (waiting.length === 0) {
-            notifications.showAffirmation("heirlooms");
+            notifications.showAffirmation("heirlooms", "create");
             return;
         }
         const reason = results.find((r) => r.status === "rejected") as PromiseRejectedResult;
