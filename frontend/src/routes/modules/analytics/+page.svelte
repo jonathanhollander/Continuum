@@ -47,7 +47,7 @@
 
     <div class="max-w-6xl mx-auto relative z-10">
         <!-- Header -->
-        <header class="flex justify-between items-end mb-12">
+        <header class="flex justify-between items-start mb-12">
             <div in:fly={{ y: -20, duration: 800 }}>
                 <div class="flex items-center gap-3 mb-2 opacity-60">
                     <Activity size={20} class="text-indigo-400" />

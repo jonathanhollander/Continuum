@@ -172,7 +172,7 @@
                 <button
                     on:click={() =>
                         runSimulation(s.id as "wallet" | "medical" | "passing")}
-                    class="bg-white p-8 rounded-2xl border border-border hover:border-black/20 hover:shadow-xl transition-all text-left group"
+                    class="bg-white p-8 rounded-2xl border border-border hover:border-black/20 hover:shadow-xl transition-all text-left group flex flex-col items-start justify-start"
                 >
                     <div
                         class="w-16 h-16 rounded-2xl {s.bg} {s.color} flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform"
