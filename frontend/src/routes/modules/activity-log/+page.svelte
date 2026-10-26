@@ -58,11 +58,11 @@
 
     // Action colors
     const actionColors: Record<string, string> = {
-        CREATE: "bg-green-100 text-green-700 border-green-200",
-        UPDATE: "bg-blue-100 text-blue-700 border-blue-200",
-        DELETE: "bg-red-100 text-red-700 border-red-200",
-        EXPORT: "bg-purple-100 text-purple-700 border-purple-200",
-        SETTINGS_CHANGE: "bg-amber-100 text-amber-700 border-amber-200",
+        CREATE: "bg-success/10 text-success border-success/20",
+        UPDATE: "bg-info/10 text-info border-info/20",
+        DELETE: "bg-muted text-muted-foreground border-border",
+        EXPORT: "bg-primary-soft text-primary-hover border-primary/20",
+        SETTINGS_CHANGE: "bg-warning-soft text-warning border-warning/20",
     };
 
     // Action icons
@@ -181,14 +181,14 @@
     >
         <div>
             <h1
-                class="font-serif font-bold text-3xl text-slate-900 flex items-center gap-3"
+                class="font-serif font-bold text-3xl text-foreground flex items-center gap-3"
             >
-                <div class="p-2.5 bg-indigo-100 rounded-xl text-indigo-700">
+                <div class="p-2.5 bg-primary-soft rounded-xl text-primary-hover">
                     <History class="w-8 h-8" />
                 </div>
                 Activity History
             </h1>
-            <p class="text-slate-500 mt-2 text-lg">
+            <p class="text-muted-foreground mt-2 text-lg">
                 Complete audit trail of all changes across your estate plan.
             </p>
         </div>
@@ -196,7 +196,7 @@
         <div class="flex items-center gap-3">
             {#if todayCount > 0}
                 <div
-                    class="px-4 py-2 bg-indigo-50 text-indigo-700 rounded-xl font-bold text-sm"
+                    class="px-4 py-2 bg-primary-soft text-primary-hover rounded-xl font-bold text-sm"
                 >
                     {todayCount}
                     {pluralWord(todayCount, "event")} today
@@ -213,20 +213,20 @@
 
     <!-- Filters & Actions -->
     <div
-        class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4"
+        class="bg-card rounded-2xl border border-border shadow-sm p-6 space-y-4"
     >
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <!-- Search -->
             <div class="relative">
                 <Search
-                    class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
+                    class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"
                 />
                 <input
                     type="text"
                     bind:value={searchQuery}
                     aria-label="Search activities"
                     placeholder="Search activities..."
-                    class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    class="w-full pl-10 pr-4 py-2.5 bg-muted border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
             </div>
 
@@ -234,7 +234,7 @@
             <select
                 bind:value={selectedModule}
                 aria-label="Modules"
-                class="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                class="px-4 py-2.5 bg-muted border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
             >
                 {#each modules as module}
                     <option value={module === "all" ? "all" : module}>
@@ -247,7 +247,7 @@
             <select
                 bind:value={selectedAction}
                 aria-label="Actions"
-                class="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                class="px-4 py-2.5 bg-muted border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
             >
                 <option value="all">All Actions</option>
                 <option value="CREATE">Create</option>
@@ -260,11 +260,11 @@
 
         <!-- Action Buttons -->
         <div
-            class="flex flex-wrap items-center gap-3 pt-4 border-t border-slate-100"
+            class="flex flex-wrap items-center gap-3 pt-4 border-t border-border"
         >
             <button
                 onclick={resetFilters}
-                class="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+                class="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
             >
                 Reset Filters
             </button>
@@ -272,21 +272,21 @@
             {#if entries.length > 0}
             <button
                 onclick={exportAsJSON}
-                class="px-4 py-2 text-sm font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors flex items-center gap-2"
+                class="px-4 py-2 text-sm font-bold text-primary-hover bg-primary-soft hover:bg-primary/20 rounded-lg transition-colors flex items-center gap-2"
             >
                 <Download size={16} />
                 Export JSON
             </button>
             <button
                 onclick={exportAsCSV}
-                class="px-4 py-2 text-sm font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors flex items-center gap-2"
+                class="px-4 py-2 text-sm font-bold text-success bg-success/10 hover:bg-success/20 rounded-lg transition-colors flex items-center gap-2"
             >
                 <FileText size={16} />
                 Export CSV
             </button>
             <button
                 onclick={clearLog}
-                class="px-4 py-2 text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors flex items-center gap-2"
+                class="px-4 py-2 text-sm font-bold text-muted-foreground bg-muted hover:text-danger hover:bg-danger-soft rounded-lg transition-colors flex items-center gap-2"
             >
                 <Trash2 size={16} />
                 Clear Log
@@ -299,17 +299,17 @@
     <div class="space-y-4">
         {#if filteredEntries.length === 0}
             <div
-                class="bg-white rounded-2xl border border-slate-200 shadow-sm p-12 text-center"
+                class="bg-card rounded-2xl border border-border shadow-sm p-12 text-center"
             >
                 <div
-                    class="p-4 bg-slate-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center"
+                    class="p-4 bg-muted rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center"
                 >
-                    <History class="w-8 h-8 text-slate-400" />
+                    <History class="w-8 h-8 text-muted-foreground" />
                 </div>
-                <h3 class="font-bold text-lg text-slate-700 mb-2">
+                <h3 class="font-bold text-lg text-foreground mb-2">
                     No Activity Found
                 </h3>
-                <p class="text-slate-500">
+                <p class="text-muted-foreground">
                     {searchQuery ||
                     selectedModule !== "all" ||
                     selectedAction !== "all"
@@ -321,7 +321,7 @@
             {#each filteredEntries as entry (entry.id)}
                 {@const Icon = actionIcons[entry.action]}
                 <div
-                    class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 hover:shadow-md transition-all group"
+                    class="bg-card rounded-xl border border-border shadow-sm p-5 hover:shadow-md transition-all group"
                     transition:slide
                 >
                     <div class="flex items-start gap-4">
@@ -347,11 +347,11 @@
                                     <div
                                         class="flex items-center gap-2 flex-wrap"
                                     >
-                                        <span class="font-bold text-slate-900"
+                                        <span class="font-bold text-foreground"
                                             >{entry.entityName}</span
                                         >
-                                        <span class="text-slate-400">•</span>
-                                        <span class="text-sm text-slate-500"
+                                        <span class="text-muted-foreground">•</span>
+                                        <span class="text-sm text-muted-foreground"
                                             >{entry.module}</span
                                         >
                                     </div>
@@ -363,21 +363,21 @@
                                         >
                                             {entry.action}
                                         </span>
-                                        <span class="text-xs text-slate-400"
+                                        <span class="text-xs text-muted-foreground"
                                             >{entry.entityType}</span
                                         >
                                     </div>
                                 </div>
                                 <div class="text-right shrink-0">
                                     <div
-                                        class="text-sm font-medium text-slate-600"
+                                        class="text-sm font-medium text-muted-foreground"
                                         title={getAbsoluteTimestamp(
                                             entry.timestamp,
                                         )}
                                     >
                                         {formatTimestamp(entry.timestamp)}
                                     </div>
-                                    <div class="text-xs text-slate-400 mt-0.5">
+                                    <div class="text-xs text-muted-foreground mt-0.5">
                                         by {entry.userContext}
                                     </div>
                                 </div>
@@ -386,10 +386,10 @@
                             <!-- Changes Detail -->
                             {#if entry.changes && entry.changes.length > 0}
                                 <div
-                                    class="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-100"
+                                    class="mt-3 p-3 bg-muted rounded-lg border border-border"
                                 >
                                     <div
-                                        class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2"
+                                        class="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2"
                                     >
                                         Changes
                                     </div>
@@ -397,20 +397,20 @@
                                         {#each entry.changes as change}
                                             <div class="text-sm">
                                                 <span
-                                                    class="font-medium text-slate-700"
+                                                    class="font-medium text-foreground"
                                                     >{change.field}:</span
                                                 >
                                                 <span
-                                                    class="text-slate-500 line-through ml-2"
+                                                    class="text-muted-foreground line-through ml-2"
                                                     >{change.oldValue ||
                                                         "(empty)"}</span
                                                 >
                                                 <span
-                                                    class="text-slate-400 mx-2"
+                                                    class="text-muted-foreground mx-2"
                                                     >→</span
                                                 >
                                                 <span
-                                                    class="text-slate-900 font-medium"
+                                                    class="text-foreground font-medium"
                                                     >{change.newValue ||
                                                         "(empty)"}</span
                                                 >
@@ -429,13 +429,13 @@
     <!-- Stats Footer -->
     {#if entries.length > 0}
         <div
-            class="bg-slate-50 rounded-xl p-4 text-center text-sm text-slate-600"
+            class="bg-muted rounded-xl p-4 text-center text-sm text-muted-foreground"
         >
-            Showing <span class="font-bold text-slate-900"
+            Showing <span class="font-bold text-foreground"
                 >{filteredEntries.length}</span
             >
             of
-            <span class="font-bold text-slate-900">{entries.length}</span> total
+            <span class="font-bold text-foreground">{entries.length}</span> total
             {pluralWord(entries.length, "event")}
         </div>
     {/if}

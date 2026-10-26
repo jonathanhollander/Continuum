@@ -9,7 +9,7 @@
         Mail,
         Briefcase,
         ChevronRight,
-        TriangleAlert,
+        Info,
         Leaf,
         FolderOpen,
         NotebookPen,
@@ -112,23 +112,23 @@
     <!-- Header -->
     <div class="mb-10 text-left">
         <div
-            class="inline-flex items-center justify-center p-4 bg-slate-100 text-slate-700 rounded-full mb-6"
+            class="inline-flex items-center justify-center p-4 bg-muted text-foreground rounded-full mb-6"
         >
             <Briefcase size={40} />
         </div>
-        <h1 class="font-serif font-bold text-4xl text-[#304743] mb-4">
+        <h1 class="font-serif font-bold text-4xl text-foreground mb-4">
             Executor Guide
         </h1>
 
         {#if $currentScenario === "Sudden"}
             <div
                 in:slide
-                class="mt-4 max-w-2xl bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3 text-left"
+                class="mt-4 max-w-2xl bg-info/10 border border-info/20 rounded-lg p-4 flex items-start gap-3 text-left"
             >
-                <TriangleAlert class="text-red-500 shrink-0 mt-1" size={20} />
+                <Info class="text-info shrink-0 mt-1" size={20} />
                 <div>
-                    <h3 class="font-bold text-red-800">Gentle first steps</h3>
-                    <p class="text-sm text-red-600">
+                    <h3 class="font-bold text-foreground">Gentle first steps</h3>
+                    <p class="text-sm text-muted-foreground">
                         These come first because they help most right now.
                     </p>
                 </div>
@@ -136,14 +136,14 @@
         {:else if $currentScenario === "Planned"}
             <div
                 in:slide
-                class="mt-4 max-w-2xl bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3 text-left"
+                class="mt-4 max-w-2xl bg-success/10 border border-success/20 rounded-lg p-4 flex items-start gap-3 text-left"
             >
-                <Leaf class="text-green-500 shrink-0 mt-1" size={20} />
+                <Leaf class="text-success shrink-0 mt-1" size={20} />
                 <div>
-                    <h3 class="font-bold text-green-800">
+                    <h3 class="font-bold text-foreground">
                         Planned Passing Mode Active
                     </h3>
-                    <p class="text-sm text-green-600">
+                    <p class="text-sm text-muted-foreground">
                         Much of the groundwork may already be in place. Look it
                         over when you're ready.
                     </p>
@@ -160,14 +160,14 @@
                         onclick={() => chooseScenario(mode)}
                         class="px-4 py-1.5 rounded-full text-sm font-semibold border transition-all {$currentScenario ===
                         mode
-                            ? 'bg-[#304743] text-white border-[#304743]'
-                            : 'bg-white text-gray-500 border-stone-200 hover:bg-gray-50'}"
+                            ? 'bg-primary text-primary-foreground border-primary'
+                            : 'bg-card text-muted-foreground border-border hover:bg-muted'}"
                     >
                         {mode} Passing
                     </button>
                 {/each}
             </div>
-            <p class="mt-2 text-sm text-gray-500">
+            <p class="mt-2 text-sm text-muted-foreground">
                 {SCENARIO_DESCRIPTIONS[$currentScenario]}
             </p>
         </div>
@@ -184,8 +184,8 @@
                 onclick={() => (activeTab = "checklist")}
                 class="px-5 py-2 rounded-full font-bold text-sm transition-all {activeTab ===
                 'checklist'
-                    ? 'bg-[#304743] text-white shadow-md'
-                    : 'bg-white text-gray-500 hover:bg-gray-50'}"
+                    ? 'bg-primary text-primary-foreground shadow-md'
+                    : 'bg-card text-muted-foreground hover:bg-muted'}"
             >
                 <Clock size={16} class="inline mr-2" /> Every step
             </button>
@@ -193,13 +193,13 @@
                 onclick={() => (activeTab = "bureau")}
                 class="px-5 py-2 rounded-full font-bold text-sm transition-all {activeTab ===
                 'bureau'
-                    ? 'bg-[#304743] text-white shadow-md'
-                    : 'bg-white text-gray-500 hover:bg-gray-50'}"
+                    ? 'bg-primary text-primary-foreground shadow-md'
+                    : 'bg-card text-muted-foreground hover:bg-muted'}"
             >
                 <Building2 size={16} class="inline mr-2" /> Gov & Bureaus
             </button>
             <span
-                class="ml-auto self-center text-sm text-gray-500"
+                class="ml-auto self-center text-sm text-muted-foreground"
                 data-testid="steps-finished"
             >
                 {finishedCount} of {executorTasks.length} steps finished
@@ -209,7 +209,7 @@
 
     <!-- Content Area -->
     <div
-        class="bg-white rounded-2xl border border-stone-200 shadow-sm p-8 min-h-[500px]"
+        class="bg-card rounded-2xl border border-border shadow-sm p-8 min-h-[500px]"
     >
         {#if selectedTask}
             <!-- Task Detail View -->
@@ -219,7 +219,7 @@
                         saveNote();
                         selectedTask = null;
                     }}
-                    class="flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-[#304743] mb-6 transition-colors"
+                    class="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground mb-6 transition-colors"
                 >
                     <ArrowLeft size={16} /> Back to Checklist
                 </button>
@@ -228,7 +228,7 @@
                     <a
                         href={STEP_RECORDS[selectedTask.id].href}
                         data-testid="step-record-link"
-                        class="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-lg bg-[#4A7C74]/10 text-[#304743] text-sm font-semibold hover:bg-[#4A7C74]/20 transition-colors"
+                        class="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-lg bg-primary/10 text-primary-hover text-sm font-semibold hover:bg-primary/20 transition-colors"
                     >
                         <FolderOpen size={16} />
                         Open {STEP_RECORDS[selectedTask.id].label}
@@ -243,7 +243,7 @@
                 <div class="mt-10 pt-6 border-t">
                     <label
                         for="step-note"
-                        class="flex items-center gap-2 text-sm font-bold text-[#304743] mb-2"
+                        class="flex items-center gap-2 text-sm font-bold text-foreground mb-2"
                     >
                         <NotebookPen size={16} /> Your notes for this step
                     </label>
@@ -255,11 +255,11 @@
                         onblur={saveNote}
                         rows="4"
                         placeholder="Who you spoke with, what was sent, what comes next…"
-                        class="w-full rounded-xl border border-stone-200 p-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#4A7C74]/30"
+                        class="w-full rounded-xl border border-border bg-card p-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                     ></textarea>
                     <div class="mt-2 flex items-center justify-end gap-3">
                         {#if noteSaved}
-                            <span class="text-xs text-[#4A7C74]" in:fade
+                            <span class="text-xs text-primary" in:fade
                                 >Your note is saved.</span
                             >
                         {/if}
@@ -267,7 +267,7 @@
                             type="button"
                             data-testid="save-note"
                             onclick={saveNote}
-                            class="px-4 py-2 rounded-lg text-sm font-semibold bg-white border border-stone-200 text-[#304743] hover:bg-stone-50"
+                            class="px-4 py-2 rounded-lg text-sm font-semibold bg-card border border-border text-primary-hover hover:bg-muted"
                         >
                             Save my note
                         </button>
@@ -283,8 +283,8 @@
                         }}
                         class="px-8 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg transition-all
                         {executorSteps.isDone(selectedTask.id)
-                            ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                            : 'bg-[#304743] text-white hover:bg-[#2A3F3B]'}"
+                            ? 'bg-success/10 text-success hover:bg-success/20'
+                            : 'bg-primary text-primary-foreground hover:bg-primary-hover'}"
                     >
                         <SquareCheck size={18} />
                         {executorSteps.isDone(selectedTask.id)
@@ -300,7 +300,7 @@
                     <div
                         role="button"
                         tabindex="0"
-                        class="w-full text-left group flex items-center gap-4 p-4 rounded-xl border border-transparent hover:border-gray-200 hover:bg-gray-50 transition-all cursor-pointer outline-none focus:ring-2 focus:ring-[#4A7C74]/20"
+                        class="w-full text-left group flex items-center gap-4 p-4 rounded-xl border border-transparent hover:border-border hover:bg-muted transition-all cursor-pointer outline-none focus:ring-2 focus:ring-primary/20"
                         data-testid="step-row"
                         data-step={task.id}
                         onclick={() => openTask(task)}
@@ -322,26 +322,26 @@
                             }}
                             class="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center border-2 transition-colors
                              {executorSteps.isDone(task.id)
-                                ? 'bg-green-500 border-green-500 text-white'
-                                : 'border-gray-300 text-transparent hover:border-[#4A7C74]'}"
+                                ? 'bg-success border-success text-primary-foreground'
+                                : 'border-muted-foreground text-transparent hover:border-primary'}"
                         >
                             <SquareCheck size={16} />
                         </button>
 
                         <div class="flex-1">
                             <h3
-                                class="font-bold text-lg text-[#304743] {executorSteps.isDone(
+                                class="font-bold text-lg text-foreground {executorSteps.isDone(
                                     task.id,
                                 )
                                     ? 'line-through opacity-50'
-                                    : ''} group-hover:text-[#4A7C74] transition-colors"
+                                    : ''} group-hover:text-primary-hover transition-colors"
                             >
                                 {task.title}
                             </h3>
-                            <p class="text-sm text-gray-500">{task.desc}</p>
+                            <p class="text-sm text-muted-foreground">{task.desc}</p>
                             {#if executorSteps.noteFor(task.id)}
                                 <p
-                                    class="mt-1 text-xs text-[#4A7C74] italic truncate"
+                                    class="mt-1 text-xs text-primary-hover italic truncate"
                                     data-testid="step-note-preview"
                                 >
                                     <NotebookPen size={12} class="inline mr-1" />
@@ -355,7 +355,7 @@
                                 href={STEP_RECORDS[task.id].href}
                                 data-testid="step-row-link"
                                 onclick={(e) => e.stopPropagation()}
-                                class="hidden sm:inline-flex items-center gap-1 shrink-0 px-3 py-1 rounded-md text-xs font-semibold text-[#304743] bg-stone-100 hover:bg-[#4A7C74]/15"
+                                class="hidden sm:inline-flex items-center gap-1 shrink-0 px-3 py-1 rounded-md text-xs font-semibold text-primary-hover bg-muted hover:bg-primary/15"
                             >
                                 <FolderOpen size={12} />
                                 {STEP_RECORDS[task.id].label}
@@ -364,14 +364,14 @@
 
                         {#if task.urgent && !executorSteps.isDone(task.id)}
                             <span
-                                class="px-2 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-md uppercase tracking-wide"
+                                class="px-2 py-1 bg-warning-soft text-warning text-xs font-bold rounded-md uppercase tracking-wide"
 >First days</span
                             >
                         {/if}
 
                         <ChevronRight
                             size={18}
-                            class="text-gray-300 group-hover:text-[#4A7C74]"
+                            class="text-muted-foreground group-hover:text-primary"
                         />
                     </div>
                 {/each}

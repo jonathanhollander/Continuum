@@ -106,38 +106,38 @@
 
 <div class="space-y-8">
     {#each videoSeries as series}
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+        <div class="bg-card rounded-2xl p-6 shadow-sm border border-border">
             <h3
-                class="font-bold text-xl text-[#304743] mb-6 flex items-center gap-2"
+                class="font-bold text-xl text-foreground mb-6 flex items-center gap-2"
             >
-                <PlayCircle class="text-[#4A7C74]" />
+                <PlayCircle class="text-primary" />
                 {series.title}
             </h3>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {#each series.videos as video}
                     <button
-                        class="text-left bg-slate-50 hover:bg-[#4A7C74]/5 border border-transparent hover:border-[#4A7C74]/20 rounded-xl p-4 transition-all group relative overflow-hidden"
+                        class="text-left bg-muted hover:bg-primary/5 border border-transparent hover:border-primary/20 rounded-xl p-4 transition-all group relative overflow-hidden"
                         onclick={() => (activeVideo = video)}
                     >
                         <div
-                            class="absolute top-3 right-3 bg-white/80 backdrop-blur px-2 py-0.5 rounded text-xs font-bold text-slate-500 group-hover:text-[#4A7C74]"
+                            class="absolute top-3 right-3 bg-card/80 backdrop-blur px-2 py-0.5 rounded text-xs font-bold text-muted-foreground group-hover:text-primary-hover"
                         >
                             {video.duration}
                         </div>
 
                         <div
-                            class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-slate-400 group-hover:text-[#4A7C74] group-hover:scale-110 transition-all mb-3"
+                            class="w-10 h-10 bg-card rounded-full flex items-center justify-center shadow-sm text-muted-foreground group-hover:text-primary group-hover:scale-110 transition-all mb-3"
                         >
                             <PlayCircle size={20} />
                         </div>
 
                         <h4
-                            class="font-bold text-slate-700 group-hover:text-[#304743] mb-1"
+                            class="font-bold text-foreground group-hover:text-primary-hover mb-1"
                         >
                             {video.title}
                         </h4>
-                        <p class="text-xs text-slate-500 line-clamp-2">
+                        <p class="text-xs text-muted-foreground line-clamp-2">
                             {video.description}
                         </p>
                     </button>
@@ -153,42 +153,42 @@
             transition:fade
         >
             <div
-                class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]"
+                class="bg-card rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]"
                 in:slide={{ duration: 200, axis: "y" }}
             >
                 <div class="p-6 flex-1 overflow-y-auto">
                     <div class="flex justify-between items-start mb-6">
                         <div>
                             <h3
-                                class="font-serif font-bold text-2xl text-[#304743]"
+                                class="font-serif font-bold text-2xl text-foreground"
                             >
                                 {activeVideo.title}
                             </h3>
-                            <p class="text-slate-500">
+                            <p class="text-muted-foreground">
                                 {activeVideo.description}
                             </p>
                         </div>
                         <button aria-label="Close"
                             onclick={() => (activeVideo = null)}
-                            class="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                            class="p-2 hover:bg-muted rounded-full transition-colors"
                         >
-                            <X size={20} class="text-gray-400" />
+                            <X size={20} class="text-muted-foreground" />
                         </button>
                     </div>
 
                     <div
-                        class="bg-slate-50 rounded-xl p-6 border border-slate-100"
+                        class="bg-muted rounded-xl p-6 border border-border"
                     >
                         <h4
-                            class="font-bold text-sm text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2"
+                            class="font-bold text-sm text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2"
                         >
                             <FileText size={14} /> Video Transcript / Outline
                         </h4>
                         <div class="space-y-3">
                             {#each activeVideo.script as line}
-                                <div class="flex gap-3 text-sm text-slate-600">
+                                <div class="flex gap-3 text-sm text-muted-foreground">
                                     <div
-                                        class="w-1.5 h-1.5 rounded-full bg-[#4A7C74] mt-2 shrink-0"
+                                        class="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0"
                                     ></div>
                                     <p>{line}</p>
                                 </div>

@@ -99,6 +99,14 @@
             (c: FamilyMember) => c.tier?.startsWith("1"),
         ),
     );
+    // Tier 1 people not yet confirmed as told ("Still to reach")
+    let stillToReach = $derived(
+        tier1.filter(
+            (c) =>
+                !c.notificationStatus ||
+                ["Pending", "Called", "LeftMsg"].includes(c.notificationStatus),
+        ).length,
+    );
     let tier2 = $derived(
         contacts.filter(
             (c: FamilyMember) => c.tier?.startsWith("2"),
@@ -333,62 +341,58 @@
     <!-- Stats -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
         <div
-            class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between"
+            class="bg-card p-5 rounded-2xl border border-border shadow-sm flex items-center justify-between"
         >
             <div>
-                <div class="text-xs font-bold uppercase text-slate-400">
+                <div class="text-xs font-bold uppercase text-muted-foreground">
                     Total Network
                 </div>
-                <div class="text-2xl font-bold text-slate-800">
+                <div class="text-2xl font-bold text-foreground">
                     {contacts.length}
                 </div>
             </div>
-            <Users class="text-slate-200" size={32} />
+            <Users class="text-border" size={32} />
         </div>
         <div
-            class="bg-rose-50 p-5 rounded-2xl border border-rose-100 shadow-sm flex items-center justify-between"
+            class="p-5 rounded-2xl border shadow-sm flex items-center justify-between {stillToReach > 0
+                ? 'bg-warning-soft border-warning/20'
+                : 'bg-card border-border'}"
         >
             <div>
-                <div class="text-xs font-bold uppercase text-rose-400">
+                <div class="text-xs font-bold uppercase {stillToReach > 0 ? 'text-warning' : 'text-muted-foreground'}">
                     Still to reach
                 </div>
-                <div class="text-2xl font-bold text-rose-700">
-                    {tier1.filter(
-                        (c) =>
-                            !c.notificationStatus ||
-                            ["Pending", "Called", "LeftMsg"].includes(
-                                c.notificationStatus,
-                            ),
-                    ).length}
+                <div class="text-2xl font-bold {stillToReach > 0 ? 'text-warning' : 'text-foreground'}">
+                    {stillToReach}
                 </div>
             </div>
-            <CircleAlert class="text-rose-300" size={32} />
+            <CircleAlert class={stillToReach > 0 ? "text-warning/40" : "text-border"} size={32} />
         </div>
         <div
-            class="bg-green-50 p-5 rounded-2xl border border-green-100 shadow-sm flex items-center justify-between"
+            class="bg-success/10 p-5 rounded-2xl border border-success/20 shadow-sm flex items-center justify-between"
         >
             <div>
-                <div class="text-xs font-bold uppercase text-green-600">
+                <div class="text-xs font-bold uppercase text-success">
                     Notifications Confirmed
                 </div>
-                <div class="text-2xl font-bold text-green-700">
+                <div class="text-2xl font-bold text-success">
                     {contacts.filter((c) => c.notificationStatus === "Notified")
                         .length}
                 </div>
             </div>
-            <CircleCheck class="text-green-300" size={32} />
+            <CircleCheck class="text-success/40" size={32} />
         </div>
     </div>
 
     <!-- Tabs -->
-    <div class="flex gap-2 mb-8 border-b border-slate-200 pb-1">
+    <div class="flex gap-2 mb-8 border-b border-border pb-1">
         <button
             onclick={() => (activeTab = "call-list")}
             aria-pressed={activeTab === "call-list"}
             class="px-5 py-2.5 font-bold text-sm rounded-t-xl transition-all border-b-2
             {activeTab === 'call-list'
-                ? 'border-primary text-primary bg-primary/10'
-                : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'}"
+                ? 'border-primary text-primary-hover bg-primary/10'
+                : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted'}"
         >
             The Call List
         </button>
@@ -397,8 +401,8 @@
             aria-pressed={activeTab === "directory"}
             class="px-5 py-2.5 font-bold text-sm rounded-t-xl transition-all border-b-2
             {activeTab === 'directory'
-                ? 'border-primary text-primary bg-primary/10'
-                : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'}"
+                ? 'border-primary text-primary-hover bg-primary/10'
+                : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted'}"
         >
             Full Directory
         </button>
@@ -431,7 +435,7 @@
         {:else if activeTab === "call-list"}
             <div in:fade class="space-y-8">
                 <div
-                    class="bg-primary/5 p-4 rounded-xl text-primary text-sm flex gap-3 border border-primary/10"
+                    class="bg-primary/5 p-4 rounded-xl text-primary-hover text-sm flex gap-3 border border-primary/10"
                 >
                     <Shield class="shrink-0" size={20} />
                     <p>
@@ -444,14 +448,14 @@
                 <!-- TIER 1 -->
                 <div class="space-y-4">
                     <div
-                        class="flex items-center gap-2 text-rose-600 border-b border-rose-100 pb-2"
+                        class="flex items-center gap-2 text-primary-hover border-b border-primary/20 pb-2"
                     >
                         <CircleAlert size={20} />
                         <h2 class="font-bold text-lg">
                             {tierLabel("1_Immediate")}
                         </h2>
                         <span
-                            class="text-xs bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full"
+                            class="text-xs bg-primary-soft text-primary-hover px-2 py-0.5 rounded-full"
                             >First to call</span
                         >
                     </div>
@@ -464,7 +468,7 @@
                 <!-- TIER 2 -->
                 <div class="space-y-4 pt-4">
                     <div
-                        class="flex items-center gap-2 text-orange-600 border-b border-orange-100 pb-2"
+                        class="flex items-center gap-2 text-foreground border-b border-border pb-2"
                     >
                         <Clock size={20} />
                         <h2 class="font-bold text-lg">
@@ -479,7 +483,7 @@
                 <!-- TIER 3 -->
                 <div class="space-y-4 pt-4">
                     <div
-                        class="flex items-center gap-2 text-slate-600 border-b border-slate-100 pb-2"
+                        class="flex items-center gap-2 text-muted-foreground border-b border-border pb-2"
                     >
                         <Mail size={20} />
                         <h2 class="font-bold text-lg">
@@ -501,66 +505,66 @@
                 >
                     {#each contacts as contact}
                         <div
-                            class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:border-primary/30 transition-all group relative"
+                            class="bg-card p-6 rounded-xl border border-border shadow-sm hover:border-primary/30 transition-all group relative"
                         >
                             <button
                                 onclick={() => deleteContact(contact.id)}
                                 aria-label="Remove {contact.name}"
-                                class="absolute top-4 right-4 p-1 rounded-md text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                class="absolute top-4 right-4 p-1 rounded-md text-muted-foreground hover:text-danger hover:bg-danger-soft transition-colors"
                             >
                                 <Trash2 size={16} />
                             </button>
 
                             <div class="flex items-center gap-3 mb-4">
                                 <div
-                                    class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-slate-500"
+                                    class="w-12 h-12 bg-muted rounded-full flex items-center justify-center text-muted-foreground"
                                 >
                                     <User size={24} />
                                 </div>
                                 <div>
-                                    <h3 class="font-bold text-slate-800 text-lg">
+                                    <h3 class="font-bold text-foreground text-lg">
                                         {contact.name}
                                     </h3>
                                     <div
-                                        class="text-xs text-slate-500 font-bold uppercase flex items-center gap-1"
+                                        class="text-xs text-muted-foreground font-bold uppercase flex items-center gap-1"
                                     >
                                         {contact.role}
                                         {#if contact.relation}• {contact.relation}{/if}
                                     </div>
                                     {#if (contact as any).isRecipient}
                                         <span
-                                            class="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary"
+                                            class="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary-hover"
                                             data-testid="start-page-badge"
                                         ><Link2 size={11} /> Start page</span>
                                     {/if}
                                 </div>
                             </div>
 
-                            <div class="space-y-2 text-sm text-slate-600">
+                            <div class="space-y-2 text-sm text-muted-foreground">
                                 {#if contact.phone}
                                     <div
-                                        class="flex items-center gap-2 bg-slate-50 p-2 rounded-lg"
+                                        class="flex items-center gap-2 bg-muted p-2 rounded-lg"
                                     >
-                                        <Phone size={14} class="text-slate-400" />
+                                        <Phone size={14} class="text-muted-foreground" />
                                         {contact.phone}
                                     </div>
                                 {/if}
                                 {#if contact.email}
                                     <div
-                                        class="flex items-center gap-2 bg-slate-50 p-2 rounded-lg"
+                                        class="flex items-center gap-2 bg-muted p-2 rounded-lg"
                                     >
-                                        <Mail size={14} class="text-slate-400" />
+                                        <Mail size={14} class="text-muted-foreground" />
                                         {contact.email}
                                     </div>
                                 {/if}
                             </div>
 
                             <div
-                                class="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center"
+                                class="mt-4 pt-4 border-t border-border flex justify-between items-center"
                             >
                                 {#if tierLabel(contact.tier)}
                                     <span
-                                        class="text-xs font-bold px-2 py-1 rounded bg-slate-100 text-slate-600"
+                                        class="text-xs font-bold px-2 py-1 rounded bg-muted text-muted-foreground"
                                         >{tierLabel(contact.tier)}</span
                                     >
                                 {:else}
@@ -579,43 +583,43 @@
                 </div>
             {:else}
                 <!-- Table View -->
-                <div in:fade class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div in:fade class="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
                     <table class="w-full">
-                        <thead class="bg-slate-50 border-b border-slate-200">
+                        <thead class="bg-muted border-b border-border">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Name</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Role</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Phone</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Email</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Tier</th>
-                                <th class="px-4 py-3 text-right text-xs font-bold uppercase text-slate-500">Actions</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Name</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Role</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Phone</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Email</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Tier</th>
+                                <th class="px-4 py-3 text-right text-xs font-bold uppercase text-muted-foreground">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100">
+                        <tbody class="divide-y divide-border">
                             {#each contacts as contact}
-                                <tr class="hover:bg-slate-50 transition-colors group">
+                                <tr class="hover:bg-muted transition-colors group">
                                     <td class="px-4 py-3">
                                         <div class="flex items-center gap-3">
-                                            <div class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500">
+                                            <div class="w-8 h-8 bg-muted rounded-full flex items-center justify-center text-muted-foreground">
                                                 <User size={16} />
                                             </div>
-                                            <span class="font-medium text-slate-800">{contact.name}</span>
+                                            <span class="font-medium text-foreground">{contact.name}</span>
                                             {#if (contact as any).isRecipient}
                                                 <span
-                                                    class="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary"
+                                                    class="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary-hover"
                                                     data-testid="start-page-badge"
                                                 ><Link2 size={11} /> Start page</span>
                                             {/if}
                                         </div>
                                     </td>
-                                    <td class="px-4 py-3 text-sm text-slate-600">
+                                    <td class="px-4 py-3 text-sm text-muted-foreground">
                                         {contact.role}{#if contact.relation} ({contact.relation}){/if}
                                     </td>
-                                    <td class="px-4 py-3 text-sm text-slate-600">{contact.phone || '-'}</td>
-                                    <td class="px-4 py-3 text-sm text-slate-600">{contact.email || '-'}</td>
+                                    <td class="px-4 py-3 text-sm text-muted-foreground">{contact.phone || '-'}</td>
+                                    <td class="px-4 py-3 text-sm text-muted-foreground">{contact.email || '-'}</td>
                                     <td class="px-4 py-3">
                                         {#if tierLabel(contact.tier)}
-                                            <span class="text-xs font-bold px-2 py-1 rounded bg-slate-100 text-slate-600">
+                                            <span class="text-xs font-bold px-2 py-1 rounded bg-muted text-muted-foreground">
                                                 {tierLabel(contact.tier)}
                                             </span>
                                         {/if}
@@ -624,14 +628,14 @@
                                         <button
                                             onclick={() => openEdit(contact)}
                                             aria-label="Update details for {contact.name}"
-                                            class="text-slate-400 hover:text-primary mr-3"
+                                            class="text-muted-foreground hover:text-primary mr-3"
                                         >
                                             <Pencil size={16} />
                                         </button>
                                         <button
                                             onclick={() => deleteContact(contact.id)}
                                             aria-label="Remove {contact.name}"
-                                            class="text-slate-500 hover:text-red-600 transition-colors"
+                                            class="text-muted-foreground hover:text-danger transition-colors"
                                         >
                                             <Trash2 size={16} />
                                         </button>
@@ -656,21 +660,21 @@
     >
         <div class="space-y-4">
             <div class="relative group">
-                <label for="contact-name" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-1 ml-1">Full name</label>
+                <label for="contact-name" class="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1 ml-1">Full name</label>
                 <input
                     id="contact-name"
                     bind:value={newContact.name}
-                    class="w-full px-4 py-3 rounded-xl border border-slate-200 transition-all {$conciergeEngine
+                    class="w-full px-4 py-3 rounded-xl border border-border transition-all {$conciergeEngine
                         .lastExtractedData?.name ||
                     $conciergeEngine.lastExtractedData?.family_member
                         ?.name
-                        ? 'amber-glow border-amber-500/50'
+                        ? 'ring-2 ring-primary/30 border-primary'
                         : 'focus:border-primary focus:ring-2 focus:ring-primary/20'} outline-none"
                     placeholder="Full Name"
                 />
                 {#if $conciergeEngine.lastExtractedData?.name || $conciergeEngine.lastExtractedData?.family_member?.name}
                     <div
-                        class="absolute -top-2 -right-2 bg-amber-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded shadow-sm animate-bounce"
+                        class="absolute -top-2 -right-2 bg-primary text-primary-foreground text-[8px] font-black px-1.5 py-0.5 rounded shadow-sm"
                     >
                         AI
                     </div>
@@ -679,29 +683,29 @@
 
             <div class="grid grid-cols-2 gap-4">
                 <div class="relative group">
-                    <label for="contact-relation" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-1 ml-1">Relation</label>
+                    <label for="contact-relation" class="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1 ml-1">Relation</label>
                     <input
                         id="contact-relation"
                         bind:value={newContact.relation}
-                        class="w-full px-4 py-3 rounded-xl border border-slate-200 transition-all outline-none {$conciergeEngine
+                        class="w-full px-4 py-3 rounded-xl border border-border transition-all outline-none {$conciergeEngine
                             .lastExtractedData?.relationship ||
                         $conciergeEngine.lastExtractedData
                             ?.family_member?.relationship
-                            ? 'amber-glow border-amber-500/50'
+                            ? 'ring-2 ring-primary/30 border-primary'
                             : 'focus:border-primary focus:ring-2 focus:ring-primary/20'}"
                         placeholder="Relation (e.g. Spouse)"
                     />
                 </div>
                 <div>
-                <label for="contact-role" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-1 ml-1">Role</label>
+                <label for="contact-role" class="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1 ml-1">Role</label>
                 <select
                     id="contact-role"
                     bind:value={newContact.role}
-                    class="w-full px-4 py-3 h-[calc(1.6em+1.5rem+2px)] rounded-xl border border-slate-200 bg-white transition-all outline-none {$conciergeEngine
+                    class="w-full px-4 py-3 h-[calc(1.6em+1.5rem+2px)] rounded-xl border border-border bg-card transition-all outline-none {$conciergeEngine
                         .lastExtractedData?.relationship ||
                     $conciergeEngine.lastExtractedData?.family_member
                         ?.relationship
-                        ? 'amber-glow border-amber-500/50'
+                        ? 'ring-2 ring-primary/30 border-primary'
                         : 'focus:border-primary focus:ring-2 focus:ring-primary/20'}"
                 >
                     {#each ROLE_OPTIONS as r}
@@ -717,31 +721,31 @@
 
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                <label for="contact-phone" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-1 ml-1">Phone</label>
+                <label for="contact-phone" class="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1 ml-1">Phone</label>
                 <input
                     id="contact-phone"
                     type="tel"
                     bind:value={newContact.phone}
-                    class="w-full px-4 py-3 rounded-xl border border-slate-200 transition-all outline-none {$conciergeEngine
+                    class="w-full px-4 py-3 rounded-xl border border-border transition-all outline-none {$conciergeEngine
                         .lastExtractedData?.phone ||
                     $conciergeEngine.lastExtractedData?.family_member
                         ?.phone
-                        ? 'amber-glow border-amber-500/50'
+                        ? 'ring-2 ring-primary/30 border-primary'
                         : 'focus:border-primary focus:ring-2 focus:ring-primary/20'}"
                     placeholder="Phone"
                 />
                 </div>
                 <div>
-                <label for="contact-email" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-1 ml-1">Email</label>
+                <label for="contact-email" class="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1 ml-1">Email</label>
                 <input
                     id="contact-email"
                     type="email"
                     bind:value={newContact.email}
-                    class="w-full px-4 py-3 rounded-xl border border-slate-200 transition-all outline-none {$conciergeEngine
+                    class="w-full px-4 py-3 rounded-xl border border-border transition-all outline-none {$conciergeEngine
                         .lastExtractedData?.email ||
                     $conciergeEngine.lastExtractedData?.family_member
                         ?.email
-                        ? 'amber-glow border-amber-500/50'
+                        ? 'ring-2 ring-primary/30 border-primary'
                         : 'focus:border-primary focus:ring-2 focus:ring-primary/20'}"
                     placeholder="Email"
                 />
@@ -753,20 +757,20 @@
             >
                 <label
                     for="contact-tier"
-                    class="block text-xs font-bold uppercase text-primary mb-2"
+                    class="block text-xs font-bold uppercase text-primary-hover mb-2"
                     >When Should They Know?</label
                 >
                 <select
                     id="contact-tier"
                     bind:value={newContact.tier}
-                    class="w-full px-4 py-3 h-[calc(1.6em+1.5rem+2px)] rounded-xl border border-primary/20 bg-white shadow-sm focus:border-primary outline-none"
+                    class="w-full px-4 py-3 h-[calc(1.6em+1.5rem+2px)] rounded-xl border border-primary/20 bg-card shadow-sm focus:border-primary outline-none"
                 >
                     {#each TIER_OPTIONS as o}
                         <option value={o.value}>{o.label}</option>
                     {/each}
                 </select>
-                <p class="text-sm text-slate-700 mt-2">{tierHint}</p>
-                <p class="text-xs text-indigo-500 mt-2">
+                <p class="text-sm text-foreground mt-2">{tierHint}</p>
+                <p class="text-xs text-muted-foreground mt-2">
                     Think about how they'd want to hear the news. The
                     people closest to you deserve to hear it directly.
                 </p>
@@ -783,7 +787,7 @@
             </div>
 
             <!-- Custom Fields -->
-            <div class="pt-4 mt-4 border-t border-slate-100">
+            <div class="pt-4 mt-4 border-t border-border">
                 <CustomFieldsManager
                     entityType="contact"
                     bind:data={parsedCustomAttributes}
@@ -792,7 +796,7 @@
 
             <!-- The executor flag the recipient start page and the packet read (Family Hub's wording). -->
             <label
-                class="flex items-center gap-3 px-4 py-3 rounded-xl border border-slate-200 bg-white cursor-pointer hover:bg-slate-50 transition-all"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl border border-border bg-card cursor-pointer hover:bg-muted transition-all"
             >
                 <input
                     type="checkbox"
@@ -800,17 +804,17 @@
                     class="w-4 h-4 rounded accent-primary"
                     data-testid="contact-executor"
                 />
-                <span class="text-sm font-medium text-slate-800">Designated Executor</span>
-                <Shield size={14} class="ml-auto text-slate-400" />
+                <span class="text-sm font-medium text-foreground">Designated Executor</span>
+                <Shield size={14} class="ml-auto text-muted-foreground" />
             </label>
 
             <RecipientLinkPanel contactId={editingId} name={newContact.name} />
 
             <!-- Footer buttons: sticky to the bottom of the dialog's scroll area so they stay in view (-bottom-6 cancels the scroll area's p-6). -->
-            <div class="sticky -bottom-6 z-10 -mx-6 -mb-6 px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 mt-6">
+            <div class="sticky -bottom-6 z-10 -mx-6 -mb-6 px-6 py-4 bg-muted border-t border-border flex justify-end gap-3 mt-6">
                 <button
                     onclick={() => (showAddModal = false)}
-                    class="px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-200 transition-colors"
+                    class="px-6 py-2.5 rounded-xl font-semibold text-muted-foreground hover:bg-border transition-colors"
                 >
                     Maybe later
                 </button>

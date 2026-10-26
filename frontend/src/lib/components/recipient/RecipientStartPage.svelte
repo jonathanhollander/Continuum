@@ -240,9 +240,9 @@
                 {:else if url && a.mime_type.startsWith("image/")}
                     <img src={url} alt={a.filename || "Photo"} class="max-w-md max-h-80 rounded-xl object-cover" />
                 {:else if url}
-                    <a href={url} download={a.filename} target="_blank" rel="noopener" class="text-[#304743] underline text-sm">Open {a.filename || "this file"}</a>
+                    <a href={url} download={a.filename} target="_blank" rel="noopener" class="text-primary-deep underline text-sm">Open {a.filename || "this file"}</a>
                 {:else}
-                    <span class="text-sm text-stone-500 inline-flex items-center gap-2 {a.mime_type.startsWith("image/") || a.mime_type.startsWith("video/") ? 'min-h-48' : ''}"><Loader2 class="w-4 h-4 animate-spin" /> Opening {a.filename || "this file"}…</span>
+                    <span class="text-sm text-slate-500 inline-flex items-center gap-2 {a.mime_type.startsWith("image/") || a.mime_type.startsWith("video/") ? 'min-h-48' : ''}"><Loader2 class="w-4 h-4 animate-spin" /> Opening {a.filename || "this file"}…</span>
                 {/if}
                 </div>
             {/each}
@@ -250,39 +250,39 @@
     {/if}
 {/snippet}
 
-<div class="min-h-screen bg-[#FAF8F5] text-stone-800" data-testid="recipient-page">
+<div class="min-h-screen bg-[#FAF8F5] text-slate-800" data-testid="recipient-page">
     {#if view.preview}
-        <div class="bg-[#304743] text-white text-sm text-center py-2.5 px-4" data-testid="recipient-preview-banner">
+        <div class="bg-primary-deep text-white text-sm text-center py-2.5 px-4" data-testid="recipient-preview-banner">
             Your preview: this is the page {recipient.name} sees.
         </div>
     {/if}
 
     <main class="max-w-4xl mx-auto px-8 py-16 space-y-14">
         <header class="space-y-4">
-            <p class="text-xs font-bold uppercase tracking-[0.2em] text-[#304743]">For {recipient.name}</p>
-            <h1 class="font-serif text-5xl leading-tight text-[#304743]" data-testid="recipient-owner">From {ownerName}</h1>
-            <div class="w-24 h-2 bg-[#D4AF37] rounded-full"></div>
-            <p class="text-lg text-stone-600 max-w-2xl leading-relaxed">
+            <p class="text-xs font-bold uppercase tracking-[0.2em] text-primary-deep">For {recipient.name}</p>
+            <h1 class="font-serif text-5xl leading-tight text-primary-deep" data-testid="recipient-owner">From {ownerName}</h1>
+            <div class="w-24 h-2 bg-gold rounded-full"></div>
+            <p class="text-lg text-slate-600 max-w-2xl leading-relaxed">
                 {OwnerName} gathered these things for you, {firstName}. Take whatever you need, in your own time.
             </p>
         </header>
 
         {#if view.note}
-            <section class="bg-white rounded-2xl border border-stone-200 p-8 shadow-sm" data-testid="recipient-note">
-                <h2 class="text-xs font-bold uppercase tracking-widest text-stone-500 mb-4">A note for you</h2>
+            <section class="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm" data-testid="recipient-note">
+                <h2 class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">A note for you</h2>
                 <p class="font-serif text-xl leading-relaxed whitespace-pre-wrap">{view.note}</p>
             </section>
         {/if}
 
         <section data-testid="recipient-steps">
-            <h2 class="font-serif text-3xl text-[#304743] mb-6">The first steps</h2>
+            <h2 class="font-serif text-3xl text-primary-deep mb-6">The first steps</h2>
             <ol class="space-y-3">
                 {#each steps as s, i}
-                    <li class="flex gap-4 bg-white rounded-2xl border border-stone-200 p-5">
-                        <span class="shrink-0 w-8 h-8 rounded-full bg-[#304743]/10 text-[#304743] font-bold flex items-center justify-center">{i + 1}</span>
+                    <li class="flex gap-4 bg-white rounded-2xl border border-slate-200 p-5">
+                        <span class="shrink-0 w-8 h-8 rounded-full bg-primary-deep/10 text-primary-deep font-bold flex items-center justify-center">{i + 1}</span>
                         <div>
-                            <p class="font-semibold text-stone-800">{s.title}</p>
-                            <p class="text-stone-600 text-sm mt-1">{s.body}{#if s.href}<a href={s.href} class="ml-1 text-[#304743] underline">See below</a>{/if}</p>
+                            <p class="font-semibold text-slate-800">{s.title}</p>
+                            <p class="text-slate-600 text-sm mt-1">{s.body}{#if s.href}<a href={s.href} class="ml-1 text-primary-deep underline">See below</a>{/if}</p>
                         </div>
                     </li>
                 {/each}
@@ -291,24 +291,24 @@
 
         {#if people.length}
             <section id="people" data-testid="recipient-contacts">
-                <h2 class="font-serif text-3xl text-[#304743] mb-6">People to reach</h2>
+                <h2 class="font-serif text-3xl text-primary-deep mb-6">People to reach</h2>
                 <div class="grid grid-cols-2 gap-4">
                     {#each people as c (c.id)}
-                        <article class="bg-white rounded-2xl border border-stone-200 p-5" data-contact={c.id}>
+                        <article class="bg-white rounded-2xl border border-slate-200 p-5" data-contact={c.id}>
                             <div class="flex items-start justify-between gap-3">
                                 <div>
                                     <p class="font-semibold text-lg">{c.name}</p>
-                                    <p class="text-sm text-stone-500">{[c.relation, c.role, isExecutorContact(c, snapshot.owner?.executor_name) && String(c.role ?? "").trim().toLowerCase() !== "executor" ? "Executor" : ""].filter(Boolean).join(" · ")}</p>
+                                    <p class="text-sm text-slate-500">{[c.relation, c.role, isExecutorContact(c, snapshot.owner?.executor_name) && String(c.role ?? "").trim().toLowerCase() !== "executor" ? "Executor" : ""].filter(Boolean).join(" · ")}</p>
                                 </div>
                                 {#if TIERS[c.call_tier]}
-                                    <span class="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-[#D4AF37]/15 text-[#7a6420]">{TIERS[c.call_tier][1]}</span>
+                                    <span class="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-gold/15 text-[#7a6420]">{TIERS[c.call_tier][1]}</span>
                                 {/if}
                             </div>
                             <div class="mt-3 space-y-1 text-sm">
-                                {#if c.phone}<a href={`tel:${c.phone}`} class="flex items-center gap-2 text-[#304743]"><Phone class="w-4 h-4" />{c.phone}</a>{/if}
-                                {#if c.email}<a href={`mailto:${c.email}`} class="flex items-center gap-2 text-[#304743]"><Mail class="w-4 h-4" />{c.email}</a>{/if}
+                                {#if c.phone}<a href={`tel:${c.phone}`} class="flex items-center gap-2 text-primary-deep"><Phone class="w-4 h-4" />{c.phone}</a>{/if}
+                                {#if c.email}<a href={`mailto:${c.email}`} class="flex items-center gap-2 text-primary-deep"><Mail class="w-4 h-4" />{c.email}</a>{/if}
                             </div>
-                            {#if c.notes}<p class="mt-3 text-sm text-stone-600 whitespace-pre-wrap">{c.notes}</p>{/if}
+                            {#if c.notes}<p class="mt-3 text-sm text-slate-600 whitespace-pre-wrap">{c.notes}</p>{/if}
                         </article>
                     {/each}
                 </div>
@@ -317,16 +317,16 @@
 
         {#if originals.length}
             <section id="originals" data-testid="recipient-originals">
-                <h2 class="font-serif text-3xl text-[#304743] mb-6">Where the originals are kept</h2>
-                <div class="bg-white rounded-2xl border border-stone-200 divide-y divide-stone-100">
+                <h2 class="font-serif text-3xl text-primary-deep mb-6">Where the originals are kept</h2>
+                <div class="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100">
                     {#each originals as d (d.key)}
                         <div class="p-5 grid grid-cols-[1fr_1.4fr] gap-6" data-record={d.key}>
                             <div>
                                 <p class="font-semibold">{d.name}</p>
-                                {#if d.kind}<p class="text-sm text-stone-500">{d.kind}</p>{/if}
+                                {#if d.kind}<p class="text-sm text-slate-500">{d.kind}</p>{/if}
                             </div>
                             <div>
-                                <p class="text-stone-700">{d.where}</p>
+                                <p class="text-slate-700">{d.where}</p>
                                 {@render media(d.files)}
                             </div>
                         </div>
@@ -337,27 +337,27 @@
 
         {#if letters.length}
             <section data-testid="recipient-letters">
-                <h2 class="font-serif text-3xl text-[#304743] mb-6">{letters.length === 1 ? "A letter for you" : "Letters for you"}</h2>
+                <h2 class="font-serif text-3xl text-primary-deep mb-6">{letters.length === 1 ? "A letter for you" : "Letters for you"}</h2>
                 <div class="space-y-6">
                     {#each letters as l (l.id)}
                         {@const short = opening(l.content)}
                         {@const open = !short || openLetters.has(String(l.id))}
-                        <article class="bg-white rounded-2xl border border-stone-200 p-8 shadow-sm" data-letter={l.id}>
-                            <h3 class="font-serif text-2xl text-stone-800">{l.title}</h3>
-                            <p class="text-sm text-stone-500 mt-1">
+                        <article class="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm" data-letter={l.id}>
+                            <h3 class="font-serif text-2xl text-slate-800">{l.title}</h3>
+                            <p class="text-sm text-slate-500 mt-1">
                                 {[l.date ? `Written ${fmtDate(l.date)}` : "", l.triggerMilestone ? `For ${milestoneLabel(l.triggerMilestone)}` : l.triggerDate ? `For ${fmtDate(l.triggerDate)}` : ""].filter(Boolean).join(" · ")}
                             </p>
                             {#if open}
                                 <p class="font-serif text-lg leading-relaxed whitespace-pre-wrap mt-6" data-testid="letter-content">{l.content}</p>
                                 {@render media(filesFor("letters", l.id))}
                             {:else}
-                                <p class="font-serif text-lg leading-relaxed text-stone-600 mt-6" data-testid="letter-opening">{short}</p>
+                                <p class="font-serif text-lg leading-relaxed text-slate-600 mt-6" data-testid="letter-opening">{short}</p>
                             {/if}
                             {#if short}
                                 <button
                                     onclick={() => toggleLetter(l.id)}
                                     aria-expanded={open}
-                                    class="mt-4 text-sm font-semibold text-[#304743] underline underline-offset-4 hover:opacity-80"
+                                    class="mt-4 text-sm font-semibold text-primary-deep underline underline-offset-4 hover:opacity-80"
                                     data-testid="letter-toggle"
                                 >{open ? "Fold the letter away" : "Read the letter"}</button>
                             {/if}
@@ -369,12 +369,12 @@
 
         {#if capsules.length}
             <section data-testid="recipient-capsules">
-                <h2 class="font-serif text-3xl text-[#304743] mb-6">Time capsule messages</h2>
+                <h2 class="font-serif text-3xl text-primary-deep mb-6">Time capsule messages</h2>
                 <div class="space-y-6">
                     {#each capsules as m (m.id)}
-                        <article class="bg-white rounded-2xl border border-stone-200 p-8" data-capsule={m.id}>
+                        <article class="bg-white rounded-2xl border border-slate-200 p-8" data-capsule={m.id}>
                             <h3 class="font-serif text-2xl">{m.title}</h3>
-                            <p class="text-sm text-stone-500 mt-1">
+                            <p class="text-sm text-slate-500 mt-1">
                                 {m.trigger_type === "milestone" ? `For ${milestoneLabel(m.trigger_value)}` : m.trigger_value ? `Opened ${fmtDate(m.trigger_value)}` : ""}
                             </p>
                             {#if m.content_preview}<p class="font-serif text-lg leading-relaxed whitespace-pre-wrap mt-5">{m.content_preview}</p>{/if}
@@ -387,12 +387,12 @@
 
         {#if memories.length}
             <section data-testid="recipient-memories">
-                <h2 class="font-serif text-3xl text-[#304743] mb-6">Photos and recordings</h2>
+                <h2 class="font-serif text-3xl text-primary-deep mb-6">Photos and recordings</h2>
                 <div class="grid grid-cols-2 gap-4">
                     {#each memories as m (m.section + m.r.id)}
-                        <article class="bg-white rounded-2xl border border-stone-200 p-5">
+                        <article class="bg-white rounded-2xl border border-slate-200 p-5">
                             <p class="font-semibold">{m.title}</p>
-                            {#if m.text}<p class="text-sm text-stone-600 mt-1">{m.text}</p>{/if}
+                            {#if m.text}<p class="text-sm text-slate-600 mt-1">{m.text}</p>{/if}
                             {@render media(m.files)}
                         </article>
                     {/each}
@@ -400,16 +400,16 @@
             </section>
         {/if}
 
-        <section id="record" class="bg-white rounded-2xl border border-stone-200 p-8 space-y-5" data-testid="recipient-record">
-            <h2 class="font-serif text-3xl text-[#304743]">The full record</h2>
-            <p class="text-stone-600 leading-relaxed">
+        <section id="record" class="bg-white rounded-2xl border border-slate-200 p-8 space-y-5" data-testid="recipient-record">
+            <h2 class="font-serif text-3xl text-primary-deep">The full record</h2>
+            <p class="text-slate-600 leading-relaxed">
                 Everything {ownerName} recorded, in one place: accounts, property, insurance, documents, wishes and more.
                 The copy holds this whole page and every file, and opens in any browser.
             </p>
             <div class="flex flex-wrap gap-3">
                 <button
                     onclick={() => (showFull = !showFull)}
-                    class="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-[#304743]/30 text-[#304743] font-semibold hover:bg-[#304743]/5"
+                    class="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-primary-deep/30 text-primary-deep font-semibold hover:bg-primary-deep/5"
                     data-testid="recipient-show-record"
                 >
                     <ChevronDown class="w-4 h-4 transition-transform {showFull ? 'rotate-180' : ''}" />
@@ -418,22 +418,22 @@
                 <button
                     onclick={downloadCopy}
                     disabled={busy !== null}
-                    class="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#304743] text-white font-semibold hover:opacity-90 disabled:opacity-60"
+                    class="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-primary-deep text-white font-semibold hover:opacity-90 disabled:opacity-60"
                     data-testid="recipient-download"
                 >
                     {#if busy}<Loader2 class="w-4 h-4 animate-spin" />{:else}<Archive class="w-4 h-4" />{/if}
                     Save a copy to keep
                 </button>
             </div>
-            {#if downloadNote}<p class="text-sm text-stone-600" data-testid="recipient-download-note">{downloadNote}</p>{/if}
+            {#if downloadNote}<p class="text-sm text-slate-600" data-testid="recipient-download-note">{downloadNote}</p>{/if}
             {#if showFull}
-                <div transition:slide class="border-t border-stone-100 pt-4 -mx-8" data-testid="recipient-packet">
+                <div transition:slide class="border-t border-slate-100 pt-4 -mx-8" data-testid="recipient-packet">
                     {@html html}
                 </div>
             {/if}
         </section>
 
-        <footer class="text-center text-sm text-stone-500 pt-6">
+        <footer class="text-center text-sm text-slate-600 pt-6">
             Kept with care by Continuum for {ownerName}.
         </footer>
     </main>

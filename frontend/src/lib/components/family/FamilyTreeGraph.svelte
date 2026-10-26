@@ -65,7 +65,7 @@
         const r = (role || "").toLowerCase();
         const rel = relation?.toLowerCase() || "";
 
-        if (r === "owner") return "#4A7C74"; // Brand Teal
+        if (r === "owner") return "var(--color-primary)";
 
         if (r === "family") {
             if (
@@ -74,19 +74,19 @@
                 rel.includes("wife") ||
                 rel.includes("husband")
             ) {
-                return "#E11D48"; // Rose
+                return "var(--color-gold)";
             }
             if (
                 rel.includes("child") ||
                 rel.includes("son") ||
                 rel.includes("daughter")
             ) {
-                return "#F59E0B"; // Amber
+                return "var(--color-info)";
             }
-            return "#64748B"; // Slate (General Family)
+            return "var(--color-muted-foreground)"; // General family
         }
 
-        return "#94A3B8"; // Default Gray
+        return "var(--color-border)";
     }
 
     function isSpouse(node: FamilyMember): boolean {
@@ -126,7 +126,7 @@
 </script>
 
 <div
-    class="relative w-full bg-slate-50 rounded-2xl overflow-hidden shadow-inner border border-slate-200 select-none {showMap
+    class="relative w-full bg-muted rounded-2xl overflow-hidden shadow-inner border border-border select-none {showMap
         ? ''
         : 'py-10 flex justify-center'}"
     style:height={showMap ? `${height}px` : undefined}
@@ -141,7 +141,8 @@
                     y1={link.source.y}
                     x2={link.target.x}
                     y2={link.target.y}
-                    stroke="#CBD5E1"
+                    stroke="var(--color-muted-foreground)"
+                    stroke-opacity="0.4"
                     stroke-width="2"
                 />
             {/each}
@@ -157,12 +158,12 @@
             >
                 {#if draft?.id === node.id}
                     <div
-                        class="absolute -inset-2 w-20 h-20 rounded-full border-2 border-[#4A7C74]/50 animate-pulse"
+                        class="absolute -inset-2 w-20 h-20 rounded-full border-2 border-primary/50 animate-pulse"
                     ></div>
                 {/if}
 
                 <div
-                    class="w-16 h-16 rounded-full bg-white border-4 shadow-sm overflow-hidden relative transition-transform group-hover:scale-110"
+                    class="w-16 h-16 rounded-full bg-card border-4 shadow-sm overflow-hidden relative transition-transform group-hover:scale-110"
                     style="border-color: {getNodeColor(node.role, node.relation)}"
                 >
                     {#if node.avatar}
@@ -173,7 +174,7 @@
                         />
                     {:else}
                         <div
-                            class="w-full h-full flex items-center justify-center bg-slate-100 text-slate-500 font-bold"
+                            class="w-full h-full flex items-center justify-center bg-muted text-muted-foreground font-bold"
                         >
                             {(node.name || "").slice(0, 2).toUpperCase()}
                         </div>
@@ -181,15 +182,15 @@
 
                     {#if node.isExecutor || isSpouse(node)}
                         <div
-                            class="absolute bottom-0 right-0 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm"
+                            class="absolute bottom-0 right-0 w-5 h-5 bg-card rounded-full flex items-center justify-center shadow-sm"
                         >
                             {#if node.isExecutor}<Shield
                                     size={12}
-                                    class="text-[#4A7C74]"
+                                    class="text-primary"
                                 />{/if}
                             {#if isSpouse(node)}<Heart
                                     size={12}
-                                    class="text-rose-500"
+                                    class="text-primary"
                                 />{/if}
                         </div>
                     {/if}
@@ -197,7 +198,7 @@
 
                 <!-- Name -->
                 <div
-                    class="absolute top-full left-1/2 -translate-x-1/2 mt-2 max-w-[160px] truncate bg-white/90 px-2 py-1 rounded text-xs font-bold text-slate-700 whitespace-nowrap shadow-sm border border-slate-100"
+                    class="absolute top-full left-1/2 -translate-x-1/2 mt-2 max-w-[160px] truncate bg-card/90 px-2 py-1 rounded text-xs font-bold text-foreground whitespace-nowrap shadow-sm border border-border"
                     title={node.name}
                 >
                     {node.name}
@@ -221,36 +222,36 @@
     <!-- Edit Panel -->
     {#if draft}
         <div
-            class="absolute top-0 right-0 h-full w-80 bg-white/95 backdrop-blur shadow-2xl border-l border-slate-200 p-5 overflow-y-auto"
+            class="absolute top-0 right-0 h-full w-80 bg-card/95 backdrop-blur shadow-2xl border-l border-border p-5 overflow-y-auto"
             transition:slide={{ axis: "x", duration: 300 }}
         >
             <div class="flex justify-between items-center mb-4">
-                <h3 class="font-serif font-bold text-xl text-slate-800">
+                <h3 class="font-serif font-bold text-xl text-foreground">
                     {draft.id ? "Edit Member" : "Add Member"}
                 </h3>
                 <button
                     aria-label="Close"
                     onclick={() => (draft = null)}
-                    class="p-1 hover:bg-slate-100 rounded-full"
+                    class="p-1 hover:bg-muted rounded-full"
                 >
-                    <X size={20} class="text-slate-400" />
+                    <X size={20} class="text-muted-foreground" />
                 </button>
             </div>
 
             <div class="space-y-3">
-                <label class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1">
+                <label class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1">
                     Name
                     <input
                         bind:value={draft.name}
-                        class="mt-1.5 w-full px-4 py-3 text-sm normal-case font-normal tracking-normal text-slate-800 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        class="mt-1.5 w-full px-4 py-3 text-sm normal-case font-normal tracking-normal text-foreground rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     />
                 </label>
 
-                <label class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1">
+                <label class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1">
                     Type
                     <select
                         bind:value={draft.role}
-                        class="mt-1.5 w-full px-4 py-3 text-sm normal-case font-normal tracking-normal text-slate-800 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        class="mt-1.5 w-full px-4 py-3 text-sm normal-case font-normal tracking-normal text-foreground rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     >
                         <option value="Family">Family Member</option>
                         <option value="Friend">Friend</option>
@@ -262,53 +263,53 @@
                     </select>
                 </label>
 
-                <label class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1">
+                <label class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1">
                     Relationship / Title
                     <input
                         bind:value={draft.relation}
                         placeholder={draft.role === "Family"
                             ? "e.g. Spouse, Son, Mother"
                             : "e.g. Cardiologist, Best Friend"}
-                        class="mt-1.5 w-full px-4 py-3 text-sm normal-case font-normal tracking-normal text-slate-800 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        class="mt-1.5 w-full px-4 py-3 text-sm normal-case font-normal tracking-normal text-foreground rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     />
                 </label>
 
-                <label class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1">
+                <label class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1">
                     Email Address
                     <input
                         type="email"
                         bind:value={draft.email}
                         placeholder="email@example.com"
-                        class="mt-1.5 w-full px-4 py-3 text-sm normal-case font-normal tracking-normal text-slate-800 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        class="mt-1.5 w-full px-4 py-3 text-sm normal-case font-normal tracking-normal text-foreground rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     />
                 </label>
 
                 <div class="flex flex-col gap-2">
                     <label
-                        class="flex items-center gap-3 px-4 py-3 rounded-xl border border-slate-200 bg-white cursor-pointer hover:bg-slate-50 transition-all"
+                        class="flex items-center gap-3 px-4 py-3 rounded-xl border border-border bg-card cursor-pointer hover:bg-muted transition-all"
                     >
                         <input
                             type="checkbox"
                             bind:checked={draft.isExecutor}
                             class="w-4 h-4 rounded accent-primary"
                         />
-                        <span class="text-sm font-medium text-slate-800">Designated Executor</span>
-                        <Shield size={14} class="ml-auto text-slate-400" />
+                        <span class="text-sm font-medium text-foreground">Designated Executor</span>
+                        <Shield size={14} class="ml-auto text-muted-foreground" />
                     </label>
                     <label
-                        class="flex items-center gap-3 px-4 py-3 rounded-xl border border-slate-200 bg-white cursor-pointer hover:bg-slate-50 transition-all"
+                        class="flex items-center gap-3 px-4 py-3 rounded-xl border border-border bg-card cursor-pointer hover:bg-muted transition-all"
                     >
                         <input
                             type="checkbox"
                             bind:checked={draft.isBeneficiary}
                             class="w-4 h-4 rounded accent-primary"
                         />
-                        <span class="text-sm font-medium text-slate-800">Beneficiary</span>
-                        <Crown size={14} class="ml-auto text-slate-400" />
+                        <span class="text-sm font-medium text-foreground">Beneficiary</span>
+                        <Crown size={14} class="ml-auto text-muted-foreground" />
                     </label>
                 </div>
 
-                <div class="pt-3 border-t border-slate-200">
+                <div class="pt-3 border-t border-border">
                     <button
                         class="w-full py-3 bg-primary text-primary-foreground rounded-xl font-bold hover:bg-primary/90 hover:shadow-lg transition-transform active:scale-95 disabled:opacity-50"
                         disabled={!String(draft.name ?? "").trim()}
@@ -318,7 +319,7 @@
                     </button>
                     {#if draft.id && draft.id !== "owner"}
                         <button
-                            class="w-full mt-2 py-2 text-red-500 text-sm font-bold hover:bg-red-50 rounded-lg transition-colors"
+                            class="w-full mt-2 py-2 text-danger text-sm font-bold hover:bg-danger-soft rounded-lg transition-colors"
                             onclick={() => {
                                 familyStore.removeMember(draft.id);
                                 draft = null;

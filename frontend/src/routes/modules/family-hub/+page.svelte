@@ -296,7 +296,7 @@
         <Loader2 class="w-8 h-8 animate-spin text-primary" />
     </div>
 {:else}
-<div class="min-h-screen bg-[#FDFBF7]">
+<div class="min-h-screen bg-background">
     <div class="max-w-6xl mx-auto px-8 pt-8">
     </div>
 
@@ -307,46 +307,46 @@
             transition:fade
         >
             <div
-                class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
+                class="bg-card rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
                 in:scale
             >
                 <div
-                    class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50"
+                    class="p-6 border-b border-border flex justify-between items-center bg-muted"
                 >
-                    <h3 class="font-serif font-bold text-xl text-[#304743]">
+                    <h3 class="font-serif font-bold text-xl text-foreground">
                         Preserve a Memory
                     </h3>
                     <button aria-label="Close"
                         onclick={resetForm}
-                        class="p-2 hover:bg-gray-200 rounded-full transition-colors"
+                        class="p-2 hover:bg-muted rounded-full transition-colors"
                     >
-                        <X size={20} class="text-gray-500" />
+                        <X size={20} class="text-muted-foreground" />
                     </button>
                 </div>
                 <div class="p-6 space-y-4">
                     <!-- Type Selector -->
-                    <div class="flex gap-2 p-1 bg-gray-100 rounded-lg">
+                    <div class="flex gap-2 p-1 bg-muted rounded-lg">
                         <button
                             class="flex-1 py-2 text-sm font-bold rounded-md transition-all {newMemory.type ===
                             'photo'
-                                ? 'bg-white shadow text-[#4A7C74]'
-                                : 'text-gray-500 hover:text-gray-700'}"
+                                ? 'bg-card shadow text-primary'
+                                : 'text-muted-foreground hover:text-foreground'}"
                             onclick={() => (newMemory.type = "photo")}
                             >Photo</button
                         >
                         <button
                             class="flex-1 py-2 text-sm font-bold rounded-md transition-all {newMemory.type ===
                             'recipe'
-                                ? 'bg-white shadow text-[#4A7C74]'
-                                : 'text-gray-500 hover:text-gray-700'}"
+                                ? 'bg-card shadow text-primary'
+                                : 'text-muted-foreground hover:text-foreground'}"
                             onclick={() => (newMemory.type = "recipe")}
                             >Recipe</button
                         >
                         <button
                             class="flex-1 py-2 text-sm font-bold rounded-md transition-all {newMemory.type ===
                             'quote'
-                                ? 'bg-white shadow text-[#4A7C74]'
-                                : 'text-gray-500 hover:text-gray-700'}"
+                                ? 'bg-card shadow text-primary'
+                                : 'text-muted-foreground hover:text-foreground'}"
                             onclick={() => (newMemory.type = "quote")}
                             >Quote</button
                         >
@@ -354,12 +354,12 @@
 
                     <div class="space-y-2">
                         <label
-                            class="text-xs font-bold uppercase text-gray-400"
+                            class="text-xs font-bold uppercase text-muted-foreground"
                         >
                             Title
                             <input
                                 bind:value={newMemory.title}
-                                class="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4A7C74] focus:ring-0 outline-none font-serif text-lg mt-1"
+                                class="w-full p-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/30 outline-none font-serif text-lg mt-1"
                                 placeholder="e.g. Summer Vacation 2005"
                             />
                         </label>
@@ -374,12 +374,12 @@
                             {#if !newMemory.image}
                                 <div class="space-y-1">
                                     <label
-                                        class="text-xs font-bold uppercase text-gray-400"
+                                        class="text-xs font-bold uppercase text-muted-foreground"
                                     >
                                         Or Paste URL
                                         <input
                                             bind:value={newMemory.image}
-                                            class="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4A7C74] outline-none text-sm mt-1"
+                                            class="w-full p-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/30 outline-none text-sm mt-1"
                                             placeholder="https://..."
                                         />
                                     </label>
@@ -388,12 +388,12 @@
                         </div>
                         <div class="space-y-2">
                             <label
-                                class="text-xs font-bold uppercase text-gray-400"
+                                class="text-xs font-bold uppercase text-muted-foreground"
                             >
                                 Date / Year
                                 <input
                                     bind:value={newMemory.date}
-                                    class="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4A7C74] outline-none mt-1"
+                                    class="w-full p-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/30 outline-none mt-1"
                                     placeholder="e.g. July 2005"
                                 />
                             </label>
@@ -401,12 +401,12 @@
                     {:else if newMemory.type === "recipe"}
                         <div class="space-y-2">
                             <label
-                                class="text-xs font-bold uppercase text-gray-400"
+                                class="text-xs font-bold uppercase text-muted-foreground"
                             >
                                 Description / Ingredients
                                 <textarea
                                     bind:value={newMemory.desc}
-                                    class="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4A7C74] outline-none h-24 resize-none mt-1"
+                                    class="w-full p-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/30 outline-none h-24 resize-none mt-1"
                                     placeholder="Secret ingredients..."
                                 ></textarea>
                             </label>
@@ -414,24 +414,24 @@
                     {:else if newMemory.type === "quote"}
                         <div class="space-y-2">
                             <label
-                                class="text-xs font-bold uppercase text-gray-400"
+                                class="text-xs font-bold uppercase text-muted-foreground"
                             >
                                 Quote Text
                                 <textarea
                                     bind:value={newMemory.text}
-                                    class="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4A7C74] outline-none h-24 resize-none font-serif italic text-lg mt-1"
+                                    class="w-full p-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/30 outline-none h-24 resize-none font-serif italic text-lg mt-1"
                                     placeholder="'Stay hungry, stay foolish...'"
                                 ></textarea>
                             </label>
                         </div>
                         <div class="space-y-2">
                             <label
-                                class="text-xs font-bold uppercase text-gray-400"
+                                class="text-xs font-bold uppercase text-muted-foreground"
                             >
                                 Attribution
                                 <input
                                     bind:value={newMemory.author}
-                                    class="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4A7C74] outline-none mt-1"
+                                    class="w-full p-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/30 outline-none mt-1"
                                     placeholder="e.g. Grandma"
                                 />
                             </label>
@@ -440,7 +440,7 @@
 
                     <button
                         onclick={saveMemory}
-                        class="w-full py-4 bg-[#4A7C74] text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:bg-[#3b635d] transition-all transform active:scale-95"
+                        class="w-full py-4 bg-primary text-primary-foreground rounded-xl font-bold shadow-lg hover:shadow-xl hover:bg-primary-hover transition-all transform active:scale-95"
                     >
                         Save this memory
                     </button>
@@ -459,21 +459,21 @@
     <!-- Family Network Visualizer -->
     <section class="max-w-7xl mx-auto px-8 -mt-16 relative z-30 mb-20">
         <div
-            class="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100"
+            class="bg-card rounded-2xl shadow-xl overflow-hidden border border-border"
         >
             <div
-                class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50"
+                class="p-6 border-b border-border flex justify-between items-center bg-muted/50"
             >
                 <div>
-                    <h2 class="font-serif text-2xl text-slate-800">
+                    <h2 class="font-serif text-2xl text-foreground">
                         Family Network
                     </h2>
-                    <p class="text-slate-500 text-sm">
+                    <p class="text-muted-foreground text-sm">
                         Interactive map of your estate hierarchy and key roles.
                     </p>
                 </div>
             </div>
-            <div class="w-full bg-slate-50">
+            <div class="w-full bg-muted">
                 <FamilyTreeGraph />
             </div>
         </div>
@@ -488,7 +488,7 @@
             <div class="text-center mt-8">
                 <button
                     onclick={() => (viewMode = "dashboard")}
-                    class="text-slate-400 hover:text-slate-600 underline text-sm"
+                    class="text-muted-foreground hover:text-foreground underline text-sm"
                 >
                     Continue to your dashboard
                 </button>
@@ -533,13 +533,13 @@
                 <div class="md:col-span-2 space-y-8">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-4">
-                            <h2 class="font-serif text-3xl text-slate-800">
+                            <h2 class="font-serif text-3xl text-foreground">
                                 Latest Memories
                             </h2>
                             {#if photoMemories.length > 0}
                                 <button
                                     onclick={startSlideshow}
-                                    class="text-xs font-bold text-[#4A7C74] bg-[#4A7C74]/10 px-3 py-1.5 rounded-full hover:bg-[#4A7C74]/20 transition-colors flex items-center gap-1"
+                                    class="text-xs font-bold text-primary-hover bg-primary/10 px-3 py-1.5 rounded-full hover:bg-primary/20 transition-colors flex items-center gap-1"
                                 >
                                     <PlayCircle size={14} /> Slideshow
                                 </button>
@@ -549,7 +549,7 @@
                             <DataViewToggle module="family-hub" />
                             <button
                                 onclick={() => (showAddModal = true)}
-                                class="flex items-center gap-2 px-4 py-2 bg-rose-100 text-rose-700 rounded-full font-bold hover:bg-rose-200 transition-colors"
+                                class="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-full font-bold hover:bg-primary-hover transition-colors"
                             >
                                 <Plus size={18} /> Add Memory
                             </button>
@@ -562,7 +562,7 @@
                             <div class="col-span-full flex justify-center mb-4">
                                 <button
                                     onclick={() => (viewMode = "concierge")}
-                                    class="text-sm font-bold text-indigo-600 bg-indigo-50 px-4 py-2 rounded-full hover:bg-indigo-100 transition-colors flex items-center gap-2"
+                                    class="text-sm font-bold text-primary-hover bg-primary-soft px-4 py-2 rounded-full hover:bg-primary/20 transition-colors flex items-center gap-2"
                                 >
                                     <Pencil size={16} />
                                     {$t("wizard.start")}
@@ -593,7 +593,7 @@
                                         {@const Icon = sample.type === "Recipe" ? Scroll : sample.type === "Quote" ? Plus : Image}
                                         <Icon
                                             size={20}
-                                            class="text-slate-400"
+                                            class="text-muted-foreground"
                                         />
                                     {/snippet}
                                 </GhostRow>
@@ -602,14 +602,14 @@
                             {#if dataViewMode === 'card'}
                                 {#each memories as memory (memory.id)}
                                     <div
-                                        class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group relative"
+                                        class="bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group relative"
                                         in:fade
                                     >
                                         <!-- Card actions -->
                                         <button
                                             onclick={() => editMemory(memory)}
                                             aria-label="Edit Memory"
-                                            class="absolute top-2 right-10 p-1.5 bg-white/80 rounded-full z-10 hover:bg-blue-100 text-blue-500"
+                                            class="absolute top-2 right-10 p-1.5 bg-card/80 rounded-full z-10 hover:bg-muted text-muted-foreground hover:text-primary-hover"
                                             title="Edit Memory"
                                         >
                                             <Pencil size={14} />
@@ -617,7 +617,7 @@
                                         <button
                                             onclick={() => deleteMemory(memory.id)}
                                             aria-label="Remove this item"
-                                            class="absolute top-2 right-2 p-1.5 bg-white/80 rounded-full z-10 hover:bg-red-100 text-red-500"
+                                            class="absolute top-2 right-2 p-1.5 bg-card/80 rounded-full z-10 hover:bg-danger-soft text-muted-foreground hover:text-danger"
                                             title="Remove this memory"
                                         >
                                             <X size={14} />
@@ -625,7 +625,7 @@
 
                                         {#if memory.type === "photo"}
                                             <div
-                                                class="aspect-[4/3] overflow-hidden bg-gray-100"
+                                                class="aspect-[4/3] overflow-hidden bg-muted"
                                             >
                                                 <img
                                                     src={memory.image}
@@ -635,39 +635,39 @@
                                             </div>
                                             <div class="p-4">
                                                 <h3
-                                                    class="font-bold text-slate-800 text-lg leading-tight group-hover:text-rose-600 transition-colors"
+                                                    class="font-bold text-foreground text-lg leading-tight group-hover:text-primary-hover transition-colors"
                                                 >
                                                     {memory.title}
                                                 </h3>
                                                 <p
-                                                    class="text-xs text-slate-400 mt-2 font-medium tracking-wide uppercase"
+                                                    class="text-xs text-muted-foreground mt-2 font-medium tracking-wide uppercase"
                                                 >
                                                     {memory.date}
                                                 </p>
                                             </div>
                                         {:else if memory.type === "recipe"}
                                             <div
-                                                class="p-6 bg-amber-50 h-full flex flex-col"
+                                                class="p-6 bg-muted h-full flex flex-col"
                                             >
                                                 <div
-                                                    class="w-10 h-10 bg-white rounded-full flex items-center justify-center mb-4 text-amber-500 shadow-sm"
+                                                    class="w-10 h-10 bg-card rounded-full flex items-center justify-center mb-4 text-gold-text shadow-sm"
                                                 >
                                                     <Scroll class="w-5 h-5" />
                                                 </div>
                                                 <h3
-                                                    class="font-serif text-xl text-amber-900 font-bold mb-2"
+                                                    class="font-serif text-xl text-foreground font-bold mb-2"
                                                 >
                                                     {memory.title}
                                                 </h3>
                                                 <p
-                                                    class="text-sm text-amber-800/80 leading-relaxed italic"
+                                                    class="text-sm text-muted-foreground leading-relaxed italic"
                                                 >
                                                     "{memory.desc}"
                                                 </p>
                                             </div>
                                         {:else if memory.type === "quote"}
                                             <div
-                                                class="p-8 bg-slate-800 h-full flex flex-col justify-center text-center items-center"
+                                                class="p-8 bg-primary-deep h-full flex flex-col justify-center text-center items-center"
                                             >
                                                 <p
                                                     class="font-serif text-xl text-white leading-relaxed mb-4"
@@ -675,23 +675,23 @@
                                                     "{memory.text}"
                                                 </p>
                                                 <div
-                                                    class="text-xs font-bold text-slate-400 uppercase tracking-widest"
+                                                    class="text-xs font-bold text-white/70 uppercase tracking-widest"
                                                 >
                                                     — {memory.author}
                                                 </div>
                                             </div>
                                         {:else}
                                             <div class="p-6">
-                                                <h3 class="font-bold text-slate-800 text-lg leading-tight">
+                                                <h3 class="font-bold text-foreground text-lg leading-tight">
                                                     {memory.title}
                                                 </h3>
                                                 {#if memory.desc || memory.text}
-                                                    <p class="text-sm text-slate-600 mt-2 leading-relaxed">
+                                                    <p class="text-sm text-muted-foreground mt-2 leading-relaxed">
                                                         {memory.desc || memory.text}
                                                     </p>
                                                 {/if}
                                                 {#if memory.date}
-                                                    <p class="text-xs text-slate-400 mt-2 font-medium tracking-wide uppercase">
+                                                    <p class="text-xs text-muted-foreground mt-2 font-medium tracking-wide uppercase">
                                                         {memory.date}
                                                     </p>
                                                 {/if}
@@ -701,39 +701,39 @@
                                 {/each}
                             {:else}
                                 <!-- Table View -->
-                                <div class="col-span-full bg-white rounded-xl border border-slate-200 overflow-hidden">
+                                <div class="col-span-full bg-card rounded-xl border border-border overflow-hidden">
                                     <table class="w-full">
-                                        <thead class="bg-slate-50 border-b border-slate-200">
+                                        <thead class="bg-muted border-b border-border">
                                             <tr>
-                                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Title</th>
-                                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Type</th>
-                                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Date</th>
-                                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Author</th>
-                                                <th class="text-right px-4 py-3 text-xs font-bold uppercase text-slate-500">Actions</th>
+                                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Title</th>
+                                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Type</th>
+                                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Date</th>
+                                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Author</th>
+                                                <th class="text-right px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Actions</th>
                                             </tr>
                                         </thead>
-                                        <tbody class="divide-y divide-slate-100">
+                                        <tbody class="divide-y divide-border">
                                             {#each memories as memory (memory.id)}
-                                                <tr class="hover:bg-slate-50 transition-colors group">
-                                                    <td class="px-4 py-3 font-medium text-slate-800">{memory.title}</td>
+                                                <tr class="hover:bg-muted transition-colors group">
+                                                    <td class="px-4 py-3 font-medium text-foreground">{memory.title}</td>
                                                     <td class="px-4 py-3">
-                                                        <span class="px-2 py-1 rounded text-xs font-medium capitalize {memory.type === 'photo' ? 'bg-blue-100 text-blue-600' : memory.type === 'recipe' ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-600'}">
+                                                        <span class="px-2 py-1 rounded text-xs font-medium capitalize {memory.type === 'photo' ? 'bg-info/10 text-info' : memory.type === 'recipe' ? 'bg-muted text-gold-text' : 'bg-muted text-muted-foreground'}">
                                                             {memory.type}
                                                         </span>
                                                     </td>
-                                                    <td class="px-4 py-3 text-slate-600 text-sm">{memory.date || '-'}</td>
-                                                    <td class="px-4 py-3 text-slate-500 text-sm">{memory.author || '-'}</td>
+                                                    <td class="px-4 py-3 text-muted-foreground text-sm">{memory.date || '-'}</td>
+                                                    <td class="px-4 py-3 text-muted-foreground text-sm">{memory.author || '-'}</td>
                                                     <td class="px-4 py-3 text-right">
                                                         <div class="flex items-center justify-end gap-1 transition-opacity">
                                                             <button aria-label="Edit these details"
                                                                 onclick={() => editMemory(memory)}
-                                                                class="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-blue-500"
+                                                                class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-primary-hover"
                                                             >
                                                                 <Pencil size={14} />
                                                             </button>
                                                             <button aria-label="Remove this item"
                                                                 onclick={() => deleteMemory(memory.id)}
-                                                                class="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-red-500"
+                                                                class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-danger"
                                                             >
                                                                 <X size={14} />
                                                             </button>
@@ -753,7 +753,7 @@
                 <div class="space-y-8">
                     <!-- Educational Resources Widget -->
                     <button
-                        class="bg-[#304743] rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group cursor-pointer text-left w-full"
+                        class="bg-primary-deep rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group cursor-pointer text-left w-full"
                         onclick={() =>
                             document
                                 .getElementById("educational-section")
@@ -769,7 +769,7 @@
                                 Learning Center
                             </h3>
                             <p
-                                class="text-emerald-100/80 text-sm mb-4 line-clamp-2"
+                                class="text-white/80 text-sm mb-4 line-clamp-2"
                             >
                                 Our guide videos are here for you, whenever you want
                                 to learn more about your role.
@@ -778,31 +778,31 @@
                     </button>
 
                     <div
-                        class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100"
+                        class="bg-card p-6 rounded-2xl shadow-sm border border-border"
                     >
                         <h3
-                            class="font-bold text-slate-800 mb-4 flex items-center gap-2"
+                            class="font-bold text-foreground mb-4 flex items-center gap-2"
                         >
-                            <MapPin class="w-4 h-4 text-emerald-500" />
+                            <MapPin class="w-4 h-4 text-primary" />
                             Our Journey
                         </h3>
                         {#if journeyEvents.length > 0}
                             <div
-                                class="space-y-6 relative pl-4 border-l-2 border-slate-100"
+                                class="space-y-6 relative pl-4 border-l-2 border-border"
                             >
                                 {#each journeyEvents as event, i (event.id)}
                                     <div class="relative">
                                         <div
-                                            class="absolute -left-[21px] top-1 w-3 h-3 rounded-full border-2 border-white {i === 0
-                                                ? 'bg-emerald-500 shadow-sm'
-                                                : 'bg-slate-300'}"
+                                            class="absolute -left-[21px] top-1 w-3 h-3 rounded-full border-2 border-card {i === 0
+                                                ? 'bg-primary shadow-sm'
+                                                : 'bg-border'}"
                                         ></div>
                                         <div
-                                            class="text-xs font-bold text-slate-400 mb-1"
+                                            class="text-xs font-bold text-muted-foreground mb-1"
                                         >
                                             {event.year}
                                         </div>
-                                        <div class="font-medium text-slate-800">
+                                        <div class="font-medium text-foreground">
                                             {event.label}
                                         </div>
                                     </div>
@@ -811,12 +811,12 @@
                         {/if}
                         <div
                             class="text-center {journeyEvents.length > 0
-                                ? 'mt-4 pt-4 border-t border-slate-100'
+                                ? 'mt-4 pt-4 border-t border-border'
                                 : ''}"
                         >
                             <a
                                 href="/modules/timeline"
-                                class="text-xs font-bold text-[#4A7C74] hover:underline"
+                                class="text-xs font-bold text-primary hover:underline"
                                 >Manage Full Timeline →</a
                             >
                         </div>
@@ -827,9 +827,9 @@
             <!-- Educational Resources Section -->
             <div
                 id="educational-section"
-                class="mt-20 pt-10 border-t border-slate-200"
+                class="mt-20 pt-10 border-t border-border"
             >
-                <h2 class="font-serif text-3xl text-slate-800 mb-8 text-center">
+                <h2 class="font-serif text-3xl text-foreground mb-8 text-center">
                     Family Learning Center
                 </h2>
                 <EducationalResources />

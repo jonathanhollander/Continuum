@@ -27,24 +27,24 @@
             id: "wallet",
             title: "Lost Wallet",
             icon: CreditCard,
-            color: "text-amber-600",
-            bg: "bg-amber-100",
+            color: "text-warning",
+            bg: "bg-warning-soft",
             desc: "Your physical wallet is stolen while traveling.",
         },
         {
             id: "medical",
             title: " Sudden Hospitalization",
             icon: Stethoscope,
-            color: "text-rose-600",
-            bg: "bg-rose-100",
+            color: "text-primary-hover",
+            bg: "bg-primary-soft",
             desc: "You are in hospital and someone you trust decides for you.",
         },
         {
             id: "passing",
             title: "Unexpected Passing",
             icon: Ghost,
-            color: "text-stone-600",
-            bg: "bg-stone-200",
+            color: "text-muted-foreground",
+            bg: "bg-muted",
             desc: "Your family steps in today to carry out your wishes.",
         },
     ];
@@ -157,7 +157,7 @@
     <!-- Header -->
     <div class="mb-12 flex items-center justify-between">
         <div>
-            <h1 class="font-serif font-bold text-4xl text-[#304743] mb-2">
+            <h1 class="font-serif font-bold text-4xl text-foreground mb-2">
                 Practice Run
             </h1>
             <p class="text-lg text-muted-foreground">
@@ -165,7 +165,7 @@
             </p>
         </div>
         <div
-            class="bg-indigo-50 text-indigo-700 px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2"
+            class="bg-primary-soft text-primary-hover px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2"
         >
             <Siren size={18} /> Fire Drill Mode
         </div>
@@ -177,7 +177,7 @@
                 <button
                     on:click={() =>
                         runSimulation(s.id as "wallet" | "medical" | "passing")}
-                    class="bg-white p-8 rounded-2xl border border-border hover:border-black/20 hover:shadow-xl transition-all text-left group flex flex-col items-start justify-start"
+                    class="bg-card p-8 rounded-2xl border border-border hover:border-primary/30 hover:shadow-xl transition-all text-left group flex flex-col items-start justify-start"
                 >
                     <div
                         class="w-16 h-16 rounded-2xl {s.bg} {s.color} flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform"
@@ -185,7 +185,7 @@
                         <svelte:component this={s.icon} size={32} />
                     </div>
                     <h3
-                        class="font-bold font-serif text-xl text-[#304743] mb-2"
+                        class="font-bold font-serif text-xl text-foreground mb-2"
                     >
                         {s.title}
                     </h3>
@@ -195,7 +195,7 @@
                         {s.desc}
                     </p>
                     <div
-                        class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-black/40 group-hover:text-[#4A7C74]"
+                        class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground group-hover:text-primary-hover"
                     >
                         Run Simulation <ArrowRight size={14} />
                     </div>
@@ -206,22 +206,22 @@
 
     {#if activeScenario !== "none"}
         <div
-            class="bg-white rounded-2xl border border-border shadow-2xl overflow-hidden"
+            class="bg-card rounded-2xl border border-border shadow-2xl overflow-hidden"
             in:fade
         >
             <!-- Sim Header -->
             <div
-                class="p-8 border-b border-border bg-stone-50 flex items-center justify-between"
+                class="p-8 border-b border-border bg-muted flex items-center justify-between"
             >
                 <div class="flex items-center gap-4">
                     <button
                         on:click={reset}
-                        class="text-muted-foreground hover:text-black"
+                        class="text-muted-foreground hover:text-foreground"
                     >
                         ← Back
                     </button>
                     <h2 class="font-bold text-xl flex items-center gap-2">
-                        Simulating: <span class="text-[#304743]"
+                        Simulating: <span class="text-primary-hover"
                             >{scenarios.find((s) => s.id === activeScenario)
                                 ?.title}</span
                         >
@@ -229,7 +229,7 @@
                 </div>
                 {#if simulationState === "running"}
                     <div
-                        class="flex items-center gap-2 text-[#4A7C74] font-bold animate-pulse"
+                        class="flex items-center gap-2 text-primary font-bold animate-pulse"
                     >
                         <Siren size={18} /> Running Checks...
                     </div>
@@ -242,10 +242,10 @@
                         class="flex flex-col items-center justify-center h-full space-y-6 pt-12"
                     >
                         <div
-                            class="w-20 h-20 border-4 border-[#4A7C74] border-t-transparent rounded-full animate-spin"
+                            class="w-20 h-20 border-4 border-primary border-t-transparent rounded-full animate-spin"
                         ></div>
                         <div class="space-y-2 text-center">
-                            <p class="text-lg font-bold text-[#304743]">
+                            <p class="text-lg font-bold text-foreground">
                                 Audit in Progress
                             </p>
                             <p class="text-muted-foreground">
@@ -260,21 +260,21 @@
                         <div class="text-center mb-12">
                             {#if overallStatus === "pass"}
                                 <div
-                                    class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4"
+                                    class="w-20 h-20 bg-success/10 text-success rounded-full flex items-center justify-center mx-auto mb-4"
                                 >
                                     <CircleCheck size={40} />
                                 </div>
                                 <h1
-                                    class="font-serif font-bold text-3xl text-green-800"
+                                    class="font-serif font-bold text-3xl text-success"
                                 >
                                     Plan Resilient
                                 </h1>
-                                <p class="text-green-700/80 mt-2">
+                                <p class="text-muted-foreground mt-2">
                                     Your estate is prepared for this event.
                                 </p>
                             {:else}
                                 <h1
-                                    class="font-serif font-bold text-3xl text-[#304743]"
+                                    class="font-serif font-bold text-3xl text-foreground"
                                 >
                                     Room to Strengthen
                                 </h1>
@@ -289,18 +289,18 @@
                             {#each report as item}
                                 <div
                                     class="p-4 rounded-xl border flex items-start gap-4 transition-all {item.status
-                                        ? 'bg-green-50 border-green-200'
-                                        : 'bg-rose-50 border-rose-200'}"
+                                        ? 'bg-success/10 border-success/20'
+                                        : 'bg-warning-soft border-warning/20'}"
                                 >
                                     <div class="mt-1">
                                         {#if item.status}
                                             <CircleCheck
-                                                class="text-green-600"
+                                                class="text-success"
                                                 size={20}
                                             />
                                         {:else}
                                             <CircleX
-                                                class="text-rose-600"
+                                                class="text-warning"
                                                 size={20}
                                             />
                                         {/if}
@@ -308,15 +308,15 @@
                                     <div>
                                         <h4
                                             class="font-bold {item.status
-                                                ? 'text-green-900'
-                                                : 'text-rose-900'}"
+                                                ? 'text-foreground'
+                                                : 'text-foreground'}"
                                         >
                                             {item.check}
                                         </h4>
                                         <p
                                             class="text-sm {item.status
-                                                ? 'text-green-800'
-                                                : 'text-rose-800'}"
+                                                ? 'text-success'
+                                                : 'text-warning'}"
                                         >
                                             {item.msg}
                                         </p>
@@ -328,7 +328,7 @@
                         <div class="mt-12 text-center">
                             <button
                                 on:click={reset}
-                                class="text-[#4A7C74] font-bold hover:underline"
+                                class="text-primary font-bold hover:underline"
                                 >Run Another Simulation</button
                             >
                         </div>

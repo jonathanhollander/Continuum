@@ -21,10 +21,10 @@
                 data-testid="guidance-toggle"
                 aria-expanded={open}
                 aria-controls={bodyId}
-                class="w-full px-6 py-3 flex items-center justify-between text-sm font-medium text-primary hover:bg-primary/5 transition-colors text-left"
+                class="w-full px-6 py-3 flex items-center justify-between text-sm font-medium text-primary-hover hover:bg-primary/5 transition-colors text-left"
                 on:click={() => (open = !open)}
             >
-                <span class="uppercase tracking-widest text-xs opacity-70"
+                <span class="uppercase tracking-widest text-xs"
                     >Why this matters</span
                 >
                 <span
@@ -40,7 +40,7 @@
                     id={bodyId}
                     data-testid="guidance-body"
                     transition:slide
-                    class="px-6 pb-5 pt-3 space-y-3 text-muted-foreground/80 leading-relaxed border-t border-primary/10"
+                    class="px-6 pb-5 pt-3 space-y-3 text-muted-foreground leading-relaxed border-t border-primary/10"
                 >
                     {#if detailedDescription}
                         <p>{@html detailedDescription}</p>

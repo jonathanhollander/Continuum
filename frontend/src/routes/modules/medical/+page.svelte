@@ -286,11 +286,11 @@
         <!-- Life Saving Profile -->
         <div class="lg:col-span-1 space-y-8">
             <section
-                class="bg-white rounded-2xl border border-primary/10 shadow-sm overflow-hidden"
+                class="bg-card rounded-2xl border border-primary/10 shadow-sm overflow-hidden"
             >
                 <div class="p-6 bg-primary/5 border-b border-primary/10">
                     <h2
-                        class="text-lg font-bold text-primary flex items-center gap-2"
+                        class="text-lg font-bold text-primary-hover flex items-center gap-2"
                     >
                         <Activity size={20} />
                         Emergency Profile
@@ -300,23 +300,23 @@
                     {#if !showProfileEdit}
                         <div class="space-y-4">
                             <div
-                                class="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100"
+                                class="flex items-center justify-between p-4 bg-muted rounded-2xl border border-border"
                             >
                                 <div>
                                     <p
-                                        class="text-xs font-bold uppercase text-gray-400"
+                                        class="text-xs font-bold uppercase text-muted-foreground"
                                     >
                                         Blood Type
                                     </p>
                                     {#if medicalStore.profile.bloodType}
-                                        <p class="text-xl font-bold text-gray-900">
+                                        <p class="text-xl font-bold text-foreground">
                                             {medicalStore.profile.bloodType}
                                         </p>
                                     {:else}
                                         <button
                                             type="button"
                                             onclick={openProfileEdit}
-                                            class="text-sm font-semibold text-primary hover:underline"
+                                            class="text-sm font-semibold text-primary-hover hover:underline"
                                         >
                                             Add blood type
                                         </button>
@@ -324,7 +324,7 @@
                                 </div>
                                 {#if medicalStore.profile.bloodType}
                                     <span
-                                        class="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold"
+                                        class="px-3 py-1 bg-primary/10 text-primary-hover rounded-full text-xs font-bold"
                                     >
                                         Rh {medicalStore.profile.bloodType.includes("+")
                                             ? "positive"
@@ -334,22 +334,26 @@
                             </div>
 
                             <div
-                                class="p-4 bg-orange-50 rounded-2xl border border-orange-100"
+                                class="p-4 rounded-2xl border {medicalStore.profile.allergies
+                                    ? 'bg-warning-soft border-warning/20'
+                                    : 'bg-muted border-border'}"
                             >
                                 <p
-                                    class="text-xs font-bold uppercase text-orange-400 mb-1"
+                                    class="text-xs font-bold uppercase mb-1 {medicalStore.profile.allergies
+                                        ? 'text-warning'
+                                        : 'text-muted-foreground'}"
                                 >
                                     Allergies
                                 </p>
                                 {#if medicalStore.profile.allergies}
-                                    <p class="text-sm font-medium text-orange-900">
+                                    <p class="text-sm font-medium text-foreground">
                                         {medicalStore.profile.allergies}
                                     </p>
                                 {:else}
                                     <button
                                         type="button"
                                         onclick={openProfileEdit}
-                                        class="text-sm font-semibold text-primary hover:underline"
+                                        class="text-sm font-semibold text-primary-hover hover:underline"
                                     >
                                         Add any allergies
                                     </button>
@@ -357,22 +361,22 @@
                             </div>
 
                             <div
-                                class="flex items-center gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-100"
+                                class="flex items-center gap-3 p-4 bg-info/10 rounded-2xl border border-info/20"
                             >
                                 {#if currentProfile.organDonor}
                                     <CircleCheck
-                                        class="text-blue-600"
+                                        class="text-info"
                                         size={20}
                                     />
-                                    <p class="text-sm font-bold text-blue-900">
+                                    <p class="text-sm font-bold text-foreground">
                                         Organ Donor Enrollment Active
                                     </p>
                                 {:else}
                                     <CircleAlert
-                                        class="text-blue-400"
+                                        class="text-info"
                                         size={20}
                                     />
-                                    <p class="text-sm font-bold text-blue-900">
+                                    <p class="text-sm font-bold text-foreground">
                                         Add your donor wishes
                                     </p>
                                 {/if}
@@ -380,7 +384,7 @@
 
                             <button
                                 onclick={openProfileEdit}
-                                class="w-full py-3 text-primary hover:bg-primary/5 rounded-xl transition-colors font-bold text-sm"
+                                class="w-full py-3 text-primary-hover hover:bg-primary/5 rounded-xl transition-colors font-bold text-sm"
                             >
                                 Edit my profile
                             </button>
@@ -389,12 +393,12 @@
                         <div class="space-y-4" in:slide>
                             <div>
                                 <label for="medical-blood-type"
-                                    class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                                    class="block text-xs font-bold uppercase text-muted-foreground mb-1"
                                     >Blood Type</label
                                 >
                                 <select id="medical-blood-type"
                                     bind:value={tempProfile.bloodType}
-                                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                    class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                 >
                                     <option value="">Unknown</option>
                                     <option value="A+">A+</option>
@@ -409,12 +413,12 @@
                             </div>
                             <div>
                                 <label for="medical-allergies"
-                                    class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                                    class="block text-xs font-bold uppercase text-muted-foreground mb-1"
                                     >Allergies</label
                                 >
                                 <textarea id="medical-allergies"
                                     bind:value={tempProfile.allergies}
-                                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                    class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                     rows="3"
                                     placeholder="Latex, Penicillin, Peanuts..."
                                 ></textarea>
@@ -427,7 +431,7 @@
                                 />
                                 <label
                                     for="donor-check"
-                                    class="text-sm font-medium text-gray-700"
+                                    class="text-sm font-medium text-foreground"
                                     >Enrolled Organ Donor</label
                                 >
                             </div>
@@ -439,7 +443,7 @@
                                 >
                                 <button
                                     onclick={() => (showProfileEdit = false)}
-                                    class="flex-1 px-4 py-2 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm"
+                                    class="flex-1 px-4 py-2 bg-muted text-muted-foreground rounded-xl font-bold text-sm"
                                     >Maybe later</button
                                 >
                             </div>
@@ -456,10 +460,10 @@
             >
                 <Shield class="text-primary mt-1 shrink-0" size={24} />
                 <div>
-                    <h3 class="font-bold text-primary text-lg">
+                    <h3 class="font-bold text-primary-hover text-lg">
                         Your End-of-Life Voice
                     </h3>
-                    <p class="text-sm text-primary/80 mt-1 leading-relaxed">
+                    <p class="text-sm text-primary-hover mt-1 leading-relaxed">
                         Providing clear guidance for your medical care is a gift
                         to your family. Doctors and family know what you
                         would want, and your loved ones feel the ease of
@@ -470,27 +474,27 @@
 
             {#each medicalStore.directives as dir}
                 <div
-                    class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-shadow relative group"
+                    class="bg-card rounded-2xl border border-border shadow-sm p-6 hover:shadow-md transition-shadow relative group"
                 >
                     <div class="flex items-start justify-between">
                         <div class="flex gap-4">
                             <div
-                                class="p-3 bg-gray-50 text-gray-400 rounded-2xl group-hover:bg-primary/5 group-hover:text-primary transition-colors"
+                                class="p-3 bg-muted text-muted-foreground rounded-2xl group-hover:bg-primary/5 group-hover:text-primary transition-colors"
                             >
                                 <FileText size={24} />
                             </div>
                             <div>
                                 <span
-                                    class="px-2 py-1 bg-gray-100 text-gray-600 rounded-lg text-[10px] font-black uppercase tracking-wider"
+                                    class="px-2 py-1 bg-muted text-muted-foreground rounded-lg text-[10px] font-black uppercase tracking-wider"
                                 >
                                     {typeLabels[dir.type]}
                                 </span>
                                 <h3
-                                    class="text-xl font-bold text-gray-900 mt-1"
+                                    class="text-xl font-bold text-foreground mt-1"
                                 >
                                     {dir.title}
                                 </h3>
-                                <p class="text-sm text-gray-500 mt-1">
+                                <p class="text-sm text-muted-foreground mt-1">
                                     {dir.summary}
                                 </p>
                                 {#if directiveMedia(dir)}
@@ -510,13 +514,13 @@
                         <div class="flex gap-1">
                             <button aria-label="Edit these details"
                                 onclick={() => editDirective(dir)}
-                                class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                class="p-2 text-muted-foreground hover:text-primary-hover hover:bg-muted rounded-lg transition-all"
                             >
                                 <Pencil size={18} />
                             </button>
                             <button aria-label="Remove this item"
                                 onclick={() => removeDirective(dir.id)}
-                                class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                class="p-2 text-muted-foreground hover:text-danger hover:bg-danger-soft rounded-lg transition-all"
                             >
                                 <Trash2 size={18} />
                             </button>
@@ -527,20 +531,20 @@
                     <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {#if dir.primaryContact || dir.contactPhone}
                         <div
-                            class="p-4 bg-gray-50 rounded-2xl border border-gray-100"
+                            class="p-4 bg-muted rounded-2xl border border-border"
                         >
                             <span
-                                class="text-[10px] font-black uppercase text-gray-400 block mb-1"
+                                class="text-[10px] font-black uppercase text-muted-foreground block mb-1"
                                 >Primary Contact / Proxy</span
                             >
                             {#if dir.primaryContact}
-                                <p class="text-sm font-bold text-gray-900">
+                                <p class="text-sm font-bold text-foreground">
                                     {dir.primaryContact}
                                 </p>
                             {/if}
                             {#if dir.contactPhone}
                                 <p
-                                    class="text-xs text-gray-500 flex items-center gap-1 mt-1"
+                                    class="text-xs text-muted-foreground flex items-center gap-1 mt-1"
                                 >
                                     <Phone size={12} />
                                     {dir.contactPhone}
@@ -550,13 +554,13 @@
                         {/if}
                         {#if dir.locationOfOriginal}
                         <div
-                            class="p-4 bg-gray-50 rounded-2xl border border-gray-100"
+                            class="p-4 bg-muted rounded-2xl border border-border"
                         >
                             <span
-                                class="text-[10px] font-black uppercase text-gray-400 block mb-1"
+                                class="text-[10px] font-black uppercase text-muted-foreground block mb-1"
                                 >Location of Original</span
                             >
-                            <p class="text-sm font-bold text-gray-900">
+                            <p class="text-sm font-bold text-foreground">
                                 {dir.locationOfOriginal}
                             </p>
                         </div>
@@ -597,7 +601,7 @@
                         >
                             {#snippet icon()}
                                 <div
-                                    class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400"
+                                    class="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground"
                                 >
                                     <FileText size={20} />
                                 </div>
@@ -627,12 +631,12 @@
         <div class="grid grid-cols-2 gap-4">
             <div>
                 <label for="medical-type"
-                    class="block text-xs font-bold uppercase text-slate-500 mb-1"
+                    class="block text-xs font-bold uppercase text-muted-foreground mb-1"
                     >Directive Type</label
                 >
                 <select id="medical-type"
                     bind:value={newDirective.type}
-                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                 >
                     <option value="healthcare_proxy">Healthcare Proxy</option>
                     <option value="living_will">Living Will</option>
@@ -643,27 +647,27 @@
             </div>
             <div>
                 <label for="medical-title"
-                    class="block text-xs font-bold uppercase text-slate-500 mb-1"
+                    class="block text-xs font-bold uppercase text-muted-foreground mb-1"
                     >Title</label
                 >
                 <input id="medical-title"
                     type="text"
                     bind:value={newDirective.title}
                     placeholder="e.g. Living Will 2024"
-                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                 />
             </div>
         </div>
 
         <div>
             <label for="medical-summary"
-                class="block text-xs font-bold uppercase text-slate-500 mb-1"
+                class="block text-xs font-bold uppercase text-muted-foreground mb-1"
                 >Summary of Wishes</label
             >
             <textarea id="medical-summary"
                 bind:value={newDirective.summary}
                 placeholder="Key points of this directive..."
-                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                 rows="3"
             ></textarea>
         </div>
@@ -671,7 +675,7 @@
         <div class="grid grid-cols-2 gap-4">
             <div>
                 <label for="medical-primary-contact"
-                    class="block text-xs font-bold uppercase text-slate-500 mb-1"
+                    class="block text-xs font-bold uppercase text-muted-foreground mb-1"
                     >Primary Proxy/Contact</label
                 >
                 <input id="medical-primary-contact"
@@ -680,7 +684,7 @@
                     bind:value={newDirective.primaryContact}
                     onchange={fillProxyPhone}
                     placeholder="e.g. Dr. Sarah Chen"
-                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                 />
                 <!-- People from Family & Contacts; any other name can still be typed. -->
                 <datalist id="medical-contact-options">
@@ -691,28 +695,28 @@
             </div>
             <div>
                 <label for="medical-contact-phone"
-                    class="block text-xs font-bold uppercase text-slate-500 mb-1"
+                    class="block text-xs font-bold uppercase text-muted-foreground mb-1"
                     >Contact Phone</label
                 >
                 <input id="medical-contact-phone"
                     type="text"
                     bind:value={newDirective.contactPhone}
                     placeholder="e.g. +1 (555) 000-0000"
-                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                 />
             </div>
         </div>
 
         <div>
             <label for="medical-location-of-original"
-                class="block text-xs font-bold uppercase text-slate-500 mb-1"
+                class="block text-xs font-bold uppercase text-muted-foreground mb-1"
                 >Location of Original Document</label
             >
             <input id="medical-location-of-original"
                 type="text"
                 bind:value={newDirective.locationOfOriginal}
                 placeholder="e.g. Safe deposit box at First National Bank"
-                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
             />
         </div>
 
@@ -725,7 +729,7 @@
         />
 
         <!-- Custom Fields -->
-        <div class="pt-4 mt-4 border-t border-slate-100">
+        <div class="pt-4 mt-4 border-t border-border">
             <CustomFieldsManager
                 entityType="medical"
                 bind:data={parsedCustomAttributes}
@@ -736,7 +740,7 @@
             <button
                 type="button"
                 onclick={resetForm}
-                class="flex-1 py-3 px-6 bg-slate-100 text-slate-600 rounded-xl font-semibold hover:bg-slate-200 transition-colors"
+                class="flex-1 py-3 px-6 bg-muted text-muted-foreground rounded-xl font-semibold hover:bg-border transition-colors"
             >
                 Maybe later
             </button>
