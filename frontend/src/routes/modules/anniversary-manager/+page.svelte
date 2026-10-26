@@ -502,7 +502,7 @@
                     <!-- Custom Fields -->
                     <div class="pt-2 border-t border-slate-100">
                         <CustomFieldsManager
-                            entityType="anniversary_event"
+                            entityType="calendar"
                             bind:data={customAttributes}
                         />
                     </div>
