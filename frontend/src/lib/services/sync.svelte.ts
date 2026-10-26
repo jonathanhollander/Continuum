@@ -431,7 +431,7 @@ export class SyncManager<T extends { id: number | string }> {
         if (index === -1) {
             // Never report a save that did not happen.
             notifications.showError({
-                message: 'We couldn\'t find that item to save. It may have been moved \u2014 please refresh and try again when you\'re ready.',
+                message: 'Refreshing the page shows your latest list.',
                 code: 'NOT_FOUND',
                 technicalDetails: `update: no item with id ${id} in ${this.key}`
             });
