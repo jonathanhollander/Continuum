@@ -1,38 +1,40 @@
 <script lang="ts">
+    import { onMount } from "svelte";
     import { Settings, Zap, ArrowLeft } from "lucide-svelte";
     import { automationRules } from "$lib/stores/automationStore.svelte";
     import AutomationCard from "$lib/components/admin/AutomationCard.svelte";
     import WebhookConfig from "$lib/components/admin/WebhookConfig.svelte";
 
-    function toggleRule(id: string) {
-        automationRules.update((rules) =>
-            rules.map((r) => (r.id === id ? { ...r, enabled: !r.enabled } : r)),
-        );
+    // Load this account's rules from the server.
+    onMount(() => {
+        automationRules.sync();
+    });
+
+    function toggleRule(id: string | number) {
+        automationRules.toggleRule(id)?.catch(() => {});
     }
 </script>
 
-<div class="min-h-screen bg-[#F3F4F6] pb-20">
+<div class="space-y-8 pb-20">
     <!-- Header -->
-    <header class="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div
-            class="container mx-auto px-6 py-4 flex items-center justify-between"
-        >
+    <header class="border-b border-slate-800 pb-8">
+        <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
                 <a aria-label="Back"
                     href="/admin"
-                    class="p-2 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
+                    class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors"
                 >
                     <ArrowLeft size={20} />
                 </a>
                 <div>
                     <h1
-                        class="font-bold text-[#304743] text-xl flex items-center gap-2"
+                        class="font-bold text-white text-3xl flex items-center gap-2"
                     >
                         <Zap size={20} class="text-[#D4AF37]" />
                         Automation Control Center
                     </h1>
                     <p
-                        class="text-xs text-gray-400 font-mono uppercase tracking-wider"
+                        class="text-xs text-slate-400 font-mono uppercase tracking-wider"
                     >
                         System v4.0.1 • Admin Mode
                     </p>
@@ -42,21 +44,21 @@
             <div class="flex items-center gap-3">
                 <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"
                 ></span>
-                <span class="text-sm font-bold text-gray-600"
+                <span class="text-sm font-bold text-slate-300"
                     >System Active</span
                 >
             </div>
         </div>
     </header>
 
-    <main class="container mx-auto px-6 py-8 max-w-5xl">
+    <section>
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Left Column: Rules -->
             <div class="lg:col-span-2 space-y-6">
                 <div
-                    class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm"
+                    class="bg-slate-900 rounded-xl p-6 border border-slate-800"
                 >
-                    <h2 class="font-serif text-2xl text-[#304743] mb-6">
+                    <h2 class="font-serif text-2xl text-white mb-6">
                         Active Rules
                     </h2>
                     <div class="space-y-4">
@@ -73,14 +75,14 @@
             <!-- Right Column: Sidebar -->
             <div class="space-y-6">
                 <div
-                    class="bg-[#304743] rounded-xl p-6 text-white text-center shadow-lg shadow-[#304743]/20"
+                    class="bg-[#304743] rounded-xl p-6 text-white text-center shadow-lg"
                 >
                     <div
                         class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4"
                     >
                         <Zap size={32} class="text-[#D4AF37]" />
                     </div>
-                    <h3 class="font-bold text-xl mb-2">Automation Limits</h3>
+                    <h3 class="font-bold text-xl text-white mb-2">Automation Limits</h3>
                     <div class="space-y-2 text-sm text-white/70 mb-6">
                         <p>
                             Rate Limit: <span class="font-mono text-white"
@@ -114,5 +116,5 @@
                 </div>
             </div>
         </div>
-    </main>
+    </section>
 </div>

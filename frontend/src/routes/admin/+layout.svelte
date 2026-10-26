@@ -4,6 +4,7 @@
         LayoutDashboard,
         Stethoscope,
         Palette,
+        Zap,
         ArrowLeft,
     } from "lucide-svelte";
 
@@ -15,6 +16,7 @@
         },
         { label: "Data Health", href: "/admin/health", icon: Stethoscope },
         { label: "UI Quality", href: "/admin/ui-audit", icon: Palette },
+        { label: "Automation", href: "/admin/automation", icon: Zap },
     ];
 </script>
 
