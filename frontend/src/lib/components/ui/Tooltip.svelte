@@ -1,4 +1,9 @@
+<script context="module" lang="ts">
+    let tooltipCount = 0;
+</script>
+
 <script lang="ts">
+    import { onDestroy } from "svelte";
     import { fade } from "svelte/transition";
     import { cn } from "$lib/utils";
     import { portal } from "$lib/actions/portal";
@@ -12,6 +17,19 @@
     let parentNode: HTMLElement;
     let tooltipNode: HTMLElement;
     let coords = { x: 0, y: 0 };
+    const tooltipId = `tooltip-${++tooltipCount}`;
+
+    // The slotted element (e.g. a nav link) is the trigger; link it to the bubble while shown.
+    $: trigger = parentNode?.firstElementChild as HTMLElement | null | undefined;
+    $: if (trigger) {
+        if (isVisible && content) trigger.setAttribute("aria-describedby", tooltipId);
+        else trigger.removeAttribute("aria-describedby");
+    }
+
+    onDestroy(() => {
+        clearTimeout(timeoutId);
+        trigger?.removeAttribute("aria-describedby");
+    });
 
     function handleMouseEnter(event: MouseEvent) {
         parentNode = event.currentTarget as HTMLElement;
@@ -84,11 +102,11 @@
     }
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
     class="relative block"
     on:mouseenter={handleMouseEnter}
     on:mouseleave={handleMouseLeave}
-    role="tooltip"
 >
     <slot />
 </div>
@@ -96,6 +114,8 @@
 {#if isVisible && content}
     <div
         use:portal
+        id={tooltipId}
+        role="tooltip"
         in:fade={{ duration: 200 }}
         out:fade={{ duration: 150 }}
         class={cn(

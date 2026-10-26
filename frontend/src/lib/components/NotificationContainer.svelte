@@ -109,6 +109,13 @@
 		pointer-events: none;
 	}
 
+	/* Desktop: start below the 80px app header so its controls stay reachable. */
+	@media (min-width: 1024px) {
+		.notification-container {
+			top: 96px;
+		}
+	}
+
 	.notification-container > :global(*) {
 		pointer-events: auto;
 	}
