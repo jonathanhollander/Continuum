@@ -1,6 +1,6 @@
 import { writable, get } from 'svelte/store';
 
-// Keyring tracks all "Standalone Accounts" (emails) registered in this browser
+// Account choices remembered in this browser. Marketing intent stays outside this list.
 const STORAGE_KEY = 'continuum_keyring_emails';
 const ACTIVE_ACC_KEY = 'continuum_active_account';
 
@@ -15,7 +15,7 @@ function getStored(key: string, def: any) {
     }
 }
 
-// All emails seen by this browser
+// Accounts remembered by this browser
 export const keyringEmails = writable<string[]>(getStored(STORAGE_KEY, []));
 
 // Currently active account (email)
@@ -36,7 +36,7 @@ if (typeof localStorage !== 'undefined') {
 }
 
 /**
- * Register a new email into the keyring and make it active
+ * After authentication identifies an account, remember it and select its namespace.
  */
 export function registerAccount(email: string) {
     keyringEmails.update(emails => {
@@ -49,14 +49,21 @@ export function registerAccount(email: string) {
 }
 
 /**
- * Switch to an existing account
+ * Resolve a remembered address without registering or selecting it.
  */
-export function switchAccount(email: string) {
+export function knownAccountEmail(email: string): string | null {
     const emails = get(keyringEmails);
-    if (emails.includes(email)) {
-        activeAccountId.set(email);
-        // Redirect to dashboard to ensure all stores reload with new namespace
-        window.location.href = '/dashboard';
+    const normalized = email.trim().toLowerCase();
+    return Array.isArray(emails)
+        ? emails.find(known => typeof known === 'string' && known.trim().toLowerCase() === normalized) ?? null
+        : null;
+}
+
+/** Choose another remembered account by signing in; auth selects its namespace afterwards. */
+export function switchAccount(email: string) {
+    const known = knownAccountEmail(email);
+    if (known) {
+        window.location.href = `/login?email=${encodeURIComponent(known)}`;
     }
 }
 

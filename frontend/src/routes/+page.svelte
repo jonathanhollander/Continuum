@@ -15,11 +15,9 @@
         FileText,
     } from "lucide-svelte";
     import {
-        keyringEmails,
-        registerAccount,
+        knownAccountEmail,
         switchAccount,
     } from "$lib/stores/keyringStore";
-    import { get } from "svelte/store";
     import type { Writable, Readable } from "svelte/store";
 
     // Product screenshots
@@ -385,26 +383,15 @@
     }
 
     function handleEmailSubmit() {
+        email = email.trim();
         if (email.includes("@") && email.includes(".")) {
-            const existingEmails = get(keyringEmails);
-
-            if (existingEmails.includes(email)) {
-                console.log(
-                    "[Enrollment] Returning user detected. Switching account.",
-                );
-                switchAccount(email);
+            const known = knownAccountEmail(email);
+            if (known) {
+                switchAccount(known);
                 return;
             }
-
-            console.log("[Enrollment] New user. Registering...");
-            registerAccount(email);
-
-            // Save initial owner name
-            import("$lib/stores/persistence").then((m) => {
-                m.setStored("owner", { name: signature, id: "owner" });
-            });
-
-            step = 2; // Success state/Celebration
+            // The greeting stays on this page; only the email is carried to signup.
+            step = 2;
         }
     }
 </script>
