@@ -1,6 +1,6 @@
 # Continuum — Project Recovery Plan
 
-**Last Updated:** 2026-10-26 01:50 EST
+**Last Updated:** 2026-10-26 01:55 EST
 
 **Revised 2026-10-26** after the features/usability review (`docs/reviews/2026-10-25-features-usability/REVIEW.md`): the order is now built around the handover, not the existing navigation.
 
@@ -169,7 +169,7 @@ workaround for the same defect.
 - Time capsule (CU-009) and final wishes (CU-011).
 
 *Why:* these are the records the completion test uses. Legacy is core from the start, not
-Phase 3.
+deferred to a later phase as the first draft of this plan had it.
 
 **Phase D — The handover.**
 - One export snapshot that both the binder and the PDF read from (CU-003).
