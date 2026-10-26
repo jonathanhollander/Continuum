@@ -98,7 +98,11 @@
     }
 
     function editEvent(event: LifeEvent) {
-        newEvent = { ...event };
+        // The contact select's option values are text, matching the id the server keeps.
+        newEvent = {
+            ...event,
+            assignedContactId: event.assignedContactId == null ? undefined : String(event.assignedContactId),
+        };
         parsedCustomAttributes = readCustom(event);
         showAddModal = true;
     }
@@ -349,7 +353,7 @@
                         >
                             <option value={undefined}>No one assigned</option>
                             {#each familyStore.members as member}
-                                <option value={member.id}
+                                <option value={String(member.id)}
                                     >{member.name} ({member.role})</option
                                 >
                             {/each}
