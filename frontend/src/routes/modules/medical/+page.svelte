@@ -263,7 +263,7 @@
         title="Health & Medical"
         subtitle="Your Voice at the End of Life"
         detailedDescription="Your voice in healthcare decisions matters, even when you can't speak for yourself. Document your directives and medical history to guide your advocates."
-        whyMatters="Clear directives give your family certainty and ease, and ensure your care aligns with your values."
+        whyMatters="Clear directives give your family certainty and ease, and guide your care by your values."
     >
         <button
             onclick={() => (showAddForm = true)}
@@ -461,8 +461,9 @@
                     </h3>
                     <p class="text-sm text-primary/80 mt-1 leading-relaxed">
                         Providing clear guidance for your medical care is a gift
-                        to your family. It gives your family certainty and
-                        ensures your wishes are honored with dignity.
+                        to your family. Doctors and family know what you
+                        would want, and your loved ones feel the ease of
+                        honoring your choices.
                     </p>
                 </div>
             </div>
