@@ -399,9 +399,8 @@
                 Why use Builder Tools?
             </h4>
             <p class="text-muted-foreground text-sm mt-1">
-                This console ensures the plan you've built is actually ready for
-                your loved ones. Complete these manual checks to verify your
-                estate's integrity.
+                Each check here is a part of your plan to look over for your
+                loved ones. What you tick is saved as you go.
             </p>
         </div>
         <a

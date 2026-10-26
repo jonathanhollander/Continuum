@@ -36,7 +36,7 @@
                     <p
                         class="text-xs text-slate-400 font-mono uppercase tracking-wider"
                     >
-                        System v4.0.1 • Admin Mode
+                        Admin Mode
                     </p>
                 </div>
             </div>
@@ -45,7 +45,7 @@
                 <span class="w-2 h-2 rounded-full bg-success animate-pulse"
                 ></span>
                 <span class="text-sm font-bold text-slate-300"
-                    >System Active</span
+                    >Saved to your account</span
                 >
             </div>
         </div>
@@ -82,16 +82,16 @@
                     >
                         <Zap size={32} class="text-gold-text" />
                     </div>
-                    <h3 class="font-bold text-xl text-white mb-2">Automation Limits</h3>
+                    <h3 class="font-bold text-xl text-white mb-2">Your Rules</h3>
                     <div class="space-y-2 text-sm text-white/70 mb-6">
                         <p>
-                            Rate Limit: <span class="font-mono text-white"
-                                >2.5 req/s</span
+                            Saved rules: <span class="font-mono text-white"
+                                >{$automationRules.length}</span
                             >
                         </p>
                         <p>
-                            Daily Usage: <span class="font-mono text-white"
-                                >12%</span
+                            Switched on: <span class="font-mono text-white"
+                                >{$automationRules.filter((r) => r.enabled).length}</span
                             >
                         </p>
                     </div>
@@ -110,8 +110,8 @@
                         Configuration
                     </h4>
                     <p class="text-sm leading-relaxed">
-                        Automation rules are evaluated every 5 minutes. Changes
-                        take effect on the next tick.
+                        Each rule's on/off setting is saved to your account as
+                        soon as you change it.
                     </p>
                 </div>
             </div>
