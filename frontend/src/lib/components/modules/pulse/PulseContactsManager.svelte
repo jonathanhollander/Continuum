@@ -257,7 +257,7 @@
                                 {contact.name}
                             </div>
                             <div
-                                class="text-[10px] text-slate-500 font-mono uppercase tracking-tighter"
+                                class="text-xs text-slate-500 break-all"
                             >
                                 {contact.email}
                             </div>
@@ -278,11 +278,12 @@
             </ul>
         {:else}
             {#each tiers as tier (tier.id)}
+                {@const tierContacts = getContactsForTier(tier.tier_number)}
                 <div
                     class="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden backdrop-blur-sm"
                 >
                     <div
-                        class="bg-slate-800/30 px-6 py-3 flex justify-between items-center border-b border-slate-800"
+                        class="bg-slate-800/30 px-6 py-3 flex justify-between items-center {tierContacts.length ? 'border-b border-slate-800' : ''}"
                     >
                         <div class="flex items-center gap-3">
                             <span
@@ -335,8 +336,9 @@
                             <Plus class="w-3 h-3" /> Add Guardian
                         </button>
                     </div>
+                    {#if tierContacts.length}
                     <div class="p-2 space-y-2">
-                        {#each getContactsForTier(tier.tier_number) as contact (contact.id)}
+                        {#each tierContacts as contact (contact.id)}
                             <div
                                 class="bg-slate-950/30 border border-slate-800/50 rounded-xl p-4 group"
                             >
@@ -356,7 +358,7 @@
                                                 {contact.name}
                                             </div>
                                             <div
-                                                class="text-[10px] text-slate-500 font-mono uppercase tracking-tighter"
+                                                class="text-xs text-slate-500 break-all"
                                             >
                                                 {contact.email}
                                             </div>
@@ -429,6 +431,7 @@
                             </div>
                         {/each}
                     </div>
+                    {/if}
                 </div>
             {/each}
         {/if}
