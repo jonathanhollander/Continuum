@@ -39,7 +39,26 @@ logger = get_logger(__name__)
 # Initialize rate limiter
 # limiter definition moved to backend/limiter.py to avoid circular imports
 
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: logging first, then database, dev user seed, Pulse scheduler.
+    setup_logging(
+        log_level="DEBUG" if settings.DEBUG else "INFO",
+        use_json=settings.ENVIRONMENT == "production"
+    )
+    logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
+
+    create_db_and_tables()
+    seed_dev_user()
+    start_scheduler()
+    yield
+    # Shutdown
+    stop_scheduler()
+
 app = FastAPI(
+    lifespan=lifespan,
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
     description="""
@@ -160,20 +179,6 @@ app.include_router(heirlooms.router)
 app.include_router(support.router)
 app.include_router(ai_proxy.router)
 
-# Initialize database on startup
-@app.on_event("startup")
-def on_startup():
-    # Setup logging first
-    setup_logging(
-        log_level="DEBUG" if settings.DEBUG else "INFO",
-        use_json=settings.ENVIRONMENT == "production"
-    )
-    logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
-
-    create_db_and_tables()
-    seed_dev_user()
-    start_scheduler()
-
 def seed_dev_user():
     """Seed a default dev user for development/testing."""
     from backend.auth import get_password_hash
@@ -197,10 +202,6 @@ def seed_dev_user():
     except Exception:
         # Keep the server running, but log the full traceback so a seed failure is visible.
         logger.exception("Failed to seed dev user")
-
-@app.on_event("shutdown")
-def on_shutdown():
-    stop_scheduler()
 
 @app.middleware("http")
 async def set_secure_headers(request: Request, call_next):
