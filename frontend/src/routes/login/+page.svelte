@@ -129,7 +129,7 @@
                 notifications.showError(e);
             }
         } finally {
-            isLoading = false;
+            if (isCurrentSession(owner, true)) isLoading = false;
         }
     }
 
@@ -142,17 +142,20 @@
             return;
         }
 
+        const owner = beginSession();
+        const email = magicLinkEmail;
         isLoading = true;
 
         try {
             await apiPost("/api/auth/magic-link", {
-                email: magicLinkEmail,
+                email,
                 redirect: safeRedirect || undefined,
             });
+            if (!isCurrentSession(owner, true)) return;
 
             // Store email for "Remember Me" early
             if (typeof localStorage !== "undefined") {
-                localStorage.setItem("continuum_last_email", magicLinkEmail);
+                localStorage.setItem("continuum_last_email", email);
             }
 
             magicLinkSent = true;
@@ -161,10 +164,13 @@
                 "Magic Link Sent",
             );
         } catch (e: any) {
+            if (!isCurrentSession(owner, true)) return;
             console.error("Login failed:", e);
-            notifications.showError(e, handleMagicLink);
+            notifications.showError(e, () => {
+                if (isCurrentSession(owner, true)) void handleMagicLink();
+            });
         } finally {
-            isLoading = false;
+            if (isCurrentSession(owner, true)) isLoading = false;
         }
     }
 

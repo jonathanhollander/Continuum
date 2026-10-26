@@ -143,7 +143,7 @@
                 notifications.showError(e);
             }
         } finally {
-            isLoading = false;
+            if (isCurrentSession(owner, true)) isLoading = false;
         }
     }
 
@@ -208,7 +208,7 @@
             passkeyFailed = true;
             step = "passkey";
         } finally {
-            isLoading = false;
+            if (isCurrentSession(owner, true)) isLoading = false;
         }
     }
 
