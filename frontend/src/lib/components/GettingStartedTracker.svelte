@@ -9,7 +9,7 @@
 
     // Props
     interface Props {
-        variant?: "sidebar" | "card" | "minimal";
+        variant?: "sidebar" | "card";
         onDismiss?: () => void;
     }
 
@@ -214,26 +214,6 @@
             </div>
         </div>
 
-    {:else}
-        <!-- Minimal inline version -->
-        <div class="flex items-center gap-3 text-sm" transition:fade>
-            <div class="flex gap-1">
-                {#each steps as step}
-                    <div
-                        class="w-2 h-2 rounded-full transition-colors
-                            {step.complete ? 'bg-primary' : 'bg-border'}"
-                    ></div>
-                {/each}
-            </div>
-            <span class="text-muted-foreground">
-                {completedCount}/{steps.length} steps complete
-            </span>
-            {#if nextStep}
-                <a href={nextStep.href} class="text-primary-hover hover:underline">
-                    Next: {nextStep.label}
-                </a>
-            {/if}
-        </div>
     {/if}
 {:else if allComplete && !dismissed}
     <!-- Completion state - affirming without celebrating -->

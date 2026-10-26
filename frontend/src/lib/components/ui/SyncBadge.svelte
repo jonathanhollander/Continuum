@@ -8,6 +8,8 @@
      * Labels use positive, supportive language appropriate for end-of-life planning context.
      */
 
+    import { dict } from "$lib/stores/conciergeStore.svelte";
+
     export type CompassionateSyncStatus = "safe" | "saving" | "local" | "attention-needed" | "ready";
 
     const statusConfig: Record<CompassionateSyncStatus, {
@@ -58,7 +60,12 @@
 
     let { status = "ready", showLabel = false, size = "sm" }: Props = $props();
 
-    let config = $derived(statusConfig[status]);
+    // Label and tooltip in the active language (X244); English stays above as the fallback.
+    let config = $derived.by(() => {
+        const base = statusConfig[status];
+        const text = ($dict.syncBadge as Record<string, { label: string; tip: string }> | undefined)?.[status];
+        return text ? { ...base, label: text.label, tooltip: text.tip } : base;
+    });
     let sizeClasses = $derived({
         sm: "w-2 h-2",
         md: "w-2.5 h-2.5",
