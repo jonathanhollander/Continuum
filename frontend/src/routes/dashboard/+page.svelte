@@ -363,6 +363,7 @@
                 >
                     {greeting}<span class="animate-pulse">_</span>
                 </div>
+                <h1 class="font-serif text-3xl font-bold tracking-tight text-white">Dashboard</h1>
                 {#if totalValue > 0}
                     <div class="text-sm text-emerald-400/80">
                         {currency.format(totalValue)} net across your documented accounts
