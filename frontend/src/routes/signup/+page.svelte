@@ -261,7 +261,7 @@
                             class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-6 py-5 text-white text-xl placeholder-slate-500 focus:border-teal-500 focus:outline-none transition-colors"
                             disabled={isLoading}
                         />
-                        <p class="text-slate-500 text-sm mt-3">
+                        <p class="text-slate-400 text-sm mt-3">
                             We'll use this to set up your account and passkey
                         </p>
                         {#if alreadyHere}
@@ -402,7 +402,7 @@
 
         <!-- Footer Info -->
         <div class="mt-8 text-center">
-            <p class="text-slate-600 text-sm">
+            <p class="text-slate-400 text-sm">
                 Your data is encrypted end-to-end with military-grade security
             </p>
         </div>

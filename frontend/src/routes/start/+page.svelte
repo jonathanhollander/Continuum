@@ -89,10 +89,10 @@
     <!-- Ambient Background -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
         <div
-            class="absolute -top-24 -left-24 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"
+            class="absolute -top-24 -left-24 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl"
         ></div>
         <div
-            class="absolute -bottom-24 -right-24 w-96 h-96 bg-rose-500/5 rounded-full blur-3xl"
+            class="absolute -bottom-24 -right-24 w-96 h-96 bg-teal-400/5 rounded-full blur-3xl"
         ></div>
     </div>
 
@@ -108,7 +108,7 @@
                 class="text-4xl md:text-6xl font-serif font-bold text-white leading-tight"
             >
                 Secure your legacy, <br />
-                <span class="text-indigo-400">one conversation at a time.</span>
+                <span class="text-teal-400">one conversation at a time.</span>
             </h1>
             <p
                 class="{fontSizeClass} text-slate-400 max-w-lg mx-auto leading-relaxed"
@@ -123,20 +123,20 @@
             <div class="flex flex-col items-center gap-4" transition:fade>
                 <div class="flex gap-2">
                     <div
-                        class="w-3 h-3 rounded-full bg-indigo-500 animate-bounce"
+                        class="w-3 h-3 rounded-full bg-teal-400 animate-bounce"
                         style="animation-delay: 0s"
                     ></div>
                     <div
-                        class="w-3 h-3 rounded-full bg-indigo-500 animate-bounce"
+                        class="w-3 h-3 rounded-full bg-teal-400 animate-bounce"
                         style="animation-delay: 0.1s"
                     ></div>
                     <div
-                        class="w-3 h-3 rounded-full bg-indigo-500 animate-bounce"
+                        class="w-3 h-3 rounded-full bg-teal-400 animate-bounce"
                         style="animation-delay: 0.2s"
                     ></div>
                 </div>
                 <span
-                    class="text-xs font-bold uppercase tracking-[0.3em] text-indigo-400/60"
+                    class="text-xs font-bold uppercase tracking-[0.3em] text-teal-400/70"
                     >Opening your space</span
                 >
             </div>
@@ -148,11 +148,11 @@
                 <!-- Guided Choice -->
                 <button
                     onclick={startGuided}
-                    class="group relative p-8 bg-indigo-600/10 border border-indigo-500/30 rounded-2xl text-left hover:bg-indigo-600/20 transition-all hover:scale-[1.02] active:scale-95 overflow-hidden"
+                    class="group relative p-8 bg-teal-500/10 border border-teal-500/30 rounded-2xl text-left hover:bg-teal-500/20 transition-all hover:scale-[1.02] active:scale-95 overflow-hidden"
                 >
                     <div class="flex flex-col h-full space-y-4 relative z-10">
                         <div
-                            class="w-12 h-12 bg-indigo-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/40"
+                            class="w-12 h-12 bg-teal-500 rounded-2xl flex items-center justify-center text-slate-950 shadow-lg shadow-teal-500/40"
                         >
                             <BrainCircuit size={24} />
                         </div>
@@ -166,7 +166,7 @@
                             </p>
                         </div>
                         <div
-                            class="mt-auto flex items-center gap-2 text-indigo-400 font-bold text-xs uppercase tracking-widest pt-4"
+                            class="mt-auto flex items-center gap-2 text-teal-400 font-bold text-xs uppercase tracking-widest pt-4"
                         >
                             <span>Begin Intro</span>
                             <ArrowRight
@@ -198,7 +198,7 @@
                             </p>
                         </div>
                         <div
-                            class="mt-auto flex items-center gap-2 text-slate-500 font-bold text-xs uppercase tracking-widest pt-4 group-hover:text-white transition-colors"
+                            class="mt-auto flex items-center gap-2 text-slate-400 font-bold text-xs uppercase tracking-widest pt-4 group-hover:text-white transition-colors"
                         >
                             <span>Go to my dashboard</span>
                             <ArrowRight
@@ -216,7 +216,7 @@
                     class="p-6 bg-white/5 border border-white/10 rounded-2xl flex items-center gap-4 text-left"
                 >
                     <div
-                        class="p-3 bg-indigo-500/20 rounded-2xl text-indigo-400"
+                        class="p-3 bg-teal-500/20 rounded-2xl text-teal-400"
                     >
                         <ShieldCheck size={32} />
                     </div>
@@ -229,7 +229,7 @@
                 </div>
 
                 <div class="flex justify-center">
-                    <p class="text-slate-500 text-sm italic">
+                    <p class="text-slate-400 text-sm italic">
                         The AI Concierge panel is open. Speak or type to begin.
                     </p>
                 </div>
@@ -240,7 +240,7 @@
     <!-- Footer Tagline -->
     <div class="absolute bottom-8 left-0 w-full text-center">
         <div
-            class="flex items-center justify-center gap-2 text-white/20 text-[10px] font-bold uppercase tracking-[0.4em]"
+            class="flex items-center justify-center gap-2 text-white/60 text-[10px] font-bold uppercase tracking-[0.4em]"
         >
             <Sparkles size={12} />
             <span>Powered by Continuum EQ</span>

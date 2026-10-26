@@ -300,7 +300,7 @@
 
                     {#if showHelp}
                         <div
-                            class="bg-indigo-500/5 border border-indigo-500/20 rounded-2xl p-6 space-y-3"
+                            class="bg-teal-500/5 border border-teal-500/20 rounded-2xl p-6 space-y-3"
                             in:fly={{ y: -10, duration: 300 }}
                         >
                             <h3 class="text-white font-bold text-lg flex items-center gap-2">
@@ -327,7 +327,7 @@
                     <!-- Divider -->
                     <div class="flex items-center gap-4 my-8">
                         <div class="flex-1 h-px bg-slate-800"></div>
-                        <span class="text-slate-500 text-sm font-bold uppercase tracking-widest">
+                        <span class="text-slate-400 text-sm font-bold uppercase tracking-widest">
                             Or
                         </span>
                         <div class="flex-1 h-px bg-slate-800"></div>
@@ -434,7 +434,7 @@
 
         <!-- Footer Info -->
         <div class="mt-8 text-center">
-            <p class="text-slate-600 text-sm">
+            <p class="text-slate-400 text-sm">
                 Your data is encrypted and secured with industry-standard protection
             </p>
         </div>
