@@ -290,7 +290,7 @@ def get_portal_view(request: Request, token: str, session: Session = Depends(get
     
     # Sensitive data opens only in this outage (rows after the owner's last check-in), once it
     # has reached this guardian's tier or they were sent their own tier alert (pulse_logic.contact_reach)
-    from backend.pulse_logic import contact_reach, owner_display_name, owner_notes
+    from backend.pulse_logic import contact_reach, owner_display_name, owner_notes, owner_phone
     tier = session.get(PulseEscalationTier, contact.tier_id) if contact.tier_id else None
     show_sensitive = contact_reach(session, contact) is not None
 
@@ -306,6 +306,7 @@ def get_portal_view(request: Request, token: str, session: Session = Depends(get
         "contact_name": contact.name,
         "contact_tier": tier.tier_number if tier else None,
         "user_name": owner_display_name(session, user_id),
+        "user_phone": owner_phone(session, user_id),
         "user_status": user_status,
         "last_checkin": _utc_iso(last_checkin.timestamp) if last_checkin else None,
         "show_sensitive": show_sensitive,

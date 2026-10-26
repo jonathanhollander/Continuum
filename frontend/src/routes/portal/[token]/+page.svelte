@@ -171,6 +171,20 @@
           </ul>
         </div>
 
+        <!-- What you can do (the Tier 2 email's steps), plus the owner's phone when the profile has one -->
+        <div class="w-full bg-slate-700/50 p-4 rounded-xl text-left">
+          <p class="text-xs text-slate-400 uppercase tracking-widest mb-2 font-bold">
+            What you can do
+          </p>
+          <ul class="space-y-2 text-sm text-slate-300 list-disc pl-5">
+            <li>
+              Reach {data.user_name} by phone, text or email{#if data.user_phone}: <a href="tel:{data.user_phone}" class="text-teal-400 hover:underline whitespace-nowrap">{data.user_phone}</a>{/if}
+            </li>
+            <li>Ask mutual friends or family, if that feels right</li>
+            <li>Let us know below once you've spoken with them, which pauses further alerts for a while</li>
+          </ul>
+        </div>
+
         <!-- Notes from the owner's Pulse vault (opened by the API when the time comes) -->
         <div class="w-full bg-slate-700/50 p-4 rounded-xl text-left">
           <p class="text-xs text-slate-400 uppercase tracking-widest mb-2 font-bold">

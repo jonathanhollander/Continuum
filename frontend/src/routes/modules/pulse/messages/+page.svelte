@@ -111,7 +111,7 @@
         if (timer) {
             return timer[1] === "alert sent"
                 ? "Safety timer alert sent"
-                : "We couldn't deliver this safety timer alert.";
+                : "Safety timer alert paused on its way; a call or message may reach them sooner.";
         }
         return text.replace(/^\[System Alert Tier \d+\] /, "");
     }

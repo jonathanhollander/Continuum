@@ -407,22 +407,35 @@ from backend.config import settings as settings_module
 
 OWNER_NAME_FALLBACK = "someone close to you"
 
+def _estate_profile(session: Session, user_id: int) -> dict:
+    estate = session.exec(select(Estate).where(Estate.user_id == user_id)).first()
+    if not estate:
+        return {}
+    try:
+        td = json.loads(estate.transparent_data or "{}")
+        ep = td.get("estate_profile", td) if isinstance(td, dict) else {}
+        return ep if isinstance(ep, dict) else {}
+    except Exception:
+        return {}
+
+def owner_phone(session: Session, user_id: int) -> Optional[str]:
+    """The owner's phone from their estate profile (owner_phone, else phone), for the guardian portal."""
+    ep = _estate_profile(session, user_id)
+    for key in ("owner_phone", "phone"):
+        val = ep.get(key)
+        if isinstance(val, str) and val.strip():
+            return val.strip()
+    return None
+
 def owner_display_name(session: Session, user_id: int, fallback: str = OWNER_NAME_FALLBACK) -> str:
     """The name guardians see: User.display_name, then the estate profile's owner_name, then a
     gentle fallback. Never the email address (same rule as the packet, X110)."""
     user = session.get(User, user_id)
     if user and (user.display_name or "").strip():
         return user.display_name.strip()
-    estate = session.exec(select(Estate).where(Estate.user_id == user_id)).first()
-    if estate:
-        try:
-            td = json.loads(estate.transparent_data or "{}")
-            ep = td.get("estate_profile", td) if isinstance(td, dict) else {}
-            name = ep.get("owner_name") if isinstance(ep, dict) else None
-            if isinstance(name, str) and name.strip():
-                return name.strip()
-        except Exception:
-            pass
+    name = _estate_profile(session, user_id).get("owner_name")
+    if isinstance(name, str) and name.strip():
+        return name.strip()
     return fallback
 
 # Owner reminders: PulseEscalationLog rows with these negative markers record that a reminder
