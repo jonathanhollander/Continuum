@@ -41,7 +41,7 @@
     import { getSmartSamples } from "$lib/data/smartSamples";
     import { language } from "$lib/stores/localization";
 
-    let viewMode = $state<ViewMode>('card');
+    let viewMode = $derived<ViewMode>(userPreferencesStore.getViewMode('qr-codes'));
     let showAffirmation = $state(false);
     let isLoading = $state(true);
 
@@ -293,7 +293,7 @@
             </div>
 
             <div class="flex items-center gap-4">
-                <DataViewToggle module="qr-codes" onchange={(mode) => viewMode = mode} />
+                <DataViewToggle module="qr-codes" />
                 <div class="relative w-80">
                     <Search
                         class="absolute left-4 top-3 text-slate-400"

@@ -57,7 +57,7 @@
 
     let showAddModal = $state(false);
     let isLoading = $state(true);
-    let viewMode = $state<ViewMode>('card');
+    let viewMode = $derived<ViewMode>(userPreferencesStore.getViewMode('property'));
 
     // A scanned QR label opens /modules/property?id=N: that asset's card is brought into view and marked.
     let focusId = $state<string | null>(null);
@@ -527,7 +527,7 @@
     whyMatters="Clear records of what you own, and where the documents are, give your family a steady path to ownership and access."
 >
     <div class="flex flex-wrap items-center gap-3">
-        <DataViewToggle module="property" onchange={(mode) => viewMode = mode} />
+        <DataViewToggle module="property" />
         <button
             onclick={() => (showWizard = true)}
             class="flex items-center gap-2 px-5 py-3 border border-primary/20 text-primary font-bold rounded-2xl hover:bg-primary/5 transition-colors"

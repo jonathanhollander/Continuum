@@ -29,7 +29,7 @@
     import { getSmartSamples } from "$lib/data/smartSamples";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
 
-    let viewMode = $state<ViewMode>('card');
+    let viewMode = $derived<ViewMode>(userPreferencesStore.getViewMode('calendar'));
 
     // --- Types ---
     type CalendarEvent = {
@@ -291,7 +291,7 @@
         whyMatters="With your guidance, special dates become moments of connection. By documenting your wishes, you transform grief into intentional remembrance."
     >
         <div class="flex items-center gap-3">
-            <DataViewToggle module="calendar" onchange={(mode) => viewMode = mode} />
+            <DataViewToggle module="calendar" />
             <button
                 class="bg-[#304743] text-white px-6 py-2 rounded-xl font-bold hover:bg-[#2a3f3b] transition-colors flex items-center gap-2"
                 onclick={() => (showAddForm = true)}
