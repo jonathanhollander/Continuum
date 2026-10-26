@@ -35,6 +35,7 @@
     import { downloadMedia, mediaIdFromRef } from "$lib/services/mediaService";
     import { notifications } from "$lib/stores/notificationStore";
     import { pluralWord } from "$lib/utils/plural";
+    import { dateWords } from "$lib/utils/dateWords";
 
     let { module, viewMode: initialViewMode = 'card' }: { module: { id: string; name?: string }, viewMode?: ViewMode } = $props();
     let viewMode = $state<ViewMode>(initialViewMode);
@@ -726,7 +727,7 @@
                                     {doc.type}
                                 </span>
                                 {#if doc.signedDate}
-                                    <span>Signed: {doc.signedDate}</span>
+                                    <span>Signed: {dateWords(doc.signedDate)}</span>
                                 {/if}
                                 {#if doc.location}
                                     <span class="flex items-center gap-1"
@@ -739,7 +740,7 @@
                                             ? 'text-amber-700 font-bold'
                                             : ''}"
                                     >
-                                        <Calendar size={10} /> Review: {doc.nextReviewDate}
+                                        <Calendar size={10} /> Review: {dateWords(doc.nextReviewDate)}
                                     </span>
                                 {/if}
                                 {#if doc.filePath}
@@ -856,9 +857,9 @@
                                     {stateLabel[docState(doc)]}
                                 </span>
                             </td>
-                            <td class="px-4 py-3 text-slate-600 text-sm">{doc.signedDate || '-'}</td>
+                            <td class="px-4 py-3 text-slate-600 text-sm">{dateWords(doc.signedDate) || '-'}</td>
                             <td class="px-4 py-3 text-slate-600 text-sm">{doc.location}</td>
-                            <td class="px-4 py-3 text-slate-500 text-sm">{doc.nextReviewDate || '-'}</td>
+                            <td class="px-4 py-3 text-slate-500 text-sm">{dateWords(doc.nextReviewDate) || '-'}</td>
                             <td class="px-4 py-3 text-right">
                                 <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                     {#if doc.filePath}
