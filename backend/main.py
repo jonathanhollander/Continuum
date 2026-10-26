@@ -112,6 +112,17 @@ def _inline_script_sources():
         for b in bodies
     ]
 
+def _connect_sources():
+    # The app calls its own origin, so 'self' covers it. API_URL is added only when it is set and is a
+    # different origin from the site (settings.ORIGIN, the site's public origin; the CSP is built at import,
+    # so there is no request to compare against). Never '*'.
+    from urllib.parse import urlparse
+    def origin(u):
+        p = urlparse((u or "").strip())
+        return f"{p.scheme}://{p.netloc}".lower() if p.scheme and p.netloc else ""
+    api = origin(settings.API_URL)
+    return ["'self'"] + ([api] if api and api != origin(settings.ORIGIN) else [])
+
 csp = (
     ContentSecurityPolicy()
     .default_src("'self'")
@@ -121,7 +132,7 @@ csp = (
     .img_src("'self'", "data:", "https:")
     # The export preview shows the generated PDF in an iframe from a blob: URL.
     .frame_src("'self'", "blob:")
-    .connect_src("'self'", settings.API_URL or "*")
+    .connect_src(*_connect_sources())
     .base_uri("'self'")
     .frame_ancestors("'none'")
     .object_src("'none'")
