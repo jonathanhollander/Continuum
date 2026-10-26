@@ -367,7 +367,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X25 | ☑ | 110654f | Signed out at 1440×900: /portal/<token> shows the portal (bare layout), a bad token shows "Link Invalid or Expired", pulse respond/verify and auth/verify stay on their pages, /portalX and /dashboard go to /login. Emails only link /portal/{token}, /auth/verify and /dashboard |
 | X29 | ☐ (after X27: same portal page) | | |
 | X26 | ☑ | 2b6286b | Disabled → "Pulse Scheduler not started"; enabled at 1 min with one synthetic expired timer → one tier-1 escalation (local outbox file, no network send), next tick nothing; 1 escalation-log row, timer inactive |
-| X31 | ☐ | | |
+| X31 | ▶ | | |
 | X27 | ▶ | | |
 | X16 | ☑ | 10b25d0 | Fresh DB: GET prefs 200 `{}`, PATCH 200, GET returns the saved value (also fixed: PATCH mutated the JSON in place so it never saved). Production column is `json`, model `JSON`: same type; not run on the simulated schema |
 | X17 | ☑ | 5b8e66c | Before: 2 CSP errors, 0 font faces; after: no console errors, Inter and EB Garamond loaded; 1440×900 diff 3.02% of pixels, text only (headings now EB Garamond, body Inter) |
