@@ -345,6 +345,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | U61 | Sidebar rows content-width under the Tooltip wrapper (U38) | `ui-standards-enforcer` / `general-purpose` | `lib/components/ui/Tooltip.svelte`, `lib/config/navigation.ts` (unused `recipientPreviewEntry` only) | Tooltip wrapper shrinks every nav row, so the active highlight is narrower than the sidebar — wrapper `block w-full` where it wraps nav rows; drop the dead export | Active row spans the sidebar width; other tooltips unchanged; 0 errors |
 | U62 | Settings label warnings; family tree checkbox rows (U42, U51) | `ui-standards-enforcer` / `general-purpose` | `lib/components/concierge/ConciergeSettings.svelte` (Perspective, Language, Export scope labels; `<svelte:component>`), `lib/components/family/FamilyTreeGraph.svelte` (Designated Executor and Beneficiary rows, `#4A7C74` button) | Labels over button groups → `<span>` + `aria-labelledby`; deprecated `<svelte:component>` replaced; the two checkbox rows and the save button match the shared form controls (`bg-primary`) | svelte-check: 0 `a11y_label_has_associated_control` in the file; before/after 1440×900; 0 errors; also `lib/components/RoleSwitcher.svelte` backdrop covers the trigger, so the trigger cannot toggle the menu closed (X161) |
 | U63 | Tooltip trigger carries `role="tooltip"` (U61) | `ui-standards-enforcer` / `general-purpose` | `lib/components/ui/Tooltip.svelte` | Screen readers announce every nav row and dashboard card as a tooltip — role off the wrapper; `role="tooltip"` + `id` on the bubble, `aria-describedby` on the trigger while shown | Accessibility tree: 0 nav rows with role tooltip; hovered bubble has role tooltip and is linked; 0 errors |
+| U64 | Toast covers the header controls; button-wrapped cards drift down in tall rows (X162, U60) | `ui-standards-enforcer` / `general-purpose` | `lib/components/` toast container (notification display only); any `<button>` wrapping a card outside grief-support | Success toast top-right sits over the 1440 header controls — offset it below the header; sweep card-in-button wrappers and give them `grid`/`text-left w-full` as U60 did | 1440×900: toast clear of header controls; 0 button-wrapped cards offset in their cell; 0 errors |
 
  (decision 12; parallel track, approved by orchestrator diff review)
 
@@ -523,6 +524,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X172 | Subscriptions card view never expands; letter HTML unescaped; letter spacing (U50) | `general-purpose` | `lib/components/modules/subscriptions/SubscriptionRow.svelte`, `routes/modules/subscriptions/+page.svelte` (`generateDefaultLetter` and the letter body classes only) | `let expanded = false` in a runes component is not reactive — `$state`, typed props with `onCancel` optional; escape service name and address in `generateDefaultLetter`; letter paragraphs spaced on screen (the `prose` class has no effect) | Card click expands and reaches the letter; `<b>` in a service name shows as text; paragraphs spaced; 0 errors |
 | X173 | Rows stored before X164 keep lowercase enum values (X164) | `database-migration` | an Alembic data migration (UPDATE only) | One data migration that rewrites `insurance_policies.insurance_type/premium_frequency/status` and `utilities.service_type` to the X164 spellings, case-insensitive; production: pg_dump first, then `alembic upgrade head` (deploys run no migrations) | Local: lowercase seed rows read canonical after upgrade, downgrade a no-op; prod: SELECT shows 0 non-canonical rows |
 | X174 | Error toast "Show details" never appears (X165) | `error-handling-standardization` | `lib/services/errorHandler.ts` (`createErrorNotification` only) | `technicalDetails` is never set, so the collapsed details toggle in `ErrorNotification.svelte` never renders — fill it from the `ErrorDetails` technical message; stays collapsed by default | Forced 500: toast shows the gentle message, the toggle reveals the technical text; 0 errors |
+| X175 | Page-level `showAffirmation` calls pass no kind; context types miss `memories` (X162) | `general-purpose` | `routes/modules/{property,digital-guardian,heirlooms,financial-accounts,insurance}/+page.svelte` (`showAffirmation` calls only), `lib/stores/notificationStore.ts` and `lib/services/sync.svelte.ts` (context type only) | Pass `'create'`/`'update'` at each direct call to match the action; one shared context type `keyof typeof affirmations` so `'memories'` needs no `as never` | Each page: an edit never shows "added" wording; svelte-check 0 errors in touched files |
 | X6 | Rotate the OpenRouter key (was F1) | The key is public in shipped JS | Owner step at openrouter.ai (Claude may not create or copy API keys) | Create a new key, put it in the Railway variable X1 reads, revoke the old one | Done after X1 is live; the old key returns 401 |
 
 ---
@@ -669,7 +671,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X159 | ☑ | 1916113 | Pulse settings no longer saves on open: `pulse.showEnabled()` updates only the device copy (`updateLocal`); toggle saves once (was twice). Server on: open → 0 POSTs (was 1); server off + 5 s → still off; toggle → 1 POST. 0 errors. Finding → X168 |
 | X160 | ☑ | 4a0c35f | Letters template auto-fill: `estateProfile.sync()` on mount (profile 3015 → 315 ms) and an effect that fills empty fields when the profile arrives; typed values kept. "Jordan Rivers" filled 300 ms after the click (was empty for good). 0 errors. Finding → X169 |
 | X161 | ☑ | eef3eab | Header role switcher asks first (X156 wording) and skips a pick of the current role; one dismissed click leaves the role as planning (was saved as executor with no dialog). 0 page errors |
-| X162 | ▶ | | |
+| X162 | ☑ | fe9b85c | Affirmations take a kind: SyncManager update never draws an "added" line, create never an "updated" one (all modules). Tier change toast "Contact added" → "Contact information saved". 0 console errors. Findings → X175, U64 |
 | X163 | ▶ | | |
 | X164 | ☑ | af4e8e6 | `/api/data` POST/PUT canonicalise insurance type, premium frequency, status and utility service type case-insensitively ("life" → Life, "WATER" → water, "QUARTERLY" → Quarterly); unlisted values ("Pet") stored as sent. 0 tracebacks. Finding → X173 |
 | X165 | ☑ | f5d010c | `ErrorNotification.technicalDetails` and `DigitalAccount.name` typed; 5 `as any` casts dropped in advanced-registry and digital-guardian. svelte-check: 0 errors in the 5 touched files (24 elsewhere). Finding → X174 |
@@ -681,7 +683,8 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X171 | ▶ | | |
 | X172 | ▶ | | |
 | X173 | ▶ | | |
-| X174 | ☐ (queued: 20-agent limit) | | |
+| X174 | ▶ | | |
+| X175 | ☐ (queued: 20-agent limit) | | |
 | X138 | ☑ | c5a7077 | Toolbar Download (insurance, property) saves the stored files of every record shown (follows search; disabled when none; cached files reused); subscriptions Filter chips by the difficulty words already shown (Easy/Medium/Hard), clear on reclick or close; `aiGriefService` uses `contextStore.isExecutor` (store holds `executor` after X118 — the old check never matched). Downloads byte-identical, executor/planner personas checked with the AI call intercepted; 0 errors |
 | X114 | ☑ | fdd80b5 | `routers/pets.py`, `heirlooms.py`, `insurance.py` removed (no caller: the app uses `/api/data/pets`, `/heirlooms` → Asset, `/insurance_policies`; `heirlooms.py` wrote the unused `Heirloom` table). TestClient: before `200 {}`; after 405/404, the `/api/data/*` paths create and list; server starts clean |
 | X107 | ☑ | a0f1802 | Role lives in `users.user_role` (existing column, `PATCH /api/auth/preferences`); `contextStore.setRole` saves once (nothing when unchanged), reverts to the server value on failure, newest choice wins; store follows `/api/auth/me` and sign-out. 1440×900: executor on `/executor` → one PATCH → dashboard ExecutorHub after reload and in a second context; back to planning → owner view after reload; `x97` passes; 0 errors |
@@ -838,10 +841,11 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | U57 | ▶ | | |
 | U58 | ▶ | | |
 | U59 | ▶ | | |
-| U60 | ▶ | | |
+| U60 | ☑ | 82163af | Find Local Help spans the full row (x 696 → 336, w 336 → 1056); guide-card buttons `grid` so cards fill their cell (Sibling Conversations was 121 px low). 0 page errors. Finding → U64 |
 | U61 | ☑ | 6e83151 | Tooltip wrapper `block`: every sidebar row 256 px (was 115–263; Wellness Check-in overflowed by 7 px); dashboard tooltips unchanged (343×90, hover intact). `recipientPreviewEntry` kept — still used by Sidebar. 0 errors. Finding → U63 |
 | U62 | ▶ | | |
-| U63 | ☐ (queued: 20-agent limit) | | |
+| U63 | ▶ | | |
+| U64 | ☐ (queued: 20-agent limit) | | |
 | U42 | ☑ | e127714 | Settings left-aligned like the dashboard (heading x 456 → 312); 5 profile inputs labelled (5 → 0 unlabelled); date of death shown to Executor and Family only (Owner 1 → 0). X156 confirm intact. 0 page errors. Finding → U62 |
 | G0 | ☐ (after Wave U) | | |
 | T0 | ☐ (after Wave U, with G0) | | |
