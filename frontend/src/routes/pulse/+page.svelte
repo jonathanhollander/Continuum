@@ -216,7 +216,7 @@
                             )}
                         </span>
                     {:else}
-                        Ready for your first
+                        Ready for your first check-in
                     {/if}
                 </p>
             </div>
