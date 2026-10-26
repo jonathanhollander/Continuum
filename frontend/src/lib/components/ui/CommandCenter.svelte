@@ -39,12 +39,11 @@
     import { advancedAssetStore } from "$lib/stores/advancedAssetStore.svelte"; // Assuming basic asset store for now
     import { petStore } from "$lib/stores/petStore.svelte";
     import { medicalStore } from "$lib/stores/medicalStore.svelte";
-    import { writable, derived } from "svelte/store";
 
     const dispatch = createEventDispatcher();
-    let query = "";
-    let selectedIndex = 0;
-    let inputElement: HTMLInputElement;
+    let query = $state("");
+    let selectedIndex = $state(0);
+    let inputElement: HTMLInputElement | undefined = $state();
 
     const searchItems = [
         {
@@ -135,16 +134,14 @@
 
     // Search Source based on stores
     // We create a derived store to auto-update search index when data changes
-    const searchIndex = derived(
-        [insuranceStore, petStore, medicalStore],
-        ([$insurance, $pets, $medical]) => {
+    const searchIndex = $derived.by(() => {
             const index = [
                 ...searchItems.map((i) => ({
                     ...i,
                     type: "navigation",
                     description: "Jump to module",
                 })),
-                ...($insurance || []).map((p: any) => ({
+                ...(insuranceStore.policies || []).map((p: any) => ({
                     label: p.insurer + " " + p.insuranceType,
                     href: "/modules/insurance", // Could be deep link if supported
                     icon: Shield,
@@ -157,7 +154,7 @@
                     type: "policy",
                     description: `Policy #${p.policyNumber || "N/A"}`,
                 })),
-                ...($pets || []).map((p: any) => ({
+                ...(petStore.items || []).map((p: any) => ({
                     label: p.name,
                     href: "/modules/pets",
                     icon: Dog,
@@ -165,7 +162,7 @@
                     type: "family",
                     description: `${p.type} - ${p.breed || "Unknown"}`,
                 })),
-                ...($medical?.directives || []).map((c: any) => ({
+                ...(medicalStore.directives || []).map((c: any) => ({
                     label: c.title,
                     href: "/modules/medical",
                     icon: Heart,
@@ -175,21 +172,24 @@
                 })),
             ];
             return index;
-        },
-    );
+    });
 
-    $: filteredItems = $searchIndex
+    const filteredItems = $derived(
+        searchIndex
         .filter((item) => {
             const text = (
                 item.label + (item.keywords || []).join(" ")
             ).toLowerCase();
             return text.includes(query.toLowerCase());
         })
-        .slice(0, 8); // Limit results
+        .slice(0, 8), // Limit results
+    );
 
-    $: if (filteredItems.length > 0 && selectedIndex >= filteredItems.length) {
-        selectedIndex = 0;
-    }
+    $effect(() => {
+        if (filteredItems.length > 0 && selectedIndex >= filteredItems.length) {
+            selectedIndex = 0;
+        }
+    });
 
     onMount(() => {
         inputElement?.focus();
@@ -222,13 +222,13 @@
 
 <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => dispatch("close") }}
     class="fixed inset-0 z-[200] flex items-start justify-center pt-24 px-4 bg-slate-900/40 backdrop-blur-sm"
-    on:click|self={() => dispatch("close")}
+    onclick={(e) => { if (e.target === e.currentTarget) dispatch("close"); }}
     transition:fade={{ duration: 200 }}
 >
     <div
         class="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200"
         transition:scale={{ start: 0.95, easing: quintOut }}
-        on:keydown={handleKeydown}
+        onkeydown={handleKeydown}
     >
         <!-- Search Header -->
         <div
@@ -257,22 +257,31 @@
                     Quick Navigation
                 </div>
                 {#each filteredItems as item, i}
+                    {@const Icon = item.icon}
                     <button
                         class="w-full flex items-center gap-4 px-4 py-3 rounded-2xl transition-all text-left
                         {i === selectedIndex
                             ? 'bg-indigo-50 text-indigo-700'
                             : 'text-slate-600 hover:bg-slate-50'}"
-                        on:click={() => navigate(item.href)}
-                        on:mouseenter={() => (selectedIndex = i)}
+                        onclick={() => navigate(item.href)}
+                        onmouseenter={() => (selectedIndex = i)}
                     >
                         <div
                             class="p-2 rounded-xl {i === selectedIndex
                                 ? 'bg-white shadow-sm'
                                 : 'bg-slate-100 text-slate-500'}"
                         >
-                            <svelte:component this={item.icon} size={18} />
+                            <Icon size={18} />
                         </div>
-                        <span class="flex-1 font-bold">{item.label}</span>
+                        <span class="flex-1 min-w-0">
+                            <span class="block font-bold">{item.label}</span>
+                            {#if item.type !== "navigation" && item.description}
+                                <span class="block text-xs font-normal text-slate-500 truncate">{item.description}</span>
+                            {/if}
+                        </span>
+                        {#if item.type !== "navigation"}
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">{item.type}</span>
+                        {/if}
                         {#if i === selectedIndex}
                             <ArrowRight size={14} class="opacity-50" />
                         {/if}
