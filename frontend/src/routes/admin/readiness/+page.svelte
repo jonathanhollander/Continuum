@@ -1,17 +1,28 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { estateAudit, AuditStore } from "$lib/stores/auditStore.svelte";
-    import { CircleCheck, Circle, ArrowRight } from "lucide-svelte";
+    import { CircleCheck, Circle, ArrowRight, Loader2 } from "lucide-svelte";
+    import { financialAssetsSync } from "$lib/stores/financialAssetsStore.svelte";
+    import { insuranceSync } from "$lib/stores/insuranceStore.svelte";
+    import { contactSync } from "$lib/stores/familyStore.svelte";
+    import { directiveSync } from "$lib/stores/medicalStore.svelte";
+    import { digitalAssetsSync } from "$lib/stores/digitalAssetsStore.svelte";
 
     onMount(() => {
         estateAudit.runAudit();
     });
 
-    $: audit = $estateAudit;
-    $: completionColor =
-        audit.percentage === 100 ? "text-emerald-400" : "text-blue-400";
-    $: ringColor =
-        audit.percentage === 100 ? "stroke-emerald-500" : "stroke-blue-500";
+    let audit = $derived($estateAudit);
+    let ringColor = $derived(
+        audit.percentage === 100 ? "stroke-emerald-500" : "stroke-blue-500",
+    );
+    // A gentle cue, not 0% and 0 pts, until every store the audit reads has its first server
+    // answer (a store this device already holds records for counts as answered).
+    let isLoading = $derived(
+        [financialAssetsSync, insuranceSync, contactSync, directiveSync, digitalAssetsSync].some(
+            (m) => m.lastSync === null && m.status !== "error" && m.items.length === 0,
+        ),
+    );
 
     // Each area's page; every id the audit scores has one
     const modulePath: Record<string, string> = {
@@ -64,16 +75,26 @@
             />
         </svg>
         <div class="absolute inset-0 flex flex-col items-center justify-center">
-            <span class="text-3xl font-bold text-white"
-                >{audit.percentage}%</span
-            >
-            <span class="text-[10px] uppercase tracking-widest text-slate-500"
-                >Ready</span
-            >
+            {#if isLoading}
+                <Loader2 size={28} class="animate-spin text-blue-400" />
+            {:else}
+                <span class="text-3xl font-bold text-white"
+                    >{audit.percentage}%</span
+                >
+                <span class="text-[10px] uppercase tracking-widest text-slate-500"
+                    >Ready</span
+                >
+            {/if}
         </div>
     </div>
 </div>
 
+{#if isLoading}
+    <div class="flex flex-col items-center justify-center gap-3 py-16" role="status" data-testid="readiness-loading">
+        <Loader2 class="w-8 h-8 animate-spin text-blue-400" />
+        <p class="text-sm text-slate-400">Gathering your records...</p>
+    </div>
+{:else}
 <!-- Module Grid -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     {#each Object.entries(audit.moduleScores) as [id, score], i}
@@ -136,4 +157,5 @@
             {/each}
         </div>
     </div>
+{/if}
 {/if}

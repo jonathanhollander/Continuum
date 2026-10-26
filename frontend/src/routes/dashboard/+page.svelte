@@ -47,6 +47,12 @@
     import Tooltip from "$lib/components/ui/Tooltip.svelte";
     import { documentStore } from "$lib/stores/documentStore.svelte";
     import { pluralWord } from "$lib/utils/plural";
+    import { Loader2 } from "lucide-svelte";
+    import { contactSync } from "$lib/stores/familyStore.svelte";
+    import { insuranceSync } from "$lib/stores/insuranceStore.svelte";
+    import { financialAssetsSync } from "$lib/stores/financialAssetsStore.svelte";
+    import { directiveSync } from "$lib/stores/medicalStore.svelte";
+    import { digitalAssetsSync } from "$lib/stores/digitalAssetsStore.svelte";
 
     // Executor mode welcome state
     let showExecutorWelcome = $state(false);
@@ -217,6 +223,19 @@
             .length,
     );
     let medicalCount = $derived(medicalStore.directives.length);
+    // A tile shows a gentle cue, not 0, until its store's first server answer
+    // (unless this device already holds those records), as the letters page does.
+    const awaitingFirstSync = (m: { lastSync: Date | null; status: string; items: unknown[] }) =>
+        m.lastSync === null && m.status !== "error" && m.items.length === 0;
+    let contactsLoading = $derived(awaitingFirstSync(contactSync));
+    let policiesLoading = $derived(awaitingFirstSync(insuranceSync));
+    let accountsLoading = $derived(awaitingFirstSync(financialAssetsSync));
+    let medicalLoading = $derived(awaitingFirstSync(directiveSync));
+    // The audit's 0% means nothing is recorded only once every store it reads has answered.
+    let auditLoading = $derived(
+        contactsLoading || policiesLoading || accountsLoading || medicalLoading ||
+            awaitingFirstSync(digitalAssetsSync),
+    );
 
     // Sync status summary for color key
     let statusSummary = $derived(syncStatusStore.getSummary());
@@ -283,7 +302,7 @@
 
     // Check for onboarding redirect
     $effect(() => {
-        if (estateAudit.percentage === 0 && browser && !loading) {
+        if (estateAudit.percentage === 0 && browser && !loading && !auditLoading) {
             const skipped =
                 localStorage.getItem("continuum_setup_skipped") === "true";
             if (
@@ -340,9 +359,16 @@
                         <div class="flex items-center justify-center mb-2">
                             <Users size={20} class="text-primary" />
                         </div>
-                        <div class="text-2xl font-bold text-white">
-                            {contactCount}
-                        </div>
+                        {#if contactsLoading}
+                            <div class="flex h-8 items-center justify-center" role="status" data-testid="tile-loading">
+                                <Loader2 size={20} class="animate-spin text-primary" />
+                                <span class="sr-only">Gathering your records...</span>
+                            </div>
+                        {:else}
+                            <div class="text-2xl font-bold text-white">
+                                {contactCount}
+                            </div>
+                        {/if}
                         <div class="text-sm text-slate-400">
                             {pluralWord(contactCount, "Contact")}
                         </div>
@@ -354,9 +380,16 @@
                         <div class="flex items-center justify-center mb-2">
                             <Shield size={20} class="text-primary" />
                         </div>
-                        <div class="text-2xl font-bold text-white">
-                            {policyCount}
-                        </div>
+                        {#if policiesLoading}
+                            <div class="flex h-8 items-center justify-center" role="status" data-testid="tile-loading">
+                                <Loader2 size={20} class="animate-spin text-primary" />
+                                <span class="sr-only">Gathering your records...</span>
+                            </div>
+                        {:else}
+                            <div class="text-2xl font-bold text-white">
+                                {policyCount}
+                            </div>
+                        {/if}
                         <div class="text-sm text-slate-400">
                             {pluralWord(policyCount, "Policy", "Policies")}
                         </div>
@@ -368,9 +401,16 @@
                         <div class="flex items-center justify-center mb-2">
                             <FileText size={20} class="text-primary" />
                         </div>
-                        <div class="text-2xl font-bold text-white">
-                            {accountCount}
-                        </div>
+                        {#if accountsLoading}
+                            <div class="flex h-8 items-center justify-center" role="status" data-testid="tile-loading">
+                                <Loader2 size={20} class="animate-spin text-primary" />
+                                <span class="sr-only">Gathering your records...</span>
+                            </div>
+                        {:else}
+                            <div class="text-2xl font-bold text-white">
+                                {accountCount}
+                            </div>
+                        {/if}
                         <div class="text-sm text-slate-400">
                             {pluralWord(accountCount, "Account")}
                         </div>
@@ -382,9 +422,16 @@
                         <div class="flex items-center justify-center mb-2">
                             <Heart size={20} class="text-primary" />
                         </div>
-                        <div class="text-2xl font-bold text-white">
-                            {medicalCount}
-                        </div>
+                        {#if medicalLoading}
+                            <div class="flex h-8 items-center justify-center" role="status" data-testid="tile-loading">
+                                <Loader2 size={20} class="animate-spin text-primary" />
+                                <span class="sr-only">Gathering your records...</span>
+                            </div>
+                        {:else}
+                            <div class="text-2xl font-bold text-white">
+                                {medicalCount}
+                            </div>
+                        {/if}
                         <div class="text-sm text-slate-400">Medical</div>
                     </a>
                 </div>

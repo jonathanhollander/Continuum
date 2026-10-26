@@ -1,6 +1,7 @@
 <script lang="ts">
     import AssetManager from "$lib/components/archetypes/AssetManager.svelte";
-    import { Sparkles, Plus } from "lucide-svelte";
+    import { Sparkles, Plus, Loader2 } from "lucide-svelte";
+    import { onMount } from "svelte";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
     import LegalDisclaimer from "$lib/components/common/LegalDisclaimer.svelte";
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
@@ -15,6 +16,17 @@
 
     // The financial_assets store owns this registry key (and its mapper).
     const assetSync: any = financialAssetsSync;
+
+    // A gentle cue until the first server answer, unless this device already holds accounts:
+    // no $0.00 total and no example cards meanwhile.
+    let isLoading = $derived(
+        financialAssetsSync.lastSync === null &&
+            financialAssetsSync.status !== "error" &&
+            financialAssetsSync.items.length === 0,
+    );
+    onMount(() => {
+        financialAssetsSync.init().catch(() => {});
+    });
 
     const wizardSteps = [
         {
@@ -147,7 +159,14 @@
     </div>
 
     <!-- Core Manager -->
-    {#key reloadKey}
-        <AssetManager module={{ id: "assets-main" }} />
-    {/key}
+    {#if isLoading}
+        <div class="flex flex-col items-center justify-center gap-3 py-16" role="status" data-testid="accounts-loading">
+            <Loader2 class="w-8 h-8 animate-spin text-primary" />
+            <p class="text-sm text-slate-500">Gathering your records...</p>
+        </div>
+    {:else}
+        {#key reloadKey}
+            <AssetManager module={{ id: "assets-main" }} />
+        {/key}
+    {/if}
 </div>
