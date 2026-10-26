@@ -104,6 +104,9 @@ csp = (
     .font_src("'self'", "https://fonts.gstatic.com")
     .img_src("'self'", "data:", "https:")
     .connect_src("'self'", settings.API_URL or "*")
+    .base_uri("'self'")
+    .frame_ancestors("'none'")
+    .object_src("'none'")
 )
 
 hsts = StrictTransportSecurity().max_age(31536000).include_subdomains()
