@@ -5,10 +5,10 @@
      * Focuses on essential tasks with grief-aware language
      */
 
-    import { FileText, Users, DollarSign, Home, Heart, Clock } from 'lucide-svelte';
+    import { FileText, Users, DollarSign, Home, Heart, Clock, Stethoscope } from 'lucide-svelte';
     import { fade, fly } from 'svelte/transition';
     import { contextStore } from "$lib/stores/contextStore.svelte";
-    import { estateAudit } from "$lib/stores/auditStore.svelte";
+    import { estateAudit, AuditStore } from "$lib/stores/auditStore.svelte";
     import { possessive } from '$lib/utils/contextualMessages';
     import SupportResources from './SupportResources.svelte';
     import ExecutorProgressTracker from './ExecutorProgressTracker.svelte';
@@ -20,11 +20,12 @@
             icon: FileText,
             title: 'Important Documents',
             description: 'Death certificate, will, and legal documents',
-            link: '/modules/documents',
+            link: '/modules/legal-documents',
             color: 'rose'
         },
         {
             id: 'contacts',
+            auditId: 'family',
             icon: Users,
             title: 'Contact Directory',
             description: 'People who need to be notified',
@@ -33,6 +34,7 @@
         },
         {
             id: 'financial',
+            auditId: 'financial',
             icon: DollarSign,
             title: 'Financial Accounts',
             description: 'Bank accounts, investments, and assets',
@@ -46,15 +48,27 @@
             description: 'Real estate and valuable possessions',
             link: '/modules/property',
             color: 'amber'
+        },
+        {
+            id: 'medical',
+            auditId: 'medical',
+            icon: Stethoscope,
+            title: 'Medical Wishes',
+            description: 'Healthcare directives and donation wishes',
+            link: '/modules/medical',
+            color: 'cyan'
         }
     ];
 
+    // An area's progress as a share of the most its audit can award (areas without an audit have none).
+    const areaPct = (auditId?: string) =>
+        auditId ? Math.round(((estateAudit.moduleScores[auditId] || 0) / (AuditStore.maxScores[auditId] || 50)) * 100) : 0;
+
     // Calculate completion for essential areas
     let essentialCompletion = $derived.by(() => {
-        const scores = estateAudit.moduleScores;
-        const essentialIds = ['documents', 'contacts', 'financial', 'property'];
-        const completed = essentialIds.filter(id => scores[id] > 50).length;
-        return Math.round((completed / essentialIds.length) * 100);
+        const scored = essentialModules.filter(m => m.auditId);
+        const completed = scored.filter(m => areaPct(m.auditId) > 50).length;
+        return Math.round((completed / scored.length) * 100);
     });
 </script>
 
@@ -70,9 +84,9 @@
         </h1>
         <p class="text-lg text-slate-300 max-w-2xl leading-relaxed">
             {#if contextStore.deceasedName}
-                You're gathering information about {contextStore.deceasedName}'s estate. Take your time—there's no rush. We've organized everything you need in one place.
+                You're gathering information about {contextStore.deceasedName}'s estate. Take your time. We've organized everything you need in one place.
             {:else}
-                You're gathering information about their estate. Take your time—there's no rush. We've organized everything you need in one place.
+                You're gathering information about their estate. Take your time. We've organized everything you need in one place.
             {/if}
         </p>
     </div>
@@ -101,7 +115,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         {#each essentialModules as module, i}
             {@const Icon = module.icon}
-            {@const score = estateAudit.moduleScores[module.id] || 0}
+            {@const score = areaPct(module.auditId)}
             {@const isStarted = score > 0}
 
             <a
@@ -145,8 +159,6 @@
                                 </div>
                                 <span>{score}%</span>
                             </div>
-                        {:else}
-                            <span class="text-xs text-slate-500">Not yet started</span>
                         {/if}
                     </div>
                 </div>

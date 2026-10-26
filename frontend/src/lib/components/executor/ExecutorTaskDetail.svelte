@@ -1,11 +1,23 @@
 <script lang="ts">
     import { ChevronRight } from "lucide-svelte";
+    import { executorSteps } from "$lib/stores/executorStepsStore.svelte";
 
-    export let blocks: any[] = [];
+    let { blocks = [], stepId = "" }: { blocks?: any[]; stepId?: string } = $props();
+
+    // Per block: its checkbox position within the step (to_do), or its number in a numbered run.
+    let marks = $derived.by(() => {
+        let todo = 0;
+        let num = 0;
+        return blocks.map((b) => {
+            if (b.type === "to_do") return todo++;
+            num = b.type === "numbered_list_item" ? num + 1 : 0;
+            return num;
+        });
+    });
 </script>
 
 <div class="space-y-6 animate-in slide-in-from-right duration-300">
-    {#each blocks as block}
+    {#each blocks as block, i}
         {#if block.type === "heading_1"}
             <h1
                 class="text-3xl font-serif font-bold text-[#304743] mt-8 mb-4 border-b pb-2"
@@ -67,7 +79,7 @@
             <div class="flex items-start gap-3 pl-2 group">
                 <span
                     class="font-bold text-[#D4AF37] text-sm mt-0.5 w-4 text-right"
-                    >.</span
+                    >{marks[i]}.</span
                 >
                 <p class="text-gray-700 leading-relaxed">
                     {@html block.content.replace(
@@ -82,7 +94,13 @@
             >
                 <input
                     type="checkbox"
-                    checked={block.to_do.checked}
+                    data-testid="sub-step"
+                    checked={stepId
+                        ? executorSteps.isSubDone(stepId, marks[i])
+                        : block.to_do.checked}
+                    onchange={() =>
+                        stepId &&
+                        executorSteps.toggleSub(stepId, marks[i]).catch(() => {})}
                     class="mt-1 w-5 h-5 rounded border-gray-300 text-[#4A7C74] focus:ring-[#4A7C74]"
                 />
                 <span class="text-gray-700 text-sm leading-relaxed">

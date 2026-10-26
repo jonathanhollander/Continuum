@@ -24,7 +24,7 @@ export const phase1Tasks = [
             { type: "bulleted_list_item", content: "Filing cabinet or desk drawers" },
             { type: "bulleted_list_item", content: "With family member or trusted friend" },
             { type: "bulleted_list_item", content: "Digital copies in cloud storage" },
-            { type: "callout", content: "TIP: Check this Notion workspace - deceased may have documented location in Legal Documents or Preparation Hub pages.", icon: "emoji:💡", color: "blue_background" }
+            { type: "callout", content: "TIP: Papers already saved in Continuum are on the Legal documents page. The link at the top of this step opens it.", icon: "emoji:💡", color: "blue_background" }
         ]
     },
     {
@@ -139,7 +139,7 @@ export const phase1Tasks = [
             { type: "paragraph", content: "**Email/text:** Appropriate for extended network, include:" },
             { type: "heading_3", content: "Sample Message" },
             { type: "paragraph", content: "I'm reaching out with sad news. [Name] passed away on [Date].\n\nFuneral/memorial service details: [When/where or 'TBD - will send soon']\n\nThe family appreciates your support during this difficult time." },
-            { type: "callout", content: "TIP: Check deceased's phone contacts, email address book, and this Notion workspace's Contact pages for comprehensive list.", icon: "emoji:📋", color: "blue_background" }
+            { type: "callout", content: "TIP: Gather names from their phone contacts, their email address book, and the Contacts page here in Continuum for a fuller list.", icon: "emoji:📋", color: "blue_background" }
         ]
     },
     {
@@ -156,7 +156,7 @@ export const phase1Tasks = [
             { type: "to_do", to_do: { checked: false, rich_text: [{ text: { content: "Deceased's clothing for viewing/burial (if applicable)" } }] } },
             { type: "to_do", to_do: { checked: false, rich_text: [{ text: { content: "Wedding ring or jewelry preferences" } }] } },
             { type: "to_do", to_do: { checked: false, rich_text: [{ text: { content: "Recent photo for obituary" } }] } },
-            { type: "to_do", to_do: { checked: false, rich_text: [{ text: { content: "Deceased's funeral preferences (check this Notion workspace)" } }] } },
+            { type: "to_do", to_do: { checked: false, rich_text: [{ text: { content: "Deceased's funeral preferences (the Funeral wishes page in Continuum)" } }] } },
             { type: "to_do", to_do: { checked: false, rich_text: [{ text: { content: "Family information for obituary" } }] } },
             { type: "to_do", to_do: { checked: false, rich_text: [{ text: { content: "Payment method (average cost: $7,000-12,000)" } }] } },
             { type: "heading_2", content: "Funeral Director Will Help With" },
@@ -183,7 +183,7 @@ export const phase1Tasks = [
             { type: "bulleted_list_item", content: "Bank statements (annual safe deposit fees)" },
             { type: "bulleted_list_item", content: "Check register or credit card statements" },
             { type: "bulleted_list_item", content: "Key found among personal items (small key, often in pairs)" },
-            { type: "bulleted_list_item", content: "This Notion workspace - check Legal Documents page" },
+            { type: "bulleted_list_item", content: "The Legal documents page here in Continuum" },
             { type: "bulleted_list_item", content: "Contact deceased's primary bank to ask" },
             { type: "heading_2", content: "How to Access" },
             { type: "paragraph", content: "**Access varies by state law:**" },
@@ -217,7 +217,7 @@ export const phase1Tasks = [
             { type: "heading_2", content: "How to Track" },
             { type: "numbered_list_item", content: "**Spreadsheet:** Simple, free (Date | Vendor | Amount | Category)" },
             { type: "numbered_list_item", content: "**Dedicated estate account:** Open checking account in estate's name, use for ALL expenses" },
-            { type: "numbered_list_item", content: "**This Notion workspace:** Use the Expenses database" },
+            { type: "numbered_list_item", content: "**Here in Continuum:** Jot each expense in this step's notes box as it happens" },
             { type: "callout", content: "RECEIPTS ARE MANDATORY: Keep every receipt, invoice, statement. Probate court may require proof of every expense.", icon: "emoji:🧾", color: "red_background" },
             { type: "heading_2", content: "Reimbursement Rules" },
             { type: "paragraph", content: "**You CAN be reimbursed for:** Mileage ($0.67/mile), professional fees, court costs, property maintenance." },
