@@ -256,3 +256,23 @@
         }
     }
 }
+
+/* `.animate-in` is given its fadeIn animation by :global rules in several page <style> blocks
+   (letters, qr-codes, property, insurance), which stay loaded for the rest of the session.
+   Their `forwards` fill keeps the last keyframe's transform on the element after the entrance,
+   and any transform makes the element the containing block for its `position: fixed`
+   descendants, so every `fixed inset-0` overlay under the layout or page wrapper was laid out
+   inside the wrapper instead of the viewport. `backwards` still holds the first frame before the
+   animation starts and drops back to `transform: none` when it ends (the last frame matches the
+   element's own style, so nothing visibly changes). Unlayered and `html .animate-in` so it wins
+   over the page rules' `animation` shorthand. */
+html .animate-in {
+    animation-fill-mode: backwards;
+}
+
+/* A full-screen overlay that sits inside a `space-y-*` wrapper picks up that wrapper's
+   margin-block-end (property's wizard got 32px), which shortens it so the page shows through
+   below. No `fixed inset-0` element in the app uses a margin on purpose. */
+.fixed.inset-0 {
+    margin: 0;
+}
