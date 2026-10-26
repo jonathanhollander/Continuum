@@ -435,7 +435,7 @@ export class SingletonSyncManager<T extends object> {
             const remoteData = this.mapper ? this.mapper(remoteDataRaw) : remoteDataRaw;
 
             // Simple migration: if remote is empty but local has data
-            const isRemoteEmpty = !remoteData || Object.keys(remoteData).length === 0;
+            const isRemoteEmpty = !remoteDataRaw || Object.keys(remoteDataRaw).length === 0; // raw: a mapper may add defaults
             const isLocalPopulated = this.data && Object.keys(this.data).length > 0;
 
             if (isRemoteEmpty && isLocalPopulated) {
@@ -464,6 +464,10 @@ export class SingletonSyncManager<T extends object> {
             const token = get(auth).token;
             const payloadRaw = this.mapper ? this.mapper(this.data) : this.data;
             const payload = convertKeys(payloadRaw, toSnake);
+            // Server-owned fields; the server rejects them (422) if sent back.
+            if (payload && typeof payload === 'object') {
+                for (const k of ['id', 'user_id', 'created_at', 'updated_at']) delete payload[k];
+            }
 
             const res = await fetch(`${BASE_URL}${this.apiBase}/${this.endpoint}`, {
                 method: "POST",
