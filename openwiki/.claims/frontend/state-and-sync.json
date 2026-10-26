@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:6651a9a588bf136a70582e57187f4bd7861860b18015f89fca2ff57c482fb04d",
+  "claims": [
+    {
+      "id": "claim_ea5fddba782c4c67add2d34e879cb09d",
+      "statement": "SyncManager loads its items from localStorage in the constructor, and sync fetches the remote list and replaces the local cache with it, skipping quietly when no auth token exists.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/lib/services/sync.svelte.ts#L40-L48",
+          "version": "repo-lines-v1:sha256:8f8e7c238c749732065e70cfab9122682bea1f3692585b54c84871cb54c8a73d:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTMzYzRlYzkzNzE4NzcxNmIwNDJlY2Y3NmRlM2UwMTQ5ZDQ3NDZmYWI4ZTcxYzI5ZWE3OTU2YjZjMTNlMzc2ZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDg5M2Y0MGUzNzgxZWI4OTZjODJkMDQ2YTA4MDY3YTExZTM1Y2RmMmYxZGZhZjI2ZmVhOTBiOGRiNjY3NjQxMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNGZhNGZjOTAzMDU0NjI3MGU1ODZiNDFmYjI2OTg1NDNlMTIxMzg2Yjg1OWQ3OTYxNTM1ZTQ2NWU5ODk3NDAxMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiM2Q4MTdjOWFkMDA0OWVhODgwNDVjNzU2MTYyZDhiODcyNjMyZmZmY2M5MGU2OGRjY2YxNWRhNWE0ZGI2NWIyYyJ9"
+        },
+        {
+          "resource": "repo://frontend/src/lib/services/sync.svelte.ts#L73-L137",
+          "version": "repo-lines-v1:sha256:f4e9b4f0c7a78e355674a024e06c8792c475b0bd635fa32f61eb2bf141baf762:eyJzZWxlY3RlZExpbmVDb3VudCI6NjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAzMWZiYWU2NWNjM2EyNGMzOGZlMmFjODRhYjY5ZWQ2M2YzOGFmMDYwYzcxYzM4MGI4OTBmMTczN2EwMDkwYmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVkNTFjN2M2YjI2OTY3NGViMWJlZDE4MTU4NmI1OTIzY2U4NTAxYWI3MmQ4YWZkNDBjMzMxMjJlYzdmZTQ4NGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY2Y2ZiMWIwMWFlYmY3NWZmOGUyMzE5NTNlNTA4OThiZThlZjE5ZDIyMTY0YzlhMjMwNGRmYTJmZDIyZGEzNmYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4574cd4c533c42ad9cb37167cc0e59e1",
+      "statement": "When the server returns an empty list but local items exist, SyncManager POSTs each local item and re-fetches to obtain server ids.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/lib/services/sync.svelte.ts#L101-L143",
+          "version": "repo-lines-v1:sha256:a86b311922088952b2102a0b84f483da3a0ae98258ac73dd75e9f075b32daf82:eyJzZWxlY3RlZExpbmVDb3VudCI6NDMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIzN2MwMjI1MWI3YjEwZjQyNDMxNjg2MzlhMzViOWNiYWE0NTc5NzQzN2ZiZWY0N2ZkOTE0OGM5NDEzMTNhNzMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFkNGQzMTA3YWU3ZmNhYjRiZmQxZTVkYWNlN2I2MjgzZTE0ODU3NTMzNjVmZTdhZTFmNTFiZDBjOWViNTAzOWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU0ZThjMDQzNjIxMjAyYTE0NDdhMTIzZmZlZjM5OTNlZDNhYmE3ZTc1NmQ2MGNiMjhhNTA2YzNmNDQ3MzFkNzUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_18405780b3b045d0a342a71c50a57194",
+      "statement": "SyncManager.create posts first and appends the server response on success, while update and delete apply the change locally first and roll back on failure; delete does not rethrow.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/lib/services/sync.svelte.ts#L146-L323",
+          "version": "repo-lines-v1:sha256:671b103b5e4b6eac8e41938db2e96857f27cf1c5bb36c9db1adfa053147078f7:eyJzZWxlY3RlZExpbmVDb3VudCI6MTc4LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJmMWIyYzgyN2FkYmFhMzMyNGVkNDYzNGVhODEyYjJjODU4MGNlNjIyMzYyYTE5ZDdkNTMwYWJkYzUxNGU3YTlkIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0ODkzZjQwZTM3ODFlYjg5NmM4MmQwNDZhMDgwNjdhMTFlMzVjZGYyZjFkZmFmMjZmZWE5MGI4ZGI2Njc2NDEzIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI4NDBlZmYwMTJmZThjMDU3MjBiN2VlNGVlYzdhMWE3MWM2NmMwYWEyMzU0NzIwMzEwMWFlY2VlMDk2MWJlYWI1IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJmNDM5NzA5ODRkYTY2Zjg2ODM4OGEzZGU3NTc0ZjU0ZGQ3ZjEwMTdkN2ZkOTIzN2IwNjVhODViMGVmYzgzMjc3In0"
+        }
+      ]
+    },
+    {
+      "id": "claim_037842a71b5140a797b0cfe52dc2a13d",
+      "statement": "Payload keys are converted camelCase to snake_case on the way out and snake_case to camelCase on the way in, with an optional per-store mapper.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/lib/services/sync.svelte.ts#L146-L150",
+          "version": "repo-lines-v1:sha256:b63603113210fd057bbb424172d04794b9ebc0bc368e27a000b2e0947d17d59a:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjFiMmM4MjdhZGJhYTMzMjRlZDQ2MzRlYTgxMmIyYzg1ODBjZTYyMjM2MmExOWQ3ZDUzMGFiZGM1MTRlN2E5ZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODQwZWZmMDEyZmU4YzA1NzIwYjdlZTRlZWM3YTFhNzFjNjZjMGFhMjM1NDcyMDMxMDFhZWNlZTA5NjFiZWFiNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjY1YmNhNTg4ODJiNTJkZDc0NjQxMGQyMTc4Njk2OWFjYTZmYWViOGE1ZjBiMTE3MzNmY2U2N2I3Y2UyZmFhNiJ9"
+        },
+        {
+          "resource": "repo://frontend/src/lib/services/sync.svelte.ts#L8-L20",
+          "version": "repo-lines-v1:sha256:9335d311bc6e841e4cd0e3a35542726081c7852962010512efcc189457ca9acf:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQyNTQ5YWFkYmQyYzg1YzM5ZTYxZDkwNzQwZWEzOGY2YWRmNDY3MTliYjYwNmI0YTJjMDg4MDI0YzE2OGY5YmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVkMWI3MjA4OGNmYTgzYzZiYTY2NjJkN2Y0MTFiNTJlZGE4ZmI2OGM3NmY0MmZmYmU3MWJhN2Q3ODgyNDQ0MTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVhYzM3N2VjYWFjMDFjOTYzYjVjZTBkMjk1NDQwYWMxNjU0MmYxM2RhYzhkZDQzYzZmMzA4Yzg5MjhhMDI3NTQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9e374295e93a4ec79ba70e9fa07a69f2",
+      "statement": "SingletonSyncManager handles one-object records with default API base /api, merging updates optimistically and POSTing the whole object.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/lib/services/sync.svelte.ts#L363-L472",
+          "version": "repo-lines-v1:sha256:747c5b36ce98ecf99c916bf010a991d7ae38b3c10da53fb33d127892eccdec5b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEwLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIyODYxODZmYjZlMDZjOTc3NTI0NzY0ZDY0ZDg2YTE0MjU5ZGFjNjI3MGQxZmI0ZmU1OTVjMzBlMDU3YmM3NGMwIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0ODkzZjQwZTM3ODFlYjg5NmM4MmQwNDZhMDgwNjdhMTFlMzVjZGYyZjFkZmFmMjZmZWE5MGI4ZGI2Njc2NDEzIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIxOWU3NjM1NWNmMTE5OTQ4MGMzZjk5ODM2YjE0ODZjODQxZDg5MWZhYWQ5MDRjNjA4ZTA5MzAyMmQzNzU3YWVlIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI3YjY3MGQ0NGZkZDlkNTZlNWM3YjMxM2YzODU2Njc3OTk1MWE4ZGNjY2ViNmFhMGM2NTkyMTlmZTliZmVjNGZhIn0"
+        }
+      ]
+    },
+    {
+      "id": "claim_6986e32ede0344c68b2a26822d035579",
+      "statement": "registerSync and registerSingletonSync create one manager per key in a shared registry, and syncAll runs sync on every registered manager with Promise.allSettled.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/lib/services/sync.svelte.ts#L502-L533",
+          "version": "repo-lines-v1:sha256:0b503ed2010a20f484408b50ea74f7d5074b55df3b00eb31d7f394dc09084e39:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA4YmNjYjQyNTk0YzY4OWU0ZDI1NGIxOTBlM2I5MTgxZThlMjZkOWYyNTNiNDQ2ZmE4ZjIyZjZmNjg0YTFkNjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI1Zjg5NWViYTk4MGIwM2YxODYzYzdhYTIwYzM4NGZjMWY0YWQ4N2NlMWM1NWQ1NmUwZjc2MzhlMjQxOTNjYjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5e8ed8bb6f344e03b4045590c6d78b95",
+      "statement": "The root layout calls syncAll whenever a new auth token becomes available.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/routes/%2Blayout.svelte#L160-L167",
+          "version": "repo-lines-v1:sha256:5d2d086032fbbf56c839c4ed2347b0c4c41700023c3e0abaf947f3d35827d15c:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzI1YmYxMjFjMjc5ODVjZjc3M2Q3MThmMjk5ODYxYzJmOWRiNmZmOTk3YjVlMmYzN2Q0NGZhZmViYjI3YjBmZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNTUyMzAyYjYyZmJiYWI1MmViNjc2MDQwNjdlYjVlYTk2NjcxNzJhNzgxN2JkOGEzYWVmMTBjNTIyY2M2MGU1OCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjg3NDc1MjZiNTFhYzExMTU0NjI1YmZmYjI4OTVlYmJkYmNmZTgxZTI3YzE3OTMyNGI1ODNjZmZmOThlMjdjMyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_7b3f96a1b8ab418b97796de9c4278fd7",
+      "statement": "persistence.ts namespaces cached values by active account and profile id, and setStored writes only to localStorage with the remote syncWithBackend call commented out.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/lib/stores/persistence.ts#L6-L49",
+          "version": "repo-lines-v1:sha256:fe3529b72bee6873f1bf2edf8d4162fd6d57fb18292192b854b407a897a6e685:eyJzZWxlY3RlZExpbmVDb3VudCI6NDQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVkNGNhMGU4MzRlYWZmMDY3NWIwZjIxMWUwMjAwNWU2NmQxNTgwNTIyNGQyMTUxNTNkMzJmY2NiZmFmZWI2ODAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhkNmVjOTU4NzQ5OTU5MmU0NjhkOTY0ZGE0MjA0YWIzMDEwNTAzM2MzY2U4NmJhZmZkMjcwYzJkMTliY2Y5MmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk1NzAwY2JmNGVlYzU1OWUyM2FhZTU5ZDU1NzI3YzY5NmM4MDg1MjUwODNkODMwYmRkODFiMGYwNjhhNzU4YTcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b9d8a2a6e16e4e4abce3ddecd0da447b",
+      "statement": "letterStore registers a list manager against /api/data/letters and estateStore registers a singleton manager against /api/estate/profile.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/lib/stores/estateStore.svelte.ts#L39-L44",
+          "version": "repo-lines-v1:sha256:818259b8c585bc80a2527797dc81cf5f3b57db3c32a5a3668ee0323fb3872aeb:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTlhNzYxZmViMTEyYzE3MTUzMzhjNGM0NjQxZDY4YTBmOTcwYzAwZGZjOGEyNmNhYzNlZmY5N2U2NDAyYjk4YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDk5NjdlYzFlZDM4MzZmOGViMTdhZmYxNzJiNWJmZWY3ZGU2MDQ4NWE0MzljNmNhMTFjNTkxZTE3NTU3MzlhZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMmVlM2JlYzhlZmNkNTY4YWEwZGRiMjg5OGEwMTIwMTExZjRmNGRjN2RjYmRmYTQ1Mzc3ZWYxZjQxNzI0OTMxYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGQ0NTAxMmI4MTdlYWVmZTE1ZGZlZjhhN2EyOTFhZmRiNzQ5OWM5ZDIxMTc3YzM1MTc3NWRiM2E4YzMyNjNmOCJ9"
+        },
+        {
+          "resource": "repo://frontend/src/lib/stores/letterStore.svelte.ts#L21-L21",
+          "version": "repo-lines-v1:sha256:6a2dc446c129e0fcaddac0f13bc3982302fc280152c0b18616c757c48a7ad76f:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmEyZGM0NDZjMTI5ZTBmY2FkZGFjMGYxM2JjMzk4MjMwMmZjMjgwMTUyYzBiMTg2MTZjNzU3YzQ4YTdhZDc2ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNmEyZGM0NDZjMTI5ZTBmY2FkZGFjMGYxM2JjMzk4MjMwMmZjMjgwMTUyYzBiMTg2MTZjNzU3YzQ4YTdhZDc2ZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjhiODRkZjFhZWI2YjBlNGRmMDg1MThmMTY1OTZlMTg1Mjk5ZjNlNTg4MDFlOGY2YWVhOTNkOThlNWM0YzM4ZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDljYzE2YTdmZTM3Y2I4MzMzOTU4MDVkOTYxNzU1NTE1OTJlYzRkNTZkMzIxYWM3NTE3NmEwYzMyOTA3ZWQ0MiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_cd500094f30b45f9907dbda3029c347f",
+      "statement": "syncService.ts is a legacy debounced whole-blob sync that POSTs transparent_data to /api/estate after two seconds.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/lib/services/syncService.ts#L18-L55",
+          "version": "repo-lines-v1:sha256:9e5cb6a999ff756443a823908b49021ffe39d725ef45f1fced64981a49277871:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRlNDNlOGYzY2JhNjgwODU0YWMzM2VkMGY0MzllNjJiZmNiNmFhNTEwOGM0MTIyNzc2M2JjODdmMDMxODNlNjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdhOWZmNzFjNmE3ZmMwNGY3ODhiYzU3MTNjYTcwZTg2ZjQyYWIxYTEyYzM2ZDM3YjY2ZjYyMDNkZTczZmZjMWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhlNjNhMDcwNDRlMzRkNzYxYWNmYjAxN2JlMzBhNGFjMzM4ZWFjZmQyZmFhYmFjZDZkYTNhYTBhMTJkMTk0YWUifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.3",
+    "at": "2026-10-26T04:52:34.633Z"
+  }
+}

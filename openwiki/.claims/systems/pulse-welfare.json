@@ -1,0 +1,168 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:947cf94a109cc3e78177e9663be89b09dd7d5c74c7562f532d039a5485518d6b",
+  "claims": [
+    {
+      "id": "claim_21b461486deb4883b6d08b2888e9a7af",
+      "statement": "PulseSettings is one row per user with enabled, frequency_days defaulting to 2, grace_period_hours defaulting to 24, a permanent checkin_token and feature flags.",
+      "evidence": [
+        {
+          "resource": "repo://backend/pulse_models.py#L5-L47",
+          "version": "repo-lines-v1:sha256:eac0d907369b961f91f975673bd37ece456f7012fbcddd6ed26065dd4753cd06:eyJzZWxlY3RlZExpbmVDb3VudCI6NDMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYyM2ZmYzZmZjg3MjM4YmM5MDI0MzMwOTdiMzhhN2M4OTEzNGFhMDY4YzRhNjQyMmRjZTE3YTU3NDI5MTIyNDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjViOWFlYWE3NjhiYWVhZGQzMWE2MmVkZGE5ZTRhNTg3OWRkMzVhYjFlODQyMWYwMWVlYzAyMTQ4NTZlNGNhODMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRmODkwMGE1NDA4OWUzOTViZGJlYmY0MTM4NzU2ZDQzNzA5NDI5ZDJkZGI1YzhhNWE4Zjc3NTcxZDA0ZDAxODIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f623616c691b4d93ba6dc6a128ee7c7e",
+      "statement": "Pulse models include check-ins with a method, per-user escalation tiers with delay_hours, contacts with tier_id and portal_token, an escalation log, messages, safety timers, vault items and WebAuthn credentials.",
+      "evidence": [
+        {
+          "resource": "repo://backend/pulse_models.py#L49-L160",
+          "version": "repo-lines-v1:sha256:2c18cb54aab39c8cc3058aa54371d6d5343e88249d1e5be22ce98b66d5121b33:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEyLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI3ODUwM2Q5NzM1ZWMyMzc1NzZmMTBlZWI5MDFkYWM4YWI3NmRlMWYyOTM1YTVlYjRjYTU1NTc2OTNlNjE5MTgzIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJmYWY3Mzk4Yjg4YmQwMjllMzk2NWI5MTA0OWQ2OGM5ZWQ0NDU2NTViOTYxMWM2NDQxYzQxMmEyYzRkMzZmZTVkIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI5OTliZGVmZWVhY2E2MzQwZTAyOTBkYzg2ZTg4OWM4OWQ1ZTE4OWFhNWJhNDRiNTg1YjNiNzA3MzRmNGE2MmQ4IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+        }
+      ]
+    },
+    {
+      "id": "claim_acbcfcfd8234480aac4cf01e5db50f6d",
+      "statement": "The Pulse scheduler is an APScheduler BackgroundScheduler job that runs check_and_escalate_all every hour, and the PULSE_SCHEDULER_ENABLED and PULSE_CHECK_INTERVAL_MINUTES settings are not read by it.",
+      "evidence": [
+        {
+          "resource": "repo://backend/config.py#L108-L109",
+          "version": "repo-lines-v1:sha256:baa6188a85e6279b13da03bb572efc844c7a3bfc895574144f4cf4a43b9c0946:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOThlNzg5ZDY1ZjU1MGY3ZjI2NWYxMTNmNmMzNTQ5MmJlMjVkZmY5Y2JkOWFlMWExY2E0Mjc1MjAyMzMyNzFkMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTNmNTBhYTI0MjQwODY2NzFmNmFiMGZiNThhMWRmNGNhNzNjOTQyN2U1ZDNiOGFkZjJkNWI2NzRiMmU1MDcyOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDE0NjNlMGJlMjQyMTI1YTJhMWNiODM5NTY5NmRkNDQ4NTAzMzUzNzhkOWNiZjc3MzVjNDIzMGIyNDUwMzVhMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODRlZTdhOWEwNzA4NGYzZTc0ZDlmMWM5YzdhN2QxZWI5Njg5YjQyOTY0OGRhNThjMzRhM2VmYjY3MTQ2ZjVmNyJ9"
+        },
+        {
+          "resource": "repo://backend/pulse_scheduler.py#L1-L27",
+          "version": "repo-lines-v1:sha256:962a39ac049c3b277578eb247ab2af3792dfbddcff52bc394b96fa1ddd78cbcd:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhMjdiNWY1YTQ2OWY0ZjRlMjk5ZjY5OTViOTFmMDA0YTk4ZTA5ZTk3NzAwNTQ5MjE3ZDU4ZmMwMmYxNzIzN2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwYTQ5NDcwM2NlNzY4ZDI0ODIxMGY0ZGU0OGVkZjViYmMzNDk2NzU2MGQyYTQ4ZDA2NTY0MDQ2YzJlNmUxODAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d0a3c9db7bd9449884604ace0f501608",
+      "statement": "Escalation starts after the hard deadline of last check-in plus frequency_days plus grace_period_hours; the grace period only logs, tier 1 fires immediately, later tiers fire after their delay_hours since the previous tier, and escalation stops after tier 4 or at a missing tier definition.",
+      "evidence": [
+        {
+          "resource": "repo://backend/pulse_logic.py#L37-L124",
+          "version": "repo-lines-v1:sha256:cc678110193ab66ea333c0cc08c0249ae95ef958ca24bf9c0b731942bbaa5858:eyJzZWxlY3RlZExpbmVDb3VudCI6ODgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYzNDk3MWZmMmQ2MjIyNDJmMTZkNTliMjFhM2M4MDRiZmY4MjVlZmJkMDc4MzVhOWE1ODMxNmFjNmMyMzU3MzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEwMjgxZmExZTkzNTM1MjRjMzZjMDc1YjQyMjE3MWM5MGY3NGE0YzhjMjExNGRjNGUzZGQ0MDRkODliMzIyODEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM1MWU4YWFmNzA1ZWU4MzNmNzg5NDMzZDU0MWZiOTQxNTM3NGEyMTk0OTI5YjVjNTgwMmU0ZmYyNGM4MmUxOTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY2NDFiYzUxMTJhMjgxYzA1ZTgyYWJmYzc0NGIwMGMzMGFmZmU0Y2I0OTk1NzhjNTZjOTBhOWVlYzk0ZTUwMTAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c6e8a2fffbac4eb1b2b454efa0c58853",
+      "statement": "trigger_escalation logs the tier and emails contacts whose tier_id matches that tier, with a link to /portal/{portal_token}, and records a PulseMessage.",
+      "evidence": [
+        {
+          "resource": "repo://backend/pulse_logic.py#L126-L218",
+          "version": "repo-lines-v1:sha256:51fca79eb239770c67fff8a4ba15d3b63792c312b34144a3442bf8eaefd0f5f4:eyJzZWxlY3RlZExpbmVDb3VudCI6OTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNjYjZjZTlmNGExNjQ4ZjAyMzlmYjUyOWE4OWEwM2QzNGIyZTU3OTQ2ZTk5N2Y2ZjUzY2ZiMDYxNGFkYmRmNzkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ4NDYwNWY1ZGY3ZGUwYzFlNTFkMzIyYWIzZWE0NDkyZjM4NzBkNzBlMzBiMTdlODI3ZmNlYTljMTRlNTFlYWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c1f844251d0d45379ef5ddfbce0a60c1",
+      "statement": "GET /api/pulse/settings creates default settings with a checkin_token on first read, and GET /api/pulse/tiers creates four default tiers with delays of 0, 6, 12 and 24 hours.",
+      "evidence": [
+        {
+          "resource": "repo://backend/routers/pulse.py#L348-L366",
+          "version": "repo-lines-v1:sha256:f435772148b1b92c3fffa950e8eda05ad2f764fecb867cd1b9db71021b9dbb76:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc2NTUzNDA3ODUyMzQ5NTI1YTY0NjdkYzAxYTcyNjY2MmJlZmE2ZDQ0OWRkNTQ4YmFmMDEzODA1ZDNhMThjMWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkzZTYwZmFhYjVmYzUzODBiZmUzYzc0N2Y1NmNlMTU5YzlkNjZmMzRhNzU0ZTRhYTQ0OGY2NmE0OGQzOTVhNTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVkY2UzMzE2ZWM2MmU2NWI0ODliMmM2ZDQzNzYwNTM0OGUzNjllMGY3NTNmYTdhZGQxYTJmMjc0YzBmM2JiOGYifQ"
+        },
+        {
+          "resource": "repo://backend/routers/pulse.py#L77-L88",
+          "version": "repo-lines-v1:sha256:5f7a927ec90fcc7e3d61aa3ffbbff372a64c74191b671e3ba89bebd1c74b56c1:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM1Y2U5MTkyY2ZjZjc3YWIzNGM5YjdiMWY3OWQyNTRkYWVkYjJlZmM3YjZjNjU4NzM3YzBhMzE4MDhiOGU5NjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc1YjFlYWQ1NWQ1Y2U2MWI5ZmIyOTJiZGRmZDI2OTFkODVjZWY4Y2Y5NmEwOWQ5NzNjZWNlZDBmZGZhZTljN2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQzOTBkYzZlZDU1Yjg4Y2RiNWQ5NzEyYmRlNzg5MzZjMzJhYjBkN2FjMDU5YzE1ZmY1MWY2Y2JkODMwNWJhMjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhjMGE2ZWNiYTc4ZjlkZGZjNWUyZDFiOWMwNzA5ODkxYTI0NTMxZDY3MTVjYjdlOTczNWY5M2IyMmEzOTViZjYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7bfd5c7a8c9f4bd6847082e9c832d22f",
+      "statement": "Creating a Pulse contact generates a random portal_token.",
+      "evidence": [
+        {
+          "resource": "repo://backend/routers/pulse.py#L116-L123",
+          "version": "repo-lines-v1:sha256:eab8b95c248e4895bca2eefeb68199856474e4d36081a8f712e4ba8f5a18cce9:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTQyZDNmYTZhNjJiNzU2YWJhYmU1ZDg2OWRkYjRlOTEyMjI1NzI2ZDM5M2UyNzhmMGY4YzQxYjFlM2M4ODUyZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZmU5Mjc2YmJlMzM1NjFiMDJmMjFkNDYxMjA5ZTQ2Y2E1ZWZjZmUxYzIzZmI2YjVmNGRkNDUxZWIzMzhlM2Q1OCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDE1NDc2ODk4ZjIyYjQ0MjFlNzQ0ZmFmN2Q2NmM4NThhOWU1ZDQ3YWVlN2M0NDM1OWUxZTNkYTZiNWU1YjFiNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTJhMWNkOGQ1MzE0NWU3YjE4NWUyYjE2MmI0MTMyYTg5OTRlNmU1ZjA0ZTQ0M2E0MTM0YmU4OGM1N2RhYzMzYiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_ca4a403d8f6d45449d4489a5598495fe",
+      "statement": "The public portal endpoint resolves a contact by portal_token and reveals sensitive status once the latest escalation tier is at or above the contact's tier.",
+      "evidence": [
+        {
+          "resource": "repo://backend/routers/pulse.py#L151-L188",
+          "version": "repo-lines-v1:sha256:e41ec8d1b52cbc97c2d6ebd54eb39a030fc11d606c817f53544bf8a9f538829a:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM4OTZjODg3YmRlYjY1ZTc1ZjZlMGY4ZGRkMjM5N2ExYTc3YmExMWVhOTE3ODMwY2I3MDk1NDNkODJhMGY4NGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI1MjBjMTA1ZGEyMTgyZGY1Nzc1OGJmZjJlYTY4MWViOTg2ZWIyOGJjMGM3ZDQ4N2ZiNTQyZTgzNGQxNTUwMWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgxOGMwOWFjOGNiYzkwMjY3NTAzMjc5NTNmZmIyNmE0MDdmZWU2ZDRjYzJiN2YyYjNhZjBiYjM0MGNkMDUxODYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3908056e7d2244f6a704204074ca76d9",
+      "statement": "Guardian snooze and confirm, and the user's one-click verify link, each create a PulseCheckin row, which resets escalation.",
+      "evidence": [
+        {
+          "resource": "repo://backend/routers/pulse.py#L190-L204",
+          "version": "repo-lines-v1:sha256:10f3e7bcdcbf7fb13e4fb1f9c76d02e3eac22e0c7721bcfcbb91d0f05b2309bc:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE3ZjUwNjhhM2U3MTkzZDdmMTE5NjE4ZWMyNDYwNDRjYTEzMDc2YTVhMTg3NjQ0NDQ2MDVjYzZjZTA2YjJlYTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2MmFiODFhZTNmYTFjM2E4YmFjM2JjMDM2ZTgxZDQ5ODJiZmFlNjVlNWFmN2ExMDBiYTUzNGY3NjgwZGJlYWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk5OWJkZWZlZWFjYTYzNDBlMDI5MGRjODZlODg5Yzg5ZDVlMTg5YWE1YmE0NGI1ODViM2I3MDczNGY0YTYyZDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMzZjg5YTQzYjc3Y2EyOWYzNDJlNjBhYmQ5YmI2ZTYzYjdiYTlkYzc4NmI3OTBhNjE1OGUyZTRhZjJlM2RiOGQifQ"
+        },
+        {
+          "resource": "repo://backend/routers/pulse.py#L290-L308",
+          "version": "repo-lines-v1:sha256:208a13f072b6f4f87ffe49773d9425affcbc1236498bb549da4ade2adf8f3b6b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFiZjUxMTM2MDI1ZDU3OGQwMDlkZDc0Yjk4ZjQxMmIyOWU3MmIwMjM5OWJiNzQzNTZjNzc1ODdiYjM5OTRlZDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE3OGNiN2ZjZjNmYzY2YTNhYzZhNWZkYzJlYTkxZmZjYWQxZmZkOWE3ZDk4ODFkZTczYzRjNmVhNjgwOGMzZTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ0Nzc1YmQyYWM4MGMwMDYzY2YwZjYwNGQ2ZmZmYjI0ZTY4M2ViYzBlMDc0OWYwNmVlMWUyYjgwN2JlNTE4ZWQifQ"
+        },
+        {
+          "resource": "repo://backend/routers/pulse.py#L337-L346",
+          "version": "repo-lines-v1:sha256:1f1caa42aedd737074fe386b62584346739bff21cec3130706ed7f33bb2f6fa8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVlZWEzYzNkYTc5MzJhM2YyMWU4OWE1NDhkMzNlMjlmZDFhOGI5MWM2YzgxNWIzYjBhN2RlYTI5ZWI1YzJmODQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3OGVlYzdmY2RiYjA4MmUzNDQ2NDk4NjJiN2I1ZTgwZjQwZmVlYzllODZmYTRjMjg4ZmJkMWJmZjZhNjAzMDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ4YjlhOGFjODgyYTUzYzMzYjIxNWJiMTA5ZGVjNWE1Y2RkMmE1N2Q4NmQ5ZTNkYTI1MzUxZWM4YTMwZWM4MGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEyMGJkMGRiMGZmMGVjYWQ5NjRhYjg1ZGUwZWUwZDhjMDdiZTM2MWQyZjE0YzAwOTY1ZmZhYmRkNjFhZTIxNzkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_83df05e9bee84125a0dbbbb5ce6711c0",
+      "statement": "The nudge endpoint takes a contact_id and has no authentication dependency, and the vault endpoints require a logged-in user.",
+      "evidence": [
+        {
+          "resource": "repo://backend/routers/pulse.py#L224-L289",
+          "version": "repo-lines-v1:sha256:c650e89fe24f441e8188e6db58984fbf3ecbe3f729d9de1b716f46a14d9e130e:eyJzZWxlY3RlZExpbmVDb3VudCI6NjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVkZjYzMWZmYzNlZjVhYTUyYjFiNGUzNjdhZDUwMjM0OWExYzIwMzc0ZTdlZmIwNDI4OGFjZTA5MjYyNWQzODEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc0MWUyYzc1NjkxZjBmNWRhNWEwMTZmMzU5Y2RjNjE1NTFlMTc2OTJlNzFkNDE4NDdmOTg0MzE3MTQzYWFhNmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYzMjk5NjI1ZjM2NWE3MmZmNWI2ZjQzZjM2ZDcxMGE4NDNhMDg0MWIyNThjOTY2ODE3YjkwZjZlM2UyYjllOTIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2e3891be4acf456ba9b4ef7cc09010a1",
+      "statement": "Safety timers can be started, read and cancelled, and the escalation logic does not process them.",
+      "evidence": [
+        {
+          "resource": "repo://backend/pulse_logic.py#L12-L35",
+          "version": "repo-lines-v1:sha256:6aeb7af23f11b8c5cd8109f7bc34af83a2b91c7f26e85bc697f0af6ca0eb2e96:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJjNWM2YWY4YTk4MmZlOTdiYmZkMGU5MjYzMDUwNjUxOTM2NTEzMDliNDEzMGU0NTQ2NWU0OGJkZDdjZjM5MzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1MDMyZTk2NGQwOTMyMzUxZTVkMTg1MjY5MjgxYjE3MWEzYTA5YjA4YjI4NmU2NjFlYTQ3MDMyM2M4MmViNGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkwMWIwMGZjNmQxYjgyZDkzNWMwOTQ3N2JkNjNjMjZhNWMzNmU2ZTBkNDE5NjM0OGFkODQ5MzgwYWRmZTY5ODciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVlZGMyMjhiMTY0MjAxMjVlNmUyY2EyNWI1M2Y1NWFlMTRlZmEyMDk5NTNkOWFiMzFhOTRhZjExZGZkNjRkYTYifQ"
+        },
+        {
+          "resource": "repo://backend/routers/pulse.py#L311-L335",
+          "version": "repo-lines-v1:sha256:f890cd1ae213efa3bf6634138b78246623615d8719ff07d7d924a7e92b431fb1:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI5MWE2NmJhODhmNzI0MmRjYTJhNzZmMTdmZWExZTExYWNkNjI4YzliZjk0YzQyMzMxNjY0NWFiMGE1NDc4ZjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU1NTJjYjY0OTdkZDQ2Y2I5ZmQ5MGI4Yjk3MzljMzY3Zjg5YmY2ZTViYTFjYTBmMzk2MTU1Njc2ZWFhNjg3M2UiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAzODlmZTZkM2U1MjYyMzFlYzg0ZGI3NzM4M2I2YWI3ODIzYjBlMmNiZWNiNjQxODY3NGM4ZjllMDUyMGVmN2MiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMyNGE1N2IzMTY0MzQ3NzQ1MWI1NDUxM2QzZjU3YjlhYjM1OWQ2NjIxNWNjNmUwOWQ1MWE3NDg4MzlkNWIwYWYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b98bc4b85e9b4c9992f2ca573b07245b",
+      "statement": "The frontend Pulse store registers singleton managers for pulse/status and pulse/settings and posts check-ins to /api/pulse/checkin.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/lib/stores/pulse.svelte.ts#L20-L50",
+          "version": "repo-lines-v1:sha256:e476f8c50e51cfc8f821e98639f30e1dc769c58b904b9739a8aa5fd4e7641da7:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE4ZGVjMDdmODlhMGJhY2FkODU5NjI0OTk2MGZkODI5NzZmYmMxYTRiYmY5NmE5MjMwNzYyYmQzYjc5NjRjMzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAwZmNjNjgwYzRiNmQyN2U0ZTVjOWZhOTRkYjA4YjViZjRjMzM1ODUwZTc5MTdhZWI1MjFhMzZiNjZhNzRlMmQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b5107331f6a545e29781a4ad4312c179",
+      "statement": "The guardian portal pages /portal/[token] and /pulse/portal/[token] call the public portal API, but the root layout only exempts /pulse/respond and /pulse/verify from the login redirect.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/routes/%2Blayout.svelte#L148-L155",
+          "version": "repo-lines-v1:sha256:7b68cb26b8ab5bd3e98dc67206f5941d6bab4b7af9d17310463ecd2ad906e8e7:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTI2OGU1NTI1YjUxNjAyODJkNWFjYTQyODA4ODA3ZGMxNDI3MjJjODk1Y2U1YTIxZjI5NDcyZWQ1N2RkMjZkOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWEwYzhiZDQ4MDMxNTE0MTRkMjdhMGQ2MDYwMTc3ODMwNGZlZWZmNjAzZWYxZTMxY2EyYTRhNDIwMmE4MjBhNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZGFhODAzODM5Mjg4MzA0Zjg2N2VjYjk0OGFhNGRkYjkwMzJhZTFkMmMwNmYwMzhlYWM2NTU5YzgyZDlkM2NkMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOTBhODcxM2NjYzRiOTYxNTA2NzUwYzc3NjJiNWZjNzg1M2E2YmY3MmNjODU4MTA2NWZkNjJmOTJlZmNkN2Q5MyJ9"
+        },
+        {
+          "resource": "repo://frontend/src/routes/portal/%5Btoken%5D/%2Bpage.svelte#L17-L55",
+          "version": "repo-lines-v1:sha256:6a007e875577324d57af01ddf017638db368dccc5e6d4a21581fbbad34a45052:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE1MWZjM2JkNjRhZDYwNzk3NTcwZWRkYWI0YzQwYmFlOTkxODUxOTI4OGRiYmJlMWY0NWY4ZjMyY2M1ZGRjMDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcxN2FmMTEwMWM5N2I3YzJmNTI1NDA3ODJlNjM0Y2M0NDQwZjBlOTcwMzQxZTUyZjk3NTIzMTFkNzhiN2Q3ZDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUyYmMxMjYzYTZkZmY4OGFhNDYzNTlmYjFmODQyOWU2YWMxNDU1OGQxZDhhN2QyNGE5MmE0NGJlYWM1NDZkZTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI1MzQxZTFiMGNlYmRhMDJiOTU2MzE1YmVkZjAxYWM5NDkyYmY3OWUyMzZiYmIzMWZjZjcxMGFmNDNiN2VkZjMifQ"
+        },
+        {
+          "resource": "repo://frontend/src/routes/pulse/portal/%5Btoken%5D/%2Bpage.svelte#L43-L65",
+          "version": "repo-lines-v1:sha256:1f84c714664dd3e92849f1879ea0aabaf7823163e45ba62cd4394f66e69ffa29:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkwYTBiMDNhMWM0MTVlMzVhZjhjMDNkZDBlMzIxOThmZjFmMjE2MDM2OGEyYmMwYWUzNDkxNDAyZTdjNDBkN2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJjYWZkMmRjMzQ0ZTQyYmVhNWExMDY2YjA1Y2E4Mjg2MDZhZDlhYmYzMzRhMjA2ZjdlMDEzYjMxY2Q1ZTQ0YjYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFkZTAxNTI4N2YwMmYyMDFmMmRhMTk1OWJkMTZmYTIyZDVjYzU0YzFlYzdiY2UzZTQ2Njc1MTU2NWY5ODI2NWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYxNTc3NWJkZGQ1M2VhY2QxOTYyYjQ0MGE1NGYyY2IxYWYyMjRjMjUyNDY3YzliOGYxYjZjMjY0NDViOThhNzUifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.3",
+    "at": "2026-10-26T04:52:34.633Z"
+  }
+}

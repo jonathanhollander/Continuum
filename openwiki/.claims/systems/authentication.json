@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:f6f42604ae260a23e04c9f9a914c70d8f14d43e7e94b0f8a14b20ecdde03ae33",
+  "claims": [
+    {
+      "id": "claim_0ea0e7a95a4b4d188053f0ae0cbf0017",
+      "statement": "Passwords are pre-hashed with SHA-256 and hashed with Argon2 via passlib, with legacy bcrypt hashes verified directly and unrecognised stored values treated as a failed check.",
+      "evidence": [
+        {
+          "resource": "repo://backend/auth.py#L18-L56",
+          "version": "repo-lines-v1:sha256:466803f8f1acd26fabf95889f2e5a0f368204268a09cb8bf917c2ce4f8800cd1:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY1ZTQ1MjcxYTZkODcxNDIzNzNlNTVjOWFhNjI4NmNiMTY5MjFiNjZlYjdjZDYxODc1ZDcyMTM2NTE4ZDE2NDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1NzcwMzExMDk1Y2QzYTJhOWQ5MjI1MzEyMzg0NjFkNzRiODcwNjQxMzNiNjRkNjBiZGVkYzgyY2E4ZGVlYTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImExM2FkNjJhYTViNmU5ZTI3MDUzYTY5ZDMxZjViMDc3NDY4ZTlmODNlYzkxZjYzYzM5MGUxNTFiZTBkOGIxODQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRmODIxMzU3MmJlMGY4MjczZmM3ZWNiNjE0ZGM3NmRhMzRhNmNhZDBkODM5ZmY1YmQwZmQwMDhmNGNjZWQwMmEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_da260a005b6740b8800877a86bec3f99",
+      "statement": "Password signup and login are rate limited to 5 per minute, passkey endpoints to 10 per minute, magic link endpoints to 5 per minute and refresh to 30 per minute.",
+      "evidence": [
+        {
+          "resource": "repo://backend/routers/auth.py#L142-L143",
+          "version": "repo-lines-v1:sha256:2dc85b9e8ed41e6e777e756b23425fc88c73560b132107a55f7f6fa2e32b917b:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODNkMjRjZjBjNjg2Nzk3NGFmZmZkNWQ0YTEzOTIwNzA4ZjQwODY0MTEwMTU2M2M3MDgxMTM2YTE4MTcwNjc0OSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjI1ZWMwNDA2NmU1ODU5NjA3MjQ5Y2NmZjBkMTFhNGQ5ZDliMmVhN2EyZGQyODRjYjZiNTM4MGFiZTNjNDgzZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzk2NDdhMGNkY2NhZDQ1YTkyZTk1NTAyYjUxMzhjNTliNzUxZmI0MDJhYzJiNjg3NzY1MzI1NWE1OWVlZGUxZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWUyNzA4NGQ0Mjg3ZjRmNmYzMDZiODNlYjUwMjA4N2RhNmM2ZWQ4MGFhMzkwNWU3YTQyZjc0ZmUyYTRiYWU4MSJ9"
+        },
+        {
+          "resource": "repo://backend/routers/auth.py#L224-L225",
+          "version": "repo-lines-v1:sha256:fbdf35ed405ae47025a1ab8a7a7dfd8be2881ee917b91652b74db5e42a0b4ba0:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzY2Y2Y0NWQ0ZjViNzY5OWRiZDNjMWU4ZDdiNWM4MTU3MTMxZGMzMWNkOGU4YjdiOTc4NDllYWZmMzE4ZTcxZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjI1ZWMwNDA2NmU1ODU5NjA3MjQ5Y2NmZjBkMTFhNGQ5ZDliMmVhN2EyZGQyODRjYjZiNTM4MGFiZTNjNDgzZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjZlMmEzNmU0ZGI5ZjYxMGIyODRiZWQ4MjdjZTNiMDdlNDhhNDFkZTM2NjAzMzM4NmFmYjNjZTU3OThjZTU4MyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTk0YjA3ZmY3M2ExYmMxN2NhMzY5MWI5ZGFmZDJiNzJlYjE0ZWQ2NWMxNTI5ZjQ0YjgxYzg3ZjVkZjQ1M2MyYSJ9"
+        },
+        {
+          "resource": "repo://backend/routers/auth.py#L278-L279",
+          "version": "repo-lines-v1:sha256:6e61e6e015bd8a2a2f8c8b9ab85806de4fcf1bdfb5b7d3ece6d51e3f4bc174f2:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNWI1MTQyNjc5OWYwYTA2OWI1ZGRmMTNkMjJjMDA3MGYyMTgwMTcyMzQ4ZmRiZWMwYmEyZDliODM5N2E4YWFjNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMmQ5Yzg3MGMzMTViNjFlOGRiM2IzNzUxNDMxOGY1NTlmNDQ3YTIwZGE4NGRjYmM0NTYxY2QxNDczNGY5OTYwNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDY1NjkwYTQwNDdlMTlkYTk3ZjIzNGVjN2IzY2U5NGIwOGYxMTM3YzIzMjk2NjllNmZmZTllMTFjOTY5N2Q4NyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDA4YTZkNmE3NTUzNWE1ZmM3ZDc0Y2ZjN2JiNzNkYzM2YTU3NjE0ZjMyNDliZmQ4NGIwM2NmZmJmNGIyOTc3ZSJ9"
+        },
+        {
+          "resource": "repo://backend/routers/auth.py#L556-L557",
+          "version": "repo-lines-v1:sha256:38b00877d061a5f608c0ccff01cd86a88a14e7d64c97c8fe5065e0ba344219b9:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzY4YmYzZWQ2M2VlNzE0NTM4NzczZmUwMmJhYzRkOTFmYWE0NDIxZmViOTFkNDU0ZDQxNWFjYzkzM2JkYmJjOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjI1ZWMwNDA2NmU1ODU5NjA3MjQ5Y2NmZjBkMTFhNGQ5ZDliMmVhN2EyZGQyODRjYjZiNTM4MGFiZTNjNDgzZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjFkYzMxNGZmNzVkNWJhZWI1ZjhmYWRmZjE2MDcyMjMwYTIxMTljZjg1NWY2ZjQ0NWRhNDhiNTAyMjBlMTJiOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOTNkZjNlMDM2N2QxZDlhYTk1NjllMjAzZmVlNmI1YjBkZWQ5ZjM1MGIwN2E3Yjc2YmM2MWMxMTVjYzE0MzZkYSJ9"
+        },
+        {
+          "resource": "repo://backend/routers/auth.py#L709-L710",
+          "version": "repo-lines-v1:sha256:2c1f70a89adbe025a00acd2ce1e482d748db61be0f0b79abbaf9696bc27c36c5:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjQ5NzJkOTRhMDUwYWRiNjQ4N2ZlMzI0OTA4NjBkZGQ2ZTliNGRiOWEzZWFhZTBkZWYzZGUxMzA5N2JiZWY3ZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZWQ0MmM4YzdkYzk0ZTk2NWUzYmJlZDAyZDQ3MDU5ODRiMGY0NWMyZWJkNDU5NjIyMzA1ZDc2ZThkNTZiMzJlNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjg3OTk1NmFlZTdlZjI4YjBhMjlkZThkZDdiYTdkMjIxNDk5NzMxZWQ4ZGQ1ZDYzMTI0MDhlNjFjNzZkY2M3YiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiM2EwOTZmNmZlMTBhNTIwNmM1Y2IzMWQ4YTEyMzM3NzYxZjNiNWQ1YWE4YWViNDUxMDc3YTFiYzM2Nzc3MTQ1YSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_aa629f5b464d4e7fa8e87f9c15c1156f",
+      "statement": "Password login with username jh@continuum.estate skips password verification, creating the user with hashed_password BYPASS_AUTH if missing, with no environment check, and logs a SECURITY BYPASS warning.",
+      "evidence": [
+        {
+          "resource": "repo://backend/routers/auth.py#L224-L270",
+          "version": "repo-lines-v1:sha256:9ea1d9419f7903f8564ef861ad4df1084c03237bdce97e6de5d4d4f23b312262:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM2NmNmNDVkNGY1Yjc2OTlkYmQzYzFlOGQ3YjVjODE1NzEzMWRjMzFjZDhlOGI3Yjk3ODQ5ZWFmZjMxOGU3MWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI2ZTJhMzZlNGRiOWY2MTBiMjg0YmVkODI3Y2UzYjA3ZTQ4YTQxZGUzNjYwMzMzODZhZmIzY2U1Nzk4Y2U1ODMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjcyODNiNTdkYWNhZTgxMDM5ZThjOGEyOGU1ZDk4NGRhYzY1YTVjZDgzMDVmY2ZkZmQxNWI5OWU4OTVkMmM0MjQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d4d1b6233fb64ded8a618769b448e5a8",
+      "statement": "Magic link tokens are JWTs with type magic_link, a random jti and a 15-minute expiry, and the request endpoint returns the same message whether or not the email is registered.",
+      "evidence": [
+        {
+          "resource": "repo://backend/routers/auth.py#L556-L630",
+          "version": "repo-lines-v1:sha256:150e0fcdb439581387f573277a9486733d4bca42b8d57ee6c77518d3fadc3221:eyJzZWxlY3RlZExpbmVDb3VudCI6NzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc2OGJmM2VkNjNlZTcxNDUzODc3M2ZlMDJiYWM0ZDkxZmFhNDQyMWZlYjkxZDQ1NGQ0MTVhY2M5MzNiZGJiYzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYxZGMzMTRmZjc1ZDViYWViNWY4ZmFkZmYxNjA3MjIzMGEyMTE5Y2Y4NTVmNmY0NDVkYTQ4YjUwMjIwZTEyYjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRjMTRlN2M4ZmE3ZTkwYzFjZTcxZTcwMDJjMGNmNjM0NjRlMzg5ZmNlYzU0YjFkYWZkZmU3MWYwOTUzYmVjNjQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f01324e166104964a1478dc6bf1f97f4",
+      "statement": "Magic link verification requires type magic_link and a jti, and accepts each jti only once by recording a revoked refresh_tokens row keyed by its hash.",
+      "evidence": [
+        {
+          "resource": "repo://backend/routers/auth.py#L631-L708",
+          "version": "repo-lines-v1:sha256:32dd8c896edac588eac33a2c69ae0df979473b6acfc4f12bfe93dd68cd00a897:eyJzZWxlY3RlZExpbmVDb3VudCI6NzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVjMjA2N2ZjNDE4NDYwYjJiMDNiMDk2ZmE4N2M3M2Y5ZGE2NTJiZDMwZGZlMDEyNWUyYzU1YjVhNDg1NDI0YmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlkN2M2M2U5OTUyYzhlMGUzNDMzYTk5NjI4OTJlOTFmYzkyMTU0YTM1YjljZWJhNzMxZjI4NWE3YzIwNTdmOGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIzNDc0ZDE2MWFiYmUyNTQ2ZTZhYTlhYzcwNmU0MGUzNTIyNzQ0YTY4MDQzZWVjZGEwZTg2NGYyM2E2YmFhYWUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_01e5427fa05f424e806bf1af282451d1",
+      "statement": "Passkey registration start creates the User with an empty public_key placeholder and stores the WebAuthn challenge; passkey login finish verifies against the PulseCredential public key and sign count and updates the sign count.",
+      "evidence": [
+        {
+          "resource": "repo://backend/routers/auth.py#L278-L320",
+          "version": "repo-lines-v1:sha256:5f728bc04f4c1c117c37101f69be96c79e94d9d07ea5c070da21f1b329e74ece:eyJzZWxlY3RlZExpbmVDb3VudCI6NDMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjViNTE0MjY3OTlmMGEwNjliNWRkZjEzZDIyYzAwNzBmMjE4MDE3MjM0OGZkYmVjMGJhMmQ5YjgzOTdhOGFhYzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ5ZjU3YWY3Yzc2MGZkOGIyOTE2YTVkYzZhMmUxZGJlZjM3OGJiYTJkNmNiMzU5Y2U3M2JiNjI2YmY4MTE1Y2UiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ2NTY5MGE0MDQ3ZTE5ZGE5N2YyMzRlYzdiM2NlOTRiMDhmMTEzN2MyMzI5NjY5ZTZmZmU5ZTExYzk2OTdkODciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM5Y2Y0OGE0ODc1YzhhYmFhOTZjNjY4YTBmMDM2MTA5ZGYxM2M0YzIxNmM3NmE1NjQyNjFhYjZiOWE0MWFiMTcifQ"
+        },
+        {
+          "resource": "repo://backend/routers/auth.py#L476-L555",
+          "version": "repo-lines-v1:sha256:153b0a2829b63fa8e7f0139106484582d245f2e35e8a1a921c3a32a594d7d54f:eyJzZWxlY3RlZExpbmVDb3VudCI6ODAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0Mjk4OWJkNDI3MmYzNzdiOWNiMGFjZWYwM2FmMzgyMzA1YjA3NzY1MDMzMTY4YmFiODcwNzM1Y2ZkMzNlMGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMxMzNjZDQ3YjEwYzdkM2RkYjNhOGFhYmIyYWRjZWE0NDQwMTU5YjI1MTY1ZWFkMTliN2MyNWE2ZjY2MTczMjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJjYzMxNzZkZTNjYzdiZjYzZTg2NGE0NmJiYzNlODdkNzFlYjM4ZWYxMmY5OTM0ODBjMjhiZTZlZjAxZmRhYzQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_19ff537f3319485e93b26de57bd1352a",
+      "statement": "WebAuthn challenges are stored for 300 seconds in a PostgreSQL-backed store in production, falling back to an in-memory store if it fails, and in memory in development.",
+      "evidence": [
+        {
+          "resource": "repo://backend/challenge_store.py#L228-L245",
+          "version": "repo-lines-v1:sha256:a4b874c91ef90444084484ed467d37dce8a3ee0dbb72b78b42ff2d6232cfaa61:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg2NzUyYjQ2Y2M5MGE4MmQzNjY4NzI0MTEzNWNiMTg1ZTRkOGZlYWI1ZjFiYWU2NjhhMDQwOGRiOWNhMjMzMGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkwNGIxNmFmNmJiYzJjOGQyMGVjY2FjMjU4NTExMjNlZmE2MzRjZWI2NDUzMTQ0OGJjN2E2NjFiMWU1NGEwMWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjExY2YzMWI1MTk3NGY1YmVmYjczMWNmZDVkYWIyNGMyOGUwMTBkZmM4MWM0MjA5YmQ2NTBiNzFlMWIwNmE0YjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://backend/challenge_store.py#L24-L110",
+          "version": "repo-lines-v1:sha256:4b4483cfe11a12d71f251eb8be184b8bd545a720d84fdb0698233675b3d13c32:eyJzZWxlY3RlZExpbmVDb3VudCI6ODcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZjMTJhMzk5ZmIwZDNhODNiMzA2MzY0NzhkOWZkNGZhODBiNjljMjVkZDU5MGI3YTIzN2RkYTcxMTZjNjZmMjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY0NTc0NjkwZWNhM2NmZGE4NjA5ZDc4YzRmYWYzNDlkMzUxZDhlNWI0MTBlZjNhN2QwMzZjODhhMjgxNmJkMDQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU5MGY4ZTVkYTBjOWU1YzRmYmY1NThlN2IwMmQ0YmNmOTk3OGRkZTE1ZDA0YjNkMGQzZTYwMWRmNzI0OTg2MWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI2YzJmZTY5NDE0NTI3Y2I4ODMzNGE2Y2RlZTkxZDc0NTgwNWJjMTA5NjZjODczZDNkZDdmMWJiMjU0NzI1ZDAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_849815e220ce4a0e8c98ebcbd80fa0b0",
+      "statement": "Access tokens are HS256 JWTs with the user id as sub and a configurable expiry; get_current_user rejects missing tokens, non-integer subjects and any token type other than absent or access with 401.",
+      "evidence": [
+        {
+          "resource": "repo://backend/auth.py#L58-L105",
+          "version": "repo-lines-v1:sha256:51dc8608bf3b43a4a93ebc0c2f18201a0af7f9f2902df89a3b6e6094899657b9:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRiNGM1Y2M0ZmIyNzE5NjlmNzUzZGYwNTAyMDkxZWEwNTdjMjg5NmU0OGFiN2ZhNzBiMDEwZjBmYTkwZDhjMGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUwYzg4OTE4MzVlNDJmZmJjMWZkOGRkNWU4ZDY4N2FmMWEzZDk3OTZhZTkwY2JlNDMzYjU4NTYyOTRhYThiOTAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM2ZjcxMGI0NzEwNzkzYjhjMzdjYmQ4MTc0NThjZjA5NmZjY2Q1NmZjZmEwMDg2NmIwYTViMDY4MGJmMDEzMjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJiMDk3NWQyN2Y2YmJmYWUwODIxYjdjZTNmMjRmMTA1MjgyZWNmMTIzOGViYTAxYzEzNjc1NGIyNDY3YmZjOWYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2a7d36ce7417415094196ae709d46fef",
+      "statement": "Refresh tokens are random URL-safe strings stored only as SHA-256 hashes with a 7-day expiry, rotated on refresh and revocable singly or for all of a user's devices.",
+      "evidence": [
+        {
+          "resource": "repo://backend/auth.py#L124-L265",
+          "version": "repo-lines-v1:sha256:a6d4749b3bee9e134cfc1700522bfdc4a252f3e6f802464d464dbd94a939c84c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQyLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIxMDg0MmRlY2YyMmNiNDY0OTZjOTkyOWE5NjZmOWVmOWE3OWU3Yzc3ZDhlNTBjYWZmZTA0ZDAwZDdhZWJkMWRlIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJkNGFjOTBkYjVjZmM5NDUzYTg3OTUxODg5Y2NlN2E2YjhiMTRjZmU0NTZkMjU5OTk0MmQ5MzQ2YzlhNjExZTA2IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJlZjVjMzZlNzk0NGM3NTJlZjRkNWM2ODY1YTU1NWE2YzA1YzRlNzJiNzU3YjM4MTc0YmNjZjExN2ZmOTEzZjM0IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+        },
+        {
+          "resource": "repo://backend/routers/auth.py#L709-L768",
+          "version": "repo-lines-v1:sha256:5e879228d2758c3de15b9a8a3ef4b861c9d99990de99182db9c056ce0af46ec9:eyJzZWxlY3RlZExpbmVDb3VudCI6NjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI0OTcyZDk0YTA1MGFkYjY0ODdmZTMyNDkwODYwZGRkNmU5YjRkYjlhM2VhYWUwZGVmM2RlMTMwOTdiYmVmN2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY4Nzk5NTZhZWU3ZWYyOGIwYTI5ZGU4ZGQ3YmE3ZDIyMTQ5OTczMWVkOGRkNWQ2MzEyNDA4ZTYxYzc2ZGNjN2IiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVhNzk2MTkzMTYyMDBiYmUwMDUyMmU0YjNmOTg4ZGRhNTVhZWJlNDA2ZjE1ZTJmYWZlNDgwZjZjY2FiNDMxNDkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_69f364376af14ec485f090c2b3866928",
+      "statement": "The frontend auth store keeps only the access token in localStorage continuum_auth_token, validates it with /api/auth/me on init, and logout only removes it locally; no frontend code uses the refresh token.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/lib/stores/auth.ts#L43-L175",
+          "version": "repo-lines-v1:sha256:1696164d76e5b3bb5c5f60c5590b89d32ea5f877e5ea5e57bba671c5f2b3f635:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMzLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIwNGY5MGE5NTU4MDQ5MzM2ZjQwMmM1ZGQwNWFhOWVkZTQ4NWYwZmI2MzY4Y2U5ZmExNzI4Y2ZjZTBlMzc5OTFhIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIwMWJhNDcxOWM4MGI2ZmU5MTFiMDkxYTdjMDUxMjRiNjRlZWVjZTk2NGUwOWMwNThlZjhmOTgwNWRhY2E1NDZiIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJiODA0NTE3ZTc2M2M0NjQ1ZmRlNTFkNGYyYWRhNGE1OWMxYzNlMDFmNjg3MWI4YTNmODEyMzE1ZTY4MDg2MDkxIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJkZjkyNmQwNjBjNzRiMGExNDg5ZDE5YWJiN2ZjN2ZmZTJkNGY1N2ZkZGZlMTZjNDI3M2Q2MThjZTMyOWNlYWI0In0"
+        }
+      ]
+    },
+    {
+      "id": "claim_d6a0cb04657844f8b198bb3e39e20721",
+      "statement": "The CSRF middleware exempts the sign-in endpoints by exact path and the public Pulse respond and confirm token routes by prefix.",
+      "evidence": [
+        {
+          "resource": "repo://backend/csrf.py#L36-L58",
+          "version": "repo-lines-v1:sha256:f51add37d782edaa1eb55c694c4dfb9e376f38042b674763fe6a8553b057d61b:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRkNTQxMGZlY2FjYTc4YWEyYTg2ZDg5YTRhYTI0OTJlNDcxMThiMjQxZmJmN2E3ZjM2M2RmODQyYTMzNTNmNTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZmJhMDUyN2MzOTUzYzRiNmUwZTViNTczOWJhODM2MTJmODA1M2JjZGM5NDY2NzMwMTkzY2QxZDU5MGI0MDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNkODI3YTBjZjM1YjM4NTI3M2Y1NzAwMTVhNTcxZTExN2Q2NzQzNjkxODkwMTNhNzBlYWNjNGRkYWMyODlkZDMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNkYWNjMDE3NWRiMjhlYTRkNzA1YmU2YjdhNDYwZGFiMjhiMzI4M2FiZGYzODZlM2NmMjYyMWNhNzliOGZmYjQifQ"
+        },
+        {
+          "resource": "repo://backend/csrf.py#L76-L90",
+          "version": "repo-lines-v1:sha256:4c38b5b9dc5730c5931d86a7847c8d63d807c69e2e86783b9172cc7fa9948a27:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRjZTMxMzIzNmE1ODgzY2ZlZDc3M2ViOWU0ZjY2MzZiYjg2YWVjODBjNzZkMDhjYjUxODJhYzAwNWNhMGJjYjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMzOTA2NjUwMDIzOGY5OTg4ZTUyNDAwN2EzYjJkMTFlNmRmMjllMjZlOTYzNWU0ZTIyMWIxNGYzN2JhNmY1NzkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgxYjI2OGE2MmI0NDc2MzFlYmYxOWQ5Y2M4ZmZiZjRiODM3ZDk5ZmVhZGRhYzQyNjMyYjVkNzhlODk2MGY0MzAifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.3",
+    "at": "2026-10-26T04:52:34.633Z"
+  }
+}

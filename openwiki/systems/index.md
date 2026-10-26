@@ -1,0 +1,6 @@
+# Files
+
+- [Authentication](authentication.md) - How users sign in to Continuum — password, magic link, WebAuthn passkeys and the jh@continuum.estate development bypass — and how JWT access and refresh tokens, get_current_user, the WebAuthn challenge store, CSRF exemptions, rate limits and the frontend auth store fit together.
+- [Email and AI Services](email-and-ai.md) - How Continuum sends email (Postmark, SMTP or a local outbox), renders Jinja templates, records delivery in email_logs and handles Postmark bounce webhooks, and how the AI concierge reaches OpenRouter through the server-side /api/ai/chat proxy with client-side redaction.
+- [Media, Documents and Export](media-documents-and-export.md) - Where Continuum keeps uploaded files and recordings (backend media storage on local disk or S3, browser IndexedDB, inline data URLs), how vault documents are stored, the IndexedDB-to-server media migration, and how the PDF export and the printable Red Binder assemble a readable copy.
+- [Pulse Welfare Check-ins](pulse-welfare.md) - How the Pulse wellness check-in system works — its settings, contacts, tiers and log models, the hourly scheduler and deadline/escalation rules, guardian email alerts and portal tokens, the public check-in and guardian endpoints, and the frontend Pulse store and pages.

@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:f28cf1d62ee436e3a189c5721a019b4f72ba5c70512d6df552fbbec0f9e0ea41",
+  "claims": [
+    {
+      "id": "claim_dd98b1ecf5c04641828d3793abb2012f",
+      "statement": "All backend settings are fields of one Pydantic Settings class in backend/config.py, with SQLite as the default DATABASE_URL, 15-minute access tokens and 7-day refresh tokens.",
+      "evidence": [
+        {
+          "resource": "repo://backend/config.py#L28-L133",
+          "version": "repo-lines-v1:sha256:de599a35c5107dd4cfceff35100127f9b9b9f67ac54bb776de400bb25030994e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTA2LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIwMWJhNDcxOWM4MGI2ZmU5MTFiMDkxYTdjMDUxMjRiNjRlZWVjZTk2NGUwOWMwNThlZjhmOTgwNWRhY2E1NDZiIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIwMWJhNDcxOWM4MGI2ZmU5MTFiMDkxYTdjMDUxMjRiNjRlZWVjZTk2NGUwOWMwNThlZjhmOTgwNWRhY2E1NDZiIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJiNzk3NGI3ZDYxNTY2OTBjZWU0YTU1NzYxMzg5Y2QzM2MwN2IzNmQ3ZDM1Y2UxYzlkNWNmMWFhZDA5NGU0OWQ3IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI4MjhmMzNjN2IxMzJlYTNmNDdjNzkzZTFjMmEzMzJkZjE1ZWFjY2EwMGVlYWVhNmIyNGMwMGVmYjJiNmFkZTFlIn0"
+        }
+      ]
+    },
+    {
+      "id": "claim_5b8c9f9abcc340b9b1e69a41f188957e",
+      "statement": "A postgres:// DATABASE_URL is rewritten to postgresql:// at load time.",
+      "evidence": [
+        {
+          "resource": "repo://backend/config.py#L148-L159",
+          "version": "repo-lines-v1:sha256:7102b055e7ed6e1c40e5fda4e79f9ba7db78c2185c38ed42e5a2fd197d51375a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAyMzE0ZjIyNjMxM2ZiMzQwMzMzM2YxMzk4YzZkMjYxNjg5M2ViMzY5OGIyMTQzYTU0MjJiMDYxNjA3ZWJiNGIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI3ODJjY2M2NjE3YTYyNGY4NDU4NjgwNmYxMWMzNzNhMGE0MGZiOWU1MjljZTNmMTg4YTAzZTZiNzZmOTc1MzYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJmZjQwNGYyODQwOWQ3MGQ1Mzk3ODIxNjllNWY4OGJhNmVlMjRmNGE5YzNmMWYyOTQxZTgyYzUwZmQ4ZTI4N2EifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_433ec378afd5434cb0c5870094086b38",
+      "statement": "In production, RP_ID, ORIGIN and FRONTEND_URL left at localhost defaults are replaced with the continuum.estate domain, and RAILWAY_PUBLIC_DOMAIN fills RP_ID and ORIGIN when they are still defaults.",
+      "evidence": [
+        {
+          "resource": "repo://backend/config.py#L161-L191",
+          "version": "repo-lines-v1:sha256:a9fadceedd4d3e87f7ab5f12113cdc5538124537bb191d316ac462d65ff3fd39:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYzYWQ4ZTg1MzQ5ZmUxMTgxOTg4NTk3NmVmOTZjYmUzZjZmNjVjMjg4YjI5MDcxM2FjYWRiZGY5YTkyODAzODgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEyYWIwOTBiY2QxNjIwZmE2MmVhZWUxNTdhNzRmY2E2MzVhYTI5ZTEyY2JmZmQ2MThiNTc5MmQ4N2JjMDNhM2YiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI4NjE1MGNhN2M2NTcwZmRmOTRmZDhjNGVlNDA1NWViY2NjOWQzYTFiN2U4ZDA1N2QxMzgxZjc0MTA0Y2U5NzgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE3OTk1ZjBkNTk2NjJlMzYxZDZhNWE3NTIyNTNmNDZlMDVhNGE0MzgwMjZmZjA1YWFkMDg0YzkyZDQ0M2JkMjMifQ"
+        },
+        {
+          "resource": "repo://backend/config.py#L18-L18",
+          "version": "repo-lines-v1:sha256:5dd8bcaf465482917f444fe0f3d26519a91c5ebef1b04833f30c7b20de86b33c:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNWRkOGJjYWY0NjU0ODI5MTdmNDQ0ZmUwZjNkMjY1MTlhOTFjNWViZWYxYjA0ODMzZjMwYzdiMjBkZTg2YjMzYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNWRkOGJjYWY0NjU0ODI5MTdmNDQ0ZmUwZjNkMjY1MTlhOTFjNWViZWYxYjA0ODMzZjMwYzdiMjBkZTg2YjMzYyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiY2JlNTJkNjg0YjA4ZmVjMGNhNzFmYzJiNmRhYTA3ZTExNTIwZDQzOTMwZDc0YjA5MDQxYTNhYWMxYmE1ZmJiZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzcyYzc2ZDUyZmU1OTk3YTliZTY5NDM2MjA4NmM3MDFhMWQ1NTEyZjBkYmU4ODFiNDFiOTVlYzg1ZDRkNzhmZSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_0adeac00636e49168ddfa267b1ce6015",
+      "statement": "In production, validate_production_config results are logged as warnings and do not stop startup.",
+      "evidence": [
+        {
+          "resource": "repo://backend/config.py#L261-L294",
+          "version": "repo-lines-v1:sha256:37d49c655fad0d5a248094a4dda7c8c7216149abf738390affa90a0bd690ea9e:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRhODdhOTNiNTBhM2FjZTdmOTBkN2EzZTlmYmFiYzg2NzIxNjlhMWE4ZGNmMWU5NjljMzY4Yzc2NTVmMTg1YzEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM5MTk0MzEzNmFiODliOTk2NGY1NDlkMDQ1MjUzOGVmYzE2NWJkZjE5ODBlMTA5MDJhMjA0NDVhNjg1Yjk2ZTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY4ZTQwNzBkNDNiYTMxMzdmNWEyZWVmYzQ4MWMwYjY5YTg2OTdhMjZhN2VkMzY5MDc4ZGFmYWNlYWMzMzE5MmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEzYzU0YjEwMjc2MDAzNDc4YTBiYzYzOTMwMTE1NTFhY2ZmYWI2YTRiMTU4M2UyZTI4OGNkMTcwYTI0NmI3NTcifQ"
+        },
+        {
+          "resource": "repo://backend/config.py#L305-L325",
+          "version": "repo-lines-v1:sha256:01b20c91121c7e6559e50f08a14abd0847d042294abdf56e2d8c794adf43e322:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM5Mzk1YjAzNjkxMTZkZWYxY2RjY2QwMjI2Y2FkODlhMjIxYWExYmFmZDA0OGJkNWI2OGI2ZmYxYWNmMDAzY2IiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3ZDNkZTc1MDcxOTgxYTVhYjY3ZTQ2MzE0ZGFiYzU3ZDg4MDExNjBkMDlkYjY5ZDAzNzc4NjRhZDM0MWE5OGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk5NTBhZDU3ZDQxMTUwYzg4N2MxN2Q0YTg1YWQyNDdhYjA1NjY1ODdhNGQ2ZjRjMzI2ZTJjZDQ5MDQ4MWU1ZjEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_92bc685f2687412b9c199b331865cb91",
+      "statement": "backend/seed.py creates a test@continuum.estate user with a mock public key if it does not exist.",
+      "evidence": [
+        {
+          "resource": "repo://backend/seed.py#L1-L25",
+          "version": "repo-lines-v1:sha256:b8063f7abd5f8f111c2ac50f93ef5db9cf3de8823397b888321352e6a7b40a02:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA1ZTdmN2VhZDE4ZGQ2NDYxMjU3YjRiZjZjY2NiZWUzMTRjYTEzZGM0YWE2MjU5MGQ5YjY2ZWFlNjg0MTAxOTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYyMjRkYTc0NzIxMDU3MjQ2NjZmZmUwYzVjNDA1ZmE2NmRhMWJmMGRjZmM1ZDMwZDlkYTQwMjQzNjIwYTJjYTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b8a213846ff6418492ba36b864d0489a",
+      "statement": "Startup configures logging at DEBUG when DEBUG is true and uses JSON output only when ENVIRONMENT is production, writing to the console and a rotating file in backend/logs.",
+      "evidence": [
+        {
+          "resource": "repo://backend/main.py#L131-L138",
+          "version": "repo-lines-v1:sha256:a9ea79a3715418f6848b1181c5aa3688176738227f8b6f6dae355ab5e5ecd9ce:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZmU0NmE4MTJiMGE3M2EyNDIyMGMyMWQ5YzM4YTI4OGEwYjRhNjMzYWQ3MjQ3OTMzYzAyZTgzZDQwNzQ4MGUxMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOWIyNGVkY2U0N2JiNTk3MDJkM2ViNzQ1NDY1ZmZjMWIzNzgxNWIzZDJkM2Y1ZDU5ZWI3NThkZTA1N2U3MTAwNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjBlZDMxNTJkMWVmMzhlN2I1Y2VkNmIyMmYyM2UwZjU5ODA3OTY5OTgwMzNjNTk4OTdlODY5OTA3ZjFhZDk5ZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODgxMGRjMGM2MTZiYWVjNWI0MTc2Y2ZjMjIzZjg2OTNiYzg4ZmRlNjYzYmViMTU0NzUxZmFjYjExMDJkYWRiOCJ9"
+        },
+        {
+          "resource": "repo://backend/utils/logger.py#L119-L190",
+          "version": "repo-lines-v1:sha256:6ada2a2184d967a67550025a760d710dbc66557cdfaa3dc2d6c9fe700dcb28e3:eyJzZWxlY3RlZExpbmVDb3VudCI6NzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIzMTQ4YjIyOTY2NWMwMDhmZTExOTBkYmI1YTI5MDEyOGU0ZTllYmEyMTk3ZDhiNzQ5OWM3ZThiZmIyZjMwN2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZjNDBjYjc5MDEwM2U5YTIxMDIzMWM5MGEzNjgxZTI5YTM3OTY1Y2M5OWYwODhiODFiYmFmMWY2N2YyM2M2ZDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVjOGY2MDI0MWY3YjcwZjEyNjNjNTkwOGViYzYyOWNmNmQyMTdlNGRhMTBkZjJjYWRlN2Q1ZmVkZGUzMzkxMGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ1NGY1MzAzMmFjNDAyYTMwNmJmOWUzYWMwYmY0NGY2YTc5YjVhMWVmYzA3NzhhZjM4N2M3ZGIyYzM1N2FhN2QifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fca9fef9b7fd4bf683a661fcd2d31754",
+      "statement": "log_audit writes an AuditLog row with user, IP, user agent, action and resource, and logs instead of raising when the write fails.",
+      "evidence": [
+        {
+          "resource": "repo://backend/utils/audit.py#L14-L58",
+          "version": "repo-lines-v1:sha256:46259a6e2779ffdffd6bc3675b919d61d4ef0f55701f1df958414b68eb7334a4:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc0MjI0MTA0ZGUxZGVhZWExNTBiMWViODQ2ODQ4NzM4OTZhMTg0N2IzNDY5YmQwNzgwYzkzNGQxYWQ1YmIyODQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY4ZDYxOWRkMTE0ZjUwMzdmMGNhYzNjOTUzM2YwNTMwMDg2NjBlMjA5YTA5MTU0OGYzMjNlOTdlYTQ4ZmNkNzkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkwMWIwMGZjNmQxYjgyZDkzNWMwOTQ3N2JkNjNjMjZhNWMzNmU2ZTBkNDE5NjM0OGFkODQ5MzgwYWRmZTY5ODciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU3ODdhYzhmZTE0NDIyMDJkZTM3YzViYjFkZTM5MTliMGQ4N2ZjMTk1ZTUyZWU1Mjk3MjZlZGUwNTAxNTM4NTQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0ecbbce054874541ad37679d38861e4d",
+      "statement": "scripts/smoke_test.py replays the UI's payloads per record type, re-fetches and diffs them, prints PASS/FAIL lines, always exits 0 and is run by hand only.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/smoke_test.py#L1-L25",
+          "version": "repo-lines-v1:sha256:7ac5b50215a82e31873c237bbc9c71e56f871f59314e7c73216761631d1ccad7:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ2ODJjYmRiNGM4YjA3NTE4YmY0ODZjNTg5OTBmYzM5MTc4M2FhMjBhOTE2YmZiMjdhZDIxMWViMWQ1YzM2NDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhhNTBlZGE2YWRiNjUwY2JmM2JiZWYzZDMzNjgxMmM4M2ZiNTRkNTA2MmY3YmZjYjM1MDIwNmQ1ZTkwMzUxZGIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM1YTczYTNjNTg4MTdjODk3ZjI4NTQ5YTk5OTI2OTFkMmY1MDYzMjZhYTNkZGIyNWU2N2Q0NTc5NzIzZjY1YzAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5787b437780d4ab093718e653fd8df86",
+      "statement": "Nixpacks installs Python 3.11 and Node 20, installs pinned requirements into /opt/venv, builds the frontend and starts uvicorn backend.main:app on PORT defaulting to 8080; Railway health-checks /api/health.",
+      "evidence": [
+        {
+          "resource": "repo://Procfile",
+          "version": "repo-file-v1:sha256:ceb34ac9f16cff395cb22dcdf1470f3c72d3cd3f9154dafc3b55b88c8af44664"
+        },
+        {
+          "resource": "repo://nixpacks.toml",
+          "version": "repo-file-v1:sha256:69604315efbfeb65b494cda947931e78f6523cbf98aba41c0a6e2392ae2f31b1"
+        },
+        {
+          "resource": "repo://railway.toml",
+          "version": "repo-file-v1:sha256:494a7f0cfdef409b0d6f68e9bfc20b52eefc0437e7bdf041be0a9ac0f1210fab"
+        }
+      ]
+    },
+    {
+      "id": "claim_720054c36e9d4e12ab41c5cf6d3b0571",
+      "statement": "backend/requirements.txt uses exact pins copied from production because unpinned installs pulled versions that broke login and seeding.",
+      "evidence": [
+        {
+          "resource": "repo://backend/requirements.txt#L1-L3",
+          "version": "repo-lines-v1:sha256:2352938e81d3680265ec33a850d8ab58fab3ef470b4a6fcd7abfe6885966ef5c:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNGIwMmMwYzQ3NTRkOWJjNmM0NzliYWYwMmJmMTNlNWVhMWY5OTUwNDM0ZWU4MjQ1YWZhNzQ0NTEyNjYwOWU0ZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzQ4Nzk4ZDY1MzY3ZmY5OTI2MTU0NWQ5ZTVhZjE3NDBiNGU0OWQ2MTUzZjcxNjVjODIwZTI2NDFhYTc2MzgxYyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOWM3MDU4NDdkYWQxMDc3Y2VkOTlkZGQ4ZjcyZjIwOTljNzAxY2IzY2JmMzc3ZDhlYjhmNjQwNWU5MTY1ZTRiMyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_1a9a28e0a79e45c193812b109b0914aa",
+      "statement": "The production HTTPS redirect uses X-Forwarded-Proto and never redirects /api/health.",
+      "evidence": [
+        {
+          "resource": "repo://backend/main.py#L197-L208",
+          "version": "repo-lines-v1:sha256:fff0472357b874ad38087ab2552d57563b516fde9ac30d3ea13f3e4918d284fe:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQzOTdmNDlkMjE0Mjc5MjVjNDI5MGNiNjFlY2I3OTAzYjg2NTU2NmJiYTE2ZjI3MjYxZjA4OTU4OTc2NWExZjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNkY2YyMGQwMjc5NDQ4NjYzZTllNjY4ODI5ZGZhNjQyNzQ1MTA1NGZlZjZkYmU5MjIzZmExZmVmMDgxNjIzOGIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkyM2Y0ZjQwMGQ4YzNmNjdhZjQ3MTJjMDNmMjA3NTM2M2RlMGEzZjE4ZmJiMDZiMWY5YWQ0YmExZTA4YzQxYjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM5YTQ4ZGMyYzdmZWUzYmI4NDdkMzlkZGUwN2VlZDllZjYxMjA1ZTg1MzRjNTAzMDZiZTg1OWI5OWI5ZDRhZGUifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.3",
+    "at": "2026-10-26T04:52:34.633Z"
+  }
+}

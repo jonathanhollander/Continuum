@@ -1,0 +1,160 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:3aca709cc9f52d531b53d1127b80e45ec53660b78a1bfc646911edabd64345fa",
+  "claims": [
+    {
+      "id": "claim_ae156f8fa14a4feea919645c19810110",
+      "statement": "On startup the app configures logging, creates database tables, seeds the dev user dev@continuum.im with password dev123 if missing, and starts the Pulse scheduler; shutdown stops the scheduler.",
+      "evidence": [
+        {
+          "resource": "repo://backend/main.py#L130-L170",
+          "version": "repo-lines-v1:sha256:5fe40f22313ec1a0f7b01e864607f9fe1d57b7f6efc08278d868f753987528b6:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFiODM5ODRhYTQ0NDk2OGIxYmU1YzgzZWFjN2RjMmQ4MGRkMjRhYThhZTYzOGY1Yjc5NTgzZjUzMDAzODgyZGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBhY2MxMzkwNDk2YmY5OTkxNTE1NzQ4ZWUwNDQ0MTBiY2RlOWE1YjA0Y2ZkNmE2YzdlM2IyNzgzY2ViYTA1OTAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjEzOWEzYTE4MTk1MDU3MTA5NzJjYzExMTk5ZTdhNjc4OTUxZGVhNjVlNmM2Mjk4Zjk3ODkwNzM0MTM2ZWZjOWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBmYmFjNDU1ZTRmOWZlYTkyNzAyMWFkYWRiNzkwOGVlNjMyYzJiMjFlYmQ2YTIxZTE3ZTYwNGU4MWYxOWUxZmYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e8d3b7911b1941438c0065a556ecfb0e",
+      "statement": "The documents router is registered before the estate_data router so the generic /api/data/{data_type} route does not capture /api/data/vault_documents.",
+      "evidence": [
+        {
+          "resource": "repo://backend/main.py#L113-L128",
+          "version": "repo-lines-v1:sha256:44a01c5265b2065c570afd8c79e94fe6144523c8ee3cb83a9e6767807ff8f091:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQyMjM2Y2RmMDg4MGZkOWNiOTkzYjAwOTljMzYwMmI0NWJjNWNiMzBlOTcyMzE5NGQxZmFmMDYyOTkxYzk3NjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY1MzMwNjdiMjIxZTY1MmU1MWZiMmQzZDIyYWQzZThjN2ZkMTBkZTM1NTYyMDk2NzM5MTUxYTQzYjE2YjhmMGIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcyMDA4MTNjOThiM2EzMDVmMDM4NTYzZmQ2MTEzMTZlMTBjMjU4ZGFhN2EzNGM2MDk2ZjVmZjU4MWI2NDRjZDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM0Mzg5Y2IyMmFlMDgzNThiYTkwYjgyNWRiNmE3ZDBkOTg2YzRhYzZiYTBjN2E4MDFhOTBkNTdjMWM2MTYxZTgifQ"
+        },
+        {
+          "resource": "repo://backend/routers/documents.py#L9-L9",
+          "version": "repo-lines-v1:sha256:1d33d54c740c1bebd6fc67ebe7083e8bb425582e68598812f289019de223ba46:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWQzM2Q1NGM3NDBjMWJlYmQ2ZmM2N2ViZTcwODNlOGJiNDI1NTgyZTY4NTk4ODEyZjI4OTAxOWRlMjIzYmE0NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWQzM2Q1NGM3NDBjMWJlYmQ2ZmM2N2ViZTcwODNlOGJiNDI1NTgyZTY4NTk4ODEyZjI4OTAxOWRlMjIzYmE0NiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYmUxNWNmYmQwZDM5OGRjNTIyZWUwZWNlYjdkMzliYjQ4MTZkNDQ4ZmUxOWE2MmMyOTY2Njc2MjI4OGY0NGI3NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzFjZWYzMGNjNjdhNzM1M2FjYTZlZGYzZDM2OWZjODFiNGFmMTYyNzEwNDkzOTEwZGZmNjZkNzdjOWI0M2Y5NyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_9562b53e9740432a9c27163fa9e33579",
+      "statement": "The /api/health endpoint checks database connectivity, upload directory writability, a loopback request to FRONTEND_URL and scheduler status, returning 503 when the database, storage or scheduler check fails.",
+      "evidence": [
+        {
+          "resource": "repo://backend/main.py#L297-L360",
+          "version": "repo-lines-v1:sha256:c44eb5c6c2f9dd02ae1780eb61f6f7b65994f2431f67d5a8db50bd087f020300:eyJzZWxlY3RlZExpbmVDb3VudCI6NjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhNWI0NmFkOTNjN2UwYTAwNGE4MTk1ODEyZGJkYjQ0NDZiODk4MWU1MzliMDUyM2Y3MTA5ZTNlZDhmNGIwYmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc1OWU5NjFhYWMxNGFhMjU1ZmRiMjRmYzdmN2Y4ZjU5MjYzMzE5Yjg1NTUyYzAxZjlhMDIwMWE1Y2E5ODY2YmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ5N2ZlYzBkNWJlOWNmYzI2ZmEzOTA5NzYxNzFjNTU0ODI4NzI5ZDgxMjQyN2QwMDdhZTUyMjFkOTE2OGMyZTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg4ODlmNGFjNjNhYzhmNWRmNTljNTJjY2MzZGU3YzY0OTZjODQxZTk5ZjcwZjU4NzFiNzM5YjMyZDRhMjQ2NjgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4eaef7fcf2424064ae7c3affbf872756",
+      "statement": "MODEL_MAP in estate_data.py maps URL data types to SQLModel classes, with properties, digital_assets and heirlooms all mapped to Asset, financial_assets to FinancialAccount and future_letters to Letter; unknown types return 400.",
+      "evidence": [
+        {
+          "resource": "repo://backend/routers/estate_data.py#L106-L136",
+          "version": "repo-lines-v1:sha256:d86a51198897fb26f6a6d95ba0e1461a96ecc130d1472325ebcd9b77b2641f1a:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM0MjY0NjdhMTVhZTE0NmEyNjVhYTgyNzA4ZjA4MTk3NjNlYWI2MTMxYTY5NDU0MWRhNzc1Y2U1MjllYmVlZjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBlMTFhZDM0N2NlNTAxYzk4YmM2MzM3MGZmZTMwZjQ4NjUxNDY5YWNhM2I3YThjZTM5YTNiZTBmNzBkMjhiZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyM2M4NjEzYWVkY2ZkOGU5YzM0Yjc0MWUzOTYyNTBhZTY1YjlkMzZkYjdkZWYwYjczMTk3ZTkxN2NiMjlhNTMifQ"
+        },
+        {
+          "resource": "repo://backend/routers/estate_data.py#L189-L199",
+          "version": "repo-lines-v1:sha256:5c1f62e8bf11ffe9badf71f19a154747a4927063e7f9d7af03b4014ddc30dd91:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhlNjQ4MWJlNTQyMDI1OGNjYjBhMjhiNmIxZGYxYjkzMGEwMDg2MWYxNGU2NDlhZjEwNWMxMWRlZDU5YjliMGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1NjAyNDAwMGY2NDFlOGFiYTk5YTg1ZjNiN2JlYzI4OTRkYjg2MGExYmQzM2UyN2Y0YmQxNGI4NzcwNTc3MGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM1ZGJlN2UyYjE2MDk4MDUxNzJhMTE5MDBjZmNmN2Q3YmVjYmExMmNmMzBkNGI3Yjc2NTNmOWE1YjMxMGFhOWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIxZWNjM2Y0YmQwZTlmMDNlODBkMDk4MTBjZDBmNzY4ZDJkNzM2MDk0ODczOWZjNTcxNTcxNWQyMGFiZDZlMjQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_bbccf49b93074d6897d494ca31372ebf",
+      "statement": "GET /api/data/{data_type} filters only by user_id, so aliases that share a model return all of that model's rows for the user.",
+      "evidence": [
+        {
+          "resource": "repo://backend/routers/estate_data.py#L189-L199",
+          "version": "repo-lines-v1:sha256:5c1f62e8bf11ffe9badf71f19a154747a4927063e7f9d7af03b4014ddc30dd91:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhlNjQ4MWJlNTQyMDI1OGNjYjBhMjhiNmIxZGYxYjkzMGEwMDg2MWYxNGU2NDlhZjEwNWMxMWRlZDU5YjliMGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1NjAyNDAwMGY2NDFlOGFiYTk5YTg1ZjNiN2JlYzI4OTRkYjg2MGExYmQzM2UyN2Y0YmQxNGI4NzcwNTc3MGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM1ZGJlN2UyYjE2MDk4MDUxNzJhMTE5MDBjZmNmN2Q3YmVjYmExMmNmMzBkNGI3Yjc2NTNmOWE1YjMxMGFhOWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIxZWNjM2Y0YmQwZTlmMDNlODBkMDk4MTBjZDBmNzY4ZDJkNzM2MDk0ODczOWZjNTcxNTcxNWQyMGFiZDZlMjQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b85ae666654348ada60a0a3cecd5133c",
+      "statement": "Generic create accepts a raw body or a single {data: ...} wrapper, rejects protected fields, injects user_id, JSON-encodes dict custom_attributes and writes an audit log entry.",
+      "evidence": [
+        {
+          "resource": "repo://backend/routers/estate_data.py#L213-L262",
+          "version": "repo-lines-v1:sha256:ee3104ba4218b1cee68710eabfd096b6fdaed84fe91df130c184d83bacf6146c:eyJzZWxlY3RlZExpbmVDb3VudCI6NTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIxODg0YWVjYmMyODFmNWY3ZmZjZWVhOWViMTcxZTRiZGU3Y2I5YTc1OTU3YzE3M2Y1ZDk3MWE5NjIwZWFkMjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIwNTU4NDU3MWVjY2JjMDk3ZTM4NjczYWFiN2VjNWEzMjU1YThiM2RhZDA1ZWQ3ZGMyNDA2ZDhhM2U3ZDQyZTAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdkYmNlZjFjYzI3ZmE2ODdkMTUxZjUyOThmYTEzYzQxZmRkNDIzMGYzOTYzYWY3ZGQxYWMyODgxMDFjZjE4OTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkyYWNiNGFkYjc5MmMwMmZhNmFiMTRiZTU4YmMxOTRjM2RkOWZlN2U1MDZhN2E5ZDczZWJjNTA5OTAzYjU4ZDQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_af2583730ffb4e918b764f08bf9e443e",
+      "statement": "Generic update checks ownership and sets only keys that exist as attributes on the model, silently ignoring unknown keys; delete checks ownership and logs the deletion before removing the row.",
+      "evidence": [
+        {
+          "resource": "repo://backend/routers/estate_data.py#L264-L355",
+          "version": "repo-lines-v1:sha256:050611af4fcd442aaa6f977c157d15cbed8b579a5b8626856a5dda4ee4aa5806:eyJzZWxlY3RlZExpbmVDb3VudCI6OTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE0ZDJhMjIxOWQ4M2ZjMTIwOGMyZjM5ZGJhODdhNmRmOWFjOWRlNjQ5ZjI4ODVhMzM0NzlmNDU3N2ViMzI5NTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI4YTc5NDNlNmNiY2QyMzliM2MzOGUwNDQ2OGRmZmE0OGIyNGM1OTY0MGVkNWQyZWUyZmVhYTAyMWFlYjQ4MDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIzZjIzMDMxMzc5N2Q2YTg4ZGI3OTYwZjkwYTk1ZTNmY2Y5ZTQ0OWY1MGM4ZjA5ZTg0NGI0YzJmYWNiMjk1ZTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d85151bc645e4c47947793dbaa4ae98e",
+      "statement": "Generic create, update and delete routes are rate limited to 30 requests per minute per client IP using slowapi.",
+      "evidence": [
+        {
+          "resource": "repo://backend/limiter.py#L1-L9",
+          "version": "repo-lines-v1:sha256:6e7ecc3bead20a6a78534ccd37d91fe78a4baf90380b5c8f29ae69b2b8a8315a:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYTMwM2VjZGQ0YTRkMTBmMTljNzNmZDQyZmQxMjQzN2ZkMzM1NGE4MjY4MTYwNWRhNTI1NWE5N2EzOTA2OGRiYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDVkYWE2MGE1Y2Y4YWU4YTVkYWRmNzBlM2YyYWEzM2YyZjYwYzI1YzFlNjA0NzZmYjY0YTA4YzM3NDllZDc3MyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        },
+        {
+          "resource": "repo://backend/routers/estate_data.py#L213-L215",
+          "version": "repo-lines-v1:sha256:4a4d5c44cce1464ad3974840cf17d7a357bdf56c21973ff0f991c0bc4fa98a23:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjE4ODRhZWNiYzI4MWY1ZjdmZmNlZWE5ZWIxNzFlNGJkZTdjYjlhNzU5NTdjMTczZjVkOTcxYTk2MjBlYWQyOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODY0NzhiNTU4Y2U3ZGRiZmFhNTNmZmQzZGZhYzAwYmVkOGFhMTRiMTlkYzJhNzdkMjFlMzc2ZDEzMGRlZTRjOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiN2RiY2VmMWNjMjdmYTY4N2QxNTFmNTI5OGZhMTNjNDFmZGQ0MjMwZjM5NjNhZjdkZDFhYzI4ODEwMWNmMTg5NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOTQzZGMwMDI4YWU1NTQyN2Q2MWEzZDc1MWZiY2Y4ZDMwZmZlMTk2MGYwNmVjYzQxZGI0M2RlNTkzNTkzZjhkZSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_e77d7da4516f43ffa071b54f04b398cd",
+      "statement": "CSRF protection uses a double-submit cookie: state-changing requests must send an X-CSRF-Token header matching the csrf_token cookie, auth and public Pulse paths are exempt, and failures are rejected with 403 only in production while development only logs a warning.",
+      "evidence": [
+        {
+          "resource": "repo://backend/csrf.py#L145-L175",
+          "version": "repo-lines-v1:sha256:73432ec8ea73f712a9e7c5e55dce5096a4808685540614b31b7bfbeade63f2d6:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg0NDgwMjI0MjAwNWY5NWFjNzkwNTNmNjVlNjMzMjFlMWVjNDhjNDY2MGRkZGFjMjdlMzdmODgzMjAxZGEwMWQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM4N2NiZmQ1NjA1ZTFiZjhjNWEzODc5NzU5Njg4YmJiNmE0YzcwNDYyMTM4ZGQyMzhiMjI3MzEwNDgyMDRhNGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBjOWM1ZTk5MzVjMTQ0NzQ3YzgwMTgzZWIyNzI0YzcwZjRhODVkYTg1NWM2NGNjOThhOTU3MWQ3ZDFhMTdlZTUifQ"
+        },
+        {
+          "resource": "repo://backend/csrf.py#L36-L57",
+          "version": "repo-lines-v1:sha256:640254fa3c33d657ddeef6892223fb7dd26e1e2a7d5ad684c470b2e31bb9137d:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRkNTQxMGZlY2FjYTc4YWEyYTg2ZDg5YTRhYTI0OTJlNDcxMThiMjQxZmJmN2E3ZjM2M2RmODQyYTMzNTNmNTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI1ZDFmYjJlNTZhYmUzZWVmNGZmYjM0Yzk4NzYxOTdkOWEwMjE1ODk0NDUyOWJmZmUyMjAyYTk0OTFkNzQxYTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNkODI3YTBjZjM1YjM4NTI3M2Y1NzAwMTVhNTcxZTExN2Q2NzQzNjkxODkwMTNhNzBlYWNjNGRkYWMyODlkZDMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI5YWM2NTljYWMyYzhlZWUyNzQzYWMxOWRmZDc5YmZiNmI2MTJiMDBjM2UwMGYzOGIyOTNkZDA2NjlmOTRiYmMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0f6a6f4867d34d1f8c0517fca43602a9",
+      "statement": "ContinuumException carries a technical message and a user_message; global handlers render all errors as an error envelope whose message is the user message, plus a _technical field.",
+      "evidence": [
+        {
+          "resource": "repo://backend/errors.py#L16-L74",
+          "version": "repo-lines-v1:sha256:6bcd29f496e1ee8cef94dd1d4ddb383a6e2dfc4991a7457b0f03ce95236fbd31:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg2OWUwY2YxZDkwZjk1NWUwMzIyOTQxYjllNjRiOWIyZmQ1MzEzOWFiYjcxMTg1N2FmOTY3NjM1ODdhNjE4MTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJkYjNjOGU5OTAwODUzNDQ4YjAxOGMzNTMyMDA3ZDUyMjVhODYxYzliYWI0NDZmMzYwMDliNjhiNTU3NTAyZmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE3OGJkYWJhZmNjODEwOWQ3ZDg5NjYyNmM4NTdjZmUxMTZjZGFiMGY4NzZjZWJkZmE3NjZhZmI0NDMyZGNkOGYifQ"
+        },
+        {
+          "resource": "repo://backend/main.py#L209-L236",
+          "version": "repo-lines-v1:sha256:3d9669de44aa46d93510fa5396978f45f68428c315cc051fe33a0c27716b7ded:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFjYTQyMzU3ODkwOGMwMTEwMDI0YWRjZGQ2YTdlNzQ2YTA2NTcxZTk1ZjgyZmZhMDYzNjY2OTdhMTQ3NGJlOTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM5YTQ4ZGMyYzdmZWUzYmI4NDdkMzlkZGUwN2VlZDllZjYxMjA1ZTg1MzRjNTAzMDZiZTg1OWI5OWI5ZDRhZGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA0YThjZDU5ZDkwZGY4NmQzNTg5ZjJjMGMxY2EwYzQzZWI0NzA2MTYyMDMyNmY0YjcwYTgwYjdiZGJlYzVhYjkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_968b7a65c8a34607b065880d0ff4d841",
+      "statement": "Unhandled exceptions are logged with a traceback and returned as a generic 500 INTERNAL_ERROR response.",
+      "evidence": [
+        {
+          "resource": "repo://backend/errors.py#L331-L366",
+          "version": "repo-lines-v1:sha256:25c28f718702e16685e37f6a3ff715e6a7bec3ac8a3a3c46bf8d43c771082e32:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNkZGQ2NTBiODQ2MTUyMTY0ZTU5N2RkMTJmOTNjMDJmYzUyMzMxYzlkMmZmMWE3Y2FmN2JmMjZkOGM1MWM4MTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkwMWIwMGZjNmQxYjgyZDkzNWMwOTQ3N2JkNjNjMjZhNWMzNmU2ZTBkNDE5NjM0OGFkODQ5MzgwYWRmZTY5ODciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdjMTU0ZTA0OTRlNjEyMzRhMzcyNjgxZmNmMjc4ZjVjODJhNDBhNzJiOTlmNGQ0MDBlNjllNWJiZDQxZmFjNjYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_84108911cc984776b2a920ff87d7df98",
+      "statement": "The backend serves the built frontend from frontend/dist, falling back to index.html for client-side routes, returning 404 for unknown /api paths and blocking path traversal.",
+      "evidence": [
+        {
+          "resource": "repo://backend/main.py#L441-L500",
+          "version": "repo-lines-v1:sha256:c8f0ee23f584146607bfa38ac9082eebe62ae42fd1702335407eef4073d428fe:eyJzZWxlY3RlZExpbmVDb3VudCI6NjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhMTI2MDBmNDg0MDY1ZTJiMjRkZTQyZDY4YWE0OWFkMjEwZjdiMzgwMmU1ODM0NTZiNmEwYjA0MDQ1MTEwMjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlhNTIwODgwZjRlMmNkODUyMTZkN2YwY2MwYWFiZGE0ZWU2ZDcxMDBjYzJjN2YwOWM5NjFmZjFhMjBiNTc5YmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMyMjAyYmRjMWUxMzY1ZTBmYmRmZTViYzliNGQ0ZWIyMTBmMDg4NTI2MTVjOTE1N2ZhOGRmODE4OGQ0ZTZhMzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc1MzZkOWE1Mzk0MDI1ODkyZWY1NWU5ODE3ZjhjNWZjZTgzZWUzOThiZTgyZjEyMzFhYjc5YmM5MGM0YmIwYjkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_127cf0afd73543b49f38516a4a50db06",
+      "statement": "Every response gets an X-Request-ID header from RequestIdMiddleware.",
+      "evidence": [
+        {
+          "resource": "repo://backend/main.py#L76-L96",
+          "version": "repo-lines-v1:sha256:9f268b9f7678fa23351130223215bd76db0214bd04732bd27df835e406dd5acd:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU1Nzk4MTgwZGJiYTY2MmFhYzkyMDZiNDI5MzQ1NGM4ZDhkODU1NDIyYTdkMWJhMGM1YzAxYzQ2Y2FkOWRmYWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE4NWNiMGRiYWJhMTFhYzViNDgyZjExYjVmNzg5ZTYwOTM3NTlmNmM2MThjY2YwMDdhNDljNWZmYWYwNjVkYTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcyZmIwNTIzNGUyOWI0NjQyNWE4ZjllN2Y2YTZiNTA2MjM5ZmUyYzJlNTUwYjg0NWM4NmQ5NDFhMDQzOGE4ZTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhiZWVmYjk0YmVkNGRjYjViYzc1YWUyNjIyNWVhMzJjYmVjMTFhNWU5Zjc0NWEyN2UyODNjNWE0NDY5ZTc2OTQifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.3",
+    "at": "2026-10-26T04:52:34.633Z"
+  }
+}

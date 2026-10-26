@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:cd6e2a4c8814734c9f7b25f93dd78674e095d9680bebeef79ac2a7cea05b4f7f",
+  "claims": [
+    {
+      "id": "claim_aa96d8b71c9f4ec2bcc1f9e9f36028b6",
+      "statement": "The media upload endpoint validates MIME type against image, video, audio and document allow-lists and size against MAX_UPLOAD_SIZE, then stores the file and a MediaFile row with storage provider and category.",
+      "evidence": [
+        {
+          "resource": "repo://backend/routers/media.py#L21-L153",
+          "version": "repo-lines-v1:sha256:d8814f341ae41bffdbd107f655545ca581c078f5dc0525762b5cee166e791739:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMzLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJiMmQ2NDk2MTgzNDYxZWY0ZGI0Y2UzNzBjZjRiZTZlOGExNDk4ZTFmYzM0YzU3OTM2ZjBhOGZiYWY5Y2UzYWU3IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIwMWJhNDcxOWM4MGI2ZmU5MTFiMDkxYTdjMDUxMjRiNjRlZWVjZTk2NGUwOWMwNThlZjhmOTgwNWRhY2E1NDZiIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJiZmQzOGExZTQ0MzY5OTQ3MWMxZWM3OGRjZTc3NGEzYWRmZmJlNjUxNDhkNjMxNjBhNjQxMzBkZmJkNDNlMzM4IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIxNzU4NjgxYWY2ODhlMDJmZWU2NjZiOWRiYmJiNmYzNjFlYjgwMDFhZWY2YzNjZDY3Y2VjYjE4ZmU2Y2Q0MzllIn0"
+        }
+      ]
+    },
+    {
+      "id": "claim_db6ae0a589014b58b1e97f7c699b17d7",
+      "statement": "Media download is owner-only, redirecting to an S3 presigned URL for S3 files and streaming local files with FileResponse.",
+      "evidence": [
+        {
+          "resource": "repo://backend/routers/media.py#L155-L196",
+          "version": "repo-lines-v1:sha256:c86b03b2b2834a567045f194fbaebf37254dd6a1fa1ce37f9e3f69adb5392754:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZmMTNkZTg2MjUzNTdmZDNjOTY1YTU3NDc0MDM3NTgwNmZkZTljODM0NzQ4OWJiOWQyZWU1NzJiNmM2MGZmNjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjYzRhN2QxY2M3OTZhYmEzZTQ2NzIzMzI3ZjUxN2U5ZjgxMTk4MmQyNTBmMDcwMjk4NmU0YjU3NjRhZDk1ODkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY0YmFlNDc3MTQ2ZGMzNDQ5MzgyNjNjOGUzMjdjZDg3YWIxMmZiZjM3YjI4YWNiNmM1MDUyOTFiMmE3MmEwNzEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_026cbebd23774eb191a9081c34b02486",
+      "statement": "Media delete is a soft delete that sets deleted_at and keeps the file in storage, and listing excludes deleted media.",
+      "evidence": [
+        {
+          "resource": "repo://backend/routers/media.py#L197-L215",
+          "version": "repo-lines-v1:sha256:a9cf395a912594ba48057f4ae204fab17d351e6f0ec8686a56c05966807879a5:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlZDA5ZTI5MDNlMGVlOTdjNjk5OWVkNjk4NTM2M2RjOGJkMWU2ODdkZGIyNzc3OTJiY2I5ZTk5NjBmMjQxN2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjYzRhN2QxY2M3OTZhYmEzZTQ2NzIzMzI3ZjUxN2U5ZjgxMTk4MmQyNTBmMDcwMjk4NmU0YjU3NjRhZDk1ODkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgyYzkxMTA1N2I4MTYxZGRiOWUyZjhhODNmNDU1OTMwNzBjYThjZDVhNGJmNTUwMWFlZjY3ODliZTYwYjJjYmYifQ"
+        },
+        {
+          "resource": "repo://backend/routers/media.py#L271-L312",
+          "version": "repo-lines-v1:sha256:c8a8abf6de76d84d56beeea3dc380aa9ad1da1bff7e11c3f36fd6787eba5d343:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJkYTNlYWU0MTIxZmVkMzNiZGJhNGQ4ZTE5M2ZjMDI1OTZiMTE4NDVmYWQ5NzUwNTUyMDllZjc5YjU4NjMzNzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjYzRhN2QxY2M3OTZhYmEzZTQ2NzIzMzI3ZjUxN2U5ZjgxMTk4MmQyNTBmMDcwMjk4NmU0YjU3NjRhZDk1ODkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU0NzQzMzVjMTdmZjE2OWFiYjllYTdhZDY0ZjVhZTc2ZWY5YjRlNTA3NTAyZDY2MzFmMWY5ZjdiMDY2NDI2M2EifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_6be5cafac20a4b8a884699e26ce2b0c4",
+      "statement": "HybridStorage tries S3 first when S3_ENABLED is true and falls back to local storage under UPLOAD_DIR in user_id/category/module folders; S3_ENABLED defaults to false.",
+      "evidence": [
+        {
+          "resource": "repo://backend/config.py#L100-L100",
+          "version": "repo-lines-v1:sha256:5874d278e48f54317a1cb26369b96e3e1d52ee123912b426f3aeac1b9a51e92c:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTg3NGQyNzhlNDhmNTQzMTdhMWNiMjYzNjliOTZlM2UxZDUyZWUxMjM5MTJiNDI2ZjNhZWFjMWI5YTUxZTkyYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTg3NGQyNzhlNDhmNTQzMTdhMWNiMjYzNjliOTZlM2UxZDUyZWUxMjM5MTJiNDI2ZjNhZWFjMWI5YTUxZTkyYyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzRmOWIzMWFmYmNjZTgzOGM4YWU1YjcyMGE2ODdhODE3MDVmZTM4ODA2Y2Y1MzE0M2FlNDkzYmYwNTU1ODcwNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGRlZmU2ZjM3MGI0OTE2YjdmNGY3Y2RkOTE5MjMxMTVkNGQ2Nzk1NTA5ZWZiYTg4Mzg3NzkxMWM3NTRhY2UyZCJ9"
+        },
+        {
+          "resource": "repo://backend/utils/file_storage.py#L19-L208",
+          "version": "repo-lines-v1:sha256:2b4df46b6b9ed5d066f4ad90f4c8b4afc2a02a7658c38473b4167087275899c2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTkwLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJkYTBlOGNhYzlmYzgxZWJkZTNhNTVhNDJiMTQ5M2Y2MTBjY2NlYmJhMDE4Y2ZlMTE2YzBjYTQzZTc2YjNmNDE2IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJhYTI4MjFjNzI2OTBkNzYyYTczN2UzOTQwYWI4YjQ1ZTM3OTY1YzVhZDg4NWRjZDg4MzhkNDFkNGM1MTljNjYzIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI2MjAwOTdlNGFhNTAwNjhiYTE1N2Y5YTI3MzlmYWQ4Njk5NWUxZTBjZGNjZGFkYzU4OTdjMjAzNGM3NGQzZWZhIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+        }
+      ]
+    },
+    {
+      "id": "claim_66efc1a9ed0b40cfab74adccf1587a24",
+      "statement": "mediaService.ts wraps the media API with upload, list, get, blob URL, delete and metadata functions plus a fileToDataUrl helper.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/lib/services/mediaService.ts#L39-L269",
+          "version": "repo-lines-v1:sha256:22d9dbb4e38e47a052806d6b6e7f2eebbe44325672c8bbb5a4e108e11199d0df:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMxLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI4MjIyMDE0Y2YwOTFhMmI0NjI2ZWZhYWQzNzM0N2ZjYWQ2MDQ5ZmFjNGVjM2I2MzM5MjllMDM3OTY3MDhlMTE4IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIyYTA2OGY3Y2U4MTY0YjBiYTNkOWRmNTdhNDJkNWNjMDdjNzUxM2VjYzI0MDI2YjBiODJiNjNhODRlMzM5NjVmIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+        }
+      ]
+    },
+    {
+      "id": "claim_1314d8daf24a4196aaa49e4e169eaeb8",
+      "statement": "Two IndexedDB-backed mediaStorage helpers exist (continuum_media_db and continuum-media), and the time capsule page saves recordings through the continuum_media_db one.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/lib/services/indexedDB.ts#L1-L40",
+          "version": "repo-lines-v1:sha256:7d0021f8782b1528511a9db505898ce27fcd2f0c1627519c2cf906b2a315e94c:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhYmVkZGRkZGFiMWE4OWNkNTI1N2NhNTkxYjdmZDE2MWUyZmMyNGM0ZDkwMWQwN2ViNWI4MmZiMThmNGQ4OGYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUxNDJjYjdjNmZlYzNkZGU1Mjg3YTA3NGQxMTY2ZTBlYTliMWFjYjgzNDk4MGQ1MjMwMjk3N2E2MWJkYTg3ZTUifQ"
+        },
+        {
+          "resource": "repo://frontend/src/lib/utils/mediaStorage.ts#L1-L14",
+          "version": "repo-lines-v1:sha256:cf6fa75637cbfc861c218573d6ec16e225e56e4ac6bda5939560a1f77d7f11fa:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhiNzExNDI4MThiNGI5N2U5NDhkMGNjNjAyMDMyMjJlZTA3YjUyYWE1YzA1NmFkNGQ4ODUxY2VjZTY0ZjhhYTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUwMTY0ODYxMmMyZmU1NDQ5NzMwYjBkNWIwOGM4NWQzYmMwMjI0ZTUxN2EwNmUxODUzZmE3MjEzOWU5ODdhMGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk1NGYyMjIxZGQzZDYzNTcwZmVhZTRhYTcyNWRhMzkwOWY5ZWIxMDgzZTdmZGJlYmZlZGFkODdlNTEyYzdkNTkifQ"
+        },
+        {
+          "resource": "repo://frontend/src/routes/modules/time-capsule/%2Bpage.svelte#L33-L33",
+          "version": "repo-lines-v1:sha256:bc2b4baac3346e66a466832106275326985bc798866d32907558dddc18234292:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYmMyYjRiYWFjMzM0NmU2NmE0NjY4MzIxMDYyNzUzMjY5ODViYzc5ODg2NmQzMjkwNzU1OGRkZGMxODIzNDI5MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYmMyYjRiYWFjMzM0NmU2NmE0NjY4MzIxMDYyNzUzMjY5ODViYzc5ODg2NmQzMjkwNzU1OGRkZGMxODIzNDI5MiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOWU3NmM3Mzk4N2VkMDA5NDE0MmM3ZTI5NWNmYzE1M2EzN2Q3NjMyZjJhNmQ2MzIxY2ExOWFkZmI2YWEzZTg0MSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMmY0YTdiZTA0N2QzMzc3NTVlNGNkNDMyYjkwZGU5NTM1YzI5YmE4OTY4NTRjNmYyMzI2MzgxOGNiNjBmMmIyMSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_22790c4163fe4edc8149ad8f0f78974b",
+      "statement": "Several uploaders store files as data URLs read with FileReader.readAsDataURL.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/lib/components/modules/heirlooms/VisionUploader.svelte#L53-L53",
+          "version": "repo-lines-v1:sha256:16309d57ac30df1fd317732b33b4ab8b23b625ad128b1415bc8af4e8e630fd62:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTYzMDlkNTdhYzMwZGYxZmQzMTc3MzJiMzNiNGFiOGIyM2I2MjVhZDEyOGIxNDE1YmM4YWY0ZThlNjMwZmQ2MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMTYzMDlkNTdhYzMwZGYxZmQzMTc3MzJiMzNiNGFiOGIyM2I2MjVhZDEyOGIxNDE1YmM4YWY0ZThlNjMwZmQ2MiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmJmODdhZWNiNWYzMTFlMjIzNzAzNWFmMGE5ZTcxYTA5ODAyNDBlMGY4YWQ5NzZjMTY4NWUyY2IyNDdmMTk0YiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTAwYWVmZjM0NGU2YjU4YzNkMDhmMDI0OTIyZWZlYTcxOWI0YTkwZmU0NjRhYWRiMDQ4YTE1ZmI0ZmNmNDIzNiJ9"
+        },
+        {
+          "resource": "repo://frontend/src/lib/components/ui/FileUploader.svelte#L59-L59",
+          "version": "repo-lines-v1:sha256:16309d57ac30df1fd317732b33b4ab8b23b625ad128b1415bc8af4e8e630fd62:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTYzMDlkNTdhYzMwZGYxZmQzMTc3MzJiMzNiNGFiOGIyM2I2MjVhZDEyOGIxNDE1YmM4YWY0ZThlNjMwZmQ2MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMTYzMDlkNTdhYzMwZGYxZmQzMTc3MzJiMzNiNGFiOGIyM2I2MjVhZDEyOGIxNDE1YmM4YWY0ZThlNjMwZmQ2MiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTZjYTNlZmRiNmJmM2I2ZjA2MjQ0MmZkNmQ5OGYwOTZkOTQxNmQxNmIzNDkyOGIwMjY4M2U0NGY0ZTM2ZTdjMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiM2M5MzNjNzJmMGQ0ZDU3ZDRmYjc0ZTg4OTJjMGJlNzIzMDNhZDJhYWQyYTg1YTI3MjM0OTVmZTBkYmMxMmFhNyJ9"
+        },
+        {
+          "resource": "repo://frontend/src/routes/modules/visual-memories/%2Bpage.svelte#L151-L151",
+          "version": "repo-lines-v1:sha256:7c829036f60a9b67ed0c8cb78abc4b550daa515e8aeeb61c5f70767c0940a801:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiN2M4MjkwMzZmNjBhOWI2N2VkMGM4Y2I3OGFiYzRiNTUwZGFhNTE1ZThhZWViNjFjNWY3MDc2N2MwOTQwYTgwMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiN2M4MjkwMzZmNjBhOWI2N2VkMGM4Y2I3OGFiYzRiNTUwZGFhNTE1ZThhZWViNjFjNWY3MDc2N2MwOTQwYTgwMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjE0OWUyMmNhOThkZjAzNmUzYWY4M2RmMDRkMTk5MTgxZmEyYjQ4YzJkNWZlZmNlYmYwOTlkMGZmMDZmODZmYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2U3M2Y3YjFhZTc1YzczOGUzZGZlOTA0MzZmMTQ4NDk3Yzk1YjU4MTc1YTQzZTNmNDM0MTNjNzk1OTEyMTJlOSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_aa0b6ec2585f4204a6a42cbba0296458",
+      "statement": "mediaMigration.ts uploads blobs from continuum_media_db to the server through uploadMedia and records an old-to-new id mapping, and MediaMigrationNotice offers this migration.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/lib/components/MediaMigrationNotice.svelte#L1-L30",
+          "version": "repo-lines-v1:sha256:efeb2df6c628a9f8b31b440789d9d2f82c6028ab74605b65c85501843c0ba99f:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk0YWJjOGVkNzU0MzgyMjA2NWMwMjlmNWVhMjUyZDEyMjNkNzZhYTdkMmQzZDRmYjEyNTgxMmY2YjVhOTlkZGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBiNmRkZTcxYTQ1MWJmZDQ1ZjViMGI4OWM4MWYyYWM0ZTJhNmVjMzMzMWJmYWUyYTI4MzRlMmEzZGFlODhkYWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNiYWRhN2RiYzk3M2U3OGI5NDc4ZWMyMTExZWUzNjVlNzZjYTAyZjBlZDgwY2QzYWZjYWNmZWNhYTNkNDRhOWMifQ"
+        },
+        {
+          "resource": "repo://frontend/src/lib/services/mediaMigration.ts#L1-L280",
+          "version": "repo-lines-v1:sha256:584f7883dde04f41b7fc3f226d9d38ef92270ea017b62c9c3f2533f3eaa64b20:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgwLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJlYWYyMmNmMDczMjU5MmMyNDcxNDFjYmU2MWVmYTExMDEyNjEyZjVhMzEyMmI5YWY5YmJhZjUyZjU3MjRkMTk0IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0NGU0YWY0MjUxZjY3M2U2YmQwMzQyYjE4NTkyNmZlMjVlMzZiYzIzODg2NjM4M2NhNzBkNDVlYWFhMDg4ODhiIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MCwicHJlY2VkaW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJiMGIzNDgzN2IxYmY5M2ZhOWYxOWU1NTZhNmNhYzA5YmM0OGM5YTIwYTE1YmYxYTA5NTljYjE4ZDc5OTQ2YzA0In0"
+        }
+      ]
+    },
+    {
+      "id": "claim_14130e3621134648a8defe008eda5ee0",
+      "statement": "Vault documents are Document rows served by a dedicated router at /api/data/vault_documents scoped to the current user, with a required title and category.",
+      "evidence": [
+        {
+          "resource": "repo://backend/estate_models.py#L143-L168",
+          "version": "repo-lines-v1:sha256:5e88fb5ee6f260d37327de3874bef39fa0798845527e086ee650100a4dbdcd92:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1YjEwNDcxOGQyNjg3ZmJmZTA1MjJjNDZlYjYzYjQwYTAwZTc5YWM1NTg3YjIyMDkyMTBjMTFmYjc3YjhhMDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEzMTA5ODZlZjBhMWZiYWMxODVkYWM4YjlhODBjZDlhOTI0YWEyMGVlZjY2YTc5YmFkN2Y5NThkNWE4MWI0ODMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI0OTliYTQxOWJkOWUyYWM2NzcyMGYxZDA3MzE5YzU0MDA1Y2Y3YzlkNzI4NzJjMTlhY2RmYzE2N2RiNGZhMzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJmM2UzN2Y2NzljZDY2NzAyYjcxZjNmOThkN2IyYjYyZTAwMGEzM2FkYjQ4OTE1NDdjNjZhOTJkNDEyNGIxNzkifQ"
+        },
+        {
+          "resource": "repo://backend/routers/documents.py#L1-L75",
+          "version": "repo-lines-v1:sha256:aa5ca5174470c194a1179d150773816fafb788735b34e75a5812b6ffca7f484f:eyJzZWxlY3RlZExpbmVDb3VudCI6NzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1NzRhNzNkOTllYjgwZTYzZjg3ZmQzNmJkYzAzOGMzMTA0NGY3NDZlNGMyMjAwYTgzMTFlMDE3NjMwY2Y1YzEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYyYTA0ODI2NTIzNGZkMTJkMGQyYzI3ZDMxMzM1M2UyMWU5NjU3Y2E0NDMzYmQxNTc3ZDQ1YWZiYmUzMmNmMTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1b67fa1c225d450c92b078667f4f02b6",
+      "statement": "exportService builds PDFs in the browser with jsPDF and jspdf-autotable from frontend store data for full, insurance or medical scopes, and the export preview route renders the PDF from query parameters.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/lib/services/exportService.ts#L1-L100",
+          "version": "repo-lines-v1:sha256:56081744444fce34d6c657a62bd632b101a8e06cae2216c76ce370d3239ec863:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAwLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI1Yzk4NzAxZDdmYjkxZTMyNTg1ODg4NDIxM2NjMTRlYjMxM2NjMzJiNmZjZGU0NTQ2MzYzZmZhOTE2OWRlMWExIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI1ZjI5MTFiMmUwNjE5MjMyYmMyOTk3ODU3MTU5YzUwOTJhZTA3YTlkZjAwNmMzZGI1YWVjYmNmMWM2Mzg3ZjhkIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MCwicHJlY2VkaW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIxYTI1MDIyY2Q4NTM4MDNlNzNhYTBiODVjZDMxNzQzZTM5YWVkYTkyZTg2N2ZlNzdiNjYwODlkMzgzNzc1NDRlIn0"
+        },
+        {
+          "resource": "repo://frontend/src/routes/export/preview/%2Bpage.svelte#L1-L40",
+          "version": "repo-lines-v1:sha256:9c09e26cc9836e7e02cdf884a9f9d407f0f71dc2e7c4ad432f47e83e1aa4b0fd:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk0YWJjOGVkNzU0MzgyMjA2NWMwMjlmNWVhMjUyZDEyMjNkNzZhYTdkMmQzZDRmYjEyNTgxMmY2YjVhOTlkZGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQwMTQ0YWM0NWU3YTE0MjlmMWFjYzAwNWZlZmRiYzJhZTQ0M2MxZGViNTI1Yjc1NTYwZmU0OTFmOTg1MDdjMmQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_82df9f73918a4263a7d1f20ebab83543",
+      "statement": "The binder page reads cached data with getStored from fixed localStorage keys and prints with window.print, without calling the API.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/routes/binder/%2Bpage.svelte#L1-L60",
+          "version": "repo-lines-v1:sha256:ba893f6abe7c96b46a2a64ffc5c6d13b7b245e24af6e655fee57332ad913737b:eyJzZWxlY3RlZExpbmVDb3VudCI6NjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk0YWJjOGVkNzU0MzgyMjA2NWMwMjlmNWVhMjUyZDEyMjNkNzZhYTdkMmQzZDRmYjEyNTgxMmY2YjVhOTlkZGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJhZGEyMjMwNmMzM2MwZTExZGRkMzA0YjU1MDVhNWJlOTQ0MWYwZTlmMzkxNWE1MzExMDNjOTA4MmRiZmQ2MTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEyM2Q5NWM0ZjZjNTFlNTY0MDZmZTg4NDE2YWM3NTA4NzFhYmJjYjE1NDlkNTU5Yjk4YmNmMWUxNjQ0NmY5OTkifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.3",
+    "at": "2026-10-26T04:52:34.633Z"
+  }
+}
