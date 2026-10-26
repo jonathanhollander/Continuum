@@ -16,11 +16,17 @@
     let isOpen = $state(false);
 
     const roles = [
-        { value: 'planning', label: 'Planning (Owner)', icon: UserCog, color: 'indigo' },
-        { value: 'executor', label: 'Executor Mode', icon: Briefcase, color: 'amber' },
-        { value: 'family', label: 'Family Member', icon: Heart, color: 'rose' },
-        { value: 'advisor', label: 'Advisor', icon: Users, color: 'emerald' }
+        { value: 'planning', label: 'Planning (Owner)', icon: UserCog, tone: 'primary' },
+        { value: 'executor', label: 'Executor Mode', icon: Briefcase, tone: 'gold' },
+        { value: 'family', label: 'Family Member', icon: Heart, tone: 'primary' },
+        { value: 'advisor', label: 'Advisor', icon: Users, tone: 'primary' }
     ] as const;
+
+    // Written-out classes (Tailwind only generates classes it can read in full), on the site tokens.
+    const tones = {
+        primary: { chip: 'bg-primary-soft text-primary-hover', dot: 'bg-primary' },
+        gold: { chip: 'bg-gold/15 text-gold-text', dot: 'bg-gold' }
+    } as const;
 
     async function selectRole(role: 'planning' | 'executor' | 'family' | 'advisor') {
         isOpen = false;
@@ -37,7 +43,7 @@
         onclick={() => isOpen = !isOpen}
         class="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors {dark
             ? 'text-slate-300 hover:text-white hover:bg-white/10'
-            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}"
+            : 'text-muted-foreground hover:text-foreground hover:bg-muted'}"
     >
         <UserCog size={16} />
         <span class="hidden md:inline">
@@ -46,32 +52,32 @@
     </button>
 
     {#if isOpen}
-        <div class="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-slate-200 py-2 z-50">
-            <div class="px-3 py-2 text-xs font-bold uppercase text-slate-400 border-b border-slate-100 mb-2">
+        <div class="absolute top-full right-0 mt-2 w-56 bg-popover rounded-xl shadow-lg border border-border py-2 z-50">
+            <div class="px-3 py-2 text-xs font-bold uppercase text-muted-foreground border-b border-border mb-2">
                 Switch Context
             </div>
             {#each roles as role}
                 {@const Icon = role.icon}
                 <button
                     onclick={() => selectRole(role.value)}
-                    class="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-slate-50 transition-colors {contextStore.role === role.value ? 'bg-slate-100' : ''}"
+                    class="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-primary-soft/50 transition-colors {contextStore.role === role.value ? 'bg-primary-soft/50' : ''}"
                 >
-                    <div class="w-8 h-8 rounded-lg bg-{role.color}-100 flex items-center justify-center text-{role.color}-600">
+                    <div class="w-8 h-8 rounded-lg {tones[role.tone].chip} flex items-center justify-center">
                         <Icon size={16} />
                     </div>
                     <div class="flex-1">
-                        <div class="text-sm font-medium text-slate-900">
+                        <div class="text-sm font-medium text-popover-foreground">
                             {role.label}
                         </div>
                     </div>
                     {#if contextStore.role === role.value}
-                        <div class="w-2 h-2 rounded-full bg-{role.color}-500"></div>
+                        <div class="w-2 h-2 rounded-full {tones[role.tone].dot}"></div>
                     {/if}
                 </button>
             {/each}
 
-            <div class="border-t border-slate-100 mt-2 pt-2 px-3 py-2">
-                <div class="text-xs text-slate-500">
+            <div class="border-t border-border mt-2 pt-2 px-3 py-2">
+                <div class="text-xs text-muted-foreground">
                     Context-aware messaging adapts language based on role.
                 </div>
             </div>
