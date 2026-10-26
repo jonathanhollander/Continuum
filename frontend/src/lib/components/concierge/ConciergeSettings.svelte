@@ -638,11 +638,11 @@
                         aria-labelledby="cs-export-scope-label"
                         class="space-y-2"
                     >
-                        {#each [{ id: "full", key: "scopeFull", color: "slate-900" }, { id: "insurance", key: "scopeInsurance", color: "emerald-600" }, { id: "medical", key: "scopeMedical", color: "rose-600" }] as scope}
+                        {#each [{ id: "full", key: "scopeFull" }, { id: "insurance", key: "scopeInsurance" }, { id: "medical", key: "scopeMedical" }] as scope}
                             <button
                                 class="w-full flex items-center justify-between p-3 rounded-xl border-2 transition-all
                                 {selectedScope === scope.id
-                                    ? `border-${scope.color} bg-slate-50`
+                                    ? 'border-primary bg-primary-soft'
                                     : 'border-slate-100 hover:border-slate-200'}"
                                 onclick={() =>
                                     (selectedScope = scope.id as any)}
