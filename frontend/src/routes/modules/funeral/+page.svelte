@@ -221,20 +221,21 @@
             { name: "Memorial Printed Package", cost: 183, estimated: 183 },
         ];
 
-        standardItems.forEach((std) => {
-            funeralStore.update((data) => ({
+        // One save for the whole set: one POST, one affirmation (was one per item).
+        funeralStore
+            .update((data) => ({
                 ...data,
                 budget: [
                     ...data.budget,
-                    {
+                    ...standardItems.map((std) => ({
                         id: crypto.randomUUID(),
                         name: std.name,
                         cost: std.cost,
                         estimated: std.estimated,
-                    },
+                    })),
                 ],
-            }));
-        });
+            }))
+            .catch(() => {}); // the manager already showed the one gentle message
     }
 </script>
 
