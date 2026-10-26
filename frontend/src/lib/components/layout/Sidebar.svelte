@@ -229,12 +229,12 @@
 </script>
 
 <aside
-    class="fixed lg:sticky top-0 left-0 z-50 h-screen w-72 bg-primary text-primary-foreground transform transition-transform duration-300 ease-out lg:translate-x-0 flex flex-col shadow-2xl {isOpen
+    class="fixed lg:sticky top-0 left-0 z-50 lg:z-30 h-screen w-72 bg-primary-deep text-white transform transition-transform duration-300 ease-out lg:translate-x-0 flex flex-col shadow-2xl {isOpen
         ? 'translate-x-0'
         : '-translate-x-full'}"
 >
     <!-- Logo Area -->
-    <div class="p-6 border-b border-primary-foreground/10 shrink-0">
+    <div class="p-6 border-b border-white/10 shrink-0">
         <div class="flex items-center justify-between mb-1">
             <div class="flex items-center gap-3">
                 <div
@@ -247,7 +247,7 @@
                     />
                 </div>
                 <h1
-                    class="font-bold text-xl tracking-tight text-primary-foreground"
+                    class="font-bold text-xl tracking-tight text-white"
                 >
                     Continuum
                 </h1>
@@ -255,13 +255,13 @@
 
             <button
                 onclick={logout}
-                class="p-2 rounded-lg text-primary-foreground/70 hover:text-white hover:bg-white/10 transition-all group"
+                class="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-all group"
                 title="Sign out"
             >
                 <LogOut size={18} />
             </button>
         </div>
-        <p class="text-xs text-primary-foreground/70 pl-14">
+        <p class="text-xs text-white/70 pl-14">
             Estate Planning Concierge
         </p>
     </div>
@@ -278,16 +278,16 @@
                     <!-- Primary group: Always expanded, different styling -->
                     <div class="px-4 py-2 mb-1">
                         <div class="flex items-center gap-2">
-                            <Zap size={12} class="text-amber-400" />
+                            <Zap size={12} class="text-gold" />
                             <span
-                                class="text-[10px] font-bold text-amber-400/90 uppercase tracking-widest"
+                                class="text-[10px] font-bold text-gold uppercase tracking-widest"
                             >
                                 {navText(group.groupKey, group.groupLabel)}
                             </span>
                         </div>
                         {#if group.groupDescription}
                             <p
-                                class="text-[10px] text-primary-foreground/50 mt-0.5 pl-5"
+                                class="text-[10px] text-white/70 mt-0.5 pl-5"
                             >
                                 {group.groupDescription}
                             </p>
@@ -303,25 +303,25 @@
                     >
                         <div class="w-full flex items-center justify-between">
                             <span
-                                class="text-[10px] font-bold text-primary-foreground/60 uppercase tracking-widest"
+                                class="text-[10px] font-bold text-white/70 uppercase tracking-widest"
                             >
                                 {navText(group.groupKey, group.groupLabel)}
                             </span>
                             {#if isGroupOpen(group)}
                                 <ChevronDown
                                     size={14}
-                                    class="text-primary-foreground/40"
+                                    class="text-white/70"
                                 />
                             {:else}
                                 <ChevronRight
                                     size={14}
-                                    class="text-primary-foreground/40"
+                                    class="text-white/70"
                                 />
                             {/if}
                         </div>
                         {#if group.groupDescription && !isGroupOpen(group)}
                             <p
-                                class="text-[10px] text-primary-foreground/40 mt-1 line-clamp-1 italic"
+                                class="text-[10px] text-white/70 mt-1 line-clamp-1 italic"
                             >
                                 {group.groupDescription}
                             </p>
@@ -351,9 +351,9 @@
                                     class="flex items-center gap-3 px-3 py-2.5 mx-1 rounded-xl transition-all duration-200 group relative overflow-hidden
                                     {isActive
                                         ? 'bg-white/20 text-white shadow-lg shadow-black/5 font-semibold'
-                                        : 'text-primary-foreground/80 hover:text-white hover:bg-white/10'}
+                                        : 'text-white/80 hover:text-white hover:bg-white/10'}
                                     {isEssential
-                                        ? 'ring-1 ring-amber-400/30'
+                                        ? 'ring-1 ring-gold/40'
                                         : ''}
                                     {group.isPrimary ? 'py-3' : ''}"
                                     aria-current={isActive ? "page" : undefined}
@@ -368,14 +368,14 @@
                                     <item.icon
                                         class="w-4 h-4 transition-transform duration-300 group-hover:scale-110 {isActive
                                             ? 'text-white'
-                                            : 'text-primary-foreground/50'}"
+                                            : 'text-white/70'}"
                                     />
                                     <span class="text-sm flex-1 min-w-0 truncate"
                                         >{navText(item.key, item.label)}</span
                                     >
                                     {#if item.isPreview}
                                         <span
-                                            class="shrink-0 -ml-2 whitespace-nowrap text-[10px] font-medium leading-none px-1 py-1 rounded bg-white/10 text-primary-foreground/70"
+                                            class="shrink-0 -ml-2 whitespace-nowrap text-[10px] font-medium leading-none px-1 py-1 rounded bg-black/20 text-white/90"
                                             data-testid="preview-tag"
                                             >{$dict.earlyPreview}</span
                                         >
@@ -383,13 +383,13 @@
                                     {#if item.isExternal}
                                         <ExternalLink
                                             size={12}
-                                            class="text-primary-foreground/40"
+                                            class="text-white/70"
                                         />
                                     {/if}
                                     {#if isEssential}
                                         <Star
                                             size={12}
-                                            class="text-amber-400/60"
+                                            class="text-gold"
                                         />
                                     {/if}
                                 </a>
@@ -404,7 +404,7 @@
             <div class="mb-2 pb-2 border-b border-white/10">
                 <div class="px-4 py-2 mb-1">
                     <span
-                        class="text-[10px] font-bold text-primary-foreground/60 uppercase tracking-widest"
+                        class="text-[10px] font-bold text-white/70 uppercase tracking-widest"
                     >
                         Pulse Navigation
                     </span>
@@ -418,7 +418,7 @@
                                 class="flex items-center gap-3 px-3 py-2 mx-1 rounded-xl transition-all duration-200 group relative overflow-hidden
                                 {isActive
                                     ? 'bg-white/20 text-white shadow-lg shadow-black/5 font-semibold'
-                                    : 'text-primary-foreground/80 hover:text-white hover:bg-white/10'}"
+                                    : 'text-white/80 hover:text-white hover:bg-white/10'}"
                                 aria-current={isActive ? "page" : undefined}
                                 onclick={handleClose}
                             >
@@ -430,7 +430,7 @@
                                 <item.icon
                                     class="w-4 h-4 transition-transform duration-300 group-hover:scale-110 {isActive
                                         ? 'text-white'
-                                        : 'text-primary-foreground/50'}"
+                                        : 'text-white/70'}"
                                 />
                                 <span class="text-sm flex-1">{item.label}</span>
                             </a>
@@ -449,12 +449,12 @@
                             class="flex items-center gap-3 px-3 py-2.5 mx-1 rounded-xl transition-all duration-200 group relative overflow-hidden
                             {isActive
                                 ? 'bg-white/20 text-white font-semibold'
-                                : 'text-primary-foreground/80 hover:text-white hover:bg-white/10'}"
+                                : 'text-white/80 hover:text-white hover:bg-white/10'}"
                             onclick={handleClose}
                             data-testid="nav-recipient-preview"
                         >
                             <previewItem.icon
-                                class="w-4 h-4 text-primary-foreground/50 transition-transform duration-300 group-hover:scale-110"
+                                class="w-4 h-4 text-white/70 transition-transform duration-300 group-hover:scale-110"
                             />
                             <span class="text-sm flex-1">{previewItem.label}</span>
                         </a>
@@ -471,7 +471,7 @@
 
     <!-- Sidebar Footer: Profile Switcher -->
     <div
-        class="p-4 border-t border-primary-foreground/10 shrink-0 bg-black/10 backdrop-blur-sm"
+        class="p-4 border-t border-white/10 shrink-0 bg-black/10 backdrop-blur-sm"
     >
         <ProfileSwitcher />
     </div>

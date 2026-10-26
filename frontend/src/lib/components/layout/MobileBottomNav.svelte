@@ -32,7 +32,7 @@
 
 <!-- Mobile Bottom Navigation - Only visible on small screens -->
 <nav
-    class="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white border-t border-gray-200 shadow-lg shadow-black/10 safe-area-bottom"
+    class="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-card border-t border-border shadow-lg shadow-black/10 safe-area-bottom"
     aria-label="Mobile navigation"
 >
     <div class="flex items-stretch justify-around h-16">
@@ -43,7 +43,7 @@
                 class="flex flex-col items-center justify-center flex-1 py-2 px-1 transition-colors relative
                     {active
                         ? 'text-primary'
-                        : 'text-gray-500 hover:text-gray-700'}"
+                        : 'text-muted-foreground hover:text-foreground'}"
                 aria-current={active ? 'page' : undefined}
             >
                 <!-- Active indicator -->
@@ -66,7 +66,7 @@
                 // Dispatch event to open sidebar
                 window.dispatchEvent(new CustomEvent('toggle-mobile-sidebar'));
             }}
-            class="flex flex-col items-center justify-center flex-1 py-2 px-1 text-gray-500 hover:text-gray-700 transition-colors"
+            class="flex flex-col items-center justify-center flex-1 py-2 px-1 text-muted-foreground hover:text-foreground transition-colors"
             aria-label="More options"
         >
             <MoreHorizontal class="w-6 h-6 mb-0.5" />
