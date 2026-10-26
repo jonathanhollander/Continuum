@@ -76,27 +76,11 @@ const sameNamespace = (owner: OperationOwner) =>
     storageAccount() === owner.account && (get(currentProfileId) || 'owner') === owner.profile;
 const currentOwner = (owner: OperationOwner) => sameNamespace(owner) && isCurrentSession(owner.session);
 const cloneData = <V>(value: V): V => JSON.parse(JSON.stringify(value)) as V;
-const recoveryMemory = new Map<string, unknown>();
-const namespaceKey = (key: string, owner: OperationOwner) => `continuum_acc_${owner.account}_prof_${owner.profile}_${key}`;
-/** Recovery reads must stay in the initiating account, even while another account is active. */
-function storedFor<V>(key: string, fallback: V, owner: OperationOwner): V {
-    const scoped = namespaceKey(key, owner);
-    if (recoveryMemory.has(scoped)) return recoveryMemory.get(scoped) as V;
-    if (typeof localStorage === 'undefined') return fallback;
-    let raw: string | null;
-    try { raw = localStorage.getItem(scoped); } catch { return fallback; }
-    if (raw === null) return fallback;
-    try { return JSON.parse(raw) as V; } catch { return raw as V; }
-}
-const saveFor = <V>(key: string, value: V, owner: OperationOwner) => {
-    const scoped = namespaceKey(key, owner);
-    try { setStored(key, value, owner.profile, owner.account); recoveryMemory.delete(scoped); }
-    catch (e) {
-        // Keeping recovery state must never turn a confirmed server result into another POST.
-        recoveryMemory.set(scoped, value);
-        console.warn('[sync] Earlier-session recovery is held in memory', e);
-    }
-};
+/** Recovery and ordinary cache reads share one namespace-aware fallback boundary. */
+const storedFor = <V>(key: string, fallback: V, owner: OperationOwner): V =>
+    getStored(key, fallback, owner.profile, owner.account);
+const saveFor = <V>(key: string, value: V, owner: OperationOwner) =>
+    setStored(key, value, owner.profile, owner.account);
 const ACCOUNT_CHANGED = new SessionChangedError();
 type RecoveredWrite<V> = {
     key: string; kind: 'create' | 'update' | 'delete'; id?: string | number; data?: Partial<V>;
@@ -105,7 +89,7 @@ type RecoveredWrite<V> = {
 /** Opaque request identity lets an editor retry/release its own draft without content deduplication. */
 export type SaveFailure = Error & { recoveryId?: string };
 const identifiedFailure = (error: unknown, recoveryId: string): SaveFailure =>
-    Object.assign(error instanceof Error ? error : new Error(errMessage(error) || 'Failed to save'), { recoveryId });
+    Object.assign(error === ACCOUNT_CHANGED ? new SessionChangedError() : error instanceof Error ? error : new Error(errMessage(error) || 'Failed to save'), { recoveryId });
 
 export type SyncStatus = "idle" | "syncing" | "error" | "synced";
 
@@ -1260,24 +1244,45 @@ export class SingletonSyncManager<T extends object> {
     private activeWrites = new Map<string, { owner: OperationOwner; key: string; data: Partial<T>; quiet: boolean }>();
     private operationNotices = new Set<string>();
     private recoveryNotices = new Set<string>();
+    // Preserve namespace-scoped releases across reset so a late failed request
+    // cannot restore an explicitly superseded draft.
+    private releasedRecoveries = new Set<string>();
+    private writeNotices = new Map<string, string>();
+    private recoveryIdentity(owner: OperationOwner, key: string) { return JSON.stringify([owner.account, owner.profile, key]); }
+    private released(owner: OperationOwner, key: string) { return this.releasedRecoveries.has(this.recoveryIdentity(owner, key)); }
+    private trackNotice(key: string, id: string) {
+        const old = this.writeNotices.get(key);
+        if (old) { notifications.dismiss(old); this.operationNotices.delete(old); }
+        this.writeNotices.set(key, id);
+        this.operationNotices.add(id);
+    }
     private get recoveryKey() { return `${this.key}__account_recovery`; }
     private remember(write: { owner: OperationOwner; key: string; data: Partial<T>; quiet: boolean }) {
+        if (this.released(write.owner, write.key)) return;
         const saved = storedFor<{ key: string; data: Partial<T>; quiet: boolean }[]>(this.recoveryKey, [], write.owner);
         saveFor(this.recoveryKey, [...saved.filter(p => p.key !== write.key), { key: write.key, data: write.data, quiet: write.quiet }], write.owner);
     }
     private forget(owner: OperationOwner, key: string) {
         this.activeWrites.delete(key);
+        this.releasedRecoveries.add(this.recoveryIdentity(owner, key));
+        const notice = this.writeNotices.get(key);
+        if (notice) { notifications.dismiss(notice); this.operationNotices.delete(notice); this.writeNotices.delete(key); }
         const saved = storedFor<{ key: string; data: Partial<T>; quiet: boolean }[]>(this.recoveryKey, [], owner);
         if (saved.some(p => p.key === key)) saveFor(this.recoveryKey, saved.filter(p => p.key !== key), owner);
     }
+    /** Release only the caller's exact completed or superseded standalone draft. */
+    releaseRecovery(recoveryId: string, owner: SessionOwnership = captureSession()): void {
+        if (!isCurrentSession(owner) || this.record) return;
+        this.forget(captureOwner(), recoveryId);
+    }
     private offerRecovery(owner: OperationOwner) {
         for (const saved of storedFor<{ key: string; data: Partial<T>; quiet: boolean }[]>(this.recoveryKey, [], owner)) {
-            if (this.recoveryNotices.has(saved.key)) continue;
+            if (this.recoveryNotices.has(saved.key) || this.released(owner, saved.key)) continue;
             this.recoveryNotices.add(saved.key);
-            this.operationNotices.add(notifications.showError({
+            this.trackNotice(saved.key, notifications.showError({
                 message: 'Your earlier changes are kept. Review your saved details, then choose Try Again to apply them.',
                 code: 'DATABASE_ERROR'
-            }, () => { if (currentOwner(owner)) this.update(saved.data, saved.quiet, saved.key).catch(() => {}); }));
+            }, () => { if (currentOwner(owner) && !this.released(owner, saved.key)) this.update(saved.data, saved.quiet, saved.key).catch(() => {}); }));
         }
     }
 
@@ -1288,6 +1293,7 @@ export class SingletonSyncManager<T extends object> {
         this.operationNotices.forEach(id => notifications.dismiss(id));
         this.operationNotices.clear();
         this.recoveryNotices.clear();
+        this.writeNotices.clear();
         this.generation++;
         this.inflight = null;
         loadAnswered(this.noticeKey);
@@ -1415,7 +1421,10 @@ export class SingletonSyncManager<T extends object> {
         if (!current()) throw ACCOUNT_CHANGED;
         newData = cloneData(newData);
         const operation = { owner, key: recoveryId || crypto.randomUUID(), data: newData, quiet };
-        if (!this.record) this.activeWrites.set(operation.key, operation);
+        if (!this.record) {
+            if (this.released(owner, operation.key)) throw identifiedFailure(new Error('This earlier draft was superseded'), operation.key);
+            this.activeWrites.set(operation.key, operation);
+        }
         let confirmed: T | undefined;
         const original = this.data;
         this.status = "syncing";
@@ -1464,21 +1473,24 @@ export class SingletonSyncManager<T extends object> {
         } catch (e) {
             if (!current()) {
                 if (!confirmed) this.remember(operation);
-                throw ACCOUNT_CHANGED;
+                throw identifiedFailure(ACCOUNT_CHANGED, operation.key);
             }
+            // Releasing an in-flight draft also retires its failure notice; it must
+            // not restore the old draft after a newer editor intent supersedes it.
+            if (this.released(owner, operation.key)) throw identifiedFailure(e, operation.key);
             console.error(`[Sync:${this.key}] Update failed, rolling back`, e);
             this.data = original;
             setStored(this.key, original);
             this.notify();
             this.status = "error";
             this.error = (e as { message?: string } | null)?.message || "Failed to save";
-            if (quiet) { this.activeWrites.delete(operation.key); throw e; } // Existing autosave rollback policy.
-            this.operationNotices.add(notifications.showError({
+            if (quiet) { this.activeWrites.delete(operation.key); throw identifiedFailure(e, operation.key); } // Existing autosave rollback policy.
+            this.trackNotice(operation.key, notifications.showError({
                 message: 'Your draft is kept. We can save it again whenever you\'re ready.',
                 code: 'DATABASE_ERROR',
                 technicalDetails: (e as { message?: string } | null)?.message || String(e)
-            }, () => { if (current()) this.update(newData, quiet, operation.key).catch(() => {}); }));
-            throw e;
+            }, () => { if (current() && !this.released(owner, operation.key)) this.update(newData, quiet, operation.key).catch(() => {}); }));
+            throw identifiedFailure(e, operation.key);
         }
     }
 
