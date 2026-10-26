@@ -45,8 +45,8 @@
         active: "Active & Monitoring",
         grace: "Grace Period",
         escalated: "Escalation Active",
-        disabled: "Disabled",
-        not_configured: "Not Configured",
+        disabled: "Resting for now",
+        not_configured: "Ready when you are",
     };
 </script>
 
@@ -67,7 +67,7 @@
                 your loved ones don't have to worry.
             </p>
         </div>
-        <a href="/pulse/settings" class="btn btn-outline gap-2">
+        <a href="/modules/pulse/settings" class="btn btn-outline gap-2">
             <Settings class="w-4 h-4" />
             Configure
         </a>
@@ -138,9 +138,22 @@
                             <AlertTriangle class="w-4 h-4" />
                             Whenever you're ready, a check-in lets your circle know you're well.
                         </p>
+                    {:else if pulse.status === "disabled"}
+                        <p class="text-slate-500">
+                            Whenever you'd like check-ins to begin again,
+                            <a
+                                href="/modules/pulse/settings"
+                                class="link link-hover text-indigo-600 font-medium"
+                                >your settings are here</a
+                            >.
+                        </p>
                     {:else}
                         <p class="text-slate-500">
-                            Configure your check-in frequency in settings.
+                            <a
+                                href="/modules/pulse/settings"
+                                class="link link-hover text-indigo-600 font-medium"
+                                >Choose how often we check in</a
+                            >, and we'll gently keep watch from there.
                         </p>
                     {/if}
                 </div>
@@ -170,8 +183,7 @@
                         I'm Okay - Check In
                     </button>
                     <p class="text-xs text-center text-slate-400">
-                        This will reset your safety timer and notify purely
-                        based on your settings.
+                        Each check-in lets your circle know you're well.
                     </p>
                 </div>
             </div>
@@ -204,7 +216,7 @@
                             )}
                         </span>
                     {:else}
-                        Never
+                        Ready for your first
                     {/if}
                 </p>
             </div>
@@ -223,7 +235,7 @@
                 </h3>
                 <div class="mt-2 text-slate-900">
                     <a
-                        href="/pulse/contacts"
+                        href="/modules/pulse/contacts"
                         class="link link-hover text-indigo-600 font-medium flex items-center gap-1 group"
                     >
                         Manage Contacts
