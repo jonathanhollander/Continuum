@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 from typing import Optional, List, Any, Dict
 from sqlmodel import Field, SQLModel, JSON
@@ -6,7 +7,7 @@ class ActivityLogEntry(SQLModel, table=True):
     """General user activity log for tracking module-level changes."""
     __tablename__ = "activity_log_entries"
 
-    id: Optional[str] = Field(default=None, primary_key=True) # UUID from frontend
+    id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)  # server-generated UUID
     user_id: int = Field(foreign_key="users.id", index=True)
     timestamp: datetime = Field(default_factory=datetime.utcnow, index=True)
     module: str = Field(index=True)
