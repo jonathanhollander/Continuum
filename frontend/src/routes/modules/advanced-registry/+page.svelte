@@ -31,6 +31,7 @@
         ArrowDownLeft,
         MoreVertical,
         Trash2,
+        Pencil,
         X,
         Calendar,
         DollarSign,
@@ -90,6 +91,8 @@
         "transaction",
     );
     let parsedCustomAttributes = $state<Record<string, any>>({});
+    // Set while the form edits an existing row; the same form and save path as Add.
+    let editingId = $state<string | null>(null);
 
     // Temp Form States
     let newTx = $state<Partial<AssetTransaction>>({
@@ -122,22 +125,23 @@
     async function handleAdd() {
         const customAttrsString = JSON.stringify(parsedCustomAttributes);
         try {
-            if (addType === "transaction")
+            if (editingId) await saveEdit(customAttrsString);
+            else if (addType === "transaction")
                 await advancedAssetStore.addTransaction({
                     ...newTx,
                     custom_attributes: customAttrsString,
                 } as Omit<AssetTransaction, "id">);
-            if (addType === "maintenance")
+            else if (addType === "maintenance")
                 await advancedAssetStore.addMaintenance({
                     ...newMaint,
                     custom_attributes: customAttrsString,
                 } as Omit<MaintenanceLog, "id">);
-            if (addType === "claim")
+            else if (addType === "claim")
                 await advancedAssetStore.addClaim({
                     ...newClaim,
                     custom_attributes: customAttrsString,
                 } as Omit<InsuranceClaim, "id">);
-            if (addType === "account")
+            else if (addType === "account")
                 await digitalAssetsSync.create({
                     ...$state.snapshot(newAccount),
                     isClosed: false,
@@ -146,12 +150,53 @@
             return;
         }
 
+        resetForm();
+        showAddModal = false;
+    }
+
+    function resetForm() {
         if (addType === "transaction") newTx = { type: "purchase", amount: 0, description: "", date: today() };
         if (addType === "maintenance") newMaint = { item: "", cost: 0, date: today() };
         if (addType === "claim") newClaim = { status: "pending", amountClaimed: 0, dateFiled: today() };
         if (addType === "account") newAccount = { platform: "", username: "", preference: "memorialize", priority: "medium" };
         parsedCustomAttributes = {};
+        editingId = null;
+    }
+
+    // Closing an edit clears its pre-filled values so the next Add starts fresh;
+    // an unsaved Add keeps what was typed, as before.
+    function closeModal() {
+        if (editingId) resetForm();
         showAddModal = false;
+    }
+
+    const parseAttrs = (v?: string) => {
+        try { const p = JSON.parse(v || "{}"); return p && typeof p === "object" && !Array.isArray(p) ? p : {}; } catch { return {}; }
+    };
+
+    function startEdit(kind: "transaction" | "maintenance" | "claim", item: AssetTransaction | MaintenanceLog | InsuranceClaim) {
+        const copy = { ...$state.snapshot(item) } as any;
+        if (kind === "transaction") newTx = copy;
+        if (kind === "maintenance") newMaint = copy;
+        if (kind === "claim") newClaim = copy;
+        parsedCustomAttributes = parseAttrs(item.custom_attributes);
+        addType = kind;
+        editingId = item.id;
+        showAddModal = true;
+    }
+
+    // Replace the one row in place through the same singleton update the adds use.
+    // A failed save shows the manager's message, rolls back and keeps the form open.
+    function saveEdit(customAttrsString: string) {
+        const list = addType === "transaction" ? "transactions" : addType === "maintenance" ? "maintenance" : "claims";
+        const draft = addType === "transaction" ? newTx : addType === "maintenance" ? newMaint : newClaim;
+        const current = advancedAssetSync.data || DEFAULT_ADVANCED_STATE;
+        return advancedAssetSync.update({
+            ...current,
+            [list]: (current[list] as { id: string }[]).map((x) =>
+                x.id === editingId ? { ...x, ...$state.snapshot(draft), id: x.id, custom_attributes: customAttrsString } : x,
+            ),
+        });
     }
 
     // The store has no remove calls: save the record without the item, the same
@@ -356,6 +401,12 @@
                                         : "-"}${tx.amount.toLocaleString()}
                                 </td>
                                 <td class="px-8 py-5 text-right">
+                                    <button aria-label="Edit these details"
+                                        onclick={() => startEdit("transaction", tx)}
+                                        class="p-2 text-muted-foreground hover:text-primary transition-colors"
+                                    >
+                                        <Pencil size={16} />
+                                    </button>
                                     <button aria-label="Remove this item"
                                         onclick={() =>
                                             removeFrom("transactions", tx.id)}
@@ -440,6 +491,12 @@
                                         class="px-3 py-1 bg-card text-[10px] font-black uppercase text-muted-foreground rounded-full border border-border"
                                         >{log.date}</span
                                     >
+                                    <button aria-label="Edit these details"
+                                        onclick={() => startEdit("maintenance", log)}
+                                        class="p-2 text-muted-foreground hover:text-primary transition-colors"
+                                    >
+                                        <Pencil size={16} />
+                                    </button>
                                     <button aria-label="Remove this item"
                                         onclick={() => removeFrom("maintenance", log.id)}
                                         class="p-2 text-muted-foreground hover:text-danger transition-colors"
@@ -585,6 +642,12 @@
                                         ${(claim.amountClaimed ?? 0).toLocaleString()}
                                     </p>
                                 </div>
+                                <button aria-label="Edit these details"
+                                    onclick={() => startEdit("claim", claim)}
+                                    class="p-2 text-muted-foreground hover:text-primary transition-colors"
+                                >
+                                    <Pencil size={20} />
+                                </button>
                                 <button aria-label="Remove this item"
                                     onclick={() =>
                                         removeFrom("claims", claim.id)}
@@ -799,7 +862,7 @@
 {/if}
 
 {#if showAddModal}
-    <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => (showAddModal = false) }}
+    <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: closeModal }}
         class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md"
         transition:fade
     >
@@ -813,10 +876,10 @@
                 <h3
                     class="text-xl font-black text-foreground uppercase tracking-tight"
                 >
-                    Add {addType}
+                    {editingId ? "Edit these details" : `Add ${addType}`}
                 </h3>
                 <button aria-label="Close"
-                    onclick={() => (showAddModal = false)}
+                    onclick={closeModal}
                     class="text-muted-foreground hover:text-foreground transition-colors"
                 >
                     <X size={24} />
@@ -1149,7 +1212,7 @@
                         Save my thoughts
                     </button>
                     <button
-                        onclick={() => (showAddModal = false)}
+                        onclick={closeModal}
                         class="px-8 py-4 bg-muted text-muted-foreground rounded-2xl font-black hover:bg-border transition-all text-sm"
                     >
                         Maybe later
