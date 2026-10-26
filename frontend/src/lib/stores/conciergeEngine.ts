@@ -136,7 +136,7 @@ function createConciergeEngine() {
             'Property & Real Estate': "I'm here to help you catalog your assets. Your home is the foundation of so much family history—where shall we begin?",
             'Financial Accounts': "Let's secure your financial legacy. Thinking ahead about these resources is such a kind thing to do for your family. Which account is most important to record first?",
             'Document Vault': "Building a solid legal foundation is an act of great care. Do you have a copy of your Will or Trust ready to upload?",
-            'Health & Medical': "Medical clarity ensures your wishes are honored with dignity. Have you designated a healthcare proxy or created a living will?",
+            'Health & Medical': "With medical clarity, doctors and family know what you would want. Have you designated a healthcare proxy or created a living will?",
             'Family & Contacts': "Legacy is all about the people you care for. Who is the first person you'd like to include in your circle of trust?",
             'Legacy Correspondence': "Your voice is a treasure for those you leave behind. Who would you like to write your first legacy letter to?",
             'The Life Timeline': "Your life is a story worth telling. What is a major life milestone we should honor first on your timeline?",
