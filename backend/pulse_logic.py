@@ -74,8 +74,18 @@ def alerts_paused_until(settings: PulseSettings, guardian: Optional[PulseCheckin
         return None
     return guardian.timestamp + timedelta(days=settings.frequency_days, hours=settings.grace_period_hours)
 
+def ghost_mode_active(settings: PulseSettings, now: datetime) -> bool:
+    """Ghost Mode ("pause all alerts") is on while ghost_mode_until (naive UTC) is in the future."""
+    return settings.ghost_mode_until is not None and now < settings.ghost_mode_until
+
 def process_user_pulse(session: Session, settings: PulseSettings):
     user_id = settings.user_id
+
+    # Ghost Mode: no tier alert, retry or tier advance while it lasts. Nothing is queued, so once it
+    # passes the normal rules below apply (at most one tier per tick, delays from the last tier row).
+    if ghost_mode_active(settings, utc_now()):
+        logger.debug(f"User {user_id}: Ghost Mode until {settings.ghost_mode_until}; alerts paused")
+        return
 
     # 1. The owner's own last check-in starts this outage (guardian actions never do)
     last_checkin = owner_last_checkin(session, user_id)
