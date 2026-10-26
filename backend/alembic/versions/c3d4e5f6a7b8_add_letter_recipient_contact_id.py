@@ -1,7 +1,7 @@
 """add letters.recipient_contact_id (card C3)
 
 Revision ID: c3d4e5f6a7b8
-Revises: a7c4e2f91b3d
+Revises: c1d0c5a7e3b2
 Create Date: 2026-10-26
 
 Idempotent. a7c1b0e3d9f4 adds model columns on databases that have not run it
@@ -15,7 +15,7 @@ import sqlalchemy as sa
 import sqlmodel  # noqa: F401
 
 revision: str = 'c3d4e5f6a7b8'
-down_revision: Union[str, Sequence[str], None] = 'a7c4e2f91b3d'
+down_revision: Union[str, Sequence[str], None] = 'c1d0c5a7e3b2'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

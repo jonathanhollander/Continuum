@@ -1,7 +1,7 @@
 """documents: vault metadata columns (witnesses, dates, stored file id, custom fields)
 
 Revision ID: c1d0c5a7e3b2
-Revises: a7c4e2f91b3d
+Revises: c8d1a2b3e4f5
 Create Date: 2026-10-26
 
 Card C1. Adds the columns DocumentVault saves. Idempotent: the app's startup
@@ -16,7 +16,7 @@ import sqlmodel
 
 
 revision: str = 'c1d0c5a7e3b2'
-down_revision: Union[str, Sequence[str], None] = 'a7c4e2f91b3d'
+down_revision: Union[str, Sequence[str], None] = 'c8d1a2b3e4f5'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
