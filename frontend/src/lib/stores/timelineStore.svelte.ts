@@ -1,4 +1,5 @@
 import { registerSync } from "$lib/services/sync.svelte";
+import { oneSpelling } from "$lib/utils/oneSpelling";
 
 export interface LifeEvent {
     id: number | string;
@@ -17,15 +18,10 @@ export interface LifeEvent {
 
 const timelineMapper = (item: any) => {
     if (!item) return item;
-    return {
-        ...item,
-        // Remote -> Local
-        isHighlight: item.is_highlight ?? item.isHighlight ?? false,
-        assignedContactId: item.assigned_contact_id ?? item.assignedContactId,
-        // Local -> Remote
-        is_highlight: item.isHighlight ?? item.is_highlight,
-        assigned_contact_id: item.assignedContactId ?? item.assigned_contact_id
-    };
+    // One spelling per field (camel; the wire snake-cases it), newest value kept
+    const out = oneSpelling(item, { isHighlight: 'is_highlight', assignedContactId: 'assigned_contact_id' });
+    // "No one assigned" binds undefined, which JSON drops; null clears it on the server.
+    return { ...out, isHighlight: out.isHighlight ?? false, assignedContactId: out.assignedContactId ?? null };
 };
 
 export const timelineSync = registerSync<LifeEvent>('timeline_events', 'timeline_events', timelineMapper).setAffirmationContext('timeline');

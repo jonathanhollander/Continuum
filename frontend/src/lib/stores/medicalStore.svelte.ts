@@ -1,4 +1,5 @@
 import { registerSync, registerSingletonSync } from "$lib/services/sync.svelte";
+import { oneSpelling } from "$lib/utils/oneSpelling";
 
 export interface MedicalDirective {
     id: number | string;
@@ -20,31 +21,24 @@ export interface MedicalProfile {
 
 const profileMapper = (item: any) => {
     if (!item) return item;
-    return {
-        ...item,
-        // Remote -> Local
-        organDonor: item.organ_donor ?? item.organDonor ?? false,
-        bloodType: item.blood_type ?? item.bloodType ?? '',
-        // Local -> Remote
-        organ_donor: item.organDonor ?? item.organ_donor,
-        blood_type: item.bloodType ?? item.blood_type
-    };
+    // One spelling per field (camel; the wire snake-cases it), newest value kept
+    const out = oneSpelling(item, { organDonor: 'organ_donor', bloodType: 'blood_type' });
+    return { ...out, organDonor: out.organDonor ?? false, bloodType: out.bloodType ?? '' };
 };
 
 const directiveMapper = (item: any) => {
     if (!item) return item;
+    // One spelling per field (camel; the wire snake-cases it), newest value kept
+    const out = oneSpelling(item, {
+        locationOfOriginal: 'location_of_original', primaryContact: 'primary_contact',
+        contactPhone: 'contact_phone', fileData: 'file_data',
+    });
     return {
-        ...item,
-        // Remote -> Local
-        locationOfOriginal: item.location_of_original ?? item.locationOfOriginal ?? '',
-        primaryContact: item.primary_contact ?? item.primaryContact ?? '',
-        contactPhone: item.contact_phone ?? item.contactPhone ?? '',
-        fileData: item.file_data ?? item.fileData ?? '',
-        // Local -> Remote
-        location_of_original: item.locationOfOriginal ?? item.location_of_original,
-        primary_contact: item.primaryContact ?? item.primary_contact,
-        contact_phone: item.contactPhone ?? item.contact_phone,
-        file_data: item.fileData ?? item.file_data
+        ...out,
+        locationOfOriginal: out.locationOfOriginal ?? '',
+        primaryContact: out.primaryContact ?? '',
+        contactPhone: out.contactPhone ?? '',
+        fileData: out.fileData ?? ''
     };
 };
 
