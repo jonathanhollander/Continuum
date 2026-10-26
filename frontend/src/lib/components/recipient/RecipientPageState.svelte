@@ -1,6 +1,7 @@
 <script lang="ts">
     // Loading, closed and retry states for the recipient start page and its preview (card D2).
     import { Loader2 } from "lucide-svelte";
+    import { page } from "$app/stores";
 
     let { state, onretry }: { state: "loading" | "closed" | "retry" | "signin" | "ready"; onretry: () => void } = $props();
 </script>
@@ -14,12 +15,12 @@
             <div class="w-24 h-2 bg-[#D4AF37] rounded-full mx-auto"></div>
             <h1 class="font-serif text-4xl text-[#304743]">This page is closed for now</h1>
             <p class="text-stone-600 leading-relaxed">
-                The person who shared it can send you a fresh link whenever it is needed.
+                The executor, or the person who shared it, can open it again for you.
                 We're here when you come back.
             </p>
         {:else if state === "signin"}
             <h1 class="font-serif text-4xl text-[#304743]">Your preview opens once you're signed in</h1>
-            <a href="/login" class="inline-block px-5 py-3 rounded-xl bg-[#304743] text-white font-semibold">Sign in to continue</a>
+            <a href={`/login?redirect=${encodeURIComponent($page.url.pathname)}`} class="inline-block px-5 py-3 rounded-xl bg-[#304743] text-white font-semibold">Sign in to continue</a>
         {:else}
             <h1 class="font-serif text-4xl text-[#304743]">This is taking a moment</h1>
             <p class="text-stone-600">Everything is kept safe. You can try again whenever you like.</p>

@@ -485,7 +485,7 @@ async def serve_spa(full_path: str):
     # If the path starts with api, it should have been caught by the routes above.
     # If we are here, it means the API route doesn't exist.
     if full_path == "api" or full_path.startswith("api/"):
-        raise HTTPException(status_code=404, detail="API endpoint not found")
+        raise HTTPException(status_code=404, detail="That address may have moved.")
 
     # P1-High: Path traversal protection
     # Define the base directory for static files
@@ -508,7 +508,7 @@ async def serve_spa(full_path: str):
     # Compare whole path components so a sibling like "dist-other" cannot pass a plain prefix test.
     if os.path.commonpath([resolved_path, base_dir]) != base_dir:
         logger.warning(f"Blocked path traversal attempt: '{full_path}' resolved to '{resolved_path}'")
-        raise HTTPException(status_code=403, detail="Access denied")
+        raise HTTPException(status_code=403, detail="That page is kept private.")
 
     if os.path.isfile(resolved_path):
         return FileResponse(resolved_path)

@@ -5,7 +5,6 @@
         Circle,
         FileText,
         BookOpen,
-        CircleAlert,
     } from "lucide-svelte";
     import { registerProfileSlice } from "$lib/services/sync.svelte";
 
@@ -40,7 +39,7 @@
     $: steps = [
         `Review ${module.title} requirements`,
         `Gather necessary documents for ${module.role}`,
-        `Verify information accuracy`,
+        `Take a look to see it all reads right`,
         `Confirm details with key stakeholders`,
         `Finalize and archive record`,
     ];
@@ -118,14 +117,12 @@
                 {:else}
                     <p class="text-muted-foreground leading-relaxed text-lg">
                         {module.description ||
-                            `This module is a critical component of the ${module.role} workflow.`}
+                            `This section is part of your ${module.role} journey.`}
                     </p>
                     <p class="text-muted-foreground mt-2">
-                        It is designed to help you organize and secure relevant
-                        information regarding <em>{module.title}</em>. Proper
-                        completion of this section ensures that your estate
-                        planning remains comprehensive and accessible when
-                        needed.
+                        This is a place to gather what matters about
+                        <em>{module.title}</em>, so it's easy for others to
+                        find.
                     </p>
                 {/if}
                 <div
@@ -134,13 +131,7 @@
                     <span
                         class="flex items-center gap-1.5 bg-secondary/30 px-3 py-1 rounded-full"
                     >
-                        <CircleAlert size={14} />
-                        Priority Level: High
-                    </span>
-                    <span
-                        class="flex items-center gap-1.5 bg-secondary/30 px-3 py-1 rounded-full"
-                    >
-                        Estimated Time: 15-30 mins
+                        A short while, at your pace
                     </span>
                 </div>
             </div>
@@ -211,9 +202,8 @@
             >
                 <h3 class="font-bold text-sm text-primary mb-2">Need Help?</h3>
                 <p class="text-xs text-muted-foreground mb-4">
-                    If you're unsure about this specific module, consult the
-                    master guide or contact your estate attorney based on the
-                    "Legal Documents" section.
+                    Whenever you'd like more guidance, your estate attorney is
+                    a good place to start.
                 </p>
             </section>
         </div>

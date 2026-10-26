@@ -5,7 +5,7 @@ import { userRole } from '../stores/conciergeStore.svelte.ts';
 import { apiFetch } from '../api/client';
 import { parseApiError } from './errorHandler';
 
-export const AI_UNAVAILABLE = "AI help isn't available right now. Everything else is still here for you, and you can come back to this whenever you're ready.";
+export const AI_UNAVAILABLE = "AI help is resting right now. Everything else is here for you, and you can come back whenever you're ready.";
 
 /**
  * Sends a chat request to our own server (which holds the AI key).

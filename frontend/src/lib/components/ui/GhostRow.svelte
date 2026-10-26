@@ -84,7 +84,7 @@
         class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-white/60 backdrop-blur-[1px]"
     >
         <span class="font-bold text-indigo-600 text-sm flex items-center gap-2">
-            <Plus size={16} /> Click to Add Real {type}
+            <Plus size={16} /> Add your own {type}
         </span>
     </div>
 </button>

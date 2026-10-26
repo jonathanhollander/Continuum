@@ -44,7 +44,7 @@
     async function removeDefinition(id: number, name: string) {
         if (
             await askConfirm(
-                `Delete field "${name}"? Data in this field will remain but be hidden.`,
+                `Remove the field "${name}"? Anything you saved in it stays safe.`,
             )
         ) {
             await customFieldStore.deleteDefinition(id);
@@ -179,7 +179,7 @@
                         onclick={() => (isManaging = false)}
                         class="px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-700"
                     >
-                        Cancel
+                        Maybe later
                     </button>
                     <button
                         onclick={addField}

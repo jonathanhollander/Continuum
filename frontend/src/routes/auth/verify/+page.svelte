@@ -15,7 +15,7 @@
 
         if (!token) {
             status = "error";
-            error = "This link may have been used already or expired. You can request a new one whenever you're ready.";
+            error = "This link has been used or has rested. A new one is a tap away whenever you're ready.";
             return;
         }
 
@@ -51,7 +51,7 @@
             console.error("Magic link verification failed:", e);
             status = "error";
             error =
-                "This link may have been used already or expired. You can request a new one whenever you're ready.";
+                "This link has been used or has rested. A new one is a tap away whenever you're ready.";
         }
     });
 </script>
@@ -89,7 +89,7 @@
                             Verifying your login...
                         </h3>
                         <p class="text-slate-300 text-lg">
-                            Please wait while we securely log you in
+                            Signing you in securely...
                         </p>
                     </div>
                 </div>
@@ -105,7 +105,7 @@
                     </div>
                     <div class="space-y-3">
                         <h3 class="text-white font-bold text-3xl">
-                            Login Successful!
+                            Welcome back
                         </h3>
                         <p class="text-slate-300 text-lg">
                             Taking you to your vault...
@@ -124,7 +124,7 @@
                     </div>
                     <div class="space-y-3">
                         <h3 class="text-white font-bold text-3xl">
-                            Verification Failed
+                            This link has finished its job
                         </h3>
                         <p class="text-slate-300 text-lg">
                             {error}

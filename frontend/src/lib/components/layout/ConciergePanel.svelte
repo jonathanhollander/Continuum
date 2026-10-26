@@ -406,7 +406,7 @@
                                     <Mic size={10} />
                                     <span
                                         class="text-[9px] uppercase font-bold tracking-tighter"
-                                        >Dictated - Please verify</span
+                                        >Spoken words, ready for a read-through</span
                                     >
                                 </div>
                             {/if}

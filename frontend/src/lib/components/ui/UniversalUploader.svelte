@@ -86,11 +86,11 @@
     async function processFile(file: File) {
         // Mode Validation
         if (mode === "image" && !file.type.startsWith("image/")) {
-            error = "Please upload an image file.";
+            error = "This space keeps images. An image file will fit here.";
             return;
         }
         if (mode === "document" && file.type.startsWith("image/")) {
-            error = "Please upload a document (PDF, Text).";
+            error = "This space keeps PDF and text documents.";
             return;
         }
 
@@ -267,7 +267,7 @@
                                 ? "Upload Image"
                                 : mode === "document"
                                   ? "Upload Document"
-                                  : "Click to upload"}
+                                  : "Add a file here"}
                         </p>
                         <p class="text-xs mt-1 text-gray-400">
                             {mode === "image"

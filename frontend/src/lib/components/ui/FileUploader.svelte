@@ -200,7 +200,7 @@
                     </div>
                     <div>
                         <p class="text-sm font-bold text-gray-600">
-                            Click to upload or drag image here
+                            Add an image here, or drag one in
                         </p>
                         <p class="text-xs mt-1">Supports JPG, PNG (Max 5MB)</p>
                     </div>

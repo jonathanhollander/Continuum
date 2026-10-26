@@ -14,6 +14,12 @@
         "Notified",
         "Unreachable",
     ];
+    // The saved values stay as they are; these are the words shown on each chip.
+    const statusLabel: Record<string, string> = {
+        Pending: "Waiting",
+        LeftMsg: "Left a message",
+        Unreachable: "Will try again",
+    };
     // A contact with no saved status is still pending, so that chip shows as chosen.
     let current = $derived(contact.notificationStatus || "Pending");
 </script>
@@ -65,7 +71,7 @@
                     ? 'bg-slate-800 text-white border-slate-800'
                     : 'bg-white text-slate-500 border-slate-200 hover:border-slate-400'}"
             >
-                {status === "LeftMsg" ? "Left Msg" : status}
+                {statusLabel[status] ?? status}
             </button>
         {/each}
     </div>

@@ -127,11 +127,10 @@
             return;
         }
 
-        const wanted: [string, any, string][] = [];
-        if (answers.life) wanted.push(["Life Insurance", "Life", "Term Life"]);
-        if (answers.auto) wanted.push(["Auto Insurance", "Auto", "Comprehensive"]);
-        if (answers.home)
-            wanted.push(["Home/Renters Insurance", "Home", "Standard Fire & Theft"]);
+        const wanted: [string, any][] = [];
+        if (answers.life) wanted.push(["Life Insurance", "Life"]);
+        if (answers.auto) wanted.push(["Auto Insurance", "Auto"]);
+        if (answers.home) wanted.push(["Home/Renters Insurance", "Home"]);
 
         showWizard = false;
         if (wanted.length > 0) saveWizardPolicies(wanted);
@@ -139,9 +138,9 @@
 
     // One wizard run is one save: the creates run quietly, then one affirmation when all land,
     // or one gentle message whose Try Again re-sends only the policies still waiting.
-    async function saveWizardPolicies(wanted: [string, any, string][]) {
+    async function saveWizardPolicies(wanted: [string, any][]) {
         const results = await Promise.allSettled(
-            wanted.map(([name, type, insurer]) => addWizardPolicy(name, type, insurer)),
+            wanted.map(([name, type]) => addWizardPolicy(name, type)),
         );
         const waiting = wanted.filter((_, i) => results[i].status === "rejected");
         if (waiting.length === 0) {
@@ -160,12 +159,13 @@
         );
     }
 
-    async function addWizardPolicy(name: string, type: any, insurer = "TBD") {
+    // The wizard knows only the kind of cover; the carrier and notes stay blank for the person to fill in.
+    async function addWizardPolicy(name: string, type: any) {
         const created = await insuranceSync.create({
             id: crypto.randomUUID(),
             policyName: name,
             insuranceType: type,
-            insurer: insurer,
+            insurer: "",
             policyNumber: "",
             premiumAmount: 0,
             premiumFrequency: "Monthly",
@@ -175,7 +175,7 @@
             claimsProcedure: "",
             status: "Pending",
             policyDocuments: "",
-            notes: "Added via Concierge Wizard",
+            notes: "",
         }, false, true);
 
         activityLog.logEvent({
@@ -191,11 +191,10 @@
     const policies = $derived(insuranceStore.policies);
     const filteredPolicies = $derived(
         policies.filter((p) => {
+            const q = searchQuery.toLowerCase();
             const matchesSearch =
-                p.policyName
-                    .toLowerCase()
-                    .includes(searchQuery.toLowerCase()) ||
-                p.insurer.toLowerCase().includes(searchQuery.toLowerCase());
+                String(p.policyName ?? "").toLowerCase().includes(q) ||
+                String(p.insurer ?? "").toLowerCase().includes(q);
             const matchesFilter =
                 filterType === "All" || p.insuranceType === filterType;
             return matchesSearch && matchesFilter;
@@ -219,6 +218,37 @@
         } finally {
             downloadingDocuments = false;
         }
+    }
+
+    // One policy's stored document, opened from its card or row.
+    let openingDocument = $state<string | null>(null);
+    async function openPolicyDocument(policy: InsurancePolicy) {
+        const id = mediaIdFromRef(policy.policyDocuments);
+        if (id === null || openingDocument) return;
+        openingDocument = String(policy.id);
+        try {
+            await downloadMedia(id);
+        } catch (e) {
+            console.warn("[insurance] policy document open paused", id, e);
+        } finally {
+            openingDocument = null;
+        }
+    }
+
+    // "2031-05-01" reads as a local calendar date.
+    function dateLabel(v: string | null | undefined): string {
+        const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(v ?? ""));
+        if (!m) return "";
+        return new Date(+m[1], +m[2] - 1, +m[3]).toLocaleDateString(undefined, {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+        });
+    }
+
+    function showAllPolicies() {
+        filterType = "All";
+        searchQuery = "";
     }
 
     const stats = $derived(insuranceStore.getTotalPremiums());
@@ -408,8 +438,8 @@
 <LivingBlueprintHeader
     title="Insurance Portfolio"
     subtitle="Protecting your loved ones with financial security"
-    detailedDescription="Life insurance and protection policies are acts of love. They ensure your family has financial security when you're no longer here to provide it, bridging the gap when they need it most."
-    whyMatters="Billions in insurance benefits go unclaimed every year simply because beneficiaries didn't know policies existed. Cataloging them here guarantees your foresight protects those you love."
+    detailedDescription="Life insurance and protection policies are acts of love. They ensure your family has financial security to look after them, bridging the gap when they need it most."
+    whyMatters="Cataloging your policies here helps every benefit reach the people you love."
 >
     <div class="flex flex-wrap items-center gap-3">
         <DataViewToggle module="insurance" onchange={(mode) => viewMode = mode} />
@@ -425,7 +455,7 @@
             class="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-2xl transition-all shadow-xl shadow-slate-900/10 font-bold"
         >
             <Plus size={20} />
-            Share Protection
+            Share a policy
         </button>
     </div>
 </LivingBlueprintHeader>
@@ -645,11 +675,11 @@
                                 >
                                     {policy.policyName}
                                 </h3>
-                                <p
-                                    class="text-slate-500 text-sm"
-                                >
-                                    {policy.insurer}
-                                </p>
+                                {#if policy.insurer}
+                                    <p class="text-slate-500 text-sm">
+                                        {policy.insurer}
+                                    </p>
+                                {/if}
                             </div>
                         </div>
                         <div
@@ -773,6 +803,88 @@
                             </div>
                         </div>
                         {/if}
+                        {#if policy.agentName || policy.agentContact}
+                        <div class="flex items-center gap-4 text-slate-600">
+                            <div
+                                class="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400"
+                            >
+                                <User size={14} />
+                            </div>
+                            <div class="min-w-0">
+                                <p
+                                    class="text-[10px] font-bold text-slate-400 uppercase tracking-widest"
+                                >
+                                    Agent / Point of Contact
+                                </p>
+                                {#if policy.agentName}
+                                    <p class="text-sm font-bold text-slate-700 truncate">{policy.agentName}</p>
+                                {/if}
+                                {#if policy.agentContact}
+                                    <p class="text-sm text-slate-500 truncate">{policy.agentContact}</p>
+                                {/if}
+                            </div>
+                        </div>
+                        {/if}
+                        {#if dateLabel(policy.expirationDate)}
+                        <div class="flex items-center gap-4 text-slate-600">
+                            <div
+                                class="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400"
+                            >
+                                <Calendar size={14} />
+                            </div>
+                            <div>
+                                <p
+                                    class="text-[10px] font-bold text-slate-400 uppercase tracking-widest"
+                                >
+                                    Expiration Date
+                                </p>
+                                <p class="text-sm font-bold text-slate-700">
+                                    {dateLabel(policy.expirationDate)}
+                                </p>
+                            </div>
+                        </div>
+                        {/if}
+                        {#if policy.notes}
+                        <div class="flex items-start gap-4 text-slate-600">
+                            <div
+                                class="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 shrink-0"
+                            >
+                                <Info size={14} />
+                            </div>
+                            <div class="min-w-0">
+                                <p
+                                    class="text-[10px] font-bold text-slate-400 uppercase tracking-widest"
+                                >
+                                    Notes
+                                </p>
+                                <p class="text-sm text-slate-600 whitespace-pre-line line-clamp-3">
+                                    {policy.notes}
+                                </p>
+                            </div>
+                        </div>
+                        {/if}
+                        {#if mediaIdFromRef(policy.policyDocuments) !== null}
+                        <button
+                            type="button"
+                            onclick={() => openPolicyDocument(policy)}
+                            aria-busy={openingDocument === String(policy.id)}
+                            class="flex items-center gap-4 text-slate-600 hover:text-primary transition-colors text-left"
+                        >
+                            <span
+                                class="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400"
+                            >
+                                <Download size={14} />
+                            </span>
+                            <span>
+                                <span
+                                    class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest"
+                                >
+                                    Policy Documentation
+                                </span>
+                                <span class="block text-sm font-bold">Policy Document</span>
+                            </span>
+                        </button>
+                        {/if}
                     </div>
                 </div>
 
@@ -797,12 +909,23 @@
                 {/if}
             </div>
         {:else}
-            <!-- Empty State for Insurance -->
-            {#if filteredPolicies.length === 0 && searchQuery === ""}
+            <!-- First run: the welcome and examples. With policies saved, a search or filter
+                 that shows none offers the way back to all of them. -->
+            {#if policies.length > 0}
+                <div class="col-span-full flex justify-center py-12">
+                    <button
+                        type="button"
+                        onclick={showAllPolicies}
+                        class="px-6 py-3 rounded-2xl font-bold border border-primary/20 text-primary hover:bg-primary/5 transition-colors"
+                    >
+                        Show all policies
+                    </button>
+                </div>
+            {:else}
                 <div class="col-span-full">
                     <EmptyState
                         title="Protect your family's financial future"
-                        whyMatters="<strong>Life insurance ensures your family has financial security when you're no longer here to provide it.</strong> Without documentation, they may never find these benefits—policies sit unclaimed, beneficiaries go unpaid, and the protection you worked for goes to waste.<br/><br/>Cataloging your policies here means your family will know exactly what coverage exists, who to contact, and how to file claims. It turns a confusing maze of paperwork into a clear roadmap during their darkest time."
+                        whyMatters="<strong>Life insurance gives your family financial security to look after them.</strong> With documentation, your family can find each benefit and the protection you worked for reaches them.<br/><br/>Cataloging your policies here means your family will know exactly what coverage exists, who to contact, and how to file claims. It turns a confusing maze of paperwork into a clear roadmap during their darkest time."
                         encouragement="Start with just your life insurance. Add health, auto, and home policies as you have time."
                         icon={Shield}
                         iconClass="text-indigo-500"
@@ -850,10 +973,20 @@
     </div>
     {:else}
         <!-- Table View -->
-        {#if filteredPolicies.length === 0 && searchQuery === ""}
+        {#if policies.length > 0 && filteredPolicies.length === 0}
+            <div class="flex justify-center py-12">
+                <button
+                    type="button"
+                    onclick={showAllPolicies}
+                    class="px-6 py-3 rounded-2xl font-bold border border-primary/20 text-primary hover:bg-primary/5 transition-colors"
+                >
+                    Show all policies
+                </button>
+            </div>
+        {:else if policies.length === 0}
             <EmptyState
                 title="Protect your family's financial future"
-                whyMatters="<strong>Life insurance ensures your family has financial security when you're no longer here to provide it.</strong> Without documentation, they may never find these benefits—policies sit unclaimed, beneficiaries go unpaid, and the protection you worked for goes to waste.<br/><br/>Cataloging your policies here means your family will know exactly what coverage exists, who to contact, and how to file claims. It turns a confusing maze of paperwork into a clear roadmap during their darkest time."
+                whyMatters="<strong>Life insurance gives your family financial security to look after them.</strong> With documentation, your family can find each benefit and the protection you worked for reaches them.<br/><br/>Cataloging your policies here means your family will know exactly what coverage exists, who to contact, and how to file claims. It turns a confusing maze of paperwork into a clear roadmap during their darkest time."
                 encouragement="Start with just your life insurance. Add health, auto, and home policies as you have time."
                 icon={Shield}
                 iconClass="text-indigo-500"
@@ -870,6 +1003,8 @@
                             <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Carrier</th>
                             <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Premium</th>
                             <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Beneficiary</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Agent</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Expiration</th>
                             <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Status</th>
                             <th class="px-4 py-3 text-right text-xs font-bold uppercase text-slate-500">Actions</th>
                         </tr>
@@ -886,6 +1021,9 @@
                                         <div>
                                             <span class="font-medium text-slate-800">{policy.policyName}</span>
                                             <div class="text-xs text-slate-400">{policy.policyNumber || '-'}</div>
+                                            {#if policy.notes}
+                                                <div class="text-xs text-slate-500 truncate max-w-[220px]" title={policy.notes}>{policy.notes}</div>
+                                            {/if}
                                         </div>
                                     </div>
                                 </td>
@@ -897,6 +1035,13 @@
                                 <td class="px-4 py-3 text-sm text-slate-600 max-w-[150px] truncate">
                                     {policy.beneficiaries || '-'}
                                 </td>
+                                <td class="px-4 py-3 text-sm text-slate-600 max-w-[180px]">
+                                    <div class="truncate">{policy.agentName}</div>
+                                    {#if policy.agentContact}
+                                        <div class="text-xs text-slate-400 truncate">{policy.agentContact}</div>
+                                    {/if}
+                                </td>
+                                <td class="px-4 py-3 text-sm text-slate-600 whitespace-nowrap">{dateLabel(policy.expirationDate)}</td>
                                 <td class="px-4 py-3">
                                     <div class="flex items-center gap-1.5">
                                         <div class="w-2 h-2 rounded-full {policy.status === 'Active' ? 'bg-emerald-500' : 'bg-slate-300'}"></div>
@@ -905,6 +1050,15 @@
                                 </td>
                                 <td class="px-4 py-3 text-right">
                                     <div class="flex items-center justify-end gap-2 transition-opacity">
+                                        {#if mediaIdFromRef(policy.policyDocuments) !== null}
+                                            <button aria-label="Policy Document"
+                                                onclick={() => openPolicyDocument(policy)}
+                                                aria-busy={openingDocument === String(policy.id)}
+                                                class="p-1.5 text-slate-400 hover:text-primary transition-colors"
+                                            >
+                                                <Download size={14} />
+                                            </button>
+                                        {/if}
                                         <button aria-label="Edit these details"
                                             onclick={() => editPolicy(policy)}
                                             class="p-1.5 text-slate-400 hover:text-primary transition-colors"
@@ -1218,7 +1372,7 @@
                                 Claims Filing Instructions
                                 <span
                                     class="bg-rose-100 text-rose-600 px-2 py-0.5 rounded-lg text-[8px] font-bold tracking-wide"
-                                    >CRITICAL</span
+                                    >IMPORTANT</span
                                 >
                             </label>
                             <textarea id="insurance-claims-procedure"
@@ -1268,7 +1422,7 @@
                     onclick={resetForm}
                     class="px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-200 transition-colors"
                 >
-                    Not right now
+                    Maybe later
                 </button>
                 <button
                     onclick={handleAddPolicy}

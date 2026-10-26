@@ -41,7 +41,7 @@
             {estate.name}
         </h3>
         <p class="text-sm text-muted-foreground line-clamp-2">
-            {estate.description || "No description provided."}
+            {estate.description || ""}
         </p>
 
         <!-- Footer -->

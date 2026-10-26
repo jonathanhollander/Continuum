@@ -106,7 +106,7 @@
             return "You've been on this emotionally challenging page for a while.";
         }
         if (signals.includes("rapid_navigation")) {
-            return "We noticed you've been moving through many pages quickly.";
+            return "You've been exploring a lot. A pause is always here for you.";
         }
         if (signals.includes("repeated_back_navigation")) {
             return "It looks like you're searching for something.";
@@ -203,7 +203,7 @@
                         for="dont-show-again"
                         class="text-xs text-zinc-500 dark:text-zinc-400 cursor-pointer select-none"
                     >
-                        Don't show this support again
+                        Hide these notes
                     </label>
                 </div>
             </div>

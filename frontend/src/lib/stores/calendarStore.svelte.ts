@@ -5,11 +5,22 @@ import { getLegacy } from "$lib/stores/persistence";
 import { activeAccountId } from "$lib/stores/keyringStore";
 import { auth } from "$lib/stores/auth";
 
+// The one type list for 'calendar_events', shared by the calendar page and Important Dates.
+export const EVENT_TYPES = [
+    { value: 'birthday', label: 'Birthday' },
+    { value: 'anniversary', label: 'Anniversary' },
+    { value: 'holiday', label: 'Holiday' },
+    { value: 'passing', label: 'Passing' },
+    { value: 'ritual', label: 'Ritual' },
+    { value: 'other', label: 'Other' },
+] as const;
+export type EventType = (typeof EVENT_TYPES)[number]['value'];
+
 export interface AnniversaryEvent {
     id: string | number;
     title: string;
     date: string; // "MM-DD"/"YYYY-MM-DD" (anniversary manager) or "MMDD"/"YYYYMMDD" (calendar page)
-    type: 'birthday' | 'anniversary' | 'passing' | 'ritual'; // the calendar page also writes 'holiday' | 'other'
+    type: EventType;
     description?: string;
     ritualInstructions?: string;
     recurring: boolean;

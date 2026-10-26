@@ -52,6 +52,7 @@
     import { getSmartSamples } from "$lib/data/smartSamples";
     import { fly } from "svelte/transition"; // Ensure fly is imported
     import { onMount } from "svelte";
+    import { portal } from "$lib/actions/portal";
     import { plural } from "$lib/utils/plural";
 
     let showAddModal = $state(false);
@@ -150,12 +151,12 @@
             id: crypto.randomUUID(),
             name: name,
             type: type,
-            location: "TBD",
+            location: "",
             valuation: 0,
             status: "Owned",
             ownershipDetails: "",
             documents: "",
-            notes: "Added via Concierge Wizard",
+            notes: "",
             evidence: [],
             thumbnail: "",
         }, false, true);
@@ -173,9 +174,10 @@
     let items = $derived(propertyStore.items); // Updated to access property directly
     let filteredItems = $derived(
         items.filter((i) => {
+            const q = searchQuery.toLowerCase();
             const matchesSearch =
-                i.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                i.location.toLowerCase().includes(searchQuery.toLowerCase());
+                String(i.name ?? "").toLowerCase().includes(q) ||
+                String(i.location ?? "").toLowerCase().includes(q);
             const matchesFilter = filterType === "All" || i.type === filterType;
             return matchesSearch && matchesFilter;
         }),
@@ -196,6 +198,16 @@
         } finally {
             downloadingEvidence = false;
         }
+    }
+
+    function showAllAssets() {
+        filterType = "All";
+        searchQuery = "";
+    }
+
+    // A value is shown once one is recorded; a blank or zero valuation is left out.
+    function hasValue(v: unknown): boolean {
+        return Number(v) > 0;
     }
 
     let totalValuation = $derived(propertyStore.getTotalValuation());
@@ -500,8 +512,8 @@
 <LivingBlueprintHeader
     title="Property & Real Estate"
     subtitle="Your home, your vehicles, the possessions that matter"
-    detailedDescription="These are the physical things you've built, bought, and cared for. Documenting them now means your family won't have to search for deeds, titles, or proof of ownership during an already difficult time."
-    whyMatters="Without clear records of what you own and where the documents are, your family could face legal complications, miss valuable assets, or struggle to prove ownership when they need access most."
+    detailedDescription="These are the physical things you've built, bought, and cared for. Documenting them now means your family can find deeds, titles, and proof of ownership with ease."
+    whyMatters="Clear records of what you own, and where the documents are, give your family a steady path to ownership and access."
 >
     <div class="flex flex-wrap items-center gap-3">
         <DataViewToggle module="property" onchange={(mode) => viewMode = mode} />
@@ -532,7 +544,9 @@
 >
     <!-- Wizard Modal -->
     {#if showWizard}
+        <!-- Moved to <body>: the animated page wrapper would otherwise hold this "fixed" overlay below the fold. -->
         <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => (showWizard = false) }}
+            use:portal
             class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
             transition:fade
         >
@@ -651,12 +665,14 @@
                                 >
                                     {item.name}
                                 </h3>
+                                {#if item.location}
                                 <div
                                     class="flex items-center gap-1.5 text-slate-400 font-bold text-xs uppercase tracking-tighter"
                                 >
                                     <MapPin size={12} class="text-primary/60" />
                                     {item.location}
                                 </div>
+                                {/if}
                             </div>
                         </div>
                         <div
@@ -695,7 +711,7 @@
                                     onclick={() => (removingId = null)}
                                     class="flex-1 py-2 text-sm font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all"
                                 >
-                                    Not right now
+                                    Maybe later
                                 </button>
                                 <button
                                     type="button"
@@ -708,7 +724,9 @@
                         </div>
                     {/if}
 
+                    {#if hasValue(item.valuation) || statusLabel(item.status)}
                     <div class="grid grid-cols-2 gap-4 mb-8">
+                        {#if hasValue(item.valuation)}
                         <div
                             class="bg-slate-50 rounded-2xl p-4 border border-slate-100/50"
                         >
@@ -720,9 +738,11 @@
                             <p
                                 class="text-lg font-black text-slate-900 tracking-tight"
                             >
-                                ${item.valuation?.toLocaleString() || '0'}
+                                ${Number(item.valuation).toLocaleString()}
                             </p>
                         </div>
+                        {/if}
+                        {#if statusLabel(item.status)}
                         <div
                             class="bg-slate-50 rounded-2xl p-4 border border-slate-100/50"
                         >
@@ -737,9 +757,12 @@
                                 {statusLabel(item.status)}
                             </p>
                         </div>
+                        {/if}
                     </div>
+                    {/if}
 
                     <div class="space-y-4 mb-8">
+                        {#if item.ownershipDetails}
                         <div class="flex items-start gap-4">
                             <div
                                 class="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 shrink-0"
@@ -755,10 +778,11 @@
                                 <p
                                     class="text-sm font-bold text-slate-700 leading-snug"
                                 >
-                                    {item.ownershipDetails || "Sole Ownership"}
+                                    {item.ownershipDetails}
                                 </p>
                             </div>
                         </div>
+                        {/if}
                         {#if item.notes}
                             <div class="flex items-start gap-4">
                                 <div
@@ -795,7 +819,7 @@
                                 <span
                                     class="block text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1"
                                 >
-                                    Critical Documents
+                                    Important Documents
                                 </span>
                                 <span class="block font-bold text-sm tracking-tight">
                                     Ownership Document
@@ -834,8 +858,19 @@
                 </div>
             </div>
         {:else}
-            <!-- GHOST ROW IMPLEMENTATION -->
-            {#if filteredItems.length === 0 && searchQuery === ""}
+            <!-- First run: the examples. With assets saved, a search or filter that shows none
+                 offers the way back to all of them. -->
+            {#if items.length > 0}
+                <div class="col-span-full flex justify-center py-12">
+                    <button
+                        type="button"
+                        onclick={showAllAssets}
+                        class="px-6 py-3 rounded-2xl font-bold border border-primary/20 text-primary hover:bg-primary/5 transition-colors"
+                    >
+                        Show all assets
+                    </button>
+                </div>
+            {:else}
                 <div class="col-span-full space-y-4">
                     {#each getSmartSamples($language).property || [] as sample}
                         <GhostRow
@@ -865,7 +900,7 @@
                             class="bg-primary text-primary-foreground px-8 py-3 rounded-2xl font-bold shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
                         >
                             <Plus size={18} />
-                            Register First Asset
+                            Share your first asset
                         </button>
                     </div>
                 </div>
@@ -874,7 +909,17 @@
     </div>
     {:else}
         <!-- Table View -->
-        {#if filteredItems.length === 0 && searchQuery === ""}
+        {#if items.length > 0 && filteredItems.length === 0}
+            <div class="flex justify-center py-12">
+                <button
+                    type="button"
+                    onclick={showAllAssets}
+                    class="px-6 py-3 rounded-2xl font-bold border border-primary/20 text-primary hover:bg-primary/5 transition-colors"
+                >
+                    Show all assets
+                </button>
+            </div>
+        {:else if items.length === 0}
             {#each getSmartSamples($language).property || [] as sample}
                 <GhostRow
                     name={sample.name}
@@ -923,7 +968,7 @@
                                 </td>
                                 <td class="px-4 py-3 text-sm text-slate-600">{item.type}</td>
                                 <td class="px-4 py-3 text-sm text-slate-600">{item.location || ''}</td>
-                                <td class="px-4 py-3 text-sm text-slate-600 font-medium">${item.valuation?.toLocaleString() || '0'}</td>
+                                <td class="px-4 py-3 text-sm text-slate-600 font-medium">{hasValue(item.valuation) ? `$${Number(item.valuation).toLocaleString()}` : ""}</td>
                                 <td class="px-4 py-3">
                                     <span class="text-xs font-medium text-slate-600">{statusLabel(item.status)}</span>
                                 </td>
@@ -963,7 +1008,7 @@
                                                     onclick={() => (removingId = null)}
                                                     class="px-4 py-2 text-sm font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all"
                                                 >
-                                                    Not right now
+                                                    Maybe later
                                                 </button>
                                                 <button
                                                     type="button"
@@ -1254,7 +1299,7 @@
                         <div class="space-y-1.5">
                             <p
                                 class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
-                                >Critical Documents</p
+                                >Important Documents</p
                             >
                             <UniversalUploader
                                 bind:value={newItem.documents}
@@ -1310,7 +1355,7 @@
                     onclick={resetForm}
                     class="px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-200 transition-colors"
                 >
-                    Not right now
+                    Maybe later
                 </button>
                 <button
                     onclick={handleAddItem}

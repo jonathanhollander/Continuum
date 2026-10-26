@@ -99,7 +99,7 @@ def create_medical_directive(request: Request, directive: MedicalDirective, user
 def update_medical_directive(request: Request, directive_id: int, updated: MedicalDirective, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     directive = session.get(MedicalDirective, directive_id)
     if not directive or directive.user_id != user.id:
-        raise HTTPException(status_code=404, detail="Directive not found")
+        raise HTTPException(status_code=404, detail="That directive may have been moved.")
     
     data = updated.dict(exclude_unset=True)
     _check_directive(data, directive)
@@ -116,7 +116,7 @@ def update_medical_directive(request: Request, directive_id: int, updated: Medic
 def delete_medical_directive(request: Request, directive_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     directive = session.get(MedicalDirective, directive_id)
     if not directive or directive.user_id != user.id:
-        raise HTTPException(status_code=404, detail="Directive not found")
+        raise HTTPException(status_code=404, detail="That directive may have been moved.")
 
     # P1-High: Audit logging for medical directive deletion
     log_deletion(

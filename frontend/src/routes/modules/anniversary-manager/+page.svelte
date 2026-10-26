@@ -3,8 +3,10 @@
     import {
         calendarStore,
         upcomingEvents,
+        EVENT_TYPES,
         type AnniversaryEvent,
     } from "$lib/stores/calendarStore.svelte";
+    import { readCustom } from "$lib/utils/customFields";
     import {
         Calendar,
         Heart,
@@ -60,19 +62,53 @@
         anniversary: Heart,
         passing: Wind,
         ritual: Flame,
+        holiday: Music,
+        other: Calendar,
     };
 
-    const typeColors = {
+    const typeColors: Record<string, string> = {
         birthday: "bg-amber-100 text-amber-700 border-amber-200",
         anniversary: "bg-rose-100 text-rose-700 border-rose-200",
         passing: "bg-indigo-100 text-indigo-700 border-indigo-200",
         ritual: "bg-emerald-100 text-emerald-700 border-emerald-200",
     };
+    // Types added on the calendar page (holiday, other) share one neutral badge until the colour pass.
+    const typeClass = (type: string) => typeColors[type] ?? "bg-slate-100 text-slate-700 border-slate-200";
+    const typeLabel = (type: string) => EVENT_TYPES.find((t) => t.value === type)?.label ?? type;
+
+    // The date is chosen as a month and a day. Stored as "MM-DD"; a one-time date from the calendar
+    // page ("YYYYMMDD") keeps its year as "YYYY-MM-DD".
+    const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const DAYS_IN_MONTH = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    let formMonth = $state("");
+    let formDay = $state("");
+    let formYear = $state("");
+    let dayCount = $derived(formMonth ? DAYS_IN_MONTH[Number(formMonth) - 1] : 31);
+    $effect(() => {
+        if (formDay && Number(formDay) > dayCount) formDay = String(dayCount).padStart(2, "0");
+    });
+
+    function setFormDate(dateStr: string | undefined) {
+        const digits = (dateStr || "").replace(/-/g, "");
+        if (digits.length < 4) {
+            formMonth = formDay = formYear = "";
+            return;
+        }
+        formMonth = digits.slice(-4, -2);
+        formDay = digits.slice(-2);
+        formYear = digits.length >= 8 ? digits.slice(0, 4) : "";
+    }
+
+    function formDateValue() {
+        if (!formMonth || !formDay) return "";
+        return formYear ? `${formYear}-${formMonth}-${formDay}` : `${formMonth}-${formDay}`;
+    }
 
     function openEdit(id: string | number) {
         const ev = calendarStore.items.find((i) => String(i.id) === String(id));
         if (!ev) return;
         editingId = ev.id;
+        setFormDate(ev.date);
         newEvent = {
             title: ev.title,
             date: ev.date,
@@ -82,11 +118,8 @@
             recurring: ev.recurring,
             tags: ev.tags ?? [],
         };
-        try {
-            customAttributes = ev.custom_attributes ? JSON.parse(ev.custom_attributes) : {};
-        } catch {
-            customAttributes = {};
-        }
+        // Server rows arrive as customAttributes, form-saved ones as custom_attributes.
+        customAttributes = readCustom(ev);
         showAddModal = true;
     }
 
@@ -95,6 +128,7 @@
         if (editingId !== null) {
             editingId = null;
             customAttributes = {};
+            setFormDate("");
             newEvent = {
                 title: "",
                 date: "",
@@ -108,32 +142,27 @@
     }
 
     async function removeEvent(id: string | number) {
-        if (!(await askConfirm("Remove this item?"))) return;
+        if (!(await askConfirm("Remove this remembrance?"))) return;
         calendarStore.removeEvent(id);
     }
 
-    function handleAdd() {
-        if (!newEvent.title || !newEvent.date) return;
-        if (editingId !== null) {
-            const ev = calendarStore.items.find((i) => String(i.id) === String(editingId));
-            const updates: Partial<AnniversaryEvent> = {
-                title: newEvent.title,
-                date: newEvent.date,
-                type: newEvent.type,
-                description: newEvent.description,
-                custom_attributes: JSON.stringify(customAttributes),
-            };
-            // Events made on the calendar page keep their email template in ritual instructions.
-            if (!ev?.emailTemplate) updates.ritualInstructions = newEvent.ritualInstructions;
-            calendarStore.updateEvent(editingId, updates);
-            editingId = null;
-        } else {
-            calendarStore.addEvent({
-                ...newEvent,
-                custom_attributes: JSON.stringify(customAttributes),
-            } as Omit<AnniversaryEvent, "id">);
+    // One save at a time; the form closes only once the save has gone through (the store shows
+    // the gentle error and the form stays open with what was typed).
+    let saving = $state(false);
+    async function handleAdd() {
+        const date = formDateValue();
+        if (!newEvent.title || !date || saving) return;
+        saving = true;
+        try {
+            await saveEvent(date);
+        } catch {
+            return;
+        } finally {
+            saving = false;
         }
+        editingId = null;
         customAttributes = {};
+        setFormDate("");
         newEvent = {
             title: "",
             date: "",
@@ -146,14 +175,26 @@
         showAddModal = false;
     }
 
-    function formatDate(dateStr: string) {
-        if (!dateStr.includes("-")) return dateStr;
-        const [month, day] = dateStr.split("-");
-        const date = new Date(2000, parseInt(month) - 1, parseInt(day));
-        return date.toLocaleDateString("en-US", {
-            month: "long",
-            day: "numeric",
-        });
+    async function saveEvent(date: string) {
+        if (editingId !== null) {
+            const ev = calendarStore.items.find((i) => String(i.id) === String(editingId));
+            const updates: Partial<AnniversaryEvent> = {
+                title: newEvent.title,
+                date,
+                type: newEvent.type,
+                description: newEvent.description,
+                custom_attributes: JSON.stringify(customAttributes),
+            };
+            // Events made on the calendar page keep their email template in ritual instructions.
+            if (!ev?.emailTemplate) updates.ritualInstructions = newEvent.ritualInstructions;
+            await calendarStore.updateEvent(editingId, updates);
+        } else {
+            await calendarStore.addEvent({
+                ...newEvent,
+                date,
+                custom_attributes: JSON.stringify(customAttributes),
+            } as Omit<AnniversaryEvent, "id">);
+        }
     }
 </script>
 
@@ -167,7 +208,7 @@
         title="Important Dates"
         subtitle="Transforming sensitive dates into intentional moments of connection"
         detailedDescription="Create meaningful rituals for birthdays, anniversaries, and remembrance days. Guide your family on how to observe these dates with intention, healing, and legacy."
-        whyMatters="Without guidance on how to observe significant dates, your family may struggle with overwhelming emotions and uncertain rituals. Creating rituals transforms grief into intentional remembrance."
+        whyMatters="With your guidance, your family has gentle rituals for the dates that carry emotion. Creating rituals transforms grief into intentional remembrance."
     >
         <button
             onclick={() => (showAddModal = true)}
@@ -179,11 +220,15 @@
     </LivingBlueprintHeader>
 
 <div class="max-w-7xl mx-auto p-8 space-y-10 animate-in fade-in duration-500">
-
+    <p class="text-sm text-slate-500">
+        These dates also appear in your
+        <a href="/modules/calendar" class="font-bold text-indigo-700 hover:underline">Event Calendar</a>,
+        where you can add a wish and a future message for each day.
+    </p>
 
     <!-- AI Concierge Drafting Assistant -->
     <AIPromptBar
-        context="heirlooms"
+        context="calendar"
         prompts={[
             "Suggest a meaningful ritual for this anniversary...",
             "Help me write about the significance of this date...",
@@ -204,7 +249,7 @@
                     <div
                         class="px-3 py-1 bg-slate-100 rounded-full text-xs font-bold text-slate-500 uppercase tracking-wider"
                     >
-                        Next 365 Days
+                        The year ahead
                     </div>
                 </div>
             </div>
@@ -212,7 +257,7 @@
             {#if $upcomingEvents.length === 0}
                 <EmptyState
                     title="Honor the moments that matter"
-                    whyMatters="<strong>Birthdays, anniversaries, and remembrance days carry deep emotional weight.</strong> Without guidance on how to observe these dates, your family may struggle with overwhelming emotions and uncertain rituals.<br/><br/>Creating rituals for these moments transforms grief into intentional remembrance. Your family will have specific actions to take, making difficult days feel purposeful rather than aimless."
+                    whyMatters="<strong>Birthdays, anniversaries, and remembrance days carry deep emotional weight.</strong> With your guidance, your family has gentle rituals for the dates that carry emotion.<br/><br/>Creating rituals for these moments transforms grief into intentional remembrance. Your family will have a ritual to follow, making hard days feel purposeful."
                     encouragement="Start with one meaningful date. Add a simple ritual that feels true to your spirit."
                     icon={Heart}
                     iconClass="text-rose-500"
@@ -230,6 +275,7 @@
                                 subtitle={sample.ritualInstructions}
                                 type={sample.type}
                                 onClick={() => {
+                                    setFormDate(sample.date);
                                     newEvent = {
                                         ...newEvent,
                                         title: sample.title,
@@ -285,11 +331,9 @@
                                                 {event.title}
                                             </h3>
                                             <span
-                                                class="text-xs font-bold px-3 py-0.5 rounded-full border {typeColors[
-                                                    event.type
-                                                ]}"
+                                                class="text-xs font-bold px-3 py-0.5 rounded-full border {typeClass(event.type)}"
                                             >
-                                                {event.type}
+                                                {typeLabel(event.type)}
                                             </span>
                                         </div>
                                         <div class="flex items-center gap-1 shrink-0">
@@ -375,8 +419,8 @@
                                     </td>
                                     <td class="px-4 py-3 font-medium text-slate-800">{event.title}</td>
                                     <td class="px-4 py-3">
-                                        <span class="text-xs font-bold px-2 py-1 rounded-full border {typeColors[event.type]}">
-                                            {event.type}
+                                        <span class="text-xs font-bold px-2 py-1 rounded-full border {typeClass(event.type)}">
+                                            {typeLabel(event.type)}
                                         </span>
                                     </td>
                                     <td class="px-4 py-3 text-slate-500 text-sm max-w-[200px] truncate">{event.description || '-'}</td>
@@ -421,8 +465,8 @@
                             class="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-2 shrink-0"
                         ></div>
                         <p class="text-sm text-indigo-800/80 leading-relaxed">
-                            <strong>Gentle Pacing:</strong> We don't flood you with
-                            notifications. Only intentional reminders.
+                            <strong>Gentle Pacing:</strong> Reminders arrive only
+                            when they matter.
                         </p>
                     </div>
                     <div class="flex gap-4">
@@ -430,8 +474,8 @@
                             class="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-2 shrink-0"
                         ></div>
                         <p class="text-sm text-indigo-800/80 leading-relaxed">
-                            <strong>Ritual focus:</strong> Dates aren't just deadlines;
-                            they are opportunities for rituals.
+                            <strong>Ritual focus:</strong> Each date is an
+                            opportunity for remembrance.
                         </p>
                     </div>
                 </div>
@@ -459,9 +503,6 @@
                         </li>
                     {/each}
                 </ul>
-                <p class="text-xs text-slate-400 text-center italic">
-                    Curated by Estate Concierge Psychology experts.
-                </p>
             </div>
         </div>
     </div>
@@ -508,20 +549,39 @@
                         />
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="space-y-1">
-                            <label
-                                for="remembrance-date"
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="col-span-2 space-y-1">
+                            <span
+                                id="remembrance-date-label"
                                 class="text-xs font-black uppercase text-slate-400 tracking-widest pl-1"
-                                >Date (MM-DD)</label
+                                >Date</span
                             >
-                            <input
-                                id="remembrance-date"
-                                bind:value={newEvent.date}
-                                placeholder="10-24"
-                                class="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                            />
+                            <div class="grid grid-cols-2 gap-4" role="group" aria-labelledby="remembrance-date-label">
+                                <select
+                                    id="remembrance-month"
+                                    aria-label="Month"
+                                    bind:value={formMonth}
+                                    class="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all appearance-none"
+                                >
+                                    <option value="" disabled>Month</option>
+                                    {#each MONTHS as name, i}
+                                        <option value={String(i + 1).padStart(2, "0")}>{name}</option>
+                                    {/each}
+                                </select>
+                                <select
+                                    id="remembrance-day"
+                                    aria-label="Day"
+                                    bind:value={formDay}
+                                    class="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all appearance-none"
+                                >
+                                    <option value="" disabled>Day</option>
+                                    {#each Array.from({ length: dayCount }, (_, i) => String(i + 1).padStart(2, "0")) as d}
+                                        <option value={d}>{Number(d)}</option>
+                                    {/each}
+                                </select>
+                            </div>
                         </div>
+
                         <div class="space-y-1">
                             <label
                                 for="remembrance-type"
@@ -533,10 +593,9 @@
                                 bind:value={newEvent.type}
                                 class="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all appearance-none"
                             >
-                                <option value="birthday">Birthday</option>
-                                <option value="anniversary">Anniversary</option>
-                                <option value="passing">Passing</option>
-                                <option value="ritual">Ritual</option>
+                                {#each EVENT_TYPES as t}
+                                    <option value={t.value}>{t.label}</option>
+                                {/each}
                             </select>
                         </div>
                     </div>
@@ -559,7 +618,7 @@
                         <label
                             for="remembrance-instructions"
                             class="text-xs font-black uppercase text-slate-400 tracking-widest pl-1"
-                            >Ritual Instructions (Optional)</label
+                            >Ritual guidance, if you wish</label
                         >
                         <textarea
                             id="remembrance-instructions"
@@ -581,15 +640,17 @@
                 <div class="flex gap-4 pt-4">
                     <button
                         onclick={closeModal}
-                        class="flex-1 px-6 py-3.5 border border-slate-200 rounded-2xl font-bold text-slate-600 hover:bg-slate-50 transition-all font-sans"
+                        class="flex-1 px-6 py-3.5 border border-slate-200 rounded-2xl font-bold text-slate-600 hover:bg-slate-50 transition-all font-sans whitespace-nowrap"
                     >
-                        Cancel
+                        Maybe later
                     </button>
                     <button
                         onclick={handleAdd}
-                        class="flex-2 px-10 py-3.5 bg-primary text-primary-foreground rounded-2xl font-bold shadow-lg hover:opacity-90 transition-all font-sans"
+                        disabled={!newEvent.title || !formMonth || !formDay || saving}
+                        aria-busy={saving}
+                        class="flex-2 px-10 py-3.5 bg-primary text-primary-foreground rounded-2xl font-bold shadow-lg hover:opacity-90 transition-all font-sans disabled:opacity-50"
                     >
-                        Save Memory
+                        {saving ? "Saving..." : "Save Memory"}
                     </button>
                 </div>
             </div>

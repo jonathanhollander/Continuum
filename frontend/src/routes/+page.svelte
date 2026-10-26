@@ -1312,7 +1312,7 @@
                         <span class="text-amber-200">{email}</span>
                     </p>
                     <a
-                        href="/start?email={email}&lang={$mLanguage}"
+                        href="/start?email={encodeURIComponent(email)}&lang={$mLanguage}"
                         class="inline-flex items-center gap-4 bg-teal-500 hover:bg-teal-600 text-white px-10 py-5 rounded-2xl font-bold uppercase tracking-widest transition-all shadow-xl shadow-teal-500/20"
                     >
                         {$mt.btnEnterVault}
