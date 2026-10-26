@@ -307,7 +307,7 @@
             Start Concierge
         </button>
         <button
-            class="bg-primary text-primary-foreground shadow-primary/20 hover:opacity-90 disabled:opacity-50 transition-all font-bold px-6 py-2 rounded-xl"
+            class="flex items-center gap-2 bg-primary text-primary-foreground shadow-primary/20 hover:opacity-90 disabled:opacity-50 transition-all font-bold px-6 py-2 rounded-xl"
             onclick={openAddForm}
         >
             <Plus size={20} /> Share a story or object
@@ -341,6 +341,7 @@
             />
             <input
                 type="text"
+                aria-label="Search by item, story, or recipient"
                 placeholder="Search by item, story, or recipient..."
                 class="w-full pl-10 pr-4 py-3 rounded-2xl border border-stone-200 focus:border-[#4A7C74] focus:ring-0 shadow-sm"
             />
@@ -563,17 +564,19 @@
     <!-- Add Form Modal -->
     <Modal
         bind:open={showAddForm}
-        title="Preserve a Treasure"
+        title={isEditing ? "Edit these details" : "Preserve a Treasure"}
         description="This object holds a story that only you can tell. By documenting it here, you're ensuring that story survives—transforming an object into an heirloom that connects generations."
         maxWidth="max-w-lg"
     >
         <div class="space-y-4">
             <div>
                 <label
+                    for="heirloom-name"
                     class="block text-xs font-bold uppercase text-slate-500 mb-1"
                     >What Is It?</label
                 >
                 <input
+                    id="heirloom-name"
                     type="text"
                     bind:value={newHeirloom.name}
                     class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
@@ -583,10 +586,12 @@
 
             <div>
                 <label
+                    for="heirloom-recipient"
                     class="block text-xs font-bold uppercase text-slate-500 mb-1"
                     >Who Should Have This?</label
                 >
                 <input
+                    id="heirloom-recipient"
                     type="text"
                     bind:value={newHeirloom.recipient}
                     class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
@@ -600,10 +605,12 @@
 
             <div>
                 <label
+                    for="heirloom-story"
                     class="block text-xs font-bold uppercase text-slate-500 mb-1"
                     >The Story Behind It</label
                 >
                 <textarea
+                    id="heirloom-story"
                     bind:value={newHeirloom.story}
                     class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all h-32"
                     placeholder="Why is this meaningful? Where did it come from?"
@@ -622,10 +629,12 @@
                     </div>
                     <div class="mt-2">
                         <label
+                            for="heirloom-image-url"
                             class="block text-xs font-bold uppercase text-slate-500 mb-1"
                             >Or paste a URL</label
                         >
                         <input
+                            id="heirloom-image-url"
                             type="text"
                             bind:value={newHeirloom.image}
                             class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
@@ -645,7 +654,8 @@
         </div>
 
         <!-- Footer buttons -->
-        <div class="-mx-6 -mb-6 px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 mt-6">
+        <!-- Sticky so the save stays in view while the form scrolls inside the modal. -->
+        <div class="sticky -bottom-6 z-10 -mx-6 -mb-6 px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 mt-6">
             <button
                 onclick={() => (showAddForm = false)}
                 class="px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-200 transition-colors"
