@@ -14,7 +14,7 @@
         Music,
         Wind,
         Info,
-        ChevronRight,
+        Pencil,
         Tag,
         Clock,
         Loader2,
@@ -43,6 +43,7 @@
     });
 
     let showAddModal = $state(false);
+    let editingId = $state<string | number | null>(null);
     let newEvent = $state<Partial<AnniversaryEvent>>({
         title: "",
         date: "",
@@ -67,12 +68,70 @@
         ritual: "bg-emerald-100 text-emerald-700 border-emerald-200",
     };
 
+    function openEdit(id: string | number) {
+        const ev = calendarStore.items.find((i) => String(i.id) === String(id));
+        if (!ev) return;
+        editingId = ev.id;
+        newEvent = {
+            title: ev.title,
+            date: ev.date,
+            type: ev.type,
+            description: ev.description ?? "",
+            ritualInstructions: ev.emailTemplate ? "" : (ev.ritualInstructions ?? ""),
+            recurring: ev.recurring,
+            tags: ev.tags ?? [],
+        };
+        try {
+            customAttributes = ev.custom_attributes ? JSON.parse(ev.custom_attributes) : {};
+        } catch {
+            customAttributes = {};
+        }
+        showAddModal = true;
+    }
+
+    function closeModal() {
+        showAddModal = false;
+        if (editingId !== null) {
+            editingId = null;
+            customAttributes = {};
+            newEvent = {
+                title: "",
+                date: "",
+                type: "birthday",
+                description: "",
+                ritualInstructions: "",
+                recurring: true,
+                tags: [],
+            };
+        }
+    }
+
+    function removeEvent(id: string | number) {
+        if (!confirm("Remove this item?")) return;
+        calendarStore.removeEvent(id);
+    }
+
     function handleAdd() {
         if (!newEvent.title || !newEvent.date) return;
-        calendarStore.addEvent({
-            ...newEvent,
-            custom_attributes: JSON.stringify(customAttributes),
-        } as Omit<AnniversaryEvent, "id">);
+        if (editingId !== null) {
+            const ev = calendarStore.items.find((i) => String(i.id) === String(editingId));
+            const updates: Partial<AnniversaryEvent> = {
+                title: newEvent.title,
+                date: newEvent.date,
+                type: newEvent.type,
+                description: newEvent.description,
+                custom_attributes: JSON.stringify(customAttributes),
+            };
+            // Events made on the calendar page keep their email template in ritual instructions.
+            if (!ev?.emailTemplate) updates.ritualInstructions = newEvent.ritualInstructions;
+            calendarStore.updateEvent(editingId, updates);
+            editingId = null;
+        } else {
+            calendarStore.addEvent({
+                ...newEvent,
+                custom_attributes: JSON.stringify(customAttributes),
+            } as Omit<AnniversaryEvent, "id">);
+        }
         customAttributes = {};
         newEvent = {
             title: "",
@@ -102,10 +161,7 @@
         <Loader2 class="w-8 h-8 animate-spin text-primary" />
     </div>
 {:else}
-<div
-    class="max-w-5xl mx-auto p-6 md:p-8 space-y-10 animate-in fade-in duration-1000"
->
-    <!-- Header -->
+<!-- Header -->
     <LivingBlueprintHeader
         title="Important Dates"
         subtitle="Transforming sensitive dates into intentional moments of connection"
@@ -115,12 +171,14 @@
     >
         <button
             onclick={() => (showAddModal = true)}
-            class="px-8 py-3.5 bg-indigo-600 text-white rounded-full font-bold shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+            class="px-8 py-3.5 bg-primary text-primary-foreground rounded-full font-bold shadow-xl hover:opacity-90 transition-all flex items-center gap-2"
         >
             <Plus size={20} />
             Add New Remembrance
         </button>
     </LivingBlueprintHeader>
+
+<div class="max-w-7xl mx-auto p-8 space-y-10 animate-in fade-in duration-500">
 
 
     <!-- AI Concierge Drafting Assistant -->
@@ -234,14 +292,22 @@
                                                 {event.type}
                                             </span>
                                         </div>
-                                        <button
-                                            onclick={() =>
-                                                calendarStore.removeEvent(event.id)}
-                                            aria-label="Remove this item"
-                                            class="p-2 text-slate-300 hover:text-rose-500 transition-all"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
+                                        <div class="flex items-center gap-1">
+                                            <button
+                                                onclick={() => openEdit(event.id)}
+                                                aria-label="Edit this item"
+                                                class="p-2 text-slate-400 hover:text-slate-700 transition-all"
+                                            >
+                                                <Pencil size={18} />
+                                            </button>
+                                            <button
+                                                onclick={() => removeEvent(event.id)}
+                                                aria-label="Remove this item"
+                                                class="p-2 text-slate-300 hover:text-rose-500 transition-all"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </div>
                                     </div>
                                     <p
                                         class="text-slate-500 leading-relaxed font-medium"
@@ -317,7 +383,14 @@
                                     <td class="px-4 py-3 text-slate-500 text-sm max-w-[150px] truncate">{event.ritualInstructions || '-'}</td>
                                     <td class="px-4 py-3 text-right">
                                         <button
-                                            onclick={() => calendarStore.removeEvent(event.id)}
+                                            onclick={() => openEdit(event.id)}
+                                            aria-label="Edit this item"
+                                            class="p-1 text-slate-400 hover:text-slate-700 transition-all"
+                                        >
+                                            <Pencil size={16} />
+                                        </button>
+                                        <button
+                                            onclick={() => removeEvent(event.id)}
                                             aria-label="Remove this item"
                                             class="p-1 text-slate-300 hover:text-rose-500 transition-all"
                                         >
@@ -363,9 +436,7 @@
                     </div>
                 </div>
                 <div class="pt-4 border-t border-indigo-100 mt-4">
-                    <p
-                        class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest text-center"
-                    >
+                    <p class="text-xs text-indigo-800/60 text-center">
                         Your Emotional Registry
                     </p>
                 </div>
@@ -373,30 +444,21 @@
 
             <!-- Ritual Library Preview -->
             <div
-                class="bg-white rounded-[2rem] border border-slate-200 p-8 space-y-6 shadow-sm overflow-hidden relative"
+                class="bg-white rounded-[2rem] border border-slate-200 p-8 space-y-6 shadow-sm"
             >
-                <div
-                    class="absolute -bottom-4 -right-4 opacity-5 pointer-events-none"
-                >
-                    <Flame size={120} />
+                <div class="flex items-center gap-3 text-slate-900">
+                    <Flame size={24} class="text-slate-400" />
+                    <h3 class="font-bold text-lg">Ritual Library</h3>
                 </div>
-
-                <h3 class="font-bold text-lg text-slate-900">Ritual Library</h3>
-                <div class="space-y-4">
+                <ul class="space-y-4">
                     {#each ["Sound & Silence", "Elemental Release", "Physical Memorial"] as ritual}
-                        <button
-                            class="w-full flex items-center justify-between p-4 rounded-xl border border-slate-100 hover:border-indigo-300 hover:bg-slate-50 transition-all group"
+                        <li
+                            class="p-4 rounded-xl border border-slate-100 font-medium text-slate-700"
                         >
-                            <span class="font-medium text-slate-700"
-                                >{ritual}</span
-                            >
-                            <ChevronRight
-                                size={16}
-                                class="text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all"
-                            />
-                        </button>
+                            {ritual}
+                        </li>
                     {/each}
-                </div>
+                </ul>
                 <p class="text-xs text-slate-400 text-center italic">
                     Curated by Estate Concierge Psychology experts.
                 </p>
@@ -410,7 +472,7 @@
             role="dialog"
             aria-modal="true"
             aria-labelledby="remembrance-dialog-title"
-            use:focusTrap={{ onEscape: () => (showAddModal = false) }}
+            use:focusTrap={{ onEscape: closeModal }}
             class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm"
             transition:fade
         >
@@ -420,10 +482,10 @@
             >
                 <div class="flex items-center justify-between">
                     <h2 id="remembrance-dialog-title" class="font-serif text-2xl font-bold text-slate-900">
-                        Add Remembrance
+                        {editingId !== null ? "Edit Remembrance" : "Add Remembrance"}
                     </h2>
                     <button
-                        onclick={() => (showAddModal = false)}
+                        onclick={closeModal}
                         aria-label="Close"
                         class="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400"
                     >
@@ -518,14 +580,14 @@
 
                 <div class="flex gap-4 pt-4">
                     <button
-                        onclick={() => (showAddModal = false)}
+                        onclick={closeModal}
                         class="flex-1 px-6 py-3.5 border border-slate-200 rounded-2xl font-bold text-slate-600 hover:bg-slate-50 transition-all font-sans"
                     >
                         Cancel
                     </button>
                     <button
                         onclick={handleAdd}
-                        class="flex-2 px-10 py-3.5 bg-indigo-600 text-white rounded-2xl font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all font-sans"
+                        class="flex-2 px-10 py-3.5 bg-primary text-primary-foreground rounded-2xl font-bold shadow-lg hover:opacity-90 transition-all font-sans"
                     >
                         Save Memory
                     </button>
@@ -535,10 +597,3 @@
     {/if}
 </div>
 {/if}
-
-<style>
-    /* Premium Typography */
-    :global(h1, h2, .font-serif) {
-        font-family: "Outfit", "Inter", serif;
-    }
-</style>
