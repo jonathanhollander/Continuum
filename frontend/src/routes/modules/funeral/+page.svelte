@@ -3,8 +3,6 @@
     import { readCustom } from "$lib/utils/customFields";
     import { fade, scale } from "svelte/transition";
     import {
-        Music,
-        Flower,
         MapPin,
         Users,
         DollarSign,
@@ -25,8 +23,6 @@
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import GriefSupportBanner from "$lib/components/GriefSupportBanner.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
-    import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
-    import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
     import { onMount } from "svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { estateExecutorName } from "$lib/stores/analyticsStore";
@@ -38,7 +34,6 @@
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
     import * as registryRaw from "$lib/data/registry.json";
     import { t, language } from "$lib/stores/localization";
-    import { getSmartSamples } from "$lib/data/smartSamples";
 
     // Registry Data Handling
     const registryData = (registryRaw as any).default || registryRaw;
@@ -53,7 +48,6 @@
     });
     let parsedCustomAttributes = $state<Record<string, any>>({});
     let isLoading = $state(true);
-    let viewMode = $state<ViewMode>('card');
 
     onMount(async () => {
         await funeralStore.sync?.();
@@ -200,15 +194,7 @@
     );
     let variance = $derived(totalEstimated - totalBudget);
 
-    function prefillEstimates() {
-        if (
-            !confirm(
-                "This will add standard industry average costs (2021 NFDA) to your budget. Continue?",
-            )
-        )
-            return;
-
-        const standardItems = [
+    const standardItems = [
             { name: "Basic Services Fees", cost: 2300, estimated: 2300 },
             { name: "Embalming & Prep", cost: 775, estimated: 775 },
             { name: "Viewing / Visitation", cost: 450, estimated: 450 },
@@ -218,7 +204,15 @@
             { name: "Casket (Metal)", cost: 2500, estimated: 2500 },
             { name: "Vault", cost: 1572, estimated: 1572 },
             { name: "Memorial Printed Package", cost: 183, estimated: 183 },
-        ];
+    ];
+
+    function prefillEstimates() {
+        if (
+            !confirm(
+                "This will add standard industry average costs (2021 NFDA) to your budget. Continue?",
+            )
+        )
+            return;
 
         // One save for the whole set: one POST, one affirmation (was one per item).
         funeralStore
@@ -274,7 +268,6 @@
 
     <!-- Tabs -->
     <div class="flex justify-center items-center gap-4 mb-8">
-        <DataViewToggle module="funeral" onchange={(mode) => viewMode = mode} />
         <div class="bg-gray-100 p-1.5 rounded-xl inline-flex gap-2">
             <button
                 class="px-6 py-2.5 rounded-lg font-bold text-sm transition-all {activeTab ===
@@ -300,26 +293,31 @@
     <div
         class="bg-white rounded-2xl border border-border shadow-sm overflow-hidden min-h-[500px] p-8"
     >
-        <!-- Memorial Subject Header (Synced) -->
+        <!-- Memorial Subject Header (Synced): only the values that are filled in -->
+        {#if $estateProfile.ownerName || $estateExecutorName || $estateProfile.legalCityState}
         <div
             class="mb-10 p-6 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-6"
         >
+            {#if $estateProfile.ownerName}
             <div class="flex items-center gap-4">
                 <div class="p-3 bg-white rounded-xl shadow-sm text-slate-400">
                     <UserCircle size={32} />
                 </div>
                 <div>
                     <h2 class="text-xl font-bold text-slate-800">
-                        Celebrating the Life of {$estateProfile.ownerName ||
-                            "Valued Member"}
+                        Celebrating the Life of {$estateProfile.ownerName}
                     </h2>
                     <p class="text-sm text-slate-500 italic">
                         Pre-filled from Estate Profile
                     </p>
                 </div>
             </div>
+            {/if}
 
+            {#if $estateExecutorName}
+            {#if $estateProfile.ownerName}
             <div class="h-10 w-px bg-slate-200 hidden md:block"></div>
+            {/if}
 
             <div class="flex items-center gap-4">
                 <div class="text-right">
@@ -329,15 +327,19 @@
                         Chief Coordinator
                     </p>
                     <p class="font-bold text-slate-700">
-                        {$estateExecutorName || "None Designated"}
+                        {$estateExecutorName}
                     </p>
                 </div>
                 <div class="p-3 bg-white rounded-xl shadow-sm text-primary">
                     <Users size={24} />
                 </div>
             </div>
+            {/if}
 
+            {#if $estateProfile.legalCityState}
+            {#if $estateProfile.ownerName || $estateExecutorName}
             <div class="h-10 w-px bg-slate-200 hidden md:block"></div>
+            {/if}
 
             <div class="flex items-center gap-4">
                 <div class="text-right">
@@ -347,14 +349,16 @@
                         Local Area
                     </p>
                     <p class="font-bold text-slate-700">
-                        {$estateProfile.legalCityState || "Not Set"}
+                        {$estateProfile.legalCityState}
                     </p>
                 </div>
                 <div class="p-3 bg-white rounded-xl shadow-sm text-primary">
                     <MapPinIcon size={24} />
                 </div>
             </div>
+            {/if}
         </div>
+        {/if}
 
         {#if activeTab === "wishes"}
             <FuneralWizard />
@@ -364,39 +368,32 @@
             <div in:fade={{ duration: 300 }}>
                 {#if budgetItems.length === 0}
                     <EmptyState
-                        title="How you'd like to be remembered"
-                        whyMatters="<strong>Without these instructions, your family will make these deeply personal choices while grieving—and wonder forever if they got it right.</strong> The music at your service, the flowers, the tone, the dress code—these details shape how people remember you.<br/><br/>Documenting your wishes isn't morbid. It's a gift. It lets your family focus on honoring you instead of guessing what you would have wanted."
-                        encouragement="You don't have to decide everything now. Start with just one thing—maybe your favorite song or flower."
-                        icon={Music}
-                        iconClass="text-purple-500"
-                        ctaLabel="Share your wishes"
+                        title="Financial Stewardship"
+                        whyMatters="By thinking through these costs now, you're protecting your family from difficult financial decisions during an already hard time."
+                        icon={DollarSign}
+                        ctaLabel="Auto-Fill Common Costs"
                         onAction={prefillEstimates}
                         skipMessage="Come back to this when you're ready. There's no rush."
                     />
 
-                    <!-- Sample Data GhostRows -->
+                    <!-- Example costs (the same standard estimates Auto-Fill adds) -->
                     <div class="mt-8">
                         <p class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-4 text-center">Example entries to inspire you</p>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 opacity-60">
-                            {#each getSmartSamples($language).funeral || [] as sample}
+                            {#each standardItems.slice(0, 3) as sample}
                                 <GhostRow
                                     name={sample.name}
-                                    subtitle={sample.description}
-                                    type={sample.type}
+                                    value={sample.cost}
                                     onClick={() => {
                                         newExpense = {
                                             name: sample.name,
-                                            cost: 0
+                                            cost: sample.cost
                                         };
                                         showAddExpense = true;
                                     }}
                                 >
                                     {#snippet icon()}
-                                        {#if sample.type === 'music'}
-                                            <Music size={20} class="text-slate-400" />
-                                        {:else}
-                                            <Flower size={20} class="text-slate-400" />
-                                        {/if}
+                                        <DollarSign size={20} class="text-slate-400" />
                                     {/snippet}
                                 </GhostRow>
                             {/each}
@@ -548,7 +545,7 @@
                         class="bg-[#304743] p-6 flex justify-between items-start text-white"
                     >
                         <div class="flex-1 pr-4">
-                            <h3 class="font-serif font-bold text-xl">
+                            <h3 class="font-serif font-bold text-xl text-white">
                                 {newExpense.id
                                     ? "Update This Detail"
                                     : "Plan Ahead"}
