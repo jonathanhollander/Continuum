@@ -25,6 +25,8 @@
         removeMemory as removeVisualMemory,
         toggleFavorite as toggleVisualFavorite,
         addTagToMemories,
+        affirmMemories,
+        tagList,
         syncAllMemories,
         type ExternalArchive,
     } from "$lib/stores/visualMemoryStore.svelte";
@@ -48,7 +50,8 @@
 
     let activeTab = $state<"gallery" | "archives">("gallery");
     let customAttributes = $state<Record<string, any>>({});
-    let dataViewMode = $state<ViewMode>('card');
+    // The Cards/Table choice is kept per module in the person's preferences.
+    let dataViewMode = $derived<ViewMode>(userPreferencesStore.getViewMode('visual-memories'));
 
     // Gallery State
     let viewMode = $state<"grid" | "carousel">("grid");
@@ -132,7 +135,8 @@
     let uploadingCount = $state(0);
 
     // Each file goes to the media API; the record keeps only its download_url.
-    async function saveOne(file: File) {
+    // Resolves true once the memory is saved (the batch affirms once for all of them).
+    async function saveOne(file: File): Promise<boolean> {
         let media;
         try {
             media = await uploadMedia(file, "visual_memories");
@@ -142,9 +146,9 @@
                 code: "UPLOAD_ERROR",
                 technicalDetails: String(err),
             } as any);
-            return;
+            return false;
         }
-        await saveRecord(media, {
+        return saveRecord(media, {
             url: media.download_url,
             name: file.name.replace(/\.[^.]+$/, "").replace(/-|_/g, " "),
             type: file.type.startsWith("image/") ? "photo" : "video",
@@ -156,11 +160,12 @@
 
     // The record save shows its own gentle message with a retry. A retry reuses the
     // uploaded file; closing that message without retrying removes the upload.
-    async function saveRecord(media: { id: number }, data: Parameters<typeof addVisualMemory>[0]) {
+    async function saveRecord(media: { id: number }, data: Parameters<typeof addVisualMemory>[0]): Promise<boolean> {
         let retried = false;
-        const retry = () => {
+        // A save that succeeds on Try Again happens on its own, so it gets its own affirmation.
+        const retry = async () => {
             retried = true;
-            return saveRecord(media, data);
+            if (await saveRecord(media, data)) affirmMemories();
         };
         try {
             const record = await addVisualMemory(data, retry);
@@ -169,9 +174,10 @@
                     console.warn("[visual-memories] reference_id link paused", e),
                 );
             }
+            return true;
         } catch {
             const noteId = get(notifications).filter((n) => n.type === "error").at(-1)?.id;
-            if (!noteId) return;
+            if (!noteId) return false;
             let unsub = () => {};
             unsub = notifications.subscribe((list) => {
                 if (list.some((n) => n.id === noteId)) return;
@@ -185,6 +191,7 @@
                     }
                 });
             });
+            return false;
         }
     }
 
@@ -199,12 +206,20 @@
         input.value = ""; // Clear input
 
         uploadingCount += files.length;
+        let saved = 0;
         for (const file of files) {
             try {
-                await saveOne(file);
+                if (await saveOne(file)) saved += 1;
             } finally {
                 uploadingCount -= 1;
             }
+        }
+        if (saved > 0) affirmMemories();
+    }
+
+    function handleRemoveMemory(id: number) {
+        if (confirm("Remove this item? You can upload it again if needed.")) {
+            removeVisualMemory(id);
         }
     }
 
@@ -384,7 +399,6 @@
         </div>
 
         <div class="flex items-center gap-3">
-            <DataViewToggle module="visual-memories" onchange={(mode) => dataViewMode = mode} />
             {#if activeTab === "archives"}
                 <button
                     onclick={() => openArchiveModal()}
@@ -393,6 +407,7 @@
                     <Plus size={16} /> Add Location
                 </button>
             {:else}
+                <DataViewToggle module="visual-memories" />
                 <button
                     onclick={triggerUpload}
                     class="flex items-center gap-2 px-4 py-2 bg-[#4A7C74] text-white rounded-lg font-bold text-sm hover:bg-[#3b635d] transition-colors shadow-sm"
@@ -443,6 +458,55 @@
                                 <Image size={14} /> Upload First Memory
                             </button>
                         </div>
+                    </div>
+                {:else if dataViewMode === "table"}
+                    <div class="overflow-x-auto mt-12">
+                        <table class="w-full text-left text-sm">
+                            <thead>
+                                <tr class="border-b border-slate-200 text-xs font-bold uppercase tracking-wider text-slate-500">
+                                    <th class="py-3 pr-4">Name</th>
+                                    <th class="py-3 pr-4">Type</th>
+                                    <th class="py-3 pr-4">Tags</th>
+                                    <th class="py-3 pr-4">Favorite</th>
+                                    <th class="py-3"><span class="sr-only">Actions</span></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {#each visualMemories.items as memory (memory.id)}
+                                    <tr class="border-b border-slate-100">
+                                        <td class="py-3 pr-4 font-medium text-slate-800">{memory.name}</td>
+                                        <td class="py-3 pr-4 text-slate-600">{memory.type === "video" ? "Video" : "Photo"}</td>
+                                        <td class="py-3 pr-4">
+                                            <div class="flex flex-wrap gap-1">
+                                                {#each tagList(memory.tags) as tag}
+                                                    <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">{tag}</span>
+                                                {/each}
+                                            </div>
+                                        </td>
+                                        <td class="py-3 pr-4">
+                                            <button
+                                                class="text-xs font-bold px-2 py-1 rounded-lg transition-colors {memory.is_favorite || (memory as any).isFavorite
+                                                    ? 'bg-rose-50 text-rose-600'
+                                                    : 'text-slate-500 hover:bg-slate-100'}"
+                                                aria-pressed={!!(memory.is_favorite || (memory as any).isFavorite)}
+                                                onclick={() => toggleVisualFavorite(Number(memory.id))}
+                                            >
+                                                Favorite
+                                            </button>
+                                        </td>
+                                        <td class="py-3 text-right">
+                                            <button
+                                                aria-label="Remove this item"
+                                                class="text-xs font-bold px-3 py-1.5 rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+                                                onclick={() => handleRemoveMemory(Number(memory.id))}
+                                            >
+                                                Remove this item
+                                            </button>
+                                        </td>
+                                    </tr>
+                                {/each}
+                            </tbody>
+                        </table>
                     </div>
                 {:else}
                     <MemoryGallery

@@ -87,6 +87,12 @@ export const affirmations = {
         { primary: "You're transforming things into legacy", secondary: "Heirloom information saved" },
     ],
 
+    memories: [
+        { primary: "You're preserving the moments that matter most", secondary: "Saved with your memories" },
+        { primary: "These smiles will be treasured for generations", secondary: "Kept safe with your memories" },
+        { primary: "Your story, told in pictures", secondary: "Your memories are updated" },
+    ],
+
     timeline: [
         { primary: "You're capturing memories that matter", secondary: "Event saved" },
         { primary: "Your story deserves to be told", secondary: "Timeline updated" },

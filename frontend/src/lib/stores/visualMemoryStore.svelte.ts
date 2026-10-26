@@ -66,9 +66,17 @@ const familyMapper = (data: any): FamilyMemory => ({
 
 // --- Sync Managers ---
 
-const visualManager = registerSync<VisualMemory>('visual_memories', 'visual', visualMapper, '/api/memories').setAffirmationContext('heirlooms');
-const archiveManager = registerSync<ExternalArchive>('external_archives', 'archives', archiveMapper, '/api/memories').setAffirmationContext('heirlooms');
-const familyManager = registerSync<FamilyMemory>('family_memories', 'family', familyMapper, '/api/memories').setAffirmationContext('heirlooms');
+// The 'memories' affirmations live in affirmations.ts; the context lists in sync.svelte.ts and
+// notificationStore.ts were written before that set, so the name is passed through untyped.
+const MEMORIES = 'memories' as never;
+
+// Visual memories affirm themselves (affirmMemories): one message per upload batch or bulk tag.
+const visualManager = registerSync<VisualMemory>('visual_memories', 'visual', visualMapper, '/api/memories');
+const archiveManager = registerSync<ExternalArchive>('external_archives', 'archives', archiveMapper, '/api/memories').setAffirmationContext(MEMORIES);
+const familyManager = registerSync<FamilyMemory>('family_memories', 'family', familyMapper, '/api/memories').setAffirmationContext(MEMORIES);
+
+/** One memories affirmation (after a batch of saves, or a single save the person made). */
+export const affirmMemories = () => notifications.showAffirmation(MEMORIES);
 
 // --- Stores & Actions ---
 
@@ -126,7 +134,8 @@ export const removeMemory = async (id: number) => {
     });
 };
 
-export const updateMemory = (id: number, updates: Partial<VisualMemory>) => {
+/** Save changes to one memory; affirm = false when the caller affirms once for a batch. */
+export const updateMemory = async (id: number, updates: Partial<VisualMemory>, affirm = true) => {
     const item = visualManager.items.find(m => String(m.id) === String(id));
     if (!item) return;
 
@@ -135,20 +144,24 @@ export const updateMemory = (id: number, updates: Partial<VisualMemory>) => {
     if (Array.isArray(payload.tags)) {
         (payload as any).tags = payload.tags.join(',');
     }
-    return visualManager.update(id, payload as any);
+    const saved = await visualManager.update(id, payload as any);
+    if (affirm) affirmMemories();
+    return saved;
 };
 
 /** Add one tag to each memory, leaving any memory that already has it (any case) as it is. */
 export const addTagToMemories = async (ids: number[], tag: string) => {
     const clean = tag.trim().replace(/,/g, ' ').trim();
     if (!clean) return;
+    let saved = 0;
     for (const id of ids) {
         const item = visualManager.items.find(m => String(m.id) === String(id));
         if (!item) continue;
         const tags = tagList(item.tags);
         if (tags.some(t => t.toLowerCase() === clean.toLowerCase())) continue;
-        await Promise.resolve(updateMemory(item.id!, { tags: [...tags, clean].join(',') })).catch(() => {});
+        await updateMemory(item.id!, { tags: [...tags, clean].join(',') }, false).then(() => saved++, () => {});
     }
+    if (saved > 0) affirmMemories();
 };
 
 export const toggleFavorite = (id: number) => {
