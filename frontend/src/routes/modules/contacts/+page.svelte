@@ -47,6 +47,7 @@
     } from "$lib/utils/contextualMessages";
     import ContextualMessage from "$lib/components/ContextualMessage.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
+    import RecipientLinkPanel from "$lib/components/recipient/RecipientLinkPanel.svelte";
 
     let activeTab = $state("call-list");
     let parsedCustomAttributes = $state<Record<string, any>>({});
@@ -741,6 +742,8 @@
                     bind:data={parsedCustomAttributes}
                 />
             </div>
+
+            <RecipientLinkPanel contactId={editingId} name={newContact.name} />
 
             <!-- Footer buttons -->
             <div class="-mx-6 -mb-6 px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 mt-6">

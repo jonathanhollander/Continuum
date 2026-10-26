@@ -154,7 +154,9 @@
 			$page.url.pathname.startsWith("/pulse/verify/") ||
 			$page.url.pathname.startsWith("/pulse/portal/") ||
 			// Guardian alert emails link here (backend/pulse_logic.py); trailing slash keeps "/portalX" protected
-			$page.url.pathname.startsWith("/portal/"),
+			$page.url.pathname.startsWith("/portal/") ||
+			// Recipient start page (card D2): opened from the owner's link with no sign-in
+			$page.url.pathname.startsWith("/for/"),
 	);
 
 	// Derived: Is this the Dashboard route? (needs dark background for glassmorphism)
