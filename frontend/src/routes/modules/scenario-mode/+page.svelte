@@ -14,6 +14,11 @@
         Cloud,
     } from "lucide-svelte";
     import { estateAnalytics, estateExecutorName } from "$lib/stores/analyticsStore";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
+    import { contactSync } from "$lib/stores/familyStore.svelte";
+    import { directiveSync } from "$lib/stores/medicalStore.svelte";
+    import { digitalAssetsSync } from "$lib/stores/digitalAssetsStore.svelte";
+    import { heirloomSync } from "$lib/stores/heirloomStore.svelte";
     import { auditReadiness } from "$lib/utils/auditReadiness.svelte";
     import AuditSourceStatus from "$lib/components/AuditSourceStatus.svelte";
     let auditSources = $derived(auditReadiness());
@@ -44,36 +49,52 @@
         scenarios.find((s) => s.id === activeScenarioId) || scenarios[0],
     );
 
-    // Readiness logic for scenarios
+    // These checks describe records, rather than authority, awareness or complete instructions.
+    type CheckKey = "hasExecutor" | "hasProxy" | "hasDigital" | "hasHeirlooms";
+    type SourceRecord = { id: string; label: string; href: string; details: string[] };
+    let sources = $derived.by((): Record<CheckKey, SourceRecord[]> => {
+        const executorName = $estateExecutorName;
+        const profileName = String($estateProfile.executorName ?? "").trim();
+        const executorContact = contactSync.items.find((c) =>
+            (c.isExecutor || String(c.role).toLowerCase() === "executor") && String(c.name).trim() === executorName);
+        const executor = !executorName ? [] : profileName
+            ? [{ id: "estate_profile.executor_name", label: "Estate profile · Executor name", href: "/settings", details: [executorName] }]
+            : executorContact ? [{ id: String(executorContact.id), label: executorContact.name, href: "/modules/contacts", details: ["Executor contact"] }] : [];
+        return {
+            hasExecutor: executor,
+            hasProxy: directiveSync.items.filter((d) => d.type === "healthcare_proxy").map((d) => ({
+                id: String(d.id), label: d.title || "Healthcare proxy record", href: "/modules/medical",
+                details: [d.primaryContact, d.locationOfOriginal, d.summary].filter((v): v is string => !!v?.trim()),
+            })),
+            hasDigital: digitalAssetsSync.items.map((d) => ({
+                id: String(d.id), label: d.platform || d.name || "Digital account", href: "/modules/digital-guardian",
+                details: d.instructions?.trim() ? [d.instructions] : [],
+            })),
+            hasHeirlooms: heirloomSync.items.map((h) => ({
+                id: String(h.id), label: h.name || "Heirloom", href: `/modules/heirlooms?id=${encodeURIComponent(h.id)}`,
+                details: [h.recipient ? `Recipient: ${h.recipient}` : "", h.story, h.ownershipDetails].filter((v): v is string => !!v?.trim()),
+            })),
+        };
+    });
     let readiness = $derived({
-        hasExecutor: !!$estateExecutorName,
-        hasProxy: $estateAnalytics.pillars.legal.metrics.hasMedicalProxy,
-        hasLivingWill: $estateAnalytics.pillars.legal.metrics.hasLivingWill,
-        hasHeirlooms: $estateAnalytics.pillars.legacy.metrics.heirloomCount > 0,
-        hasDigital: $estateAnalytics.pillars.financial.metrics.digitalCount > 0,
+        hasExecutor: sources.hasExecutor.length > 0,
+        hasProxy: sources.hasProxy.length > 0,
+        hasDigital: sources.hasDigital.length > 0,
+        hasHeirlooms: sources.hasHeirlooms.length > 0,
         score: $estateAnalytics.overallHealth,
     });
+    // Keep the overall audit guard; these four facts wait for their own sources, including the profile.
+    let scenarioSourcesKnown = $derived(
+        ["medical_directives", "digital_assets", "heirlooms"].every((id) => auditSources.sources.find((s) => s.id === id)?.known) &&
+        (readiness.hasExecutor || (estateProfile.status === "synced" &&
+            !!auditSources.sources.find((s) => s.id === "family_members")?.known)));
 
-    // The drill checks shown below, in each scenario's order of priority.
-    // `goal` reuses each check's own wording for its met state.
-    type CheckKey = "hasExecutor" | "hasProxy" | "hasDigital" | "hasHeirlooms";
+    const countRecords = (n: number, label: string) => `${n} ${label} record${n === 1 ? "" : "s"}`;
     const checks: Record<CheckKey, { label: string; goal: string }> = {
-        hasProxy: {
-            label: "Healthcare Proxy",
-            goal: "decisions can be made immediately",
-        },
-        hasExecutor: {
-            label: "Executor",
-            goal: "they know their role",
-        },
-        hasDigital: {
-            label: "Digital Accounts Plan",
-            goal: "there are instructions for all accounts",
-        },
-        hasHeirlooms: {
-            label: "Physical Heirloom Protocol",
-            goal: "pet & object care instructions are found",
-        },
+        hasProxy: { label: "Healthcare Proxy", goal: "a healthcare proxy record is included" },
+        hasExecutor: { label: "Executor", goal: "your executor is named in your records" },
+        hasDigital: { label: "Digital Accounts", goal: "your digital account list is recorded" },
+        hasHeirlooms: { label: "Heirlooms", goal: "your heirloom list is recorded" },
     };
     const scenarioChecks: Record<string, CheckKey[]> = {
         sudden_disability: ["hasProxy", "hasExecutor", "hasDigital", "hasHeirlooms"],
@@ -86,6 +107,28 @@
         return key ? checks[key] : null;
     });
 </script>
+
+{#snippet recordedSources(key: CheckKey)}
+    {#if sources[key].length > 0}
+        <details class="mt-3 text-xs text-muted-foreground" data-scenario-sources={key}>
+            <summary class="cursor-pointer font-semibold">Recorded sources</summary>
+            <ul class="mt-2 space-y-3">
+                {#each sources[key] as record (record.id)}
+                    <li data-scenario-source={key} data-record-id={record.id}>
+                        <a href={record.href} class="underline underline-offset-2 break-words">{record.label}</a>
+                        <p class="mt-1 break-words">Source: {record.id}</p>
+                        {#if record.id === "estate_profile.executor_name" && estateProfile.status !== "synced"}
+                            <p class="mt-1">Device copy while your records refresh.</p>
+                        {/if}
+                        {#each record.details as detail}
+                            <p class="mt-1 whitespace-pre-wrap break-words">{detail}</p>
+                        {/each}
+                    </li>
+                {/each}
+            </ul>
+        </details>
+    {/if}
+{/snippet}
 
 <div class="max-w-6xl mx-auto space-y-8 p-4 md:p-8">
     <!-- Header -->
@@ -104,7 +147,7 @@
                 Future Scenarios
             </h1>
             <p class="text-muted-foreground mt-2 text-lg">
-                See how ready your plan is for the moments that matter.
+                Review the records your loved ones may need in each scenario.
             </p>
         </div>
         <div
@@ -113,9 +156,9 @@
             <div
                 class="text-xs font-black uppercase tracking-widest text-muted-foreground"
             >
-                Current Rating
+                Record Audit
             </div>
-            {#if auditSources.canScore}<div class="text-2xl font-black">{readiness.score}% READY</div>{/if}
+            {#if auditSources.canScore}<div class="text-2xl font-black">{readiness.score}%</div>{/if}
         </div>
     </header>
 
@@ -152,11 +195,10 @@
                 class="surface-dark p-8 bg-gradient-to-br from-card to-background rounded-[40px] text-foreground"
             >
                 <ShieldAlert class="text-gold-text mb-4" size={32} />
-                <h4 class="font-bold text-lg mb-2 text-foreground">Proactive Protection</h4>
+                <h4 class="font-bold text-lg mb-2 text-foreground">Review Your Records</h4>
                 <p class="text-sm text-muted-foreground leading-relaxed">
-                    Running these drills shows which parts of your legacy
-                    your loved ones can find and use when they need them
-                    most.
+                    These scenarios bring together recorded names, documents
+                    and account lists to review with the people involved.
                 </p>
             </div>
         </div>
@@ -170,15 +212,18 @@
                     class="p-8 border-b border-border flex items-center justify-between"
                 >
                     <h2 class="text-2xl font-black text-foreground">
-                        Drill Audit Report
+                        Scenario Record Review
                     </h2>
                     <span
                         class="px-4 py-1.5 bg-success/10 text-success rounded-full text-xs font-black uppercase tracking-tighter"
-                        >Live Analysis</span
+                        >Recorded Details</span
                     >
                 </div>
 
                 <div class="p-8 space-y-12">
+                    {#if !scenarioSourcesKnown}
+                        <p class="text-muted-foreground" data-testid="scenario-facts-loading">Gathering your records...</p>
+                    {:else}
                     <!-- Section 1: Visibility -->
                     <section>
                         <h3
@@ -188,6 +233,7 @@
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div
+                                data-scenario-check="hasExecutor" data-present={readiness.hasExecutor}
                                 class="p-6 {readiness.hasExecutor
                                     ? 'bg-success/10 border-success/20'
                                     : 'bg-warning-soft border-warning/20'} border-2 rounded-2xl flex items-center gap-4 transition-colors"
@@ -199,14 +245,14 @@
                                     />
                                     <div>
                                         <p class="font-bold text-foreground">
-                                            Executor Designated
+                                            Executor Name Recorded
                                         </p>
                                         <p
                                             class="text-xs text-success font-medium"
                                         >
-                                            {$estateExecutorName} knows their
-                                            role.
+                                            {$estateExecutorName} is named in your records.
                                         </p>
+                                        {@render recordedSources("hasExecutor")}
                                     </div>
                                 {:else}
                                     <CircleX class="text-warning" size={24} />
@@ -224,6 +270,7 @@
                             </div>
 
                             <div
+                                data-scenario-check="hasProxy" data-present={readiness.hasProxy}
                                 class="p-6 {readiness.hasProxy
                                     ? 'bg-success/10 border-success/20'
                                     : 'bg-warning-soft border-warning/20'} border-2 rounded-2xl flex items-center gap-4 transition-colors"
@@ -235,13 +282,14 @@
                                     />
                                     <div>
                                         <p class="font-bold text-foreground">
-                                            Healthcare Proxy Active
+                                            Healthcare Proxy Recorded
                                         </p>
                                         <p
                                             class="text-xs text-success font-medium"
                                         >
-                                            Decisions can be made immediately.
+                                            {countRecords(sources.hasProxy.length, "healthcare proxy")}
                                         </p>
+                                        {@render recordedSources("hasProxy")}
                                     </div>
                                 {:else}
                                     <CircleX class="text-warning" size={24} />
@@ -269,6 +317,7 @@
                         </h3>
                         <div class="space-y-4">
                             <div
+                                data-scenario-check="hasDigital" data-present={readiness.hasDigital}
                                 class="flex items-center justify-between p-6 bg-muted rounded-2xl group hover:bg-card hover:shadow-md hover:border-border border border-transparent transition-all"
                             >
                                 <div class="flex items-center gap-4">
@@ -279,15 +328,16 @@
                                     </div>
                                     <div>
                                         <h4 class="font-bold text-foreground">
-                                            Digital Accounts Plan
+                                            Digital Accounts
                                         </h4>
                                         <p
                                             class="text-sm text-muted-foreground font-medium"
                                         >
                                             {readiness.hasDigital
-                                                ? "Active: Instructions for all accounts"
+                                                ? countRecords(sources.hasDigital.length, "digital account")
                                                 : "Listing your digital accounts lets your family find each one."}
                                         </p>
+                                        {@render recordedSources("hasDigital")}
                                     </div>
                                 </div>
                                 {#if readiness.hasDigital}
@@ -304,6 +354,7 @@
                             </div>
 
                             <div
+                                data-scenario-check="hasHeirlooms" data-present={readiness.hasHeirlooms}
                                 class="flex items-center justify-between p-6 bg-muted rounded-2xl group hover:bg-card hover:shadow-md hover:border-border border border-transparent transition-all"
                             >
                                 <div class="flex items-center gap-4">
@@ -314,15 +365,16 @@
                                     </div>
                                     <div>
                                         <h4 class="font-bold text-foreground">
-                                            Physical Heirloom Protocol
+                                            Heirlooms
                                         </h4>
                                         <p
                                             class="text-sm text-muted-foreground font-medium"
                                         >
                                             {readiness.hasHeirlooms
-                                                ? "Verified: Pet & Object care instructions found"
+                                                ? countRecords(sources.hasHeirlooms.length, "heirloom")
                                                 : "Listing your heirlooms lets your family care for each one."}
                                         </p>
+                                        {@render recordedSources("hasHeirlooms")}
                                     </div>
                                 </div>
                                 {#if readiness.hasHeirlooms}
@@ -356,9 +408,8 @@
                                     >, your highest priority is the
                                     <strong>{nextCheck.label}</strong>, so that {nextCheck.goal}.
                                 {:else}
-                                    Every check for the <strong
-                                        >{activeScenario.title}</strong
-                                    > is in place.
+                                    The records used in <strong>{activeScenario.title}</strong>
+                                    are present. Review their details and access instructions.
                                 {/if}
                             </p>
                         </div>
@@ -366,9 +417,10 @@
                             href="/export/preview?scope=full"
                             class="px-8 py-4 bg-white text-primary-deep rounded-2xl font-black text-sm hover:scale-105 transition-transform active:scale-95 shadow-lg shadow-black/10"
                         >
-                            GENERATE PDF REPORT
+                            OPEN HANDOVER PREVIEW
                         </a>
                     </div>
+                    {/if}
                 </div>
             </div>
         </div>
