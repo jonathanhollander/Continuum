@@ -25,7 +25,7 @@ export type FuneralBudgetItem = {
     id: string;
     name: string;
     cost: number;
-    estimated: number;
+    estimated?: number; // the national average, when the item has one
     custom_attributes?: string; // JSON string of custom field values
 };
 

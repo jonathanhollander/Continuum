@@ -16,7 +16,7 @@ import { get } from 'svelte/store';
 import { API_BASE_URL } from '$lib/config';
 import { auth } from '$lib/stores/auth';
 import { estateTotals, isDebt } from '$lib/stores/financialAssetsStore.svelte';
-import { formatMoney } from '$lib/utils/money';
+import { formatMoney, toCents, fromCents } from '$lib/utils/money';
 import { fetchMediaBlob } from '$lib/services/mediaService';
 import { dateWords } from '$lib/utils/dateWords';
 
@@ -207,6 +207,20 @@ const assetCategoryTotals = (rows: any[]): PacketField[] => [
         ? [{ label: 'Recorded value', value: money(rows.reduce((s, r) => s + (Number(r.valuation) || 0), 0)) }]
         : [])
 ];
+
+// Subscriptions: a closed one (auto_renew false, as the subscriptions page marks it) is listed
+// with its status and left out of the totals, the same sums the page shows.
+const subscriptionClosed = (r: any) => r.auto_renew === false || r.autoRenew === false;
+const subscriptionTotals = (rows: any[]): PacketField[] => {
+    const open = rows.filter((r) => !subscriptionClosed(r));
+    const yearly = (r: any) => (r.cycle || r.frequency) === 'Yearly';
+    const month = open.reduce((s, r) => s + (yearly(r) ? Math.round(toCents(r.cost) / 12) : toCents(r.cost)), 0);
+    const year = open.reduce((s, r) => s + (yearly(r) ? toCents(r.cost) : toCents(r.cost) * 12), 0);
+    return [
+        { label: 'Monthly total', value: money(fromCents(month)) },
+        { label: 'Yearly total', value: money(fromCents(year)) }
+    ];
+};
 
 // The documents module's readiness (DocumentVault docState): "Review due" once the review
 // date arrives, "Ready" when the family can find it.
@@ -440,9 +454,11 @@ const SECTIONS: SectionDef[] = [
         fields: [
             ['cost', 'Cost', { money: true }], [(r) => r.cycle || r.frequency, 'Billed'], ['paymentMethod', 'Paid with'],
             ['nextBilling', 'Next billing'], ['loginUrl', 'Login address'],
-            ['cancellationInstructions', 'How to cancel', { long: true }], ['notes', 'Notes', { long: true }]
+            ['cancellationInstructions', 'How to cancel', { long: true }], ['notes', 'Notes', { long: true }],
+            [(r) => (subscriptionClosed(r) ? 'Closed' : ''), 'Status']
         ],
-        consumed: ['cycle', 'frequency', 'auto_renew', 'renewal_date', 'difficulty']
+        consumed: ['cycle', 'frequency', 'auto_renew', 'autoRenew', 'renewal_date', 'difficulty'],
+        summary: subscriptionTotals
     },
     {
         key: 'funeral_data', source: 'funeral_data', title: 'Final wishes',

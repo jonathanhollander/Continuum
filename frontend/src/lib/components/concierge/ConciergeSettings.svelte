@@ -88,7 +88,7 @@
             case "Soft":
                 return $dict.encSoft || "Gentle Reminders";
             case "Hidden":
-                return $dict.encHidden || "Zen Mode (Off)";
+                return $dict.encHidden || "Zen Mode";
             default:
                 return mode;
         }
