@@ -538,7 +538,6 @@
                     <div class="relative group">
                         <SubscriptionRow
                             {sub}
-                            onCancel={() => removeSubscription(sub.id)}
                             onGenerateLetter={() => openLetterModal(sub)}
                         />
                         <div
