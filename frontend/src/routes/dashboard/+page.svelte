@@ -59,7 +59,6 @@
 
     import Tooltip from "$lib/components/ui/Tooltip.svelte";
     import { documentStore } from "$lib/stores/documentStore.svelte";
-    import { pluralWord } from "$lib/utils/plural";
     import { Loader2 } from "lucide-svelte";
     import { contactSync } from "$lib/stores/familyStore.svelte";
     import { insuranceSync } from "$lib/stores/insuranceStore.svelte";
@@ -89,10 +88,11 @@
 
     // Greeting Typewriter
     let greeting = $state("");
-    let fullGreeting = $derived.by(() => {
-        const english = estateAudit.totalScore > 0 ? getGreeting() : "Ready when you are";
-        return ($dict.dashGreet as Record<string, string>)[english] ?? english;
-    });
+    let fullGreeting = $derived(
+        estateAudit.totalScore > 0
+            ? getGreeting($dict)
+            : ($dict.dashGreet as Record<string, string>)["Ready when you are"],
+    );
 
     // Dynamic Metrics
     // The same net the financial page shows: open assets less open debts
@@ -146,8 +146,11 @@
     // The status chips' own names, also used for the filtered list's heading.
     let statusName = $derived($dict.dashStatus as Record<string, string>);
 
-    function recordCount(count: number, one: string, many?: string) {
-        return { inProgress: count > 0, count, label: pluralWord(count, one, many) };
+    // The noun after a record count ("3 letters"), in the active language's plural form (X244).
+    const recordWord = (noun: string, n: number) =>
+        countWord(($dict.dashRecord as Record<string, Record<string, string>>)[noun], n);
+    function recordCount(count: number, noun: string) {
+        return { inProgress: count > 0, count, label: recordWord(noun, count) };
     }
 
     // Module status mapping - connects nav items to audit data and stores
@@ -164,14 +167,14 @@
                     inProgress:
                         scores["family"] > 0 || familyStore.members.length > 0,
                     count: familyStore.members.length,
-                    label: pluralWord(familyStore.members.length, "person", "people"),
+                    label: recordWord("people", familyStore.members.length),
                 };
             case "financial":
                 // A debt is recorded here too, but it is no account (the audit's "financial" score reads these records)
                 return {
                     inProgress: financialAssetsStore.items.length > 0,
                     count: accountCount,
-                    label: pluralWord(accountCount, "open account"),
+                    label: recordWord("openAccounts", accountCount),
                 };
             case "insurance":
                 return {
@@ -179,13 +182,13 @@
                         scores["insurance"] > 0 ||
                         insuranceStore.policies.length > 0,
                     count: insuranceStore.policies.length,
-                    label: pluralWord(insuranceStore.policies.length, "policy", "policies"),
+                    label: recordWord("policies", insuranceStore.policies.length),
                 };
             case "documents":
                 return {
                     inProgress: documentStore.items.length > 0,
                     count: documentStore.items.length,
-                    label: pluralWord(documentStore.items.length, "document"),
+                    label: recordWord("documents", documentStore.items.length),
                 };
             case "medical":
                 return {
@@ -193,13 +196,13 @@
                         scores["medical"] > 0 ||
                         medicalStore.directives.length > 0,
                     count: medicalStore.directives.length,
-                    label: pluralWord(medicalStore.directives.length, "directive"),
+                    label: recordWord("directives", medicalStore.directives.length),
                 };
             case "subscriptions":
                 return {
                     inProgress: subscriptionStore.items.length > 0,
                     count: subscriptionStore.items.length,
-                    label: pluralWord(subscriptionStore.items.length, "subscription"),
+                    label: recordWord("subscriptions", subscriptionStore.items.length),
                 };
             case "guardian":
                 return {
@@ -207,36 +210,35 @@
                         scores["digital"] > 0 ||
                         digitalAssetsStore.items.length > 0,
                     count: digitalAssetsStore.items.length,
-                    label: pluralWord(digitalAssetsStore.items.length, "account"),
+                    label: recordWord("accounts", digitalAssetsStore.items.length),
                 };
             case "property":
                 return {
                     inProgress: propertyStore.items.length > 0,
                     count: propertyStore.items.length,
-                    label: pluralWord(propertyStore.items.length, "property", "properties"),
+                    label: recordWord("properties", propertyStore.items.length),
                 };
             case "letters":
-                return recordCount(letterStore.items.length, "letter");
+                return recordCount(letterStore.items.length, "letters");
             case "heirlooms":
-                return recordCount(heirloomStore.items.length, "heirloom");
+                return recordCount(heirloomStore.items.length, "heirlooms");
             case "journal":
-                return recordCount(journalStore.items.length, "entry", "entries");
+                return recordCount(journalStore.items.length, "entries");
             case "visual-memories":
-                return recordCount(visualMemories.items.length, "memory", "memories");
+                return recordCount(visualMemories.items.length, "memories");
             case "capsule":
-                return recordCount(timeCapsuleStore.items.length, "message");
+                return recordCount(timeCapsuleStore.items.length, "messages");
             case "timeline":
-                return recordCount(timelineStore.items.length, "moment");
+                return recordCount(timelineStore.items.length, "moments");
             case "pets":
-                return recordCount(petStore.items.length, "pet");
+                return recordCount(petStore.items.length, "pets");
             case "calendar":
-                return recordCount(calendarStore.items.length, "event");
+                return recordCount(calendarStore.items.length, "events");
             case "home-manual":
                 return recordCount(
                     homeAccessStore.items.length +
                         utilityStore.items.length +
                         vendorStore.items.length,
-                    "entry",
                     "entries",
                 );
             default:

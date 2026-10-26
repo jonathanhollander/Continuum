@@ -5,7 +5,9 @@
  * for different user contexts (planning, executor, family member, etc.)
  */
 
+import { get } from "svelte/store";
 import { contextStore } from "$lib/stores/contextStore.svelte";
+import { dict } from "$lib/stores/conciergeStore.svelte";
 
 export type MessageVariants = {
     planning: string;
@@ -132,9 +134,16 @@ export function contacts(): string {
 }
 
 /**
- * Greeting message variants
+ * Greeting message variants, in the active language (X244). The dictionary's `dashGreet`
+ * is keyed by the English text; a caller in a reactive context passes `$dict` so the
+ * greeting follows a language change.
  */
-export function getGreeting(): string {
+export function getGreeting(d: Record<string, any> = get(dict)): string {
+    const english = englishGreeting();
+    return (d.dashGreet as Record<string, string> | undefined)?.[english] ?? english;
+}
+
+function englishGreeting(): string {
     const role = contextStore.role;
     const isGrieving = contextStore.isGrieving;
 
