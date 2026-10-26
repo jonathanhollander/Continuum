@@ -5,7 +5,6 @@
         estateComplexity,
         filteredTasks,
         acceptanceProgress,
-        timeRemaining,
         type AcceptanceTask,
         type EstateComplexity,
     } from "$lib/stores/acceptanceStore.svelte";
@@ -59,13 +58,6 @@
         ),
     );
 
-    function formatTime(minutes: number): string {
-        if (minutes < 60) return `${minutes} min`;
-        const hours = Math.floor(minutes / 60);
-        const mins = minutes % 60;
-        return mins > 0 ? `${hours}h ${mins}m` : `${hours} hours`;
-    }
-
     const complexityInfomation = {
         simple: "Focuses on the essential foundation. Ideal for early-stage planning or straightforward estates.",
         moderate:
@@ -92,7 +84,7 @@
                         Builder Tools
                     </h1>
                     <p class="text-muted-foreground font-medium">
-                        Compliance & Verification Command Center
+                        Your planning checklist
                     </p>
                 </div>
             </div>
@@ -165,7 +157,7 @@
     {/if}
 
     <!-- Progress Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div
             class="bg-card rounded-2xl p-6 border border-border shadow-sm flex flex-col justify-between"
         >
@@ -187,25 +179,6 @@
                         style="width: {$acceptanceProgress}%"
                     ></div>
                 </div>
-            </div>
-        </div>
-
-        <div
-            class="bg-card rounded-2xl p-6 border border-border shadow-sm flex flex-col justify-between"
-        >
-            <div class="flex items-center justify-between mb-4">
-                <div class="p-2 bg-warning-soft text-warning rounded-lg">
-                    <Clock size={20} />
-                </div>
-                <span class="text-2xl font-black text-warning"
-                    >{formatTime($timeRemaining)}</span
-                >
-            </div>
-            <div>
-                <h3 class="font-bold text-foreground mb-1">Estimated Effort</h3>
-                <p class="text-sm text-muted-foreground">
-                    Remaining time to 100% setup
-                </p>
             </div>
         </div>
 
@@ -337,12 +310,6 @@
                                         >
                                             <Clock size={12} />
                                             {task.estTime} min
-                                        </div>
-                                        <div
-                                            class="flex items-center gap-1 text-[10px] font-bold text-muted-foreground uppercase"
-                                        >
-                                            <Zap size={12} />
-                                            {task.complexity}
                                         </div>
                                     </div>
                                 </div>

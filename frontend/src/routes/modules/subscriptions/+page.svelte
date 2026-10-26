@@ -380,7 +380,7 @@
 
 <LivingBlueprintHeader
     title="Subscriptions & Services"
-    subtitle="Prevent forgotten charges that drain your estate"
+    subtitle="Keep recurring charges in view for your family"
     detailedDescription="Every subscription you document helps your family keep money that might otherwise go to forgotten charges."
     whyMatters="A short list of your subscriptions gives your family the names and steps to close each one, one less thing for them to carry."
 >
@@ -465,7 +465,7 @@
                 <div
                     class="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1"
                 >
-                    Monthly Burn
+                    Monthly total
                 </div>
                 <div class="text-2xl font-bold text-foreground">
                     {formatMoney(totalMonthly)}
