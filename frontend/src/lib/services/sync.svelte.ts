@@ -27,13 +27,13 @@ const errTechnical = (e: unknown): string => {
     return (typeof t === 'string' && t) || errMessage(e) || String(e);
 };
 
-const convertKeys = (obj: any, converter: (s: string) => string): any => {
+const convertKeys = (obj: unknown, converter: (s: string) => string): any => {
     if (obj === null || typeof obj !== 'object' || obj instanceof Date || obj instanceof Blob) return obj;
     if (Array.isArray(obj)) return obj.map(i => convertKeys(i, converter));
 
-    const newObj: any = {};
-    Object.keys(obj).forEach(key => {
-        newObj[converter(key)] = VERBATIM_VALUE_KEYS.has(key) ? obj[key] : convertKeys(obj[key], converter);
+    const newObj: Record<string, unknown> = {};
+    Object.keys(obj as object).forEach(key => {
+        newObj[converter(key)] = VERBATIM_VALUE_KEYS.has(key) ? (obj as Record<string, unknown>)[key] : convertKeys((obj as Record<string, unknown>)[key], converter);
     });
     return newObj;
 };
@@ -52,8 +52,8 @@ const JSON_TEXT_WIRE_KEYS = ['valueHistory', 'maintenanceSchedule', 'evidence'];
 
 const toWireKey = (s: string) => (CAMEL_WIRE_KEYS.has(s) ? s : toSnake(s));
 
-const toWire = (obj: any): any => {
-    const out = convertKeys(obj, toWireKey);
+const toWire = (obj: unknown): any => {
+    const out = convertKeys(obj, toWireKey) as Record<string, unknown> | null;
     for (const k of JSON_TEXT_WIRE_KEYS) {
         if (out && out[k] !== null && typeof out[k] === 'object') out[k] = JSON.stringify(out[k]);
     }
@@ -662,7 +662,7 @@ export class SyncManager<T extends { id: number | string }> {
 // uploads go out together as one POST (the server merges the posted keys). The estate profile's
 // stores go further and share one manager (SharedRecord, below).
 const _sharedGets = new Map<string, Promise<any>>();
-const _pendingUploads = new Map<string, { payload: Record<string, any>; waiters: { resolve: (v: any) => void; reject: (e: any) => void }[] }>();
+const _pendingUploads = new Map<string, { payload: Record<string, unknown>; waiters: { resolve: (v: any) => void; reject: (e: unknown) => void }[] }>();
 
 function sharedGet(url: string, token: string): Promise<any> {
     const k = `${token}|${url}`;
@@ -680,11 +680,11 @@ function sharedGet(url: string, token: string): Promise<any> {
 
 // Every store that read the same GET reaches this in the same microtask run, so a 0 ms timer
 // collects all of them before the one POST is sent.
-function sharedUpload(url: string, token: string, payload: Record<string, any>): Promise<any> {
+function sharedUpload(url: string, token: string, payload: Record<string, unknown>): Promise<any> {
     const k = `${token}|${url}`;
     let batch = _pendingUploads.get(k);
     if (!batch) {
-        const b = { payload: {} as Record<string, any>, waiters: [] as { resolve: (v: any) => void; reject: (e: any) => void }[] };
+        const b = { payload: {} as Record<string, unknown>, waiters: [] as { resolve: (v: any) => void; reject: (e: unknown) => void }[] };
         batch = b;
         _pendingUploads.set(k, b);
         setTimeout(() => {
@@ -706,7 +706,7 @@ function sharedUpload(url: string, token: string, payload: Record<string, any>):
 const isEmptyRecord = (r: any) => !r || typeof r !== 'object' || Object.keys(r).length === 0;
 const ACCOUNT_CHANGED = new Error("account changed before this save was sent");
 
-type ProfileBatch = { token: string; payload: Record<string, any>; waiters: { resolve: () => void; reject: (e: any) => void }[] };
+type ProfileBatch = { token: string; payload: Record<string, unknown>; waiters: { resolve: () => void; reject: (e: unknown) => void }[] };
 
 /** One server record that several singleton stores share, each owning its own keys (estate/profile:
  *  estate, scenario, tone, onboarding, concierge, complexity). It is the one manager of that record:
@@ -1139,11 +1139,11 @@ function registerManager<M extends { sync(): Promise<void> }>(key: string, endpo
     return manager;
 }
 
-export function registerSync<T extends { id: number | string }>(key: string, endpoint: string, mapper?: any, apiBase?: string) {
+export function registerSync<T extends { id: number | string }>(key: string, endpoint: string, mapper?: (local: Record<string, unknown>) => NoInfer<T>, apiBase?: string) {
     return registerManager(key, endpoint, apiBase, () => new SyncManager<T>(key, endpoint, mapper, apiBase));
 }
 
-export function registerSingletonSync<T extends object>(key: string, endpoint: string, mapper?: any, apiBase?: string) {
+export function registerSingletonSync<T extends object>(key: string, endpoint: string, mapper?: (local: Record<string, unknown>) => NoInfer<T>, apiBase?: string) {
     return registerManager(key, endpoint, apiBase, () => new SingletonSyncManager<T>(key, endpoint, mapper, apiBase)) as unknown as SingletonSyncManager<T>;
 }
 
