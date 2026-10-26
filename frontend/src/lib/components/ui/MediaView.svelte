@@ -21,6 +21,11 @@
         return url;
     }
 
+    /** The object URL already made (or being made) for this id, if any. */
+    export function cachedBlobUrl(id: number): Promise<string> | undefined {
+        return blobUrls.get(id);
+    }
+
     function forgetBlobUrls() {
         for (const url of blobUrls.values()) {
             url.then((u) => URL.revokeObjectURL(u), () => undefined);
@@ -129,7 +134,7 @@
     async function save() {
         if (mediaId === null) return;
         try {
-            await downloadMedia(mediaId, filename || undefined);
+            await downloadMedia(mediaId, filename || undefined, cachedBlobUrl(mediaId));
         } catch (e: any) {
             message = e?.message || "This file is taking a moment to open.";
         }
