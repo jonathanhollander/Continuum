@@ -99,6 +99,27 @@ def get_settings(user: User = Depends(get_current_user), session: Session = Depe
     settings = session.get(PulseSettings, user.id)
     return settings or PulseSettings(user_id=user.id)
 
+_SETTINGS_DATETIME_FIELDS = ("ghost_mode_until", "safety_timer_active_until", "last_known_location_time")
+
+
+def _parse_settings_datetime(value):
+    """ISO 8601 string (a trailing "Z" or any offset allowed) -> naive UTC datetime; None stays None.
+    Anything else is a 422 with a gentle message, never a 500 from the database driver."""
+    if value is None:
+        return None
+    parsed = value if isinstance(value, datetime) else None
+    if isinstance(value, str):
+        try:
+            parsed = datetime.fromisoformat(value.strip())
+        except ValueError:
+            parsed = None
+    if parsed is None:
+        raise HTTPException(status_code=422, detail="That date and time needs another look. Choose it again whenever you're ready and we'll save it.")
+    if parsed.tzinfo is not None:
+        parsed = parsed.astimezone(timezone.utc).replace(tzinfo=None)
+    return parsed
+
+
 @router.post("/settings", summary="Update Pulse settings", description="Saves the user's Pulse configuration, creating the row on first save. The check-in token is issued by the server on first save and kept.")
 @limiter.limit("10/minute")
 def update_settings(request: Request, new_settings: PulseSettings, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
@@ -110,6 +131,12 @@ def update_settings(request: Request, new_settings: PulseSettings, user: User = 
     settings_data = new_settings.dict(exclude_unset=True)
     settings_data.pop("user_id", None)  # the row always belongs to the signed-in person
     settings_data.pop("checkin_token", None)  # server-issued, kept once made
+    # PulseSettings is a table model, so the body is not validated: its DateTime fields arrive as
+    # the raw JSON value (an ISO string from the browser). Parse them here to naive UTC, the form
+    # every stored time and utc_now() comparison uses; null clears the field.
+    for key in _SETTINGS_DATETIME_FIELDS:
+        if key in settings_data:
+            settings_data[key] = _parse_settings_datetime(settings_data[key])
     for key, value in settings_data.items():
         setattr(settings, key, value)
     if not settings.checkin_token:
