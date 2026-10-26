@@ -1,12 +1,12 @@
 # Active recovery implementation handoff
 
-**Last Updated:** 2026-10-26 17:44 EDT
+**Last Updated:** 2026-10-26 18:08 EDT
 
 The canonical task board remains [RECOVERY_EXECUTION_PLAN.md](RECOVERY_EXECUTION_PLAN.md). This handoff supersedes the earlier orchestrator snapshot; its operational history remains in Git.
 
-## Active checkpoint — 2026-10-26 17:44 EDT
+## Active checkpoint — 2026-10-26 18:08 EDT
 
-The owner authorized implementation and scoped subagents under the canonical plan. **60 of 63 active corrective cards X303–X366 are reviewed and merged locally (excluding deferredX364).** X364 records a separate deferred administrative-tool recovery limitation. Exact commits, proof qualifications and completion status are in the plan. Active implementation: X331, X333 and X363. The final backend cut is0d47a81 (X340/X366included); final local O1 endpoint timings are underway. R0 and O2 route inventories are prepared and await the final frontend feature cut; final acceptance has not begun. Never redispatch reopened historical parent rows independently.
+The owner authorized implementation and scoped subagents under the canonical plan. **63 of 64 active corrective cards X303–X367 are reviewed and merged locally (excluding deferredX364).** X364 records a separate deferred administrative-tool recovery limitation. Exact commits, proof qualifications and completion status are in the plan. Active implementation: X367 advanced-history receipt recovery, including a conditional list update that preserves concurrent edits. O1’s stable backend cut0d47a81 has completed7,080local requests across174success patterns with all JSON reads/writes below reporting targets; its X367supplement remains open. R0 and O2 route inventories are prepared and await the final feature cut. Chrome sign-in was confirmed read-only; final rehearsal/deployment/live acceptance remain open. Never redispatch reopened historical parent rows independently.
 
 The owner clarified X320: executor-note sharing must be a saved user choice, with executors only as the default and an option for all recipients. Shared readers and new downloads follow that choice; the owner’s full copy includes the notes. X320 is reviewed and merged with actual owner/reader/ZIP/PDF proof and account/profile-safe controls. X365 also corrects the common shared-profile stale-toast retry path and is reviewed/merged.
 
@@ -14,7 +14,7 @@ Local main is intentionally ahead of origin. Pushing main automatically deploys;
 
 Focused proofs use disposable synthetic databases/outboxes or intercepted APIs, with complete logs in private temporary paths documented by card reports. First-batch oversight is recorded in [O1-BATCH1](reviews/2026-10-26-implementation/O1-BATCH1.md) and [O2-BATCH1](reviews/2026-10-26-implementation/O2-BATCH1.md); their source cutoffs are explicit and do not establish final release or production acceptance. Main through `e462c10` passes the combined frontend check (0 errors, 0 warnings) and production build. Later corrective changes still require integrated verification. Final composed owner/recipient acceptance, remaining-wave oversight, release backup/new migrations, consolidated push and actual Railway deployment-identity verification remain open.
 
-Completed nested checkouts are removed after merged/clean/ignored-file inspection, with branches and both central stashes retained. The latest four cleanups removed32 checkouts; this implementation’s cumulative checkout/cache recovery is approximately3.79GB. Each cleanup batch has a local manifest under.git/worktree-cleanup-backups/2026-10-26/. Active worktrees remain. No production records, real mail or scheduler were used for these proofs, and no scheduled automation was restarted.
+Completed nested checkouts are removed after merged/clean/ignored-file inspection, with branches and both central stashes retained. All63reviewed-card checkouts have been removed; this implementation’s cumulative checkout/cache recovery is3,998,883,840bytes (approximately4.00GB). Each cleanup batch has a local manifest under.git/worktree-cleanup-backups/2026-10-26/. Active worktrees remain. No production records, real mail or scheduler were used for these proofs, and no scheduled automation was restarted.
 
 ## Current source-review status
 
@@ -24,7 +24,7 @@ The completed review examined source snapshot `8751f22` and changed documentatio
 
 ## Earlier recovery closure, before this review
 
-Before the later source review, Waves A–E, U, G, T and V, O1/O2 oversight, R0 and the release had been recorded complete. That earlier closure audit checked status rows and release-fix commits. A strict status-cell recount confirms **496 unique marked status rows** at source snapshot `8751f22`, **551** after the55review follow-ups, and **560** afterX358–X366were added. This includes the named O1 release-table and O2 release-screenshot rows; the intervening494/549recount accidentally omitted those two genuine data rows. Headers/separators are excluded and status IDs remain unique. The complete counted-ID inventory is retained in `/private/tmp/continuum-status-recount-2026-10-26.json`. The earlier closure left two owner-only cards, X6 and X141, after the owner's X154 decision was implemented. The current reopened state is in the execution plan and source review linked above.
+Before the later source review, Waves A–E, U, G, T and V, O1/O2 oversight, R0 and the release had been recorded complete. That earlier closure audit checked status rows and release-fix commits. A strict status-cell recount confirms **496 unique marked status rows** at source snapshot `8751f22`, **551** after the55review follow-ups, and **561** afterX358–X367were added. This includes the named O1 release-table and O2 release-screenshot rows; the intervening494/549recount accidentally omitted those two genuine data rows. Headers/separators are excluded and status IDs remain unique. The complete counted-ID inventory is retained in `/private/tmp/continuum-status-recount-2026-10-26.json`. The earlier closure left two owner-only cards, X6 and X141, after the owner's X154 decision was implemented. The current reopened state is in the execution plan and source review linked above.
 
 **X154:** the owner approved matching Pulse alerts to the displayed “When should they know?” tier. Commit `8c73c54` aligns initial alerts, retries, custom delays, portal tier labels and guardian access. An explicit own Pulse tier wins; otherwise First Call / Same Day / Extended map to tiers 1 / 2 / 3 and Kept private is excluded. Persistent guardian links are issued for eligible new contacts and existing contacts missing a link. Five backend files, no migration or frontend change.
 
