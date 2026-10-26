@@ -144,20 +144,20 @@
         if (data && (data.name || hasNumber(data.value) || data.location)) {
             // Runs only when the extracted data changes; reading the form here would re-run it forever.
             untrack(() => {
-            // Open form if not already open
-            if (!showAddForm) showAddForm = true;
+                // Open form if not already open
+                if (!showAddForm) showAddForm = true;
 
-            // Sync form state
-            newAsset = {
-                ...newAsset,
-                name: data.name || newAsset.name,
-                type: (data.type || newAsset.type) as AssetType,
-                value: hasNumber(data.value) ? data.value : newAsset.value, // an extracted 0 is a real value
-                location: data.location || newAsset.location,
-                accountNumber: data.accountNumber || newAsset.accountNumber,
-                beneficiaries: data.beneficiaries || newAsset.beneficiaries,
-                notes: data.notes || newAsset.notes,
-            };
+                // Sync form state
+                newAsset = {
+                    ...newAsset,
+                    name: data.name || newAsset.name,
+                    type: (data.type || newAsset.type) as AssetType,
+                    value: hasNumber(data.value) ? data.value : newAsset.value, // an extracted 0 is a real value
+                    location: data.location || newAsset.location,
+                    accountNumber: data.accountNumber || newAsset.accountNumber,
+                    beneficiaries: data.beneficiaries || newAsset.beneficiaries,
+                    notes: data.notes || newAsset.notes,
+                };
             });
         }
     });
