@@ -30,7 +30,7 @@ export const executorSharing = {
     },
     save: async (value: ExecutorNoteSharing, owner = captureOwner()) => {
         assertOwner(owner);
-        await sharingSync.update({ executorNoteSharing: value });
+        await sharingSync.update({ executorNoteSharing: value }, true);
         assertOwner(owner);
     },
 };
