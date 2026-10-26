@@ -108,6 +108,54 @@ function humanize(key: string): string {
 // Stored values such as "active" or "needs_review" read as words: "Active", "Needs review".
 const words = (v: any) => humanize(String(v));
 
+/**
+ * Milestone ids as words (card G4): one map for letters (triggerMilestone) and time capsules
+ * (trigger_value), from the time capsule's COMMON_MILESTONES and the letters page's labels.
+ * An id the owner typed themselves reads as words ("first_job" -> "First job").
+ */
+export const MILESTONE_LABELS: Record<string, string> = {
+    grad: 'College Graduation',
+    wedding: 'Wedding Day',
+    parent: 'Becoming a Parent',
+    home: 'First Home',
+    career: 'Major Career Achievement',
+    anniv_10: '10th Marriage Anniversary'
+};
+export const milestoneLabel = (id: any): string => {
+    const k = String(id ?? '').trim();
+    return MILESTONE_LABELS[k] ?? (k ? humanize(k.replace(/[-]+/g, '_')) : '');
+};
+
+/**
+ * One executor test for the packet and the recipient page (card G4; the server's
+ * recipient.is_executor): the contact's flag, the role "Executor", or the name the owner
+ * gave as executor in the estate profile.
+ */
+export function isExecutorContact(c: any, executorName?: any): boolean {
+    if (!c) return false;
+    if (c.is_executor === true || c.isExecutor === true) return true;
+    if (String(c.role ?? '').trim().toLowerCase() === 'executor') return true;
+    const named = String(executorName ?? '').trim().toLowerCase();
+    return !!named && named === String(c.name ?? '').trim().toLowerCase();
+}
+
+// Important Dates keep "MMDD"/"YYYYMMDD" (calendar page) or "MM-DD"/"YYYY-MM-DD".
+function calendarDate(v: any): string {
+    const d = String(v ?? '').replace(/-/g, '');
+    if (!/^\d{4}(\d{4})?$/.test(d)) return text(v);
+    const [y, m, day] = d.length === 8 ? [d.slice(0, 4), d.slice(4, 6), d.slice(6, 8)] : ['', d.slice(0, 2), d.slice(2, 4)];
+    const dt = new Date(2000, Number(m) - 1, Number(day));
+    if (Number.isNaN(dt.getTime())) return text(v);
+    const md = dt.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+    return y ? `${md}, ${y}` : md;
+}
+
+// The calendar page keeps its email template as JSON {recipient, subject, body} in ritual_instructions.
+function calendarMessage(v: any): { recipient?: string; subject?: string; body?: string } | null {
+    const t = parseJSON(v);
+    return t && typeof t === 'object' && !Array.isArray(t) && ('body' in t || 'subject' in t) ? t : null;
+}
+
 function text(v: any): string {
     if (typeof v === 'boolean') return v ? 'Yes' : '';
     if (Array.isArray(v)) return v.map(text).filter(Boolean).join(', ');
@@ -284,7 +332,7 @@ const SECTIONS: SectionDef[] = [
         name: (r) => r.title,
         fields: [
             ['recipient_name', 'To'], ['date', 'Written'],
-            [(r) => (r.triggerDate ? dateWords(r.triggerDate) : r.triggerMilestone || ''), 'For when'],
+            [(r) => (r.triggerDate ? dateWords(r.triggerDate) : milestoneLabel(r.triggerMilestone)), 'For when'],
             [(r) => (r.isLocked ? 'Kept on hold by the author' : ''), 'Hold'],
             ['content', 'Letter', { long: true }]
         ],
@@ -306,7 +354,7 @@ const SECTIONS: SectionDef[] = [
         name: (r) => r.title,
         fields: [
             ['recipient', 'For'],
-            [(r) => (r.trigger_type === 'milestone' ? `Milestone: ${r.trigger_value}` : r.trigger_value ? `On ${dateWords(r.trigger_value)}` : ''), 'Opens'],
+            [(r) => (r.trigger_type === 'milestone' ? `Milestone: ${milestoneLabel(r.trigger_value)}` : r.trigger_value ? `On ${dateWords(r.trigger_value)}` : ''), 'Opens'],
             [(r) => (r.is_released ? 'Released' : ''), 'Status'],
             ['created_at', 'Recorded', { fmt: dateWords }],
             ['content_preview', 'Message', { long: true }]
@@ -320,10 +368,32 @@ const SECTIONS: SectionDef[] = [
         consumed: ['url', 'size', 'is_favorite']
     },
     {
+        key: 'external_archives', source: 'external_archives', title: 'Photo archives',
+        name: (r) => r.platform,
+        fields: [['location_details', 'Where and how to reach it', { long: true }], ['access_url', 'Address']],
+        consumed: ['platform', 'icon']
+    },
+    {
         key: 'family_memories', source: 'family_memories', title: 'Family memories',
         name: (r) => r.title,
         fields: [['type', 'Kind', { fmt: (v) => humanize(v) }], ['date', 'Date'], ['author', 'Shared by'], ['desc', 'Description', { long: true }], ['text', 'In their words', { long: true }]],
         consumed: ['is_favorite']
+    },
+    {
+        key: 'calendar_events', source: 'calendar_events', title: 'Important dates',
+        name: (r) => r.title,
+        fields: [
+            ['date', 'Date', { fmt: (v, r) => `${calendarDate(v)}${r.recurring ? ', every year' : ''}` }],
+            ['type', 'Kind', { fmt: words }],
+            ['description', 'Wish', { long: true }],
+            [(r) => (calendarMessage(r.ritual_instructions) ? '' : r.ritual_instructions), 'Ritual', { long: true }],
+            [(r) => {
+                const m = calendarMessage(r.ritual_instructions);
+                return m ? [m.recipient && `To ${m.recipient}`, m.subject, m.body].filter(Boolean).join('\n') : '';
+            }, 'Message', { long: true }],
+            ['tags', 'Tags']
+        ],
+        consumed: ['title', 'recurring', 'ritual_instructions']
     },
     {
         key: 'home_access', source: 'home_access', title: 'Home access',
@@ -424,6 +494,7 @@ function buildFields(def: SectionDef, r: any, title = ''): PacketField[] {
     const custom = parseJSON(r.custom_attributes);
     if (custom && typeof custom === 'object' && !Array.isArray(custom)) {
         for (const [k, v] of Object.entries(custom)) {
+            if (k.startsWith('_')) continue; // held by the app itself (e.g. _media: the attached file)
             const t = text(v);
             if (t) out.push({ label: k, value: t, long: t.length > 80 });
         }
@@ -471,7 +542,7 @@ export function buildPacket(snapshot: Snapshot, scope: ExportScope = 'full'): Pa
     const contacts = snapshot.sections.contacts ?? [];
     const executors = [
         ...(o.executor_name ? [String(o.executor_name)] : []),
-        ...contacts.filter((c) => c.is_executor).map((c) => String(c.name))
+        ...contacts.filter((c) => isExecutorContact(c, o.executor_name)).map((c) => String(c.name))
     ].filter((n, i, a) => n && a.indexOf(n) === i);
 
     return {

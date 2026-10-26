@@ -45,8 +45,8 @@ from backend.utils.clock import utc_now
 
 router = APIRouter(prefix="/api/recipient", tags=["recipient"])
 
-CLOSED = "This page is closed for now. The person who shared it can send a fresh link whenever it is needed."
-FOUND_NOTHING = "We couldn't find that person. They may have been moved."
+CLOSED = "This page is closed for now. The executor, or the person who shared it, can open it again for you."
+FOUND_NOTHING = "That person may have been moved."
 MIN_TOKEN_LENGTH = 32
 
 
@@ -153,17 +153,27 @@ def shown_media_ids(session: Session, contact: PulseContact, token: str) -> Froz
     return ids
 
 
+def is_executor(contact: PulseContact, owner: Dict[str, Any]) -> bool:
+    """One executor test (the packet's, exportService.isExecutorContact): the contact's flag,
+    the role "Executor", or the name the owner gave as executor in the estate profile."""
+    if contact.is_executor or (contact.role or "").strip().lower() == "executor":
+        return True
+    named = str(owner.get("executor_name") or "").strip().lower()
+    return bool(named) and named == (contact.name or "").strip().lower()
+
+
 def _view(session: Session, contact: PulseContact, preview: bool) -> Dict[str, Any]:
+    snap = recipient_snapshot(session, contact)
     return {
         "preview": preview,
         "recipient": {
             "id": contact.id,
             "name": contact.name,
             "relation": contact.relation,
-            "is_executor": bool(contact.is_executor),
+            "is_executor": is_executor(contact, snap.get("owner") or {}),
         },
         "note": contact.recipient_note or "",
-        "snapshot": recipient_snapshot(session, contact),
+        "snapshot": snap,
     }
 
 
