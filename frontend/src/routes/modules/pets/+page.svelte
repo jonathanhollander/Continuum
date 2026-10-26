@@ -57,7 +57,7 @@
         notes: "",
     });
 
-    function savePet() {
+    async function savePet() {
         if (!newPet.name) return;
 
         // Serialize custom attributes
@@ -66,8 +66,9 @@
             custom_attributes: JSON.stringify(parsedCustomAttributes)
         };
 
+        try {
         if (newPet.id) {
-            petStore.updatePet(newPet.id, petData);
+            await petStore.updatePet(newPet.id, petData);
             activityLog.logEvent({
                 module: "Pet Care",
                 action: "UPDATE",
@@ -77,12 +78,12 @@
                 userContext: $estateProfile.ownerName || "User",
             });
         } else {
-            petStore.addPet(petData as Omit<PetEntry, "id">);
+            const created = await petStore.addPet(petData as Omit<PetEntry, "id">, savePet);
             activityLog.logEvent({
                 module: "Pet Care",
                 action: "CREATE",
                 entityType: "Pet",
-                entityId: crypto.randomUUID(),
+                entityId: String(created.id),
                 entityName: newPet.name || "Unknown",
                 userContext: $estateProfile.ownerName || "User",
             });
@@ -90,6 +91,9 @@
 
         closeAndReset();
         showAffirmation = true;
+        } catch {
+            // The manager already showed the one gentle message; the form stays open with the draft.
+        }
     }
 
     function editPet(pet: PetEntry) {

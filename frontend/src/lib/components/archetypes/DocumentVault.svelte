@@ -117,7 +117,14 @@
             });
 
             // Log UPDATE
-            // (Logging logic preserved...)
+            activityLog.logEvent({
+                module: module.name || "Document Vault",
+                action: "UPDATE",
+                entityType: "Document",
+                entityId: String(newDoc.id),
+                entityName: newDoc.name,
+                userContext: $estateProfile.ownerName || "User",
+            });
         } else {
             // Create Mode
             const created = await docSync.create({

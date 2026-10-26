@@ -54,7 +54,7 @@ export const insuranceStore = {
     get policies() { return insuranceSync.items; },
     get status() { return insuranceSync.status; },
     sync: () => insuranceSync.sync(),
-    addPolicy: (policy: Omit<InsurancePolicy, 'id'>) => insuranceSync.create({ ...policy, id: crypto.randomUUID() }),
+    addPolicy: (policy: Omit<InsurancePolicy, 'id'>, onRetry?: () => Promise<unknown>) => insuranceSync.create({ ...policy, id: crypto.randomUUID() }, false, false, onRetry),
     updatePolicy: (id: number | string, updates: Partial<InsurancePolicy>) => insuranceSync.update(id, updates),
     deletePolicy: (id: number | string) => insuranceSync.delete(id),
     getPolicy: (id: number | string) => insuranceSync.items.find(p => p.id === id),

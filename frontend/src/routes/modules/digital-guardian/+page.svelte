@@ -192,7 +192,9 @@
     }
 
     async function addAsset(platform: string, username: string, type: string) {
-        const newAsset = await digitalAssetsSync.create({
+        let newAsset;
+        try {
+        newAsset = await digitalAssetsSync.create({
             platform,
             username,
             description: `${type} Account`,
@@ -201,7 +203,10 @@
             instructions: "",
             priority: "medium",
             isClosed: false,
-        });
+        }, false, false, () => addAsset(platform, username, type));
+        } catch {
+            return; // the manager already showed the one gentle message
+        }
 
         activityLog.logEvent({
             module: "Digital Guardian",

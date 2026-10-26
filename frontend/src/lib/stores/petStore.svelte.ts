@@ -35,7 +35,7 @@ export const petSync = registerSync<PetEntry>('pets', 'pets', petMapper).setAffi
 export const petStore = {
     get items() { return petSync.items; },
     get status() { return petSync.status; },
-    addPet: (pet: Omit<PetEntry, 'id'>) => petSync.create({ ...pet, id: crypto.randomUUID() }),
+    addPet: (pet: Omit<PetEntry, 'id'>, onRetry?: () => Promise<unknown>) => petSync.create({ ...pet, id: crypto.randomUUID() }, false, false, onRetry),
     updatePet: (id: string | number, updates: Partial<PetEntry>) => petSync.update(id, updates),
     removePet: (id: string | number) => petSync.delete(id),
     sync: () => petSync.sync(),
