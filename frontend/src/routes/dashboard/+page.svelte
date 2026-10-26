@@ -67,9 +67,11 @@
     import type { CompassionateSyncStatus } from "$lib/components/ui/SyncBadge.svelte";
     let filterByStatus = $state<CompassionateSyncStatus | null>(null);
 
-    // Collapsed sections state (secondary groups start collapsed)
+    // Collapsed sections state: groups marked isCollapsedByDefault in navigation.ts
+    // (My Finances, My Instructions, People & Check-ins, Extras) start collapsed;
+    // My Legacy opens, as the one section the dashboard showed open before E1.
     let collapsedSections = $state<Set<string>>(
-        new Set(["groupSecondary", "groupLegacy", "groupExtras"]),
+        new Set(navGroups.filter((g) => g.isCollapsedByDefault).map((g) => g.groupKey)),
     );
 
     // Greeting Typewriter

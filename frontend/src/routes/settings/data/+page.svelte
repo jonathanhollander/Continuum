@@ -2,7 +2,7 @@
     import { getRegistry, type SyncManager } from "$lib/services/sync.svelte";
     import { onMount } from "svelte";
     import { navGroups, catalogCategories, type NavItem } from "$lib/config/navigation";
-    import { userRole } from "$lib/stores/conciergeStore.svelte";
+    import { dict, userRole } from "$lib/stores/conciergeStore.svelte";
     import { auth } from "$lib/stores/auth";
     import { API_BASE_URL } from "$lib/config";
     import { get } from "svelte/store";
@@ -253,7 +253,7 @@
     // Hubs that show other modules' data rather than holding their own.
     const hubKeys = new Set(["dashboard", "catalog", "binder"]);
     // Catalog categories join the nav group they belong to.
-    const catalogGroup: Record<string, string> = { legacy: "groupLegacy", tools: "groupExtras" };
+    const catalogGroup: Record<string, string> = { legacy: "groupMyLegacy", tools: "groupExtras" };
 
     type ModuleCard = { id: string; label: string; keys: string[] };
 
@@ -412,7 +412,7 @@
                         class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4"
                     >
                         <h2 class="font-bold text-xl text-slate-800">
-                            {group.groupLabel}
+                            {$dict[group.groupKey] || group.groupLabel}
                         </h2>
                         <span class="text-slate-400 text-sm"
                             >{group.groupDescription}</span
