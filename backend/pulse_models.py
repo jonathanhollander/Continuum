@@ -1,6 +1,7 @@
 from typing import Optional
 from datetime import datetime
 from backend.utils.clock import utc_now
+from sqlalchemy import Index
 from sqlmodel import Field, SQLModel
 
 class PulseSettings(SQLModel, table=True):
@@ -57,6 +58,8 @@ class PulseVault(SQLModel, table=True):
 
 class PulseCheckin(SQLModel, table=True):
     __tablename__ = "pulse_checkins"
+    # Status, portal and the scheduler read "this user's latest check-in" (migration e2a7c9d4b1f3)
+    __table_args__ = (Index("ix_pulse_checkins_user_id_timestamp", "user_id", "timestamp"),)
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="users.id")
     timestamp: datetime = Field(default_factory=utc_now)
@@ -70,14 +73,14 @@ class PulseCheckin(SQLModel, table=True):
 class PulseEscalationLog(SQLModel, table=True):
     __tablename__ = "pulse_escalation_log"
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id")
+    user_id: int = Field(foreign_key="users.id", index=True)
     tier_number: int
     triggered_at: datetime = Field(default_factory=utc_now)
     medical_safe_pass_triggered: bool = Field(default=False)
 class PulseEscalationTier(SQLModel, table=True):
     __tablename__ = "pulse_escalation_tiers"
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id")
+    user_id: int = Field(foreign_key="users.id", index=True)
     tier_number: int # 1, 2, 3, 4
     delay_hours: int = Field(default=6)
     notification_method: str = Field(default="email") # 'email', 'sms', 'both'
@@ -85,7 +88,7 @@ class PulseEscalationTier(SQLModel, table=True):
 class PulseContact(SQLModel, table=True):
     __tablename__ = "pulse_contacts"
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id")
+    user_id: int = Field(foreign_key="users.id", index=True)
     
     # Global Contact Fields
     name: str
@@ -119,7 +122,7 @@ class PulseContact(SQLModel, table=True):
     # Pulse Specific (Optional - only if they are a Guardian)
     tier_id: Optional[int] = Field(default=None, foreign_key="pulse_escalation_tiers.id")
     priority: int = Field(default=1)
-    portal_token: Optional[str] = Field(default=None)
+    portal_token: Optional[str] = Field(default=None, index=True)
     portal_token_expires: Optional[datetime] = Field(default=None)
     can_view_history: bool = Field(default=True)
     
@@ -135,7 +138,7 @@ class PulseContact(SQLModel, table=True):
 class PulseSafetyTimer(SQLModel, table=True):
     __tablename__ = "pulse_safety_timers"
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id")
+    user_id: int = Field(foreign_key="users.id", index=True)
     started_at: datetime = Field(default_factory=utc_now)
     expires_at: datetime
     purpose: Optional[str] = Field(default="Walking home") # e.g. "Walking home", "Home alone"
@@ -144,8 +147,8 @@ class PulseSafetyTimer(SQLModel, table=True):
 class PulseMessage(SQLModel, table=True):
     __tablename__ = "pulse_messages"
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id")
-    contact_id: int = Field(foreign_key="pulse_contacts.id")
+    user_id: int = Field(foreign_key="users.id", index=True)
+    contact_id: int = Field(foreign_key="pulse_contacts.id", index=True)
     direction: str # 'user_to_contact' or 'contact_to_user'
     message: str
     sent_at: datetime = Field(default_factory=utc_now)
