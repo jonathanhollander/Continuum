@@ -88,6 +88,7 @@ def _check_user_role(role: Any) -> str:
 class UserResponse(BaseModel):
     id: int
     email: str
+    is_admin: bool = False
     external_id: str
     display_name: Optional[str] = None
     user_role: Optional[str] = "planning"

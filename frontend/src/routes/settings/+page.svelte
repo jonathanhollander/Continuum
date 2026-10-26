@@ -2,6 +2,7 @@
     import ConciergeSettings from "$lib/components/concierge/ConciergeSettings.svelte";
     import { Settings, Database, ArrowRight } from "lucide-svelte";
     import { dict } from "$lib/stores/conciergeStore.svelte";
+    import { auth } from "$lib/stores/auth";
 </script>
 
 <div
@@ -24,6 +25,14 @@
     <div
         class="bg-card rounded-[2rem] border border-border shadow-sm p-6 md:p-8"
     >
+        {#if $auth.user?.email}
+            <div class="flex items-center justify-between gap-4 mb-6 text-sm">
+                <p class="text-muted-foreground">Signed in as <span class="text-foreground font-medium">{$auth.user.email}</span></p>
+                {#if $auth.user.is_admin === true}
+                    <a href="/admin/users" class="text-primary-hover font-semibold hover:underline">Administrator settings</a>
+                {/if}
+            </div>
+        {/if}
         <ConciergeSettings />
     </div>
 

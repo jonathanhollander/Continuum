@@ -12,6 +12,7 @@ import {
 export interface User {
     id: number;
     email: string;
+    is_admin?: boolean;
     external_id: string;
     user_role?: 'planning' | 'executor' | 'family' | 'advisor';
     emotional_context?: 'healthy' | 'terminal' | 'grieving';
