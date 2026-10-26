@@ -89,8 +89,40 @@
         // Logic to handle intermediate answers if needed
     }
 
-    function handleConciergeComplete(e: CustomEvent) {
-        const answers = e.detail;
+    const wizardSteps = [
+        {
+            id: "intro",
+            question: "wizard.family_intro",
+            type: "boolean" as const,
+            logic: { yes: "fav_memory", no: "EXIT" },
+        },
+        {
+            id: "fav_memory",
+            question:
+                "What is one favorite memory you want to preserve right now?",
+            type: "textarea" as const,
+            placeholder: "I remember when...",
+            required: true,
+        },
+        {
+            id: "role",
+            question: "Who are you preserving this legacy for?",
+            type: "select" as const,
+            options: [
+                "My Children",
+                "My Spouse",
+                "Myself",
+                "Future Generations",
+            ],
+            required: true,
+        },
+    ];
+
+    function handleConciergeComplete(answers: Record<string, any>) {
+        if (answers.intro === false) {
+            viewMode = "dashboard";
+            return;
+        }
 
         // Auto-create a memory from the concierge answer
         if (answers.fav_memory) {
@@ -476,35 +508,7 @@
     {#if viewMode === "concierge"}
         <div class="max-w-4xl mx-auto px-6 py-12" in:fade>
             <ConciergeFlow
-                steps={[
-                    {
-                        id: "intro",
-                        question: $t("wizard.start"),
-                        type: "text",
-                        placeholder: "Press Enter...",
-                        required: false,
-                    },
-                    {
-                        id: "fav_memory",
-                        question:
-                            "What is one favorite memory you want to preserve right now?",
-                        type: "textarea",
-                        placeholder: "I remember when...",
-                        required: true,
-                    },
-                    {
-                        id: "role",
-                        question: "Who are you preserving this legacy for?",
-                        type: "select",
-                        options: [
-                            "My Children",
-                            "My Spouse",
-                            "Myself",
-                            "Future Generations",
-                        ],
-                        required: true,
-                    },
-                ]}
+                steps={wizardSteps}
                 oncomplete={handleConciergeComplete}
             />
             <div class="text-center mt-8">

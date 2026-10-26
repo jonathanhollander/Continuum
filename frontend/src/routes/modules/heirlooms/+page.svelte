@@ -28,6 +28,7 @@
     } from "$lib/stores/heirloomStore.svelte";
     import { qrStore } from "$lib/stores/qrStore";
     import { activityLog } from "$lib/stores/activityLog.svelte";
+    import { notifications } from "$lib/stores/notificationStore";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import EvidenceGalleryUploader from "$lib/components/ui/EvidenceGalleryUploader.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
@@ -65,7 +66,7 @@
             id: "intro",
             question: "wizard.heirloom_start",
             type: "boolean" as const,
-            logic: { yes: "watch", no: "cancel", next: "watch" },
+            logic: { yes: "watch", no: "EXIT" },
         },
         {
             id: "watch",
@@ -86,28 +87,48 @@
         },
     ];
 
-    function handleWizardComplete(event: CustomEvent) {
-        const answers = event.detail;
+    function handleWizardComplete(answers: Record<string, any>) {
         if (answers.intro === false) {
             showWizard = false;
             return;
         }
 
-        if (answers.watch) addWizardItem("Vintage Watch", "Grandson");
-        if (answers.jewelry)
-            addWizardItem("Wedding Ring", "Spouse / Eldest Child");
-        if (answers.furniture) addWizardItem("Antique Desk", "Home Office");
+        const wanted: [string, string][] = [];
+        if (answers.watch) wanted.push(["Vintage Watch", "Grandson"]);
+        if (answers.jewelry) wanted.push(["Wedding Ring", "Spouse / Eldest Child"]);
+        if (answers.furniture) wanted.push(["Antique Desk", "Home Office"]);
 
         showWizard = false;
+        if (wanted.length > 0) saveWizardItems(wanted);
     }
 
-    function addWizardItem(name: string, recipient: string) {
-        heirloomSync.create({
-            name,
-            recipient,
-            story: "Family heirloom passed down...",
-            image: "",
-        }).catch(() => {}); // the manager already showed the one gentle message
+    // One wizard run is one save: the creates run quietly, then one affirmation when all land,
+    // or one gentle message whose Try Again re-sends only the items still waiting.
+    async function saveWizardItems(wanted: [string, string][]) {
+        const results = await Promise.allSettled(
+            wanted.map(([name, recipient]) =>
+                heirloomSync.create(
+                    { name, recipient, story: "Family heirloom passed down...", image: "" },
+                    false,
+                    true,
+                ),
+            ),
+        );
+        const waiting = wanted.filter((_, i) => results[i].status === "rejected");
+        if (waiting.length === 0) {
+            notifications.showAffirmation("heirlooms");
+            return;
+        }
+        const reason = results.find((r) => r.status === "rejected") as PromiseRejectedResult;
+        notifications.showError(
+            {
+                message:
+                    "Your answers are safe here. We can save them again whenever you're ready.",
+                code: "DATABASE_ERROR",
+                technicalDetails: reason.reason?.technicalDetails || reason.reason?.message || String(reason.reason),
+            } as any,
+            () => saveWizardItems(waiting),
+        );
     }
 
     onMount(async () => {
@@ -359,11 +380,11 @@
         <div class="w-full max-w-2xl relative" in:fly={{ y: 20 }}>
             <button
                 class="absolute -top-12 right-0 text-white/70 hover:text-white transition-colors"
-                onclick={() => (showWizard = false)}>Not right now</button
+                onclick={() => (showWizard = false)}>Maybe later</button
             >
             <ConciergeFlow
                 steps={wizardSteps}
-                on:complete={handleWizardComplete}
+                oncomplete={handleWizardComplete}
             />
         </div>
     </div>

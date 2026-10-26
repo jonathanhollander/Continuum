@@ -19,9 +19,9 @@
     const wizardSteps = [
         {
             id: "intro",
-            question: "wizard.start",
+            question: "wizard.financial_intro",
             type: "boolean" as const,
-            logic: { yes: "check", no: "EXIT", next: "check" },
+            logic: { yes: "check", no: "EXIT" },
         },
         {
             id: "check",
@@ -49,7 +49,6 @@
         },
     ];
 
-    // ConciergeFlow calls oncomplete with the answers (it dispatches no "complete" event).
     async function handleWizardComplete(answers: Record<string, any>) {
         if (answers.intro === false) {
             showWizard = false;
