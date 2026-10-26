@@ -8,7 +8,14 @@
         createPDFBlob,
         fetchSnapshot,
         buildDownloadCopy,
+        buildPacket,
+        fileCoverage,
+        fileCoverageLabel,
+        fileFieldLabel,
+        packetRecordId,
+        downloadCopyStatus,
         saveBlob,
+        type FileCoverage,
         type ExportScope,
         type Snapshot,
     } from "$lib/services/exportService";
@@ -21,6 +28,9 @@
     let blob = $state<Blob | null>(null);
     let snapshot = $state<Snapshot | null>(null);
     let packing = $state(false);
+    let copyNote = $state<string | null>(null);
+    let copyCoverage = $state<FileCoverage | null>(null);
+    const copyFiles = new Map<string, Blob>();
 
     const SCOPE_LABELS: Record<ExportScope, string> = {
         full: "Everything",
@@ -38,6 +48,9 @@
     async function generate() {
         loading = true;
         note = null;
+        copyNote = null;
+        copyCoverage = null;
+        copyFiles.clear();
         try {
             snapshot = await fetchSnapshot();
             blob = await createPDFBlob(scope, includeImages, (m) => (progress = m), snapshot);
@@ -66,9 +79,12 @@
         if (!snapshot) return;
         packing = true;
         try {
-            saveBlob(await buildDownloadCopy(snapshot, (m) => (progress = m)), `Continuum_download_copy_${day()}.zip`);
+            const copy = await buildDownloadCopy(snapshot, (m) => (copyNote = m), copyFiles);
+            copyCoverage = fileCoverage(snapshot, buildPacket(snapshot, "full"), copyFiles);
+            saveBlob(copy, `Continuum_download_copy_${day()}.zip`);
+            copyNote = downloadCopyStatus(copyCoverage);
         } catch (e) {
-            note = (e as Error)?.message || "Your packet is right here. You can save a download copy again whenever you're ready.";
+            copyNote = (e as Error)?.message || "Your packet is right here. You can save a download copy again whenever you're ready.";
         } finally {
             packing = false;
         }
@@ -107,7 +123,7 @@
                     class="flex items-center gap-2 bg-card border border-border text-foreground px-4 py-2 rounded-lg font-medium hover:bg-muted transition-colors disabled:opacity-60"
                 >
                     {#if packing}<Loader2 size={18} class="animate-spin" />{:else}<Archive size={18} />{/if}
-                    Download copy
+                    {copyCoverage?.issues.length ? "Try files and save copy" : "Download copy"}
                 </button>
                 <button
                     onclick={downloadPDF}
@@ -119,6 +135,25 @@
             {/if}
         </div>
     </header>
+
+    {#if copyNote}
+        <section class="bg-card border-b border-border px-6 py-4 max-h-64 overflow-y-auto text-sm space-y-2" data-testid="preview-download-status" aria-label="Download status">
+            <p role="status">{copyNote}</p>
+            {#if copyCoverage?.issues.length}
+                <p class="font-semibold">{fileCoverageLabel(copyCoverage)}</p>
+                <ul class="space-y-2">
+                    {#each copyCoverage.issues as issue (issue.key)}
+                        <li>
+                            <p class="font-semibold">{issue.filename}</p>
+                            {#each issue.records as record (`${record.section}:${record.id}:${record.field}`)}
+                                <a class="block text-primary-hover underline" href={`/binder#${packetRecordId(record.section, record.id)}`}>{record.title} · {fileFieldLabel(record.field)}</a>
+                            {/each}
+                        </li>
+                    {/each}
+                </ul>
+            {/if}
+        </section>
+    {/if}
 
     <main class="flex-1 relative overflow-hidden">
         {#if loading}

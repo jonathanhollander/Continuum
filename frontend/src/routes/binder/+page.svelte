@@ -6,6 +6,7 @@
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import { goto } from "$app/navigation";
     import { onMount, onDestroy } from "svelte";
+    import { SvelteMap } from "svelte/reactivity";
     import {
         fetchSnapshot,
         buildPacket,
@@ -13,30 +14,47 @@
         loadAttachmentFiles,
         buildDownloadCopy,
         saveBlob,
+        fileCoverage,
+        fileCoverageLabel,
+        downloadCopyStatus,
+        packetRecordId,
+        fileFieldLabel,
         type Packet,
         type Snapshot,
     } from "$lib/services/exportService";
 
     let snapshot = $state<Snapshot | null>(null);
     let packet = $state<Packet | null>(null);
-    let files = $state<Map<string, Blob>>(new Map());
-    let urls = $state<Map<string, string>>(new Map());
+    const files = new SvelteMap<string, Blob>();
+    const urls = new SvelteMap<string, string>();
     let loading = $state(true);
     let note = $state<string | null>(null);
     let busy = $state<string | null>(null);
+    let downloadNote = $state<string | null>(null);
+    let gone = false;
+    const coverage = $derived(snapshot && packet ? fileCoverage(snapshot, packet, files) : null);
 
-    let html = $derived(packet ? packetHTML(packet, (a) => urls.get(a.key) ?? null) : "");
+    let html = $derived(packet ? packetHTML(packet, (a) => urls.get(a.key) ?? null, coverage ?? undefined) : "");
+
+    function showFiles(got: Map<string, Blob>) {
+        if (gone) return;
+        for (const [key, blob] of got) {
+            files.set(key, blob);
+            if (!urls.has(key)) urls.set(key, URL.createObjectURL(blob));
+        }
+    }
 
     async function load() {
         loading = true;
         note = null;
+        downloadNote = null;
+        for (const url of urls.values()) URL.revokeObjectURL(url);
+        urls.clear();
+        files.clear();
         try {
             snapshot = await fetchSnapshot();
             packet = buildPacket(snapshot, "full");
-            files = await loadAttachmentFiles(snapshot, packet.attachments);
-            const next = new Map<string, string>();
-            for (const [k, b] of files) next.set(k, URL.createObjectURL(b));
-            urls = next;
+            showFiles(await loadAttachmentFiles(snapshot, packet.attachments, undefined, () => {}, () => {}));
         } catch (e: any) {
             note = e?.message || "Your records are safe in your account. You can gather your binder again whenever you're ready.";
         } finally {
@@ -49,6 +67,7 @@
         load();
     });
     onDestroy(() => {
+        gone = true;
         if (typeof document !== "undefined") document.body.classList.remove("binder-print");
         for (const u of urls.values()) URL.revokeObjectURL(u);
     });
@@ -59,14 +78,30 @@
         window.print();
     }
 
+    async function retryFile(key: string) {
+        if (!snapshot || !packet || busy) return;
+        busy = "files";
+        try {
+            showFiles(await loadAttachmentFiles(snapshot, packet.attachments.filter((a) => a.key === key), undefined, () => {}, () => {}));
+            downloadNote = fileCoverageLabel(fileCoverage(snapshot, packet, files));
+        } finally {
+            busy = null;
+        }
+    }
+
     async function downloadCopy() {
         if (!snapshot) return;
         busy = "zip";
         try {
-            saveBlob(await buildDownloadCopy(snapshot, () => {}, files), `Continuum_download_copy_${day()}.zip`);
+            const copy = await buildDownloadCopy(snapshot, (message) => downloadNote = message, files);
+            if (gone) return;
+            showFiles(files);
+            saveBlob(copy, `Continuum_download_copy_${day()}.zip`);
+            downloadNote = downloadCopyStatus(fileCoverage(snapshot, packet!, files));
         } catch (e: any) {
             note = e?.message || "Your binder is right here. You can save a download copy again whenever you're ready.";
         } finally {
+            showFiles(files);
             busy = null;
         }
     }
@@ -106,6 +141,29 @@
             <span>{note}</span>
             <button onclick={load} class="text-primary-deep dark:text-primary-hover font-semibold underline">Try again</button>
         </div>
+    {/if}
+    {#if downloadNote}
+        <p class="max-w-4xl mx-auto mb-6 text-sm text-foreground print:hidden" role="status" data-testid="binder-download-note">{downloadNote}</p>
+    {/if}
+    {#if !loading && coverage?.issues.length}
+        <section class="max-w-4xl mx-auto mb-6 p-5 rounded-xl bg-card border border-border space-y-3 print:hidden" aria-label="Files to revisit" data-testid="binder-file-issues">
+            <h2 class="font-semibold">{fileCoverageLabel(coverage)}</h2>
+            <ul class="space-y-4">
+                {#each coverage.issues as issue (issue.key)}
+                    <li class="text-sm space-y-1">
+                        <p class="font-semibold">{issue.filename}</p>
+                        {#each issue.records as record (`${record.section}:${record.id}:${record.field}`)}
+                            <a class="block text-primary-deep dark:text-primary-hover underline" href={`#${packetRecordId(record.section, record.id)}`}>{record.title} · {fileFieldLabel(record.field)}</a>
+                        {/each}
+                        {#if issue.kind === "retry"}
+                            <button onclick={() => retryFile(issue.key)} disabled={busy !== null} class="font-semibold text-primary-deep dark:text-primary-hover underline disabled:opacity-60">Try this file again</button>
+                        {:else}
+                            <p>The original record names this file. You can review its details in the record.</p>
+                        {/if}
+                    </li>
+                {/each}
+            </ul>
+        </section>
     {/if}
 
     <div class="max-w-4xl mx-auto shadow-xl border border-border print:shadow-none print:border-none {!loading && packet && packet.sections.length > 0 ? 'bg-white' : 'bg-card'}">

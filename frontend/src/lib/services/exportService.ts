@@ -71,6 +71,67 @@ export interface Packet {
     attachments: SnapshotAttachment[];
 }
 
+export interface PacketFileIssue {
+    key: string;
+    filename: string;
+    kind: 'retry' | 'reference';
+    media_id?: number;
+    retry_url?: string;
+    records: { section: string; id: any; field: string; title: string; packet_path: string }[];
+}
+
+export interface FileCoverage {
+    included: number;
+    expected: number;
+    issues: PacketFileIssue[];
+    source_page?: string;
+}
+
+export function packetRecordId(section: string, id: any): string {
+    const hex = (v: string) => Array.from(new TextEncoder().encode(v), (b) => b.toString(16).padStart(2, '0')).join('');
+    return `cx-record-${hex(section)}-${hex(String(id))}`;
+}
+
+/** One byte/file count, with every source-record/field retained for a usable retry list. */
+export function fileCoverage(snapshot: Snapshot, packet: Packet, files: Map<string, Blob>): FileCoverage {
+    const titles = new Map(packet.sections.flatMap((s) => s.records.map((r) => [`${r.section}:${r.id}`, r.title] as const)));
+    const source_page = typeof window !== 'undefined' ? window.location.href.split('#')[0] : undefined;
+    const refs = (rows: SnapshotAttachment['records']) => rows
+        .filter((r) => titles.has(`${r.section}:${r.id}`))
+        .map((r) => ({ ...r, title: titles.get(`${r.section}:${r.id}`)!, packet_path: `packet.html#${packetRecordId(r.section, r.id)}` }));
+    const retryUrl = (mediaId?: number) => {
+        if (!mediaId || !source_page) return undefined;
+        const token = new URL(source_page).pathname.match(/\/for\/([^/]+)\/?$/)?.[1];
+        const path = token ? `/api/media/shared/${token}/${mediaId}` : `/api/media/${mediaId}/download`;
+        return new URL(`${API_BASE_URL}${path}`, source_page).href;
+    };
+    const issues: PacketFileIssue[] = packet.attachments.filter((a) => !files.has(a.key)).map((a) => ({
+        key: a.key, filename: a.filename || attachmentPath(a).split('/').pop() || 'File', kind: 'retry',
+        media_id: a.media_id, retry_url: retryUrl(a.media_id), records: refs(a.records)
+    }));
+    const missing = new Map<string, PacketFileIssue>();
+    for (const r of snapshot.missing_attachments ?? []) {
+        const records = refs([r]);
+        if (!records.length) continue;
+        const key = `media-${r.media_id}`;
+        if (packet.attachments.some((a) => a.key === key)) continue;
+        const item: PacketFileIssue = missing.get(key) ?? { key, filename: `File ${r.media_id}`, kind: 'reference',
+            media_id: r.media_id, retry_url: retryUrl(r.media_id), records: [] };
+        item.records.push(...records);
+        missing.set(key, item);
+    }
+    return { included: packet.attachments.filter((a) => files.has(a.key)).length,
+        expected: packet.attachments.length + missing.size, issues: [...issues, ...missing.values()], source_page };
+}
+
+export const fileCoverageLabel = (coverage: FileCoverage) => `Files ready: ${coverage.included} of ${coverage.expected}`;
+export const fileFieldLabel = (field: string) => ({ thumbnail: 'Cover', evidence: 'Evidence', file_path: 'Stored copy', media_id: 'Stored copy',
+    custom_attributes: 'Attachment', image: 'Photo', url: 'Photo or recording', video_url: 'Video', audio_url: 'Audio', documents: 'Ownership document' } as Record<string, string>)[field] || humanize(field);
+export const downloadCopyStatus = (coverage: FileCoverage) => coverage.issues.length
+    ? `Your copy is saved with ${coverage.included} of ${coverage.expected} files. The file list shows what to try again.`
+    : coverage.expected ? `Your copy is saved with ${coverage.included} ${coverage.included === 1 ? 'file' : 'files'} and your recorded details.`
+        : 'Your copy is saved with your recorded details.';
+
 // ---------------------------------------------------------------------------
 // Snapshot
 // ---------------------------------------------------------------------------
@@ -602,9 +663,11 @@ export async function loadAttachmentFiles(
     snapshot: Snapshot,
     attachments: SnapshotAttachment[],
     fetchBlob: (a: SnapshotAttachment) => Promise<Blob> = (a) => fetchMediaBlob(a.media_id as number),
-    onProgress: (msg: string) => void = () => { }
+    onProgress: (msg: string) => void = () => { },
+    onFailure?: (attachment: SnapshotAttachment) => void
 ): Promise<Map<string, Blob>> {
     const out = new Map<string, Blob>();
+    const failed: SnapshotAttachment[] = [];
     let n = 0;
     await Promise.all(attachments.map(async (a) => {
         try {
@@ -614,13 +677,19 @@ export async function loadAttachmentFiles(
                 const ref = a.records[0];
                 const row = (snapshot.sections[ref.section] ?? []).find((r) => String(r.id) === String(ref.id));
                 const v = row?.[ref.field];
-                if (typeof v === 'string') out.set(a.key, dataUrlBlob(v));
+                if (typeof v !== 'string') throw new Error('The recorded file reference needs a second look.');
+                out.set(a.key, dataUrlBlob(v));
             }
         } catch (e) {
             console.warn('[export] Attachment open failed', a.key, e);
+            failed.push(a);
+            onFailure?.(a);
         }
         onProgress(`Gathering files (${++n} of ${attachments.length})...`);
     }));
+    // Callers that support partial copies receive file identities through onFailure. Other
+    // callers (e.g. a PDF with photos) surface the failure instead of silently dropping images.
+    if (failed.length && !onFailure) throw new Error('Your recorded details are ready. You can try gathering the files again.');
     return out;
 }
 
@@ -665,9 +734,9 @@ export const PACKET_CSS = `
 @media print{.cx-packet .cx-page{break-after:page;border:none}.cx-packet .cx-page:last-child{break-after:auto}.cx-packet .cx-record{border-color:#d6d3d1;break-inside:avoid}.cx-packet h2,.cx-packet h3{break-after:avoid}.cx-packet .cx-files video,.cx-packet .cx-files audio{display:none}}
 `;
 
-function fileBlock(a: SnapshotAttachment, url: string | null): string {
+function fileBlock(a: SnapshotAttachment, url: string | null, retry = false): string {
     const name = esc(a.filename || attachmentPath(a).split('/').pop());
-    const caption = `<div class="cx-file-name">${name} · ${esc(fmtSize(a.file_size))}${url ? ` · <a href="${esc(url)}" download="${name}" target="_blank" rel="noopener">Open this file</a>` : ''}</div>`;
+    const caption = `<div class="cx-file-name">${name} · ${esc(fmtSize(a.file_size))}${url ? ` · <a href="${esc(url)}" download="${name}" target="_blank" rel="noopener">Open this file</a>` : retry ? ' · Listed in files to try again' : ''}</div>`;
     if (!url) return caption;
     if (a.mime_type.startsWith('image/')) return `<img src="${esc(url)}" alt="${name}">${caption}`;
     if (a.mime_type.startsWith('video/')) return `<video src="${esc(url)}" controls preload="metadata"></video>${caption}`;
@@ -676,13 +745,16 @@ function fileBlock(a: SnapshotAttachment, url: string | null): string {
 }
 
 /** The packet as HTML. `urlFor` gives each attachment's address (a blob URL on screen, a path in the zip). */
-export function packetHTML(packet: Packet, urlFor: (a: SnapshotAttachment) => string | null = () => null): string {
+export function packetHTML(packet: Packet, urlFor: (a: SnapshotAttachment) => string | null = () => null, coverage?: FileCoverage): string {
     const parts: string[] = [`<style>${PACKET_CSS}</style>`];
     parts.push(`<section class="cx-page cx-cover"><div>${packet.ownerName ? `<div class="cx-kicker">The estate of</div><h1>${esc(packet.ownerName)}</h1>` : '<h1>The Red Binder</h1>'}<div class="cx-rule"></div></div>
-<div class="cx-meta"><div><h3>Prepared</h3><p>${esc(fmtDate(packet.generatedAt))}</p></div>${packet.executors.length ? `<div><h3>Executor</h3><p>${packet.executors.map(esc).join('<br>')}</p></div>` : ''}</div></section>`);
+<div class="cx-meta"><div><h3>Prepared</h3><p>${esc(fmtDate(packet.generatedAt))}</p></div>${packet.executors.length ? `<div><h3>Executor</h3><p>${packet.executors.map(esc).join('<br>')}</p></div>` : ''}${coverage ? `<div><h3>Files</h3><p>${esc(fileCoverageLabel(coverage))}</p></div>` : ''}</div></section>`);
     parts.push(`<section class="cx-page"><h2>Contents</h2><ol class="cx-toc">${packet.sections
         .map((s) => `<li><a href="#cx-${esc(s.key)}">${esc(s.title)}</a> <span class="cx-id">${s.records.length}</span></li>`)
-        .join('')}</ol></section>`);
+        .join('')}${coverage?.issues.length ? '<li><a href="#cx-file-list">Files to try again</a></li>' : ''}</ol></section>`);
+    if (coverage?.issues.length) {
+        parts.push(`<section class="cx-page" id="cx-file-list"><h2>Files to try again</h2><p>${esc(fileCoverageLabel(coverage))}. Your recorded details are included.</p>${coverage.source_page ? `<p><a href="${esc(coverage.source_page)}" target="_blank" rel="noopener">Open the original page to gather these files again</a></p>` : ''}<ul>${coverage.issues.map((issue) => `<li><strong>${esc(issue.filename)}</strong><ul>${issue.records.map((r) => `<li><a href="#${packetRecordId(r.section, r.id)}">${esc(r.title)}</a> · ${esc(fileFieldLabel(r.field))}</li>`).join('')}</ul></li>`).join('')}</ul></section>`);
+    }
     for (const s of packet.sections) {
         parts.push(`<section class="cx-page" id="cx-${esc(s.key)}" data-section="${esc(s.key)}"><h2>${esc(s.title)}</h2>`);
         if (s.summary.length) {
@@ -692,9 +764,9 @@ export function packetHTML(packet: Packet, urlFor: (a: SnapshotAttachment) => st
             // Short details in a two-column grid; long text as plain blocks so it flows across printed pages.
             const short = r.fields.filter((f) => !f.long);
             const long = r.fields.filter((f) => f.long);
-            parts.push(`<article class="cx-record" data-record="${esc(r.section)}:${esc(r.id)}"><h3>${esc(r.title)}</h3>${short.length
+            parts.push(`<article class="cx-record" id="${packetRecordId(r.section, r.id)}" data-record="${esc(r.section)}:${esc(r.id)}"><h3>${esc(r.title)}</h3>${short.length
                 ? `<dl class="cx-fields">${short.map((f) => `<dt>${esc(f.label)}</dt><dd>${esc(f.value)}</dd>`).join('')}</dl>`
-                : ''}${long.map((f) => `<dl class="cx-long"><dt>${esc(f.label)}</dt><dd>${esc(f.value)}</dd></dl>`).join('')}${r.attachments.length ? `<div class="cx-files">${r.attachments.map((a) => fileBlock(a, urlFor(a))).join('')}</div>` : ''}</article>`);
+                : ''}${long.map((f) => `<dl class="cx-long"><dt>${esc(f.label)}</dt><dd>${esc(f.value)}</dd></dl>`).join('')}${r.attachments.length ? `<div class="cx-files">${r.attachments.map((a) => fileBlock(a, urlFor(a), coverage?.issues.some((i) => i.key === a.key))).join('')}</div>` : ''}</article>`);
         }
         parts.push(`</section>`);
     }
@@ -713,7 +785,7 @@ const blobToDataUrl = (b: Blob) =>
         r.readAsDataURL(b);
     });
 
-export async function packetPDF(packet: Packet, images: Map<string, string> = new Map()): Promise<Blob> {
+export async function packetPDF(packet: Packet, images: Map<string, string> = new Map(), coverage?: FileCoverage): Promise<Blob> {
     const doc = await createUnicodePDF();
     const W = doc.internal.pageSize.getWidth();
     const H = doc.internal.pageSize.getHeight();
@@ -748,11 +820,25 @@ export async function packetPDF(packet: Packet, images: Map<string, string> = ne
     }
     write(`Prepared ${fmtDate(packet.generatedAt)}`, 13, { color: 90, gap: 6 });
     if (packet.executors.length) write(`Executor: ${packet.executors.join(', ')}`, 13, { color: 90 });
+    if (coverage) write(fileCoverageLabel(coverage), 12, { color: 90, gap: 6 });
 
     // Contents
     doc.addPage(); y = M;
     write('Contents', 22, { bold: true, color: 48, gap: 10 });
     packet.sections.forEach((s, i) => write(`${i + 1}. ${s.title} (${s.records.length})`, 13, { gap: 2 }));
+    if (coverage?.issues.length) write('Files to try again', 13, { gap: 2 });
+
+    if (coverage?.issues.length) {
+        doc.addPage(); y = M;
+        write('Files to try again', 22, { bold: true, gap: 10 });
+        write(`${fileCoverageLabel(coverage)}. Your recorded details are included.`, 12, { gap: 8 });
+        if (coverage.source_page) write(`Original page: ${coverage.source_page}`, 10, { gap: 10 });
+        for (const issue of coverage.issues) {
+            write(issue.filename, 12, { bold: true, gap: 4 });
+            for (const r of issue.records) write(`${r.title} - ${fileFieldLabel(r.field)}`, 10, { indent: 12, gap: 2 });
+            y += 6;
+        }
+    }
 
     for (const s of packet.sections) {
         doc.addPage(); y = M;
@@ -783,7 +869,12 @@ export async function packetPDF(packet: Packet, images: Map<string, string> = ne
                         // the file is listed below and kept in the download copy
                     }
                 }
-                write(`File: ${a.filename || attachmentPath(a).split('/').pop()} (${fmtSize(a.file_size)}), in the download copy at ${attachmentPath(a)}`, 10, { color: 90, indent: 12, gap: 2 });
+                const pending = coverage?.issues.some((i) => i.key === a.key);
+                write(pending
+                    ? `File to try again: ${a.filename || attachmentPath(a).split('/').pop()} (${fmtSize(a.file_size)}). See the file list.`
+                    : coverage
+                        ? `File: ${a.filename || attachmentPath(a).split('/').pop()} (${fmtSize(a.file_size)}), in the download copy at ${attachmentPath(a)}`
+                        : `File: ${a.filename || attachmentPath(a).split('/').pop()} (${fmtSize(a.file_size)}). Use Download copy to gather this file.`, 10, { color: 90, indent: 12, gap: 2 });
             }
             y += 12;
         }
@@ -928,7 +1019,12 @@ export async function buildDownloadCopy(
     fetchBlob?: (a: SnapshotAttachment) => Promise<Blob>
 ): Promise<Blob> {
     const packet = buildPacket(snapshot, 'full');
-    const blobs = files ?? (await loadAttachmentFiles(snapshot, packet.attachments, fetchBlob, onProgress));
+    const blobs = files ?? new Map<string, Blob>();
+    // A cached page can hold successful files alongside failed reads. Every download tries
+    // the absent keys again; a previous failed request is never treated as a cached success.
+    const gathered = await loadAttachmentFiles(snapshot, packet.attachments.filter((a) => !blobs.has(a.key)), fetchBlob, onProgress, () => {});
+    for (const [key, blob] of gathered) blobs.set(key, blob);
+    const coverage = fileCoverage(snapshot, packet, blobs);
     const enc = new TextEncoder();
     const entries: { path: string; data: Uint8Array }[] = [];
     const manifestFiles: any[] = [];
@@ -948,15 +1044,15 @@ export async function buildDownloadCopy(
             size: data.length,
             sha256: await sha256(data),
             media_id: a.media_id ?? null,
-            records: a.records.map((r) => ({ ...r, title: titleOf.get(`${r.section}:${r.id}`) ?? '' }))
+            records: a.records.map((r) => ({ ...r, title: titleOf.get(`${r.section}:${r.id}`) ?? '', packet_path: `packet.html#${packetRecordId(r.section, r.id)}` }))
         });
     }
 
     onProgress('Writing the packet...');
-    const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${packet.ownerName ? `The estate of ${esc(packet.ownerName)}` : 'Continuum'}</title></head><body style="margin:0;background:#fff">${packetHTML(packet, (a) => (blobs.has(a.key) ? attachmentPath(a) : null))}</body></html>`;
+    const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${packet.ownerName ? `The estate of ${esc(packet.ownerName)}` : 'Continuum'}</title></head><body style="margin:0;background:#fff">${packetHTML(packet, (a) => (blobs.has(a.key) ? attachmentPath(a) : null), coverage)}</body></html>`;
     entries.unshift({ path: 'packet.html', data: enc.encode(html) });
     const images = await imageDataUrls(blobs, included);
-    entries.splice(1, 0, { path: 'packet.pdf', data: new Uint8Array(await (await packetPDF(packet, images)).arrayBuffer()) });
+    entries.splice(1, 0, { path: 'packet.pdf', data: new Uint8Array(await (await packetPDF(packet, images, coverage)).arrayBuffer()) });
 
     // The records as recorded; files kept inside a record point at their copy in files/.
     const records: Record<string, any[]> = {};
@@ -976,12 +1072,19 @@ export async function buildDownloadCopy(
         data: enc.encode(JSON.stringify({
             generated_at: snapshot.generated_at,
             owner: packet.ownerName,
+            files_complete: coverage.issues.length === 0,
+            included_file_count: coverage.included,
+            expected_file_count: coverage.expected,
+            source_page: coverage.source_page,
             packet: ['packet.html', 'packet.pdf'],
             sections: packet.sections.map((s) => ({ key: s.key, title: s.title, records: s.records.map((r) => ({ section: r.section, id: r.id, title: r.title })) })),
             files: manifestFiles,
-            files_to_retry: packet.attachments.filter((a) => !blobs.has(a.key)).map((a) => ({ key: a.key, filename: a.filename, records: a.records })),
+            files_to_retry: coverage.issues.filter((issue) => issue.kind === 'retry'),
+            file_issues: coverage.issues,
             missing_attachments: snapshot.missing_attachments
         }, null, 2))
     });
-    return makeZip(entries);
+    const copy = makeZip(entries);
+    onProgress(downloadCopyStatus(coverage));
+    return copy;
 }
