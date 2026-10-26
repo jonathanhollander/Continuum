@@ -74,6 +74,12 @@ def process_user_pulse(session: Session, settings: PulseSettings):
     last_log = session.exec(log_stmt).first()
     
     current_tier_number = last_log.tier_number if last_log else 0
+    if current_tier_number > 0:
+        try:
+            retry_failed_tier_sends(session, last_log)
+        except Exception:
+            session.rollback()
+            logger.error(f"Tier {current_tier_number} retry for user {user_id} failed", exc_info=True)
     
     # Decide if we need to escalate to the NEXT tier
     next_tier_number = current_tier_number + 1
@@ -153,6 +159,29 @@ def trigger_escalation(session: Session, user_id: int, tier_number: int, referen
             logger.error(f"Tier {tier_number} alert to contact {contact.id} failed; not retrying this tier",
                          exc_info=True)
 
+    session.commit()
+
+TIER_FAIL_TEXT = "We couldn't deliver this alert to"  # owner-facing; the technical reason is logged only
+TIER_MAX_ATTEMPTS = 3
+
+def retry_failed_tier_sends(session: Session, log: PulseEscalationLog):
+    """Re-send the current tier to contacts whose only attempts since it triggered failed,
+    up to TIER_MAX_ATTEMPTS each (same pattern as safety timers). Does not touch tier timing."""
+    prefix = f"[System Alert Tier {log.tier_number}] "
+    for contact in session.exec(select(PulseContact).where(
+            PulseContact.user_id == log.user_id,
+            PulseContact.tier_id == select(PulseEscalationTier.id).where(
+                PulseEscalationTier.user_id == log.user_id,
+                PulseEscalationTier.tier_number == log.tier_number
+            ).order_by(PulseEscalationTier.id).limit(1).scalar_subquery())).all():
+        msgs = session.exec(select(PulseMessage.message).where(
+            PulseMessage.contact_id == contact.id, PulseMessage.sent_at >= log.triggered_at,
+            col(PulseMessage.message).startswith(prefix))).all()
+        fails = sum(1 for m in msgs if m.startswith(prefix + TIER_FAIL_TEXT))
+        if fails == len(msgs) and 0 < fails < TIER_MAX_ATTEMPTS:
+            logger.warning(f"Retrying Tier {log.tier_number} alert to contact {contact.id} "
+                           f"(attempt {fails + 1}/{TIER_MAX_ATTEMPTS})")
+            send_notification(session, contact, log.tier_number)
     session.commit()
 
 SAFETY_TIMER_LOG_TIER = 0  # PulseEscalationLog.tier_number marker for safety-timer alerts (no schema change)
@@ -282,7 +311,7 @@ def send_notification(session: Session, contact: PulseContact, tier_number: int)
         direction="user_to_contact",  # System acting on behalf of user
         message=(f"[System Alert Tier {tier_number}] Escalation notification sent via email"
                  if result.status != "failed" else
-                 f"[System Alert Tier {tier_number}] Escalation notification could not be delivered ({result.error})")
+                 f"[System Alert Tier {tier_number}] {TIER_FAIL_TEXT} {contact.name}.")
     )
     if result.status == "failed":
         logger.error(f"Tier {tier_number} alert to contact {contact.id} failed: {result.error}")
