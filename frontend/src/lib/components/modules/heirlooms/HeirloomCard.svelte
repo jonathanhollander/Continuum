@@ -36,12 +36,14 @@
         {/if}
 
         <!-- Recipient Badge -->
-        <div
-            class="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-bold text-slate-900 shadow-sm flex items-center gap-1.5"
-        >
-            <User size={12} class="text-primary" />
-            For {heirloom.recipient}
-        </div>
+        {#if heirloom.recipient}
+            <div
+                class="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-bold text-slate-900 shadow-sm flex items-center gap-1.5"
+            >
+                <User size={12} class="text-primary" />
+                For {heirloom.recipient}
+            </div>
+        {/if}
     </div>
 
     <!-- Content -->
