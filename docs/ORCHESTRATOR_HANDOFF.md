@@ -1,6 +1,6 @@
 # Orchestrator Handoff — RECOVERY_EXECUTION_PLAN
 
-**Last Updated:** 2026-10-26 13:05 EST
+**Last Updated:** 2026-10-26 13:20 EST
 
 This document is for an agent taking over as orchestrator of `docs/RECOVERY_EXECUTION_PLAN.md` (the plan, the only task board). Read this file, then the plan's "Owner decisions", "Orchestration loop", "Section status" and "Card status" sections. Source code and git win over anything written here.
 
@@ -16,7 +16,7 @@ This document is for an agent taking over as orchestrator of `docs/RECOVERY_EXEC
 |---|---|---|
 | **Release** | ▶ — step 9 done (production variables set, `ENVIRONMENT=production`, verified live). Step 10 full browser test is **running** (see §2). O1 release table ☑, O2 release screenshots ☑ (`docs/reviews/2026-10-26-release/O2-RELEASE.md`). | Browser test report saved to `docs/reviews/2026-10-26-release/`, every proven defect carded and fixed, deploy verified live → mark Release ☑ in Card status and ✅ in Section status. |
 | **Wave X** | ▶ | X279, X285–X288 running (§2); then X5; owner items X6, X141, X154. |
-| **Local main is 17 commits ahead of origin — NOT PUSHED** | Deliberate: pushing main auto-deploys, which would restart the server under the running browser test. | Push as soon as the browser test reports (§3 step 1). |
+| **Push status** | Owner asked 2026-10-26 to push to origin; main was pushed (deploying) while the browser test was still running — re-check any browser-test failure against the new deploy before carding it. |
 
 **Merged locally, not yet deployed** (merge commit `ba55e5a`, plus plan commits, HEAD `c1b50f5`): X277 (owner-save rate limits 10→600/min incl. medical directives), X278 (estate writes: audit row in same commit, fewer queries), X280 (traditions/module wording), X281 (home/marketing claims, "Open my plan" header), X282 (hub steps link to real modules, watermark, time-capsule contrast), X283 (orphan pages linked, calm icons), X284 (just/simple wording). Build OK; svelte-check 0 errors / 0 warnings / 4248 files.
 
