@@ -7,17 +7,17 @@ import { heirloomStore } from "$lib/stores/heirloomStore.svelte";
 import { digitalAssetsStore } from "$lib/stores/digitalAssetsStore.svelte";
 import { medicalStore } from "$lib/stores/medicalStore.svelte";
 import { activityLog } from '$lib/stores/activityLog.svelte';
-import { registerSingletonSync } from "$lib/services/sync.svelte";
+import { registerProfileSlice } from "$lib/services/sync.svelte";
 
 interface OnboardingState {
     hasSeenWelcome: boolean;
     isDemoMode: boolean;
 }
 
-const manager = registerSingletonSync<OnboardingState>('onboarding_settings', 'estate/profile', (data: any) => ({
+const manager = registerProfileSlice<OnboardingState>('onboarding_settings', (data: any) => ({
     hasSeenWelcome: data.hasSeenWelcome === true,
     isDemoMode: data.isDemoMode === true
-}), '/api');
+}));
 
 export const onboardingStore = {
     subscribe: manager.subscribe.bind(manager),

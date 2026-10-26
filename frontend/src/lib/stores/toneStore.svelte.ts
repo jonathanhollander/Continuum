@@ -1,4 +1,4 @@
-import { registerSingletonSync } from "$lib/services/sync.svelte";
+import { registerProfileSlice } from "$lib/services/sync.svelte";
 import { browser } from '$app/environment';
 
 export type AppTone = 'planning' | 'grief' | 'executor';
@@ -8,10 +8,10 @@ interface ToneState {
     intensity: number; // 0 to 1, could scale animations or color saturation
 }
 
-const manager = registerSingletonSync<ToneState>('app_tone', 'estate/profile', (data: any) => ({
+const manager = registerProfileSlice<ToneState>('app_tone', (data: any) => ({
     mode: data.mode || data.toneMode || 'planning',
     intensity: data.intensity !== undefined ? data.intensity : 0.5
-}), '/api');
+}));
 
 if (browser) {
     manager.subscribe(value => {

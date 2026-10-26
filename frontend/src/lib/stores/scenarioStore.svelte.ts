@@ -1,4 +1,4 @@
-import { registerSingletonSync } from "$lib/services/sync.svelte";
+import { registerProfileSlice } from "$lib/services/sync.svelte";
 
 export type Scenario = 'General' | 'Sudden' | 'Planned';
 
@@ -13,10 +13,10 @@ interface ScenarioSettings {
     isSimActive: boolean;
 }
 
-const manager = registerSingletonSync<ScenarioSettings>('scenario_settings', 'estate/profile', (data: any) => ({
+const manager = registerProfileSlice<ScenarioSettings>('scenario_settings', (data: any) => ({
     currentScenario: data.currentScenario || 'General',
     isSimActive: data.isSimActive === true
-}), '/api');
+}));
 
 export const currentScenario = {
     subscribe: (fn: any) => manager.subscribe(val => fn(val?.currentScenario || 'General')),
