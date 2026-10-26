@@ -359,6 +359,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | U75 | Tooltip drifts when the page scrolls while it shows (U73) | `general-purpose` | `lib/components/ui/Tooltip.svelte` | Placed once on open; a wheel scroll leaves it off its trigger — hide it on `scroll` while visible | Hover dashboard card, scroll: bubble hidden (or follows); 0 errors |
 | U77 | Uploader error and subscriptions buttons (U71) | `ui-standards-enforcer` / `general-purpose` | `lib/components/ui/FileUploader.svelte` (error text only), `routes/modules/subscriptions/+page.svelte` (Difficulty buttons `type` only) | No `aria-live` on the module-less uploader's error; Difficulty buttons lack `type="button"` | Error announced (role=alert/aria-live); buttons type=button; 0 errors |
 | U78 | Command Center close as a prop (U74) | `general-purpose` | `lib/components/ui/CommandCenter.svelte`, `routes/+layout.svelte` (the CommandCenter tag only) | Still uses `createEventDispatcher` for `close` — `onclose` prop, layout passes it | Ctrl+K opens, Escape/backdrop/selection close; 0 errors |
+| U79 | Command Center Escape closes twice (U78) | `general-purpose` | `lib/components/ui/CommandCenter.svelte` (`handleKeydown` Escape branch only) | Escape fires `onclose` from `handleKeydown` and from focusTrap `onEscape` — drop the `handleKeydown` branch | Escape closes once (`onclose` called 1×); 0 errors |
 
  (decision 12; parallel track, approved by orchestrator diff review)
 
@@ -915,7 +916,8 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | U74 | ☑ | 24ea5ca | Command Center data rows show description and type (policy row "Policy #Z-1", POLICY tag); file on runes; keyboard selection unchanged. 0 errors. Finding → U78 |
 | U75 | ☑ | 6791ff8 | Tooltip hides on any scroll (capture, passive) while shown; listener removed on hide and destroy. Hover + 40 px wheel on dashboard: bubble overlapping its card by 32 px → hidden. 0 errors. Reappears on the next hover (intended: acceptance is "hidden") |
 | U77 | ☑ | d267b6d | FileUploader error `role="alert"`; subscriptions Difficulty buttons (filter and modal) `type="button"`. Attributes only; svelte-check 0 errors on the files; build passes. No browser run (attribute-only; diff reviewed) |
-| U78 | ▶ | | |
+| U78 | ☑ | c02f0f1 | CommandCenter takes an `onclose` prop (dispatcher gone); layout passes it. Ctrl+K opens; Escape, backdrop, Enter and click selection close (same as main, screenshots byte-identical); empty-list arrows no longer set NaN. 0 errors. Finding → U79 |
+| U79 | ▶ | | |
 | U42 | ☑ | e127714 | Settings left-aligned like the dashboard (heading x 456 → 312); 5 profile inputs labelled (5 → 0 unlabelled); date of death shown to Executor and Family only (Owner 1 → 0). X156 confirm intact. 0 page errors. Finding → U62 |
 | G0 | ☐ (after Wave U) | | |
 | T0 | ☐ (after Wave U, with G0) | | |
