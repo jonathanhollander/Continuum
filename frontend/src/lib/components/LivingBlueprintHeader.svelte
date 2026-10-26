@@ -56,43 +56,6 @@
         </svg>
     </div>
 
-    <!-- Layer 2: Architectural Drawing (Simplified "Cornerstone") -->
-    <svg
-        viewBox="0 0 100 100"
-        class="absolute top-0 right-0 size-64 text-primary/20 pointer-events-none"
-    >
-        {#if mounted}
-            <rect
-                x="10"
-                y="10"
-                width="80"
-                height="80"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1"
-                class="animate-draw-path"
-            />
-            <line
-                x1="10"
-                y1="10"
-                x2="90"
-                y2="90"
-                stroke="currentColor"
-                stroke-width="0.5"
-                class="animate-draw-path delay-100"
-            />
-            <line
-                x1="90"
-                y1="10"
-                x2="10"
-                y2="90"
-                stroke="currentColor"
-                stroke-width="0.5"
-                class="animate-draw-path delay-200"
-            />
-        {/if}
-    </svg>
-
     <!-- Layer 3: Content using Heirloom Typography -->
     <div class="container relative z-10 px-6 mx-auto">
         <div class="max-w-3xl space-y-4">
@@ -141,23 +104,3 @@
     ></div>
 </header>
 
-<style>
-    .animate-draw-path {
-        stroke-dasharray: 1;
-        stroke-dashoffset: 1;
-        animation: draw 1.5s ease-in-out forwards;
-    }
-
-    @keyframes draw {
-        to {
-            stroke-dashoffset: 0;
-        }
-    }
-
-    .delay-100 {
-        animation-delay: 0.1s;
-    }
-    .delay-200 {
-        animation-delay: 0.2s;
-    }
-</style>
