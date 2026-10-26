@@ -5,6 +5,7 @@
         Circle,
         FileText,
         BookOpen,
+        ArrowRight,
     } from "lucide-svelte";
     import { registerProfileSlice } from "$lib/services/sync.svelte";
 
@@ -34,15 +35,26 @@
     let completedSteps: Record<string, boolean> = {};
     let touched = false;
 
-    // Generate simulated steps based on the module context
-    // In a real app, these would come from the database/YAML
-    $: steps = [
-        `Review ${module.title} requirements`,
-        `Gather necessary documents for ${module.role}`,
-        `Take a look to see it all reads right`,
-        `Confirm details with key stakeholders`,
-        `Finalize and archive record`,
-    ];
+    // Each step opens the module where that part of the plan lives. A tick is kept by the
+    // step's page, so the list can change order without moving anyone's ticks.
+    type Step = { label: string; href: string };
+    const STEPS: Record<string, Step[]> = {
+        owner: [
+            { label: "Your Circle of Trust", href: "/modules/contacts" },
+            { label: "Document Vault", href: "/modules/legal-documents" },
+            { label: "Financial Accounts", href: "/modules/financial-accounts" },
+            { label: "Final Wishes", href: "/modules/funeral" },
+            { label: "Letters to Loved Ones", href: "/modules/letters" },
+        ],
+        executor: [
+            { label: "Executor Guide", href: "/modules/executor-toolkit" },
+            { label: "Document Vault", href: "/modules/legal-documents" },
+            { label: "Accounts to Close or Transfer", href: "/modules/subscriptions" },
+            { label: "Your Circle of Trust", href: "/modules/contacts" },
+            { label: "Final Wishes", href: "/modules/funeral" },
+        ],
+    };
+    $: steps = STEPS[module.role] || STEPS.owner;
 
     const legacyKey = () => `continuum_module_${module.id}`;
 
@@ -71,9 +83,9 @@
             .catch(() => {});
     });
 
-    async function toggleStep(stepIndex: number) {
+    async function toggleStep(key: string) {
         touched = true;
-        completedSteps[stepIndex] = !completedSteps[stepIndex];
+        completedSteps[key] = !completedSteps[key];
         completedSteps = completedSteps;
         const all = readAll();
         all[module.id] = { ...completedSteps };
@@ -85,7 +97,7 @@
     }
 
     $: progress = Math.round(
-        (Object.values(completedSteps).filter(Boolean).length / steps.length) *
+        (steps.filter((s) => completedSteps[s.href]).length / steps.length) *
             100,
     );
 </script>
@@ -97,17 +109,18 @@
             <div
                 class="bg-card border border-border rounded-xl p-8 shadow-sm relative overflow-hidden group"
             >
-                <div
-                    aria-hidden="true"
-                    class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"
-                >
-                    <FileText size={120} />
+                <div class="mb-4 flex items-center justify-between gap-4">
+                    <h3 class="text-xl font-serif flex items-center gap-2">
+                        <BookOpen class="text-primary size-5" />
+                        Module Overview
+                    </h3>
+                    <div
+                        aria-hidden="true"
+                        class="shrink-0 opacity-10 group-hover:opacity-20 transition-opacity"
+                    >
+                        <FileText size={40} />
+                    </div>
                 </div>
-
-                <h3 class="text-xl font-serif mb-4 flex items-center gap-2">
-                    <BookOpen class="text-primary size-5" />
-                    Module Overview
-                </h3>
 
                 {#if module.description && module.description.length > 50}
                     <div
@@ -157,40 +170,52 @@
                 </div>
 
                 <div class="grid gap-3">
-                    {#each steps as step, i}
-                        <button
-                            class="flex items-start gap-4 p-4 rounded-lg border text-left transition-all duration-200 group
-                            {completedSteps[i]
-                                ? 'bg-primary/5 border-primary/20 hover:bg-primary/10'
+                    {#each steps as step (step.href)}
+                        {@const done = !!completedSteps[step.href]}
+                        <div
+                            data-hub-step
+                            class="flex items-center gap-2 rounded-lg border transition-all duration-200
+                            {done
+                                ? 'bg-primary/5 border-primary/20'
                                 : 'bg-card border-border hover:border-primary/50 hover:shadow-md'}"
-                            on:click={() => toggleStep(i)}
                         >
-                            <div
-                                class="mt-0.5 shrink-0 transition-colors duration-300 {completedSteps[
-                                    i
-                                ]
-                                    ? 'text-primary'
-                                    : 'text-muted-foreground group-hover:text-primary'}"
+                            <button
+                                type="button"
+                                aria-pressed={done}
+                                class="flex flex-1 items-start gap-4 p-4 text-left group"
+                                on:click={() => toggleStep(step.href)}
                             >
-                                {#if completedSteps[i]}
-                                    <CircleCheck
-                                        size={20}
-                                        class="fill-primary/10"
-                                    />
-                                {:else}
-                                    <Circle size={20} />
-                                {/if}
-                            </div>
-                            <div>
+                                <div
+                                    class="mt-0.5 shrink-0 transition-colors duration-300 {done
+                                        ? 'text-primary'
+                                        : 'text-muted-foreground group-hover:text-primary'}"
+                                >
+                                    {#if done}
+                                        <CircleCheck
+                                            size={20}
+                                            class="fill-primary/10"
+                                        />
+                                    {:else}
+                                        <Circle size={20} />
+                                    {/if}
+                                </div>
                                 <span
-                                    class="font-medium {completedSteps[i]
+                                    class="font-medium {done
                                         ? 'text-foreground/60 line-through decoration-primary/30'
                                         : 'text-foreground'}"
                                 >
-                                    {step}
+                                    {step.label}
                                 </span>
-                            </div>
-                        </button>
+                            </button>
+                            <a
+                                href={step.href}
+                                aria-label="Open {step.label}"
+                                class="mr-2 shrink-0 flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-primary-hover hover:bg-primary/10 transition-colors"
+                            >
+                                Open
+                                <ArrowRight size={16} aria-hidden="true" />
+                            </a>
+                        </div>
                     {/each}
                 </div>
             </div>
