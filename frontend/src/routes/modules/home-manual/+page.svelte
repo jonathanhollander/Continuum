@@ -92,7 +92,7 @@
     // Form States
     let vendorForm = $state({ category: "", name: "", phone: "", email: "", website: "", notes: "" });
     let codeForm = $state({ location: "", code: "", instructions: "" });
-    let utilityForm = $state({ service_type: "", provider: "", location: "" });
+    let utilityForm = $state({ service_type: "", provider: "", location: "", account_number: "", support_phone: "" });
 
     // Handlers
     function openVendorModal() {
@@ -201,7 +201,7 @@
 
     function openUtilityModal() {
         editingUtilityId = null;
-        utilityForm = { service_type: "", provider: "", location: "" };
+        utilityForm = { service_type: "", provider: "", location: "", account_number: "", support_phone: "" };
         showUtilityModal = true;
     }
 
@@ -211,6 +211,8 @@
             service_type: item.service_type,
             provider: item.provider,
             location: item.location || "",
+            account_number: item.account_number ?? "",
+            support_phone: item.support_phone ?? "",
         };
         showUtilityModal = true;
     }
@@ -231,6 +233,8 @@
             service_type: utilityForm.service_type,
             provider: utilityForm.provider || "",
             location: utilityForm.location,
+            account_number: utilityForm.account_number,
+            support_phone: utilityForm.support_phone,
         };
         try {
             if (editingUtilityId != null) await utilitySync.update(editingUtilityId, fields);
@@ -409,6 +413,26 @@
                 type="text"
                 bind:value={utilityForm.provider}
                 placeholder="e.g. City Water Dept, PG&E"
+                class={inputClass}
+            />
+        </div>
+
+        <div>
+            <label for="utility-account-number" class={labelClass}>Account number</label>
+            <input
+                id="utility-account-number"
+                type="text"
+                bind:value={utilityForm.account_number}
+                class={inputClass}
+            />
+        </div>
+
+        <div>
+            <label for="utility-support-phone" class={labelClass}>Support phone</label>
+            <input
+                id="utility-support-phone"
+                type="tel"
+                bind:value={utilityForm.support_phone}
                 class={inputClass}
             />
         </div>
@@ -818,7 +842,9 @@
                                         utilityForm = {
                                             service_type: sample.service_type,
                                             provider: sample.provider,
-                                            location: sample.location || ""
+                                            location: sample.location || "",
+                                            account_number: sample.account_number ?? "",
+                                            support_phone: sample.support_phone ?? "",
                                         };
                                         showUtilityModal = true;
                                     }}
@@ -886,6 +912,23 @@
                                                 </p>
                                             {/if}
                                         </div>
+
+                                        {#if item.account_number || item.support_phone}
+                                            <dl class="grid grid-cols-2 gap-4 text-sm">
+                                                {#if item.account_number}
+                                                    <div class="min-w-0">
+                                                        <dt class="text-xs font-bold uppercase text-muted-foreground mb-1">Account number</dt>
+                                                        <dd class="font-mono text-foreground break-all">{item.account_number}</dd>
+                                                    </div>
+                                                {/if}
+                                                {#if item.support_phone}
+                                                    <div class="min-w-0">
+                                                        <dt class="text-xs font-bold uppercase text-muted-foreground mb-1">Support phone</dt>
+                                                        <dd class="font-mono text-foreground break-all">{item.support_phone}</dd>
+                                                    </div>
+                                                {/if}
+                                            </dl>
+                                        {/if}
 
                                         {#if item.location}
                                             <div class="bg-background p-4 rounded-lg">
