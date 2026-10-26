@@ -38,7 +38,8 @@ const mapper = (data: Record<string, unknown>): Letter => {
 
 // The one owner of 'letters' (the letters page uses it too).
 export const lettersSync = registerSync<Letter>('letters', 'letters', mapper, '/api/data')
-    .setAffirmationContext('letters');
+    .setAffirmationContext('letters')
+    .syncOnDemand(); // 400 letters are ~1.3 MB: fetched when a page shows letters (X210)
 const manager = lettersSync;
 
 export const letterStore = {

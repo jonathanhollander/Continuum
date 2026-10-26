@@ -123,6 +123,14 @@ export class SyncManager<T extends { id: number | string }> {
         return this;
     }
 
+    /** Large stores (letters): syncAll leaves this one alone until something shows it
+     *  (or the page shows every module); until then the device copy stands. */
+    onDemand = false;
+    syncOnDemand() {
+        this.onDemand = true;
+        return this;
+    }
+
     subscribe(run: (value: T[]) => void) {
         shownBy(this, true);
         run(this.items);
@@ -1173,6 +1181,8 @@ export function registerProfileSlice<T extends object>(key: string, mapper: (dat
 // them is fetched at once when something starts showing it.
 const _shown = new WeakSet<object>();
 const _later = new Set<{ sync(): Promise<void>; lastSync?: Date | null }>();
+// Stores marked onDemand: fetched only when something starts showing them (or `everything`).
+const _onDemand = new Set<{ sync(): Promise<void> }>();
 let _sessionRun = 0;
 /** How long the page's own stores have the network to themselves before the rest begin. */
 const REST_AFTER_MS = 2000;
@@ -1182,7 +1192,7 @@ function shownBy(m: { sync(): Promise<void> }, subscribed = false) {
     if (!browser || (!subscribed && !$effect.tracking())) return;
     _shown.add(m);
     // Out of the read: a sync sets state, which a template or derived value may not do.
-    if (_later.delete(m)) queueMicrotask(() => { m.sync().catch(() => {}); });
+    if (_later.delete(m) || _onDemand.delete(m)) queueMicrotask(() => { m.sync().catch(() => {}); });
 }
 
 const whenIdle = () => new Promise<void>(resolve => {
@@ -1200,13 +1210,17 @@ export function syncAll({ everything = false }: { everything?: boolean } = {}) {
     return untrack(() => {
         _sessionActive = true;
         _later.clear();
+        _onDemand.clear();
         const run = ++_sessionRun;
         const started = Date.now();
         const account = storageAccount();
         const managers = Object.values(getRegistry());
         managers.forEach(m => { if (m.loadedFor !== account) m.reset(false); });
         const now = managers.filter(m => everything || _shown.has(m) || m.status === 'syncing');
-        managers.forEach(m => { if (!now.includes(m)) _later.add(m); });
+        managers.forEach(m => {
+            if (now.includes(m)) return;
+            if ((m as { onDemand?: boolean }).onDemand) _onDemand.add(m); else _later.add(m);
+        });
         const first = Promise.allSettled(now.map(m => m.sync()));
         // The rest; one that answered since this call began (a page synced it) is done.
         const rest = first.then(async () => {
@@ -1243,5 +1257,6 @@ export function clearAll() {
     _sessionActive = false;
     _sessionRun++;
     _later.clear();
+    _onDemand.clear();
     Object.values(getRegistry()).forEach(m => m.reset(true));
 }
