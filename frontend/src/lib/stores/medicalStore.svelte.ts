@@ -1,4 +1,6 @@
 import { registerSync, registerSingletonSync } from "$lib/services/sync.svelte";
+import { deleteMedia, type MediaFile } from "$lib/services/mediaService";
+import { readCustom } from "$lib/utils/customFields";
 
 export interface MedicalDirective {
     id: number | string;
@@ -8,8 +10,21 @@ export interface MedicalDirective {
     primaryContact: string;
     contactPhone: string;
     summary: string;
-    fileData?: string;
-    custom_attributes?: string; // JSON string of custom field values
+    custom_attributes?: string; // JSON string of custom field values (and the attached file under DIRECTIVE_MEDIA_KEY)
+}
+
+/**
+ * The attached file's media record, kept under this key in `custom_attributes`
+ * (the directive has no file column), as the time capsule does.
+ */
+export const DIRECTIVE_MEDIA_KEY = '_media';
+
+export type DirectiveMedia = Pick<MediaFile, 'id' | 'mime_type' | 'filename' | 'file_size'>;
+
+/** The directive's attached file, if one is stored. */
+export function directiveMedia(dir: any): DirectiveMedia | undefined {
+    const media = readCustom(dir)[DIRECTIVE_MEDIA_KEY];
+    return media && typeof media.id === 'number' ? media : undefined;
 }
 
 export interface MedicalProfile {
@@ -33,18 +48,18 @@ const profileMapper = (item: any) => {
 
 const directiveMapper = (item: any) => {
     if (!item) return item;
+    // fileData/file_data: an older device-only field the server never kept; never sent.
+    const { fileData, file_data, ...rest } = item;
     return {
-        ...item,
+        ...rest,
         // Remote -> Local
         locationOfOriginal: item.location_of_original ?? item.locationOfOriginal ?? '',
         primaryContact: item.primary_contact ?? item.primaryContact ?? '',
         contactPhone: item.contact_phone ?? item.contactPhone ?? '',
-        fileData: item.file_data ?? item.fileData ?? '',
         // Local -> Remote
         location_of_original: item.locationOfOriginal ?? item.location_of_original,
         primary_contact: item.primaryContact ?? item.primary_contact,
-        contact_phone: item.contactPhone ?? item.contact_phone,
-        file_data: item.fileData ?? item.file_data
+        contact_phone: item.contactPhone ?? item.contact_phone
     };
 };
 
@@ -68,7 +83,13 @@ export const medicalStore = {
     updateProfile: (data: Partial<MedicalProfile>) => profileSync.update(data as MedicalProfile),
     addDirective: (dir: Omit<MedicalDirective, 'id'>, onRetry?: () => Promise<unknown>) => directiveSync.create({ ...dir, id: crypto.randomUUID() }, false, false, onRetry),
     updateDirective: (id: string | number, updates: Partial<MedicalDirective>) => directiveSync.update(id, updates),
-    removeDirective: (id: string | number) => directiveSync.delete(id),
+    /** Remove the directive, then its attached file (only once the directive is gone, Try Again included). */
+    removeDirective: (id: string | number) => {
+        const media = directiveMedia(directiveSync.items.find(d => String(d.id) === String(id)));
+        return directiveSync.delete(id, media ? async () => {
+            await deleteMedia(media.id).catch((e) => console.warn('[medical] file removal paused', media.id, e));
+        } : undefined);
+    },
 
     // Store Compatibility
     subscribe: (run: any) => {
