@@ -1,6 +1,6 @@
 <script>
     import ConciergeSettings from "$lib/components/concierge/ConciergeSettings.svelte";
-    import { Settings } from "lucide-svelte";
+    import { Settings, Database, ArrowRight } from "lucide-svelte";
     import { dict } from "$lib/stores/conciergeStore.svelte";
 </script>
 
@@ -26,4 +26,18 @@
     >
         <ConciergeSettings />
     </div>
+
+    <a
+        href="/settings/data"
+        class="group flex items-center gap-4 bg-card rounded-[2rem] border border-border shadow-sm p-6 md:p-8 hover:border-primary/40 transition-colors"
+    >
+        <div class="p-3 bg-primary-soft text-primary-hover rounded-2xl">
+            <Database size={24} />
+        </div>
+        <div class="flex-1">
+            <div class="font-serif text-xl font-bold text-foreground">Your records, kept safe</div>
+            <p class="text-muted-foreground">See what is saved on this device and in your Continuum space.</p>
+        </div>
+        <ArrowRight size={20} class="text-muted-foreground group-hover:text-primary-hover transition-colors" />
+    </a>
 </div>
