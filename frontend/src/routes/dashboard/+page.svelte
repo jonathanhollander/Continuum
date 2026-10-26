@@ -687,7 +687,7 @@
                                     >
                                         <a
                                             href={item.href}
-                                            class="block group"
+                                            class="block h-full group"
                                             onclick={(e) =>
                                                 handleNavigation(e, item)}
                                             in:fly={{
@@ -697,7 +697,7 @@
                                             }}
                                         >
                                             <div
-                                                class="relative rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] {status.inProgress
+                                                class="relative h-full rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] {status.inProgress
                                                     ? 'bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 hover:border-emerald-500/40'
                                                     : 'bg-white/5 border border-white/10 hover:border-indigo-500/40 hover:bg-white/10'}"
                                             >
@@ -718,7 +718,7 @@
                                                     </div>
                                                     <div class="flex-1 min-w-0">
                                                         <h3
-                                                            class="font-semibold text-lg text-white truncate group-hover:text-indigo-300 transition-colors"
+                                                            class="font-semibold text-lg text-white break-words group-hover:text-indigo-300 transition-colors"
                                                         >
                                                             {navText(item.key, item.label)}
                                                         </h3>
@@ -796,7 +796,7 @@
                                                 >
                                                     <a
                                                         href={item.href}
-                                                        class="block group"
+                                                        class="block h-full group"
                                                         onclick={(e) =>
                                                             handleNavigation(
                                                                 e,
@@ -809,7 +809,7 @@
                                                         }}
                                                     >
                                                         <div
-                                                            class="relative rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] {status.inProgress
+                                                            class="relative h-full rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] {status.inProgress
                                                                 ? 'bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 hover:border-emerald-500/40'
                                                                 : 'bg-white/5 border border-white/10 hover:border-primary/40 hover:bg-white/10'}"
                                                         >
@@ -832,7 +832,7 @@
                                                                     class="flex-1 min-w-0"
                                                                 >
                                                                     <h3
-                                                                        class="font-semibold text-lg text-white group-hover:text-indigo-300 transition-colors truncate"
+                                                                        class="font-semibold text-lg text-white group-hover:text-indigo-300 transition-colors break-words"
                                                                     >
                                                                         {navText(item.key, item.label)}
                                                                     </h3>
@@ -965,7 +965,7 @@
                                             >
                                                 <a
                                                     href={item.href}
-                                                    class="block group"
+                                                    class="block h-full group"
                                                     onclick={(e) =>
                                                         handleNavigation(
                                                             e,
@@ -978,7 +978,7 @@
                                                     }}
                                                 >
                                                     <div
-                                                        class="relative rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] {status.inProgress
+                                                        class="relative h-full rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] {status.inProgress
                                                             ? 'bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 hover:border-emerald-500/40'
                                                             : 'bg-white/5 border border-white/10 hover:border-primary/40 hover:bg-white/10'}"
                                                     >
@@ -1004,7 +1004,7 @@
                                                                 class="flex-1 min-w-0"
                                                             >
                                                                 <h3
-                                                                    class="font-semibold text-lg text-white group-hover:text-indigo-300 transition-colors truncate"
+                                                                    class="font-semibold text-lg text-white group-hover:text-indigo-300 transition-colors break-words"
                                                                 >
                                                                     {navText(item.key, item.label)}
                                                                 </h3>
