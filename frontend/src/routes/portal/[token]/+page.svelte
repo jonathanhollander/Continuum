@@ -95,12 +95,14 @@
       <!-- Header -->
       <div class="bg-slate-900 p-6 text-center border-b border-slate-700">
         <h1 class="text-xl font-medium text-white">
-          {data.user_name} is Active
+          {data.user_status === "active"
+            ? `${data.user_name} checked in recently`
+            : `${data.user_name} hasn't checked in for a little while`}
         </h1>
         <p class="text-sm text-slate-400 mt-1">
-          Status: <span class="text-emerald-400 font-bold uppercase"
-            >{data.status}</span
-          >
+          {data.user_status === "active"
+            ? "All is well for now."
+            : "A gentle note from you may help."}
         </p>
       </div>
 
@@ -138,7 +140,9 @@
           <p
             class="text-xs text-slate-400 uppercase tracking-widest mb-2 font-bold"
           >
-            Guardian Access (Tier {data.contact_tier})
+            Guardian Access{data.contact_tier
+              ? ` (Tier ${data.contact_tier})`
+              : ""}
           </p>
           <ul class="space-y-2 text-sm text-slate-300">
             <li class="flex items-center gap-2">
