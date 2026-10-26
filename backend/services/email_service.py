@@ -389,8 +389,8 @@ class EmailService:
         tier_subjects = {
             1: f"A gentle check-in about {user_name}",
             2: f"Checking in on {user_name}",
-            3: f"{user_name} may need you; their notes are open to you",
-            4: f"{user_name}'s notes are open to you",
+            3: f"Shared notes from {user_name}" if context.get("available_vault_names") else f"A check-in about {user_name}",
+            4: f"Shared notes from {user_name}" if context.get("available_vault_names") else f"A note about {user_name}'s check-in",
         }
 
         payload = self._build_payload(

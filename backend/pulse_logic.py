@@ -1,10 +1,10 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from backend.utils.clock import utc_now
 from typing import List, Optional
 from sqlmodel import Session, select, col
 from backend.pulse_models import (
     PulseSettings, PulseCheckin, PulseEscalationTier,
-    PulseContact, PulseEscalationLog, PulseMessage
+    PulseContact, PulseEscalationLog, PulseMessage, PulseVault
 )
 from backend.utils.logger import get_logger
 from backend.pulse_tiers import pulse_tier_expression, pulse_tier_number
@@ -357,6 +357,17 @@ def tier_alert_context(session: Session, contact: PulseContact, tier_number: int
         "user_name": owner_display_name(session, contact.user_id),
         "portal_url": f"{settings.get_frontend_url()}/portal/{contact.portal_token}",
     }
+    # Describe the same current view as the portal. A proposed personal alert does not
+    # itself open notes: that happens after provider acceptance or the global tier is reached.
+    if tier_number >= 3:
+        view = guardian_portal_view(session, contact) if guardian_link_state(contact) == "ready" else {}
+        shared = guardian_vault_records(session, contact) if view else []
+        context.update({
+            "available_vault_names": [item.name for item in shared],
+            "has_last_checkin": bool(view.get("last_checkin")),
+            "has_owner_phone": bool(view.get("user_phone")),
+            "has_owner_messages": bool(view.get("notes")),
+        })
     if tier_number >= 2:
         last_checkin = owner_last_checkin(session, contact.user_id)
         if last_checkin:
@@ -585,6 +596,65 @@ def owner_notes(session: Session, contact: PulseContact, limit: int = 50) -> lis
     return list(reversed(rows))
 
 
+def _utc_string(value: Optional[datetime]) -> Optional[str]:
+    if value is None:
+        return None
+    value = value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value.astimezone(timezone.utc)
+    return value.isoformat().replace("+00:00", "Z")
+
+
+def guardian_link_state(contact: PulseContact) -> str:
+    if not contact.portal_token:
+        return "prepared"
+    if contact.portal_token_expires and contact.portal_token_expires < utc_now():
+        return "rested"
+    return "ready"
+
+
+def guardian_portal_view(session: Session, contact: PulseContact) -> dict:
+    """Shared source for the token portal and the owner's current guardian preview.
+    Token validation remains at the public route; owner-only planned data stays separate."""
+    last = owner_last_checkin(session, contact.user_id)
+    pulse_settings = session.get(PulseSettings, contact.user_id)
+    frequency = pulse_settings.frequency_days if pulse_settings else PulseSettings().frequency_days
+    sensitive = contact_reach(session, contact) is not None
+    return {
+        "contact_name": contact.name,
+        "contact_tier": pulse_tier_number(session, contact),
+        "user_name": owner_display_name(session, contact.user_id),
+        "user_phone": owner_phone(session, contact.user_id),
+        "user_status": "active" if last and utc_now() < last.timestamp + timedelta(days=frequency) else "grace",
+        "last_checkin": _utc_string(last.timestamp) if last else None,
+        "show_sensitive": sensitive,
+        "sensitive_data": {"medical_proxy": "Active" if sensitive else "Locked", "safe_pass": sensitive},
+        "notes": [{"message": note.message, "sent_at": _utc_string(note.sent_at)}
+                  for note in owner_notes(session, contact)],
+    }
+
+
+def guardian_vault_records(session: Session, contact: PulseContact) -> list[PulseVault]:
+    """The existing Automatic Release + current-outage reach + per-note tier rule."""
+    pulse_settings = session.get(PulseSettings, contact.user_id)
+    if not (pulse_settings and pulse_settings.location_vault_enabled):
+        return []
+    reached = contact_reach(session, contact)
+    if reached is None:
+        return []
+    items = session.exec(select(PulseVault).where(PulseVault.user_id == contact.user_id)).all()
+    opened = []
+    for item in items:
+        parts = (item.unlock_condition or "").split("_")
+        tier = int(parts[1]) if len(parts) >= 2 and parts[0] == "tier" and parts[1].isdigit() else None
+        if tier is not None and tier <= reached:
+            opened.append(item)
+    return opened
+
+
+def guardian_vault_out(items: list[PulseVault]) -> list[dict]:
+    return [{"name": item.name, "content": (item.encrypted_content or b"").decode("utf-8", errors="replace")}
+            for item in items]
+
+
 ALL_CLEAR_PREFIX = tier_prefix(0)  # shown by the messages page as a system line
 
 def send_all_clear(session: Session, user_id: int, since: datetime) -> int:
@@ -620,7 +690,7 @@ def send_all_clear(session: Session, user_id: int, since: datetime) -> int:
             elif result.delivery_state == "saved_local":
                 message = f"{ALL_CLEAR_PREFIX}The all-clear note for {contact.name} is prepared in the local outbox."
             else:
-                message = f"{ALL_CLEAR_PREFIX}Your all-clear note to {contact.name} is waiting to be sent."
+                message = f"{ALL_CLEAR_PREFIX}Your check-in is recorded. A call or message can let {contact.name} know you are well."
             session.add(PulseMessage(user_id=user_id, contact_id=contact.id, direction="user_to_contact",
                                      message=message))
             session.commit()
