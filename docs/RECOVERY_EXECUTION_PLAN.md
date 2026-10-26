@@ -921,7 +921,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | U75 | ☑ | 6791ff8 | Tooltip hides on any scroll (capture, passive) while shown; listener removed on hide and destroy. Hover + 40 px wheel on dashboard: bubble overlapping its card by 32 px → hidden. 0 errors. Reappears on the next hover (intended: acceptance is "hidden") |
 | U77 | ☑ | d267b6d | FileUploader error `role="alert"`; subscriptions Difficulty buttons (filter and modal) `type="button"`. Attributes only; svelte-check 0 errors on the files; build passes. No browser run (attribute-only; diff reviewed) |
 | U78 | ☑ | c02f0f1 | CommandCenter takes an `onclose` prop (dispatcher gone); layout passes it. Ctrl+K opens; Escape, backdrop, Enter and click selection close (same as main, screenshots byte-identical); empty-list arrows no longer set NaN. 0 errors. Finding → U79 |
-| U79 | ▶ | | |
+| U79 | ☑ | 420d08b | Escape handled only by focusTrap (handleKeydown branch removed): `onclose` calls on Escape 2 → 1; backdrop still 1. 0 px change; 0 errors |
 | U42 | ☑ | e127714 | Settings left-aligned like the dashboard (heading x 456 → 312); 5 profile inputs labelled (5 → 0 unlabelled); date of death shown to Executor and Family only (Owner 1 → 0). X156 confirm intact. 0 page errors. Finding → U62 |
 | G0 | ☐ (after Wave U) | | |
 | T0 | ☐ (after Wave U, with G0) | | |
