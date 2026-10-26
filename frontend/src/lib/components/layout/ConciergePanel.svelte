@@ -290,30 +290,32 @@
               : `top: 0; right: 0; width: 480px;`}
     >
         <div
-            class="p-6 border-b border-white/10 bg-black/20 backdrop-blur flex items-center justify-between {popOutMode ===
+            class="border-b border-white/10 bg-black/20 backdrop-blur flex items-center justify-between gap-2 {popOutMode ===
             'floating'
-                ? 'cursor-move active:cursor-grabbing'
-                : ''}"
+                ? 'px-4 py-5 cursor-move active:cursor-grabbing'
+                : 'p-6'}"
             onpointerdown={onPointerDown}
             onpointermove={onPointerMove}
             onpointerup={onPointerUp}
         >
-            <div class="flex items-center gap-3">
-                <div class="p-2 bg-primary/20 rounded-xl text-primary">
+            <div class="flex items-center gap-3 min-w-0">
+                <div class="p-2 bg-primary/20 rounded-xl text-primary shrink-0">
                     <Sparkles size={20} />
                 </div>
-                <div>
+                <div class="min-w-0">
                     <h2 class="text-xl font-bold text-white tracking-tight">
                         AI Concierge
                     </h2>
-                    <div class="flex items-center gap-2">
-                        <span
-                            class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"
-                        ></span>
-                        <span
-                            class="text-[10px] uppercase tracking-widest text-white/40 font-bold"
-                            >Active Assistant</span
-                        >
+                    <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <span class="flex items-center gap-2 whitespace-nowrap">
+                            <span
+                                class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"
+                            ></span>
+                            <span
+                                class="text-[10px] uppercase tracking-widest text-white/40 font-bold"
+                                >Active Assistant</span
+                            >
+                        </span>
                         {#if $conciergeEngine.currentContextName}
                             <div
                                 class="flex items-center gap-1.5 px-2 py-0.5 bg-primary/20 rounded-full border border-primary/30"
@@ -328,7 +330,7 @@
                     </div>
                 </div>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 shrink-0">
                 <button
                     onclick={() => conciergeEngine.clearHistory()}
                     class="p-2 text-white/40 hover:text-white hover:bg-white/5 rounded-full transition-colors"
@@ -354,12 +356,15 @@
                         onclick={handlePopIn}
                         class="p-1.5 px-3 bg-primary/20 text-primary-hover hover:bg-primary/30 rounded-full transition-colors flex items-center gap-1.5 border border-primary/30"
                         title="Pop In"
+                        aria-label="Pop In"
                     >
                         <Minimize2 size={14} />
-                        <span
-                            class="text-[10px] uppercase font-bold tracking-wider"
-                            >Pop In</span
-                        >
+                        {#if popOutMode !== "floating"}
+                            <span
+                                class="text-[10px] uppercase font-bold tracking-wider"
+                                >Pop In</span
+                            >
+                        {/if}
                     </button>
                 {/if}
                 <button aria-label="Close"
