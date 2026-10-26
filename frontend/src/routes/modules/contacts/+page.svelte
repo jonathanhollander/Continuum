@@ -74,17 +74,17 @@
     // Adjusting based on `GhostRow` usage which sets `tier: "2_SameDay"`
     let tier1 = $derived(
         contacts.filter(
-            (c: FamilyMember) => c.tier?.startsWith("1") || c.tierId === 1,
+            (c: FamilyMember) => c.tier?.startsWith("1"),
         ),
     );
     let tier2 = $derived(
         contacts.filter(
-            (c: FamilyMember) => c.tier?.startsWith("2") || c.tierId === 2,
+            (c: FamilyMember) => c.tier?.startsWith("2"),
         ),
     );
     let tier3 = $derived(
         contacts.filter(
-            (c: FamilyMember) => c.tier?.startsWith("3") || c.tierId === 3,
+            (c: FamilyMember) => c.tier?.startsWith("3"),
         ),
     );
 
@@ -149,15 +149,20 @@
             isExecutor: false,
             isBeneficiary: false,
             isEmergencyContact: false,
-            tierId: null, // Don't enforce tier until selected
-            tier: "1_Immediate", // Simulation default
+            tierId: null, // Pulse escalation tier: set on the Pulse page
+            tier: newContact.tier || "1_Immediate", // Call-list tier from "When Should They Know?"
             notificationStatus: "Pending",
             avatar: newContact.avatar,
             custom_attributes: JSON.stringify(parsedCustomAttributes),
         };
 
-        // familyStore handles generation of ID and Sync
-        await familyStore.addMember(contactToAdd);
+        // familyStore handles generation of ID and Sync. On failure it shows a gentle
+        // message with Try Again, and the form stays open with the draft.
+        try {
+            await familyStore.addMember(contactToAdd);
+        } catch {
+            return;
+        }
 
         showAddModal = false;
         newContact = { role: "Family", notes: "", relation: "" };
@@ -175,8 +180,14 @@
         familyStore.removeMember(id);
     }
 
-    function updateStatus(id: number | string, status: string) {
-        familyStore.updateMember(id, { notificationStatus: status });
+    async function updateStatus(id: number | string, status: string) {
+        // Saved to the contact's notification_status; on failure the store rolls back
+        // and shows a gentle message with Try Again.
+        try {
+            await familyStore.updateMember(id, { notificationStatus: status });
+        } catch {
+            // already surfaced by the store
+        }
     }
 </script>
 

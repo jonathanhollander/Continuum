@@ -258,7 +258,9 @@ def migrate_db():
                 "avatar": "TEXT",
                 "is_executor": "BOOLEAN DEFAULT FALSE",
                 "is_beneficiary": "BOOLEAN DEFAULT FALSE",
-                "is_emergency_contact": "BOOLEAN DEFAULT FALSE"
+                "is_emergency_contact": "BOOLEAN DEFAULT FALSE",
+                "call_tier": "TEXT",
+                "notification_status": "TEXT"
             }
 
             for col_name, col_type in contact_new_cols.items():
