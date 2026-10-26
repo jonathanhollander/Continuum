@@ -13,7 +13,8 @@ from backend.estate_models import (
     Document, Letter, JournalEntry, Subscription, CalendarEvent,
     InsurancePolicy, MedicalDirective, Pet, ContactRelationship,
     MedicalProfile, LifeEvent, TimeCapsuleMessage, FuneralData,
-    AdvancedAssetData, DigitalGuardianData, UserCustomFieldDefinition
+    AdvancedAssetData, DigitalGuardianData, UserCustomFieldDefinition,
+    ExecutorStep
 )
 from backend.models.activity_models import ActivityLogEntry
 from backend.models.qr_models import QRAccessPack, QRAssetLabel
@@ -133,6 +134,7 @@ MODEL_MAP = {
     "funeral_data": FuneralData,
     "advanced_assets": AdvancedAssetData,
     "digital_guardian": DigitalGuardianData,
+    "executor_steps": ExecutorStep,
     "activity_log": ActivityLogEntry,
     "qr_packs": QRAccessPack,
     "qr_labels": QRAssetLabel,

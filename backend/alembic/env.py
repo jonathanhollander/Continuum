@@ -40,6 +40,7 @@ from backend.estate_models import (
     AdvancedAssetData,
     DigitalGuardianData,
     UserCustomFieldDefinition,
+    ExecutorStep,
 )
 from backend.pulse_models import (
     PulseSettings,
