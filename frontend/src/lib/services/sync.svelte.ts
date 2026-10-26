@@ -170,7 +170,7 @@ export class SyncManager<T extends { id: number | string }> {
     // CRUD
     // quiet: background bookkeeping (activity log). Failures are logged to the console only,
     // never shown to the user, and never change this manager's status.
-    async create(data: Partial<T>, skipLocal = false, quiet = false) {
+    async create(data: Partial<T>, skipLocal = false, quiet = false, onRetry?: () => Promise<unknown>) {
         if (!quiet && !skipLocal) { this.status = "syncing"; this.error = null; }
         try {
             const payloadRaw = this.mapper ? this.mapper(data as any) : data;
@@ -228,7 +228,7 @@ export class SyncManager<T extends { id: number | string }> {
                 message: 'We couldn\'t save that just yet. Your words are still here \u2014 try again when you\'re ready.',
                 code: 'DATABASE_ERROR',
                 technicalDetails: e.technicalDetails || e.message || String(e)
-            } as any, () => { this.create(data, skipLocal).catch(() => {}); });
+            } as any, () => { (onRetry ? onRetry() : this.create(data, skipLocal)).catch(() => {}); });
             throw e;
         }
     }
@@ -248,7 +248,15 @@ export class SyncManager<T extends { id: number | string }> {
         // Optimistic Update
         const original = [...this.items];
         const index = this.items.findIndex(i => String(i.id) === String(id));
-        if (index === -1) return;
+        if (index === -1) {
+            // Never report a save that did not happen.
+            notifications.showError({
+                message: 'We couldn\'t find that item to save. It may have been moved \u2014 please refresh and try again when you\'re ready.',
+                code: 'NOT_FOUND',
+                technicalDetails: `update: no item with id ${id} in ${this.key}`
+            } as any);
+            throw new Error(`Item ${id} not found`);
+        }
 
         this.status = "syncing";
         this.error = null;

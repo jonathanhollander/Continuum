@@ -144,7 +144,7 @@ export const updateArchive = (id: number, updates: Partial<ExternalArchive>) => 
 };
 
 // Family Actions
-export const addFamilyMemory = (memory: Omit<FamilyMemory, 'id'>) => familyManager.create(memory as FamilyMemory);
+export const addFamilyMemory = (memory: Omit<FamilyMemory, 'id'>, onRetry?: () => Promise<unknown>) => familyManager.create(memory as FamilyMemory, false, false, onRetry);
 export const removeFamilyMemory = (id: number) => familyManager.delete(id);
 export const updateFamilyMemory = (id: number, updates: Partial<FamilyMemory>) => {
     const item = familyManager.items.find(m => m.id === id);

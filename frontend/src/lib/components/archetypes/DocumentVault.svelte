@@ -103,6 +103,7 @@
     async function saveDoc() {
         if (!newDoc.name || !docSync) return;
 
+        try {
         if (newDoc.id) {
             // Edit Mode
             await docSync.update(newDoc.id, {
@@ -128,7 +129,7 @@
                 witnesses: newDoc.witnesses || "",
                 nextReviewDate: newDoc.nextReviewDate || "",
                 fileData: newDoc.fileData || "",
-            });
+            }, false, false, saveDoc);
 
             // Log CREATE
             activityLog.logEvent({
@@ -142,6 +143,9 @@
         }
 
         resetForm();
+        } catch {
+            // The manager already showed the one gentle message; the form stays open with the draft.
+        }
     }
 
     function editDoc(doc: Doc) {
@@ -168,7 +172,7 @@
         wizardStep = 0;
     }
 
-    function removeDoc(id: string) {
+    async function removeDoc(id: string) {
         if (
             !confirm(
                 "Would you like to remove this document? This action is permanent.",
@@ -178,10 +182,10 @@
         if (!docSync) return;
 
         const doc = docs.find((d) => d.id === id);
-        docSync.delete(id);
+        await docSync.delete(id);
 
-        // Log DELETE
-        if (doc) {
+        // Log DELETE only if the item is really gone (the manager rolls back and shows its message on failure)
+        if (doc && !docSync.items.some((d) => d.id === id)) {
             activityLog.logEvent({
                 module: module.name || "Document Vault",
                 action: "DELETE",
