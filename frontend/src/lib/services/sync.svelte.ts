@@ -376,7 +376,7 @@ export class SyncManager<T extends { id: number | string }> {
 
                 // Affirm only a save the person made (quiet = background bookkeeping).
                 if (this.affirmationContext && !quiet) {
-                    notifications.showAffirmation(this.affirmationContext);
+                    notifications.showAffirmation(this.affirmationContext, 'create');
                 }
             }
             if (!quiet && !skipLocal) { this.status = "synced"; this.lastSync = new Date(); }
@@ -499,9 +499,9 @@ export class SyncManager<T extends { id: number | string }> {
             this.status = "synced";
             this.lastSync = new Date();
 
-            // Show affirmation if context is set
+            // Show affirmation if context is set (update wording: never "added")
             if (this.affirmationContext) {
-                notifications.showAffirmation(this.affirmationContext);
+                notifications.showAffirmation(this.affirmationContext, 'update');
             }
 
             return remoteItem;
