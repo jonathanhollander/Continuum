@@ -786,7 +786,7 @@
                     </div>
 
                     <div
-                        class="flex items-center gap-2 md:opacity-0 group-hover:opacity-100 transition-opacity justify-end"
+                        class="flex items-center gap-2 justify-end"
                     >
                         {#if doc.filePath}
                             <button
@@ -803,6 +803,7 @@
                             onclick={() => editDoc(doc)}
                             class="p-2 hover:bg-secondary/10 text-muted-foreground hover:text-[#4A7C74] rounded-full transition-colors"
                             title="Edit Details"
+                            aria-label="Edit Details"
                         >
                             <Pencil size={18} />
                         </button>

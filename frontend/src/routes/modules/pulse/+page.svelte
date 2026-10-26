@@ -109,6 +109,7 @@
     <div
         class="relative flex flex-col items-center justify-center py-12 md:py-20 text-center"
     >
+        <h1 class="font-serif text-4xl text-white mb-10">Wellness Check-in</h1>
         <!-- Pulse Button Architecture -->
         <div class="relative group cursor-pointer mb-8" onclick={checkIn}>
             <!-- Breathing Rings -->
@@ -158,7 +159,7 @@
         </div>
 
         <div class="space-y-2">
-            <h1 class="text-2xl font-serif text-white flex items-center gap-3">
+            <h2 class="text-2xl font-serif text-white flex items-center gap-3">
                 {pulse.status === "active"
                     ? "Heartbeat Active"
                     : "Seeking Connection"}
@@ -167,7 +168,7 @@
                         class="inline-block w-2 h-2 bg-primary rounded-full animate-ping"
                     ></span>
                 {/if}
-            </h1>
+            </h2>
             <p
                 class="text-slate-400 text-sm max-w-sm mx-auto leading-relaxed italic"
             >

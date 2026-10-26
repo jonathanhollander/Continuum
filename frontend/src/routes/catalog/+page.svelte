@@ -45,7 +45,7 @@
 
 <div class="min-h-screen bg-background pb-20">
     <LivingBlueprintHeader
-        title="Module Registry"
+        title="Explore All Features"
         subtitle={`${registry.length} System Components Loaded`}
         tier="preparation"
     />

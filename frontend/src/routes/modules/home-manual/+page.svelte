@@ -535,7 +535,7 @@
                                                 class="px-2 py-1 bg-primary/10 text-primary text-[10px] font-bold uppercase rounded-md tracking-wider"
                                                 >{vendor.category}</span
                                             >
-                                            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div class="flex items-center gap-2">
                                                 <button
                                                     onclick={() => editVendor(vendor)}
                                                     aria-label="Update {vendor.name}"
@@ -809,7 +809,7 @@
                                 <div
                                     class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-6 items-start relative group"
                                 >
-                                    <div class="absolute top-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div class="absolute top-4 right-4 flex items-center gap-2">
                                         <button
                                             onclick={() => editUtility(item)}
                                             aria-label="Update {item.service_type} shutoff"
