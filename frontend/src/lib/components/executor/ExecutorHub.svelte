@@ -8,10 +8,12 @@
     import { FileText, Users, DollarSign, Home, Heart, Clock, Stethoscope } from 'lucide-svelte';
     import { fade, fly } from 'svelte/transition';
     import { contextStore } from "$lib/stores/contextStore.svelte";
-    import { estateAudit, AuditStore } from "$lib/stores/auditStore.svelte";
-    import { possessive } from '$lib/utils/contextualMessages';
+    import { auth } from "$lib/stores/auth";
     import SupportResources from './SupportResources.svelte';
-    import ExecutorProgressTracker from './ExecutorProgressTracker.svelte';
+    import ExecutorProgressTracker, { TONES, stepsFor, type Tone } from './ExecutorProgressTracker.svelte';
+
+    // The name given in the executor welcome is saved with the account, so it is here after a reload too.
+    let deceasedName = $derived(contextStore.deceasedName || ($auth.user as { deceased_name?: string } | null)?.deceased_name || '');
 
     // Essential modules for executors (prioritized)
     const essentialModules = [
@@ -21,25 +23,23 @@
             title: 'Important Documents',
             description: 'Death certificate, will, and legal documents',
             link: '/modules/legal-documents',
-            color: 'rose'
+            color: 'rose' as Tone
         },
         {
             id: 'contacts',
-            auditId: 'family',
             icon: Users,
             title: 'Contact Directory',
-            description: 'People who need to be notified',
+            description: "People to let know when you're ready",
             link: '/modules/contacts',
-            color: 'indigo'
+            color: 'indigo' as Tone
         },
         {
             id: 'financial',
-            auditId: 'financial',
             icon: DollarSign,
             title: 'Financial Accounts',
             description: 'Bank accounts, investments, and assets',
             link: '/modules/financial-accounts',
-            color: 'emerald'
+            color: 'emerald' as Tone
         },
         {
             id: 'property',
@@ -47,29 +47,18 @@
             title: 'Property & Assets',
             description: 'Real estate and valuable possessions',
             link: '/modules/property',
-            color: 'amber'
+            color: 'amber' as Tone
         },
         {
             id: 'medical',
-            auditId: 'medical',
             icon: Stethoscope,
             title: 'Medical Wishes',
             description: 'Healthcare directives and donation wishes',
             link: '/modules/medical',
-            color: 'cyan'
+            color: 'cyan' as Tone
         }
     ];
 
-    // An area's progress as a share of the most its audit can award (areas without an audit have none).
-    const areaPct = (auditId?: string) =>
-        auditId ? Math.round(((estateAudit.moduleScores[auditId] || 0) / (AuditStore.maxScores[auditId] || 50)) * 100) : 0;
-
-    // Calculate completion for essential areas
-    let essentialCompletion = $derived.by(() => {
-        const scored = essentialModules.filter(m => m.auditId);
-        const completed = scored.filter(m => areaPct(m.auditId) > 50).length;
-        return Math.round((completed / scored.length) * 100);
-    });
 </script>
 
 <div class="max-w-6xl mx-auto" in:fade>
@@ -83,8 +72,8 @@
             We're here to help
         </h1>
         <p class="text-lg text-slate-300 max-w-2xl leading-relaxed">
-            {#if contextStore.deceasedName}
-                You're gathering information about {contextStore.deceasedName}'s estate. Take your time. We've organized everything you need in one place.
+            {#if deceasedName}
+                You're gathering information about {deceasedName}'s estate. Take your time. We've organized everything you need in one place.
             {:else}
                 You're gathering information about their estate. Take your time. We've organized everything you need in one place.
             {/if}
@@ -93,7 +82,7 @@
 
     <!-- Progress Tracker -->
     <div class="mb-8">
-        <ExecutorProgressTracker completion={essentialCompletion} />
+        <ExecutorProgressTracker />
     </div>
 
     <!-- Support Resources Banner -->
@@ -108,20 +97,22 @@
             Essential Areas
         </h2>
         <p class="text-sm text-slate-400 mb-6">
-            Focus on these key areas first. Everything else can wait until you're ready.
+            These areas may help most first. Everything else can wait until you're ready.
         </p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         {#each essentialModules as module, i}
             {@const Icon = module.icon}
-            {@const score = areaPct(module.auditId)}
+            {@const tone = TONES[module.color]}
+            {@const steps = stepsFor(module.link)}
+            {@const score = steps.pct}
             {@const isStarted = score > 0}
 
             <a
                 href={module.link}
                 class="group relative p-6 rounded-2xl bg-slate-800/40 border border-slate-700/50
-                       hover:border-{module.color}-500/50 hover:bg-slate-800/60
+                       {tone.borderStrong} hover:bg-slate-800/60
                        transition-all duration-300"
                 in:fly={{ y: 20, duration: 500, delay: i * 100 }}
             >
@@ -137,7 +128,7 @@
                 </div>
 
                 <div class="flex items-start gap-4">
-                    <div class="w-12 h-12 rounded-xl bg-{module.color}-500/10 flex items-center justify-center text-{module.color}-400 group-hover:scale-110 transition-transform">
+                    <div class="w-12 h-12 rounded-xl {tone.tile} flex items-center justify-center {tone.icon} group-hover:scale-110 transition-transform">
                         <Icon size={24} />
                     </div>
 
@@ -150,14 +141,14 @@
                         </p>
 
                         {#if isStarted}
-                            <div class="flex items-center gap-2 text-xs text-{module.color}-400">
+                            <div class="flex items-center gap-2 text-xs {tone.icon}">
                                 <div class="w-full max-w-[120px] h-1.5 bg-slate-700 rounded-full overflow-hidden">
                                     <div
-                                        class="h-full bg-{module.color}-500 transition-all duration-500"
+                                        class="h-full {tone.bar} transition-all duration-500"
                                         style="width: {score}%"
                                     ></div>
                                 </div>
-                                <span>{score}%</span>
+                                <span class="whitespace-nowrap">{steps.done} of {steps.total} steps</span>
                             </div>
                         {/if}
                     </div>
@@ -169,11 +160,11 @@
     <!-- Gentle CTA for Additional Resources -->
     <div class="mt-12 p-6 rounded-2xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20">
         <h3 class="text-lg font-semibold text-white mb-2">
-            Need to explore more?
+            Explore more, whenever you like
         </h3>
         <p class="text-slate-300 mb-4">
             Beyond these essentials, there are many other modules available—but only when you're ready.
-            Focus on what matters most right now.
+            Rest with what matters most right now.
         </p>
         <a
             href="/catalog"

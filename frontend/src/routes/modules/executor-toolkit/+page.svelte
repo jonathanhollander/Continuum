@@ -18,7 +18,11 @@
     import GriefSupportBanner from "$lib/components/GriefSupportBanner.svelte";
     import ExecutorTaskDetail from "$lib/components/executor/ExecutorTaskDetail.svelte";
     import { executorTasks } from "$lib/data/executorTasks";
-    import { currentScenario } from "$lib/stores/scenarioStore.svelte";
+    import {
+        currentScenario,
+        SCENARIO_DESCRIPTIONS,
+        type Scenario,
+    } from "$lib/stores/scenarioStore.svelte";
     import {
         executorSteps,
         STEP_RECORDS,
@@ -28,9 +32,22 @@
     let selectedTask = $state<any>(null);
 
     // Ticks and notes live on the server (executor_steps), so they follow the account.
+    // ?tab=bureau opens on the Gov & Bureaus steps (the /executor hub links there).
     onMount(() => {
         executorSteps.sync();
+        if (new URL(window.location.href).searchParams.get("tab") === "bureau")
+            activeTab = "bureau";
     });
+
+    // The situation the steps are arranged for; saved with the estate profile (scenario_settings).
+    const SCENARIOS: Scenario[] = ["General", "Sudden", "Planned"];
+    function chooseScenario(mode: Scenario) {
+        currentScenario.set(mode).catch(() => {}); // the store rolls back and shows the gentle error
+    }
+
+    let finishedCount = $derived(
+        executorTasks.filter((t) => executorSteps.isDone(t.id)).length,
+    );
 
     function toggleCompletion(id: string) {
         executorSteps.toggle(id).catch(() => {});
@@ -110,13 +127,9 @@
             >
                 <TriangleAlert class="text-red-500 shrink-0 mt-1" size={20} />
                 <div>
-                    <h3 class="font-bold text-red-800">
-                        Sudden Passing Mode Active
-                    </h3>
+                    <h3 class="font-bold text-red-800">Gentle first steps</h3>
                     <p class="text-sm text-red-600">
-                        Tasks are reorganized to prioritize immediate
-                        stabilization and legal security. Focus on the "Urgent"
-                        items first.
+                        These come first because they help most right now.
                     </p>
                 </div>
             </div>
@@ -131,13 +144,33 @@
                         Planned Passing Mode Active
                     </h3>
                     <p class="text-sm text-green-600">
-                        The workflow is optimized for an organized estate. Many
-                        discovery tasks may already be complete—verify and mark
-                        them off.
+                        Much of the groundwork may already be in place. Look it
+                        over when you're ready.
                     </p>
                 </div>
             </div>
         {/if}
+
+        <div class="mt-6 max-w-2xl" data-testid="scenario-choice">
+            <div class="flex flex-wrap gap-2">
+                {#each SCENARIOS as mode}
+                    <button
+                        type="button"
+                        aria-pressed={$currentScenario === mode}
+                        onclick={() => chooseScenario(mode)}
+                        class="px-4 py-1.5 rounded-full text-sm font-semibold border transition-all {$currentScenario ===
+                        mode
+                            ? 'bg-[#304743] text-white border-[#304743]'
+                            : 'bg-white text-gray-500 border-stone-200 hover:bg-gray-50'}"
+                    >
+                        {mode} Passing
+                    </button>
+                {/each}
+            </div>
+            <p class="mt-2 text-sm text-gray-500">
+                {SCENARIO_DESCRIPTIONS[$currentScenario]}
+            </p>
+        </div>
 
         <div class="mt-8 text-left">
             <GriefSupportBanner compact={true} />
@@ -165,6 +198,12 @@
             >
                 <Building2 size={16} class="inline mr-2" /> Gov & Bureaus
             </button>
+            <span
+                class="ml-auto self-center text-sm text-gray-500"
+                data-testid="steps-finished"
+            >
+                {finishedCount} of {executorTasks.length} steps finished
+            </span>
         </div>
     {/if}
 
@@ -249,8 +288,8 @@
                     >
                         <SquareCheck size={18} />
                         {executorSteps.isDone(selectedTask.id)
-                            ? "Done — tap to reopen"
-                            : "Mark this step done"}
+                            ? "Finished — tap to reopen"
+                            : "Mark this step as finished"}
                     </button>
                 </div>
             </div>
@@ -276,7 +315,7 @@
                             aria-pressed={executorSteps.isDone(task.id)}
                             aria-label={executorSteps.isDone(task.id)
                                 ? `Reopen ${task.title}`
-                                : `Mark ${task.title} done`}
+                                : `Mark ${task.title} as finished`}
                             onclick={(e) => {
                                 e.stopPropagation();
                                 toggleCompletion(task.id);
@@ -326,7 +365,7 @@
                         {#if task.urgent && !executorSteps.isDone(task.id)}
                             <span
                                 class="px-2 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-md uppercase tracking-wide"
-                                >Urgent</span
+>First days</span
                             >
                         {/if}
 

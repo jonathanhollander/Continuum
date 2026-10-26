@@ -7,8 +7,8 @@ export const phase2Tasks = [
         phase: "Legal",
         blocks: [
             { type: "heading_1", content: "Task 11: File Will with Probate Court" },
-            { type: "paragraph", content: "Filing the will with probate court is typically required within 10-30 days of death. Even if probate isn't needed, filing the will is usually mandatory. Failing to file can result in fines or criminal penalties." },
-            { type: "callout", content: "LEGAL DEADLINE: Most states require filing within 30 days. Some states require 4 years, but best practice is to file immediately.", icon: "emoji:⚠️", color: "red_background" },
+            { type: "paragraph", content: "Most states ask for the will to be filed with the probate court within about 30 days. Filing it keeps things in good order." },
+            { type: "callout", content: "Most states ask for filing within 30 days, and a few allow up to 4 years. Filing early keeps things simple.", icon: "emoji:⚠️", color: "red_background" },
             { type: "heading_2", content: "What You Need to File" },
             { type: "to_do", to_do: { checked: false, rich_text: [{ text: { content: "Original will (NOT a photocopy - court requires original)" } }] } },
             { type: "to_do", to_do: { checked: false, rich_text: [{ text: { content: "Certified death certificate" } }] } },
@@ -35,7 +35,7 @@ export const phase2Tasks = [
         phase: "Legal",
         blocks: [
             { type: "heading_1", content: "Task 12: Obtain Letters Testamentary" },
-            { type: "paragraph", content: "Letters Testamentary (or Letters of Administration) prove you're the legal executor. Without them, banks and government agencies won't let you access accounts." },
+            { type: "paragraph", content: "Letters Testamentary (or Letters of Administration) prove you're the legal executor. With them, banks and agencies can work with you." },
             { type: "heading_2", content: "How to Obtain" },
             { type: "numbered_list_item", content: "**File will with court** (Task 11)" },
             { type: "numbered_list_item", content: "**Attend probate hearing** (2-4 weeks later)" },
@@ -70,8 +70,8 @@ export const phase2Tasks = [
         phase: "Government",
         blocks: [
             { type: "heading_1", content: "Task 14: Notify Social Security Administration" },
-            { type: "paragraph", content: "Report death ASAP to stop benefits and claim survivor payments. Failure to report results in overpayments you must return." },
-            { type: "callout", content: "URGENT: If deceased received payment in month of death, SSA will reclaim it. Do NOT spend that money.", icon: "emoji:⚠️", color: "red_background" },
+            { type: "paragraph", content: "Reporting early helps benefits stop smoothly and opens survivor payments." },
+            { type: "callout", content: "Payments received in the month of death are reclaimed, so it helps to set that money aside.", icon: "emoji:⚠️", color: "red_background" },
             { type: "heading_2", content: "How to Notify" },
             { type: "numbered_list_item", content: "**Funeral home:** Usually reports automatically" },
             { type: "numbered_list_item", content: "**Phone:** 1-800-772-1213" },
@@ -82,7 +82,7 @@ export const phase2Tasks = [
             { type: "bulleted_list_item", content: "Spouse (age 60+)" },
             { type: "bulleted_list_item", content: "Children (under 18)" },
             { type: "bulleted_list_item", content: "Lump sum death benefit ($255)" },
-            { type: "callout", content: "CLAIM PROACTIVELY: SSA does not send benefits automatically. You must call and request them.", icon: "emoji:📞", color: "blue_background" }
+            { type: "callout", content: "Survivor benefits begin when you call to request them.", icon: "emoji:📞", color: "blue_background" }
         ]
     },
     {
@@ -133,12 +133,12 @@ export const phase2Tasks = [
     {
         id: "task-18",
         title: "Set Up Estate Bank Account",
-        desc: "Separate estate funds (Critical).",
+        desc: "Keep estate funds in their own account.",
         urgent: true,
         phase: "Financial",
         blocks: [
             { type: "heading_1", content: "Task 18: Estate Bank Account" },
-            { type: "paragraph", content: "Opening an estate account is crucial. NEVER mix estate money with personal funds." },
+            { type: "paragraph", content: "Keeping estate funds in their own account keeps things clear." },
             { type: "callout", content: "LEGAL PROTECTION: Commingling funds is illegal. Always use a separate account.", icon: "emoji:⚠️", color: "red_background" },
             { type: "heading_2", content: "Requirements" },
             { type: "to_do", to_do: { checked: false, rich_text: [{ text: { content: "Letters Testamentary" } }] } },
@@ -160,7 +160,7 @@ export const phase2Tasks = [
             { type: "numbered_list_item", content: "**Select 'Estate'**" },
             { type: "numbered_list_item", content: "**Complete Form SS-4**" },
             { type: "numbered_list_item", content: "**Save confirmation PDF** (Required for bank)" },
-            { type: "callout", content: "TIMING: Do this BEFORE going to the bank. They cannot open the account without it.", icon: "emoji:⏰", color: "yellow_background" }
+            { type: "callout", content: "This comes before the bank visit. They open the account once you have it.", icon: "emoji:⏰", color: "yellow_background" }
         ]
     },
     {

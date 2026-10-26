@@ -9,6 +9,8 @@
     import { Heart, Clock, Shield, CheckCircle } from 'lucide-svelte';
     import { fade, fly } from 'svelte/transition';
     import { contextStore } from "$lib/stores/contextStore.svelte";
+    import { apiFetch } from "$lib/api/client";
+    import { logger } from "$lib/utils/logger";
 
     interface Props {
         onComplete?: () => void;
@@ -26,10 +28,10 @@
         },
         {
             title: 'Take Your Time',
-            description: 'There are no deadlines here'
+            description: 'Take all the time you need.'
         },
         {
-            title: 'Get Started',
+            title: "Begin when you're ready",
             description: 'When you\'re ready'
         }
     ];
@@ -42,12 +44,29 @@
         }
     }
 
+    // The name and the grieving context are kept with the account (users.deceased_name and
+    // users.emotional_context), so they are still there after a reload or on another device.
+    async function saveToAccount(name: string) {
+        try {
+            const res = await apiFetch('/api/auth/onboarding', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ emotional_context: 'grieving', ...(name ? { deceased_name: name } : {}) })
+            });
+            if (!res.ok) throw new Error(`status ${res.status}`);
+        } catch (e) {
+            logger.error('[ExecutorWelcome] Saving the welcome details failed', e);
+        }
+    }
+
     function handleComplete() {
         // Save deceased name if provided
-        if (deceasedName.trim()) {
-            contextStore.setDeceasedName(deceasedName.trim());
+        const name = deceasedName.trim();
+        if (name) {
+            contextStore.setDeceasedName(name);
         }
         contextStore.setEmotionalContext('grieving');
+        void saveToAccount(name);
 
         // Mark welcome as seen
         if (typeof localStorage !== 'undefined') {
@@ -82,7 +101,7 @@
 
                 <p class="text-slate-400 mb-8">
                     Continuum is designed to help you organize and manage estate information at your own pace,
-                    with compassion and without pressure.
+                    with compassion and room to breathe.
                 </p>
 
                 <div class="flex flex-col sm:flex-row gap-3">
@@ -93,11 +112,12 @@
                     >
                         Continue
                     </button>
+                    <!-- Closes for now; the welcome returns on the next visit to the dashboard -->
                     <button
-                        onclick={handleComplete}
+                        onclick={() => onComplete()}
                         class="px-6 py-3 text-slate-400 hover:text-white transition-colors"
                     >
-                        Skip introduction
+                        Come back to this later
                     </button>
                 </div>
             </div>
@@ -109,7 +129,7 @@
                 </div>
 
                 <h1 class="text-3xl md:text-4xl font-serif font-bold text-white mb-4">
-                    There's no rush
+                    Take your time
                 </h1>
 
                 <div class="space-y-4 mb-8">
@@ -126,9 +146,9 @@
                     <div class="flex items-start gap-3 p-4 rounded-xl bg-slate-800/40 border border-slate-700/50">
                         <CheckCircle size={20} class="text-emerald-400 flex-shrink-0 mt-0.5" />
                         <div>
-                            <div class="font-medium text-white mb-1">Skip what you don't know</div>
+                            <div class="font-medium text-white mb-1">Fill in what you know</div>
                             <div class="text-sm text-slate-400">
-                                Leave sections blank if you don't have the information yet. You can fill them in later.
+                                Leave a section for later, and fill it in whenever the details come.
                             </div>
                         </div>
                     </div>
@@ -138,7 +158,7 @@
                         <div>
                             <div class="font-medium text-white mb-1">Take breaks when needed</div>
                             <div class="text-sm text-slate-400">
-                                This work can be emotionally taxing. Rest is important.
+                                This work is tender. Rest is part of it.
                             </div>
                         </div>
                     </div>
@@ -173,8 +193,8 @@
 
                 <p class="text-slate-300 mb-6">
                     If you'd like, you can provide the name of the person who passed away. This helps us
-                    personalize the experience (e.g., "their estate" becomes "John's estate"). This is
-                    completely optional.
+                    personalize the experience (e.g., "their estate" becomes "John's estate"). Share it
+                    only if you wish.
                 </p>
 
                 <div class="mb-8">
@@ -191,7 +211,7 @@
                                transition-colors"
                     />
                     <p class="text-xs text-slate-500 mt-2">
-                        This information is stored locally and privately.
+                        This is kept privately with your account.
                     </p>
                 </div>
 
@@ -201,7 +221,7 @@
                         class="px-6 py-3 bg-white text-slate-900 rounded-xl font-semibold
                                hover:bg-slate-100 transition-colors"
                     >
-                        Get started
+                        Begin when you're ready
                     </button>
                     <button
                         onclick={() => step--}

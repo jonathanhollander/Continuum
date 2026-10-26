@@ -37,7 +37,7 @@
 
             <div class="flex-1">
                 <h3 class="text-lg font-semibold text-white mb-2 flex items-center gap-2">
-                    Need Support?
+                    Support is here for you
                 </h3>
                 <p class="text-slate-300 text-sm mb-4">
                     Managing an estate while grieving is hard work. You can lean on others,
@@ -83,7 +83,7 @@
                         <!-- Crisis Support -->
                         <div class="mt-4 p-3 rounded-lg bg-rose-500/10 border border-rose-500/20">
                             <p class="text-xs text-slate-300">
-                                <strong class="text-rose-400">In crisis?</strong> 988 Suicide &amp; Crisis Lifeline, call or text
+                                <strong class="text-rose-400">If you need someone right now,</strong> 988 Suicide &amp; Crisis Lifeline, call or text
                                 <a href="tel:988" class="underline hover:text-white transition-colors">988</a>
                             </p>
                         </div>
