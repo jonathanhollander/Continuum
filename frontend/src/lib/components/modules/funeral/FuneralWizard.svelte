@@ -65,14 +65,14 @@
         funeralStore.update((data) => ({
             ...data,
             wishes: { ...data.wishes, religiousTradition: key },
-        }));
+        })).catch(() => {}); // the manager rolls back and shows the gentle retry line
     }
 
     function setDisposition(type: string) {
         funeralStore.update((data) => ({
             ...data,
             wishes: { ...data.wishes, disposition: type },
-        }));
+        })).catch(() => {}); // the manager rolls back and shows the gentle retry line
     }
 
     function toggleRitual(ritual: string) {
@@ -90,7 +90,7 @@
                     rituals: newRituals,
                 },
             },
-        }));
+        })).catch(() => {}); // the manager rolls back and shows the gentle retry line
     }
 
     function updateField(path: string[], value: any) {

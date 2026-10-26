@@ -94,10 +94,22 @@
     });
     // Toggles kept from before a reload: shown at once, sent once the server row has loaded.
     let restored = pending !== null;
+    // Restored before this sync ran: the sync's answer (or its upload of the device copy) is the
+    // server's, so it can show the toggles already saved. After it, the copy is only this page's.
+    const restoredBeforeSync = digitalGuardianSync.status !== "synced";
+    // True when the manager's server copy already holds every pending map.
+    const pendingSaved = () => {
+        const data: Checks = digitalGuardianSync.data ?? {};
+        return (Object.keys(pending ?? {}) as (keyof Checks)[]).every(
+            (k) => JSON.stringify(data[k]) === JSON.stringify(pending![k]),
+        );
+    };
     if (pending) digitalGuardianSync.updateLocal({ ...(digitalGuardianSync.data ?? {}), ...pending });
     $effect(() => {
         if (restored && digitalGuardianSync.status === "synced") {
             restored = false;
+            // A new account's sync already uploaded the device copy, which carries them: one POST.
+            if (restoredBeforeSync && pendingSaved()) { pending = null; return; }
             clearTimeout(saveTimer);
             saveTimer = setTimeout(flushChecks, 500);
         }
@@ -132,9 +144,7 @@
     $effect(() => {
         if (digitalGuardianSync.status === "synced" && pending && failed && !saving) {
             failed = false;
-            const data: Checks = digitalGuardianSync.data ?? {};
-            const keys = Object.keys(pending) as (keyof Checks)[];
-            if (keys.every((k) => JSON.stringify(data[k]) === JSON.stringify(pending![k]))) { pending = null; return; }
+            if (pendingSaved()) { pending = null; return; }
             clearTimeout(saveTimer);
             saveTimer = setTimeout(flushChecks, 500);
         }
