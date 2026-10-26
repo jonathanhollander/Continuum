@@ -129,7 +129,7 @@ async function retryStep(owner: Owner, stepId: string) {
     // sync() retains the device copy and resolves on a failed GET. It is not permission
     // to create another row while the result of an earlier create is still unknown.
     if (stepSync.status !== 'synced' || !stepSync.lastSync) {
-        offerRecovered(owner, "Your draft is kept. We couldn't load your saved list, so no changes were sent. Choose Try Again when you're connected.");
+        offerRecovered(owner, "Your draft is kept. Choose Try Again to load your saved list before applying this change.");
         return;
     }
     return save(stepId, pending.changes);
