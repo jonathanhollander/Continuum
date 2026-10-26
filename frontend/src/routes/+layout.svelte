@@ -200,13 +200,21 @@
 			// Card X142: the page's own stores first, the rest a moment later (see syncAll);
 			// the dashboard shows every module, so it takes them all at once.
 			syncAll({ everything: isDashboardRoute });
-			// Saved Cards/Table choices, so every view opens the way it was left (card X230).
-			untrack(() => userPreferencesStore.init());
-
 			// Initialize overwhelm detector from user preference
 			if ($auth.user) {
 				overwhelmDetector.initialize(!!$auth.user.overwhelm_muted);
 			}
+		}
+	});
+
+	// Preferences follow identified sign-ins, including a new sign-in that reuses a token.
+	// Keep their lifetime separate from the global data-sync token guard.
+	$effect(() => {
+		const state = $auth;
+		if (state.loading || !state.token || !state.isAuthenticated || !state.user) {
+			untrack(() => userPreferencesStore.reset());
+		} else if (!isRecipientRoute) {
+			untrack(() => userPreferencesStore.init());
 		}
 	});
 

@@ -1,161 +1,126 @@
-/**
- * User Preferences Store
- *
- * Manages user preferences that sync to the backend, including:
- * - View mode preferences (card/table) per module
- *
- * Uses Svelte 5 runes for reactive state management.
- * Preferences are persisted to the backend to sync across devices.
- */
-
+/** Account-owned Cards/Table preferences, persisted one module at a time. */
 import { browser } from '$app/environment';
-import { apiGet } from '$lib/api/client';
 import { API_BASE_URL } from '$lib/config';
+import {
+    captureSession, isCurrentSession, sessionToken, SessionChangedError, type SessionOwnership,
+} from '$lib/services/sessionOwnership';
 
 export type ViewMode = 'card' | 'table';
+interface ViewPreferences { [module: string]: ViewMode; }
+interface UserPreferencesState { view_preferences: ViewPreferences; }
 
-interface ViewPreferences {
-    [module: string]: ViewMode;
-}
-
-interface UserPreferencesState {
-    view_preferences: ViewPreferences;
-}
-
-// Reactive state using Svelte 5 runes
 let preferences = $state<ViewPreferences>({});
 let isInitialized = $state(false);
 let isLoading = $state(false);
-// The sign-in the loaded preferences belong to; a different account loads its own.
-let loadedForToken: string | null = null;
+let preferenceOwner: SessionOwnership | null = null;
+let epoch = 0;
+let editedModes: ViewPreferences = {};
+let inFlight: { owner: SessionOwnership; epoch: number; run: Promise<void> } | null = null;
+let writes: Promise<void> = Promise.resolve();
 
-/**
- * Get authentication headers for API requests
- */
-function getAuthHeaders(): HeadersInit {
-    const headers: HeadersInit = {
-        'Content-Type': 'application/json'
-    };
-
-    if (browser) {
-        const token = localStorage.getItem('continuum_auth_token');
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
-    }
-
-    return headers;
-}
-
-/**
- * Initialize preferences from backend
- */
-async function init(): Promise<void> {
-    if (!browser || isLoading) return;
-    const token = localStorage.getItem('continuum_auth_token');
-    if (isInitialized && token === loadedForToken) return;
-
-    isLoading = true;
-    if (token !== loadedForToken) preferences = {};
-    loadedForToken = token;
-
-    try {
-        const response = await apiGet<UserPreferencesState>('/api/auth/me/preferences');
-        preferences = response.view_preferences || {};
-        isInitialized = true;
-    } catch (error) {
-        // Log but don't throw - preferences are non-critical
-        console.warn('Failed to load user preferences:', error);
-        // Use empty defaults
-        preferences = {};
-        isInitialized = true;
-    } finally {
-        isLoading = false;
-    }
-}
-
-/**
- * Get the view mode for a specific module
- */
-function getViewMode(module: string): ViewMode {
-    return preferences[module] || 'card'; // Default to card view
-}
-
-/**
- * Set the view mode for a specific module and sync to backend
- */
-async function setViewMode(module: string, mode: ViewMode): Promise<void> {
-    // Optimistic update
-    preferences[module] = mode;
-
-    if (!browser) return;
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/auth/me/preferences`, {
-            method: 'PATCH',
-            headers: getAuthHeaders(),
-            body: JSON.stringify({ view_preferences: preferences })
-        });
-
-        if (!response.ok) {
-            console.error('Failed to save preference:', response.statusText);
-            // Could rollback here, but preferences are non-critical
-        }
-    } catch (error) {
-        console.error('Failed to save preference:', error);
-        // Don't rollback - local state is still valid
-    }
-}
-
-/**
- * Reset all preferences (for logout/testing)
- */
 function reset(): void {
+    epoch++;
     preferences = {};
+    editedModes = {};
+    preferenceOwner = null;
+    inFlight = null;
+    writes = Promise.resolve();
     isInitialized = false;
-    loadedForToken = null;
+    isLoading = false;
 }
 
-// Export the store as an object with reactive getters
-export const userPreferencesStore = {
-    /**
-     * Initialize the store - call this on app startup or when user logs in
-     */
-    init,
-
-    /**
-     * Get current view mode for a module
-     */
-    getViewMode,
-
-    /**
-     * Set view mode for a module (syncs to backend)
-     */
-    setViewMode,
-
-    /**
-     * Reset store state
-     */
-    reset,
-
-    /**
-     * Check if store has been initialized
-     */
-    get isInitialized() {
-        return isInitialized;
-    },
-
-    /**
-     * Check if store is currently loading
-     */
-    get isLoading() {
-        return isLoading;
-    },
-
-    /**
-     * Get all preferences (read-only)
-     */
-    get preferences() {
-        return { ...preferences };
+function selectOwner(owner: SessionOwnership): void {
+    if (preferenceOwner?.generation !== owner.generation) {
+        reset();
+        preferenceOwner = owner;
     }
+}
+
+function ownsPreferences(owner: SessionOwnership, version: number): boolean {
+    return epoch === version && preferenceOwner?.generation === owner.generation && isCurrentSession(owner);
+}
+
+/** The shared fetch hook refreshes this session; the local epoch also guards abandoned loads. */
+async function requestPreferences(owner: SessionOwnership, version: number, init: RequestInit = {}): Promise<Response> {
+    if (!ownsPreferences(owner, version)) throw new SessionChangedError();
+    const response = await fetch(`${API_BASE_URL}/api/auth/me/preferences`, {
+        ...init,
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${sessionToken(owner)}` },
+    });
+    if (!ownsPreferences(owner, version)) throw new SessionChangedError();
+    return response;
+}
+
+function init(): Promise<void> {
+    const owner = captureSession();
+    if (!browser || !owner.token || !owner.ready || !isCurrentSession(owner)) return Promise.resolve();
+    selectOwner(owner);
+    if (isInitialized) return Promise.resolve();
+    if (inFlight?.owner.generation === owner.generation && inFlight.epoch === epoch) return inFlight.run;
+
+    const version = epoch;
+    isLoading = true;
+    const entry = { owner, epoch: version, run: (async () => {
+        try {
+            const response = await requestPreferences(owner, version);
+            if (!ownsPreferences(owner, version)) return;
+            if (!response.ok) throw new Error(`Preference load returned ${response.status}`);
+            const data: UserPreferencesState = await response.json();
+            if (!ownsPreferences(owner, version)) return;
+            // A choice made while the initial read was pending is newer than that read.
+            preferences = { ...(data.view_preferences || {}), ...editedModes };
+            isInitialized = true;
+        } catch (error) {
+            if (!ownsPreferences(owner, version)) return;
+            console.warn('Could not load view preferences:', error);
+            preferences = { ...editedModes };
+            isInitialized = true;
+        } finally {
+            if (inFlight?.epoch === version && ownsPreferences(owner, version)) {
+                inFlight = null;
+                isLoading = false;
+            }
+        }
+    })() };
+    inFlight = entry;
+    return entry.run;
+}
+
+function getViewMode(module: string): ViewMode {
+    const mode = preferences[module]; // Read reactive state even before the first owner is ready.
+    return preferenceOwner && isCurrentSession(preferenceOwner) ? mode || 'card' : 'card';
+}
+
+function setViewMode(module: string, mode: ViewMode): Promise<void> {
+    const owner = captureSession();
+    if (!browser || !owner.token || !owner.ready || !isCurrentSession(owner)) return Promise.resolve();
+    selectOwner(owner);
+    const version = epoch;
+    editedModes[module] = mode;
+    preferences[module] = mode;
+    // Serialize this session's writes; a new session starts its own queue immediately.
+    const run = writes.then(async () => {
+        if (!ownsPreferences(owner, version)) return;
+        try {
+            const response = await requestPreferences(owner, version, {
+                method: 'PATCH', body: JSON.stringify({ view_preferences: { [module]: mode } }),
+            });
+            if (!ownsPreferences(owner, version)) return;
+            if (!response.ok) console.warn('Could not save view preference:', response.status);
+        } catch (error) {
+            if (ownsPreferences(owner, version)) console.warn('Could not save view preference:', error);
+        }
+    });
+    writes = run;
+    return run;
+}
+
+export const userPreferencesStore = {
+    init, getViewMode, setViewMode, reset,
+    get isInitialized() { return isInitialized && !!preferenceOwner && isCurrentSession(preferenceOwner); },
+    get isLoading() { return isLoading && !!preferenceOwner && isCurrentSession(preferenceOwner); },
+    get preferences() {
+        const current = { ...preferences };
+        return preferenceOwner && isCurrentSession(preferenceOwner) ? current : {};
+    },
 };
