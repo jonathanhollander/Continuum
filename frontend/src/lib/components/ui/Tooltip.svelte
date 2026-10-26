@@ -44,6 +44,23 @@
         isVisible = false;
     }
 
+    function handleFocusIn(event: FocusEvent) {
+        parentNode = event.currentTarget as HTMLElement;
+        clearTimeout(timeoutId);
+        calculatePosition();
+        isVisible = true;
+    }
+
+    function handleFocusOut() {
+        handleMouseLeave();
+    }
+
+    function handleKeydown(event: KeyboardEvent) {
+        if (event.key === "Escape" && isVisible) {
+            handleMouseLeave();
+        }
+    }
+
     function calculatePosition() {
         if (!parentNode) return;
         const rect = parentNode.getBoundingClientRect();
@@ -107,6 +124,9 @@
     class="relative block"
     on:mouseenter={handleMouseEnter}
     on:mouseleave={handleMouseLeave}
+    on:focusin={handleFocusIn}
+    on:focusout={handleFocusOut}
+    on:keydown={handleKeydown}
 >
     <slot />
 </div>
