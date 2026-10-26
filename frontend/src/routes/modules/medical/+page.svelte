@@ -31,7 +31,6 @@
     import {
         deleteMedia,
         downloadMedia,
-        getMedia,
         updateMediaMetadata,
     } from "$lib/services/mediaService";
     import { t, language } from "$lib/stores/localization";
@@ -76,10 +75,11 @@
     let currentProfile = $state(medicalStore.profile);
 
     // Sync medical data on mount and update reactive profile
-    onMount(async () => {
-        await medicalStore.sync();
-        isLoading = false;
-        // Subscribe to store changes to update reactive profile
+    onMount(() => {
+        medicalStore.sync().then(() => {
+            isLoading = false;
+        });
+        // Subscribe to store changes to update reactive profile; the returned cleanup runs on leave.
         return medicalStore.subscribe(() => {
             currentProfile = medicalStore.profile;
         });
@@ -174,18 +174,22 @@
         }
     }
 
-    async function onFileChange(_url: string, id?: number) {
+    function onFileChange(
+        _url: string,
+        id?: number,
+        file?: { filename: string; mime_type: string; file_size: number },
+    ) {
         dropUnsavedFile();
-        if (id === undefined) {
-            formMedia = null;
-            return;
-        }
-        try {
-            const m = await getMedia(id);
-            formMedia = { id: m.id, mime_type: m.mime_type, filename: m.filename, file_size: m.file_size };
-        } catch {
-            formMedia = { id, mime_type: "", filename: "", file_size: 0 };
-        }
+        formMedia =
+            id === undefined
+                ? null
+                : { id, mime_type: file?.mime_type ?? "", filename: file?.filename ?? "", file_size: file?.file_size ?? 0 };
+    }
+
+    /** The modal closes through ×, Escape, the backdrop or "Not right now"; each one drops the draft. */
+    function setFormOpen(open: boolean) {
+        if (open) showAddForm = true;
+        else if (showAddForm) resetForm();
     }
 
     function resetForm() {
@@ -565,7 +569,7 @@
 
 <!-- Add/Edit Modal -->
 <Modal
-    bind:open={showAddForm}
+    bind:open={() => showAddForm, setFormOpen}
     title={newDirective.id ? "Share Your Voice" : "Who should hear your voice?"}
     description="These choices reflect your values and ensure you're cared for exactly as you wish. It's okay to take your time."
     maxWidth="max-w-lg"

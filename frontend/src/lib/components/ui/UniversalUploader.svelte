@@ -36,7 +36,12 @@
         module: string;
         category?: string;
         referenceId?: string;
-        onchange?: (url: string, id?: number) => void;
+        /** `file` comes with a fresh upload: its name, type and size, as the server stored them. */
+        onchange?: (
+            url: string,
+            id?: number,
+            file?: { filename: string; mime_type: string; file_size: number },
+        ) => void;
     }>();
 
     let dragging = $state(false);
@@ -129,7 +134,12 @@
             value = response.download_url;
             mediaId = response.id;
 
-            if (onchange) onchange(value, mediaId);
+            if (onchange)
+                onchange(value, mediaId, {
+                    filename: response.filename,
+                    mime_type: response.mime_type,
+                    file_size: response.file_size,
+                });
         } catch (err: any) {
             console.error("Upload failed", err);
             error = err.message || "Saving this file paused. It is ready to try again.";
