@@ -12,6 +12,7 @@
         Pencil,
         Sparkles,
         Gift,
+        Flower2,
         Clock,
         X,
         ChevronRight,
@@ -34,7 +35,7 @@
         id: string;
         title: string;
         date: string; // MMDD for recurring (e.g. "1225"), YYYYMMDD for one-time
-        type: "birthday" | "holiday" | "anniversary" | "other";
+        type: "birthday" | "holiday" | "anniversary" | "passing" | "other";
         isRecurring: boolean;
         wish: string;
         emailTemplate?: {
@@ -261,13 +262,15 @@
         birthday: Gift,
         holiday: Sparkles,
         anniversary: Heart,
+        passing: Flower2,
         other: CalendarIcon,
     };
 
-    const eventTypeColors = {
+    const eventTypeColors: Record<string, string> = {
         birthday: "text-rose-500 bg-rose-50",
         holiday: "text-amber-500 bg-amber-50",
         anniversary: "text-purple-500 bg-purple-50",
+        passing: "text-slate-500 bg-slate-100",
         other: "text-blue-500 bg-blue-50",
     };
 </script>
@@ -346,7 +349,7 @@
                     <!-- Type Badge -->
                     <div class="absolute top-14 right-0 p-4 opacity-10 pointer-events-none" aria-hidden="true">
                         <svelte:component
-                            this={eventTypeIcons[evt.type]}
+                            this={(eventTypeIcons[evt.type] ?? CalendarIcon)}
                             size={120}
                         />
                     </div>
@@ -354,10 +357,10 @@
                     <div class="relative z-10">
                         <div class="flex justify-between items-start mb-4">
                             <div
-                                class={`p-3 rounded-2xl ${eventTypeColors[evt.type]} inline-flex`}
+                                class={`p-3 rounded-2xl ${eventTypeColors[evt.type] ?? eventTypeColors.other} inline-flex`}
                             >
                                 <svelte:component
-                                    this={eventTypeIcons[evt.type]}
+                                    this={(eventTypeIcons[evt.type] ?? CalendarIcon)}
                                     size={24}
                                 />
                             </div>
@@ -465,8 +468,8 @@
                         <tr class="hover:bg-slate-50 transition-colors group">
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-2">
-                                    <div class={`p-1.5 rounded-lg ${eventTypeColors[evt.type]}`}>
-                                        <svelte:component this={eventTypeIcons[evt.type]} size={14} />
+                                    <div class={`p-1.5 rounded-lg ${eventTypeColors[evt.type] ?? eventTypeColors.other}`}>
+                                        <svelte:component this={(eventTypeIcons[evt.type] ?? CalendarIcon)} size={14} />
                                     </div>
                                     <span class="font-medium text-slate-800">{evt.title}</span>
                                 </div>
