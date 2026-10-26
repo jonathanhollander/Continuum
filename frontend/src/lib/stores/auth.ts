@@ -10,6 +10,7 @@ export interface User {
     external_id: string;
     user_role?: 'planning' | 'executor' | 'family' | 'advisor';
     emotional_context?: 'healthy' | 'terminal' | 'grieving';
+    deceased_name?: string | null;
     overwhelm_muted?: boolean;
     onboarding_completed?: boolean;
 }
