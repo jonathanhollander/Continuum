@@ -363,13 +363,13 @@
                                 <td class="px-4 py-3 text-sm text-slate-600">{pet.vetName || '-'}</td>
                                 <td class="px-4 py-3 text-right">
                                     <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button
+                                        <button aria-label="Edit these details"
                                             onclick={() => editPet(pet)}
                                             class="p-1.5 text-slate-400 hover:text-primary transition-colors"
                                         >
                                             <Pencil size={14} />
                                         </button>
-                                        <button
+                                        <button aria-label="Remove this item"
                                             onclick={() => removePet(pet.id as number)}
                                             class="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
                                         >

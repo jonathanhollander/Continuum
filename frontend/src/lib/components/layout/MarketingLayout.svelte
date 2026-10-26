@@ -40,6 +40,7 @@
             >
                 <Globe size={14} class="text-white/60" />
                 <select
+                    aria-label="Language"
                     bind:value={$mLanguage}
                     class="bg-transparent text-xs font-bold uppercase tracking-widest outline-none cursor-pointer text-white appearance-none"
                 >

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { focusTrap } from "$lib/actions/focusTrap";
     import { fade, fly } from "svelte/transition";
     import { LucideX, LucideHeart, LucideChevronRight } from "lucide-svelte";
     import type { Guide } from "$lib/data/familyGuides";
@@ -26,7 +27,7 @@
 <svelte:window on:keydown={handleKeydown} />
 
 {#if guide}
-    <div
+    <div use:focusTrap
         class="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8"
         transition:fade={{ duration: 200 }}
         onclick={handleBackdropClick}

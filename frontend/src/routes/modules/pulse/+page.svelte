@@ -237,6 +237,7 @@
             {:else if localStatus.showSafetyConfig}
                 <div class="space-y-4" in:slide>
                     <select
+                        aria-label="Purpose"
                         bind:value={localStatus.purpose}
                         class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-300"
                     >
@@ -250,6 +251,7 @@
                             min="5"
                             max="120"
                             step="5"
+                            aria-label="Minutes"
                             bind:value={localStatus.safetyInput}
                             class="flex-1 h-1.5 bg-slate-800 accent-primary rounded-lg cursor-pointer"
                         />

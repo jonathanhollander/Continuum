@@ -235,6 +235,7 @@
             <!-- Module Filter -->
             <select
                 bind:value={selectedModule}
+                aria-label="Modules"
                 class="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
                 {#each modules as module}
@@ -247,6 +248,7 @@
             <!-- Action Filter -->
             <select
                 bind:value={selectedAction}
+                aria-label="Actions"
                 class="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
                 <option value="all">All Actions</option>

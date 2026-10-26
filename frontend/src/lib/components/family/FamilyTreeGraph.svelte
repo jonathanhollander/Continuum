@@ -314,7 +314,7 @@
                 <h3 class="font-serif font-bold text-xl text-slate-800">
                     {selectedNode.id ? "Edit Member" : "Add Member"}
                 </h3>
-                <button
+                <button aria-label="Close"
                     on:click={() => (selectedNode = null)}
                     class="p-1 hover:bg-slate-100 rounded-full"
                 >

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { focusTrap } from "$lib/actions/focusTrap";
     import {
         overwhelmDetector,
         type OverwhelmState,
@@ -133,7 +134,7 @@
 
 {#if showModal && !showBreakScreen}
     <!-- Initial Overwhelm Intervention Prompt -->
-    <div
+    <div aria-modal="true" use:focusTrap
         class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
         transition:fade={{ duration: 300 }}
         role="dialog"
@@ -230,7 +231,7 @@
     </div>
 {:else}
     <!-- Full Break Experience Screen -->
-    <div
+    <div role="dialog" aria-modal="true" use:focusTrap
         class="fixed inset-0 z-[100] bg-gradient-to-br from-teal-50 via-blue-50 to-indigo-50 dark:from-zinc-900 dark:via-zinc-800 dark:to-zinc-900 flex items-center justify-center p-6"
         transition:fade={{ duration: 500 }}
     >

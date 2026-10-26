@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { focusTrap } from "$lib/actions/focusTrap";
     import {
         advancedAssetStore,
         type AssetTransaction,
@@ -300,7 +301,7 @@
                                         : "-"}${tx.amount.toLocaleString()}
                                 </td>
                                 <td class="px-8 py-5 text-right">
-                                    <button
+                                    <button aria-label="Remove this item"
                                         onclick={() =>
                                             advancedAssetStore.removeTransaction(
                                                 tx.id,
@@ -512,7 +513,7 @@
                                         ${claim.amountClaimed.toLocaleString()}
                                     </p>
                                 </div>
-                                <button
+                                <button aria-label="Remove this item"
                                     onclick={() =>
                                         advancedAssetStore.removeClaim(
                                             claim.id,
@@ -708,7 +709,7 @@
 {/if}
 
 {#if showAddModal}
-    <div
+    <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => (showAddModal = false) }}
         class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md"
         transition:fade
     >
@@ -724,7 +725,7 @@
                 >
                     Add {addType}
                 </h3>
-                <button
+                <button aria-label="Close"
                     onclick={() => (showAddModal = false)}
                     class="text-slate-400 hover:text-slate-900 transition-colors"
                 >

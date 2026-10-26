@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { focusTrap } from "$lib/actions/focusTrap";
     import { fade, fly } from "svelte/transition";
     import {
         Image,
@@ -242,7 +243,7 @@
 {:else}
 <!-- Archive Modal -->
 {#if showArchiveModal}
-    <div
+    <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => (showArchiveModal = false) }}
         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
         transition:fade
     >
@@ -256,7 +257,7 @@
                 <h3 class="font-serif font-bold text-xl text-[#304743]">
                     {editingArchive ? "Edit Location" : "Add Legacy Location"}
                 </h3>
-                <button
+                <button aria-label="Close"
                     onclick={() => (showArchiveModal = false)}
                     class="text-slate-400 hover:text-slate-600"
                 >

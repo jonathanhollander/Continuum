@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { focusTrap } from "$lib/actions/focusTrap";
     import { readCustom } from "$lib/utils/customFields";
     import { fade, scale } from "svelte/transition";
     import {
@@ -507,14 +508,14 @@
                                         <div
                                             class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
                                         >
-                                            <button
+                                            <button aria-label="Edit these details"
                                                 onclick={() =>
                                                     editExpense(item)}
                                                 class="p-2 text-stone-400 hover:text-[#4A7C74] bg-white border border-stone-200 rounded-full shadow-sm"
                                             >
                                                 <Pencil size={14} />
                                             </button>
-                                            <button
+                                            <button aria-label="Remove this item"
                                                 onclick={() =>
                                                     removeExpense(item.id)}
                                                 class="p-2 text-stone-400 hover:text-red-500 bg-white border border-stone-200 rounded-full shadow-sm"
@@ -533,7 +534,7 @@
 
         <!-- Expense Modal -->
         {#if showAddExpense}
-            <div
+            <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: resetExpenseForm }}
                 class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
                 transition:fade
             >
@@ -558,7 +559,7 @@
                                     : "By thinking through these costs now, you're protecting your family from difficult financial decisions during an already hard time."}
                             </p>
                         </div>
-                        <button
+                        <button aria-label="Close"
                             onclick={resetExpenseForm}
                             class="text-white/50 hover:text-white transition-colors mt-1"
                         >

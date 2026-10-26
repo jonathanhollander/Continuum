@@ -313,7 +313,7 @@
                             placeholder="Type a secure note..."
                             class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-primary/50 transition-colors"
                         />
-                        <button
+                        <button aria-label="Send"
                             type="submit"
                             disabled={!newMessage.text}
                             class="bg-primary hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed text-primary-foreground p-3 rounded-xl transition-all"

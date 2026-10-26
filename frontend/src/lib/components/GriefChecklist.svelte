@@ -106,7 +106,7 @@
                     : ''}"
             >
                 <div class="flex gap-4">
-                    <button
+                    <button role="checkbox" aria-checked={item.done} aria-label={item.text}
                         onclick={() => toggleItem(item.id)}
                         class="shrink-0 mt-1"
                     >

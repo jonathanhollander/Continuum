@@ -36,7 +36,7 @@
         </div>
     </div>
 
-    <button
+    <button role="switch" aria-checked={rule.enabled} aria-label={rule.name}
         class="w-12 h-6 rounded-full transition-colors relative {rule.enabled
             ? 'bg-[#4A7C74]'
             : 'bg-gray-200'}"

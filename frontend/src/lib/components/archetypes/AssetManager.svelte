@@ -45,6 +45,7 @@
     import { conciergeEngine } from "$lib/stores/conciergeEngine";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
+    import { focusTrap } from "$lib/actions/focusTrap";
 
     let { module } = $props<{ module: any }>();
 
@@ -577,12 +578,17 @@
         <!-- Only Owner and Executor can add assets -->
         {#if showAddForm}
             <div
-                class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6"
+                class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 focus:outline-none"
                 transition:slide
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="asset-form-title"
+                use:focusTrap={{ onEscape: resetForm }}
             >
                 <div
                     class="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
                     onclick={resetForm}
+                    role="presentation"
                 ></div>
 
                 <div
@@ -599,13 +605,14 @@
                                 <span>Asset Inventory</span>
                             </nav>
                             <h2
+                                id="asset-form-title"
                                 class="text-4xl font-black text-slate-900 tracking-tighter"
                             >
                                 {newAsset.id ? "Update" : "Add"}
                                 <span class="text-[#4A7C74]">Asset</span>
                             </h2>
                         </div>
-                        <button
+                        <button aria-label="Close"
                             onclick={resetForm}
                             class="w-14 h-14 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:rotate-90 transition-all duration-500"
                         >
@@ -632,11 +639,12 @@
                                 class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
                             >
                                 <div class="space-y-3">
-                                    <label
+                                    <label for="asset-asset-name"
                                         class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
                                         >Asset Name</label
                                     >
                                     <input
+                                        id="asset-asset-name"
                                         type="text"
                                         bind:value={newAsset.name}
                                         placeholder="e.g. Chase Checking, Tesla Model Y"
@@ -647,11 +655,12 @@
                                     />
                                 </div>
                                 <div class="space-y-3">
-                                    <label
+                                    <label for="asset-asset-type"
                                         class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
                                         >Asset Type</label
                                     >
                                     <select
+                                        id="asset-asset-type"
                                         bind:value={newAsset.type}
                                         class="w-full bg-slate-50 border-2 border-transparent focus:border-[#4A7C74] focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all appearance-none cursor-pointer"
                                     >
@@ -664,7 +673,7 @@
                                     </select>
                                 </div>
                                 <div class="space-y-3">
-                                    <label
+                                    <label for="asset-est-value"
                                         class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-mono"
                                         >Est. Value ($)</label
                                     >
@@ -674,6 +683,7 @@
                                             class="absolute left-4 top-4.5 text-[#4A7C74]"
                                         />
                                         <input
+                                            id="asset-est-value"
                                             type="number"
                                             bind:value={newAsset.value}
                                             class="w-full bg-white border-2 border-transparent focus:border-[#4A7C74] rounded-2xl p-4 pl-10 text-sm font-black outline-none transition-all shadow-sm"
@@ -686,11 +696,12 @@
                                 class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8"
                             >
                                 <div class="space-y-3">
-                                    <label
+                                    <label for="asset-location-institution"
                                         class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
                                         >Location / Institution</label
                                     >
                                     <input
+                                        id="asset-location-institution"
                                         bind:value={newAsset.location}
                                         placeholder="e.g. 123 Main St, Wallet"
                                         class="w-full bg-slate-50 border-2 border-transparent focus:border-[#4A7C74] focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all"
@@ -698,11 +709,12 @@
                                 </div>
                                 {#if newAsset.type === "Financial" || newAsset.type === "Digital"}
                                     <div class="space-y-3">
-                                        <label
+                                        <label for="asset-login-url"
                                             class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
                                             >Login URL</label
                                         >
                                         <input
+                                            id="asset-login-url"
                                             type="text"
                                             bind:value={newAsset.loginUrl}
                                             placeholder="https://..."
@@ -779,11 +791,12 @@
                                     class="grid grid-cols-1 md:grid-cols-2 gap-8"
                                 >
                                     <div class="space-y-3">
-                                        <label
+                                        <label for="asset-beneficiary-name"
                                             class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
                                             >Beneficiary Name</label
                                         >
                                         <input
+                                            id="asset-beneficiary-name"
                                             type="text"
                                             bind:value={newAsset.beneficiaries}
                                             placeholder="Who inherits this?"
@@ -791,11 +804,12 @@
                                         />
                                     </div>
                                     <div class="space-y-3">
-                                        <label
+                                        <label for="asset-beneficiary-email"
                                             class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
                                             >Beneficiary Email</label
                                         >
                                         <input
+                                            id="asset-beneficiary-email"
                                             type="text"
                                             bind:value={
                                                 newAsset.beneficiaryEmail

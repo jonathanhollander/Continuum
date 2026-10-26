@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { focusTrap } from "$lib/actions/focusTrap";
     import { fade, slide } from "svelte/transition";
     import {
         Shield,
@@ -982,7 +983,7 @@
 
         <div class="space-y-3">
             {#if showWizard}
-                <div
+                <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => (showWizard = false) }}
                     class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
                     transition:fade
                 >
@@ -990,7 +991,7 @@
                         class="w-full max-w-2xl relative bg-white rounded-2xl shadow-2xl overflow-hidden"
                         transition:slide
                     >
-                        <button
+                        <button aria-label="Close"
                             class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10"
                             onclick={() => (showWizard = false)}
                         >
@@ -1048,7 +1049,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <button
+                            <button aria-label="Remove this item"
                                 onclick={() => deleteAsset(asset.id)}
                                 class="text-red-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-full transition-colors"
                             >
@@ -1081,7 +1082,7 @@
                                         </td>
                                         <td class="px-4 py-3 text-slate-500 text-sm">{asset.description}</td>
                                         <td class="px-4 py-3 text-right">
-                                            <button
+                                            <button aria-label="Remove this item"
                                                 onclick={() => deleteAsset(asset.id)}
                                                 class="text-red-400 hover:text-red-600 p-1 hover:bg-red-50 rounded transition-colors"
                                             >

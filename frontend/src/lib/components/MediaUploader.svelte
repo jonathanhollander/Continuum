@@ -155,7 +155,7 @@
                 <p class="file-name">{selectedFile.name}</p>
                 <p class="file-size">{formatFileSize(selectedFile.size)}</p>
             </div>
-            <button type="button" on:click={clearFile} class="clear-button">×</button>
+            <button aria-label="Remove this item" type="button" on:click={clearFile} class="clear-button">×</button>
         </div>
     {/if}
 

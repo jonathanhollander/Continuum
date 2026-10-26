@@ -345,7 +345,7 @@
                         >
                     </button>
                 {/if}
-                <button
+                <button aria-label="Close"
                     onclick={onClose}
                     class="p-2 text-white/40 hover:text-white hover:bg-white/5 rounded-full transition-colors"
                 >
@@ -529,7 +529,7 @@
             {/if}
 
             <div class="flex gap-2">
-                <button
+                <button aria-label="Voice input" aria-pressed={$conciergeEngine.isListening}
                     onclick={toggleVoice}
                     class="p-4 rounded-2xl transition-all shadow-lg {$conciergeEngine.isListening
                         ? 'bg-rose-500 text-white animate-pulse shadow-rose-500/20'
@@ -552,7 +552,7 @@
                         class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-5 pr-12 {fontSizeClass} text-white focus:outline-none focus:border-indigo-500/50 transition-all resize-none min-h-[60px] max-h-[120px]"
                         disabled={$conciergeEngine.isListening}
                     ></textarea>
-                    <button
+                    <button aria-label="Send"
                         onclick={handleSend}
                         disabled={!input.trim() || $conciergeEngine.isThinking}
                         class="absolute right-3 bottom-3 p-2 text-indigo-400 hover:text-white disabled:opacity-30 transition-colors"

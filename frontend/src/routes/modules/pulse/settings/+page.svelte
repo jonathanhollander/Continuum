@@ -230,6 +230,9 @@
                 class="relative inline-flex h-8 w-14 items-center rounded-full transition-colors {settings.enabled
                     ? 'bg-teal-500'
                     : 'bg-slate-700'}"
+                role="switch"
+                aria-checked={settings.enabled}
+                aria-label="Active Heartbeat"
                 onclick={() => {
                     settings.enabled = !settings.enabled;
                     saveSettings();
@@ -276,13 +279,14 @@
                                     <div class="flex items-center gap-2">
                                         <input
                                             type="number"
+                                            aria-label={`Tier ${tier.tier_number} hours`}
                                             class="w-12 bg-slate-900 border border-teal-500/50 rounded px-1 py-0.5 text-xs text-white"
                                             bind:value={tier.delay_hours}
                                         />
                                         <span class="text-[10px] text-slate-500"
                                             >hours</span
                                         >
-                                        <button
+                                        <button aria-label="Save"
                                             onclick={() => updateTier(tier)}
                                             class="text-emerald-400 hover:text-emerald-300"
                                         >
@@ -336,7 +340,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <button
+                                        <button aria-label="Remove this item"
                                             onclick={() =>
                                                 deleteContact(contact.id)}
                                             class="text-slate-600 hover:text-rose-400 transition-colors"
@@ -484,6 +488,9 @@
                         class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors {settings.location_vault_enabled
                             ? 'bg-indigo-500'
                             : 'bg-slate-700'}"
+                        role="switch"
+                        aria-checked={settings.location_vault_enabled}
+                        aria-label="Automatic Release"
                         onclick={() => {
                             settings.location_vault_enabled =
                                 !settings.location_vault_enabled;

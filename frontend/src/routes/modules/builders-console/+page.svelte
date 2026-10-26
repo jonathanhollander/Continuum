@@ -249,6 +249,7 @@
             <Filter size={16} class="text-slate-400" />
             <select
                 bind:value={selectedSection}
+                aria-label="Sections"
                 class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
             >
                 {#each sections as section}

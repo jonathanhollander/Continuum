@@ -39,7 +39,7 @@
         EMOTIONAL_PROMPTS,
         type LetterTemplate,
     } from "$lib/data/letterTemplates";
-    import { onMount } from "svelte";
+    import { onMount, tick } from "svelte";
     import { activityLog } from "$lib/stores/activityLog.svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import LetterAssistant from "$lib/components/modules/letters/LetterAssistant.svelte";
@@ -337,6 +337,11 @@
         if (currentPromptIndex < 2) {
             currentPromptIndex++;
             refreshQuestion();
+            // The answer box is rebuilt for each question; put the keyboard back in it.
+            tick().then(() => {
+                const boxes = document.querySelectorAll<HTMLTextAreaElement>("[data-reflection-box] textarea");
+                boxes[boxes.length - 1]?.focus();
+            });
         } else {
             generateEmotionalDraft();
         }
@@ -828,7 +833,7 @@
         >
             <div class="lg:col-span-2 space-y-8">
                 <div class="flex items-center justify-between gap-4">
-                    <button
+                    <button aria-label="Back to Your letters"
                         onclick={() => (mode = "menu")}
                         class="p-4 bg-white border border-slate-100 rounded-2xl text-slate-400 hover:text-slate-900 transition-all"
                     >
@@ -846,7 +851,7 @@
                             Review & Refine Draft
                         </p>
                     </div>
-                    <button
+                    <button aria-label="Save my letter"
                         onclick={saveToVault}
                         class="p-4 bg-[#4A7C74] text-white rounded-2xl shadow-xl shadow-[#4A7C74]/20"
                     >
@@ -984,6 +989,7 @@
                     <button
                         onclick={() => (mode = "menu")}
                         class="p-3 bg-white border border-slate-100 rounded-xl text-slate-400 hover:text-slate-900"
+                        aria-label="Back to Your letters"
                     >
                         <ArrowLeft size={18} />
                     </button>
@@ -1095,10 +1101,12 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="space-y-2">
                                 <label
+                                    for="letter-release-date"
                                     class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
                                     >Specific Release Date</label
                                 >
                                 <input
+                                    id="letter-release-date"
                                     type="date"
                                     bind:value={letterTriggerDate}
                                     class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
@@ -1106,10 +1114,12 @@
                             </div>
                             <div class="space-y-2">
                                 <label
+                                    for="letter-milestone"
                                     class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
                                     >Or Lifecycle Milestone</label
                                 >
                                 <select
+                                    id="letter-milestone"
                                     bind:value={letterTriggerMilestone}
                                     class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800 appearance-none"
                                 >
@@ -1152,6 +1162,8 @@
                         >
                             <SmartTextarea
                                 bind:value={generatedLetter}
+                                label="Refine Your Draft"
+                                hideLabel
                                 placeholder="Begin typing your legacy here..."
                                 context="letter"
                                 minimal={true}
@@ -1246,6 +1258,7 @@
                 ></div>
                 {#key currentPromptIndex}
                     <div
+                        data-reflection-box
                         class="relative w-full h-80 bg-white border-2 border-slate-100 rounded-2xl shadow-2xl focus-within:border-[#4A7C74] transition-all overflow-hidden p-8"
                     >
                         <SmartTextarea
@@ -1259,6 +1272,8 @@
                                 ]
                             }
                             context="letter"
+                            label={currentQuestion}
+                            hideLabel
                             minimal={true}
                             minHeight="100%"
                             placeholder="Reflect here..."

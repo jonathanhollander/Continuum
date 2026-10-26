@@ -43,7 +43,7 @@
             <p class="font-medium opacity-90">{text}</p>
         </div>
 
-        <button
+        <button aria-label="Close"
             class="shrink-0 opacity-40 hover:opacity-100 transition-opacity"
             on:click={dismiss}
         >

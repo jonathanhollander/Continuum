@@ -420,7 +420,7 @@
                         <div
                             class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity"
                         >
-                            <button
+                            <button aria-label="Remove this item"
                                 onclick={() => removeContact(member.id)}
                                 class="text-muted-foreground hover:text-rose-500"
                                 ><Trash2 size={16} /></button
@@ -495,7 +495,7 @@
                     class="bg-card border border-border p-5 rounded-lg hover:shadow-lg transition-all group relative"
                     transition:fade
                 >
-                    <button
+                    <button aria-label="Remove this item"
                         onclick={() => removeContact(pro.id)}
                         class="absolute top-3 right-3 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
                         ><Trash2 size={14} /></button

@@ -3,63 +3,58 @@
     import { X } from "lucide-svelte";
     import { fade, scale } from "svelte/transition";
     import { cubicOut } from "svelte/easing";
+    import { focusTrap } from "$lib/actions/focusTrap";
 
     let {
         title = "",
         description = "",
         open = $bindable(false),
         maxWidth = "max-w-md",
+        onClose,
         children,
     } = $props<{
         title?: string;
         description?: string;
         open: boolean;
         maxWidth?: string;
+        onClose?: () => void;
         children?: import("svelte").Snippet;
     }>();
 
+    const uid = $props.id();
     const dispatch = createEventDispatcher();
 
     function close() {
         dispatch("close");
+        onClose?.();
         open = false;
     }
 
-    function handleKeydown(e: KeyboardEvent) {
-        if (e.key === "Escape") {
-            close();
-        }
-    }
-
-    // Lock body scroll when open
+    // Lock body scroll while open.
     $effect(() => {
-        if (typeof document !== "undefined") {
-            if (open) {
-                document.body.style.overflow = "hidden";
-            } else {
-                document.body.style.overflow = "";
-            }
-        }
+        if (!open || typeof document === "undefined") return;
+        document.body.style.overflow = "hidden";
+        return () => {
+            document.body.style.overflow = "";
+        };
     });
 </script>
 
-<svelte:window onkeydown={handleKeydown} />
-
 {#if open}
     <div
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 focus:outline-none"
         role="dialog"
         aria-modal="true"
+        use:focusTrap={{ onEscape: close }}
+        aria-labelledby={title ? `${uid}-title` : undefined}
+        aria-describedby={description ? `${uid}-desc` : undefined}
     >
-        <!-- Backdrop -->
+        <!-- Backdrop: a pointer shortcut only; keyboard users have Escape and the Close button. -->
         <div
             class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
             transition:fade={{ duration: 200 }}
             onclick={close}
-            onkeydown={(e) => e.key === "Enter" && close()}
-            role="button"
-            tabindex="0"
-            aria-label="Close modal"
+            role="presentation"
         ></div>
 
         <!-- Panel -->
@@ -73,13 +68,14 @@
             >
                 <div class="flex-1 pr-4">
                     {#if title}
-                        <h2 class="{description ? 'font-serif font-bold text-xl' : 'text-lg font-semibold'} text-slate-800">{title}</h2>
+                        <h2 id="{uid}-title" class="{description ? 'font-serif font-bold text-xl' : 'text-lg font-semibold'} text-slate-800">{title}</h2>
                     {/if}
                     {#if description}
-                        <p class="text-slate-500 text-sm mt-2 leading-relaxed">{description}</p>
+                        <p id="{uid}-desc" class="text-slate-500 text-sm mt-2 leading-relaxed">{description}</p>
                     {/if}
                 </div>
                 <button
+                    type="button"
                     class="p-2 -mr-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors flex-shrink-0"
                     onclick={close}
                     aria-label="Close"

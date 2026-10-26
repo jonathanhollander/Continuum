@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { focusTrap } from "$lib/actions/focusTrap";
     import { readCustom } from "$lib/utils/customFields";
     import {
         insuranceStore,
@@ -403,7 +404,7 @@
     <!-- Wizard Modal -->
     {#if showWizard}
         <!-- Moved to <body>: the animated page wrapper would otherwise hold this "fixed" overlay below the fold. -->
-        <div
+        <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => (showWizard = false) }}
             use:portal
             class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
             transition:fade
@@ -569,6 +570,7 @@
             >
             <button
                 class="p-3 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-primary transition-colors shadow-sm"
+                aria-label="Download"
             >
                 <Download size={18} />
             </button>
@@ -618,13 +620,13 @@
                         <div
                             class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0"
                         >
-                            <button
+                            <button aria-label="Edit these details"
                                 onclick={() => editPolicy(policy)}
                                 class="p-2 bg-slate-50 hover:bg-primary/5 text-slate-400 hover:text-primary rounded-xl transition-all"
                             >
                                 <Pencil size={16} />
                             </button>
-                            <button
+                            <button aria-label="Remove this item"
                                 onclick={() =>
                                     deletePolicy(
                                         String(policy.id),
@@ -869,13 +871,13 @@
                                 </td>
                                 <td class="px-4 py-3 text-right">
                                     <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button
+                                        <button aria-label="Edit these details"
                                             onclick={() => editPolicy(policy)}
                                             class="p-1.5 text-slate-400 hover:text-primary transition-colors"
                                         >
                                             <Pencil size={14} />
                                         </button>
-                                        <button
+                                        <button aria-label="Remove this item"
                                             onclick={() => deletePolicy(String(policy.id), policy.policyName)}
                                             class="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
                                         >
@@ -895,7 +897,7 @@
 
 <!-- Premium Add/Edit Modal -->
 {#if showAddModal}
-    <div
+    <div use:focusTrap={{ onEscape: resetForm }}
         class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
         role="dialog"
         aria-modal="true"

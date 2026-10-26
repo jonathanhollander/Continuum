@@ -490,6 +490,8 @@
                                 ? 'border-primary scale-110'
                                 : 'border-transparent hover:scale-105'}"
                             style="background-color: {swatch.color}"
+                            aria-label={swatch.id.charAt(0).toUpperCase() + swatch.id.slice(1)}
+                            aria-pressed={$accessibilityStore.color === swatch.id}
                             onclick={() =>
                                 accessibilityStore.setColor(swatch.id as any)}
                         >
@@ -584,6 +586,9 @@
                                 ? 'bg-emerald-500'
                                 : 'bg-slate-300'}"
                             onclick={() => (includeImages = !includeImages)}
+                            role="switch"
+                            aria-checked={includeImages}
+                            aria-label={$dict.labelIncludeMedia}
                         >
                             <div
                                 class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform {includeImages

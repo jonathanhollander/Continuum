@@ -108,7 +108,7 @@
 
             {#if link.path}
                 <div class="flex items-center gap-2">
-                    <input readonly value={linkUrl(link.path)} class="flex-1 min-w-0 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-600" data-testid="recipient-link" />
+                    <input readonly aria-label="Link" value={linkUrl(link.path)} class="flex-1 min-w-0 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-600" data-testid="recipient-link" />
                     <button onclick={copy} class="px-3 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100" title="Copy the link">
                         {#if copied}<Check class="w-4 h-4" />{:else}<Copy class="w-4 h-4" />{/if}
                     </button>

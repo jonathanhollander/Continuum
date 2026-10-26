@@ -89,6 +89,7 @@
         <button
             class="flex items-center gap-3 flex-1 min-w-0"
             onclick={toggleDropdown}
+            aria-expanded={isOpen}
         >
             <!-- Avatar -->
             <div
@@ -128,6 +129,8 @@
         <button
             onclick={toggleDropdown}
             class="p-1 rounded-lg hover:bg-white/10 transition-colors"
+            aria-label={$dict.familyCircle || "Family Circles"}
+            aria-expanded={isOpen}
         >
             <ChevronDown
                 size={16}
