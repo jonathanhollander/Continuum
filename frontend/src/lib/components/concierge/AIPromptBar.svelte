@@ -24,6 +24,7 @@
     let isGenerating = false;
     let isListening = false;
     let result = "";
+    let isNotice = false; // gentle unavailable message: plain text, no draft framing
     let visiblePrompts: string[] = [];
 
     const quickPrompts: Record<string, string[]> = {
@@ -106,13 +107,15 @@
         logInteraction("AI Prompt", `Context: ${context} | Prompt: ${text}`);
 
         try {
-            // Call the real service
+            // chat() never throws; on failure it returns a gentle notice instead of a draft.
             const response = await aiConciergeService.chat(text, [], context);
-            result = `[Draft based on: "${text}"]\n\n${response.content}`;
-        } catch (e) {
-            console.error(e);
-            result =
-                "I'm having trouble connecting to my creative brain right now. Please try again in a moment.";
+            const notice =
+                response.content.startsWith("AI help isn't available") ||
+                response.content.startsWith("I'm having a little trouble connecting");
+            isNotice = notice;
+            result = notice
+                ? response.content
+                : `[Draft based on: "${text}"]\n\n${response.content}`;
         } finally {
             isGenerating = false;
         }
@@ -226,7 +229,9 @@
             class="mt-4 bg-white rounded-xl p-4 border border-primary-100 shadow-sm relative group"
             transition:slide
         >
-            <div class="font-mono text-sm text-gray-700 whitespace-pre-wrap">
+            <div
+                class="text-sm text-gray-700 whitespace-pre-wrap {isNotice ? '' : 'font-mono'}"
+            >
                 {result}
             </div>
             <button

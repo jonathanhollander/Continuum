@@ -74,9 +74,6 @@ Example: { "message": "The silence they leave behind can be so loud... it's okay
         }
     } catch (error) {
         console.error('Grief AI Error:', error);
-        if (error instanceof Error && error.message.startsWith("AI help isn't available")) {
-            return { content: error.message };
-        }
         return { content: "I'm still here with you. My words aren't flowing as smoothly right now, but you're not alone. Take a gentle breath, and know that the resources in the sidebar are always available." };
     }
 }
