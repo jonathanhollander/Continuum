@@ -115,6 +115,7 @@ export class SyncManager<T extends { id: number | string }> {
     }
 
     subscribe(run: (value: T[]) => void) {
+        shownBy(this, true);
         run(this.items);
         this.subscriptions.add(run);
         return () => this.subscriptions.delete(run);
