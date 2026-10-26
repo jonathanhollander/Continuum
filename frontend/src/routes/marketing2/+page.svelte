@@ -1061,6 +1061,12 @@
             transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
+    /* "revealed" is added by the reveal action at runtime, so it is marked global */
+    .reveal-section:global(.revealed) {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
     /* 3D Card transitions */
     .card-3d {
         transition:
@@ -1233,7 +1239,11 @@
         }
     }
 
-    /* Heart beat */
+    /* Heart beat. Icon classes sit on child icon components, so they are global under this page's divs */
+    div :global(.heart-beat) {
+        animation: heartBeat 1.5s ease-in-out infinite;
+    }
+
     @keyframes heartBeat {
         0%,
         100% {
@@ -1254,6 +1264,10 @@
     }
 
     /* Icon animations */
+    div :global(.icon-spin) {
+        animation: iconSpin 20s linear infinite;
+    }
+
     @keyframes iconSpin {
         from {
             transform: rotate(0deg);
@@ -1261,6 +1275,10 @@
         to {
             transform: rotate(360deg);
         }
+    }
+
+    div :global(.icon-pulse) {
+        animation: iconPulse 3s ease-in-out infinite;
     }
 
     @keyframes iconPulse {
@@ -1273,6 +1291,10 @@
             opacity: 0.8;
             transform: scale(1.1);
         }
+    }
+
+    div :global(.icon-shimmer) {
+        animation: iconShimmer 3s ease-in-out infinite;
     }
 
     @keyframes iconShimmer {
@@ -1325,6 +1347,10 @@
     }
 
     /* Menu animations */
+    div :global(.animate-spin-in) {
+        animation: spinIn 0.3s ease;
+    }
+
     @keyframes spinIn {
         from {
             transform: rotate(-90deg);
@@ -1390,7 +1416,12 @@
         .animate-float-fast,
         .animate-float-particle,
         .pulse-ring,
-        .scroll-dot {
+        .scroll-dot,
+        div :global(.heart-beat),
+        div :global(.icon-spin),
+        div :global(.icon-pulse),
+        div :global(.icon-shimmer),
+        div :global(.animate-spin-in) {
             animation: none;
         }
     }

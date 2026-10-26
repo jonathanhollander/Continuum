@@ -51,7 +51,7 @@ export const marketing2Dictionary = {
         distinctionTitle: "Made to work alongside your lawyer and advisors.",
         distinctionDesc: "Wills, trusts and financial advice come from your professionals.",
         distinctionRole: "We're the organization layer. We help you gather what they create—and what you want to say—so it's found, understood, and used.",
-        distinctionTagline: "They create the plan. We make sure it works.",
+        distinctionTagline: "They create the plan. We help your family find it, understand it, and use it.",
 
         // Section 5.5: Security
         securityTitle: "Your life, protected.",
@@ -187,7 +187,7 @@ export const marketing2Dictionary = {
         distinctionTitle: "Pensado para trabajar junto a tu abogado y tus asesores.",
         distinctionDesc: "Los testamentos, los fideicomisos y el asesoramiento financiero vienen de tus profesionales.",
         distinctionRole: "Somos la capa de organización. Te ayudamos a reunir lo que ellos crean—y lo que quieres decir—para que se encuentre, se entienda y se use.",
-        distinctionTagline: "Ellos crean el plan. Nosotros nos aseguramos de que funcione.",
+        distinctionTagline: "Ellos crean el plan. Nosotros ayudamos a tu familia a encontrarlo, entenderlo y usarlo.",
 
         // Section 5.5: Security
         securityTitle: "Tu vida, protegida.",
@@ -323,7 +323,7 @@ export const marketing2Dictionary = {
         distinctionTitle: "Conçu pour travailler aux côtés de votre avocat et de vos conseillers.",
         distinctionDesc: "Les testaments, les fiducies et les conseils financiers viennent de vos professionnels.",
         distinctionRole: "Nous sommes la couche d'organisation. Nous vous aidons à rassembler ce qu'ils créent—et ce que vous voulez dire—pour que cela soit trouvé, compris et utilisé.",
-        distinctionTagline: "Ils créent le plan. Nous nous assurons qu'il fonctionne.",
+        distinctionTagline: "Ils créent le plan. Nous aidons votre famille à le trouver, le comprendre et l'utiliser.",
 
         // Section 5.5: Security
         securityTitle: "Votre vie, protégée.",
@@ -459,7 +459,7 @@ export const marketing2Dictionary = {
         distinctionTitle: "Gemacht für die Zusammenarbeit mit Ihrem Anwalt und Ihren Beratern.",
         distinctionDesc: "Testamente, Treuhandverfügungen und Finanzberatung kommen von Ihren Fachleuten.",
         distinctionRole: "Wir sind die Organisationsebene. Wir helfen Ihnen, das zu sammeln, was sie erstellen—und was Sie sagen möchten—damit es gefunden, verstanden und verwendet wird.",
-        distinctionTagline: "Sie erstellen den Plan. Wir sorgen dafür, dass er funktioniert.",
+        distinctionTagline: "Sie erstellen den Plan. Wir helfen Ihrer Familie, ihn zu finden, zu verstehen und zu nutzen.",
 
         // Section 5.5: Security
         securityTitle: "Ihr Leben, geschützt.",
@@ -595,7 +595,7 @@ export const marketing2Dictionary = {
         distinctionTitle: "Создан для работы вместе с вашим юристом и консультантами.",
         distinctionDesc: "Завещания, трасты и финансовые советы — это работа ваших специалистов.",
         distinctionRole: "Мы — уровень организации. Мы помогаем вам собрать то, что они создают—и то, что вы хотите сказать—чтобы это было найдено, понято и использовано.",
-        distinctionTagline: "Они создают план. Мы следим за тем, чтобы он работал.",
+        distinctionTagline: "Они создают план. Мы помогаем вашей семье найти его, понять и использовать.",
 
         // Section 5.5: Security
         securityTitle: "Ваша жизнь под защитой.",
@@ -731,7 +731,7 @@ export const marketing2Dictionary = {
         distinctionTitle: "נבנה כדי לעבוד לצד עורך הדין והיועצים שלכם.",
         distinctionDesc: "צוואות, נאמנויות וייעוץ פיננסי מגיעים מאנשי המקצוע שלכם.",
         distinctionRole: "אנחנו שכבת הארגון. אנחנו עוזרים לכם לאסוף את מה שהם יוצרים—ומה שאתם רוצים לומר—כדי שזה יימצא, יובן וישמש.",
-        distinctionTagline: "הם יוצרים את התוכנית. אנחנו מוודאים שהיא עובדת.",
+        distinctionTagline: "הם יוצרים את התוכנית. אנחנו עוזרים למשפחה שלכם למצוא אותה, להבין אותה ולהשתמש בה.",
 
         // Section 5.5: Security
         securityTitle: "החיים שלכם, מוגנים.",

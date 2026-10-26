@@ -1354,7 +1354,8 @@
         will-change: transform, opacity, filter;
     }
 
-    :global(.reveal.in-view) {
+    :global(.reveal.in-view),
+    :global(.in-view .reveal) {
         opacity: 1;
         transform: translateY(0) scale(1);
         filter: blur(0);

@@ -26,7 +26,7 @@
             </h1>
             <p class="text-white/70 text-lg max-w-2xl font-light">
                 Everything you need to navigate your estate planning journey.
-                From getting started to finding the right professionals.
+                From your first steps to answers for common questions.
             </p>
         </div>
     </header>
