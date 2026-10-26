@@ -17,6 +17,7 @@ export interface FinancialAsset {
     loginUrl?: string;
     beneficiaryEmail?: string;
     closureNotes?: string;
+    documents?: string;
     image?: string;
     is_closed: boolean;
     closure_date?: string;
@@ -44,6 +45,17 @@ function migrateFinancialAssets(): FinancialAsset[] {
     }));
 }
 
+function parseHistory(v: any): number[] {
+    if (Array.isArray(v)) return v;
+    if (typeof v === 'string' && v) {
+        try {
+            const parsed = JSON.parse(v);
+            if (Array.isArray(parsed)) return parsed;
+        } catch { }
+    }
+    return [];
+}
+
 const financialAssetMapper = (item: any) => {
     if (!item) return item;
     return {
@@ -51,8 +63,8 @@ const financialAssetMapper = (item: any) => {
         // Remote (snake) -> Local (camel)
         is_closed: item.is_closed ?? item.isClosed ?? false,
         closure_date: item.closure_date ?? item.closureDate,
-        // Ensure valueHistory is an array
-        valueHistory: Array.isArray(item.valueHistory) ? item.valueHistory : []
+        // Wire is a JSON string (sync.svelte.ts stringifies on write); keep an array locally
+        valueHistory: parseHistory(item.valueHistory)
     };
 };
 

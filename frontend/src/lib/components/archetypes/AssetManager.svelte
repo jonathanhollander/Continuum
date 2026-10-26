@@ -76,6 +76,7 @@
         loginUrl?: string;
         beneficiaryEmail?: string;
         closureNotes?: string;
+        documents?: string;
         image?: string;
         is_closed: boolean;
         closure_date?: string;
@@ -197,7 +198,7 @@
                 type: (newAsset.type as AssetType) || "Other",
                 value: Number(newAsset.value) || 0,
                 location: newAsset.location || "",
-                accountNumber: newAsset.accountNumber,
+                accountNumber: newAsset.accountNumber || "",
                 ownershipPercentage: Number(newAsset.ownershipPercentage),
                 beneficiaries: newAsset.beneficiaries || "",
                 notes: newAsset.notes || "",
@@ -206,6 +207,8 @@
                 image: newAsset.image || "",
                 is_closed: newAsset.is_closed || false,
                 closure_date: newAsset.closure_date || "",
+                closureNotes: newAsset.closureNotes || "",
+                documents: newAsset.documents || "",
                 valueHistory: JSON.stringify(generateMockHistory(Number(newAsset.value) || 0)),
                 customAttributes: customAttributesStr,
             });
@@ -245,7 +248,7 @@
             closure_date: asset.closure_date || "",
             closureNotes: asset.closureNotes || "",
             customAttributes: asset.customAttributes || "{}",
-            documents: "",
+            documents: asset.documents || "",
         };
         try {
             parsedCustomAttributes = JSON.parse(asset.customAttributes || "{}");

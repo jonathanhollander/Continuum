@@ -8,15 +8,40 @@ import { notifications } from "$lib/stores/notificationStore";
 const toCamel = (str: string) => str.replace(/([-_][a-z])/g, group => group.toUpperCase().replace('-', '').replace('_', ''));
 const toSnake = (str: string) => str.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
 
+// Values of these keys are user data (JSON text or objects with user-chosen keys):
+// never case-convert anything inside them.
+const VERBATIM_VALUE_KEYS = new Set(['custom_attributes', 'customAttributes']);
+
 const convertKeys = (obj: any, converter: (s: string) => string): any => {
     if (obj === null || typeof obj !== 'object' || obj instanceof Date || obj instanceof Blob) return obj;
     if (Array.isArray(obj)) return obj.map(i => convertKeys(i, converter));
 
     const newObj: any = {};
     Object.keys(obj).forEach(key => {
-        newObj[converter(key)] = convertKeys(obj[key], converter);
+        newObj[converter(key)] = VERBATIM_VALUE_KEYS.has(key) ? obj[key] : convertKeys(obj[key], converter);
     });
     return newObj;
+};
+
+// Wire contract: these SQLModel fields (Asset, FinancialAccount, Subscription) are camelCase
+// columns. They go over the wire exactly as named; every other key is sent as snake_case.
+const CAMEL_WIRE_KEYS = new Set([
+    'ownershipDetails', 'purchaseDate', 'maintenanceSchedule',
+    'accountNumber', 'ownershipPercentage', 'loginUrl', 'beneficiaryEmail',
+    'valueHistory', 'closureNotes',
+    'paymentMethod', 'cancellationInstructions', 'nextBilling',
+]);
+// Text columns that hold JSON; the UI keeps them as arrays/objects.
+const JSON_TEXT_WIRE_KEYS = ['valueHistory', 'maintenanceSchedule', 'evidence'];
+
+const toWireKey = (s: string) => (CAMEL_WIRE_KEYS.has(s) ? s : toSnake(s));
+
+const toWire = (obj: any): any => {
+    const out = convertKeys(obj, toWireKey);
+    for (const k of JSON_TEXT_WIRE_KEYS) {
+        if (out && out[k] !== null && typeof out[k] === 'object') out[k] = JSON.stringify(out[k]);
+    }
+    return out;
 };
 
 // Use centralized config for API base URL (fixes dev mode sync issue)
@@ -146,7 +171,7 @@ export class SyncManager<T extends { id: number | string }> {
     async create(data: Partial<T>, skipLocal = false) {
         try {
             const payloadRaw = this.mapper ? this.mapper(data as any) : data;
-            const payload = convertKeys(payloadRaw, toSnake);
+            const payload = toWire(payloadRaw);
 
             // Clean ID for creation
             if (payload.id && typeof payload.id === 'string' && payload.id.length > 10) {
@@ -228,7 +253,7 @@ export class SyncManager<T extends { id: number | string }> {
         try {
             const token = get(auth).token;
             const payloadRaw = this.mapper ? this.mapper(updatedItem) : updatedItem;
-            const payload = convertKeys(payloadRaw, toSnake);
+            const payload = toWire(payloadRaw);
 
             // Remove protected fields that backend won't accept
             delete payload.id;

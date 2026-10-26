@@ -55,6 +55,8 @@ const digitalAssetMapper = (item: any) => {
     if (!item) return item;
     return {
         ...item,
+        // Asset.name is required by the server; the digital UI only collects platform
+        name: item.name || item.platform || item.description || 'Digital account',
         // Remote (snake) -> Local (camel)
         isClosed: item.is_closed ?? item.isClosed,
         closureDate: item.closure_date ?? item.closureDate,
