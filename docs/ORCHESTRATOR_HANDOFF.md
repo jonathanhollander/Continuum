@@ -1,12 +1,12 @@
 # Active recovery implementation handoff
 
-**Last Updated:** 2026-10-26 18:08 EDT
+**Last Updated:** 2026-10-26 18:10 EDT
 
 The canonical task board remains [RECOVERY_EXECUTION_PLAN.md](RECOVERY_EXECUTION_PLAN.md). This handoff supersedes the earlier orchestrator snapshot; its operational history remains in Git.
 
-## Active checkpoint — 2026-10-26 18:08 EDT
+## Active checkpoint — 2026-10-26 18:10 EDT
 
-The owner authorized implementation and scoped subagents under the canonical plan. **63 of 64 active corrective cards X303–X367 are reviewed and merged locally (excluding deferredX364).** X364 records a separate deferred administrative-tool recovery limitation. Exact commits, proof qualifications and completion status are in the plan. Active implementation: X367 advanced-history receipt recovery, including a conditional list update that preserves concurrent edits. O1’s stable backend cut0d47a81 has completed7,080local requests across174success patterns with all JSON reads/writes below reporting targets; its X367supplement remains open. R0 and O2 route inventories are prepared and await the final feature cut. Chrome sign-in was confirmed read-only; final rehearsal/deployment/live acceptance remain open. Never redispatch reopened historical parent rows independently.
+The owner authorized implementation and scoped subagents under the canonical plan. **All64active correctivecards X303–X367 are reviewed and merged locally (excluding deferredX364).** X364 records a separate deferred administrative-tool recovery limitation. Exact commits, proof qualifications and completion status are in the plan. Finalfeaturecut `e8e357640c0759ae8169ea5477ebbed5da5a84c0` includes the64reviewed corrections. R0 has started its one composed owner→reader→copy run at that exactcut (frontendtree `9b41bf790498a0157b5a9dde9e296206c3171ee1`); existingT-A3 will use a separate syntheticowner. O1’s7,080stable requests at0d47a81 passed reporting targets; the X367conditionalPUT supplement is running. O2’s79-route local inventory is prepared for after the consolidated deployment. Chrome sign-in was confirmed read-only. Final rehearsal/deployment/live acceptance remain open. Never redispatch reopened historical parent rows independently.
 
 The owner clarified X320: executor-note sharing must be a saved user choice, with executors only as the default and an option for all recipients. Shared readers and new downloads follow that choice; the owner’s full copy includes the notes. X320 is reviewed and merged with actual owner/reader/ZIP/PDF proof and account/profile-safe controls. X365 also corrects the common shared-profile stale-toast retry path and is reviewed/merged.
 
@@ -14,7 +14,7 @@ Local main is intentionally ahead of origin. Pushing main automatically deploys;
 
 Focused proofs use disposable synthetic databases/outboxes or intercepted APIs, with complete logs in private temporary paths documented by card reports. First-batch oversight is recorded in [O1-BATCH1](reviews/2026-10-26-implementation/O1-BATCH1.md) and [O2-BATCH1](reviews/2026-10-26-implementation/O2-BATCH1.md); their source cutoffs are explicit and do not establish final release or production acceptance. Main through `e462c10` passes the combined frontend check (0 errors, 0 warnings) and production build. Later corrective changes still require integrated verification. Final composed owner/recipient acceptance, remaining-wave oversight, release backup/new migrations, consolidated push and actual Railway deployment-identity verification remain open.
 
-Completed nested checkouts are removed after merged/clean/ignored-file inspection, with branches and both central stashes retained. All63reviewed-card checkouts have been removed; this implementation’s cumulative checkout/cache recovery is3,998,883,840bytes (approximately4.00GB). Each cleanup batch has a local manifest under.git/worktree-cleanup-backups/2026-10-26/. Active worktrees remain. No production records, real mail or scheduler were used for these proofs, and no scheduled automation was restarted.
+Completed nested checkouts are removed after merged/clean/ignored-file inspection, with branches and both central stashes retained. All64reviewed-card checkouts have been removed; this implementation’s cumulative checkout/cache recovery is4,067,667,968bytes (approximately4.07GB). The active R0 checkout remains. Each cleanup batch has a local manifest under.git/worktree-cleanup-backups/2026-10-26/. Active worktrees remain. No production records, real mail or scheduler were used for these proofs, and no scheduled automation was restarted.
 
 ## Current source-review status
 
