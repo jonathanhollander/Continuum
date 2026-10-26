@@ -1,9 +1,9 @@
 <script lang="ts">
     /**
-     * Role Switcher Component (Development/Testing)
+     * Role Switcher (header)
      *
-     * Allows switching between user roles to test context-aware messaging.
-     * This would typically be in Settings in production, but is useful for demos.
+     * Switches the account's saved role (contextStore.setRole PATCHes users.user_role),
+     * so each change asks first, the same confirm as Settings' choosePerspective (X156).
      */
 
     import { contextStore } from "$lib/stores/contextStore.svelte";
@@ -19,8 +19,11 @@
     ] as const;
 
     function selectRole(role: 'planning' | 'executor' | 'family' | 'advisor') {
-        contextStore.setRole(role);
         isOpen = false;
+        if (contextStore.role === role) return;
+        const label = roles.find((r) => r.value === role)?.label ?? role;
+        if (!confirm(`Change your perspective to ${label}? You can switch back here anytime.`)) return;
+        contextStore.setRole(role);
     }
 </script>
 
