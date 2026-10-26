@@ -10,7 +10,11 @@ const toSnake = (str: string) => str.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLo
 
 // Values of these keys are user data (JSON text or objects with user-chosen keys):
 // never case-convert anything inside them.
-const VERBATIM_VALUE_KEYS = new Set(['custom_attributes', 'customAttributes', 'setupStatus', 'fireDrill']);
+// funeral_data and advanced_assets keep their maps/lists as JSON text, read back unconverted.
+const VERBATIM_VALUE_KEYS = new Set([
+    'custom_attributes', 'customAttributes', 'setupStatus', 'fireDrill',
+    'wishes', 'budget', 'transactions', 'maintenance', 'claims',
+]);
 
 const convertKeys = (obj: any, converter: (s: string) => string): any => {
     if (obj === null || typeof obj !== 'object' || obj instanceof Date || obj instanceof Blob) return obj;
