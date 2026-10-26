@@ -11,7 +11,7 @@
         url?: string;
         category: string;
         icon: ComponentType;
-        color: string;
+        tone?: "primary" | "gold";
         delay?: number;
     }
 
@@ -23,27 +23,26 @@
         url,
         category,
         icon: Icon,
-        color,
+        tone: toneName = "primary",
         delay = 0,
     }: Props = $props();
 
     // Written-out classes (Tailwind only generates classes it can read in full), on the
-    // site tokens: one accent (primary) plus gold. This page is dark in both themes, so the
-    // accent text is the token lightened toward white to stay readable on the dark card.
+    // site tokens: one accent (primary) plus gold. This card sits on a dark surface in both
+    // themes, so the accent text uses the on-dark member of each family.
     const tones = {
         primary: {
-            badge: "bg-primary/10 border-primary/20 text-[color-mix(in_srgb,var(--color-primary)_40%,white)]",
-            action: "text-[color-mix(in_srgb,var(--color-primary)_40%,white)]",
-            glow: "hover:shadow-primary/10",
+            badge: "bg-primary-on-dark/10 border-primary-on-dark/20 text-primary-on-dark",
+            action: "text-primary-on-dark",
+            glow: "hover:shadow-primary-on-dark/10",
         },
         gold: {
-            badge: "bg-gold/10 border-gold/20 text-(--color-gold)",
-            action: "text-(--color-gold)",
+            badge: "bg-gold/10 border-gold/20 text-gold",
+            action: "text-gold",
             glow: "hover:shadow-gold/10",
         },
     } as const;
-    const toneByColor: Record<string, keyof typeof tones> = { amber: "gold" };
-    const tone = $derived(tones[toneByColor[color] ?? "primary"]);
+    const tone = $derived(tones[toneName] ?? tones.primary);
 
     function getTypeLabel(t: string): string {
         switch (t) {
@@ -90,7 +89,7 @@
             >
                 {category}
             </div>
-            <LucideExternalLink class="w-4 h-4 text-slate-400" />
+            <LucideExternalLink class="w-4 h-4 text-muted-foreground" />
         </div>
 
         <h3
@@ -98,12 +97,12 @@
         >
             {title}
         </h3>
-        <p class="text-sm text-slate-400 line-clamp-2 leading-relaxed mb-6">
+        <p class="text-sm text-muted-foreground line-clamp-2 leading-relaxed mb-6">
             {description}
         </p>
 
         <div class="flex items-center justify-between text-xs font-medium">
-            <div class="flex items-center gap-2 text-slate-400">
+            <div class="flex items-center gap-2 text-muted-foreground">
                 {#if Icon}
                     <Icon class="w-4 h-4" />
                 {/if}
@@ -130,13 +129,13 @@
             </div>
             {#if type === "video" && duration}
                 <div
-                    class="flex items-center gap-1.5 text-[10px] text-slate-400 font-mono"
+                    class="flex items-center gap-1.5 text-[10px] text-muted-foreground font-mono"
                 >
                     <LucidePlay class="w-3 h-3" />
                     {duration}
                 </div>
             {:else if type === "guide"}
-                <LucideBookOpen class="w-4 h-4 text-slate-400" />
+                <LucideBookOpen class="w-4 h-4 text-muted-foreground" />
             {/if}
         </div>
 
@@ -145,12 +144,12 @@
         >
             {title}
         </h3>
-        <p class="text-sm text-slate-400 line-clamp-2 leading-relaxed mb-6">
+        <p class="text-sm text-muted-foreground line-clamp-2 leading-relaxed mb-6">
             {description}
         </p>
 
         <div class="flex items-center justify-between text-xs font-medium">
-            <div class="flex items-center gap-2 text-slate-400">
+            <div class="flex items-center gap-2 text-muted-foreground">
                 {#if Icon}
                     <Icon class="w-4 h-4" />
                 {/if}
