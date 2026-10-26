@@ -352,6 +352,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | U68 | Subscription row unreachable by keyboard (X172) | `ui-standards-enforcer` / `general-purpose` | `lib/components/modules/subscriptions/SubscriptionRow.svelte`, `routes/modules/subscriptions/+page.svelte` (row props only) | The clickable row has no role, tabindex or key handler — make the toggle a button (`aria-expanded`); drop the unused `onCancel` prop and its pass | Tab + Enter expands a row; 0 a11y warnings in the file; 0 errors |
 | U69 | Executor toolkit wrapper and task list width (U67) | `ui-standards-enforcer` / `general-purpose` | `routes/modules/executor-toolkit/+page.svelte` | Wrapper `max-w-6xl mx-auto p-6` puts the title at 312 where module titles sit at 320 — `px-8`; task list `max-w-3xl` leaves a wide empty band in its card — fill the card | Title x 320; task rows reach the card's inner edge; 0 errors |
 | U70 | Tooltips open on hover only (U63) | `ui-standards-enforcer` / `general-purpose` | `lib/components/ui/Tooltip.svelte` | Keyboard focus never shows the bubble — focusin/focusout show and hide it, Escape dismisses | Tab to a sidebar row: bubble shown and described; Escape hides it; 0 errors |
+| U71 | Uploader drop zone name and selected state of button groups (U66) | `ui-standards-enforcer` / `general-purpose` | `lib/components/UniversalUploader.svelte`, `lib/components/FileUploader.svelte` (drop zone only); insurance Status Tracking, property Current Status, subscriptions Difficulty to Cancel button rows (`aria-pressed` only) | Drop zone is named by its own prompt text, not its field label — `aria-describedby` the label; the three button groups never announce the selected option — `aria-pressed` | Accessibility tree: drop zone described by its label; selected option pressed=true; 0 errors |
 
  (decision 12; parallel track, approved by orchestrator diff review)
 
@@ -881,11 +882,12 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | U63 | ☑ | 974707a | Tooltip: role off the trigger wrapper (contacts 4 → 0, dashboard 13 → 0 tooltip nodes at rest); bubble `role=tooltip` + id, trigger `aria-describedby` while shown (descriptions now announced); pending show timer cleared on destroy. Bubble box unchanged. 0 errors. Finding → U70 |
 | U64 | ☑ | 20c43e1 | Toast stack starts at 96 px on ≥1024 px, below the 80 px header (covered 3 of 6 header controls → 0). Card-in-button sweep: 0 offset cards on 41 routes. 0 errors |
 | U65 | ▶ | | |
-| U66 | ▶ | | |
+| U66 | ☑ | c26505b | Labels linked to controls in FormInput, SmartInput, FileUploader, UniversalUploader and 10 module forms; button rows are named groups; field-less labels became text. Unnamed fields in add forms: pets 1, property 2, insurance 3, subscriptions 1, medical 1 → 0; svelte-check label warnings 60 → 0. 0 page errors. Finding → U71 |
 | U67 | ☑ | 7182103 | pets, subscriptions, family-hub, catalog body `px-8` (body x 312 → 320 = h1); executor guide tabs 706 → 312, task list 480 → 345. 0 page errors. Finding → U69 |
 | U68 | ☐ (queued: files in flight — U65) | | |
 | U69 | ▶ | | |
 | U70 | ▶ | | |
+| U71 | ☐ (queued: files in flight — U65) | | |
 | U42 | ☑ | e127714 | Settings left-aligned like the dashboard (heading x 456 → 312); 5 profile inputs labelled (5 → 0 unlabelled); date of death shown to Executor and Family only (Owner 1 → 0). X156 confirm intact. 0 page errors. Finding → U62 |
 | G0 | ☐ (after Wave U) | | |
 | T0 | ☐ (after Wave U, with G0) | | |
