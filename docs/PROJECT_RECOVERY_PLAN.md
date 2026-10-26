@@ -1,6 +1,6 @@
 # Continuum — Project Recovery Plan
 
-**Last Updated:** 2026-10-26 00:45 EST
+**Last Updated:** 2026-10-26 01:10 EST
 
 **Revised 2026-10-26** after the features/usability review (`docs/reviews/2026-10-25-features-usability/REVIEW.md`): the order is now built around the handover, not the existing navigation.
 
@@ -132,10 +132,7 @@ Run it as one fixed scenario with fake data. It is taken from the review at
 apply, also check failed-save behaviour and attachments. A screenshot or a 200 response on
 its own is not acceptance.
 
-**Design decision: "designated recipient", not a hard-coded "son".** The codebase is a
-multi-account product (production domain, 6-language marketing). The recipient view is
-built for *a person the owner names*. The son is the first recipient and the acceptance
-scenario. Recipient and executor are separate flags on a contact.
+**Owner decision (2026-10-26): a product built from Jonathan's own needs for himself and his son.** Features are generic: the recipient view is built for *a person the owner names*. The son is the first recipient and the acceptance scenario. Recipient and executor are separate flags on a contact.
 
 ## 4. The plan (order changed after the 2026-10-25 review)
 
@@ -187,7 +184,7 @@ Phase 3.
 - The remaining type errors.
 - Phone and keyboard usability (CU-025).
 
-**Phase F — Security, admin and operations.** Unchanged:
+**Phase F — Security, admin and operations. Out of scope for this upgrade (owner decision: features and functionality only).** Listed so nothing is lost:
 - **Rotate the exposed OpenRouter key now.** It's an owner step in the dashboard and takes
   minutes.
 - Server-side AI calls.
@@ -198,9 +195,7 @@ Phase 3.
 **Not a phase:** Pulse, QR, scenarios, analytics and builder tools stay reachable, with
 early-preview labels. They no longer decide when the project counts as "usable".
 
-**Deploys:** every phase that changes code is deployed and checked live, per the owner's
-standing rule. Doc-only and discovery work is not deployed. The live check is the
-completion-test step that phase touched, not just `/api/health`.
+**Execution (owner decision 2026-10-26):** subagents code every phase, A through E, each in its own worktree, which is removed after merge. The orchestrator reviews by diff only. Then one deploy of everything, then a full browser test of everything, including the completion test. Defects loop back through the same steps. The coding session's goal is "A–E complete". Older rules are guidance and may be bypassed when that is better for the software (see the execution plan, owner decisions).
 
 Durations are not estimated until Phase B has scoped the shared defects.
 

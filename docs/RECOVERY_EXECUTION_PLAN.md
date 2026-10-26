@@ -1,6 +1,6 @@
 # Continuum — Recovery Execution Plan (subagent-run)
 
-**Last Updated:** 2026-10-26 00:50 EST
+**Last Updated:** 2026-10-26 01:10 EST
 
 The how and the order for [PROJECT_RECOVERY_PLAN.md](PROJECT_RECOVERY_PLAN.md) (phases A–F).
 Issue IDs (CU-0xx) and their evidence are in
@@ -8,7 +8,16 @@ Issue IDs (CU-0xx) and their evidence are in
 
 ---
 
-## Rules (ponytail)
+## Owner decisions (2026-10-26, confirmed)
+
+1. **Product:** Continuum is a product built from Jonathan's needs for himself and his son. Features are generic ("designated recipient"), and the son is the first recipient and the acceptance scenario.
+2. **This upgrade is features and functionality only.** Security and admin (Wave F) are out of scope. Recipient access uses the simplest owner-issued link; there is no permissions system.
+3. **Execution model:** subagents code **all** cards, Waves A through E. The orchestrator reviews **by diff only**. Then **one deploy of everything**, then a **full browser test of everything**. Defects found go round the same code → diff review → deploy → browser test loop.
+4. **Rules are guidance.** Every older rule (archived plans, agent specs, the UI standards doc, `AGENTS.md`, `CLAUDE.md` conventions, and the rules below) may be bypassed when that is better for the software. Say so in the commit message. Merged branches may be deleted. Still kept: no force-push to main, no destructive operations on production data (the existing mixed records need an owner yes), no messages to real people, no spending, and the `jh@continuum.estate` bypass stays.
+5. **Goal:** at the start of coding, set a session goal of "Waves A–E complete", and do not stop or switch focus until Wave E is done.
+6. **Worktrees:** every coding agent works in its own worktree, so agents don't clash. After a card merges, remove its worktree and delete its merged branch.
+
+## Rules (ponytail; guidance, see decision 4)
 
 - **One card, one job.** Make the smallest change that meets the card's acceptance, then stop.
 - **One proof scenario.** It covers *every* acceptance condition on the card. A screenshot
@@ -27,16 +36,19 @@ Issue IDs (CU-0xx) and their evidence are in
 - **No fake data in the owner's records.** Tests use synthetic data in throwaway
   databases.
 
-## Orchestration loop
+## Orchestration loop (owner decisions 3 and 6)
 
-1. **Dispatch** a wave in one message. Code cards use `isolation: "worktree"`.
-2. **Check proof.** Read the agent's proof against the card's acceptance. Do not redo its
-   work.
-3. **Merge, check, commit, push.** Run `npm run check` and `npm run build` once, and
-   compare the type-error count to the previous wave.
-4. **Deploy waves that change code.** Then run the completion-test steps that wave touched
-   on the live site. Doc and discovery waves are not deployed.
-5. **Tick the cards** here, and the completion-test table in the recovery plan.
+**Coding pass (Waves A to E, no deploys in between):**
+1. Set the session goal "Waves A–E complete" (decision 5).
+2. Dispatch each wave in one message. **Every coding agent gets `isolation: "worktree"`.** Waves run in order (A, B in sequence, C, D, E), because later cards build on earlier ones.
+3. Each agent runs its own local proof scenario against synthetic data, and reports the files it changed.
+4. **Review by diff only:** read each worktree's `git diff` against its card. Check the scope, the owned files, the acceptance conditions it claims, and that no feature was removed. Do not re-run the agent's work. Merge if it's good. If not, send it back with the specific diff lines.
+5. Commit each merged card with its card ID, push, then **clean up**: `git worktree remove` that worktree and delete its merged branch. Run `git worktree prune` at the end of each wave.
+
+**Release pass (once, after Wave E):**
+6. Run `npm run check` and `npm run build` once, then deploy everything with `railway up`, and poll `/api/health` until the new version is live.
+7. **Full browser test:** the whole completion test (owner and recipient contexts), then every module on load, save, edit, reload and second-context retrieval, the binder and the PDF. Record the results in the completion-test table and the card status table.
+8. Each proven defect becomes a card. Run it through the same loop (worktree → code → diff review → merge and clean up → deploy → browser test) until everything is green.
 
 ### Agent brief template
 
@@ -53,11 +65,11 @@ Report: files changed, proof output, done or stopped (why).
 
 ---
 
-## Wave A — Stable ground (3 agents, parallel). Not deployed except A1.
+## Wave A — Stable ground (3 agents, parallel)
 
 | ID | Card | Agent | Owns | Change | Acceptance |
 |---|---|---|---|---|---|
-| A1 | Pin the full backend set | `general-purpose` | `backend/requirements.txt`, `nixpacks.toml` | Pin exactly production's `pip freeze` (all resolved packages). Keep `python311`. | A fresh 3.11 venv installs; the dev user seeds; login returns 200; a redeploy reports the same versions over `railway ssh` |
+| A1 | Pin the full backend set | `general-purpose` | `backend/requirements.txt`, `nixpacks.toml` | Pin exactly production's `pip freeze` (all resolved packages). Keep `python311`. | A fresh 3.11 venv installs; the dev user seeds; login returns 200 (production versions are checked in the release pass) |
 | A2 | Stale CI line | `general-purpose` | `CLAUDE.md` (Deployment) | Replace "wait for GitHub Actions" with "run `npm run check` and `npm run build` by hand". | One-line diff |
 | A3 | UI-payload smoke script | `general-purpose` | `scripts/smoke_test.py` (new), reusing `docs/reviews/.../evidence/reproduce_api_probes.py` | For each core record type, send the exact payload its store sends (after `toSnake`), re-fetch, and diff every field. Run by hand. | Its output reproduces CU-001, CU-002, CU-004 and CU-009 as failures, and journal/home-access as passes |
 
@@ -89,7 +101,7 @@ These touch shared files, so they run in sequence, not in parallel.
 | ID | Card | CU | Owns | Acceptance |
 |---|---|---|---|---|
 | D1 | One export snapshot | 003 | `exportService.ts`, `/binder`, `/export/preview` | The binder and PDF both read one snapshot covering all the scenario records, with full text, correct names and an attachment manifest; their counts match the screens |
-| D2 | Recipient start page and owner preview | 005 | a new route for the recipient view, plus recipient/executor flags on contacts | A named recipient opens the owner-issued link (reusing the portal token mechanism, independent of Pulse escalation) in a separate context and finds the note, steps, contacts, original locations, letters and media; the owner's preview shows the same page |
+| D2 | Recipient start page and owner preview | 005 | a new route for the recipient view, plus recipient/executor flags on contacts | A named recipient opens the owner-issued link (simplest token link, reusing the portal token mechanism, independent of Pulse escalation, with no permissions system) in a separate context and finds the note, steps, contacts, original locations, letters and media; the owner's preview shows the same page |
 | D3 | Persistent executor steps | 015 | executor-toolkit | Completed steps and notes survive a reload and link to the records each step needs |
 | D4 | Honest readiness | 012 | `readiness.ts`, `estateAudit`, the vault score, the financial trend | An empty state reads "not started"; no invented trends; summary totals match the detail lists |
 
@@ -102,11 +114,9 @@ confirming they have 0 importers · E6 remaining type errors in the touched file
 phone and keyboard pass (CU-025) · E8 branch triage (delete merged branches under the
 standing git rule; list the rest).
 
-## Wave F — Security and admin (after D is green)
+## Wave F — Security and admin: OUT OF SCOPE for this upgrade (owner decision 2)
 
-F1 **OWNER:** rotate the OpenRouter key · F2 server-side AI proxy · F3 production
-environment variables (one forced re-login) · F4 untrack the `.db` files · F5 the bypass,
-only when asked.
+Listed so nothing is lost: F1 rotate the OpenRouter key (an owner step, recommended anyway) · F2 server-side AI proxy · F3 production environment variables · F4 untrack the `.db` files · F5 the bypass, only when asked.
 
 ---
 
@@ -121,4 +131,5 @@ only when asked.
 | C1–C6 | ☐ | |
 | D1–D4 | ☐ | |
 | E1–E8 | ☐ | |
-| F1–F5 | ☐ | |
+| Release: deploy + full browser test | ☐ | |
+| F1–F5 | out of scope | |
