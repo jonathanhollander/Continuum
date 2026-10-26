@@ -1,6 +1,7 @@
 <script lang="ts">
     import { focusTrap } from "$lib/actions/focusTrap";
     import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
+    import { milestoneLabel } from "$lib/services/exportService";
     import { activeAccountId } from "$lib/stores/keyringStore";
     import { get } from "svelte/store";
     import { readCustom } from "$lib/utils/customFields";
@@ -271,7 +272,7 @@
     }
 
     function getMilestoneLabel(id: string) {
-        return COMMON_MILESTONES.find((m) => m.id === id)?.label || id;
+        return milestoneLabel(id);
     }
 
     /** "2030-01-01" -> "January 1, 2030" in the reader's locale, read as a local day (no time-zone shift). */
