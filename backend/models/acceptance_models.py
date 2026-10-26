@@ -13,6 +13,6 @@ class AcceptanceTask(SQLModel, table=True):
     role: str
     check: str
     status: str = Field(default="Pending") # Pending, Complete
-    est_time: int
+    est_time: int = 0  # unused by the UI; the client omits it
     section: str
     complexity: str # simple, moderate, complex
