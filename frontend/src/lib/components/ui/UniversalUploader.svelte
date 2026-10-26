@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onDestroy } from "svelte";
     import {
         Upload,
         X,
@@ -28,6 +29,9 @@
         category = "uncategorized",
         referenceId = undefined,
         onchange,
+        onabandoned,
+        uploadState = $bindable("idle"),
+        disabled = false,
     } = $props<{
         value?: string;
         mediaId?: number | null;
@@ -36,6 +40,10 @@
         module: string;
         category?: string;
         referenceId?: string;
+        uploadState?: "idle" | "uploading" | "failed";
+        disabled?: boolean;
+        /** The initiating form owns a late upload even after its uploader is gone. */
+        onabandoned?: (file: MediaUploadResponse) => void;
         /** `file` comes with a fresh upload: its name, type and size, as the server stored them. */
         onchange?: (
             url: string,
@@ -51,6 +59,9 @@
     let error: string | null = $state(null);
     let fileInput: HTMLInputElement | undefined = $state();
     let uploadProgress = $state(0);
+    let attempt = 0;
+    let destroyed = false;
+    onDestroy(() => { destroyed = true; attempt++; });
     /** The last upload's record, passed to the preview while it is still the file shown. */
     let uploaded = $state<MediaUploadResponse | null>(null);
     let shownId = $derived(mediaIdFromRef(mediaId ?? value));
@@ -84,6 +95,10 @@
     }
 
     async function processFile(file: File) {
+        if (disabled || destroyed) return;
+        const operation = ++attempt;
+        uploadState = "failed";
+        processing = false;
         // Mode Validation
         if (mode === "image" && !file.type.startsWith("image/")) {
             error = "This space keeps images. An image file will fit here.";
@@ -109,32 +124,28 @@
 
         error = null;
         processing = true;
+        uploadState = "uploading";
         uploadProgress = 0;
 
         try {
-            // Upload to Backend (S3/Local)
-            // Note: We don't pass 'category' here because mediaService logic (implied by previous plan steps)
-            // calculated it on backend.
-            // WAIT, plan said "Update save_file to accept doc_category (passed from upload endpoint)".
-            // But mediaService.ts uploadMedia function doesn't take category arg in my previous view?
-            // I should check if I updated mediaService.ts to accept category.
-            // Checking previous steps: I updated backend logic to `get_doc_category(mime_type)`.
-            // So I DON'T need to pass it from frontend. Backend derives it. Good.
-
             const response = await uploadMedia(
                 file,
                 module,
                 referenceId,
                 file.name, // Use filename as description initially
                 (progress) => {
-                    uploadProgress = progress.percentage;
+                    if (!destroyed && operation === attempt) uploadProgress = progress.percentage;
                 },
             );
 
-            // Update State
+            if (destroyed || operation !== attempt) {
+                onabandoned?.(response);
+                return;
+            }
             uploaded = response;
             value = response.download_url;
             mediaId = response.id;
+            uploadState = "idle";
 
             if (onchange)
                 onchange(value, mediaId, {
@@ -143,15 +154,24 @@
                     file_size: response.file_size,
                 });
         } catch (err: any) {
+            if (destroyed || operation !== attempt) return;
             console.error("Upload failed", err);
             error = err.message || "Saving this file paused. It is ready to try again.";
+            uploadState = "failed";
         } finally {
-            processing = false;
-            uploadProgress = 0;
+            if (!destroyed && operation === attempt) {
+                processing = false;
+                uploadProgress = 0;
+            }
         }
     }
 
     function clearFile() {
+        if (disabled) return;
+        attempt++;
+        processing = false;
+        uploadState = "idle";
+        error = null;
         value = "";
         mediaId = null;
         uploaded = null;
@@ -177,6 +197,7 @@
             <div class="bg-muted p-2 flex justify-end gap-2 border-t border-border">
                 <button
                     type="button"
+                    {disabled}
                     onclick={() => fileInput?.click()}
                     class="text-foreground px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-card hover:shadow-sm border border-transparent hover:border-border flex items-center gap-2"
                 >
@@ -184,6 +205,7 @@
                 </button>
                 <button
                     type="button"
+                    {disabled}
                     onclick={clearFile}
                     class="text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-card hover:shadow-sm border border-transparent hover:border-border flex items-center gap-2"
                 >
@@ -193,6 +215,7 @@
             <input
                 id="{uid}-file"
                 type="file"
+                {disabled}
                 bind:this={fileInput}
                 onchange={handleFileSelect}
                 accept={acceptAttr}
@@ -215,15 +238,17 @@
             ondragover={handleDragOver}
             ondragleave={handleDragLeave}
             ondrop={handleDrop}
-            onclick={() => fileInput?.click()}
-            onkeydown={(e) => e.key === "Enter" && fileInput?.click()}
+            onclick={() => !disabled && fileInput?.click()}
+            onkeydown={(e) => !disabled && e.key === "Enter" && fileInput?.click()}
             role="button"
-            tabindex="0"
+            tabindex={disabled ? -1 : 0}
+            aria-disabled={disabled}
             aria-describedby={label ? `${uid}-label` : undefined}
         >
             <input
                 id="{uid}-file"
                 type="file"
+                {disabled}
                 bind:this={fileInput}
                 onchange={handleFileSelect}
                 accept={acceptAttr}

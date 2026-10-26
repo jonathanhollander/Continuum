@@ -392,6 +392,15 @@ export async function deleteMedia(ref: MediaRef): Promise<void> {
     if (!response.ok) throw new Error('Removing this file paused. You can try again shortly.');
 }
 
+/** Lifecycle cleanup only: a file used by any current saved record stays available. */
+export async function removeUnusedMedia(ref: MediaRef, owner = captureSession()): Promise<void> {
+    const response = await fetch(`${API_BASE}/${requireId(ref)}?only_if_unused=true`, {
+        method: 'DELETE', headers: authHeaders(owner),
+    });
+    assertCurrentSession(owner);
+    if (!response.ok && response.status !== 404) throw new Error('Clearing the unused file paused. You can try again when you are ready.');
+}
+
 /**
  * Update media metadata
  */
