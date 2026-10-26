@@ -51,7 +51,7 @@
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import { fly } from "svelte/transition"; // Ensure fly is imported
-    import { onMount } from "svelte";
+    import { onMount, tick } from "svelte";
     import { portal } from "$lib/actions/portal";
     import { plural } from "$lib/utils/plural";
 
@@ -59,9 +59,19 @@
     let isLoading = $state(true);
     let viewMode = $state<ViewMode>('card');
 
+    // A scanned QR label opens /modules/property?id=N: that asset's card is brought into view and marked.
+    let focusId = $state<string | null>(null);
+
     onMount(async () => {
         await propertyStore.sync?.();
         isLoading = false;
+
+        const id = new URLSearchParams(window.location.search).get("id");
+        if (id && propertyStore.items.some((p) => String(p.id) === id)) {
+            focusId = id;
+            await tick();
+            document.getElementById(`property-item-${id}`)?.scrollIntoView({ block: "center" });
+        }
     });
     let isEditing = $state(false);
     let searchQuery = $state("");
@@ -489,7 +499,8 @@
     function generateQR(item: PropertyItem) {
         qrStore.generateAssetQR({
             id: crypto.randomUUID(),
-            assetId: item.id,
+            // A string, as the heirloom labels are, so one asset never gets two labels.
+            assetId: String(item.id),
             assetName: item.name,
             assetType: "Property",
             location: item.location,
@@ -499,7 +510,7 @@
             module: "Property",
             action: "CREATE",
             entityType: "QR Label",
-            entityId: item.id,
+            entityId: String(item.id),
             entityName: item.name,
             userContext: $estateProfile.ownerName || "User",
         });
@@ -620,7 +631,9 @@
         {#each filteredItems as item (item.id)}
             {@const Icon = typeIcons[item.type] || LayoutGrid}
             <div
-                class="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 overflow-hidden group flex flex-col relative"
+                id="property-item-{item.id}"
+                data-focused={focusId === String(item.id)}
+                class="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 overflow-hidden group flex flex-col relative {focusId === String(item.id) ? 'ring-2 ring-primary' : ''}"
                 use:coverInView={item.thumbnail}
                 transition:scale={{
                     duration: 400,
@@ -957,7 +970,11 @@
                     <tbody class="divide-y divide-slate-100">
                         {#each filteredItems as item (item.id)}
                             {@const Icon = typeIcons[item.type] || LayoutGrid}
-                            <tr class="hover:bg-slate-50 transition-colors group">
+                            <tr
+                                id="property-item-{item.id}"
+                                data-focused={focusId === String(item.id)}
+                                class="hover:bg-slate-50 transition-colors group {focusId === String(item.id) ? 'ring-2 ring-primary ring-inset' : ''}"
+                            >
                                 <td class="px-4 py-3">
                                     <div class="flex items-center gap-3">
                                         <div class="w-8 h-8 rounded-lg flex items-center justify-center {typeColors[item.type]}">

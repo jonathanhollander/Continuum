@@ -36,8 +36,8 @@ export const heirloomStore = {
         return heirloomSync.create({
             ...item,
             // id: item.id  <-- Drop ID, let backend assign auto-increment int
-            name: item.name || 'Unknown Treasure',
-            recipient: item.recipient || 'Undecided',
+            name: item.name || '',
+            recipient: item.recipient || '',
             story: item.story || '',
             image: item.image || ''
         });
