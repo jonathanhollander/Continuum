@@ -513,6 +513,11 @@ def passkey_login_finish(request: Request, payload: PasskeyLoginFinishPayload, s
         session.add(credential)
         session.commit()
 
+        passkey_user = session.get(User, credential.user_id)
+        if not passkey_user:
+            raise HTTPException(status_code=401, detail="Authentication failed")
+        log_auth_success(session, request, passkey_user.id, passkey_user.email, "passkey")
+
         # Generate JWT tokens
         access_token = create_access_token(
             data={"sub": str(credential.user_id)},
@@ -527,7 +532,13 @@ def passkey_login_finish(request: Request, payload: PasskeyLoginFinishPayload, s
             "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60
         }
 
+    except HTTPException as e:
+        # Keep the specific 400/401 raised above instead of folding it into the generic failure
+        log_auth_failure(session, request, "", "passkey", str(e.detail))
+        raise
     except Exception as e:
+        session.rollback()
+        log_auth_failure(session, request, "", "passkey", "Verification failed")
         logger.error(
             "WebAuthn authentication verification failed",
             extra={"context": {
@@ -559,12 +570,9 @@ def send_magic_link(request: Request, link_data: MagicLinkRequest, session: Sess
 
     # Generate magic link JWT token with short expiration
     access_token = create_access_token(
-        data={"sub": str(user.id), "type": "magic_link"},
+        data={"sub": str(user.id), "type": "magic_link", "jti": secrets.token_urlsafe(16)},
         expires_delta=timedelta(minutes=15)  # 15 minute expiration
     )
-
-    # Log magic link request
-    log_auth_success(session, request, user.id, user.email, "magic_link_request")
 
     # Generate magic link URL
     from backend.services.email_service import email_service
@@ -573,20 +581,36 @@ def send_magic_link(request: Request, link_data: MagicLinkRequest, session: Sess
     magic_link_url = f"{frontend_url}/auth/verify?token={access_token}"
 
     # Send email with magic link
+    from backend.utils.audit import log_audit
     try:
-        email_service.send_magic_link(
+        result = email_service.send_magic_link(
             to_email=user.email,
             magic_link_url=magic_link_url,
             db_session=session
         )
-        logger.info(
-            "Magic link email sent",
-            extra={"context": {
-                "user_id": user.id,
-                "email": user.email
-            }}
+        sent = result.status != "failed"
+        # A request is not a login: record it as a request, not as an auth success
+        log_audit(
+            session=session, request=request, action="magic_link_requested",
+            user_id=user.id, user_email=user.email, resource_type="magic_link_request",
+            success=sent, error_message=None if sent else (result.error or "Email not sent")
         )
+        if sent:
+            logger.info(
+                "Magic link email sent",
+                extra={"context": {"user_id": user.id, "email": user.email}}
+            )
+        else:
+            logger.warning(
+                "Magic link email failed to send",
+                extra={"context": {"user_id": user.id, "email": user.email, "error": result.error}}
+            )
     except Exception as e:
+        log_audit(
+            session=session, request=request, action="magic_link_requested",
+            user_id=user.id, user_email=user.email, resource_type="magic_link_request",
+            success=False, error_message=type(e).__name__
+        )
         logger.warning(
             "Magic link email failed to send",
             extra={"context": {
@@ -632,6 +656,31 @@ def verify_magic_link(request: Request, token: str, session: Session = Depends(g
         if not user:
             log_auth_failure(session, request, "", "magic_link_verify", "User not found")
             raise HTTPException(status_code=401, detail="User not found")
+
+        # One-time use: record the jti on first verify. Reuses refresh_tokens (unique token_hash,
+        # revoked=True so it can never act as a refresh token). Tokens without a jti (issued before
+        # this change) are refused: they live 15 minutes at most and fail-closed is the safe default.
+        jti = payload.get("jti")
+        if not jti or not isinstance(jti, str):
+            log_auth_failure(session, request, user.email, "magic_link_verify", "Token has no one-time id")
+            raise HTTPException(status_code=401, detail="Invalid or expired token")
+        import hashlib
+        from datetime import datetime
+        from sqlalchemy.exc import IntegrityError
+        from backend.database import RefreshToken
+        try:
+            session.add(RefreshToken(
+                user_id=user.id,
+                token_hash=hashlib.sha256(f"magic_link:{jti}".encode()).hexdigest(),
+                expires_at=datetime.utcfromtimestamp(payload["exp"]),
+                revoked=True,
+                device_info="magic_link_used",
+            ))
+            session.commit()
+        except IntegrityError:
+            session.rollback()
+            log_auth_failure(session, request, user.email, "magic_link_verify", "Token already used")
+            raise HTTPException(status_code=401, detail="Invalid or expired token")
 
         # Log successful magic link authentication
         log_auth_success(session, request, user.id, user.email, "magic_link")
