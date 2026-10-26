@@ -14,8 +14,7 @@
     import { preferenceStore } from "$lib/stores/preferenceStore";
     import { goto } from "$app/navigation";
     import { auth } from "$lib/stores/auth";
-    import { keyringEmails } from "$lib/stores/keyringStore";
-    import { get } from "svelte/store";
+    import { knownAccountEmail } from "$lib/stores/keyringStore";
 
     // Accessibility scale
     const fontSizeClass = $derived(
@@ -32,7 +31,7 @@
     // The marketing CTA's ?email, and ?path (guided | expert) when a visitor
     // returns here from signup or sign-in with the choice they made
     const startParams = new URLSearchParams(window.location.search);
-    const handoffEmail = startParams.get("email");
+    const handoffEmail = startParams.get("email")?.trim() || null;
     const chosenPath = startParams.get("path");
 
     onMount(() => {
@@ -60,10 +59,11 @@
     // knows) or creates an account first; the email from the marketing CTA
     // fills the form, and the chosen path comes back here afterwards.
     function sendToSignInIfNeeded(path: "guided" | "expert"): boolean {
-        if ($auth.user || $auth.token) return false;
+        const signedInEmail = $auth.user?.email?.trim().toLowerCase();
+        if (signedInEmail && (!handoffEmail || signedInEmail === handoffEmail.toLowerCase())) return false;
         const params = new URLSearchParams({ redirect: `/start?path=${path}` });
-        if (handoffEmail) params.set("email", handoffEmail);
-        const returning = !!handoffEmail && get(keyringEmails).includes(handoffEmail);
+        const returning = handoffEmail ? knownAccountEmail(handoffEmail) : null;
+        if (handoffEmail) params.set("email", returning || handoffEmail);
         goto(`${returning ? "/login" : "/signup"}?${params}`);
         return true;
     }

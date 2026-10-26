@@ -1,6 +1,9 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { migrateAllMedia, needsMigration, type MigrationProgress } from '$lib/services/mediaMigration';
+    import { auth } from '$lib/stores/auth';
+    import { activeAccountId } from '$lib/stores/keyringStore';
+    import { captureMediaOwner, isCurrentMediaOwner, MEDIA_STORAGE_CHANGED, type MediaOwner } from '$lib/services/indexedDB';
 
     let showNotice = false;
     let migrating = false;
@@ -9,36 +12,93 @@
     let retryText: string | null = null;
     let retryLabel = 'Try again';
     let success = false;
+    let ownerKey: string | null = null;
+    let checkRevision = 0;
+    let runRevision = 0;
+    let dismissed = false;
+    let destroyed = false;
+    let hideTimer: ReturnType<typeof setTimeout> | undefined;
 
-    onMount(async () => {
-        // Check if migration is needed
-        const needs = await needsMigration();
-        showNotice = needs;
+    function sameOwner(owner: MediaOwner, run = runRevision): boolean {
+        return !destroyed && run === runRevision && isCurrentMediaOwner(owner);
+    }
+
+    function checkPending() {
+        const owner = captureMediaOwner();
+        const nextKey = owner ? `${owner.account}:${owner.session.generation}` : null;
+        if (nextKey !== ownerKey) {
+            ownerKey = nextKey;
+            runRevision++;
+            clearTimeout(hideTimer);
+            showNotice = false;
+            migrating = false;
+            progress = null;
+            retryText = null;
+            success = false;
+            dismissed = false;
+        }
+        const check = ++checkRevision;
+        if (!owner || migrating || success) return;
+        const run = runRevision;
+        void needsMigration(owner).then((needs) => {
+            if (check === checkRevision && sameOwner(owner, run)) showNotice = needs && !dismissed;
+        });
+    }
+
+    onMount(() => {
+        // A fresh account is checked after /me identifies it, and a failed new upload can
+        // surface its own retained bytes without a reload. Historical unowned bytes stay aside.
+        const offAuth = auth.subscribe(checkPending);
+        const offAccount = activeAccountId.subscribe(checkPending);
+        const storageChanged = (event: Event) => {
+            const owner = captureMediaOwner();
+            if ((event as CustomEvent<{ account: string }>).detail?.account === owner?.account) dismissed = false;
+            checkPending();
+        };
+        window.addEventListener(MEDIA_STORAGE_CHANGED, storageChanged);
+        return () => {
+            destroyed = true;
+            runRevision++;
+            checkRevision++;
+            clearTimeout(hideTimer);
+            offAuth();
+            offAccount();
+            window.removeEventListener(MEDIA_STORAGE_CHANGED, storageChanged);
+        };
     });
 
     async function startMigration() {
+        if (migrating) return;
+        const owner = captureMediaOwner();
+        if (!owner) { checkPending(); return; }
+        const run = ++runRevision;
         migrating = true;
         retryText = null;
         success = false;
 
         try {
             const result = await migrateAllMedia((p) => {
-                progress = p;
-            });
+                if (sameOwner(owner, run)) progress = p;
+            }, owner);
+            if (!sameOwner(owner, run)) return;
 
             if (result.success) {
                 success = true;
-                setTimeout(() => {
+                hideTimer = setTimeout(() => {
+                    if (!sameOwner(owner, run)) return;
+                    success = false;
                     showNotice = false;
+                    checkPending();
                 }, 3000);
             } else {
                 retryText = restText(result.migrated, result.failed);
             }
         } catch (e: any) {
+            if (!sameOwner(owner, run)) return;
             console.error('Media migration:', e);
             retryText = restText(0, 0);
         } finally {
-            migrating = false;
+            if (sameOwner(owner, run)) migrating = false;
         }
     }
 
@@ -52,6 +112,7 @@
     }
 
     function dismiss() {
+        dismissed = true;
         showNotice = false;
     }
 </script>

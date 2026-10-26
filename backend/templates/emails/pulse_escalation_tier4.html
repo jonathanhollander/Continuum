@@ -3,25 +3,33 @@
 {% block content %}
 <div class="greeting">Dear {{ recipient_name }},</div>
 
-<h2>{{ user_name }}'s notes are open to you</h2>
+{% if available_vault_names %}
+<h2>Shared notes from {{ user_name }}</h2>
+{% else %}
+<h2>A check-in about {{ user_name }}</h2>
+{% endif %}
 
-<div class="alert-box" style="border-left-color: #7c2d12; background: #fef2f2;">
-    Everything {{ user_name }} chose to share with their guardians is now available to you.
+<div class="alert-box info">
+    {% if available_vault_names %}
+    The shared vault notes listed below are available in the Guardian Portal.
+    {% else %}
+    The Guardian Portal shows {{ user_name }}'s current check-in status.
+    {% endif %}
 </div>
 
-<p>
-    {{ user_name }} chose you as one of the people they trust most. Their check-ins have been quiet for a long while, so what they chose to share is now open in the Guardian Portal. We are so sorry if this reaches you in a hard moment.
-</p>
+<p>{{ user_name }} chose you as one of the people they trust most. Their Guardian Portal is a place to look at their current check-in and the information they have shared with you.</p>
 
 <p><strong>In the Guardian Portal you'll find:</strong></p>
 <ul style="color: #475569; margin: 16px 0;">
-    <li>When {{ user_name }} last checked in</li>
-    <li>Every note {{ user_name }} saved for their guardians, if they chose to release them</li>
-    <li>Any messages they've written to you</li>
+    <li>Their current check-in status</li>
+    {% if has_last_checkin %}<li>When {{ user_name }} last checked in</li>{% endif %}
+    {% if has_owner_phone %}<li>The phone number {{ user_name }} saved for you</li>{% endif %}
+    {% if has_owner_messages %}<li>Messages {{ user_name }} wrote for you</li>{% endif %}
+    {% for name in available_vault_names %}<li>Shared vault note: {{ name }}</li>{% endfor %}
 </ul>
 
 <div class="cta-container">
-    <a href="{{ portal_url }}" class="cta-button" style="background: #7c2d12;">Open what {{ user_name }} left for you</a>
+    <a href="{{ portal_url }}" class="cta-button">Open Guardian Portal</a>
 </div>
 
 <div class="divider"></div>
@@ -29,21 +37,15 @@
 <p><strong>When you feel ready:</strong></p>
 <ol style="color: #475569; margin: 16px 0;">
     <li>You might begin by looking in on {{ user_name }}, with the help of local services if needed</li>
-    <li>Read the notes they left, to understand their wishes</li>
+    <li>Read what they shared in the Guardian Portal</li>
     <li>Talk with the others {{ user_name }} trusted</li>
 </ol>
 
-<p style="font-size: 14px; color: #1e293b; margin-top: 24px; font-weight: 600;">
-    {{ user_name }} trusted you with this, and honoring their wishes is the best way to care for it.
+<p style="font-size: 14px; color: #1e293b; margin-top: 24px;">
+    Thank you for looking out for {{ user_name }}.
 </p>
-
-<div class="divider"></div>
 
 <p style="font-size: 13px; color: #64748b;">
-    If you've heard from {{ user_name }}, we're so glad. Let us know in the Guardian Portal and further alerts will pause for a while.
-</p>
-
-<p style="font-size: 13px; color: #94a3b8; margin-top: 16px;">
-    We're here if you'd like help; reply to this email.
+    If you've heard from {{ user_name }}, let us know through the Guardian Portal and further alerts will pause for a while.
 </p>
 {% endblock %}

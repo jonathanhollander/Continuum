@@ -3,8 +3,9 @@
  * Helps migrate media from IndexedDB to backend storage
  */
 
-import { mediaStorage } from './indexedDB';
+import { mediaStorage, captureMediaOwner, isCurrentMediaOwner, requireMediaOwner, mediaMappingKey, type MediaOwner } from './indexedDB';
 import { uploadMediaDirect, verifyMediaRetrieval } from './mediaService';
+import { SessionChangedError } from './sessionOwnership';
 
 export interface MigrationProgress {
     total: number;
@@ -24,14 +25,10 @@ export interface MigrationResult {
 /**
  * Get all media IDs from IndexedDB
  */
-async function getAllMediaIds(): Promise<string[]> {
+async function getAllMediaIds(owner: MediaOwner): Promise<string[]> {
     // Through indexedDB.ts, so the store is created with the database (a bare
     // open here used to create an empty database that never got its store)
-    try {
-        return await mediaStorage.keys();
-    } catch {
-        return [];
-    }
+    return mediaStorage.keys(owner);
 }
 
 /**
@@ -105,12 +102,16 @@ function parseLegacyId(id: string): { module: string; referenceId?: string; file
  */
 async function migrateSingleMedia(
     id: string,
+    owner: MediaOwner,
     onProgress?: (id: string) => void
 ): Promise<{ id: string; mediaId: number; downloadUrl: string }> {
+    requireMediaOwner(owner);
     if (onProgress) onProgress(id);
+    requireMediaOwner(owner);
 
     // Get blob from IndexedDB
-    const blob = await mediaStorage.get(id);
+    const blob = await mediaStorage.get(id, owner);
+    requireMediaOwner(owner);
     if (!blob) {
         throw new Error('Media not found in IndexedDB');
     }
@@ -122,11 +123,13 @@ async function migrateSingleMedia(
     const file = new File([blob], filename, { type: blob.type });
 
     // Upload to backend (the original stays in IndexedDB until it reads back)
-    const response = await uploadMediaDirect(file, module, referenceId, `Migrated from IndexedDB: ${id}`);
+    const response = await uploadMediaDirect(file, module, referenceId, `Recovered from this account's browser copy: ${id}`, undefined, owner.session);
+    requireMediaOwner(owner);
 
-    if (!(await verifyMediaRetrieval(response.id, file.size))) {
+    if (!(await verifyMediaRetrieval(response.id, file.size, owner.session))) {
         throw new Error(`Server copy ${response.id} did not read back yet; the local original is kept`);
     }
+    requireMediaOwner(owner);
 
     return {
         id,
@@ -139,14 +142,17 @@ async function migrateSingleMedia(
  * Migrate all media from IndexedDB to backend
  */
 export async function migrateAllMedia(
-    onProgress?: (progress: MigrationProgress) => void
+    onProgress?: (progress: MigrationProgress) => void,
+    owner = requireMediaOwner()
 ): Promise<MigrationResult> {
     const errors: Array<{ id: string; error: string }> = [];
     const migrations: Array<{ oldId: string; newId: number; downloadUrl: string }> = [];
 
     try {
         // Get all media IDs from IndexedDB
-        const mediaIds = await getAllMediaIds();
+        requireMediaOwner(owner);
+        const mediaIds = await getAllMediaIds(owner);
+        requireMediaOwner(owner);
         const total = mediaIds.length;
 
         if (total === 0) {
@@ -165,8 +171,9 @@ export async function migrateAllMedia(
         // Migrate each file
         for (const id of mediaIds) {
             try {
-                const result = await migrateSingleMedia(id, (currentId) => {
-                    if (onProgress) {
+                requireMediaOwner(owner);
+                const result = await migrateSingleMedia(id, owner, (currentId) => {
+                    if (onProgress && isCurrentMediaOwner(owner)) {
                         onProgress({
                             total,
                             completed,
@@ -175,6 +182,7 @@ export async function migrateAllMedia(
                         });
                     }
                 });
+                requireMediaOwner(owner);
 
                 migrations.push({
                     oldId: result.id,
@@ -183,14 +191,20 @@ export async function migrateAllMedia(
                 });
                 // Record the mapping before removing the original, so records that
                 // still hold the old id resolve to the server copy (indexedDB.ts getUrl)
-                saveMigrationMapping(migrations);
-
-                completed++;
+                saveMigrationMapping(migrations, owner);
 
                 // The server copy read back with the same size, so the local original can go
-                await mediaStorage.delete(id);
+                await mediaStorage.delete(id, owner);
+                requireMediaOwner(owner);
+                completed++;
 
             } catch (error: any) {
+                if (error instanceof SessionChangedError) {
+                    // This run belongs to its starting account. Remaining files stay there;
+                    // another sign-in neither continues the uploads nor removes those originals.
+                    return { success: false, total, migrated: completed, failed: total - completed,
+                        errors: [...errors, { id, error: error.message }] };
+                }
                 console.error(`Failed to migrate ${id}:`, error);
                 errors.push({
                     id,
@@ -200,7 +214,7 @@ export async function migrateAllMedia(
             }
 
             // Update progress
-            if (onProgress) {
+            if (onProgress && isCurrentMediaOwner(owner)) {
                 onProgress({
                     total,
                     completed,
@@ -232,25 +246,29 @@ export async function migrateAllMedia(
 }
 
 /** Merge new entries into the stored mapping (earlier runs are kept). */
-function saveMigrationMapping(entries: Array<{ oldId: string; newId: number; downloadUrl: string }>): void {
+function saveMigrationMapping(entries: Array<{ oldId: string; newId: number; downloadUrl: string }>, owner: MediaOwner): void {
+    requireMediaOwner(owner);
     let existing: Array<{ oldId: string; newId: number; downloadUrl: string }> = [];
     try {
-        existing = JSON.parse(localStorage.getItem('media_migration_mapping') || '[]');
+        existing = JSON.parse(localStorage.getItem(mediaMappingKey(owner)) || '[]');
         if (!Array.isArray(existing)) existing = [];
     } catch {
         existing = [];
     }
     const byOld = new Map(existing.map((m) => [m.oldId, m]));
     for (const m of entries) byOld.set(m.oldId, m);
-    localStorage.setItem('media_migration_mapping', JSON.stringify([...byOld.values()]));
+    requireMediaOwner(owner);
+    localStorage.setItem(mediaMappingKey(owner), JSON.stringify([...byOld.values()]));
 }
 
 /**
  * Get migration mapping from localStorage
  * Returns map of oldId -> { newId, downloadUrl }
  */
-export function getMigrationMapping(): Record<string, { newId: number; downloadUrl: string }> {
-    const mapping = localStorage.getItem('media_migration_mapping');
+export function getMigrationMapping(owner = captureMediaOwner()): Record<string, { newId: number; downloadUrl: string }> {
+    if (!owner) return {};
+    requireMediaOwner(owner);
+    const mapping = localStorage.getItem(mediaMappingKey(owner));
     if (!mapping) return {};
 
     try {
@@ -273,16 +291,19 @@ export function getMigrationMapping(): Record<string, { newId: number; downloadU
 /**
  * Clear migration mapping after successful reference updates
  */
-export function clearMigrationMapping(): void {
-    localStorage.removeItem('media_migration_mapping');
+export function clearMigrationMapping(owner = requireMediaOwner()): void {
+    requireMediaOwner(owner);
+    localStorage.removeItem(mediaMappingKey(owner));
 }
 
 /**
  * Check if migration is needed (IndexedDB has media)
  */
-export async function needsMigration(): Promise<boolean> {
+export async function needsMigration(owner = captureMediaOwner()): Promise<boolean> {
+    if (!owner) return false;
     try {
-        const mediaIds = await getAllMediaIds();
+        const mediaIds = await getAllMediaIds(owner);
+        requireMediaOwner(owner);
         return mediaIds.length > 0;
     } catch {
         return false;

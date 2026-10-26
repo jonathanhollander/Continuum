@@ -294,7 +294,7 @@
                     {/each}
                 </div>
             </div>
-        {:else}
+        {:else if $estateAnalytics.guardians.loaded}
             <div
                 in:slide={{ duration: 400 }}
                 class="bg-success/10 border border-success/20 p-8 rounded-2xl text-center"
@@ -313,6 +313,8 @@
                     legacy current.
                 </p>
             </div>
+        {:else}
+            <p class="text-muted-foreground" role="status">Gathering your circle...</p>
         {/if}
     </div>
 </div>

@@ -122,9 +122,9 @@
     <!-- Header Section -->
     <LivingBlueprintHeader
         title="QR Access Codes"
-        subtitle="Bridge the gap between physical reality and digital security"
-        detailedDescription="Generate encrypted access keys and asset labels that connect your physical belongings to digital documentation. Create QR codes for your Red Binder that give your executor instant access to critical information."
-        whyMatters="QR codes transform static documents into dynamic access points. Your executor can scan a single code to access exactly what they need, when they need it, without searching through files."
+        subtitle="Printed shortcuts to your Continuum pages"
+        detailedDescription="Create QR codes for your Red Binder and item labels. Pack codes open Dashboard or the executor guide after sign-in; asset labels open the linked record in the signed-in account."
+        whyMatters="Keep a printed route back to your records alongside your physical documents and belongings."
     >
         <div class="flex items-center gap-4">
             <div
@@ -139,7 +139,7 @@
                     <p
                         class="text-[10px] font-black uppercase tracking-widest text-muted-foreground"
                     >
-                        Active Keys
+                        Generated Codes
                     </p>
                     <p class="text-sm font-bold text-foreground">
                         {$qrStore.assetLabels.length +
@@ -157,9 +157,9 @@
     <AIPromptBar
         context="qr-codes"
         prompts={[
-            "Explain how QR access codes work for my estate...",
-            "Draft instructions for my executor on using a printed QR access code...",
-            "Help me set up QR access codes for my family...",
+            "Explain how these QR shortcuts open my signed-in account...",
+            "Draft sign-in instructions for my executor using a printed QR code...",
+            "Help me explain recipient links to my family...",
             "Where can I keep printed QR codes safe at home?"
         ]}
     />
@@ -171,9 +171,15 @@
             <h2
                 class="text-2xl font-black text-foreground uppercase tracking-tighter"
             >
-                Digital Access Keys
+                QR Pack Shortcuts
             </h2>
         </div>
+
+        <p class="text-muted-foreground">
+            Pack codes open pages in the signed-in account. For your recipient's own start page,
+            open Full Directory in Family &amp; Contacts, edit their contact, and create their link.
+            <a href="/modules/contacts" class="font-semibold text-primary hover:underline">Set up a recipient's link</a>
+        </p>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {#each $qrStore.accessPacks as pack}
@@ -196,7 +202,7 @@
                             <div>
                                 <span
                                     class="text-[10px] font-black uppercase tracking-widest text-muted-foreground"
-                                    >{pack.type} Access Pack</span
+                                    >{pack.type} Pack</span
                                 >
                                 <h3
                                     class="text-2xl font-black text-foreground font-serif"
@@ -209,14 +215,17 @@
                             {pack.description}
                         </p>
 
-                        <div class="flex flex-wrap gap-2">
-                            {#each pack.modules as mod}
-                                <span
-                                    class="px-3 py-1 bg-muted text-muted-foreground rounded-full text-[10px] font-black uppercase tracking-wider border border-border"
-                                >
-                                    {mod}
-                                </span>
-                            {/each}
+                        <div class="space-y-2">
+                            <p class="text-xs text-muted-foreground">Suggested topics to review</p>
+                            <div class="flex flex-wrap gap-2">
+                                {#each pack.modules as mod}
+                                    <span
+                                        class="px-3 py-1 bg-muted text-muted-foreground rounded-full text-[10px] font-black uppercase tracking-wider border border-border"
+                                    >
+                                        {mod}
+                                    </span>
+                                {/each}
+                            </div>
                         </div>
 
                         <div class="pt-4 flex items-center gap-4">
@@ -237,7 +246,7 @@
                                 <button
                                     onclick={() => generatePack(pack.id)}
                                     class="p-4 bg-muted text-muted-foreground hover:text-foreground rounded-2xl transition-all"
-                                    title="Regenerate Key"
+                                    title="Regenerate QR Code"
                                 >
                                     <History size={18} />
                                 </button>
@@ -261,7 +270,7 @@
                             <p
                                 class="mt-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest"
                             >
-                                Scan to Preview
+                                Scan to Open
                             </p>
                         {:else}
                             <div
@@ -492,9 +501,9 @@
                         >Best Practices</span
                     >
                     <h2 class="text-4xl font-black font-serif leading-tight text-white">
-                        Securing Your <span
+                        Using Your <span
                             class="italic font-light text-primary-on-dark"
-                            >Physical Legacy</span
+                            >Printed Codes</span
                         >
                     </h2>
                 </div>
@@ -524,11 +533,11 @@
                             <Shield size={24} class="text-primary-on-dark" />
                         </div>
                         <div>
-                            <h4 class="font-bold text-xl mb-1 text-white">Gated Access</h4>
+                            <h4 class="font-bold text-xl mb-1 text-white">Sign-in and sharing</h4>
                             <p class="text-slate-400">
-                                The "Family Essentials" pack is designed for
-                                convenience, while the "Executor Master" pack
-                                grants access to sensitive data.
+                                Each pack opens a page in the signed-in account.
+                                Create a recipient's link in Family &amp; Contacts
+                                for the page you want to share.
                             </p>
                         </div>
                     </div>
@@ -547,13 +556,13 @@
                     <p
                         class="text-xs font-medium text-slate-300 italic leading-relaxed"
                     >
-                        "QR labels allow my children to know the story of my
-                        heirlooms just by scanning them."
+                        Keep the Family Essentials Pack with your printed notes
+                        as a shortcut to Dashboard after sign-in.
                     </p>
                     <p
                         class="text-[10px] font-black uppercase tracking-widest text-slate-300"
                     >
-                        — User Feedback
+                        Printed shortcut
                     </p>
                 </div>
                 <div
@@ -567,13 +576,13 @@
                     <p
                         class="text-xs font-medium text-slate-300 italic leading-relaxed"
                     >
-                        "One QR code at the front of the Red Binder changed
-                        everything for our executor."
+                        Keep the Executor Master Pack with your Red Binder
+                        as a shortcut to the executor guide after sign-in.
                     </p>
                     <p
                         class="text-[10px] font-black uppercase tracking-widest text-slate-300"
                     >
-                        — User Feedback
+                        Printed shortcut
                     </p>
                 </div>
             </div>
