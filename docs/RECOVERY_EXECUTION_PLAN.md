@@ -520,6 +520,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X170 | Settings › Data: blank "documents" card; Vault and Home Manual open to an empty table (U43) | `general-purpose` | `routes/settings/data/+page.svelte` | `documents` store owned by no card shows a blank card under "Other modules" — add it to the Document Vault card's keys; Vault and Home Manual counts come from the server but the table has no rows until those pages open — load the rows on expand | No blank card; expanding Vault/Home Manual lists the saved rows; 0 errors |
 | X171 | Login opens on the passkey view when arriving from the signup email-link choice (X158) | `general-purpose` | `routes/login/+page.svelte`, `routes/signup/+page.svelte` (the redirect URL only) | Signup sends `/login?method=email`; login opens on the email-link form with `continuum_last_email` filled | From the signup panel: one click lands on the email-link form with the email filled; 0 errors |
 | X172 | Subscriptions card view never expands; letter HTML unescaped; letter spacing (U50) | `general-purpose` | `lib/components/modules/subscriptions/SubscriptionRow.svelte`, `routes/modules/subscriptions/+page.svelte` (`generateDefaultLetter` and the letter body classes only) | `let expanded = false` in a runes component is not reactive — `$state`, typed props with `onCancel` optional; escape service name and address in `generateDefaultLetter`; letter paragraphs spaced on screen (the `prose` class has no effect) | Card click expands and reaches the letter; `<b>` in a service name shows as text; paragraphs spaced; 0 errors |
+| X173 | Rows stored before X164 keep lowercase enum values (X164) | `database-migration` | an Alembic data migration (UPDATE only) | One data migration that rewrites `insurance_policies.insurance_type/premium_frequency/status` and `utilities.service_type` to the X164 spellings, case-insensitive; production: pg_dump first, then `alembic upgrade head` (deploys run no migrations) | Local: lowercase seed rows read canonical after upgrade, downgrade a no-op; prod: SELECT shows 0 non-canonical rows |
 | X6 | Rotate the OpenRouter key (was F1) | The key is public in shipped JS | Owner step at openrouter.ai (Claude may not create or copy API keys) | Create a new key, put it in the Railway variable X1 reads, revoke the old one | Done after X1 is live; the old key returns 401 |
 
 ---
@@ -668,15 +669,16 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X161 | ☑ | eef3eab | Header role switcher asks first (X156 wording) and skips a pick of the current role; one dismissed click leaves the role as planning (was saved as executor with no dialog). 0 page errors |
 | X162 | ▶ | | |
 | X163 | ▶ | | |
-| X164 | ▶ | | |
+| X164 | ☑ | af4e8e6 | `/api/data` POST/PUT canonicalise insurance type, premium frequency, status and utility service type case-insensitively ("life" → Life, "WATER" → water, "QUARTERLY" → Quarterly); unlisted values ("Pet") stored as sent. 0 tracebacks. Finding → X173 |
 | X165 | ▶ | | |
 | X166 | ▶ | | |
 | X167 | ▶ | | |
 | X168 | ▶ | | |
 | X169 | ▶ | | |
 | X170 | ▶ | | |
-| X171 | ☐ (queued: 20-agent limit) | | |
+| X171 | ▶ | | |
 | X172 | ☐ (queued: 20-agent limit) | | |
+| X173 | ☐ (queued: 20-agent limit) | | |
 | X138 | ☑ | c5a7077 | Toolbar Download (insurance, property) saves the stored files of every record shown (follows search; disabled when none; cached files reused); subscriptions Filter chips by the difficulty words already shown (Easy/Medium/Hard), clear on reclick or close; `aiGriefService` uses `contextStore.isExecutor` (store holds `executor` after X118 — the old check never matched). Downloads byte-identical, executor/planner personas checked with the AI call intercepted; 0 errors |
 | X114 | ☑ | fdd80b5 | `routers/pets.py`, `heirlooms.py`, `insurance.py` removed (no caller: the app uses `/api/data/pets`, `/heirlooms` → Asset, `/insurance_policies`; `heirlooms.py` wrote the unused `Heirloom` table). TestClient: before `200 {}`; after 405/404, the `/api/data/*` paths create and list; server starts clean |
 | X107 | ☑ | a0f1802 | Role lives in `users.user_role` (existing column, `PATCH /api/auth/preferences`); `contextStore.setRole` saves once (nothing when unchanged), reverts to the server value on failure, newest choice wins; store follows `/api/auth/me` and sign-out. 1440×900: executor on `/executor` → one PATCH → dashboard ExecutorHub after reload and in a second context; back to planning → owner view after reload; `x97` passes; 0 errors |
