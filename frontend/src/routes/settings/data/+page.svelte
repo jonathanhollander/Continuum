@@ -529,7 +529,7 @@
                     class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4"
                 >
                     <h2 class="font-bold text-xl text-slate-400">
-                        Other Modules
+                        {$dict.groupOtherModules}
                     </h2>
                 </div>
                 <div
