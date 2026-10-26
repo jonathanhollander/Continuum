@@ -247,7 +247,7 @@ Listed so nothing is lost:
 |---|---|---|---|
 | A0 | ☑ | 0444175 | `git check-ignore -v .worktrees/x` → `.gitignore:58` |
 | A1 | ▶ | | |
-| A2 | ▶ | | |
+| A2 | ☑ | 8d54a13 | Diff = the Pre-deploy line plus the footer; `.github/` absent |
 | A3 | ▶ | | |
 | B1 | ☐ | | |
 | B2 | ☐ | | |
