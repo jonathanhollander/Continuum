@@ -69,8 +69,9 @@
                 <input
                     type="text"
                     bind:value={searchQuery}
+                    aria-label="Find what you need"
                     placeholder="Find what you need..."
-                    class="w-full bg-card border border-border rounded pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-primary transition-colors"
+                    class="w-full bg-card border border-border rounded pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors"
                 />
             </div>
 
