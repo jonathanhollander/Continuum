@@ -6,6 +6,7 @@ export type ClosurePreference = 'memorialize' | 'delete' | 'transfer' | 'none';
 export interface DigitalAccount {
     id: string;
     platform: string;
+    name?: string;
     username: string;
     preference?: ClosurePreference;
     instructions?: string;

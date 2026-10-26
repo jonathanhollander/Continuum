@@ -161,7 +161,7 @@
     );
     let filteredAccounts = $derived(
         $digitalAssetsStore.filter((a) =>
-            (a.platform ?? (a as any).name ?? "").toLowerCase().includes(searchQuery.toLowerCase()),
+            (a.platform ?? a.name ?? "").toLowerCase().includes(searchQuery.toLowerCase()),
         ),
     );
 </script>
@@ -627,7 +627,7 @@
                                         <h3
                                             class="font-black text-slate-900 text-xl tracking-tight uppercase"
                                         >
-                                            {acc.platform ?? (acc as any).name ?? ""}
+                                            {acc.platform ?? acc.name ?? ""}
                                         </h3>
                                         <p
                                             class="text-[10px] font-black text-slate-400 tracking-[0.2em]"
