@@ -174,11 +174,12 @@ def signup(request: Request, signup_data: SignupRequest, session: Session = Depe
     )
 
     session.add(new_user)
+    session.flush()  # assigns new_user.id for the audit row
+
+    # Log successful signup: the user and its audit entry in one commit (X289)
+    log_auth_success(session, request, new_user.id, new_user.email, "signup", commit=False)
     session.commit()
     session.refresh(new_user)
-
-    # Log successful signup
-    log_auth_success(session, request, new_user.id, new_user.email, "signup")
 
     # Collect warnings to return to user
     warnings = []
@@ -267,8 +268,8 @@ def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), se
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Log successful login
-    log_auth_success(session, request, user.id, user.email, "password")
+    # Log successful login; create_refresh_token's commit writes it (X289)
+    log_auth_success(session, request, user.id, user.email, "password", commit=False)
 
     # Generate JWT tokens
     access_token = create_access_token(
@@ -532,7 +533,8 @@ def passkey_login_finish(request: Request, payload: PasskeyLoginFinishPayload, s
         passkey_user = session.get(User, credential.user_id)
         if not passkey_user:
             raise HTTPException(status_code=401, detail="Let's try that again together.")
-        log_auth_success(session, request, passkey_user.id, passkey_user.email, "passkey")
+        # create_refresh_token's commit writes the audit row (X289)
+        log_auth_success(session, request, passkey_user.id, passkey_user.email, "passkey", commit=False)
 
         # Generate JWT tokens
         access_token = create_access_token(
@@ -712,8 +714,8 @@ def verify_magic_link(request: Request, token: str, session: Session = Depends(g
             log_auth_failure(session, request, user.email, "magic_link_verify", "Token already used")
             raise HTTPException(status_code=401, detail="This link has rested. A fresh one is a click away from the sign-in page.")
 
-        # Log successful magic link authentication
-        log_auth_success(session, request, user.id, user.email, "magic_link")
+        # Log successful magic link authentication; create_refresh_token's commit writes it (X289)
+        log_auth_success(session, request, user.id, user.email, "magic_link", commit=False)
 
         # Generate JWT tokens
         access_token = create_access_token(

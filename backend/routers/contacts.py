@@ -143,19 +143,39 @@ def get_relationships(user: User = Depends(get_current_user), session: Session =
     return session.exec(statement).all()
 
 @router.post("/relationships", response_model=ContactRelationship)
-def create_relationship(rel: ContactRelationship, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+def create_relationship(request: Request, rel: ContactRelationship, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     rel = validated_new(ContactRelationship, rel, user.id)
     session.add(rel)
-    session.commit()
+    session.flush()  # assigns rel.id for the audit row
+    log_audit(
+        session=session,
+        request=request,
+        action="create_contact_relationship",
+        user_id=user.id,
+        user_email=user.email,
+        resource_type="contact_relationship",
+        resource_id=str(rel.id),
+        commit=False,
+    )
+    session.commit()  # the row and its audit entry in one transaction (X289)
     session.refresh(rel)
     return rel
 
 @router.delete("/relationships/{rel_id}")
-def delete_relationship(rel_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+def delete_relationship(request: Request, rel_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     rel = session.get(ContactRelationship, rel_id)
     if not rel or rel.user_id != user.id:
         raise HTTPException(status_code=404, detail="That relationship may have been moved.")
-    
+
+    log_deletion(
+        session=session,
+        request=request,
+        user_id=user.id,
+        user_email=user.email,
+        resource_type="contact_relationship",
+        resource_id=rel_id,
+        commit=False,  # written by the delete's own commit (X289)
+    )
     session.delete(rel)
     session.commit()
     return {"status": "deleted"}
