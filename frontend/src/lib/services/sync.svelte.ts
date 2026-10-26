@@ -153,6 +153,9 @@ export class SyncManager<T extends { id: number | string }> {
     private uploading: Promise<unknown> = Promise.resolve();
     /** Account whose records are loaded; null after a logout clear. */
     loadedFor: string | null = null;
+    /** The notice for a list read that failed before any read this session answered: one per
+     *  store, cleared by Try Again, by a later read that answers, and by an account change. */
+    private loadNotice: string | null = null;
     /** Per record id with updates in flight: the row as the server last returned it (or as it was
      *  before the first of them), each open update's fields by sequence, every field they touched,
      *  and the last request, which the next update to that row waits for (the server applies them
@@ -186,6 +189,8 @@ export class SyncManager<T extends { id: number | string }> {
     reset(clear = false) {
         this.inflight = null; // a sync still running belongs to the previous account
         this.generation++;
+        if (this.loadNotice) notifications.dismiss(this.loadNotice);
+        this.loadNotice = null;
         this.loadedFor = clear ? null : storageAccount();
         this.items = clear ? [] : getStored<T[]>(this.key, []);
         this.status = "idle";
@@ -217,6 +222,7 @@ export class SyncManager<T extends { id: number | string }> {
         const profile = get(currentProfileId) || 'owner';
         // Still the account (and the run) this sync started for.
         const current = () => this.generation === generation && storageAccount() === account && !!get(auth).token;
+        let answered = false; // the server returned the list (a later failure is an upload's)
 
         try {
             // Fetch Remote
@@ -235,6 +241,8 @@ export class SyncManager<T extends { id: number | string }> {
             const rawItems: unknown[] = await res.json();
             // The account changed while this was in flight: these records belong to someone else.
             if (get(auth).token !== token) return;
+            answered = true;
+            if (this.loadNotice) { notifications.dismiss(this.loadNotice); this.loadNotice = null; }
             const remoteItems = rawItems.map(item => {
                 const camelItem = convertKeys(item, toCamel);
                 return this.mapper ? this.mapper(camelItem) : camelItem as unknown as T;
@@ -287,6 +295,15 @@ export class SyncManager<T extends { id: number | string }> {
             console.error(`[Sync:${this.key}] Error:`, e);
             this.status = "error";
             this.error = errMessage(e) ?? null;
+            // The first read of the list did not answer: the device copy stays on screen, and one
+            // gentle notice offers to load it again (repeat failures add none).
+            if (!answered && !this.#lastSync && !this.loadNotice && current()) {
+                this.loadNotice = notifications.showError({
+                    message: 'Your saved records are still on your account. Let\'s try loading them again.',
+                    code: 'SERVICE_UNAVAILABLE',
+                    technicalDetails: errTechnical(e)
+                }, () => { this.loadNotice = null; this.sync().catch(() => {}); });
+            }
         }
     }
 

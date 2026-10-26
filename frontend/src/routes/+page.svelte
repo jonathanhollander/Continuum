@@ -22,13 +22,12 @@
     import { get } from "svelte/store";
     import type { Writable, Readable } from "svelte/store";
 
-    // Assets from notion-assets & screenshots
+    // Product screenshots
     const assets = {
         vault: "/Marketing/product_shots/shot_vault.png?v=2",
         letters: "/Marketing/product_shots/shot_letters.png?v=2",
         guardian: "/Marketing/product_shots/shot_guardian.png?v=2",
         legacy: "/Marketing/product_shots/shot_heirlooms.png?v=2",
-        heroBg: "/Marketing/notion-assets/assets/covers_default/digital_legacy_management_cover.png",
     };
 
     let scrollY = $state(0);
@@ -421,12 +420,6 @@
             class="absolute inset-0 opacity-[0.4]"
             style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 100px 100px; transform: translateY({scrollY *
                 -0.05}px);"
-        ></div>
-
-        <!-- Grainy Noise Overlay -->
-        <div
-            class="fixed inset-0 z-10 opacity-[0.15] mix-blend-overlay pointer-events-none"
-            style="background-image: url('https://grainy-gradients.vercel.app/noise.svg');"
         ></div>
 
         <!-- The Morphing Mesh -->

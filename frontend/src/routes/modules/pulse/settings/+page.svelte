@@ -288,9 +288,11 @@
                         ? 'bg-purple-900/30 border-purple-500/50 text-purple-200 scale-[0.98]'
                         : 'bg-card border-border text-slate-300 hover:bg-slate-700 hover:border-slate-600'}"
                 >
-                    {settings.ghost_mode_until
-                        ? "Return from rest"
-                        : "Rest for 7 days"}
+                    {!loaded
+                        ? "Rest Mode"
+                        : settings.ghost_mode_until
+                          ? "Return from rest"
+                          : "Rest for 7 days"}
                 </button>
             </div>
 
