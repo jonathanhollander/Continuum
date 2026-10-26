@@ -19,6 +19,8 @@
     let newFieldName = $state("");
     let newFieldType = $state<FieldType>("text");
     let definitions = $derived(customFieldStore.getDefinitions(entityType));
+    // Unique per instance, so each field's visible label can name its input.
+    const uid = $props.id();
 
     onMount(() => {
         customFieldStore.loadDefinitions(entityType);
@@ -63,6 +65,8 @@
         {#each definitions as def (def.id)}
             <div class="space-y-1">
                 <label
+                    id={`${uid}-label-${def.id}`}
+                    for={def.field_type === "boolean" ? undefined : `${uid}-field-${def.id}`}
                     class="text-[11px] font-bold text-slate-600 uppercase tracking-wider pl-1"
                 >
                     {def.name}
@@ -70,13 +74,13 @@
 
                 {#if def.field_type === "date"}
                     <input
+                        id={`${uid}-field-${def.id}`}
                         type="date"
-                        aria-label={def.name}
                         bind:value={data[def.name]}
                         class="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:bg-white rounded-xl p-2.5 text-sm font-medium outline-none transition-all"
                     />
                 {:else if def.field_type === "boolean"}
-                    <div class="flex items-center gap-2 mt-1">
+                    <div class="flex items-center gap-2 mt-1" role="group" aria-labelledby={`${uid}-label-${def.id}`}>
                         <button
                             class="px-4 py-2 rounded-lg text-xs font-bold border transition-all {data[
                                 def.name
@@ -96,12 +100,14 @@
                     </div>
                 {:else if def.field_type === "textarea"}
                     <textarea
+                        id={`${uid}-field-${def.id}`}
                         bind:value={data[def.name]}
                         placeholder={`Enter ${def.name}...`}
                         class="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:bg-white rounded-xl p-3 text-sm font-medium outline-none transition-all min-h-[80px] resize-none"
                     ></textarea>
                 {:else if def.field_type === "number"}
                     <input
+                        id={`${uid}-field-${def.id}`}
                         type="number"
                         bind:value={data[def.name]}
                         placeholder="0.00"
@@ -109,6 +115,7 @@
                     />
                 {:else}
                     <input
+                        id={`${uid}-field-${def.id}`}
                         type="text"
                         bind:value={data[def.name]}
                         placeholder={`Enter ${def.name}...`}
@@ -150,6 +157,7 @@
                 <input
                     type="text"
                     bind:value={newFieldName}
+                    aria-label="Field Name"
                     placeholder="Field Name (e.g. Warranty Date)"
                     class="w-full px-3 py-2 rounded-lg border border-indigo-200 text-sm focus:border-indigo-500 outline-none"
                     autofocus
