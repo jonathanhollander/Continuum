@@ -159,8 +159,7 @@ async def upload_media(
     )
 
     session.add(media_record)
-    session.commit()
-    session.refresh(media_record)
+    session.flush()  # assigns media_record.id for the audit row
 
     # P1-High: Audit logging for media upload
     log_audit(
@@ -170,8 +169,11 @@ async def upload_media(
         user_id=user.id,
         user_email=user.email,
         resource_type="media",
-        resource_id=str(media_record.id)
+        resource_id=str(media_record.id),
+        commit=False,
     )
+    session.commit()  # the row and its audit entry in one transaction (X279)
+    session.refresh(media_record)
 
     return MediaUploadResponse(
         id=media_record.id,
@@ -332,7 +334,8 @@ def delete_media(
         user_id=user.id,
         user_email=user.email,
         resource_type="media",
-        resource_id=media_id
+        resource_id=media_id,
+        commit=False,  # written by the delete's own commit (X279)
     )
 
     # Soft delete (Mark as deleted in DB)

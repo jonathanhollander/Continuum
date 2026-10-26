@@ -52,8 +52,6 @@ def update_medical_profile(request: Request, updated: MedicalProfile, user: User
         setattr(profile, key, val)
 
     session.add(profile)
-    session.commit()
-    session.refresh(profile)
 
     # P1-High: Audit logging for medical profile update
     log_audit(
@@ -63,9 +61,11 @@ def update_medical_profile(request: Request, updated: MedicalProfile, user: User
         user_id=user.id,
         user_email=user.email,
         resource_type="medical_profile",
-        resource_id=str(user.id)
+        resource_id=str(user.id),
+        commit=False,
     )
-    session.refresh(profile)  # the audit commit expires it; otherwise the response is {}
+    session.commit()  # the row and its audit entry in one transaction (X279)
+    session.refresh(profile)
     return profile
 
 # --- Medical Directives ---
@@ -80,8 +80,7 @@ def create_medical_directive(request: Request, directive: MedicalDirective, user
     _check_directive({"type": getattr(directive, "type", None), "title": getattr(directive, "title", None)})
     directive = validated_new(MedicalDirective, directive, user.id)
     session.add(directive)
-    session.commit()
-    session.refresh(directive)
+    session.flush()  # assigns directive.id for the audit row
 
     # P1-High: Audit logging for medical directive creation
     log_audit(
@@ -91,9 +90,11 @@ def create_medical_directive(request: Request, directive: MedicalDirective, user
         user_id=user.id,
         user_email=user.email,
         resource_type="medical_directive",
-        resource_id=str(directive.id)
+        resource_id=str(directive.id),
+        commit=False,
     )
-    session.refresh(directive)  # the audit commit expires it; otherwise the response is {}
+    session.commit()  # the row and its audit entry in one transaction (X279)
+    session.refresh(directive)
     return directive
 
 @router.put("/directives/{directive_id}", response_model=MedicalDirective)
@@ -128,7 +129,8 @@ def delete_medical_directive(request: Request, directive_id: int, user: User = D
         user_id=user.id,
         user_email=user.email,
         resource_type="medical_directive",
-        resource_id=directive_id
+        resource_id=directive_id,
+        commit=False,  # written by the delete's own commit (X279)
     )
 
     session.delete(directive)

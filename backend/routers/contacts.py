@@ -83,8 +83,7 @@ def create_contact(request: Request, body: ContactCreate, user: User = Depends(g
     _apply(contact, body.model_dump(exclude_unset=True), user, session)
 
     session.add(contact)
-    session.commit()
-    session.refresh(contact)
+    session.flush()  # assigns contact.id for the audit row
 
     # P1-High: Audit logging for contact creation
     log_audit(
@@ -94,9 +93,10 @@ def create_contact(request: Request, body: ContactCreate, user: User = Depends(g
         user_id=user.id,
         user_email=user.email,
         resource_type="contact",
-        resource_id=str(contact.id)
+        resource_id=str(contact.id),
+        commit=False,
     )
-    # log_audit commits, which expires the instance; reload it so the response carries the row.
+    session.commit()  # the row and its audit entry in one transaction (X279)
     session.refresh(contact)
     return contact
 
@@ -128,7 +128,8 @@ def delete_contact(request: Request, contact_id: int, user: User = Depends(get_c
         user_id=user.id,
         user_email=user.email,
         resource_type="contact",
-        resource_id=contact_id
+        resource_id=contact_id,
+        commit=False,  # written by the delete's own commit (X279)
     )
 
     session.delete(contact)

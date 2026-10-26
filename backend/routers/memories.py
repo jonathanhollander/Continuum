@@ -21,8 +21,7 @@ def get_family_memories(user: User = Depends(get_current_user), session: Session
 def create_family_memory(request: Request, memory: FamilyMemory, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     memory = validated_new(FamilyMemory, memory, user.id)  # id left unset so the DB generates it
     session.add(memory)
-    session.commit()
-    session.refresh(memory)
+    session.flush()  # assigns memory.id for the audit row
 
     # P1-High: Audit logging for family memory creation
     log_audit(
@@ -32,9 +31,11 @@ def create_family_memory(request: Request, memory: FamilyMemory, user: User = De
         user_id=user.id,
         user_email=user.email,
         resource_type="family_memory",
-        resource_id=str(memory.id)
+        resource_id=str(memory.id),
+        commit=False,
     )
-    session.refresh(memory)  # the audit commit expires it; otherwise the response is {}
+    session.commit()  # the row and its audit entry in one transaction (X279)
+    session.refresh(memory)
     return memory
 
 @router.put("/family/{memory_id}", response_model=FamilyMemory)
@@ -66,7 +67,8 @@ def delete_family_memory(request: Request, memory_id: int, user: User = Depends(
         user_id=user.id,
         user_email=user.email,
         resource_type="family_memory",
-        resource_id=memory_id
+        resource_id=memory_id,
+        commit=False,  # written by the delete's own commit (X279)
     )
 
     session.delete(db_memory)
@@ -83,8 +85,7 @@ def get_visual_memories(user: User = Depends(get_current_user), session: Session
 def create_visual_memory(request: Request, memory: VisualMemory, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     memory = validated_new(VisualMemory, memory, user.id)
     session.add(memory)
-    session.commit()
-    session.refresh(memory)
+    session.flush()  # assigns memory.id for the audit row
 
     # P1-High: Audit logging for visual memory creation
     log_audit(
@@ -94,9 +95,11 @@ def create_visual_memory(request: Request, memory: VisualMemory, user: User = De
         user_id=user.id,
         user_email=user.email,
         resource_type="visual_memory",
-        resource_id=str(memory.id)
+        resource_id=str(memory.id),
+        commit=False,
     )
-    session.refresh(memory)  # the audit commit expires it; otherwise the response is {}
+    session.commit()  # the row and its audit entry in one transaction (X279)
+    session.refresh(memory)
     return memory
 
 @router.put("/visual/{memory_id}", response_model=VisualMemory)
@@ -128,7 +131,8 @@ def delete_visual_memory(request: Request, memory_id: int, user: User = Depends(
         user_id=user.id,
         user_email=user.email,
         resource_type="visual_memory",
-        resource_id=memory_id
+        resource_id=memory_id,
+        commit=False,  # written by the delete's own commit (X279)
     )
 
     session.delete(db_memory)
@@ -145,8 +149,7 @@ def get_external_archives(user: User = Depends(get_current_user), session: Sessi
 def create_external_archive(request: Request, archive: ExternalArchive, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     archive = validated_new(ExternalArchive, archive, user.id)
     session.add(archive)
-    session.commit()
-    session.refresh(archive)
+    session.flush()  # assigns archive.id for the audit row
 
     # P1-High: Audit logging for external archive creation
     log_audit(
@@ -156,9 +159,11 @@ def create_external_archive(request: Request, archive: ExternalArchive, user: Us
         user_id=user.id,
         user_email=user.email,
         resource_type="external_archive",
-        resource_id=str(archive.id)
+        resource_id=str(archive.id),
+        commit=False,
     )
-    session.refresh(archive)  # the audit commit expires it; otherwise the response is {}
+    session.commit()  # the row and its audit entry in one transaction (X279)
+    session.refresh(archive)
     return archive
 
 @router.put("/archives/{archive_id}", response_model=ExternalArchive)
@@ -190,7 +195,8 @@ def delete_external_archive(request: Request, archive_id: int, user: User = Depe
         user_id=user.id,
         user_email=user.email,
         resource_type="external_archive",
-        resource_id=archive_id
+        resource_id=archive_id,
+        commit=False,  # written by the delete's own commit (X279)
     )
 
     session.delete(db_archive)
