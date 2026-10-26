@@ -1213,19 +1213,19 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | O1 — per wave (A–E) | ☑ (A done: login p95 133, /me 4.8, refresh 19.2, ai/chat 503 path 473 → X10. B done: every touched endpoint in target, 200 rows/type: list reads p95 7–66 ms, writes 8–37 ms, 2 queries per read; dashboard cold load 30 requests, data visible 378–642 ms → X52, X53, X54. E done (7ec56c3, 200 rows/type): every touched endpoint in target — media/shared downloads p95 2–3 ms (2 queries), cold-token burst 74 ms max with health 16 ms (was 348), recipient view/preview/export 132–137 ms p95 (23 queries, 1.2–1.9 MB — nearest to target), /api/data lists p95 ≤ 9.5 ms, writes ≤ 22 ms; queries flat 20 → 200 rows; dashboard/financial/property/heirlooms/catalog data on screen 230–730 ms, 0 duplicate fetches (X54 gone) → X142, X143; `build_snapshot` watched at release) U done (e25188f → 5b40507, 200 rows/type, median of 3): no regression — 9 pages 0 duplicate fetches, 0 errors, data on screen flat (ai-audit 2227 → 373 ms, subscriptions 349 → 280); touched endpoints p95 ≤ 8.1 ms with the same query counts (canonicalize adds none; pulse settings POST 500 → 200; magic-link 8.8 ms); /modules/* +2–3 GETs from CommandCenter → U80; letters list 1.3 MB every page → X210) G/T/V done (5b40507 → d6cbb7c, 200 rows/type): every touched endpoint in target except the `build_snapshot` watch item (recipient view 154.5, export 154 ms p95, +4 ms; 24–25 queries flat); pulse, portal, validated writes p95 ≤ 21.9 ms; all pages data on screen ≤ 837 ms, 0 console errors; one new duplicate fetch (`/api/pulse/settings` ×2 on /modules/pulse/settings) → X258) | |
 | O2 — per wave (A–E) | ☑ (A done: X1 pages render the gentle message, no layout break; findings → X15, X16, X17, E9, E10. B done: before 883e6b5 / after 995f2b1 at 1440×900, nav identical on 23 routes, console errors 16–43 per page → 0, property/anniversary/activity-log/advanced-registry spinners now render; findings → C1, C10, X54, X58, U0/T0/V0 seeds. E done (296da03 → 7ec56c3, 45 routes, 26 seeded records, 1440×900): 0 console errors, no overflow or broken images, unnamed buttons 1–8 → 0 per page, nothing left navigation (5 newly top-level; catalog 9 → 33), legacy first and finance second; failed save clear (draft kept, Try Again); findings → X144–X150, U0/T0 seeds) U done (e25188f → 5b40507, 64 routes × 1440 and 390, 26 seeded records): real console errors 0 → 0, overflow 0, broken images 0, unlabelled fields 45 → 9, unnamed controls 1 → 0 (desktop); every pixel change traced to a ticked U card; nav changes all intended (U36, U38, U44); regressions → U81, X212, X213, U82; polish → U83–U86, V0/T0 seeds) G/T/V done (5b40507 → d6cbb7c, 64 routes × 1440/390 × light/dark): contrast fails 1626 → 68 (desktop light), 1846 → 69 (dark), 1549/1692 → 76 (mobile); dark content areas dark everywhere except intended paper previews; unlabelled fields 9 → 0; overflow, broken images 0; navigation intact (13 links, 14 groups, catalog 33, legacy first, finance second); failed save keeps the draft with Try Again; findings → X259–X263) | |
 | O1 — release table | ☑ | docs/reviews/2026-10-26-release/O1-RELEASE.md | Every frontend endpoint in target locally (reads 2 queries flat, writes < 10 ms p95); production 5 slowest GETs p50 68–121 ms (network floor ~60 ms); findings X277 (rate limits refuse normal use), X278 (write query count) |
-| X277 | ▶ | | |
-| X279 | ☐ (after X277/X278 merge) | | |
-| X278 | ▶ | | |
+| X277 | ☑ | merged ba55e5a | Owner-save limits 10→600/min (pulse settings, vault GET, medical profile, directives); checkin stays 5/min |
+| X279 | ▶ | | |
+| X278 | ☑ | merged ba55e5a | Estate writes: audit row in the same commit; POST 6→4 queries, PUT 7→5, DELETE 5→4; responses and audit rows identical |
 | O2 — release screenshots | ☑ | docs/reviews/2026-10-26-release/O2-RELEASE.md | 83 page loads on production: 54 pass, 14 fail (wording, orphan pages, watermark overlap, example contrast), 6 n/a; 0 console errors, 0 overflow; findings X280–X284 |
-| X285 | ☐ (after X280 merge) | | |
-| X280 | ▶ | | |
-| X287 | ☐ (after X281 merge) | | |
-| X281 | ▶ | | |
-| X282 | ▶ | | |
-| X286 | ☐ (after X283 merge) | | |
-| X283 | ▶ | | |
-| X288 | ☐ (after X284 merge) | | |
-| X284 | ▶ | | |
+| X285 | ▶ | | |
+| X280 | ☑ | merged ba55e5a | Traditions, scenario-mode, subscriptions, builders-console wording; scan 0 flagged phrases |
+| X287 | ▶ | | |
+| X281 | ☑ | merged ba55e5a | Speed talk gone; letters claim true; testimonial removed; signed-in header "Open my plan"; Pact aria-label; six languages |
+| X282 | ☑ | merged ba55e5a | Hub steps link to real modules; watermark overlap 9152px²→0; time-capsule examples 2.35→4.97 light, 3.02→5.52 dark |
+| X286 | ▶ | | |
+| X283 | ☑ | merged ba55e5a | /settings/data and Plan Check-in linked; calm shield icons on verify and pulse respond |
+| X288 | ▶ | | |
+| X284 | ☑ | merged ba55e5a | Five just/simple/stress-test/promise lines rewritten; three left (describe things, not effort) |
 | R0 | ☑ | docs/reviews/2026-10-26-R0/REPORT.md | Full completion test on merged main 17e17b7, local, synthetic data: 22 of 23 steps pass (owner adds/edits, controlled failure + retry, reload, preview, recipient finds note/steps/advisor/original, full letter, media). Fail: account transfer instructions missing from binder/PDF/recipient record → X275; smoke script out of date → X276 |
 | X275 | ☑ | e279830 | Account "Transfer instructions" now prints for every account in all four outputs (binder, binder print-to-PDF, app PDF, recipient full record — one `SECTIONS` source); closed accounts show the date alone |
 | X276 | ☑ | 28ec576 | `scripts/smoke_test.py` sends today's payloads (documents, letters, time capsule, contact mappers, create strips id/created_at): fresh database 13/4 → 17 PASS, 0 FAIL |
