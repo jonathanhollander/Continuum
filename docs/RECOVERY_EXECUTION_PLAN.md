@@ -307,7 +307,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X2 | ☑ | 91321f9 | `git ls-files` lists no .db; `*.db` ignored; local copies kept on disk. Old copy in `34780fe` (branch `origin/stash-backup/2026-01-26-34780fe`) holds 1 non-dev user row, empty password. Owner 2026-10-26: bundled to `docs/archive/stash-backup-2026-01-26-34780fe.bundle` (local only, git-ignored, verified), remote branch deleted |
 | X3 | ☑ | 70068dd | `ENVIRONMENT=production` locally: health 200 "production"; POST without CSRF header 403, with cookie+header 200; no `_technical`; login 200; fetch wrapper (bundled, node stub) adds the header to same-origin writes only. Also fixed: HTTPS redirect loop behind Railway's proxy (would have broken the deploy), CORS substring match. Release must set the variables below |
 | X4 | ☑ | 9e539f4 | Started from `backend/` and from the root: `/`, `/_app/...`, `/modules/x` 200; traversal variants never leak; prefix check replaced by `commonpath` (sibling `dist-other` could pass before) |
-| X11 | ▶ | | |
+| X11 | ☑ | 1007f48 | `/api-guide` 200 html; `/api`, `/api/nope` 404 JSON; `/modules/x` 200; traversal no leak |
 | X5 | ☐ | | |
 | X6 | ☐ (owner) | | |
 | X7 | ☑ | 8a5b462 | Fresh DB: login, /me, refresh 200; magic-link token on /me 401; "BYPASS_AUTH" stored value 401 (was 500); sub-less magic link 401 (was 500); valid magic link 200; jh@ bypass 200 |
