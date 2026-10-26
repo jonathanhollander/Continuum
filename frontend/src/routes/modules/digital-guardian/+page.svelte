@@ -1016,7 +1016,7 @@
     <div
         class="mt-12 mb-20 animate-in fade-in slide-in-from-bottom-4 duration-700"
     >
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
             <div>
                 <h2 class="font-serif font-bold text-2xl text-[#304743]">
                     Digital Asset Inventory
@@ -1025,7 +1025,7 @@
                     Key accounts your executor needs access to.
                 </p>
             </div>
-            <div class="flex items-center gap-3">
+            <div class="flex flex-wrap items-center gap-3">
                 <button
                     onclick={() => (showWizard = true)}
                     class="bg-[#304743] text-white px-4 py-2 rounded-full font-bold hover:bg-[#2a3f3b] transition-colors flex items-center gap-2 text-sm"
