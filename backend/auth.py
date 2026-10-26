@@ -66,6 +66,16 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
+def _subject_to_user_id(sub) -> Optional[int]:
+    """Token `sub` is a string; return it as an int user id, or None if it is not a plain integer."""
+    if isinstance(sub, bool):
+        return None
+    try:
+        return int(sub)
+    except (TypeError, ValueError):
+        return None
+
+
 def get_current_user(token: str = Depends(oauth2_scheme), session: Session = Depends(get_session)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -80,7 +90,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), session: Session = Dep
 
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: int = payload.get("sub")
+        user_id = _subject_to_user_id(payload.get("sub"))
         if user_id is None:
             raise credentials_exception
         # Access tokens carry no "type" claim; reject typed tokens (e.g. "magic_link").
@@ -99,7 +109,7 @@ def optional_current_user(token: str = Depends(oauth2_scheme), session: Session 
         return None
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: int = payload.get("sub")
+        user_id = _subject_to_user_id(payload.get("sub"))
         if user_id is None:
             return None
         if payload.get("type") not in (None, "access"):
