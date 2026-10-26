@@ -1,6 +1,5 @@
 <script lang="ts">
     import { onMount, untrack } from "svelte";
-    import HolographicGrid from "$lib/components/dashboard/HolographicGrid.svelte";
     import ExecutorHub from "$lib/components/executor/ExecutorHub.svelte";
     import ExecutorWelcome from "$lib/components/executor/ExecutorWelcome.svelte";
     import SyncBadge from "$lib/components/ui/SyncBadge.svelte";
@@ -28,7 +27,6 @@
         Search,
         ChevronDown,
         ChevronRight,
-        Zap,
         Users,
         Shield,
         FileText,
@@ -413,8 +411,6 @@
 </script>
 
 <div class="min-h-screen text-foreground font-sans selection:bg-primary/30">
-    <HolographicGrid />
-
     <!-- Executor Welcome Modal -->
     {#if showExecutorWelcome}
         <ExecutorWelcome onComplete={() => (showExecutorWelcome = false)} />
@@ -750,17 +746,10 @@
                                                                 {status.label}
                                                             </p>
                                                         {/if}
+                                                        {#if holdsRecords(item.key) && !cardLoading(item.key)}
+                                                            <div class="mt-1"><SyncBadge status={getModuleSyncStatus(item.key)} size="md" showLabel={true} /></div>
+                                                        {/if}
                                                     </div>
-                                                    <!-- Sync Badge with label -->
-                                                    {#if holdsRecords(item.key) && !cardLoading(item.key)}
-                                                    <SyncBadge
-                                                        status={getModuleSyncStatus(
-                                                            item.key,
-                                                        )}
-                                                        size="md"
-                                                        showLabel={true}
-                                                    />
-                                                    {/if}
                                                 </div>
                                             </div>
                                         </a>
@@ -864,16 +853,10 @@
                                                                             {$dict.dashStarted}
                                                                         </p>
                                                                     {/if}
+                                                                    {#if holdsRecords(item.key) && !cardLoading(item.key)}
+                                                                        <div class="mt-1"><SyncBadge status={getModuleSyncStatus(item.key)} size="md" showLabel={true} /></div>
+                                                                    {/if}
                                                                 </div>
-                                                                {#if holdsRecords(item.key) && !cardLoading(item.key)}
-                                                                <SyncBadge
-                                                                    status={getModuleSyncStatus(
-                                                                        item.key,
-                                                                    )}
-                                                                    size="md"
-                                                                    showLabel={true}
-                                                                />
-                                                                {/if}
                                                             </div>
                                                         </div>
                                                     </a>
@@ -889,9 +872,7 @@
                     <!-- Navigation Groups -->
                     <div class="space-y-6">
                         {#each filteredNavGroups as group, groupIndex (group.groupKey)}
-                            {@const isCollapsed =
-                                !group.isPrimary &&
-                                collapsedSections.has(group.groupKey)}
+                            {@const isCollapsed = collapsedSections.has(group.groupKey)}
 
                             <section
                                 class="rounded-2xl bg-slate-950/30 backdrop-blur-sm border border-white/5 overflow-hidden"
@@ -902,66 +883,41 @@
                                 }}
                             >
                                 <!-- Group Header -->
-                                {#if group.isPrimary}
+                                <button
+                                    class="w-full px-6 py-5 border-b border-white/5 text-left hover:bg-white/5 transition-colors"
+                                    onclick={() =>
+                                        toggleSection(group.groupKey)}
+                                >
                                     <div
-                                        class="px-6 py-5 border-b border-white/5"
+                                        class="flex items-center justify-between"
                                     >
-                                        <div class="flex items-center gap-3">
-                                            <Zap
-                                                size={20}
-                                                class="text-gold-text"
-                                            />
+                                        <div>
                                             <h2
-                                                class="text-lg font-bold text-gold-text uppercase tracking-wide"
+                                                class="text-lg font-semibold text-foreground"
                                             >
                                                 {navText(group.groupKey, group.groupLabel)}
                                             </h2>
-                                        </div>
-                                        {#if group.groupDescription}
-                                            <p
-                                                class="text-base text-muted-foreground mt-2 pl-8"
-                                            >
-                                                {navDesc(group.groupKey, group.groupDescription)}
-                                            </p>
-                                        {/if}
-                                    </div>
-                                {:else}
-                                    <button
-                                        class="w-full px-6 py-5 border-b border-white/5 text-left hover:bg-white/5 transition-colors"
-                                        onclick={() =>
-                                            toggleSection(group.groupKey)}
-                                    >
-                                        <div
-                                            class="flex items-center justify-between"
-                                        >
-                                            <div>
-                                                <h2
-                                                    class="text-lg font-semibold text-foreground"
+                                            {#if group.groupDescription}
+                                                <p
+                                                    class="text-base text-muted-foreground mt-1"
                                                 >
-                                                    {navText(group.groupKey, group.groupLabel)}
-                                                </h2>
-                                                {#if group.groupDescription}
-                                                    <p
-                                                        class="text-base text-muted-foreground mt-1"
-                                                    >
-                                                        {navDesc(group.groupKey, group.groupDescription)}
-                                                    </p>
-                                                {/if}
-                                            </div>
-                                            {#if isCollapsed}
-                                                <ChevronRight
-                                                    size={20}
-                                                    class="text-muted-foreground"
-                                                />
-                                            {:else}
-                                                <ChevronDown
-                                                    size={20}
-                                                    class="text-muted-foreground"
-                                                />
+                                                    {navDesc(group.groupKey, group.groupDescription)}
+                                                </p>
                                             {/if}
                                         </div>
-                                    </button>
-                                {/if}
+                                        {#if isCollapsed}
+                                            <ChevronRight
+                                                size={20}
+                                                class="text-muted-foreground"
+                                            />
+                                        {:else}
+                                            <ChevronDown
+                                                size={20}
+                                                class="text-muted-foreground"
+                                            />
+                                        {/if}
+                                    </div>
+                                </button>
 
                                 <!-- Group Items -->
                                 {#if !isCollapsed}
@@ -1031,18 +987,10 @@
                                                                         {$dict.dashStarted}
                                                                     </p>
                                                                 {/if}
+                                                                {#if holdsRecords(item.key) && !cardLoading(item.key)}
+                                                                    <div class="mt-1"><SyncBadge status={getModuleSyncStatus(item.key)} size="md" showLabel={true} /></div>
+                                                                {/if}
                                                             </div>
-
-                                                            <!-- Sync Badge with label -->
-                                                            {#if holdsRecords(item.key) && !cardLoading(item.key)}
-                                                            <SyncBadge
-                                                                status={getModuleSyncStatus(
-                                                                    item.key,
-                                                                )}
-                                                                size="md"
-                                                                showLabel={true}
-                                                            />
-                                                            {/if}
                                                         </div>
                                                     </div>
                                                 </a>
