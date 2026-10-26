@@ -117,7 +117,7 @@ The affected B/C/D/E/U/G/T/X sections and current Release acceptance are marked 
 
 The 29 reopened parent cards are: B3, B4, B5, C2, C3, C7.1, C10, D1, D2, D3, D4, E11, G2, G3, G4, G5, G6, G7, G9, G12, G14, G15, G16, G18, G19, U21, X215, X230, X36. Their linked X cards own the repairs; redispatching both would duplicate work. X154's accepted display-tier mapping is still present. Its related early-individual all-clear omission is new companion work under X343, not evidence that the mapping itself reverted.
 
-The inventory also corrects the earlier handoff's 494-row count: the source snapshot has 496 marked card-status rows (excluding headers), and the reconciled plan has 551 after adding 55. Status IDs are unique. This bookkeeping correction does not add application defects or imply 551 independent open issues.
+A later recount excluding both the table header and separator confirms the earlier 494-row data count: source snapshot `8751f22` has 494 marked status data rows, and this review added 55 to reach 549. The earlier 496/551 totals counted two non-data rows. Later implementation findings have their own X cards in the canonical plan; status IDs remain unique. This bookkeeping correction adds no application defect.
 
 ## Owner deferrals and separate verification limits
 
