@@ -111,10 +111,11 @@
     let assets = $derived(assetSync.items);
     let viewMode = $state<ViewMode>('card');
 
-    let newAsset = $state<Partial<Asset> & { id?: string; documents?: string }>({
+    // A blank value stays blank (null), so the audit can ask for it; an entered 0 is a real value.
+    let newAsset = $state<Partial<Omit<Asset, "value">> & { value?: number | null; id?: string; documents?: string }>({
         name: "",
         type: "Financial",
-        value: 0,
+        value: null,
         location: "",
         accountNumber: "",
         ownershipPercentage: 100,
@@ -194,6 +195,13 @@
         return Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : 100;
     }
 
+    // The form's value as saved: blank (or not a number) is null, anything entered is that number.
+    function valueOf(v: any): number | null {
+        if (v === null || v === undefined || String(v).trim() === "") return null;
+        const n = Number(v);
+        return Number.isFinite(n) ? n : null;
+    }
+
     // Real change only: first recorded value to the latest one; nothing until two values exist.
     function changeOf(history: number[] | string | undefined): number | null {
         const h = parseHistory(history);
@@ -225,13 +233,14 @@
         try {
         if (newAsset.id) {
             // Edit Mode - update via SyncManager
-            const value = Number(newAsset.value) || 0;
-            // History records real saved values: append only when the value changed.
+            const value = valueOf(newAsset.value);
+            // History records real saved values: append only when the value changed; a blank is no value.
             const previous = assets.find((a) => a.id === newAsset.id);
+            const previousValue = valueOf(previous?.value);
             const history = [...parseHistory(newAsset.valueHistory)];
-            if (history.length === 0 && previous && Number(previous.value) !== value)
-                history.push(Number(previous.value) || 0);
-            if (history.length === 0 || history[history.length - 1] !== value)
+            if (history.length === 0 && previousValue !== null && previousValue !== value)
+                history.push(previousValue);
+            if (value !== null && (history.length === 0 || history[history.length - 1] !== value))
                 history.push(value);
             const updates = {
                 ...newAsset,
@@ -255,10 +264,11 @@
             });
         } else {
             // Create Mode - create via SyncManager
+            const value = valueOf(newAsset.value);
             const created = await assetSync.create({
                 name: newAsset.name!,
                 type: (newAsset.type as AssetType) || "Other",
-                value: Number(newAsset.value) || 0,
+                value,
                 location: newAsset.location || "",
                 accountNumber: newAsset.accountNumber || "",
                 ownershipPercentage: ownershipOf(newAsset.ownershipPercentage),
@@ -271,7 +281,7 @@
                 closure_date: newAsset.closure_date || "",
                 closureNotes: newAsset.closureNotes || "",
                 documents: newAsset.documents || "",
-                valueHistory: [Number(newAsset.value) || 0], // the one real value so far
+                valueHistory: value === null ? [] : [value], // the one real value so far
                 customAttributes: customAttributesStr,
             }, false, false, saveAsset);
 
@@ -299,7 +309,7 @@
             id: asset.id,
             name: asset.name || "",
             type: asset.type || "Financial",
-            value: asset.value || 0,
+            value: valueOf(asset.value),
             location: asset.location || "",
             accountNumber: asset.accountNumber || "",
             ownershipPercentage: asset.ownershipPercentage ?? 100,
@@ -328,7 +338,7 @@
             id: undefined, // Clear ID to switch back to create mode
             name: "",
             type: "Financial",
-            value: 0,
+            value: null,
             location: "",
             accountNumber: "",
             ownershipPercentage: 100,
