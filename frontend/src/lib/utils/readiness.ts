@@ -14,7 +14,7 @@ export type ModuleStatus = {
 // e.g. 'financial_assets' -> continuum_acc_{id}_prof_{pid}_financial_assets
 export const MODULES_CONFIG = [
     { id: 'financial_assets', name: 'Financial Accounts', path: '/modules/financial-accounts' },
-    { id: 'docs_legal-vault', name: 'Legal Documents', path: '/modules/legal-documents' },
+    { id: 'documents', name: 'Legal Documents', path: '/modules/legal-documents' },
     { id: 'insurance_policies', name: 'Insurance', path: '/modules/insurance' },
     { id: 'subscriptions', name: 'Subscriptions', path: '/modules/subscriptions' },
     { id: 'heirlooms', name: 'Heirlooms', path: '/modules/heirlooms' },

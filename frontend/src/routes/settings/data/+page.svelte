@@ -196,6 +196,11 @@
         return item.name || item.title || item.provider || item.service_type || item.location || "Untitled";
     }
 
+    // Assets and utilities carry their kind in category / service_type rather than type.
+    function rowType(item: any) {
+        return item.type || item.category || item.service_type || item.serviceType || "Generic";
+    }
+
     // Helper: isTestRow
     function isTestRow(moduleKey: string, id: string | number) {
         return testRegistry[moduleKey]?.includes(String(id));
@@ -287,11 +292,10 @@
         };
     }
 
-    // Registered stores no card owns (pulse_status is the server's own check-in state; the
-    // Document Vault page's docs_* managers read the same /api/data/documents rows as "documents").
+    // Registered stores no card owns (pulse_status is the server's own check-in state).
     let otherModules = $derived.by(() => {
         const owned = new Set([...Object.values(moduleKeys).flat(), "pulse_status"]);
-        return Object.entries(syncRegistry).filter(([key]) => !owned.has(key) && !key.startsWith("docs_"));
+        return Object.entries(syncRegistry).filter(([key]) => !owned.has(key));
     });
 </script>
 
@@ -595,7 +599,9 @@
                             >
                                 {#if isAdmin}
                                 <td class="p-4">
-                                    {#if inCloud}
+                                    {#if !audit || audit.error}
+                                        <span class="text-slate-400">--</span>
+                                    {:else if inCloud}
                                         <div
                                             class="flex items-center gap-2 text-emerald-600 font-bold"
                                         >
@@ -605,10 +611,7 @@
                                         <div
                                             class="flex items-center gap-2 text-amber-600 font-bold"
                                         >
-                                            <RefreshCw
-                                                size={16}
-                                                class="animate-spin"
-                                            /> Pending
+                                            <RefreshCw size={16} /> Pending
                                         </div>
                                     {/if}
                                 </td>
@@ -616,7 +619,7 @@
                                 <td class="p-4"
                                     ><span
                                         class="px-2 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200"
-                                        >{item.type || "Generic"}</span
+                                        >{rowType(item)}</span
                                     ></td
                                 >
                                 <td class="p-4 font-medium text-slate-900"
@@ -647,7 +650,7 @@
                                         >Cloud Only</td
                                     >
                                     <td class="p-4 text-slate-400"
-                                        >{item.type || "Generic"}</td
+                                        >{rowType(item)}</td
                                     >
                                     <td class="p-4 text-slate-400"
                                         >{rowName(item)}</td

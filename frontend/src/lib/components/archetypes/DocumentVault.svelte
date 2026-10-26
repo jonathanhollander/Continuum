@@ -34,6 +34,7 @@
     import { activityLog } from "$lib/stores/activityLog.svelte";
     import { userPreferencesStore } from "$lib/stores/userPreferencesStore.svelte";
     import { downloadMedia, mediaIdFromRef } from "$lib/services/mediaService";
+    import { documentSync, type Document, type DocType } from "$lib/stores/documentStore.svelte";
     import { notifications } from "$lib/stores/notificationStore";
     import { pluralWord } from "$lib/utils/plural";
     import { dateWords } from "$lib/utils/dateWords";
@@ -42,86 +43,14 @@
     // The one Cards/Table toggle below remembers its choice in userPreferencesStore; read it from there.
     let viewMode = $derived(userPreferencesStore.getViewMode("legal-documents"));
 
-    type DocType =
-        | "Will"
-        | "Trust"
-        | "Deed"
-        | "Insurance"
-        | "Tax"
-        | "ID"
-        | "Other";
-
-    // UI shape. Other pages read name/type/location from the "docs_<id>" store, so those stay.
-    interface Doc {
-        id: string;
-        name: string;
-        type: DocType;
-        location: string; // where the original is kept
-        witnesses?: string;
-        signedDate?: string;
-        nextReviewDate?: string;
-        status: "verified" | "pending" | "needs_review";
-        notes?: string;
-        filePath?: string; // stored copy: "/api/media/12/download" (or an older data URL)
-        mediaId?: number | null;
-        customAttributes?: Record<string, any>;
-    }
-
-    /**
-     * Doc <-> Document row (backend/estate_models.py), used both ways by SyncManager.
-     * UI fields win over their column twins, so an edit to `name` beats a stale `title`.
-     */
-    function docMapper(d: any): any {
-        const name = d.name || d.title || "";
-        const type = d.type || d.category || "Other";
-        const location = d.location ?? d.locationPhysical ?? "";
-        const filePath = d.filePath || d.fileData || ""; // fileData: older device-only copies
-        let custom = d.customAttributes;
-        if (typeof custom === "string") {
-            try { custom = JSON.parse(custom); } catch { custom = {}; }
-        }
-        return {
-            id: d.id,
-            name,
-            title: name,
-            type,
-            category: type,
-            location,
-            locationPhysical: location,
-            witnesses: d.witnesses ?? "",
-            signedDate: d.signedDate ?? "",
-            nextReviewDate: d.nextReviewDate ?? "",
-            status: d.status || "verified",
-            notes: d.notes ?? "",
-            filePath,
-            mediaId: d.mediaId ?? mediaIdFromRef(filePath),
-            isDigitized: !!filePath,
-            customAttributes: custom && typeof custom === "object" ? custom : {},
-        };
-    }
-
-    import {
-        registerSync,
-        type SyncManager,
-    } from "$lib/services/sync.svelte";
-
-    let docSync = $state<SyncManager<Doc> | null>(null);
-    let docs = $derived(docSync?.items || []);
+    // The one /api/data/documents manager (documentStore); the dashboard and Settings › Data read it too.
+    type Doc = Document;
+    const docSync = documentSync;
+    let docs = $derived(docSync.items);
     // A gentle cue until the first server answer, unless this device already holds documents.
     let isLoading = $derived(
-        !docSync || (docSync.lastSync === null && docSync.status !== "error" && docs.length === 0),
+        docSync.lastSync === null && docSync.status !== "error" && docs.length === 0,
     );
-
-    $effect(() => {
-        if (module?.id) {
-            // docs_{id} -> /api/data/documents (all verbs go through routers/estate_data.py)
-            docSync = registerSync<Doc>(
-                `docs_${module.id}`,
-                "documents",
-                docMapper,
-            ).setAffirmationContext("documents");
-        }
-    });
 
     let showUpload = $state(false);
     let showWizard = $state(false);
@@ -169,7 +98,6 @@
     }
 
     async function saveDocOnce() {
-        if (!docSync) return;
         if (!(newDoc.name ?? "").trim()) {
             titleMissing = true;
             await tick();
@@ -266,7 +194,7 @@
     async function confirmRemove() {
         const doc = removing;
         removing = null;
-        if (!doc || !docSync) return;
+        if (!doc) return;
         const id = doc.id;
         await docSync.delete(id);
 

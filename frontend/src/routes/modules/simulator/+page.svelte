@@ -26,7 +26,7 @@
     // ...
 
     onMount(() => {
-        docs = getStored<any[]>("docs_legal-vault", []);
+        docs = getStored<any[]>("documents", []);
         assets = getStored<any[]>("assets_assets-main", []);
     });
 
