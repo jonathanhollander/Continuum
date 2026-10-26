@@ -145,13 +145,13 @@
                     description: "Jump to module",
                 })),
                 ...($insurance || []).map((p: any) => ({
-                    label: p.provider + " " + p.insuranceType,
+                    label: p.insurer + " " + p.insuranceType,
                     href: "/modules/insurance", // Could be deep link if supported
                     icon: Shield,
                     keywords: [
                         "policy",
                         "insurance",
-                        p.provider,
+                        p.insurer,
                         p.policyNumber,
                     ],
                     type: "policy",
@@ -163,7 +163,7 @@
                     icon: Dog,
                     keywords: ["pet", "dog", "cat", p.breed],
                     type: "family",
-                    description: `${p.species} - ${p.breed || "Unknown"}`,
+                    description: `${p.type} - ${p.breed || "Unknown"}`,
                 })),
                 ...($medical?.directives || []).map((c: any) => ({
                     label: c.title,
