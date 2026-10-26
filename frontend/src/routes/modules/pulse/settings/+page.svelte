@@ -26,23 +26,34 @@
     });
 
     let tiers = $state<any[]>([]);
+    // True once the server's settings have arrived. Until then the page holds defaults, and a save
+    // would post all six of them over the person's saved choices, so the controls wait for it.
+    let loaded = $state(false);
 
-    onMount(async () => {
-        await loadData();
+    onMount(() => {
+        loadSettings();
+        loadTiers();
     });
 
-    async function loadData() {
-        try {
-            const [settingsData, tiersData] = await Promise.all([
-                pulse.loadSettings(),
-                apiGet("/api/pulse/tiers"),
-            ]);
+    const settingsNotice = "Your saved check-in choices are still on your account. Let's try loading them again.";
 
-            if (settingsData) settings = settingsData as typeof settings;
-            else notifications.showError("Your saved check-in choices are still on your account. Let's try loading them again.", () => loadData());
-            tiers = tiersData;
+    // Settings and tiers load on their own, so one slow or failed read leaves the other in place.
+    async function loadSettings() {
+        const settingsData = await pulse.loadSettings();
+        if (settingsData) {
+            settings = settingsData as typeof settings;
+            loaded = true;
+        } else {
+            notifications.showError(settingsNotice, () => loadSettings());
+        }
+    }
+
+    async function loadTiers() {
+        try {
+            tiers = await apiGet("/api/pulse/tiers");
         } catch (e) {
             console.error(e);
+            notifications.showError("Your escalation plan is still on your account. Let's try loading it again.", () => loadTiers());
         }
     }
 
@@ -51,6 +62,11 @@
     // `undo` puts back the change the caller just made when the save fails, so the page never
     // shows a setting the server did not keep.
     async function saveSettings(undo?: () => void) {
+        if (!loaded) {
+            undo?.();
+            notifications.showError(settingsNotice, () => loadSettings());
+            return;
+        }
         saving = true;
         try {
             await apiPost("/api/pulse/settings", {
@@ -135,6 +151,7 @@
                 role="switch"
                 aria-checked={settings.enabled}
                 aria-label="Active Heartbeat"
+                disabled={!loaded}
                 onclick={() => {
                     settings.enabled = !settings.enabled;
                     saveSettings(() => (settings.enabled = !settings.enabled));
@@ -164,6 +181,7 @@
                         max="365"
                         step="1"
                         value={settings.frequency_days}
+                        disabled={!loaded}
                         onchange={(e) => saveNumber("frequency_days", e.currentTarget.value, 1, 365)}
                         class="w-24 bg-slate-950/60 border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
                     />
@@ -182,6 +200,7 @@
                         max="720"
                         step="1"
                         value={settings.grace_period_hours}
+                        disabled={!loaded}
                         onchange={(e) => saveNumber("grace_period_hours", e.currentTarget.value, 0, 720)}
                         class="w-24 bg-slate-950/60 border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
                     />
@@ -262,6 +281,7 @@
                 {/if}
                 <button
                     onclick={toggleGhostMode}
+                    disabled={!loaded}
                     class="w-full py-2.5 rounded-xl border transition-all text-sm font-bold relative z-10 {settings.ghost_mode_until
                         ? 'bg-purple-900/30 border-purple-500/50 text-purple-200 scale-[0.98]'
                         : 'bg-card border-border text-slate-300 hover:bg-slate-700 hover:border-slate-600'}"
@@ -299,6 +319,7 @@
                         role="switch"
                         aria-checked={settings.location_vault_enabled}
                         aria-label="Automatic Release"
+                        disabled={!loaded}
                         onclick={() => {
                             settings.location_vault_enabled =
                                 !settings.location_vault_enabled;
