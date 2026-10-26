@@ -1,5 +1,6 @@
 import { registerSync } from "$lib/services/sync.svelte";
 import { notifications } from "$lib/stores/notificationStore";
+import { deleteMedia, mediaIdFromRef } from "$lib/services/mediaService";
 
 // --- Types ---
 
@@ -98,20 +99,37 @@ export const syncAllMemories = () => Promise.all([
 ]);
 
 // Visual Actions
-export const addMemory = (memory: Omit<VisualMemory, 'id' | 'tags'> & { tags: string | string[] }) => {
+export const addMemory = (
+    memory: Omit<VisualMemory, 'id' | 'tags'> & { tags: string | string[] },
+    onRetry?: () => Promise<unknown>
+) => {
     // Backend expects comma-separated string for tags
     const payload = {
         ...memory,
         tags: Array.isArray(memory.tags) ? memory.tags.join(',') : memory.tags,
         is_favorite: memory.is_favorite ?? false
     };
-    return visualManager.create(payload as any);
+    return visualManager.create(payload as any, false, false, onRetry);
 };
 
-export const removeMemory = (id: number) => visualManager.delete(id);
+/** The media id behind a record's url; null for old `data:` records and other urls. */
+export const memoryMediaId = (url: string | null | undefined): number | null =>
+    !url || url.startsWith('data:') ? null : mediaIdFromRef(url);
+
+/** Remove the record, then the stored file behind it (only once the record is gone). */
+export const removeMemory = async (id: number) => {
+    const item = visualManager.items.find(m => String(m.id) === String(id));
+    await visualManager.delete(id);
+    // delete() rolls back and shows its own message when the server keeps the record
+    if (visualManager.items.some(m => String(m.id) === String(id))) return;
+    const mediaId = memoryMediaId(item?.url);
+    if (mediaId !== null) {
+        await deleteMedia(mediaId).catch((e) => console.warn('[visual-memories] media removal paused', mediaId, e));
+    }
+};
 
 export const updateMemory = (id: number, updates: Partial<VisualMemory>) => {
-    const item = visualManager.items.find(m => m.id === id);
+    const item = visualManager.items.find(m => String(m.id) === String(id));
     if (!item) return;
 
     const payload = { ...item, ...updates };
@@ -120,6 +138,19 @@ export const updateMemory = (id: number, updates: Partial<VisualMemory>) => {
         (payload as any).tags = payload.tags.join(',');
     }
     return visualManager.update(id, payload as any);
+};
+
+/** Add one tag to each memory, leaving any memory that already has it (any case) as it is. */
+export const addTagToMemories = async (ids: number[], tag: string) => {
+    const clean = tag.trim().replace(/,/g, ' ').trim();
+    if (!clean) return;
+    for (const id of ids) {
+        const item = visualManager.items.find(m => String(m.id) === String(id));
+        if (!item) continue;
+        const tags = tagList(item.tags);
+        if (tags.some(t => t.toLowerCase() === clean.toLowerCase())) continue;
+        await Promise.resolve(updateMemory(item.id!, { tags: [...tags, clean].join(',') })).catch(() => {});
+    }
 };
 
 export const toggleFavorite = (id: number) => {
