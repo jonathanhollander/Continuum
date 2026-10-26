@@ -27,14 +27,44 @@
         executorSteps,
         STEP_RECORDS,
     } from "$lib/stores/executorStepsStore.svelte";
+    import { executorSharing, type ExecutorNoteSharing } from "$lib/stores/executorSharingStore.svelte";
 
     let activeTab = $state("checklist");
     let selectedTask = $state<any>(null);
+    let sharingDraft = $state<ExecutorNoteSharing>('executors_only');
+    let sharingLoaded = $state(false);
+    let sharingBusy = $state(false);
+    let sharingNote = $state('');
+    let sharingFailed = $state(false);
+
+    async function loadSharing() {
+        await executorSharing.sync();
+        sharingLoaded = executorSharing.status !== 'error';
+        if (sharingLoaded) sharingDraft = executorSharing.current;
+        else sharingNote = 'Your sharing choice is ready to load again.';
+    }
+
+    async function saveSharing() {
+        if (!sharingLoaded || sharingBusy) return;
+        sharingBusy = true;
+        sharingNote = '';
+        try {
+            await executorSharing.save(sharingDraft);
+            sharingFailed = false;
+            sharingNote = 'Sharing choice saved.';
+        } catch {
+            sharingFailed = true;
+            sharingNote = 'Your sharing choice is ready to save again.';
+        } finally {
+            sharingBusy = false;
+        }
+    }
 
     // Ticks and notes live on the server (executor_steps), so they follow the account.
     // ?tab=bureau opens on the Gov & Bureaus steps (the /executor hub links there).
     onMount(() => {
         executorSteps.sync();
+        loadSharing();
         if (new URL(window.location.href).searchParams.get("tab") === "bureau")
             activeTab = "bureau";
     });
@@ -171,6 +201,22 @@
                 {SCENARIO_DESCRIPTIONS[$currentScenario]}
             </p>
         </div>
+
+        <section class="mt-6 max-w-2xl rounded-xl border border-border bg-card p-5 space-y-3" aria-label="Checklist note sharing" data-testid="executor-sharing">
+            <label for="executor-note-sharing" class="block font-semibold">Who can read your checklist notes?</label>
+            <p class="text-sm text-muted-foreground">Your full copy keeps your notes. Choose who sees the recorded steps and notes through a recipient link and its download copy.</p>
+            <div class="flex flex-wrap gap-3 items-center">
+                <select id="executor-note-sharing" bind:value={sharingDraft} disabled={!sharingLoaded || sharingBusy} class="rounded-lg border border-border bg-background px-3 py-2 text-sm">
+                    <option value="executors_only">Recipients marked as executors</option>
+                    <option value="all_recipients">All recipients</option>
+                </select>
+                <button onclick={saveSharing} disabled={!sharingLoaded || sharingBusy} class="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-primary-hover disabled:opacity-60" data-testid="save-executor-sharing">
+                    {sharingBusy ? 'Saving sharing choice…' : sharingFailed ? 'Try saving again' : 'Save sharing choice'}
+                </button>
+                {#if !sharingLoaded}<button onclick={loadSharing} class="text-sm text-primary-hover underline">Load sharing choice</button>{/if}
+            </div>
+            {#if sharingNote}<p class="text-sm text-muted-foreground" role="status" data-testid="executor-sharing-status">{sharingNote}</p>{/if}
+        </section>
 
         <div class="mt-8 text-left">
             <GriefSupportBanner compact={true} />

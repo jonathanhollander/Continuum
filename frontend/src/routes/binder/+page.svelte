@@ -119,7 +119,7 @@
         <div class="mb-4">
             <h1 class="font-serif font-bold text-3xl text-primary-deep dark:text-primary-hover">The Red Binder</h1>
             <p class="text-muted-foreground">
-                Everything you have recorded, in one place to print or keep.
+                Your legacy and practical records, financial history and recorded executor steps, in one place to print or keep.
             </p>
         </div>
         {#if packet && packet.sections.length > 0}

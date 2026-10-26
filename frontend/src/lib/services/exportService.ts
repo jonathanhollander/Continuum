@@ -20,6 +20,7 @@ import { formatMoney, toCents, fromCents } from '$lib/utils/money';
 import { fetchMediaBlob } from '$lib/services/mediaService';
 import { dateWords } from '$lib/utils/dateWords';
 import { captureSession, assertCurrentSession, isCurrentSession, SessionChangedError, type SessionOwnership } from '$lib/services/sessionOwnership';
+import { executorTasks } from '$lib/data/executorTasks';
 
 export type ExportScope = 'full' | 'insurance' | 'medical';
 
@@ -155,7 +156,7 @@ const money = formatMoney;
 const has = (v: any) => v !== null && v !== undefined && v !== '' && !(typeof v === 'number' && Number.isNaN(v));
 
 function isFileValue(v: any): boolean {
-    return typeof v === 'string' && (/^data:/i.test(v) || /\/api\/media\/\d+(\/download)?([?#].*)?$/.test(v));
+    return typeof v === 'string' && (/^data:/i.test(v) || /^(?:https?:\/\/\S+)?\/api\/media\/\d+(\/download)?([?#][^\s]*)?$/.test(v));
 }
 
 function humanize(key: string): string {
@@ -226,7 +227,7 @@ function parseJSON(v: any): any {
     }
 }
 
-type Spec = [key: string | ((r: any) => any), label: string, opts?: { long?: boolean; money?: boolean; fmt?: (v: any, r: any) => string }];
+type Spec = [key: string | ((r: any, snapshot: Snapshot) => any), label: string, opts?: { long?: boolean; money?: boolean; fmt?: (v: any, r: any) => string }];
 
 interface SectionDef {
     key: string; // packet section key
@@ -248,6 +249,33 @@ const ALWAYS_SKIP = new Set([
     'beneficiary_id', 'maintenanceSchedule', 'thumbnail', 'is_digitized', 'assigned_contact_id',
     'image', 'avatar', 'url' // files show as attachments; stock pictures are left out
 ]);
+
+const DETAIL_SECTIONS = new Set(['asset_transactions', 'maintenance_logs', 'insurance_claims', 'executor_steps']);
+const recordedValue = (r: any, key: string, alias?: string) => {
+    const value = Object.prototype.hasOwnProperty.call(r, key) ? r[key] : alias ? r[alias] : undefined;
+    return value === null ? 'Unknown' : value;
+};
+const recordedMoney = (r: any, key: string, alias?: string) => {
+    const value = recordedValue(r, key, alias);
+    return value === 'Unknown' ? value : has(value) ? money(value) : '';
+};
+function linkedAsset(snapshot: Snapshot, value: any, propertyOnly = false): string {
+    if (!has(value)) return value === null ? 'Unknown' : '';
+    const ref = String(value);
+    const match = ref.match(/^(property|financial):(.+)$/);
+    const source = match?.[1] === 'financial' ? 'financial_accounts' : 'assets';
+    const id = match?.[2] ?? ref;
+    const row = (snapshot.sections[source] ?? []).find((r) => String(r.id) === id && (source !== 'assets' || !propertyOnly || r.category === 'properties'));
+    return row?.name || ref;
+}
+function executorStepName(r: any): string {
+    const [id, sub] = String(r.step_id ?? r.stepId ?? '').split(':');
+    const task = executorTasks.find((t) => t.id === id);
+    if (!task) return `Executor step ${id}`.trim();
+    const block = sub !== undefined && /^\d+$/.test(sub) ? task.blocks.filter((b: any) => b.type === 'to_do')[Number(sub)] as any : null;
+    const label = block?.to_do?.rich_text?.map((t: any) => t.text?.content || '').join('');
+    return label ? `${task.title}: ${label}` : sub !== undefined ? `${task.title} · Step ${Number(sub) + 1 || sub}` : task.title;
+}
 
 const assetCategoryTotals = (rows: any[]): PacketField[] => [
     { label: 'Items', value: String(rows.length) },
@@ -370,6 +398,45 @@ const SECTIONS: SectionDef[] = [
         consumed: ['premium_amount', 'premium_frequency']
     },
     {
+        key: 'asset_transactions', source: 'asset_transactions', title: 'Asset history',
+        name: (r) => r.description || humanize(r.type || 'Transaction'),
+        fields: [
+            [(r, s) => linkedAsset(s, recordedValue(r, 'assetId', 'asset_id')), 'Asset'],
+            ['type', 'Type', { fmt: words }], ['date', 'Date'],
+            [(r) => recordedMoney(r, 'amount'), 'Amount'],
+            [(r) => recordedValue(r, 'performBy', 'perform_by'), 'Recorded by']
+        ],
+        consumed: ['description', 'assetId', 'asset_id', 'performBy', 'perform_by', 'amount']
+    },
+    {
+        key: 'maintenance_logs', source: 'maintenance_logs', title: 'Maintenance history',
+        name: (r) => r.item || 'Maintenance entry',
+        fields: [
+            [(r, s) => linkedAsset(s, recordedValue(r, 'propertyId', 'property_id'), true), 'Property'],
+            ['date', 'Date'], ['provider', 'Provider'],
+            [(r) => recordedMoney(r, 'cost'), 'Cost'],
+            [(r) => recordedValue(r, 'nextDueDate', 'next_due_date'), 'Next due']
+        ],
+        consumed: ['item', 'propertyId', 'property_id', 'cost', 'nextDueDate', 'next_due_date']
+    },
+    {
+        key: 'insurance_claims', source: 'insurance_claims', title: 'Insurance claims',
+        name: (r) => r.claimNumber || r.claim_number ? `Claim ${r.claimNumber || r.claim_number}` : 'Insurance claim',
+        fields: [
+            [(r, s) => {
+                const id = recordedValue(r, 'policyId', 'policy_id');
+                const policy = (s.sections.insurance_policies ?? []).find((p) => String(p.id) === String(id));
+                return policy ? [policy.policy_name, policy.insurer].filter(Boolean).join(' · ') : id;
+            }, 'Policy'],
+            [(r) => recordedValue(r, 'dateFiled', 'date_filed'), 'Filed'],
+            [(r) => recordedValue(r, 'status'), 'Status', { fmt: words }],
+            [(r) => recordedMoney(r, 'amountClaimed', 'amount_claimed'), 'Amount claimed'],
+            [(r) => recordedMoney(r, 'amountPaid', 'amount_paid'), 'Amount paid'],
+            ['note', 'Notes', { long: true }]
+        ],
+        consumed: ['claimNumber', 'claim_number', 'policyId', 'policy_id', 'dateFiled', 'date_filed', 'amountClaimed', 'amount_claimed', 'amountPaid', 'amount_paid', 'status']
+    },
+    {
         key: 'documents', source: 'documents', title: 'Documents',
         name: (r) => r.name || r.title,
         fields: [
@@ -390,6 +457,15 @@ const SECTIONS: SectionDef[] = [
             ['notes', 'Notes', { long: true }]
         ],
         consumed: ['is_executor', 'is_beneficiary', 'is_emergency_contact', 'is_recipient', 'avatar']
+    },
+    {
+        key: 'executor_steps', source: 'executor_steps', title: 'Recorded executor steps',
+        name: executorStepName,
+        fields: [
+            [(r) => r.done === true ? 'Finished' : r.done === false ? 'Open' : 'Unknown', 'Checklist status'],
+            ['note', 'Notes', { long: true }]
+        ],
+        consumed: ['step_id', 'stepId', 'done']
     },
     {
         key: 'letters', source: 'letters', title: 'Letters',
@@ -524,15 +600,15 @@ const SECTIONS: SectionDef[] = [
 
 const SCOPES: Record<ExportScope, string[] | null> = {
     full: null,
-    insurance: ['financial_accounts', 'properties', 'digital_assets', 'heirlooms', 'other_assets', 'insurance_policies'],
+    insurance: ['financial_accounts', 'properties', 'digital_assets', 'heirlooms', 'other_assets', 'insurance_policies', 'asset_transactions', 'maintenance_logs', 'insurance_claims'],
     medical: ['medical_profiles', 'medical_directives']
 };
 
-function buildFields(def: SectionDef, r: any, title = ''): PacketField[] {
+function buildFields(def: SectionDef, r: any, snapshot: Snapshot, title = ''): PacketField[] {
     const out: PacketField[] = [];
     const used = new Set<string>([...(def.consumed || [])]);
     for (const [key, label, opts] of def.fields) {
-        const raw = typeof key === 'function' ? key(r) : r[key];
+        const raw = typeof key === 'function' ? key(r, snapshot) : DETAIL_SECTIONS.has(def.source) && r[key] === null ? 'Unknown' : r[key];
         if (typeof key === 'string') used.add(key);
         if (!has(raw) || isFileValue(raw)) continue;
         const value = opts?.fmt ? opts.fmt(raw, r) : opts?.money ? money(raw) : text(raw);
@@ -552,8 +628,8 @@ function buildFields(def: SectionDef, r: any, title = ''): PacketField[] {
     // Everything else the record holds, so no entered detail is left out of the packet.
     for (const [k, v] of Object.entries(r)) {
         if (used.has(k) || ALWAYS_SKIP.has(k) || !has(v) || isFileValue(v)) continue;
-        if (typeof v === 'boolean' && !v) continue;
-        const t = text(v);
+        if (typeof v === 'boolean' && !v && !DETAIL_SECTIONS.has(def.source)) continue;
+        const t = DETAIL_SECTIONS.has(def.source) && v === false ? 'No' : text(v);
         if (t && t !== title) out.push({ label: humanize(k), value: t, long: t.length > 80 }); // the card title is said once
     }
     // Custom fields the owner added (their own keys, kept as written).
@@ -561,7 +637,7 @@ function buildFields(def: SectionDef, r: any, title = ''): PacketField[] {
     if (custom && typeof custom === 'object' && !Array.isArray(custom)) {
         for (const [k, v] of Object.entries(custom)) {
             if (k.startsWith('_')) continue; // held by the app itself (e.g. _media: the attached file)
-            const t = text(v);
+            const t = DETAIL_SECTIONS.has(def.source) && v === null ? 'Unknown' : DETAIL_SECTIONS.has(def.source) && v === false ? 'No' : text(v);
             if (t) out.push({ label: k, value: t, long: t.length > 80 });
         }
     }
@@ -597,7 +673,7 @@ export function buildPacket(snapshot: Snapshot, scope: ExportScope = 'full'): Pa
                 section: def.source,
                 id,
                 title,
-                fields: buildFields(def, r, title),
+                fields: buildFields(def, r, snapshot, title),
                 attachments
             };
         });
