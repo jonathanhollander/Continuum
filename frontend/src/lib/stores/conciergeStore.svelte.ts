@@ -13,9 +13,9 @@ interface ConciergeSettings {
     language: Language;
 }
 
-const manager = registerProfileSlice<ConciergeSettings>('concierge_settings', (data: any) => ({
-    encouragementMode: data.encouragementMode || data.encouragement || 'Full',
-    language: data.language || 'en'
+const manager = registerProfileSlice<ConciergeSettings>('concierge_settings', (data: Record<string, unknown>) => ({
+    encouragementMode: (data.encouragementMode || data.encouragement || 'Full') as EncouragementMode,
+    language: (data.language || 'en') as Language
 }));
 
 export const conciergeStore = {

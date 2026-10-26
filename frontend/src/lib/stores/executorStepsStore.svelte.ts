@@ -13,11 +13,11 @@ export interface ExecutorStepRecord {
     note: string;
 }
 
-const mapper = (d: any): ExecutorStepRecord => ({
-    id: d.id,
+const mapper = (d: Record<string, unknown>): ExecutorStepRecord => ({
+    id: d.id as number | string,
     stepId: String(d.stepId ?? d.step_id ?? ''),
     done: !!d.done,
-    note: d.note ?? '',
+    note: (d.note ?? '') as string,
 });
 
 const stepSync = registerSync<ExecutorStepRecord>('executor_steps', 'executor_steps', mapper);

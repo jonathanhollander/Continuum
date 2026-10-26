@@ -10,7 +10,7 @@ export interface HomeAccess {
 
 // Runs on server records (camelCase), local records and outgoing payloads alike: keep the
 // server id, and keep one spelling of each field so an edit is the value that gets sent.
-const mapper = (data: any): HomeAccess => {
+const mapper = (data: Record<string, unknown>): HomeAccess => {
     const { codeEncrypted, code, label, notes, ...rest } = data;
     return {
         ...rest,
@@ -18,7 +18,7 @@ const mapper = (data: any): HomeAccess => {
         location: data.location || label || 'Unknown',
         code_encrypted: data.code_encrypted ?? codeEncrypted ?? code ?? '',
         instructions: data.instructions ?? notes,
-    };
+    } as HomeAccess;
 };
 
 const manager = registerSync<HomeAccess>('home_access', 'home_access', mapper, '/api/data')

@@ -10,15 +10,15 @@ export interface ActivityLogEntry {
     entityName: string;
     changes?: {
         field: string;
-        oldValue: any;
-        newValue: any;
+        oldValue: unknown;
+        newValue: unknown;
     }[];
     userContext: string;
 }
 
 // --- Mapper ---
 
-const mapper = (data: any): ActivityLogEntry => data;
+const mapper = (data: Record<string, unknown>): ActivityLogEntry => data as unknown as ActivityLogEntry;
 
 // --- Sync Manager ---
 
@@ -45,7 +45,7 @@ export const activityLog = {
             entityName: String(entry.entityName ?? ''),
             timestamp: new Date().toISOString(),
         };
-        manager.create(newEntry as any, false, true).catch((e) => {
+        manager.create(newEntry as ActivityLogEntry, false, true).catch((e) => {
             console.warn('[ActivityLog] Could not record this activity (the save itself is unaffected):', e);
         });
     },

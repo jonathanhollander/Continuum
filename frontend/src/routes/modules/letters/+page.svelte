@@ -154,7 +154,7 @@
             module: "Letters",
             action: editingId !== null ? "UPDATE" : "CREATE",
             entityType: "Draft",
-            entityId: saved.id,
+            entityId: String(saved.id),
             entityName: saved.title,
             userContext: $estateProfile.ownerName || "User",
         });

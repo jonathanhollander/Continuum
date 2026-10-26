@@ -9,9 +9,9 @@
     }
 
     // Kept on this account's profile record (/api/estate/profile), like the other settings slices.
-    const webhooks = registerProfileSlice<WebhookSettings>("webhook_settings", (data: any) => ({
-        taskWebhook: data?.taskWebhook || "",
-        systemWebhook: data?.systemWebhook || "",
+    const webhooks = registerProfileSlice<WebhookSettings>("webhook_settings", (data: Record<string, unknown>) => ({
+        taskWebhook: (data?.taskWebhook || "") as string,
+        systemWebhook: (data?.systemWebhook || "") as string,
     }));
 
     let taskWebhook = $state(webhooks.data?.taskWebhook || "");

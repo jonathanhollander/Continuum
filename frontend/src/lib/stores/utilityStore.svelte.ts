@@ -16,7 +16,7 @@ export interface Utility {
 const SERVICE_TYPES = ['Water', 'Gas', 'Electric', 'Internet', 'Other'];
 const pageType = (v: unknown) => SERVICE_TYPES.find(t => t.toLowerCase() === String(v ?? '').trim().toLowerCase()) ?? v;
 
-const mapper = (data: any): Utility => {
+const mapper = (data: Record<string, unknown>): Utility => {
     const { serviceType, accountNumber, supportPhone, type, ...rest } = data;
     return {
         ...rest,
@@ -24,7 +24,7 @@ const mapper = (data: any): Utility => {
         service_type: pageType(data.service_type ?? serviceType ?? type) as string,
         account_number: data.account_number ?? accountNumber,
         support_phone: data.support_phone ?? supportPhone,
-    };
+    } as Utility;
 };
 
 const manager = registerSync<Utility>('utilities', 'utilities', mapper, '/api/data')

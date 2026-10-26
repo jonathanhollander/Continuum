@@ -27,15 +27,16 @@ const errTechnical = (e: unknown): string => {
     return (typeof t === 'string' && t) || errMessage(e) || String(e);
 };
 
-const convertKeys = (obj: unknown, converter: (s: string) => string): any => {
-    if (obj === null || typeof obj !== 'object' || obj instanceof Date || obj instanceof Blob) return obj;
-    if (Array.isArray(obj)) return obj.map(i => convertKeys(i, converter));
+// R is what the caller knows the input to be (a record by default; a row type or a list where it says so).
+const convertKeys = <R = Record<string, unknown>>(obj: unknown, converter: (s: string) => string): R => {
+    if (obj === null || typeof obj !== 'object' || obj instanceof Date || obj instanceof Blob) return obj as R;
+    if (Array.isArray(obj)) return obj.map(i => convertKeys(i, converter)) as R;
 
     const newObj: Record<string, unknown> = {};
     Object.keys(obj as object).forEach(key => {
         newObj[converter(key)] = VERBATIM_VALUE_KEYS.has(key) ? (obj as Record<string, unknown>)[key] : convertKeys((obj as Record<string, unknown>)[key], converter);
     });
-    return newObj;
+    return newObj as R;
 };
 
 // Wire contract: these SQLModel fields (Asset, FinancialAccount, Subscription, Letter) are camelCase
@@ -52,8 +53,8 @@ const JSON_TEXT_WIRE_KEYS = ['valueHistory', 'maintenanceSchedule', 'evidence'];
 
 const toWireKey = (s: string) => (CAMEL_WIRE_KEYS.has(s) ? s : toSnake(s));
 
-const toWire = (obj: unknown): any => {
-    const out = convertKeys(obj, toWireKey) as Record<string, unknown> | null;
+const toWire = (obj: unknown): Record<string, unknown> => {
+    const out = convertKeys<Record<string, unknown>>(obj, toWireKey);
     for (const k of JSON_TEXT_WIRE_KEYS) {
         if (out && out[k] !== null && typeof out[k] === 'object') out[k] = JSON.stringify(out[k]);
     }
@@ -228,7 +229,7 @@ export class SyncManager<T extends { id: number | string }> {
             if (get(auth).token !== token) return;
             const remoteItems = rawItems.map(item => {
                 const camelItem = convertKeys(item, toCamel);
-                return this.mapper ? this.mapper(camelItem) : camelItem;
+                return this.mapper ? this.mapper(camelItem) : camelItem as unknown as T;
             });
 
             // Logic: Up-Sync vs Down-Sync
@@ -263,7 +264,7 @@ export class SyncManager<T extends { id: number | string }> {
                     if (get(auth).token !== token) return;
                     const wrapped2 = raw2.map((i: unknown) => {
                         const camel = convertKeys(i, toCamel);
-                        return this.mapper ? this.mapper(camel) : camel;
+                        return this.mapper ? this.mapper(camel) : camel as unknown as T;
                     });
                     this.updateLocal(this.withOpenUpdates(wrapped2, generation, baseMark));
                 }
@@ -365,7 +366,7 @@ export class SyncManager<T extends { id: number | string }> {
 
         const raw = await res.json();
         const newItemRaw = convertKeys(raw, toCamel);
-        return this.mapper ? this.mapper(newItemRaw) : newItemRaw;
+        return this.mapper ? this.mapper(newItemRaw) : newItemRaw as unknown as T;
     }
 
     // CRUD
@@ -493,7 +494,7 @@ export class SyncManager<T extends { id: number | string }> {
             }
             const raw = await res.json();
             const remoteItemRaw = convertKeys(raw, toCamel);
-            const remoteItem = this.mapper ? this.mapper(remoteItemRaw) : remoteItemRaw;
+            const remoteItem = this.mapper ? this.mapper(remoteItemRaw) : remoteItemRaw as unknown as T;
 
             // The server's row, with any newer update still in flight laid over it (those values
             // stay on screen until their own answer comes back).
@@ -703,10 +704,20 @@ function sharedUpload(url: string, token: string, payload: Record<string, unknow
     return new Promise((resolve, reject) => target.waiters.push({ resolve, reject }));
 }
 
-const isEmptyRecord = (r: any) => !r || typeof r !== 'object' || Object.keys(r).length === 0;
+const isEmptyRecord = (r: unknown) => !r || typeof r !== 'object' || Object.keys(r).length === 0;
 const ACCOUNT_CHANGED = new Error("account changed before this save was sent");
 
 type ProfileBatch = { token: string; payload: Record<string, unknown>; waiters: { resolve: () => void; reject: (e: unknown) => void }[] };
+
+/** What the shared record needs from each store that owns a slice of it. */
+interface ProfileSlice {
+    status: SyncStatus;
+    error: string | null;
+    hasLocalData(): boolean;
+    wirePayloadOfData(): Record<string, unknown>;
+    applyRemote(record: Record<string, unknown>): void;
+    syncFailed(e: unknown): void;
+}
 
 /** One server record that several singleton stores share, each owning its own keys (estate/profile:
  *  estate, scenario, tone, onboarding, concierge, complexity). It is the one manager of that record:
@@ -714,8 +725,8 @@ type ProfileBatch = { token: string; payload: Record<string, unknown>; waiters: 
  *  POST in flight at a time; saves made meanwhile wait and go together in the next POST (the server
  *  merges posted keys), so no response or reload can undo another store's save. */
 class SharedRecord {
-    private slices = new Set<SingletonSyncManager<any>>();
-    private server: Record<string, any> = {}; // the record as the server last returned it (camelCase)
+    private slices = new Set<ProfileSlice>();
+    private server: Record<string, unknown> = {}; // the record as the server last returned it (camelCase)
     private queue: ProfileBatch[] = [];
     private sending: ProfileBatch | null = null;
     private inflight: Promise<void> | null = null;
@@ -725,10 +736,10 @@ class SharedRecord {
 
     constructor(private url: string) {}
 
-    attach(slice: SingletonSyncManager<any>) { this.slices.add(slice); }
+    attach(slice: ProfileSlice) { this.slices.add(slice); }
 
     /** The server record with every save not yet confirmed laid over it. */
-    get current(): Record<string, any> {
+    get current(): Record<string, unknown> {
         const out = { ...this.server };
         for (const b of [this.sending, ...this.queue]) if (b) Object.assign(out, convertKeys(b.payload, toCamel));
         return out;
@@ -747,14 +758,14 @@ class SharedRecord {
     }
 
     /** Bring one store up to date: joins the session's single GET, or reads the record already held. */
-    async syncSlice(slice: SingletonSyncManager<any>) {
+    async syncSlice(slice: ProfileSlice) {
         this.attach(slice);
         if (!this.synced) return this.sync();
         // A store that registers after the first load and holds this device's earlier data uploads it
         // only while the account's record is still empty (as its own first load would have).
         if (isEmptyRecord(this.current) && slice.hasLocalData()) {
             const epoch = this.epoch;
-            try { await this.write(slice.wirePayload(slice.data)); } catch (e) { if (e !== ACCOUNT_CHANGED) slice.syncFailed(e); return; }
+            try { await this.write(slice.wirePayloadOfData()); } catch (e) { if (e !== ACCOUNT_CHANGED) slice.syncFailed(e); return; }
             if (epoch !== this.epoch) return;
         }
         slice.applyRemote(this.current);
@@ -781,8 +792,8 @@ class SharedRecord {
             // First load of an empty account: every store's own device data goes up in one POST
             // (quietly; a store holding only its mapper's defaults sends nothing).
             if (isEmptyRecord(raw)) {
-                const upload: Record<string, any> = {};
-                this.slices.forEach(s => { if (s.hasLocalData()) Object.assign(upload, s.wirePayload(s.data)); });
+                const upload: Record<string, unknown> = {};
+                this.slices.forEach(s => { if (s.hasLocalData()) Object.assign(upload, s.wirePayloadOfData()); });
                 if (!isEmptyRecord(upload)) {
                     console.log(`[Sync:${this.url}] Migrating local profile to cloud...`);
                     await this.write(upload, token);
@@ -799,7 +810,7 @@ class SharedRecord {
     }
 
     /** Queue a save of some keys (snake_case). Resolves once the server holds them. */
-    write(payload: Record<string, any>, token: string | null = get(auth).token): Promise<void> {
+    write(payload: Record<string, unknown>, token: string | null = get(auth).token): Promise<void> {
         const t = token || '';
         let b = this.queue[this.queue.length - 1];
         if (!b || b.token !== t) { b = { token: t, payload: {}, waiters: [] }; this.queue.push(b); }
@@ -929,7 +940,7 @@ export class SingletonSyncManager<T extends object> {
             const raw = await sharedGet(url, token);
             if (get(auth).token !== token) return; // account changed mid-flight
             const remoteDataRaw = convertKeys(raw, toCamel);
-            const remoteData = this.mapper ? this.mapper(remoteDataRaw) : remoteDataRaw;
+            const remoteData = this.mapper ? this.mapper(remoteDataRaw) : remoteDataRaw as unknown as T;
 
             // Simple migration: if remote is empty but this device holds real data, upload it
             // (quietly: background bookkeeping, no affirmation).
@@ -939,7 +950,7 @@ export class SingletonSyncManager<T extends object> {
                 console.log(`[Sync:${this.key}] Migrating local singleton to cloud...`);
                 const saved = convertKeys(await sharedUpload(url, token, this.wirePayload(this.data!)), toCamel);
                 if (get(auth).token !== token) return;
-                this.updateLocal(this.mapper ? this.mapper(saved) : saved);
+                this.updateLocal(this.mapper ? this.mapper(saved) : saved as unknown as T);
             } else {
                 this.updateLocal(remoteData);
             }
@@ -962,6 +973,9 @@ export class SingletonSyncManager<T extends object> {
         return JSON.stringify(this.mapper(stored)) !== JSON.stringify(this.mapper({}));
     }
 
+    /** wirePayload of the data this store holds now. */
+    wirePayloadOfData(): Record<string, unknown> { return this.wirePayload(this.data as T); }
+
     /** The record as sent: mapped, snake_case, without the fields the server owns. */
     wirePayload(data: T): Record<string, unknown> {
         const payload = convertKeys(this.mapper ? this.mapper(data as Record<string, unknown>) : data, toSnake);
@@ -973,7 +987,7 @@ export class SingletonSyncManager<T extends object> {
     }
 
     /** Shared record: the server's copy arrived (or was already held); take this store's slice. */
-    applyRemote(record: Record<string, any>) {
+    applyRemote(record: Record<string, unknown>) {
         this.updateLocal((this.mapper ? this.mapper(record) : record) as T);
         this.status = "synced";
         this.error = null;
@@ -1013,7 +1027,7 @@ export class SingletonSyncManager<T extends object> {
             if (!res.ok) throw new Error("Update failed");
             const raw = await res.json();
             const savedRaw = convertKeys(raw, toCamel);
-            const saved = this.mapper ? this.mapper(savedRaw) : savedRaw;
+            const saved = this.mapper ? this.mapper(savedRaw) : savedRaw as unknown as T;
 
             this.updateLocal(saved);
             this.status = "synced";
@@ -1049,7 +1063,7 @@ export class SingletonSyncManager<T extends object> {
         const epoch = record.epoch;
         const full = this.wirePayload(this.data!);
         const changed = new Set(Object.keys(newData).map(toSnake));
-        const payload: Record<string, any> = {};
+        const payload: Record<string, unknown> = {};
         for (const k of Object.keys(full || {})) if (changed.has(k)) payload[k] = full[k];
         try {
             await record.write(isEmptyRecord(payload) ? full : payload);
@@ -1149,7 +1163,7 @@ export function registerSingletonSync<T extends object>(key: string, endpoint: s
 
 /** A store that owns some keys of the one estate profile record (/api/estate/profile). Every such
  *  store reads and writes its slice through that record's single manager (SharedRecord). */
-export function registerProfileSlice<T extends object>(key: string, mapper: (data: any) => T) {
+export function registerProfileSlice<T extends object>(key: string, mapper: (data: Record<string, unknown>) => T) {
     return registerManager(key, 'estate/profile', '/api', () => new SingletonSyncManager<T>(key, 'estate/profile', mapper, '/api', true)) as unknown as SingletonSyncManager<T>;
 }
 

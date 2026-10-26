@@ -68,18 +68,18 @@ const DEFAULT_TASKS: AcceptanceTask[] = [
 
 export type EstateComplexity = 'simple' | 'moderate' | 'complex';
 
-const mapper = (data: any): AcceptanceTask => ({
+const mapper = (data: Record<string, unknown>): AcceptanceTask => ({
     ...data,
     id: typeof data.id === 'string' && data.id.length > 10 ? data.id : Number(data.id) || data.id,
-});
+} as AcceptanceTask);
 
 
 const taskManager = registerSync<AcceptanceTask>('acceptance_tasks', 'acceptance_tasks', mapper, '/api/data');
 
 // Complexity is now part of the global estate profile or a separate singleton
-const complexityManager = registerProfileSlice<{ level: EstateComplexity; complexity?: EstateComplexity }>('estate_complexity', (data: any) => {
+const complexityManager = registerProfileSlice<{ level: EstateComplexity; complexity?: EstateComplexity }>('estate_complexity', (data: Record<string, unknown>) => {
     // The profile key is "complexity"; "level" is the local name. Carry both so a save round-trips.
-    const level = data.complexity || data.level || 'moderate';
+    const level = (data.complexity || data.level || 'moderate') as EstateComplexity;
     return { level, complexity: level };
 });
 

@@ -48,21 +48,21 @@ export interface FamilyMemory {
  * the server's shape: tags stay one comma-separated string (the column is a string; an
  * array in the body made every create and update fail). Split them for display with tagList().
  */
-const visualMapper = (data: any): VisualMemory => {
-    if (!data) return data;
+const visualMapper = (data: Record<string, unknown>): VisualMemory => {
+    if (!data) return data as unknown as VisualMemory;
     const tags = Array.isArray(data.tags) ? data.tags.join(',') : (data.tags ?? '');
-    return { ...data, tags };
+    return { ...data, tags } as unknown as VisualMemory;
 };
 
 export const tagList = (tags: string | string[] | null | undefined): string[] =>
     Array.isArray(tags) ? tags : (tags || '').split(',').map((t) => t.trim()).filter(Boolean);
 
-const archiveMapper = (data: any): ExternalArchive => data;
+const archiveMapper = (data: Record<string, unknown>): ExternalArchive => data as unknown as ExternalArchive;
 
-const familyMapper = (data: any): FamilyMemory => ({
+const familyMapper = (data: Record<string, unknown>): FamilyMemory => ({
     ...data,
     author: data.author || 'Me'
-});
+} as FamilyMemory);
 
 // --- Sync Managers ---
 

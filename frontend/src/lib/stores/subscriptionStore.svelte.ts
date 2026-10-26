@@ -26,14 +26,14 @@ const pageCycle = (cycle: unknown, frequency: unknown): 'Monthly' | 'Yearly' => 
 };
 
 // One spelling per field (the page's; paymentMethod is a camel column), newest value kept.
-const mapper = (data: any): Subscription => {
+const mapper = (data: Record<string, unknown>): Subscription => {
     const out = oneSpelling(data, { auto_renew: 'autoRenew', renewal_date: 'renewalDate', paymentMethod: 'payment_method' });
     return {
         ...out,
         id: typeof out.id === 'string' && out.id.length > 10 ? undefined : Number(out.id) || out.id,
         auto_renew: out.auto_renew ?? true,
         cycle: pageCycle(out.cycle, out.frequency),
-    };
+    } as Subscription;
 };
 
 // The one owner of 'subscriptions' (the subscriptions page uses it too).

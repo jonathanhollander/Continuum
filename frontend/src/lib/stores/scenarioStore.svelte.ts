@@ -13,18 +13,18 @@ interface ScenarioSettings {
     isSimActive: boolean;
 }
 
-const manager = registerProfileSlice<ScenarioSettings>('scenario_settings', (data: any) => ({
-    currentScenario: data.currentScenario || 'General',
+const manager = registerProfileSlice<ScenarioSettings>('scenario_settings', (data: Record<string, unknown>) => ({
+    currentScenario: (data.currentScenario || 'General') as Scenario,
     isSimActive: data.isSimActive === true
 }));
 
 export const currentScenario = {
-    subscribe: (fn: any) => manager.subscribe(val => fn(val?.currentScenario || 'General')),
+    subscribe: (fn: (value: Scenario) => void) => manager.subscribe(val => fn(val?.currentScenario || 'General')),
     set: (val: Scenario) => manager.update({ currentScenario: val })
 };
 
 export const isSimulationActive = {
-    subscribe: (fn: any) => manager.subscribe(val => fn(val?.isSimActive || false)),
+    subscribe: (fn: (value: boolean) => void) => manager.subscribe(val => fn(val?.isSimActive || false)),
     set: (val: boolean) => manager.update({ isSimActive: val })
 };
 
