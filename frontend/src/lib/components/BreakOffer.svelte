@@ -159,7 +159,7 @@
             >
                 {getMessage()}
                 <span class="block mt-2 text-sm">
-                    Your progress is always saved. It's perfectly okay to pause.
+                    It's perfectly okay to pause. You can return when you're ready.
                 </span>
             </p>
 
@@ -241,7 +241,7 @@
             </h2>
 
             <p class="text-lg text-muted-foreground mb-8">
-                Breathe slowly. Your work is safe and waiting for you.
+                Breathe slowly. You can return when you're ready.
             </p>
 
             <!-- Timer -->
