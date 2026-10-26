@@ -4,12 +4,13 @@
 	// sidebar and header; the wording stays positive and true (owner rule).
 	import { page } from "$app/stores";
 	import { auth } from "$lib/stores/auth";
+	import { dict } from "$lib/stores/conciergeStore.svelte";
 	import { Compass, ArrowRight } from "lucide-svelte";
 
 	let signedIn = $derived(!!($auth.user || $auth.token));
 	let isNotFound = $derived($page.status === 404);
 	let homeHref = $derived(signedIn ? "/dashboard" : "/");
-	let homeLabel = $derived(signedIn ? "Go to my dashboard" : "Go to the home page");
+	let homeLabel = $derived(signedIn ? $dict.errorPage.toDashboard : $dict.errorPage.toHome);
 </script>
 
 <svelte:head>
@@ -27,16 +28,14 @@
 		</div>
 
 		<h1 class="text-2xl font-serif text-foreground mb-3">
-			Let's find your way back
+			{$dict.errorPage.title}
 		</h1>
 
 		<p class="text-muted-foreground leading-relaxed mb-8">
 			{#if !isNotFound}
-				Reloading the page often sets this right.
+				{$dict.errorPage.reload}
 			{/if}
-			{signedIn
-				? "Everything you've saved is safe and waiting on your dashboard."
-				: "Continuum's home page is one step away."}
+			{signedIn ? $dict.errorPage.savedSafe : $dict.errorPage.homeNear}
 		</p>
 
 		<a

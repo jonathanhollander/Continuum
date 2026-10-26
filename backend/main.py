@@ -145,7 +145,9 @@ def _connect_sources():
 csp = (
     ContentSecurityPolicy()
     .default_src("'self'")
-    .script_src("'self'", *_inline_script_sources())
+    # Cloudflare Web Analytics: Cloudflare injects its beacon script at the edge and it reports
+    # back to cloudflareinsights.com. Exact hosts only.
+    .script_src("'self'", *_inline_script_sources(), "https://static.cloudflareinsights.com")
     .style_src("'self'", "'unsafe-inline'", "https://fonts.googleapis.com")
     .font_src("'self'", "https://fonts.gstatic.com")
     # blob: so stored photos, recordings and videos (fetched with the auth header
@@ -154,7 +156,7 @@ csp = (
     .media_src("'self'", "blob:")
     # The export preview shows the generated PDF in an iframe from a blob: URL.
     .frame_src("'self'", "blob:")
-    .connect_src(*_connect_sources())
+    .connect_src(*_connect_sources(), "https://cloudflareinsights.com")
     .base_uri("'self'")
     .frame_ancestors("'none'")
     .object_src("'none'")

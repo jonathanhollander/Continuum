@@ -426,6 +426,16 @@ export const dictionary = {
             circleTrustDesc: "Secure, controlled access for executors and loved ones to the information they need, when they need it.",
             complianceTitle: "Compliance & Trust",
             complianceDesc: "Continuum helps you organize your intent and get your affairs in order. For guidance on your local healthcare and estate laws, a qualified attorney can help make sure your wishes are legally binding."
+        },
+        // Error page and its breadcrumb (X264)
+        errorPage: {
+            crumb: "Your way back",
+            title: "Let's find your way back",
+            reload: "Reloading the page often sets this right.",
+            savedSafe: "Everything you've saved is safe and waiting on your dashboard.",
+            homeNear: "Continuum's home page is one step away.",
+            toDashboard: "Go to my dashboard",
+            toHome: "Go to the home page"
         }
     },
     es: {
@@ -828,6 +838,16 @@ export const dictionary = {
             circleTrustDesc: "Acceso seguro y controlado para albaceas y seres queridos a la información que necesitan, cuando la necesitan.",
             complianceTitle: "Cumplimiento y Confianza",
             complianceDesc: "Continuum le ayuda a organizar su intención y poner sus asuntos en orden. Para orientación sobre las leyes locales de salud y sucesiones, un abogado calificado puede ayudarle a que sus deseos sean legalmente vinculantes."
+        },
+        // Error page and its breadcrumb (X264)
+        errorPage: {
+            crumb: "Su camino",
+            title: "Encontremos el camino de regreso",
+            reload: "Volver a cargar la página suele resolverlo.",
+            savedSafe: "Todo lo que ha guardado está a salvo y le espera en su tablero.",
+            homeNear: "La página de inicio de Continuum está a un paso.",
+            toDashboard: "Ir a mi tablero",
+            toHome: "Ir a la página de inicio"
         }
     },
     fr: {
@@ -1230,6 +1250,16 @@ export const dictionary = {
             circleTrustDesc: "Accès sécurisé et contrôlé pour les exécuteurs et les proches aux informations dont ils ont besoin.",
             complianceTitle: "Conformité et Confiance",
             complianceDesc: "Continuum vous aide à organiser vos intentions. Pour les lois locales, un avocat qualifié peut vous aider à rendre vos volontés juridiquement valables."
+        },
+        // Error page and its breadcrumb (X264)
+        errorPage: {
+            crumb: "Votre chemin",
+            title: "Retrouvons votre chemin",
+            reload: "Recharger la page suffit souvent à tout remettre en ordre.",
+            savedSafe: "Tout ce que vous avez enregistré est en sécurité et vous attend sur votre tableau de bord.",
+            homeNear: "La page d'accueil de Continuum est à un pas.",
+            toDashboard: "Aller à mon tableau de bord",
+            toHome: "Aller à la page d'accueil"
         }
     },
     de: {
@@ -1632,6 +1662,16 @@ export const dictionary = {
             circleTrustDesc: "Sicherer, kontrollierter Zugang für Testamentsvollstrecker und Angehörige zu den benötigten Informationen.",
             complianceTitle: "Compliance & Vertrauen",
             complianceDesc: "Continuum hilft Ihnen, Ihre Absichten zu organisieren. Zu den lokalen Gesetzen kann Ihnen ein qualifizierter Anwalt helfen, Ihre Wünsche rechtsverbindlich zu machen."
+        },
+        // Error page and its breadcrumb (X264)
+        errorPage: {
+            crumb: "Ihr Weg zurück",
+            title: "Finden wir den Weg zurück",
+            reload: "Ein Neuladen der Seite bringt das oft in Ordnung.",
+            savedSafe: "Alles, was Sie gespeichert haben, ist sicher und wartet auf Ihrem Dashboard.",
+            homeNear: "Die Startseite von Continuum ist nur einen Schritt entfernt.",
+            toDashboard: "Zu meinem Dashboard",
+            toHome: "Zur Startseite"
         }
     },
     ru: {
@@ -2017,6 +2057,16 @@ export const dictionary = {
             circleTrustDesc: "Безопасный, контролируемый доступ для исполнителей и близких к необходимой информации.",
             complianceTitle: "Соответствие и доверие",
             complianceDesc: "Continuum помогает вам организовать свои намерения. Квалифицированный юрист поможет с местными законами, чтобы ваши пожелания имели юридическую силу."
+        },
+        // Error page and its breadcrumb (X264)
+        errorPage: {
+            crumb: "Путь назад",
+            title: "Давайте найдём дорогу обратно",
+            reload: "Перезагрузка страницы часто всё исправляет.",
+            savedSafe: "Всё, что вы сохранили, в безопасности и ждёт вас на панели управления.",
+            homeNear: "Главная страница Continuum — в одном шаге.",
+            toDashboard: "Перейти на мою панель управления",
+            toHome: "Перейти на главную страницу"
         }
     },
     he: {
@@ -2395,6 +2445,16 @@ export const dictionary = {
             circleTrustDesc: "גישה מאובטחת ומבוקרת למוציאים לפועל וליקירכם למידע הדרוש להם.",
             complianceTitle: "ציות ואמון",
             complianceDesc: "Continuum עוזרת לכם לארגן את כוונותיכם. עורך דין מוסמך יכול לסייע בחוקים המקומיים ולוודא שרצונותיכם מחייבים מבחינה משפטית."
+        },
+        // Error page and its breadcrumb (X264)
+        errorPage: {
+            crumb: "הדרך חזרה",
+            title: "בואו נמצא את הדרך חזרה",
+            reload: "טעינה מחדש של הדף מסדרת זאת לעיתים קרובות.",
+            savedSafe: "כל מה ששמרתם בטוח ומחכה לכם בלוח הבקרה.",
+            homeNear: "דף הבית של Continuum במרחק צעד אחד.",
+            toDashboard: "ללוח הבקרה שלי",
+            toHome: "לדף הבית"
         }
     }
 };

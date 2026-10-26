@@ -4,7 +4,15 @@
 // The backend (backend/csrf.py) uses double-submit-cookie CSRF protection: every
 // POST/PUT/PATCH/DELETE must send the csrf_token cookie value back in X-CSRF-Token.
 // Production enforces it, so the header is added here once instead of in each caller.
+import type { HandleClientError } from '@sveltejs/kit';
 import { API_BASE_URL } from '$lib/config';
+
+// An unknown address (404) is shown by routes/+error.svelte, so it stays out of the
+// console; every other unexpected error is logged as SvelteKit's default does.
+export const handleError: HandleClientError = ({ error, status, message }) => {
+	if (status !== 404) console.error(error);
+	return { message };
+};
 
 const CSRF_COOKIE = 'csrf_token';
 const CSRF_HEADER = 'X-CSRF-Token';
