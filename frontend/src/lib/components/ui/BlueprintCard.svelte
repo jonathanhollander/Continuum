@@ -114,8 +114,8 @@
                         {description}
                     </h2>
                     <p class="text-muted-foreground text-sm leading-relaxed">
-                        Completing this blueprint ensures your estate is
-                        prepared. Follow the steps on the right to reach 100%.
+                        When you're ready, these small steps may help. Move
+                        at your own pace.
                     </p>
                 </div>
 
