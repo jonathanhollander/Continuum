@@ -299,7 +299,7 @@
     </div>
 {:else}
 <div
-    class="max-w-5xl mx-auto p-6 md:p-8 space-y-8 animate-in fade-in duration-500"
+    class="container mx-auto px-6 py-8 space-y-8 animate-in fade-in duration-500"
 >
 
     <!-- AI Concierge Drafting Assistant -->
@@ -495,13 +495,15 @@
                                     </td>
                                     <td class="px-4 py-3 text-sm text-slate-600">{sub.cycle}</td>
                                     <td class="px-4 py-3">
-                                        <span class="text-xs font-medium px-2 py-1 rounded-lg {
-                                            sub.difficulty === 'Easy' ? 'bg-green-100 text-green-700' :
-                                            sub.difficulty === 'Medium' ? 'bg-amber-100 text-amber-700' :
-                                            'bg-red-100 text-red-700'
-                                        }">
-                                            {sub.difficulty}
-                                        </span>
+                                        {#if sub.difficulty}
+                                            <span class="text-xs font-medium px-2 py-1 rounded-lg {
+                                                sub.difficulty === 'Easy' ? 'bg-green-100 text-green-700' :
+                                                sub.difficulty === 'Medium' ? 'bg-amber-100 text-amber-700' :
+                                                'bg-red-100 text-red-700'
+                                            }">
+                                                {sub.difficulty}
+                                            </span>
+                                        {/if}
                                     </td>
                                     <td class="px-4 py-3 text-sm text-slate-600 max-w-[150px] truncate">
                                         {sub.paymentMethod || '-'}
@@ -545,10 +547,10 @@
             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
         >
             <div
-                class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto"
+                class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col"
             >
                 <div
-                    class="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-start"
+                    class="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-start shrink-0"
                 >
                     <div class="flex-1 pr-4">
                         <h3
@@ -565,13 +567,15 @@
                         </p>
                     </div>
                     <button
+                        aria-label="Close"
                         onclick={resetForm}
-                        class="text-gray-400 hover:text-gray-600 mt-1"
-                        >Go back</button
+                        class="p-2 -mr-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
                     >
+                        <X size={20} />
+                    </button>
                 </div>
 
-                <div class="p-6 space-y-4">
+                <div class="p-6 space-y-4 flex-1 overflow-y-auto">
                     <div>
                         <label
                             class="block text-xs font-bold uppercase text-gray-500 mb-1"
@@ -673,9 +677,9 @@
                     </div>
                 </div>
 
-                <div class="p-6 bg-gray-50 flex justify-end gap-3">
+                <div class="p-6 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 shrink-0">
                     <button
-                        onclick={() => (showAddForm = false)}
+                        onclick={resetForm}
                         class="px-6 py-2 rounded-xl font-bold text-gray-500 hover:bg-gray-200"
                         >Not right now</button
                     >
