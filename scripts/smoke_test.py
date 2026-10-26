@@ -12,10 +12,10 @@ Usage (synthetic data only; it talks only to the URL you give it):
     python3 scripts/smoke_test.py --base URL --verbose  # also print payloads/responses
 
 How the payloads are reproduced (read these before changing anything here):
-  - frontend/src/lib/services/sync.svelte.ts: toSnake/toCamel/convertKeys (lines 8-20),
-    SyncManager.create (146-202: mapper -> convertKeys(toSnake) -> drop string id > 10 chars),
-    SyncManager.update (204-286: {...local, ...updates} -> mapper -> toSnake -> drop
-    id/user_id/created_at/updated_at), SingletonSyncManager.sync/update (396-472).
+  - frontend/src/lib/services/sync.svelte.ts: toSnake/toCamel/convertKeys/toWire (lines 11-62),
+    SyncManager.post (375-385: mapper -> toWire -> drop id/user_id/created_at/updated_at),
+    SyncManager.update (450-514: {...local, ...updates} -> mapper -> toWire -> drop the same
+    four), SingletonSyncManager.sync/update.
   - Each store's mapper is ported 1:1 below (JS `??`, `||`, object spread of strings,
     and JSON.stringify dropping `undefined` are emulated).
   - Which SyncManager instance owns a registry key: the login page redirects to /dashboard
@@ -40,7 +40,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 
 # ---------------------------------------------------------------------------
 # JS semantics helpers
@@ -124,14 +124,20 @@ def convert_keys(obj, conv):
         return obj
     out = {}
     for k, v in obj.items():
-        out[conv(k)] = v if k in ("custom_attributes", "customAttributes") else convert_keys(v, conv)
+        out[conv(k)] = v if k in VERBATIM_VALUE_KEYS else convert_keys(v, conv)
     return out
+
+
+# sync.svelte.ts VERBATIM_VALUE_KEYS (lines 17-20): values never case-converted
+VERBATIM_VALUE_KEYS = {"custom_attributes", "customAttributes", "setupStatus", "fireDrill",
+                       "wishes", "budget", "transactions", "maintenance", "claims"}
 
 
 # sync.svelte.ts CAMEL_WIRE_KEYS / JSON_TEXT_WIRE_KEYS / toWire (B1)
 CAMEL_WIRE_KEYS = {"ownershipDetails", "purchaseDate", "maintenanceSchedule", "accountNumber",
                    "ownershipPercentage", "loginUrl", "beneficiaryEmail", "valueHistory", "closureNotes",
-                   "paymentMethod", "cancellationInstructions", "nextBilling"}
+                   "paymentMethod", "cancellationInstructions", "nextBilling",
+                   "triggerDate", "triggerMilestone", "isLocked"}
 
 
 def to_wire(obj):
@@ -140,6 +146,28 @@ def to_wire(obj):
         if isinstance(out.get(k), (list, dict)):
             out[k] = js_json(out[k])
     return out
+
+
+def one_spelling(item, names):  # lib/utils/oneSpelling.ts
+    out = dict(item)
+    for keep, other in names.items():
+        if keep not in out and other in out:
+            out[keep] = out[other]
+        out.pop(other, None)
+    return out
+
+
+def media_id_from_ref(ref):  # mediaService.ts mediaIdFromRef (76-82)
+    if nullish(ref) or ref == "":
+        return None
+    if isinstance(ref, (int, float)) and not isinstance(ref, bool):
+        return ref
+    if isinstance(ref, str):
+        if re.fullmatch(r"\d+", ref):
+            return int(ref)
+        m = re.search(r"/api/media/(\d+)(?:/download)?(?:[?#].*)?$", ref)
+        return int(m.group(1)) if m else None
+    return None
 
 
 def strip_undef(obj):
@@ -226,26 +254,56 @@ def heirloom_mapper(item):  # heirloomStore.svelte.ts:47-56
             "valuation": parsed if value is not UNDEF else val}
 
 
-def time_capsule_mapper(item):  # timeCapsuleStore.svelte.ts:35-58
+def time_capsule_mapper(item):  # timeCapsuleStore.svelte.ts timeCapsuleMapper (59-78)
     if not truthy(item):
         return item
-    return {**item,
-            "videoUrl": nn(g(item, "video_url"), g(item, "videoUrl")),
-            "audioUrl": nn(g(item, "audio_url"), g(item, "audioUrl")),
-            "mediaId": nn(g(item, "media_id"), g(item, "mediaId")),
-            "contentPreview": nn(g(item, "content_preview"), g(item, "contentPreview")),
-            "triggerType": nn(g(item, "trigger_type"), g(item, "triggerType")),
-            "triggerValue": nn(g(item, "trigger_value"), g(item, "triggerValue")),
-            "isReleased": nn(g(item, "is_released"), g(item, "isReleased"), False),
-            "createdAt": nn(g(item, "created_at"), g(item, "createdAt")),
-            "video_url": nn(g(item, "videoUrl"), g(item, "video_url")),
-            "audio_url": nn(g(item, "audioUrl"), g(item, "audio_url")),
-            "media_id": nn(g(item, "mediaId"), g(item, "media_id")),
-            "content_preview": nn(g(item, "contentPreview"), g(item, "content_preview")),
-            "trigger_type": nn(g(item, "triggerType"), g(item, "trigger_type")),
-            "trigger_value": nn(g(item, "triggerValue"), g(item, "trigger_value")),
-            "is_released": nn(g(item, "isReleased"), g(item, "is_released")),
-            "created_at": nn(g(item, "createdAt"), g(item, "created_at"))}
+    out = one_spelling(item, {
+        "recipientContactId": "recipient_contact_id", "custom_attributes": "customAttributes",
+        "videoUrl": "video_url", "audioUrl": "audio_url", "mediaId": "media_id",
+        "contentPreview": "content_preview", "triggerType": "trigger_type",
+        "triggerValue": "trigger_value", "isReleased": "is_released", "createdAt": "created_at"})
+    out["recipientContactId"] = nn(g(out, "recipientContactId"), None)
+    out["isReleased"] = nn(g(out, "isReleased"), False)
+    return out
+
+
+def doc_mapper(d):  # documentStore.svelte.ts docMapper (33-60)
+    name = js_or(js_or(g(d, "name"), g(d, "title")), "")
+    typ = js_or(js_or(g(d, "type"), g(d, "category")), "Other")
+    location = nn(g(d, "location"), g(d, "locationPhysical"), "")
+    file_path = js_or(js_or(g(d, "filePath"), g(d, "fileData")), "")
+    custom = g(d, "customAttributes")
+    if isinstance(custom, str):
+        try:
+            custom = json.loads(custom)
+        except ValueError:
+            custom = {}
+    return {"id": g(d, "id"), "name": name, "title": name, "type": typ, "category": typ,
+            "location": location, "locationPhysical": location,
+            "witnesses": nn(g(d, "witnesses"), ""), "signedDate": nn(g(d, "signedDate"), ""),
+            "nextReviewDate": nn(g(d, "nextReviewDate"), ""), "status": js_or(g(d, "status"), "verified"),
+            "notes": nn(g(d, "notes"), ""), "filePath": file_path,
+            "mediaId": nn(g(d, "mediaId"), media_id_from_ref(file_path)),
+            "isDigitized": truthy(file_path),
+            "customAttributes": custom if isinstance(custom, (dict, list)) else {}}
+
+
+def letter_mapper(data):  # letterStore.svelte.ts mapper (24-37)
+    rest = {k: v for k, v in data.items() if k not in (
+        "recipient_name", "recipient_contact_id", "release_condition", "custom_attributes", "user_id", "userId")}
+    i = g(data, "id")
+    if not (isinstance(i, str) and len(i) > 10):
+        try:
+            n = float(i) if isinstance(i, (int, float, str)) and not isinstance(i, bool) and str(i).strip() else float("nan")
+        except ValueError:
+            n = float("nan")
+        i = n if truthy(n) else i
+    return {**rest, "id": i,
+            "recipientName": nn(g(data, "recipientName"), g(data, "recipient_name"), ""),
+            "recipientContactId": nn(g(data, "recipientContactId"), g(data, "recipient_contact_id"), None),
+            "releaseCondition": nn(g(data, "releaseCondition"), g(data, "release_condition"), "death"),
+            "customAttributes": nn(g(data, "customAttributes"), g(data, "custom_attributes"), "{}"),
+            "isLocked": truthy(g(data, "isLocked"))}
 
 
 def journal_mapper(data):  # journalStore.svelte.ts:13-17
@@ -273,7 +331,7 @@ def insurance_mapper(item):  # insuranceStore.svelte.ts:22-49
     return out
 
 
-def contact_mapper(item):  # familyStore.svelte.ts:41-82
+def contact_mapper(item):  # familyStore.svelte.ts contactMapper (41-87)
     if not truthy(item):
         return item
     legacy = {"spouse": "Family", "child": "Family", "grandchild": "Family", "parent": "Family",
@@ -283,15 +341,19 @@ def contact_mapper(item):  # familyStore.svelte.ts:41-82
         if not truthy(relation):
             relation = role[:1].upper() + role[1:]
         role = legacy[role]
-    return {**item, "role": js_or(role, "Other"), "relation": js_or(relation, ""),
-            "isExecutor": nn(g(item, "is_executor"), g(item, "isExecutor"), False),
-            "isBeneficiary": nn(g(item, "is_beneficiary"), g(item, "isBeneficiary"), False),
-            "isEmergencyContact": nn(g(item, "is_emergency_contact"), g(item, "isEmergencyContact"), False),
-            "tierId": nn(g(item, "tier_id"), g(item, "tierId"), None),
-            "is_executor": nn(g(item, "isExecutor"), g(item, "is_executor")),
-            "is_beneficiary": nn(g(item, "isBeneficiary"), g(item, "is_beneficiary")),
-            "is_emergency_contact": nn(g(item, "isEmergencyContact"), g(item, "is_emergency_contact")),
-            "tier_id": nn(g(item, "tierId"), g(item, "tier_id"))}
+    tier = g(item, "tier")
+    call_tier = js_or(tier if tier is not UNDEF else nn(g(item, "callTier"), g(item, "call_tier")), None)
+    out = one_spelling(item, {
+        "isExecutor": "is_executor", "isBeneficiary": "is_beneficiary",
+        "isEmergencyContact": "is_emergency_contact", "tierId": "tier_id",
+        "notificationStatus": "notification_status", "callTier": "call_tier"})
+    return {**out, "role": js_or(role, "Other"), "relation": js_or(relation, ""),
+            "isExecutor": nn(g(out, "isExecutor"), False),
+            "isBeneficiary": nn(g(out, "isBeneficiary"), False),
+            "isEmergencyContact": nn(g(out, "isEmergencyContact"), False),
+            "tierId": nn(g(out, "tierId"), None),
+            "tier": nn(call_tier, UNDEF),
+            "callTier": call_tier}
 
 
 def funeral_mapper(data):  # funeralStore.svelte.ts funeralMapper (B3): always objects, never re-stringifies
@@ -325,10 +387,16 @@ class Client:
                 return c.value
         return None
 
-    def req(self, method, path, body=None, form=None):
+    def req(self, method, path, body=None, form=None, upload=None):
         headers = {"Accept": "application/json"}
         data = None
-        if form is not None:
+        if upload is not None:  # (filename, mime, bytes) as multipart field "file" (mediaService.ts:160-161)
+            boundary = "----smoke" + uuid.uuid4().hex
+            fname, mime, content = upload
+            data = (f"--{boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"{fname}\"\r\n"
+                    f"Content-Type: {mime}\r\n\r\n").encode() + content + f"\r\n--{boundary}--\r\n".encode()
+            headers["Content-Type"] = f"multipart/form-data; boundary={boundary}"
+        elif form is not None:
             data = urllib.parse.urlencode(form).encode()
             headers["Content-Type"] = "application/x-www-form-urlencoded"
         elif body is not None:
@@ -383,8 +451,8 @@ class Sync:
 
     def create(self, data):
         payload = to_wire(self._map(data))
-        if isinstance(payload.get("id"), str) and len(payload["id"]) > 10:
-            del payload["id"]
+        for k in ("id", "user_id", "created_at", "updated_at"):  # server-owned (post(), 380-385)
+            payload.pop(k, None)
         payload = strip_undef(payload)
         st, resp = self.c.req("POST", self.url, body=payload)
         local = self._map(convert_keys(resp, to_camel)) if 200 <= st < 300 and isinstance(resp, dict) else None
@@ -398,6 +466,10 @@ class Sync:
         payload = strip_undef(payload)
         st, resp = self.c.req("PUT", f"{self.url}/{local_item['id']}", body=payload)
         return payload, st, resp
+
+    def read_back(self, row):
+        """The server row as the page holds it, put back in wire form."""
+        return strip_undef(to_wire(self._map(convert_keys(row, to_camel))))
 
     def fetch_list(self):
         st, resp = self.c.req("GET", self.url)
@@ -431,11 +503,15 @@ def same(sent, got):
     return sent == got
 
 
-def diff(sent, got):
+def diff(sent, got, seen=None):
+    """`seen` is the row as the page reads it back (toCamel -> store mapper -> toWire); a UI
+    helper key the server keeps under another column (contacts `tier` -> call_tier) counts as
+    kept when the page shows the same value after reload."""
     problems = []
     for k, v in sent.items():
         if k not in got:
-            problems.append(f"dropped {k}={json.dumps(v)[:40]}")
+            if not (isinstance(seen, dict) and k in seen and same(v, seen[k])):
+                problems.append(f"dropped {k}={json.dumps(v)[:40]}")
         elif not same(v, got[k]):
             problems.append(f"changed {k}: sent {json.dumps(v)[:40]} got {json.dumps(got[k])[:40]}")
     return problems
@@ -470,7 +546,7 @@ def check_create(name, refs, sync, ui_record, note=""):
     if row is None:
         report(name, refs, [f"POST ok (id {resp['id']}) but GET {sync.url} -> {gst} does not list it"], note)
         return resp, local
-    report(name, refs, diff(payload, row), note)
+    report(name, refs, diff(payload, row, sync.read_back(row)), note)
     return resp, local
 
 
@@ -483,7 +559,7 @@ def check_update(name, refs, sync, local_item, updates, note=""):
     if row is None:
         report(name, refs, [f"PUT ok but GET {sync.url} -> {gst} does not list id {local_item['id']}"], note)
         return
-    report(name, refs, diff(payload, row), note)
+    report(name, refs, diff(payload, row, sync.read_back(row)), note)
 
 
 # ---------------------------------------------------------------------------
@@ -491,7 +567,6 @@ def check_update(name, refs, sync, local_item, updates, note=""):
 # ---------------------------------------------------------------------------
 def run(c):
     today = datetime.now().strftime("%-m/%-d/%Y")  # toLocaleDateString() en-US
-    now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
     # 1. Financial account + edit (AssetManager.svelte:195-211 create, 259-279 + 169-181 edit).
     fin = Sync(c, "financial_assets", financial_asset_mapper)
@@ -585,26 +660,18 @@ def run(c):
                 problems.append(f"{owner} id {rid} also listed in /api/data/{coll}")
     report("category membership", "CU-004", problems, fallback)
 
-    # 7. Document vault (DocumentVault.svelte:72-78 endpoint, 113-123 create).
-    check_create("document vault (vault_documents)", "CU-002", Sync(c, "vault_documents"), {
-        "name": "Synthetic Will", "type": "Will", "date": today, "location": "Fireproof safe, study",
-        "status": "verified", "witnesses": "Two synthetic witnesses", "nextReviewDate": "2027-10-26",
-        "fileData": "data:application/pdf;base64,JVBERi0xLjQKJSBzeW50aGV0aWMK"})
-
-    # 8. Time capsule (time-capsule/+page.svelte:63-78, timeCapsuleStore.addMessage:66-73).
-    check_create("time capsule", "CU-009", Sync(c, "time_capsule", time_capsule_mapper), {
-        "title": "For your 30th birthday", "recipient": "Synthetic Son",
-        "contentPreview": "A synthetic message for a future day.", "triggerType": "date",
-        "triggerValue": "2035-01-01", "mediaId": None, "custom_attributes": "{}",
-        "id": str(uuid.uuid4()), "isReleased": False, "createdAt": now_iso})
-
-    # 9. Letter (letters/+page.svelte:70-73 registry, 108-116 saveToVault).
-    check_create("letter", "CU-008", Sync(c, "future_letters"), {
-        "title": f"Letter to Loved One ({today})",
-        "content": "Dear son,\n\nThis synthetic letter stands in for the real one. " * 20,
-        "date": today, "type": "emotional", "triggerDate": "2030-01-01", "triggerMilestone": "",
-        "isLocked": True},
-        note="screen has no recipient field; recipient_name is never sent")
+    # 7. Document vault (DocumentVault.svelte:106-136 saveDocOnce -> documentSync, documentStore.svelte.ts:78
+    #    '/api/data/documents' with docMapper). The digital copy goes up first through FileUploader
+    #    (module "documents"): filePath = its download_url, mediaId = its id.
+    st, up = c.req("POST", "/api/media/upload?module=documents",
+                   upload=("synthetic-will.pdf", "application/pdf", b"%PDF-1.4\n% synthetic\n%%EOF\n"))
+    up_ok = 200 <= st < 300 and isinstance(up, dict) and up.get("id") is not None
+    check_create("document vault (documents)", "CU-002", Sync(c, "documents", doc_mapper), {
+        "name": "Synthetic Will", "type": "Will", "location": "Fireproof safe, study",
+        "witnesses": "Two synthetic witnesses", "signedDate": "2024-03-01", "nextReviewDate": "2027-10-26",
+        "filePath": up["download_url"] if up_ok else "", "mediaId": up["id"] if up_ok else None,
+        "customAttributes": {}, "status": "verified"},
+        note="" if up_ok else f"digital copy upload -> {st}: {json.dumps(up)[:120]}; saved without it")
 
     # 10. Journal entry + edit (legacy-journal/+page.svelte:50-55, 126-140; journalStore mapper).
     jr = Sync(c, "journal_entries", journal_mapper)
@@ -629,13 +696,31 @@ def run(c):
         "policyDocuments": "Policy binder in safe", "notes": "Paid by autopay",
         "custom_attributes": "{}", "id": str(uuid.uuid4())})
 
-    # 13. Advisor contact (contacts/+page.svelte:138-160; familyStore.addMember adds a UUID id).
-    check_create("advisor contact", "-", Sync(c, "contacts", contact_mapper, api_base="/api"), {
+    # 13. Advisor contact (contacts/+page.svelte:183-203; familyStore.addMember adds a UUID id).
+    _, advisor = check_create("advisor contact", "-", Sync(c, "contacts", contact_mapper, api_base="/api"), {
         "name": "Synthetic Advisor", "role": "Financial", "relation": "Financial advisor",
         "phone": "555-0101", "email": "advisor@example.test", "notes": "Knows every account",
         "isExecutor": False, "isBeneficiary": False, "isEmergencyContact": False, "tierId": None,
         "tier": "1_Immediate", "notificationStatus": "Pending", "avatar": UNDEF,
         "custom_attributes": "{}", "id": str(uuid.uuid4())})
+    person = advisor or {}
+    person_id = int(person["id"]) if person.get("id") is not None else None
+
+    # 8. Time capsule (time-capsule/+page.svelte:187-213 handleAdd; timeCapsuleStore.addMessage adds
+    #    isReleased false; the server sets id and created_at). For the advisor contact above.
+    check_create("time capsule", "CU-009", Sync(c, "time_capsule", time_capsule_mapper), {
+        "title": "For your 30th birthday", "recipient": "Synthetic Son", "recipientContactId": person_id,
+        "contentPreview": "A synthetic message for a future day.", "triggerType": "date",
+        "triggerValue": "2035-01-01", "videoUrl": None, "mediaId": None, "custom_attributes": "{}",
+        "isReleased": False})
+
+    # 9. Letter (letters/+page.svelte:119-141 saveToVaultOnce -> lettersSync '/api/data/letters').
+    check_create("letter", "CU-008", Sync(c, "letters", letter_mapper), {
+        "content": "Dear son,\n\nThis synthetic letter stands in for the real one. " * 20,
+        "recipientName": person.get("name", ""), "recipientContactId": person_id,
+        "triggerDate": "2030-01-01", "triggerMilestone": None, "isLocked": True,
+        "customAttributes": "{}",
+        "title": f"Letter to Loved One ({today})", "date": today, "type": "emotional"})
 
     # 14. Final wishes: SingletonSyncManager (sync.svelte.ts:376-472) + funeral page editWish (66-76).
     final_wishes(c)
