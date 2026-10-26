@@ -1,6 +1,6 @@
 <script lang="ts">
     import { slide } from "svelte/transition";
-    import { Sparkles, ArrowRight, Loader2, Copy, Mic } from "lucide-svelte";
+    import { Sparkles, ArrowRight, Loader2, Copy } from "lucide-svelte";
     import { logInteraction } from "$lib/stores/conciergeStore.svelte";
     import { aiConciergeService } from "$lib/services/aiConciergeService";
 
@@ -31,7 +31,6 @@
 
     let prompt = "";
     let isGenerating = false;
-    let isListening = false;
     let result = "";
     let isNotice = false; // gentle unavailable message: plain text, no draft framing
     let copyStatus: "" | "copied" | "failed" = "";
@@ -164,36 +163,6 @@
         }
     }
 
-    function toggleDictation() {
-        if (isListening) {
-            isListening = false;
-            return;
-        }
-
-        isListening = true;
-        prompt = ""; // Clear current prompt
-
-        // Simulated dictated text
-        const simulatedText =
-            "Draft a warm letter to my family explaining where I kept the safe deposit box key and that I love them very much.";
-        let i = 0;
-
-        const typeInterval = setInterval(() => {
-            if (!isListening) {
-                clearInterval(typeInterval);
-                return;
-            }
-
-            prompt += simulatedText.charAt(i);
-            i++;
-
-            if (i >= simulatedText.length) {
-                clearInterval(typeInterval);
-                isListening = false;
-            }
-        }, 50); // Typing speed
-    }
-
     async function copyResult() {
         try {
             await navigator.clipboard.writeText(result);
@@ -218,33 +187,17 @@
         <input
             type="text"
             bind:value={prompt}
-            placeholder={isListening
-                ? "Listening..."
-                : "Ask me to draft, summarize, or explain..."}
-            class="w-full p-4 pr-24 rounded-xl border transition-all shadow-sm
-            {isListening
-                ? 'border-red-400 ring-2 ring-red-100 bg-red-50'
-                : 'border-primary/20 focus:outline-none focus:ring-2 focus:ring-primary'}"
+            placeholder="Ask me to draft, summarize, or explain..."
+            class="w-full p-4 pr-14 rounded-xl border transition-all shadow-sm border-primary/20 focus:outline-none focus:ring-2 focus:ring-primary"
             on:keydown={(e) => e.key === "Enter" && runPrompt(prompt)}
-            disabled={isListening}
         />
 
         <div class="absolute right-2 top-2 flex gap-1">
-            <!-- Mic Button -->
-            <button
-                class="p-2 rounded-lg transition-colors {isListening
-                    ? 'bg-red-500 text-white animate-pulse'
-                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}"
-                on:click={toggleDictation}
-                title="Dictate (Simulation)"
-            >
-                <Mic size={18} />
-            </button>
-
             <!-- Send Button -->
             <button
                 class="p-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-colors disabled:opacity-50"
-                disabled={!prompt || isGenerating || isListening}
+                disabled={!prompt || isGenerating}
+                aria-label="Send to the assistant"
                 on:click={() => runPrompt(prompt)}
             >
                 {#if isGenerating}

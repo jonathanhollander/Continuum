@@ -231,20 +231,6 @@
 		};
 
 		// Handle overwhelm detection events
-		const handleSimplifyView = () => {
-			logger.info("Simplified view requested by user");
-			// TODO: Implement simplified view mode
-			// For now, just show a notification
-			import("$lib/stores/notificationStore.ts").then(
-				({ notifications }) => {
-					notifications.showInfo(
-						"We've simplified the view to show only essential information. You can always expand sections as needed.",
-						"Simplified view activated",
-					);
-				},
-			);
-		};
-
 		const handleRequestHelp = () => {
 			logger.info("Help requested from overwhelm detection");
 			// Open AI Concierge
@@ -256,7 +242,6 @@
 		};
 
 		window.addEventListener("keydown", handleGlobalKeydown);
-		window.addEventListener("continuum:simplify-view", handleSimplifyView);
 		window.addEventListener("continuum:request-help", handleRequestHelp);
 		window.addEventListener(
 			"toggle-mobile-sidebar",
@@ -265,10 +250,6 @@
 
 		return () => {
 			window.removeEventListener("keydown", handleGlobalKeydown);
-			window.removeEventListener(
-				"continuum:simplify-view",
-				handleSimplifyView,
-			);
 			window.removeEventListener(
 				"continuum:request-help",
 				handleRequestHelp,

@@ -1,41 +1,21 @@
 <script lang="ts">
-    import { onMount } from "svelte";
     import {
         X,
-        Sparkles,
         TriangleAlert,
         Info,
-        FileText,
         CircleCheck,
-        ScanSearch,
+        BookOpenText,
     } from "lucide-svelte";
-    import {
-        analyzeLegalDoc,
-        type AnalyzedLegalese,
-    } from "$lib/services/legalService";
+    import { EXAMPLE_WILL, type ExplainedTerm } from "$lib/services/legalService";
     import { fade, slide, scale } from "svelte/transition";
     import { cubicOut } from "svelte/easing";
 
-    let { docName, docType, onclose }: { docName: string; docType: string; onclose: () => void } = $props();
+    let { onclose }: { onclose: () => void } = $props();
 
-    let status = $state<"scanning" | "ready">("scanning");
-    let analysis = $state<AnalyzedLegalese | null>(null);
-    let selectedTerm = $state<{
-        term: string;
-        definition: string;
-        severity: "info" | "warning";
-    } | null>(null);
+    const analysis = EXAMPLE_WILL;
+    let selectedTerm = $state<ExplainedTerm | null>(null);
 
-    onMount(async () => {
-        try {
-            analysis = await analyzeLegalDoc(docType);
-            status = "ready";
-        } catch (e) {
-            console.error(e);
-        }
-    });
-
-    function highlightText(text: string, terms: any[]) {
+    function highlightText(text: string, terms: ExplainedTerm[]) {
         let html = text;
         terms.forEach((t) => {
             const regex = new RegExp(`(${t.term})`, "gi");
@@ -100,35 +80,6 @@
             <X class="w-5 h-5" />
         </button>
 
-        {#if status === "scanning"}
-            <div
-                class="w-full h-full flex flex-col items-center justify-center text-center p-8 space-y-8"
-            >
-                <div class="relative">
-                    <div
-                        class="absolute inset-0 bg-[#4A7C74] blur-3xl opacity-20 animate-pulse"
-                    ></div>
-                    <ScanSearch
-                        size={64}
-                        class="text-[#4A7C74] relative z-10 animate-bounce"
-                    />
-                </div>
-                <div>
-                    <h3
-                        class="text-2xl font-black text-slate-900 font-serif mb-2"
-                    >
-                        Analyzing Document...
-                    </h3>
-                    <p class="text-slate-500 font-medium animate-pulse">
-                        Scanning "{docName}" for complex clauses and legal
-                        jargon.
-                    </p>
-                </div>
-                <div class="w-64 h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div class="h-full bg-[#4A7C74] animate-progress"></div>
-                </div>
-            </div>
-        {:else if analysis}
             <!-- Viewer -->
             <div class="flex-1 flex flex-col h-full">
                 <div
@@ -138,12 +89,12 @@
                         <div
                             class="flex items-center gap-2 text-[#4A7C74] font-black text-xs uppercase tracking-widest mb-1"
                         >
-                            <Sparkles size={14} /> Jargon Slayer Active
+                            <BookOpenText size={14} /> Example
                         </div>
                         <h3
                             class="text-2xl font-bold font-serif text-slate-900"
                         >
-                            {docName}
+                            An example will, explained
                         </h3>
                     </div>
                 </div>
@@ -169,7 +120,7 @@
                     <h4
                         class="font-bold text-slate-900 text-sm uppercase tracking-wider mb-4"
                     >
-                        Analysis Report
+                        Terms explained
                     </h4>
                     <div class="space-y-3">
                         <div
@@ -178,7 +129,7 @@
                             <Info size={18} class="text-blue-600" />
                             <div>
                                 <p class="text-xs font-bold text-blue-900">
-                                    {analysis.terms.length} Terms Found
+                                    {analysis.terms.length} terms highlighted
                                 </p>
                                 <p class="text-[10px] text-blue-700">
                                     Tap highlighted text to explain
@@ -199,7 +150,7 @@
                                 <CircleCheck size={14} /> Translated
                             </div>
                             <h5
-                                class="text-xl font-bold font-serif mb-4 border-b border-white/10 pb-4"
+                                class="text-xl font-bold font-serif mb-4 border-b border-white/10 pb-4 text-white"
                             >
                                 "{selectedTerm.term}"
                             </h5>
@@ -228,7 +179,7 @@
                     <div
                         class="flex-1 flex flex-col items-center justify-center text-center text-slate-400 p-4 border-2 border-dashed border-slate-100 rounded-2xl"
                     >
-                        <ScanSearch size={32} class="mb-3 opacity-50" />
+                        <BookOpenText size={32} class="mb-3 opacity-50" />
                         <p class="text-sm font-medium">
                             Select a highlighted term to view its plain English
                             explanation.
@@ -236,23 +187,10 @@
                     </div>
                 {/if}
             </div>
-        {/if}
     </div>
 </div>
 
 <style>
-    @keyframes progress {
-        0% {
-            width: 0%;
-        }
-        100% {
-            width: 100%;
-        }
-    }
-    .animate-progress {
-        animation: progress 2s ease-out forwards;
-    }
-
     :global(.term-highlight) {
         border-bottom: 2px solid;
         cursor: pointer;
