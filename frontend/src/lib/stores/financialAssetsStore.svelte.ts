@@ -1,6 +1,31 @@
 import { registerSync } from "$lib/services/sync.svelte";
 
-export type AssetType = 'Property' | 'Financial' | 'Business' | 'Vehicle' | 'Digital' | 'Other';
+export type AssetType = 'Property' | 'Financial' | 'Business' | 'Vehicle' | 'Digital' | 'Debt' | 'Other';
+
+/** A row the family owes (loan, mortgage, credit card): subtracted from the estate, never added. */
+export function isDebt(a: { type?: string } | null | undefined): boolean {
+    const t = String(a?.type ?? '').trim().toLowerCase();
+    return t === 'debt' || t === 'liability';
+}
+
+/** The owned share of a row's value; an unset ownership is 100%. */
+export function ownedValue(a: { value?: any; ownershipPercentage?: any }): number {
+    const pct = a.ownershipPercentage === null || a.ownershipPercentage === undefined || a.ownershipPercentage === ''
+        ? 100 : Number(a.ownershipPercentage);
+    const share = Number.isFinite(pct) ? pct / 100 : 1;
+    return (Number(a.value) || 0) * share;
+}
+
+/** The one estate total: open assets minus open debts. */
+export function estateTotals(items: any[]): { assets: number; debts: number; net: number } {
+    let assets = 0, debts = 0;
+    for (const a of items) {
+        if (!a || a.is_closed) continue;
+        if (isDebt(a)) debts += Math.abs(ownedValue(a)); // an amount owed, however it was typed
+        else assets += ownedValue(a);
+    }
+    return { assets, debts, net: assets - debts };
+}
 
 export interface FinancialAsset {
     id: string;
@@ -55,9 +80,7 @@ export const financialAssetsSync = registerSync<FinancialAsset>('financial_asset
 export const financialAssetsStore = {
     get items() { return financialAssetsSync.items; },
     get totalValue() {
-        return financialAssetsSync.items
-            .filter(a => !a.is_closed)
-            .reduce((sum, a) => sum + (a.value || 0), 0);
+        return estateTotals(financialAssetsSync.items).net;
     },
     addAsset: (asset: Omit<FinancialAsset, 'id'>) => {
         return financialAssetsSync.create({
