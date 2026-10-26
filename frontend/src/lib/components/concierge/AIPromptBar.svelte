@@ -37,7 +37,7 @@
         letters: [
             "Help me start a letter to my daughter...",
             "Write a note of forgiveness...",
-            "Draft a 'ethical will' listing my values...",
+            "Draft an 'ethical will' listing my values...",
         ],
         executor: [
             "Summarize the immediate next steps...",

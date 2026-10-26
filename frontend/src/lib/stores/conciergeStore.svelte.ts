@@ -28,7 +28,7 @@ export const conciergeStore = {
 
 // Compatibility individual stores
 export const encouragementMode = {
-    subscribe: (fn: any) => manager.subscribe(val => fn(val?.encouragementMode || 'Full')),
+    subscribe: (fn: (value: EncouragementMode) => void) => manager.subscribe(val => fn(val?.encouragementMode || 'Full')),
     set: (val: EncouragementMode) => manager.update({ encouragementMode: val }),
     update: (fn: (current: EncouragementMode) => EncouragementMode) => {
         const current = manager.data?.encouragementMode || 'Full';
@@ -37,12 +37,12 @@ export const encouragementMode = {
 };
 
 export const userRole = {
-    subscribe: (fn: any) => manager.subscribe(val => fn(val?.userRole || 'Owner')),
+    subscribe: (fn: (value: UserRole) => void) => manager.subscribe(val => fn(val?.userRole || 'Owner')),
     set: (val: UserRole) => manager.update({ userRole: val })
 };
 
 export const language = {
-    subscribe: (fn: any) => manager.subscribe(val => fn(val?.language || 'en')),
+    subscribe: (fn: (value: Language) => void) => manager.subscribe(val => fn(val?.language || 'en')),
     set: (val: Language) => manager.update({ language: val })
 };
 
