@@ -21,7 +21,7 @@
         actionError: null as string | null,
     });
 
-    // The API sends naive UTC timestamps (no "Z"); read them as UTC, not local time
+    // The API sends UTC with "Z"; a time without a zone is still read as UTC, never local
     function parseUtc(ts: string): Date {
         return new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(ts) ? ts : ts + "Z");
     }
@@ -122,12 +122,12 @@
                     </h2>
                     <p class="text-slate-300">
                         {#if state.actionSuccess === "snoozed"}
-                            You have successfully snoozed the alert. The timer
-                            has been reset while you verify {state.data
-                                .user_name}'s status locally.
+                            Thank you for checking on {state.data.user_name}.
+                            Their check-in schedule starts fresh from now, and
+                            this appears in their check-in history.
                         {:else}
-                            Thank you. Your acknowledgment has been recorded in
-                            the system log.
+                            Thank you for looking in on {state.data.user_name}.
+                            It means a great deal to have you close.
                         {/if}
                     </p>
                 </div>
@@ -179,7 +179,7 @@
                                         I've confirmed they are OK
                                     </div>
                                     <div class="text-slate-500 text-xs mt-0.5">
-                                        Snooze alerts for 48 hours
+                                        Starts their check-in schedule fresh from now
                                     </div>
                                 </div>
                             </div>
@@ -216,8 +216,8 @@
 
                     <div class="p-6 text-center">
                         <p class="text-xs text-slate-500 leading-relaxed">
-                            Acting on behalf of {state.data.user_name} will be logged
-                            for transparency within the Inner Circle.
+                            When you mark {state.data.user_name} as OK, it appears
+                            in their check-in history.
                         </p>
                     </div>
                 </div>
