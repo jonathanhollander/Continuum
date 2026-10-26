@@ -322,7 +322,7 @@ def _remove_if_unreferenced(session: Session, media: MediaFile) -> bool:
     The final UPDATE excludes only unchanged rows already proved to be false positives.
     A reference added or edited during this request therefore keeps the file available.
     """
-    from backend.routers.export import SECTION_MODELS, PRIVATE_FIELDS, _attachments, _handover_rows
+    from backend.routers.export import SECTION_MODELS, PRIVATE_FIELDS, ADVANCED_LISTS, _attachments, _handover_rows
 
     plans = []
     scans = []
@@ -335,10 +335,13 @@ def _remove_if_unreferenced(session: Session, media: MediaFile) -> bool:
         conditions = []
         for col in cols:
             text = cast(col, Text)
-            conditions.append(text.contains(f"/api/media/{media.id}", autoescape=True))
+            conditions.append(or_(text.contains(f"/api/media/{media.id}", autoescape=True),
+                                  text.contains("/api/media/0", autoescape=True),
+                                  text.regexp_match(r"/api/media/[0-9]*[^0-9/#?]")))
             if col.name == "media_id" or (section == "assets" and col.name == "thumbnail"):
                 conditions.append(text.contains(str(media.id)))
-            if col.name == "custom_attributes" or (section == "assets" and col.name == "evidence"):
+            if (col.name == "custom_attributes" or (section == "assets" and col.name == "evidence")
+                    or (section == "advanced_assets" and col.name in ADVANCED_LISTS)):
                 # JSON id values, including escaped keys/digits, are checked exactly below.
                 conditions.append(or_(text.contains(str(media.id)), text.contains("\\u", autoescape=True)))
                 if media.id == 1:

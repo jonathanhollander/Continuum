@@ -89,9 +89,9 @@
 
     function handleFileSelect(e: Event) {
         const target = e.target as HTMLInputElement;
-        if (target.files && target.files[0]) {
-            processFile(target.files[0]);
-        }
+        const file = target.files?.[0];
+        target.value = "";
+        if (file) processFile(file);
     }
 
     async function processFile(file: File) {
