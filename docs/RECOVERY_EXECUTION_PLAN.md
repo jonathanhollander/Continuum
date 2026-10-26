@@ -56,6 +56,7 @@ board, and it is the live checklist** (decision 9).
     - **Who approves:** the orchestrator, by diff review (same as build cards), then merge, clean up, tick.
     - **When:** X cards run in parallel with the build waves whenever their owned files are not owned by a build card in flight. They ship in the same single release.
     - **In the loop:** every loop run advances Wave X as well as the build.
+    - **As many X agents as needed** (owner, 2026-10-26: "assign additionaly subagents for X issues as needed"): every X card whose files are free is dispatched at once, each with its own agent.
 
 ## Test register (decision 11)
 
@@ -171,7 +172,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 
 ---
 
-## Wave A — Stable ground (A0 first, then A1–A3 in parallel)
+## Wave A — Stable ground (A0 first, then A1–A3 in parallel) ✅ 2026-10-26
 
 | ID | Card | Agent | Owns | Change | Acceptance |
 |---|---|---|---|---|---|
@@ -241,6 +242,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X5 | Remove the `jh@continuum.estate` bypass (was F5) | Passwordless login to production for anyone | The bypass block in `backend/routers/auth.py`; `CLAUDE.md` dev-login line | Delete the bypass | Dispatched **after** the release browser test (which signs in with it); merged once the owner has signed in once with a real password or passkey, so he is never locked out; then a targeted deploy |
 | X7 | Auth error paths (A5 findings) | `get_current_user`/`optional_current_user` accept magic-link tokens as access tokens (`backend/auth.py:73-95`); an unrecognised stored hash makes login 500 not 401 (`auth.py:28`, `routers/auth.py:246`); magic-link verify 500s on a token with no `sub` (`routers/auth.py:625`) | `backend/auth.py`; the token and magic-link-verify handlers in `backend/routers/auth.py` (not the bypass block) | Reject tokens whose `type` isn't an access token; treat unknown hashes as a failed login; 401 for a token with no `sub` | Locally: a magic-link token is refused by a protected endpoint; a user with a non-hash stored value gets 401; a no-`sub` token gets 401; normal login and refresh still work |
 | X8 | Naive `datetime.utcnow()` defaults (A5 finding) | 41 uses in 15 backend files; deprecated, and the same family as the SQLModel 0.0.48 crash | Those files — **dispatched after Wave C merges**, because B/C cards own `estate_models.py` and `routers/media.py` | One helper; same naive-UTC values stored, so no migration | `grep utcnow backend` finds only the helper; seed, login and one save per touched model still work |
+| X9 | Magic-link and token-subject hardening (X7 findings) | Magic-link tokens are reusable for 15 min; `/magic-link/request` logs an auth success when it only sent an email; `sub` is passed to `session.get` as a string (`backend/auth.py:75`, `:91`); the passkey-login token path (`routers/auth.py:~517`) is unreviewed | `backend/auth.py`; the magic-link request/verify and passkey-login-finish handlers in `backend/routers/auth.py` (not the bypass block) | One-time magic links (a `jti` recorded on first use, smallest storage that works, migration only if needed); log the request as a request; cast `sub` to int safely; review and fix the passkey token path | A magic link works once and is refused the second time; normal login, refresh and passkey paths unchanged |
 | X6 | Rotate the OpenRouter key (was F1) | The key is public in shipped JS | Owner step at openrouter.ai (Claude may not create or copy API keys) | Create a new key, put it in the Railway variable X1 reads, revoke the old one | Done after X1 is live; the old key returns 401 |
 
 ---
@@ -249,7 +251,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 
 | Section | Status | Verified on | Notes |
 |---|---|---|---|
-| Wave A — Stable ground | ▶ | | |
+| Wave A — Stable ground | ✅ | 2026-10-26 | A0–A5 ☑; O1/O2 for Wave A dispatched |
 | Wave B — Shared contracts | ☐ | | |
 | Wave C — Scenario records | ☐ | | |
 | Wave D — Handover | ☐ | | |
@@ -299,12 +301,13 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | E8 | ☐ | | |
 | X1 | ☑ | 4575c17 | Build with fake `sk-or-` key: no `sk-or-`/`openrouter.ai` in dist; `/api/ai/chat` 401 without token, 503 gentle message with no key. Also fixed: duplicate user message, unsanitised history, CSRF header on the AI call |
 | X2 | ☑ | 91321f9 | `git ls-files` lists no .db; `*.db` ignored; local copies kept on disk. Old copy in `34780fe` (branch `origin/stash-backup/2026-01-26-34780fe`) holds 1 non-dev user row, empty password. Owner 2026-10-26: bundled to `docs/archive/stash-backup-2026-01-26-34780fe.bundle` (local only, git-ignored, verified), remote branch deleted |
-| X3 | ☐ | | |
-| X4 | ☐ | | |
+| X3 | ▶ | | |
+| X4 | ▶ | | |
 | X5 | ☐ | | |
 | X6 | ☐ (owner) | | |
-| X7 | ▶ | | |
+| X7 | ☑ | 8a5b462 | Fresh DB: login, /me, refresh 200; magic-link token on /me 401; "BYPASS_AUTH" stored value 401 (was 500); sub-less magic link 401 (was 500); valid magic link 200; jh@ bypass 200 |
 | X8 | ☐ (after Wave C) | | |
+| X9 | ▶ | | |
 | O1 — per wave (A–E) | ☐ | | |
 | O2 — per wave (A–E) | ☐ | | |
 | O1 — release table | ☐ | | |
