@@ -3,7 +3,7 @@
         encouragementMode,
         userRole,
         language,
-        t,
+        dict,
     } from "$lib/stores/conciergeStore.svelte";
     import { accessibilityStore } from "$lib/stores/accessibilityStore";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
@@ -73,11 +73,11 @@
     function getEncouragementLabel(mode: string) {
         switch (mode) {
             case "Full":
-                return $t.encFull || "Full Support";
+                return $dict.encFull || "Full Support";
             case "Soft":
-                return $t.encSoft || "Gentle Reminders";
+                return $dict.encSoft || "Gentle Reminders";
             case "Hidden":
-                return $t.encHidden || "Zen Mode (Off)";
+                return $dict.encHidden || "Zen Mode (Off)";
             default:
                 return mode;
         }
@@ -116,7 +116,7 @@
                 <Users size={18} />
             </div>
             <h2 class="font-serif text-xl text-slate-800">
-                {$t.sectionIdentity}
+                {$dict.sectionIdentity}
             </h2>
         </div>
 
@@ -126,7 +126,7 @@
                 <label
                     class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500"
                 >
-                    {$t.labelPerspective}
+                    {$dict.labelPerspective}
                 </label>
                 <div
                     class="bg-slate-100 p-1 rounded-xl flex items-center gap-1"
@@ -140,11 +140,11 @@
                             onclick={() => userRole.set(role.id as any)}
                         >
                             <div class="flex flex-col items-center gap-1">
-                                <span>{$t[role.key] || role.id}</span>
+                                <span>{$dict[role.key] || role.id}</span>
                                 <span
                                     class="text-[8px] opacity-60 normal-case font-medium leading-none"
                                 >
-                                    {$t[role.descKey]}
+                                    {$dict[role.descKey]}
                                 </span>
                             </div>
                         </button>
@@ -157,7 +157,7 @@
                 <label
                     class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500"
                 >
-                    {$t.labelLanguages}
+                    {$dict.labelLanguages}
                 </label>
                 <div class="grid grid-cols-2 gap-2">
                     {#each languages as lang}
@@ -185,7 +185,7 @@
                 <ShieldCheck size={18} />
             </div>
             <h2 class="font-serif text-xl text-slate-800">
-                {$t.sectionProfile}
+                {$dict.sectionProfile}
             </h2>
         </div>
 
@@ -198,24 +198,24 @@
                     <div class="grid grid-cols-1 gap-1.5">
                         <label
                             class="text-[10px] font-bold text-slate-400 uppercase"
-                            >{$t.labelOwner}</label
+                            >{$dict.labelOwner}</label
                         >
                         <input
                             type="text"
                             bind:value={$estateProfile.ownerName}
-                            placeholder={$t.placeholderName}
+                            placeholder={$dict.placeholderName}
                             class="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm"
                         />
                     </div>
                     <div class="grid grid-cols-1 gap-1.5">
                         <label
                             class="text-[10px] font-bold text-slate-400 uppercase"
-                            >{$t.labelExecutor}</label
+                            >{$dict.labelExecutor}</label
                         >
                         <input
                             type="text"
                             bind:value={$estateProfile.executorName}
-                            placeholder={$t.placeholderPrimary}
+                            placeholder={$dict.placeholderPrimary}
                             class="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm"
                         />
                     </div>
@@ -227,7 +227,7 @@
                         <div class="space-y-1.5">
                             <label
                                 class="text-[10px] font-bold text-slate-400 uppercase"
-                                >{$t.labelDeathDate}</label
+                                >{$dict.labelDeathDate}</label
                             >
                             <input
                                 type="date"
@@ -238,7 +238,7 @@
                         <div class="space-y-1.5">
                             <label
                                 class="text-[10px] font-bold text-slate-400 uppercase"
-                                >{$t.labelSSN}</label
+                                >{$dict.labelSSN}</label
                             >
                             <input
                                 type="text"
@@ -252,12 +252,12 @@
                     <div class="grid grid-cols-1 gap-1.5 pt-0.5">
                         <label
                             class="text-[10px] font-bold text-slate-400 uppercase"
-                            >{$t.labelResidence}</label
+                            >{$dict.labelResidence}</label
                         >
                         <input
                             type="text"
                             bind:value={$estateProfile.legalCityState}
-                            placeholder={$t.placeholderCityState}
+                            placeholder={$dict.placeholderCityState}
                             class="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none shadow-sm"
                         />
                     </div>
@@ -273,10 +273,10 @@
                 >
                     {#if isSaving}
                         <Check size={18} class="animate-bounce" />
-                        {$t.saving || "Saving..."}
+                        {$dict.saving || "Saving..."}
                     {:else}
                         <Check size={18} />
-                        {$t.btnSaveProfile || "Save Profile"}
+                        {$dict.btnSaveProfile || "Save Profile"}
                     {/if}
                 </button>
             </div>
@@ -290,7 +290,7 @@
                 <Shield size={18} />
             </div>
             <h2 class="font-serif text-xl text-slate-800">
-                {$t.sectionExperience}
+                {$dict.sectionExperience}
             </h2>
         </div>
 
@@ -306,10 +306,10 @@
                     </div>
                     <div>
                         <p class="text-sm font-bold text-slate-700">
-                            {$t.labelHighContrast}
+                            {$dict.labelHighContrast}
                         </p>
                         <p class="text-[10px] text-slate-400">
-                            {$t.labelHighContrastDesc}
+                            {$dict.labelHighContrastDesc}
                         </p>
                     </div>
                 </div>
@@ -337,7 +337,7 @@
                     </div>
                     <div>
                         <p class="text-sm font-bold text-slate-700">
-                            {$t.labelEncouragement}
+                            {$dict.labelEncouragement}
                         </p>
                         <p class="text-[10px] text-slate-400">
                             {getEncouragementLabel($encouragementMode)}
@@ -368,7 +368,7 @@
         >
             <span
                 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-2"
-                >{$t.labelFontScaling}</span
+                >{$dict.labelFontScaling}</span
             >
             <div
                 class="flex bg-white border border-slate-200 rounded-xl p-1 shadow-sm overflow-hidden"
@@ -382,7 +382,7 @@
                         onclick={() =>
                             accessibilityStore.setFontSize(size as any)}
                     >
-                        {$t[
+                        {$dict[
                             "font" +
                                 size.charAt(0).toUpperCase() +
                                 size.slice(1)
@@ -512,7 +512,7 @@
                 <Download size={18} />
             </div>
             <h2 class="font-serif text-xl text-slate-800">
-                {$t.sectionData}
+                {$dict.sectionData}
             </h2>
         </div>
 
@@ -525,10 +525,10 @@
                 </div>
                 <div class="space-y-1">
                     <h3 class="font-bold text-slate-800 italic">
-                        {$t.exportTitle}
+                        {$dict.exportTitle}
                     </h3>
                     <p class="text-sm text-slate-500 leading-relaxed">
-                        {$t.exportDesc}
+                        {$dict.exportDesc}
                     </p>
                 </div>
             </div>
@@ -538,7 +538,7 @@
                 <div class="space-y-3">
                     <label
                         class="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1"
-                        >{$t.labelExportScope}</label
+                        >{$dict.labelExportScope}</label
                     >
                     <div class="space-y-2">
                         {#each [{ id: "full", key: "scopeFull", color: "slate-900" }, { id: "insurance", key: "scopeInsurance", color: "emerald-600" }, { id: "medical", key: "scopeMedical", color: "rose-600" }] as scope}
@@ -556,7 +556,7 @@
                                         ? 'text-slate-900'
                                         : 'text-slate-600'}"
                                 >
-                                    {$t[scope.key]}
+                                    {$dict[scope.key]}
                                 </span>
                                 {#if selectedScope === scope.id}
                                     <Check size={16} class="text-slate-900" />
@@ -573,10 +573,10 @@
                     >
                         <div>
                             <p class="text-sm font-bold text-slate-700">
-                                {$t.labelIncludeMedia}
+                                {$dict.labelIncludeMedia}
                             </p>
                             <p class="text-[10px] text-slate-400 italic">
-                                {$t.includeMediaDesc}
+                                {$dict.includeMediaDesc}
                             </p>
                         </div>
                         <button
@@ -601,7 +601,7 @@
                             size={20}
                             class="group-hover:-translate-y-1 transition-transform"
                         />
-                        {$t.btnGenerateExport}
+                        {$dict.btnGenerateExport}
                     </button>
                 </div>
             </div>

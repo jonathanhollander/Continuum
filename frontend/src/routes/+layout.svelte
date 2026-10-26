@@ -72,7 +72,7 @@
 	} from "lucide-svelte";
 	import { fade, fly } from "svelte/transition";
 	import Modal from "$lib/components/ui/Modal.svelte";
-	import { t } from "$lib/stores/conciergeStore.svelte";
+	import { dict } from "$lib/stores/conciergeStore.svelte";
 	import { toneStore, type AppTone } from "$lib/stores/toneStore.svelte";
 	import CommandCenter from "$lib/components/ui/CommandCenter.svelte";
 	import { magicTrigger } from "$lib/stores/magicStore";
@@ -438,7 +438,7 @@
 								class="uppercase tracking-wider font-semibold text-xs {isDashboardRoute
 									? 'text-slate-500'
 									: 'text-slate-500'}"
-								>{$t.groupOverview || "Estate Overview"}</span
+								>{$dict.groupOverview || "Estate Overview"}</span
 							>
 							<ChevronRight
 								size={14}
@@ -452,10 +452,10 @@
 									: 'text-slate-800'}"
 							>
 								{$page.url.pathname === "/dashboard"
-									? $t.dashboard
+									? $dict.dashboard
 									: $page.url.pathname.includes("catalog")
-										? $t.catalog
-										: $t[
+										? $dict.catalog
+										: $dict[
 												navGroups
 													.flatMap((g) => g.items)
 													.find(
@@ -463,7 +463,7 @@
 															i.href ===
 															$page.url.pathname,
 													)?.key || ""
-											] || $t.activeModule}
+											] || $dict.activeModule}
 							</span>
 						</div>
 

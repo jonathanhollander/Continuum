@@ -46,13 +46,15 @@ export const language = {
     set: (val: Language) => manager.update({ language: val })
 };
 
-// Infer dictionary type from English fallback
-type Dictionary = typeof dictionary.en;
+// Infer dictionary type from English fallback; the index signature lets callers look up
+// keys computed at runtime (`$dict[item.key]`).
+type Dictionary = typeof dictionary.en & Record<string, any>;
 
-export const t = derived(language, ($language: Language) => {
-    // @ts-ignore - Dynamic key access
-    const dict = (dictionary as Record<string, Dictionary>)[$language] || dictionary.en;
-    return dict as Dictionary;
+// The active language's dictionary, read as an object (`$dict.wizTitle`).
+// The callable translator (`$t("wizard.start")`) is `t` in `$lib/stores/localization`.
+export const dict = derived(language, ($language: Language) => {
+    const all = dictionary as unknown as Record<string, Dictionary>;
+    return all[$language] || all.en;
 });
 
 // Engagement Logger (Analytics - Kept Local for now unless asked to sync)

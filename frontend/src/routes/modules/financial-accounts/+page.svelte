@@ -125,7 +125,7 @@
 
 <div class="max-w-6xl mx-auto p-8">
     <LivingBlueprintHeader
-        title={$t("financial")}
+        title={$t("assets")}
         subtitle="Manage bank accounts, investments, and liabilities"
         tier="financial"
         detailedDescription="Gathering your financial accounts in one place isn't just about numbers—it's about ensuring your family isn't left searching for resources they might desperately need. This clarity provides immediate stability during a time of uncertainty."

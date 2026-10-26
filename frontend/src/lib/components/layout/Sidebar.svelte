@@ -1,6 +1,6 @@
 <script lang="ts">
     import { page } from "$app/stores";
-    import { t, userRole } from "$lib/stores/conciergeStore.svelte";
+    import { dict, userRole } from "$lib/stores/conciergeStore.svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { navGroups, pulseSubNav } from "$lib/config/navigation";
     import {
@@ -175,7 +175,7 @@
                             <span
                                 class="text-[10px] font-bold text-amber-400/90 uppercase tracking-widest"
                             >
-                                {$t[group.groupKey] || group.groupLabel}
+                                {$dict[group.groupKey] || group.groupLabel}
                             </span>
                         </div>
                         {#if group.groupDescription}
@@ -198,7 +198,7 @@
                             <span
                                 class="text-[10px] font-bold text-primary-foreground/60 uppercase tracking-widest"
                             >
-                                {$t[group.groupKey] || group.groupLabel}
+                                {$dict[group.groupKey] || group.groupLabel}
                             </span>
                             {#if isGroupOpen(group)}
                                 <ChevronDown
@@ -264,7 +264,7 @@
                                             : 'text-primary-foreground/50'}"
                                     />
                                     <span class="text-sm flex-1"
-                                        >{$t[item.key] || item.label}</span
+                                        >{$dict[item.key] || item.label}</span
                                     >
                                     {#if item.isExternal}
                                         <ExternalLink
