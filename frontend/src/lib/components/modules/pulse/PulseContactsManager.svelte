@@ -73,11 +73,11 @@
         }
     }
 
-    // Saved through the shared contacts store, which this list reads; on failure it rolls back
-    // and shows its own gentle message.
+    // Delay and safety-timer edits: saved quietly (no affirmation) through the shared contacts
+    // store, which this list reads; on failure it rolls back and shows its own gentle message.
     async function updateContact(contactId: number | string, updates: Record<string, unknown>) {
         try {
-            await contactSync.update(contactId, updates);
+            await contactSync.update(contactId, updates, false);
         } catch (e) {
             console.error(e);
         }

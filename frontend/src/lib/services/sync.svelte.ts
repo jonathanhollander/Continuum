@@ -395,7 +395,8 @@ export class SyncManager<T extends { id: number | string }> {
         }
     }
 
-    async update(idOrData: T | number | string, partialData?: Partial<T>) {
+    // affirm=false: a small setting saved in place (no affirmation); failures still show the gentle error.
+    async update(idOrData: T | number | string, partialData?: Partial<T>, affirm = true) {
         let id: number | string;
         let updates: Partial<T>;
 
@@ -500,7 +501,7 @@ export class SyncManager<T extends { id: number | string }> {
             this.lastSync = new Date();
 
             // Show affirmation if context is set (update wording: never "added")
-            if (this.affirmationContext) {
+            if (this.affirmationContext && affirm) {
                 notifications.showAffirmation(this.affirmationContext, 'update');
             }
 
@@ -531,7 +532,7 @@ export class SyncManager<T extends { id: number | string }> {
                 message: 'We couldn\'t save that just yet. Your words are still here \u2014 try again when you\'re ready.',
                 code: 'DATABASE_ERROR',
                 technicalDetails: e.technicalDetails || e.message || String(e)
-            } as any, () => { this.update(id, updates).catch(() => {}); });
+            } as any, () => { this.update(id, updates, affirm).catch(() => {}); });
             throw e;
         }
     }
