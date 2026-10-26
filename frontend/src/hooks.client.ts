@@ -31,7 +31,7 @@ if (typeof window !== 'undefined' && !(window.fetch as { __csrfWrapped?: boolean
 	const nativeFetch = window.fetch.bind(window);
 	const origins = allowedOrigins();
 
-	const wrapped = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+	const csrfFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
 		const request = input instanceof Request ? input : null;
 		const method = (init?.method ?? request?.method ?? 'GET').toUpperCase();
 		if (!WRITE_METHODS.has(method)) return nativeFetch(input, init);
@@ -62,6 +62,43 @@ if (typeof window !== 'undefined' && !(window.fetch as { __csrfWrapped?: boolean
 		if (token) headers.set(CSRF_HEADER, token);
 
 		return nativeFetch(input, { ...init, headers });
+	};
+
+	// Expired sessions: when an API call carrying a Bearer token gets a 401, refresh
+	// the session once (shared by parallel calls, see refreshSession) and retry the
+	// call with the new token. If the refresh is refused, sign out gently.
+	const wrapped = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+		const res = await csrfFetch(input, init);
+		if (res.status !== 401 || input instanceof Request) return res;
+
+		const headers = new Headers(init?.headers);
+		const sent = headers.get('Authorization');
+		if (!sent?.startsWith('Bearer ')) return res;
+
+		let url: URL;
+		try {
+			url = new URL(String(input instanceof URL ? input.href : input), window.location.href);
+		} catch {
+			return res;
+		}
+		if (!origins.has(url.origin) || url.pathname.startsWith('/api/auth/')) return res;
+
+		const { refreshSession, auth } = await import('$lib/stores/auth');
+		let token = localStorage.getItem('continuum_auth_token');
+		if (!token || `Bearer ${token}` === sent) {
+			// Nobody has refreshed since this call was sent, so do it now
+			const refreshed = await refreshSession();
+			if (!refreshed.ok) {
+				if (refreshed.definite) {
+					auth.logout();
+					if (!window.location.pathname.startsWith('/login')) window.location.href = '/login';
+				}
+				return res;
+			}
+			token = refreshed.token;
+		}
+		headers.set('Authorization', `Bearer ${token}`);
+		return csrfFetch(input, { ...init, headers });
 	};
 	(wrapped as unknown as { __csrfWrapped: boolean }).__csrfWrapped = true;
 	window.fetch = wrapped as typeof window.fetch;

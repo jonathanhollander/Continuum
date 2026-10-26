@@ -68,6 +68,7 @@ export function logout() {
     activeAccountId.set(null);
     if (typeof window !== 'undefined') {
         localStorage.removeItem('continuum_auth_token');
+        localStorage.removeItem('continuum_refresh_token');
         window.location.href = '/login';
     }
 }
