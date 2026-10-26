@@ -330,6 +330,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | U45 | AI prompt bar and catalog search unlabelled (seeds) | `ui-standards-enforcer` / `general-purpose` | `lib/components/AIPromptBar.svelte` (find path), `routes/catalog/+page.svelte` | Prompt bar `aria-label` (`:187`, 22 routes); catalog search labelled with a focus ring (`:69`) | Accessible names present; 0 errors |
 | U47 | Video recorder dot green while the camera starts (U19) | `general-purpose` | `lib/components/media/VideoRecorder.svelte` | Status dot shows the starting state until `cameraReady` | 4 s fake-camera delay: dot neutral, then green; 0 errors |
 | U48 | Accomplishments gallery: unlabelled search, orange chips (U18) | `ui-standards-enforcer` / `general-purpose` | `lib/components/modules/legacy-journal/AccomplishmentsGallery.svelte` (find path) | Search `aria-label` ("Search accomplishments"); category chips in the site primary like the journal tabs | 0 unlabelled; chips match the tabs; 0 errors |
+| U49 | Memory gallery card view: dark heading, no per-memory remove (U16) | `ui-standards-enforcer` / `general-purpose` | `lib/components/memories/MemoryGallery.svelte` (find path) | Heading at ~:316 relies on parent `text-white` (global h colour) — `text-white` on it; card view gets the same "Remove this item" as U16's table (confirm "Remove this item? You can upload it again if needed.", `removeMemory`) | Heading ≥ 4.5:1; remove one in card view → gone after reload, media 404; 0 errors |
 
  (decision 12; parallel track, approved by orchestrator diff review)
 
@@ -634,7 +635,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X153 | ☑ | 73abf0f | Pulse settings GET returns the 3 datetimes with `Z` (`_utc_iso`); `_check_settings_fields` 422s bad booleans, frequency 1–365, grace 0–720, biometric 1–168, text ≤2000, lat/lon ranges. Ghost until 03:30Z shows 11/1 in New York; 8 bad bodies 422; GET→POST round-trip 200; 0 tracebacks. Finding → X159 |
 | X154 | ☐ (owner decision) | | |
 | X155 | ▶ | | |
-| X156 | ☐ (queued: 20-agent limit; worktree ready) | | |
+| X156 | ▶ | | |
 | X157 | ☐ (queued: 20-agent limit) | | |
 | X158 | ☐ (queued: 20-agent limit) | | |
 | X159 | ☐ (queued: 20-agent limit; worktree ready) | | |
@@ -752,7 +753,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | U12 | ☑ | fe78e41 | Heirlooms header button one row (244×65 → 272×45, icon inline); edit modal title "Edit these details"; modal footer sticky (save y 1352 → 790, clickable on add and edit); 4 labels linked; search named. 0 errors. Findings → U20 |
 | U13 | ☑ | bb79c88 | Capsule modal `max-h-[90vh]` scroll (-17→917 → 45→855; fits 1440×700); "Release this capsule" opens an in-card confirm ("Keep it locked" / "Release now"); 4 labels linked, Release Type a labelled group, dialog named; edit shows a pencil; Seal buttons site primary; duplicate "Begin a Legacy" removed. 0 errors |
 | U14 | ☑ | d7efcc7 | Letters: recipient select `text-sm` (309 px text in 254 → 245, fits); "Empathy Engine" h3 white; fake 1.5 s drafting timer removed (editor 1541 → ~50 ms, fades 150 ms); 6 template fields labelled; auto-mapped chip only when the profile filled a field; focus to the letter textarea. 0 errors. Finding → X160 |
-| U15 | ▶ | | |
+| U15 | ☑ | 81637e6 | GhostRow is a container-query grid: under 448 px the badge/value moves under the title (anniversary titles 2 → 1 line, badge 40 → 24 px; funeral 2–3 → 1; timeline, calendar, qr-codes, financial all 1 line); badge/value `nowrap`; nameless rows lose the skeleton bars and use the existing "Example {type}" title. 17 pages checked, 0 errors |
 | U16 | ☑ | 1428306 | Visual Memories own affirmation set (one toast per upload batch: 3 → 1); Cards/Table from the saved preference, real table with Favorite and "Remove this item" (record then media); toggle only on the gallery tab; dashboard card "Ready" → "Kept safe". 0 errors |
 | U17 | ☑ | a88b80b | Final Wishes Financial Care empty state is about costs ("Financial Stewardship", Auto-Fill Common Costs, three standard estimates open the cost modal prefilled); dead Cards/Table toggle removed; summary strip items only when set (strip left out when empty, steps up 146 px); cost modal title white. 0 errors |
 | U18 | ☑ | 86b5f71 | Legacy Journal header add follows the open tab (Share a memory / Add Value / Add a lesson / Go to Timeline to Add); Accomplishments tab dark like the others; long reflection titles wrap clear of the icons (2px → 35px); two searches labelled. 0 errors. Finding → U48 |
@@ -784,6 +785,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | U45 | ☐ (queued: 20-agent limit) | | |
 | U47 | ☐ (queued: 20-agent limit) | | |
 | U48 | ☐ (queued: 20-agent limit) | | |
+| U49 | ☐ (queued: 20-agent limit) | | |
 | U42 | ☐ (queued: after X156) | | |
 | G0 | ☐ (after Wave U) | | |
 | T0 | ☐ (after Wave U, with G0) | | |
