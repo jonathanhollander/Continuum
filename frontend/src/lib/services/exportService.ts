@@ -603,7 +603,7 @@ function fileBlock(a: SnapshotAttachment, url: string | null): string {
 /** The packet as HTML. `urlFor` gives each attachment's address (a blob URL on screen, a path in the zip). */
 export function packetHTML(packet: Packet, urlFor: (a: SnapshotAttachment) => string | null = () => null): string {
     const parts: string[] = [`<style>${PACKET_CSS}</style>`];
-    parts.push(`<section class="cx-page cx-cover"><div>${packet.ownerName ? `<div class="cx-kicker">The estate of</div><h1>${esc(packet.ownerName)}</h1>` : ''}<div class="cx-rule"></div></div>
+    parts.push(`<section class="cx-page cx-cover"><div>${packet.ownerName ? `<div class="cx-kicker">The estate of</div><h1>${esc(packet.ownerName)}</h1>` : '<h1>The Red Binder</h1>'}<div class="cx-rule"></div></div>
 <div class="cx-meta"><div><h3>Prepared</h3><p>${esc(fmtDate(packet.generatedAt))}</p></div>${packet.executors.length ? `<div><h3>Executor</h3><p>${packet.executors.map(esc).join('<br>')}</p></div>` : ''}</div></section>`);
     parts.push(`<section class="cx-page"><h2>Contents</h2><ol class="cx-toc">${packet.sections
         .map((s) => `<li><a href="#cx-${esc(s.key)}">${esc(s.title)}</a> <span class="cx-id">${s.records.length}</span></li>`)
@@ -671,6 +671,9 @@ export function packetPDF(packet: Packet, images: Map<string, string> = new Map(
     if (packet.ownerName) {
         write('THE ESTATE OF', 12, { bold: true, color: 48, gap: 8 });
         write(packet.ownerName, 32, { bold: true, color: 48, gap: 24 });
+    } else {
+        // No name given: the binder's own name, so the cover still has a title (card X144).
+        write('The Red Binder', 32, { bold: true, color: 48, gap: 24 });
     }
     write(`Prepared ${fmtDate(packet.generatedAt)}`, 13, { color: 90, gap: 6 });
     if (packet.executors.length) write(`Executor: ${packet.executors.join(', ')}`, 13, { color: 90 });
