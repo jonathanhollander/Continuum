@@ -536,7 +536,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | E3 | ▶ | | |
 | E4 | ▶ | | |
 | E5 | ▶ | | |
-| E6 | ▶ | | |
+| E6 | ☑ | 0da1844 | `calendarStore.ts` (0 importers; every import ends `.svelte` → live store) `git mv` to `frontend/_archive/`; `visualMemoryStore.ts` and `advancedAssetStore.ts` were already deleted in B5/B5.1. Build passes; svelte-check files 4136 → 4135, errors 122 → 122 |
 | E7 | ▶ | | |
 | E8 | ☐ | | |
 | E9 | ☑ | 70c0e2b | Input and "Find support" stacked (overlapped by 119.5px); headings `text-slate-100` plus scoped `h2/h3` inherit (contrast 1.15:1 → 15.67:1, card titles 1.13 → 11.77:1, Crisis Center 1.10 → 11.94:1); white band removed (bottom 120px avg rgb 218 → 20). 1440×900, 0 errors. Breadcrumb comes from `+layout.svelte:455-468` → moved to E1. Sidebar/header light on this dark page → U0 |
