@@ -21,6 +21,7 @@ import { fetchMediaBlob } from '$lib/services/mediaService';
 import { dateWords } from '$lib/utils/dateWords';
 import { captureSession, assertCurrentSession, isCurrentSession, SessionChangedError, type SessionOwnership } from '$lib/services/sessionOwnership';
 import { executorTasks } from '$lib/data/executorTasks';
+import { subscriptionCycle } from '$lib/utils/subscriptionCadence';
 
 export type ExportScope = 'full' | 'insurance' | 'medical';
 
@@ -289,7 +290,7 @@ const assetCategoryTotals = (rows: any[]): PacketField[] => [
 const subscriptionClosed = (r: any) => r.auto_renew === false || r.autoRenew === false;
 const subscriptionTotals = (rows: any[]): PacketField[] => {
     const open = rows.filter((r) => !subscriptionClosed(r));
-    const yearly = (r: any) => (r.cycle || r.frequency) === 'Yearly';
+    const yearly = (r: any) => subscriptionCycle(r.cycle, r.frequency) === 'Yearly';
     const month = open.reduce((s, r) => s + (yearly(r) ? Math.round(toCents(r.cost) / 12) : toCents(r.cost)), 0);
     const year = open.reduce((s, r) => s + (yearly(r) ? toCents(r.cost) : toCents(r.cost) * 12), 0);
     return [
@@ -578,7 +579,7 @@ const SECTIONS: SectionDef[] = [
         key: 'subscriptions', source: 'subscriptions', title: 'Recurring services',
         name: (r) => r.name,
         fields: [
-            ['cost', 'Cost', { money: true }], [(r) => r.cycle || r.frequency, 'Billed'], ['paymentMethod', 'Paid with'],
+            ['cost', 'Cost', { money: true }], [(r) => subscriptionCycle(r.cycle, r.frequency), 'Billed'], ['paymentMethod', 'Paid with'],
             ['nextBilling', 'Next billing'], ['loginUrl', 'Login address'],
             ['cancellationInstructions', 'How to cancel', { long: true }], ['notes', 'Notes', { long: true }],
             [(r) => (subscriptionClosed(r) ? 'Closed' : ''), 'Status']

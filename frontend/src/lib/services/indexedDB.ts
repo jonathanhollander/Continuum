@@ -1,3 +1,4 @@
+import { browserStorage } from "./browserStorage";
 /** Account-owned local originals, retained until their server copy reads back. */
 import {
     assertCurrentSession, captureSession, isCurrentSession, SessionChangedError,
@@ -35,10 +36,7 @@ function pendingFile(value: unknown): PendingMediaFile | undefined {
 
 export const MEDIA_STORAGE_CHANGED = 'continuum:media-storage-changed';
 const activeUploads = new Set<string>();
-const accountNow = () => {
-    try { return typeof localStorage === 'undefined' ? '' : (localStorage.getItem('continuum_active_account') || '').trim(); }
-    catch { return ''; }
-};
+const accountNow = () => (browserStorage.getItem('continuum_active_account') || '').trim();
 
 export function captureMediaOwner(): MediaOwner | null {
     const session = captureSession();
@@ -180,7 +178,7 @@ export const mediaStorage = {
             const blob = await mediaStorage.get(id, owner);
             requireMediaOwner(owner);
             if (blob) return URL.createObjectURL(blob);
-            const raw = localStorage.getItem(mediaMappingKey(owner));
+            const raw = browserStorage.getItem(mediaMappingKey(owner));
             const entry = raw ? (JSON.parse(raw) as Array<{ oldId: string; newId: number }>).find((m) => m.oldId === id) : undefined;
             if (entry) {
                 const { getMediaBlobUrl } = await import('./mediaService');

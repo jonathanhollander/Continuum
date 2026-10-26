@@ -1,3 +1,4 @@
+import { browserStorage } from "$lib/services/browserStorage";
 import { writable } from 'svelte/store';
 import { browser } from '$app/environment';
 import { API_BASE_URL } from '$lib/config';
@@ -29,7 +30,7 @@ interface AuthState {
     offline?: boolean;
 }
 
-const token = browser ? localStorage.getItem('continuum_auth_token') : null;
+const token = browser ? browserStorage.getItem('continuum_auth_token') : null;
 const initialState: AuthState = {
     token,
     user: null,
@@ -45,17 +46,17 @@ const REFRESH_KEY = 'continuum_refresh_token';
 export function storeTokens(accessToken: string, refreshToken?: string | null, owner = beginSession(), refresh = false): boolean {
     if (!browser) return false;
     return commitSessionToken(owner, accessToken, () => {
-        localStorage.setItem(TOKEN_KEY, accessToken);
-        if (refreshToken) localStorage.setItem(REFRESH_KEY, refreshToken);
-        else if (!refresh) localStorage.removeItem(REFRESH_KEY);
+        browserStorage.setItem(TOKEN_KEY, accessToken);
+        if (refreshToken) browserStorage.setItem(REFRESH_KEY, refreshToken);
+        else if (!refresh) browserStorage.removeItem(REFRESH_KEY);
     }, refresh);
 }
 
 function clearTokens(owner = beginSession()) {
     if (!browser) return;
     commitSessionToken(owner, null, () => {
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(REFRESH_KEY);
+        browserStorage.removeItem(TOKEN_KEY);
+        browserStorage.removeItem(REFRESH_KEY);
     });
 }
 
@@ -72,7 +73,7 @@ export function refreshSession(owner = captureSession()): Promise<RefreshResult>
     if (!browser || !isCurrentSession(owner, true)) return Promise.resolve({ ok: false, definite: false });
     if (refreshInFlight && refreshInFlight.owner.generation === owner.generation
         && isCurrentSession(refreshInFlight.owner, true)) return refreshInFlight.run;
-    const refreshToken = localStorage.getItem(REFRESH_KEY);
+    const refreshToken = browserStorage.getItem(REFRESH_KEY);
     if (!refreshToken) return Promise.resolve({ ok: false, definite: true });
 
     const entry: { owner: SessionOwnership; run: Promise<RefreshResult> } = { owner, run: (async (): Promise<RefreshResult> => {
@@ -175,7 +176,7 @@ function createAuthStore() {
          * first; a new token (sign-in) or an earlier failure (offline) loads again.
          */
         init: (): Promise<void> => {
-            const token = browser ? localStorage.getItem(TOKEN_KEY) : null;
+            const token = browser ? browserStorage.getItem(TOKEN_KEY) : null;
             if (!token) return Promise.resolve();
             if (initRun?.token === token && isCurrentSession(initRun.owner, true)) return initRun.run;
             const owner = captureSession();
@@ -308,7 +309,7 @@ if (browser) {
     window.addEventListener('storage', (event) => {
         if (event.key !== TOKEN_KEY && event.key !== null) return;
         initRun = null;
-        if (localStorage.getItem(TOKEN_KEY)) void auth.init();
+        if (browserStorage.getItem(TOKEN_KEY)) void auth.init();
         else auth.logout();
     });
 }

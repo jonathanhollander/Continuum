@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount, tick } from "svelte";
+    import { onMount, onDestroy, tick } from "svelte";
     import {
         CloudUpload,
         FileText,
@@ -24,7 +24,7 @@
     } from "lucide-svelte";
     import JargonSlayer from "$lib/components/modules/legal-documents/JargonSlayer.svelte";
     import { slide, scale, fade, fly } from "svelte/transition";
-    import FileUploader from "$lib/components/ui/FileUploader.svelte";
+    import UniversalUploader from "$lib/components/ui/UniversalUploader.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
@@ -32,11 +32,14 @@
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { activityLog } from "$lib/stores/activityLog.svelte";
     import { userPreferencesStore } from "$lib/stores/userPreferencesStore.svelte";
-    import { downloadMedia, mediaIdFromRef } from "$lib/services/mediaService";
+    import { downloadMedia, mediaIdFromRef, removeUnusedMedia } from "$lib/services/mediaService";
     import { documentSync, type Document, type DocType } from "$lib/stores/documentStore.svelte";
     import { notifications } from "$lib/stores/notificationStore";
     import { pluralWord } from "$lib/utils/plural";
     import { dateWords } from "$lib/utils/dateWords";
+
+    import { captureSession, isCurrentSession, type SessionOwnership } from "$lib/services/sessionOwnership";
+    import { formSaveAttempt } from "$lib/utils/formSaveAttempt";
 
     let { module }: { module: { id: string; name?: string } } = $props();
     // The one Cards/Table toggle below remembers its choice in userPreferencesStore; read it from there.
@@ -84,87 +87,116 @@
         }
     });
 
-    // One save at a time: while it is open the button waits, so a second click sends nothing.
+    type MediaDraft = {
+        owner: SessionOwnership; original: Set<number>; uploads: Set<number>; attempted: Set<number>;
+        uploadState: "idle" | "uploading" | "failed"; closed: boolean;
+    };
+    const fileIds = (doc: Partial<Doc>) => new Set([doc.mediaId, mediaIdFromRef(doc.filePath)]
+        .filter((id): id is number => typeof id === "number"));
+    const freshMediaDraft = (doc?: Partial<Doc>): MediaDraft => ({ owner: captureSession(), original: fileIds(doc || {}),
+        uploads: new Set(), attempted: new Set(), uploadState: "idle", closed: false });
+    let mediaDraft = $state<MediaDraft>(freshMediaDraft());
+    let destroyed = false;
+    const saveAttempt = formSaveAttempt(docSync);
     let saving = $state(false);
-    async function saveDoc() {
-        if (saving) return;
-        saving = true;
-        try {
-            await saveDocOnce();
-        } finally {
-            saving = false;
+
+    async function clearUnused(ids: Iterable<number>, owner: SessionOwnership) {
+        for (const id of new Set(ids)) {
+            if (!isCurrentSession(owner)) return;
+            try { await removeUnusedMedia(id, owner); }
+            catch (error) {
+                if (!isCurrentSession(owner)) return;
+                notifications.showError({ message: "Clearing the unused file can finish when you are ready.",
+                    code: "NETWORK_ERROR", technicalDetails: String(error) } as any,
+                    () => { if (isCurrentSession(owner)) void clearUnused([id], owner); });
+            }
         }
     }
+    function abandon(form: MediaDraft) {
+        form.closed = true;
+        void clearUnused([...form.uploads].filter(id => !form.attempted.has(id)), form.owner);
+    }
+    onDestroy(() => { destroyed = true; abandon(mediaDraft); });
 
-    async function saveDocOnce() {
+    function fileChanged(form: MediaDraft, url: string, id?: number, uploaded?: object) {
+        if (destroyed || form.closed || mediaDraft !== form || !isCurrentSession(form.owner)) {
+            if (uploaded && id !== undefined) void clearUnused([id], form.owner);
+            return;
+        }
+        const previous = fileIds(newDoc);
+        if (uploaded && id !== undefined) form.uploads.add(id);
+        newDoc.filePath = url;
+        newDoc.mediaId = id ?? null;
+        void clearUnused([...previous].filter(old => form.uploads.has(old) && !form.attempted.has(old) && old !== id), form.owner);
+    }
+    const fieldsOf = (doc: DocDraft) => ({
+        name: doc.name, type: (doc.type as DocType) || "Other", location: doc.location || "",
+        witnesses: doc.witnesses || "", signedDate: doc.signedDate || "", nextReviewDate: doc.nextReviewDate || "",
+        filePath: doc.filePath || "", mediaId: doc.filePath ? (doc.mediaId ?? null) : null,
+        customAttributes: { ...(doc.customAttributes || {}) }, status: doc.status || "verified",
+    });
+    function logChange(action: "CREATE" | "UPDATE" | "DELETE", doc: Partial<Doc>) {
+        try {
+            Promise.resolve(activityLog.logEvent({ module: module.name || "Document Vault", action, entityType: "Document",
+                entityId: String(doc.id), entityName: doc.name || "", userContext: $estateProfile.ownerName || "User" }))
+                .catch(error => console.warn("[documents] activity log paused", error));
+        } catch (error) { console.warn("[documents] activity log paused", error); }
+    }
+    async function saveDoc() {
+        const form = mediaDraft;
+        if (saving || form.uploadState !== "idle" || form.closed || !isCurrentSession(form.owner)) return;
         if (!(newDoc.name ?? "").trim()) {
             titleMissing = true;
             await tick();
             document.getElementById("doc-title")?.focus();
             return;
         }
-
-        const fields = {
-            name: newDoc.name,
-            type: (newDoc.type as DocType) || "Other",
-            location: newDoc.location || "",
-            witnesses: newDoc.witnesses || "",
-            signedDate: newDoc.signedDate || "",
-            nextReviewDate: newDoc.nextReviewDate || "",
-            filePath: newDoc.filePath || "",
-            mediaId: newDoc.filePath ? (newDoc.mediaId ?? null) : null,
-            customAttributes: { ...(newDoc.customAttributes || {}) },
-            status: newDoc.status || "verified",
-        };
-
+        const fields = fieldsOf(newDoc);
+        const sent = JSON.stringify(fields);
+        const id = newDoc.id;
+        fileIds(fields).forEach(mid => form.attempted.add(mid));
+        saving = true;
         try {
-        if (newDoc.id) {
-            // Edit Mode
-            await docSync.update(newDoc.id, fields);
-
-            // Log UPDATE
-            activityLog.logEvent({
-                module: module.name || "Document Vault",
-                action: "UPDATE",
-                entityType: "Document",
-                entityId: String(newDoc.id),
-                entityName: newDoc.name ?? "",
-                userContext: $estateProfile.ownerName || "User",
-            });
-        } else {
-            // Create Mode
-            const created = await docSync.create(fields, false, false, saveDoc);
-
-            // Log CREATE
-            activityLog.logEvent({
-                module: module.name || "Document Vault",
-                action: "CREATE",
-                entityType: "Document",
-                entityId: created.id,
-                entityName: created.name,
-                userContext: $estateProfile.ownerName || "User",
-            });
-        }
-
-        resetForm();
+            await saveAttempt(form, fields, async saved => {
+                const kept = fileIds(saved);
+                const current = !destroyed && !form.closed && mediaDraft === form;
+                const visible = current ? fileIds(newDoc) : new Set<number>();
+                await clearUnused([...form.original, ...form.uploads].filter(mid => !kept.has(mid) && !visible.has(mid)), form.owner);
+                if (!isCurrentSession(form.owner)) return;
+                form.original = kept;
+                kept.forEach(mid => { form.uploads.delete(mid); form.attempted.delete(mid); });
+                logChange(id ? "UPDATE" : "CREATE", saved);
+                if (destroyed || form.closed || mediaDraft !== form) return;
+                newDoc.id = saved.id;
+                if (JSON.stringify(fieldsOf(newDoc)) === sent) resetForm();
+            }, id);
         } catch {
-            // The manager already showed the one gentle message; the form stays open with the draft.
-        }
+            // Both saved and attempted files stay available with this form's exact retry.
+        } finally { if (!destroyed && mediaDraft === form) saving = false; }
     }
 
     function editDoc(doc: Doc) {
+        if (saving) return;
+        resetForm();
         newDoc = { ...doc, customAttributes: { ...(doc.customAttributes || {}) } };
-        // Skip wizard for edits, go straight to form
+        mediaDraft = freshMediaDraft(doc);
         showWizard = false;
         showUpload = true;
     }
-
     function resetForm() {
+        abandon(mediaDraft);
         newDoc = emptyDoc();
+        mediaDraft = freshMediaDraft();
         titleMissing = false;
         showUpload = false;
         showWizard = false;
         wizardStep = 0;
+        saving = false;
+    }
+    function startDocument() {
+        if (saving) return;
+        resetForm();
+        showUpload = true;
     }
 
     async function saveCopy(doc: Doc) {
@@ -195,19 +227,13 @@
         removing = null;
         if (!doc) return;
         const id = doc.id;
-        await docSync.delete(id);
-
-        // Log DELETE only if the item is really gone (the manager rolls back and shows its message on failure)
-        if (!docSync.items.some((d) => d.id === id)) {
-            activityLog.logEvent({
-                module: module.name || "Document Vault",
-                action: "DELETE",
-                entityType: "Document",
-                entityId: id,
-                entityName: doc.name,
-                userContext: $estateProfile.ownerName || "User",
-            });
-        }
+        const owner = captureSession();
+        await docSync.delete(id, async () => {
+            if (!isCurrentSession(owner)) return;
+            await clearUnused(fileIds(doc), owner);
+            if (!isCurrentSession(owner)) return;
+            logChange("DELETE", doc);
+        });
     }
 
     // Nothing in the app sets a document's saved status, so readiness comes from its real fields:
@@ -255,6 +281,8 @@
 
     // Wizard Logic
     function startWizard() {
+        if (saving) return;
+        startDocument();
         showWizard = true;
         showUpload = true;
         wizardStep = 1;
@@ -413,10 +441,8 @@
                 <BookOpenText size={16} /> Example will, explained
             </button>
             <button
-                onclick={() => {
-                    showUpload = true;
-                    showWizard = false;
-                }}
+                onclick={startDocument}
+                disabled={saving}
                 class="px-5 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
             >
                 <CloudUpload size={16} /> Add a document
@@ -445,7 +471,7 @@
                             </p>
                         </div>
                         <button
-                            onclick={() => (showUpload = false)}
+                            onclick={resetForm}
                             class="p-2 -mr-2 text-muted-foreground hover:text-muted-foreground hover:bg-muted rounded-full transition-colors"
                             aria-label="Close"
                         >
@@ -576,13 +602,20 @@
                     </div>
 
                     <div class="mb-4">
-                        <FileUploader
-                            label="Digital Copy (Optional)"
-                            module="documents"
-                            mode="any"
-                            bind:imageUrl={newDoc.filePath}
-                            bind:mediaId={newDoc.mediaId}
-                        />
+                        {#key mediaDraft}
+                            {@const form = mediaDraft}
+                            <UniversalUploader
+                                label="Digital Copy (Optional)" module="documents" mode="any"
+                                value={newDoc.filePath} mediaId={newDoc.mediaId}
+                                disabled={saving}
+                                bind:uploadState={form.uploadState}
+                                onchange={(url, id, file) => fileChanged(form, url, id, file)}
+                                onabandoned={(file) => { void clearUnused([file.id], form.owner); }}
+                            />
+                        {/key}
+                        {#if mediaDraft.uploadState === "failed"}
+                            <p id="doc-upload-hint" class="text-xs text-warning mt-2">Choose a file again or remove the selection to continue.</p>
+                        {/if}
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -658,16 +691,18 @@
                     <div class="flex justify-end gap-3 pt-4">
                         <button
                             onclick={resetForm}
+                            disabled={saving}
                             class="px-6 py-2.5 rounded-xl font-semibold text-muted-foreground hover:bg-muted transition-colors"
                             >Not right now</button
                         >
                         <button
                             onclick={saveDoc}
-                            disabled={saving}
-                            aria-busy={saving}
+                            disabled={saving || mediaDraft.uploadState !== "idle"}
+                            aria-busy={saving || mediaDraft.uploadState === "uploading"}
+                            aria-describedby={mediaDraft.uploadState === "failed" ? "doc-upload-hint" : undefined}
                             class="px-6 py-2.5 rounded-xl font-semibold bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50"
                         >
-                            {saving ? "Saving..." : newDoc.id ? "Save my updates" : "Save my document"}
+                            {saving ? "Saving..." : mediaDraft.uploadState === "uploading" ? "Uploading file..." : newDoc.id ? "Save my updates" : "Save my document"}
                         </button>
                     </div>
                 </div>

@@ -1,7 +1,12 @@
 <script lang="ts">
     import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { getRegistry, type SyncManager } from "$lib/services/sync.svelte";
-    import { onMount } from "svelte";
+    import { onMount, untrack } from "svelte";
+    import { get } from "svelte/store";
+    import { activeAccountId } from "$lib/stores/keyringStore";
+    import { currentProfileId } from "$lib/stores/profileContext";
+    import { captureSession, isCurrentSession } from "$lib/services/sessionOwnership";
+    import type { SamplePurgeResult } from "$lib/services/testDataFactory";
     import { navGroups, catalogCategories, type NavItem } from "$lib/config/navigation";
     import { dict, userRole } from "$lib/stores/conciergeStore.svelte";
     import { auth } from "$lib/stores/auth";
@@ -30,6 +35,16 @@
     let purgingTest = $state(false);
     let selectedModule = $state<string | null>(null);
     let testDataFactory = $state<any>(null); // Dynamic import
+    let purgeResult = $state<SamplePurgeResult | null>(null);
+    let factoryRun = 0;
+
+    function captureFactoryView() {
+        const session = captureSession();
+        const account = get(activeAccountId);
+        const profile = get(currentProfileId);
+        return () => isCurrentSession(session) && account === get(activeAccountId)
+            && profile === get(currentProfileId);
+    }
 
     // Audit State
     let auditResults = $state<Record<string, any>>({});
@@ -39,6 +54,20 @@
 
     // Test Registry Cache (for highlighting)
     let testRegistry = $state<Record<string, string[]>>({});
+
+    $effect(() => {
+        const account = $activeAccountId;
+        const profile = $currentProfileId;
+        const user = $auth.user?.id;
+        untrack(() => {
+            factoryRun++;
+            purgeResult = null;
+            generatingTest = false;
+            purgingTest = false;
+            showConfirmGenerate = false;
+            refreshTestRegistry();
+        });
+    });
 
     onMount(async () => {
         // Load factory client-side only to avoid SSR complications
@@ -121,7 +150,7 @@
     }
 
     async function generateTestData() {
-        if (!testDataFactory) return;
+        if (!testDataFactory || generatingTest || purgingTest || !isAdmin) return;
         if (!showConfirmGenerate) {
             showConfirmGenerate = true;
             return;
@@ -129,22 +158,43 @@
 
         showConfirmGenerate = false;
 
+        const current = captureFactoryView();
+        const run = ++factoryRun;
         generatingTest = true;
-        await testDataFactory.generate();
-        refreshTestRegistry();
-        await syncAll();
-        generatingTest = false;
+        purgeResult = null;
+        try {
+            await testDataFactory.generate();
+            if (!current() || run !== factoryRun) return;
+            refreshTestRegistry();
+            await syncAll();
+        } finally {
+            if (current() && run === factoryRun) generatingTest = false;
+        }
     }
 
     async function purgeTestData() {
-        if (!testDataFactory) return;
+        if (!testDataFactory || generatingTest || purgingTest || !isAdmin) return;
+        const current = captureFactoryView();
         if (!(await askConfirm("Remove all test data? This will clean up sample content from your account."))) return;
+        if (!current()) return;
 
+        const run = ++factoryRun;
         purgingTest = true;
-        await testDataFactory.purge();
-        refreshTestRegistry();
-        await syncAll();
-        purgingTest = false;
+        try {
+            await testDataFactory.purge((result: SamplePurgeResult) => {
+                if (!current() || run !== factoryRun) return;
+                purgeResult = result;
+                refreshTestRegistry();
+                // The store's own Try Again can confirm a removal after this batch returned.
+                // Refresh its companion cloud comparison too, once per retry rather than per row.
+                if (!purgingTest && !syncingAll) void syncAll();
+            });
+            if (!current() || run !== factoryRun) return;
+            refreshTestRegistry();
+            await syncAll();
+        } finally {
+            if (current() && run === factoryRun) purgingTest = false;
+        }
     }
 
     // List managers hold `items`; a singleton holds one `data` record, counted once only when it
@@ -375,7 +425,7 @@
         <div class="flex items-center gap-3 w-full md:w-auto">
             <button
                 onclick={generateTestData}
-                disabled={generatingTest || !testDataFactory}
+                disabled={generatingTest || purgingTest || !testDataFactory}
                 class="flex-1 md:flex-none px-4 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary-hover transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
             >
                 {#if generatingTest}<RefreshCw
@@ -388,7 +438,7 @@
             </button>
             <button
                 onclick={purgeTestData}
-                disabled={purgingTest || !testDataFactory}
+                disabled={purgingTest || generatingTest || !testDataFactory}
                 class="flex-1 md:flex-none px-4 py-2 bg-card border border-danger/30 text-danger font-semibold rounded-lg hover:bg-danger-soft transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
             >
                 {#if purgingTest}<RefreshCw
@@ -399,6 +449,15 @@
             </button>
         </div>
     </div>
+    {#if purgeResult}
+        <p class="text-sm text-muted-foreground" role="status" data-testid="sample-purge-result">
+            {purgeResult.deletedCount} sample {purgeResult.deletedCount === 1 ? "entry" : "entries"} removed.
+            {#if purgeResult.remainingCount > 0}
+                {purgeResult.remainingCount} sample {purgeResult.remainingCount === 1 ? "entry remains" : "entries remain"}.
+                Choose Remove sample data to continue.
+            {/if}
+        </p>
+    {/if}
     {/if}
 
     <!-- Module Grid -->

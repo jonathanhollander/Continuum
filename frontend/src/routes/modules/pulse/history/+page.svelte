@@ -1,11 +1,15 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onMount, onDestroy } from "svelte";
     import { Clock, Smartphone, Mail, HeartHandshake } from "lucide-svelte";
     import { fade } from "svelte/transition";
     import { apiGet } from "$lib/api/client";
+    import { captureSession, isCurrentSession } from "$lib/services/sessionOwnership";
 
     let history = $state<any[]>([]);
     let loading = $state(true);
+    let error = $state("");
+    let readVersion = 0;
+    const retryNotice = "You can try loading this view again whenever you're ready.";
     let filterMethod = $state("all");
 
     // Stored methods (routers/pulse.py): manual (dashboard tap), magic_link (email link),
@@ -39,15 +43,29 @@
         return note && note !== "Manual Dashboard Tap" && note !== "One-Click Link" ? note : null;
     }
 
-    onMount(async () => {
+    onMount(() => { loadHistory(); });
+    onDestroy(() => { readVersion++; });
+    async function loadHistory() {
+        const owner = captureSession();
+        const version = ++readVersion;
+        loading = true;
+        error = "";
         try {
-            history = await apiGet('/api/pulse/history?limit=50');
-        } catch (e) {
-            console.error("Failed to load check-in history", e);
+            if (!isCurrentSession(owner)) throw new Error("Session changed");
+            const saved = await apiGet('/api/pulse/history?limit=50');
+            if (version === readVersion && isCurrentSession(owner)) history = saved;
+        } catch {
+            if (version === readVersion) error = retryNotice;
         } finally {
-            loading = false;
+            if (version === readVersion) {
+                loading = false;
+                if (!isCurrentSession(owner)) {
+                    history = [];
+                    error = retryNotice;
+                }
+            }
         }
-    });
+    }
 
     function getMethodIcon(method: string) {
         switch (method) {
@@ -102,8 +120,13 @@
         {/each}
     </div>
 
-    {#if loading}
-        <div class="space-y-4">
+    {#if error}
+        <div role="alert" class="rounded-xl border border-border bg-card p-5 space-y-3">
+            <p class="text-sm text-foreground">{error}</p>
+            <button onclick={loadHistory} class="text-sm text-primary underline">Try again</button>
+        </div>
+    {:else if loading}
+        <div class="space-y-4" role="status" aria-label="Opening your check-in history">
             {#each Array(3) as _}
                 <div
                     class="h-16 bg-background/50 rounded-xl animate-pulse"

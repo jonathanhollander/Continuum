@@ -1,3 +1,4 @@
+import { browserStorage } from "./browserStorage";
 /** Recover current account uploads only after their durable record links read back. */
 import { API_BASE_URL } from '$lib/config';
 import { mediaStorage, captureMediaOwner, requireMediaOwner, mediaMappingKey, type MediaOwner, type PendingMediaUpload } from './indexedDB';
@@ -146,7 +147,7 @@ function saveMigrationMapping(entries: Array<{ oldId: string; newId: number; dow
     requireMediaOwner(owner);
     let existing: Array<{ oldId: string; newId: number; downloadUrl: string }> = [];
     try {
-        existing = JSON.parse(localStorage.getItem(mediaMappingKey(owner)) || '[]');
+        existing = JSON.parse(browserStorage.getItem(mediaMappingKey(owner)) || '[]');
         if (!Array.isArray(existing)) existing = [];
     } catch {
         existing = [];
@@ -154,7 +155,7 @@ function saveMigrationMapping(entries: Array<{ oldId: string; newId: number; dow
     const byOld = new Map(existing.map((m) => [m.oldId, m]));
     for (const m of entries) byOld.set(m.oldId, m);
     requireMediaOwner(owner);
-    localStorage.setItem(mediaMappingKey(owner), JSON.stringify([...byOld.values()]));
+    browserStorage.setItem(mediaMappingKey(owner), JSON.stringify([...byOld.values()]));
 }
 
 /**
@@ -164,7 +165,7 @@ function saveMigrationMapping(entries: Array<{ oldId: string; newId: number; dow
 export function getMigrationMapping(owner = captureMediaOwner()): Record<string, { newId: number; downloadUrl: string }> {
     if (!owner) return {};
     requireMediaOwner(owner);
-    const mapping = localStorage.getItem(mediaMappingKey(owner));
+    const mapping = browserStorage.getItem(mediaMappingKey(owner));
     if (!mapping) return {};
 
     try {
@@ -189,7 +190,7 @@ export function getMigrationMapping(owner = captureMediaOwner()): Record<string,
  */
 export function clearMigrationMapping(owner = requireMediaOwner()): void {
     requireMediaOwner(owner);
-    localStorage.removeItem(mediaMappingKey(owner));
+    browserStorage.removeItem(mediaMappingKey(owner));
 }
 
 export async function needsMigration(owner = captureMediaOwner()): Promise<boolean> {
