@@ -6,7 +6,6 @@
 	import { onMount, setContext } from "svelte";
 	import { goto } from "$app/navigation";
 	import { estateAudit } from "$lib/stores/auditStore.svelte";
-	import ConciergeSettings from "$lib/components/concierge/ConciergeSettings.svelte";
 	import ConciergePanel from "$lib/components/layout/ConciergePanel.svelte";
 	import { conciergeEngine } from "$lib/stores/conciergeEngine";
 	import {
@@ -71,7 +70,6 @@
 		Palette,
 	} from "lucide-svelte";
 	import { fade, fly } from "svelte/transition";
-	import Modal from "$lib/components/ui/Modal.svelte";
 	import { dict } from "$lib/stores/conciergeStore.svelte";
 	import { toneStore, type AppTone } from "$lib/stores/toneStore.svelte";
 	import CommandCenter from "$lib/components/ui/CommandCenter.svelte";
@@ -84,7 +82,7 @@
 	import Sidebar from "$lib/components/layout/Sidebar.svelte";
 	import FocusFooter from "$lib/components/layout/FocusFooter.svelte";
 	import MobileBottomNav from "$lib/components/layout/MobileBottomNav.svelte";
-	import { navGroups, pulseSubNav } from "$lib/config/navigation";
+	import { navGroups, pulseSubNav, catalogCategories } from "$lib/config/navigation";
 	import { compassStore } from "$lib/stores/compassStore";
 	import NotificationContainer from "$lib/components/NotificationContainer.svelte";
 	import RoleSwitcher from "$lib/components/RoleSwitcher.svelte";
@@ -102,7 +100,11 @@
 	// `title` from its load, else the generic label.
 	let breadcrumbTitle = $derived.by(() => {
 		const path = $page.url.pathname;
-		const item = [...navGroups.flatMap((g) => g.items), ...pulseSubNav].find(
+		const item = [
+			...navGroups.flatMap((g) => g.items),
+			...pulseSubNav,
+			...catalogCategories.flatMap((c) => c.items),
+		].find(
 			(i) => i.href === path,
 		);
 		if (item) return $language === "en" ? item.label : $dict[item.key] || item.label;
@@ -110,7 +112,6 @@
 		return own || $dict.activeModule;
 	});
 	let isCompassOpen = $state(false);
-	let showSettings = $state(false);
 	let showCommandCenter = $state(false);
 
 	// Derived: Are we in Focus Mode? (Active Block + NOT God Mode)
@@ -153,6 +154,13 @@
 		$page.url.pathname.startsWith("/wizard") ||
 			$page.url.pathname.startsWith("/start"),
 	);
+	// Onboarding and the welcome page are full-screen like the wizard (own logo,
+	// no sidebar); they stay behind sign-in, so isWizardRoute is left alone.
+	let isFullScreenRoute = $derived(
+		isWizardRoute ||
+			$page.url.pathname === "/onboarding" ||
+			$page.url.pathname === "/welcome",
+	);
 	let isMarketingRoute = $derived(
 		$page.url.pathname.startsWith("/marketing") ||
 			$page.url.pathname === "/",
@@ -178,6 +186,18 @@
 
 	// Derived: Is this the Dashboard route? (needs dark background for glassmorphism)
 	let isDashboardRoute = $derived($page.url.pathname === "/dashboard");
+
+	// Pages whose own content is dark: the header sits dark above them too.
+	const darkHeaderPaths = [
+		"/dashboard",
+		"/resources/grief-support",
+		"/modules/analytics",
+		"/modules/treasure-hunt",
+		"/admin/readiness",
+		"/onboarding",
+		"/modules/pulse",
+	];
+	let isDarkHeader = $derived(darkHeaderPaths.includes($page.url.pathname));
 
 	// Sync Data when Auth is ready
 	let lastSyncedToken = $state<string | null>(null);
@@ -337,7 +357,7 @@
 			Verifying your security credentials...
 		</p>
 	</div>
-{:else if isWizardRoute || isMarketingRoute || isAuthRoute}
+{:else if isFullScreenRoute || isMarketingRoute || isAuthRoute}
 	<!-- Wizard/Marketing Mode: Full exclusion of standard layout -->
 	{@render children()}
 {:else}
@@ -348,12 +368,17 @@
 			? 'bg-[#0F1115] text-white'
 			: 'bg-background text-foreground'}"
 	>
+		<a
+			href="#main-content"
+			class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-white focus:text-slate-900 focus:shadow-lg focus:ring-2 focus:ring-primary"
+			>Skip to main content</a
+		>
 		<GlobalSimBanner />
 		<div class="flex flex-1">
 			<!-- Mobile Sidebar Overlay -->
 			{#if isSidebarOpen}
 				<button
-					class="fixed inset-0 z-40 lg:hidden backdrop-blur-sm cursor-default w-full h-full border-0 {isDashboardRoute
+					class="fixed inset-0 z-40 lg:hidden backdrop-blur-sm cursor-default w-full h-full border-0 {isDarkHeader
 						? 'bg-black/80'
 						: 'bg-background/80'}"
 					transition:fade={{ duration: 200 }}
@@ -393,13 +418,13 @@
 			>
 				<!-- Mobile Header -->
 				<header
-					class="lg:hidden sticky top-0 z-30 border-b px-4 py-3 flex items-center justify-between {isDashboardRoute
+					class="lg:hidden sticky top-0 z-30 border-b px-4 py-3 flex items-center justify-between {isDarkHeader
 						? 'bg-[#0F1115] border-white/5'
 						: 'bg-background border-border'}"
 				>
 					<div class="flex items-center gap-3">
 						<button aria-label="Menu"
-							class="p-2 -ml-2 rounded-lg {isDashboardRoute
+							class="p-2 -ml-2 rounded-lg {isDarkHeader
 								? 'text-slate-300 hover:bg-white/10'
 								: 'text-slate-600 hover:bg-slate-100'}"
 							onclick={toggleSidebar}
@@ -407,7 +432,7 @@
 							<Menu class="w-6 h-6" />
 						</button>
 						<span
-							class="font-semibold {isDashboardRoute
+							class="font-semibold {isDarkHeader
 								? 'text-white'
 								: 'text-slate-900'}">Continuum</span
 						>
@@ -415,7 +440,7 @@
 
 					<a aria-label="Settings"
 						href="/settings"
-						class="p-2 rounded-lg {isDashboardRoute
+						class="p-2 rounded-lg {isDarkHeader
 							? 'text-slate-300 hover:bg-white/10'
 							: 'text-slate-600 hover:bg-slate-100'}"
 					>
@@ -426,31 +451,31 @@
 				<!-- Glass Header (Desktop) -->
 				{#if !isFocusMode}
 					<header
-						class="hidden lg:flex sticky top-0 z-40 h-20 px-8 items-center justify-between border-b transition-all {isDashboardRoute
+						class="hidden lg:flex sticky top-0 z-40 h-20 px-8 items-center justify-between border-b transition-all {isDarkHeader
 							? 'bg-[#0F1115] border-white/5'
 							: 'bg-background border-border'}"
 					>
 						<!-- Breadcrumbs / Page Title -->
 						<div
-							class="flex items-center gap-2 text-sm {isDashboardRoute
+							class="flex items-center gap-2 text-sm {isDarkHeader
 								? 'text-slate-400'
 								: 'text-muted-foreground'}"
 						>
 							<span
-								class="uppercase tracking-wider font-semibold text-xs {isDashboardRoute
+								class="uppercase tracking-wider font-semibold text-xs {isDarkHeader
 									? 'text-slate-500'
 									: 'text-slate-500'}"
 								>{$dict.groupOverview || "Estate Overview"}</span
 							>
 							<ChevronRight
 								size={14}
-								class={isDashboardRoute
+								class={isDarkHeader
 									? "text-slate-600"
 									: "text-slate-400"}
 							/>
 							<span
 								data-testid="breadcrumb-title"
-								class="font-serif font-medium text-lg {isDashboardRoute
+								class="font-serif font-medium text-lg {isDarkHeader
 									? 'text-white'
 									: 'text-slate-800'}"
 							>
@@ -468,7 +493,7 @@
 
 							<!-- Color Picker (Top Menu) -->
 							<div
-								class="flex items-center gap-1.5 px-2 py-1 rounded-lg border {isDashboardRoute
+								class="flex items-center gap-1.5 px-2 py-1 rounded-lg border {isDarkHeader
 									? 'bg-white/10 border-white/20'
 									: 'bg-slate-100 border-slate-200'}"
 							>
@@ -490,7 +515,7 @@
 										accessibilityStore.setColor(
 											e.currentTarget.value as any,
 										)}
-									class="bg-transparent text-[10px] font-bold uppercase tracking-tight outline-none cursor-pointer transition-colors border-none p-0 pr-1 focus:ring-0 min-w-0 {isDashboardRoute
+									class="bg-transparent text-[10px] font-bold uppercase tracking-tight outline-none cursor-pointer transition-colors border-none p-0 pr-1 focus:ring-0 min-w-0 {isDarkHeader
 										? 'text-slate-300 hover:text-white'
 										: 'text-slate-600 hover:text-slate-900'}"
 								>
@@ -505,13 +530,13 @@
 
 							<!-- Language Selector (Top Menu) -->
 							<div
-								class="flex items-center gap-1.5 px-2 py-1 rounded-lg border max-w-[100px] {isDashboardRoute
+								class="flex items-center gap-1.5 px-2 py-1 rounded-lg border max-w-[100px] {isDarkHeader
 									? 'bg-white/10 border-white/20'
 									: 'bg-slate-100 border-slate-200'}"
 							>
 								<Globe
 									size={14}
-									class="{isDashboardRoute
+									class="{isDarkHeader
 										? 'text-slate-400'
 										: 'text-slate-400'} shrink-0"
 								/>
@@ -522,7 +547,7 @@
 										language.set(
 											e.currentTarget.value as any,
 										)}
-									class="bg-transparent text-[10px] font-bold uppercase tracking-tight outline-none cursor-pointer transition-colors border-none p-0 pr-1 focus:ring-0 min-w-0 {isDashboardRoute
+									class="bg-transparent text-[10px] font-bold uppercase tracking-tight outline-none cursor-pointer transition-colors border-none p-0 pr-1 focus:ring-0 min-w-0 {isDarkHeader
 										? 'text-slate-300 hover:text-white'
 										: 'text-slate-600 hover:text-slate-900'}"
 								>
@@ -538,7 +563,9 @@
 							<!-- AI Concierge Trigger -->
 							<button
 								onclick={() => conciergeEngine.open()}
-								class="flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg transition-colors border border-primary/20"
+								class="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors border {isDarkHeader
+									? 'bg-white/10 text-white hover:bg-white/20 border-white/30'
+									: 'bg-primary/10 text-primary hover:bg-primary/20 border-primary/20'}"
 								title="Open AI Concierge"
 							>
 								<Sparkles size={18} />
@@ -573,7 +600,7 @@
 					</header>
 				{/if}
 
-				<main class="flex-1 overflow-x-hidden pb-20 lg:pb-6">
+				<main id="main-content" tabindex="-1" class="flex-1 overflow-x-hidden outline-none pb-20 lg:pb-6">
 					<div
 						class="animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-full"
 					>
@@ -593,14 +620,6 @@
 		{/if}
 	</div>
 {/if}
-
-<!-- Settings Modal -->
-<Modal
-	bind:open={showSettings}
-	title="Concierge Settings"
->
-	<ConciergeSettings />
-</Modal>
 
 {#if showCommandCenter}
 	<CommandCenter on:close={() => (showCommandCenter = false)} />
