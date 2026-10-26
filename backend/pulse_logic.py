@@ -133,23 +133,90 @@ def trigger_escalation(session: Session, user_id: int, tier_number: int, referen
     )
     session.add(log_entry)
     
-    # 2. Notify Contacts
+    # 2. Notify Contacts (tier pick is deterministic: lowest id wins if two tiers share a number)
+    tier_id_sq = select(PulseEscalationTier.id).where(
+        PulseEscalationTier.user_id == user_id,
+        PulseEscalationTier.tier_number == tier_number
+    ).order_by(PulseEscalationTier.id).limit(1).scalar_subquery()
     contacts = session.exec(
         select(PulseContact).where(
             PulseContact.user_id == user_id,
-            PulseContact.tier_id == select(PulseEscalationTier.id).where(
-                PulseEscalationTier.user_id == user_id,
-                PulseEscalationTier.tier_number == tier_number
-            )
+            PulseContact.tier_id == tier_id_sq
         )
     ).all()
-    
+
+    # The log row is committed with the sends, so a failing send is not retried every tick.
     for contact in contacts:
-        send_notification(session, contact, tier_number)
-        
+        try:
+            send_notification(session, contact, tier_number)
+        except Exception:
+            logger.error(f"Tier {tier_number} alert to contact {contact.id} failed; not retrying this tier",
+                         exc_info=True)
+
     session.commit()
 
-from backend.services.email_service import email_service
+SAFETY_TIMER_LOG_TIER = 0  # PulseEscalationLog.tier_number marker for safety-timer alerts (no schema change)
+SAFETY_TIMER_MAX_ATTEMPTS = 3
+
+def _timer_marker(timer_id: int, what: str) -> str:
+    return f"[Safety timer {timer_id}] {what}"
+
+def trigger_safety_timer_alert(session: Session, timer) -> bool:
+    """Alert only contacts with notify_on_safety_timer, with a timer-specific message.
+    Each contact gets at most SAFETY_TIMER_MAX_ATTEMPTS tries (recorded as PulseMessage rows).
+    Returns True once every flagged contact is sent or out of attempts (timer can be closed)."""
+    contacts = session.exec(
+        select(PulseContact).where(
+            PulseContact.user_id == timer.user_id,
+            PulseContact.notify_on_safety_timer == True
+        )
+    ).all()
+    sent_msg, fail_msg = _timer_marker(timer.id, "alert sent"), _timer_marker(timer.id, "send failed")
+    done = True
+    for contact in contacts:
+        msgs = session.exec(select(PulseMessage.message).where(
+            PulseMessage.user_id == timer.user_id, PulseMessage.contact_id == contact.id,
+            col(PulseMessage.message).startswith(_timer_marker(timer.id, ""))
+        )).all()
+        if any(m.startswith(sent_msg) for m in msgs):
+            continue
+        fails = sum(1 for m in msgs if m.startswith(fail_msg))
+        if fails >= SAFETY_TIMER_MAX_ATTEMPTS:
+            continue
+        ok, err = False, None
+        try:
+            user = session.get(User, timer.user_id)
+            user_name = user.email.split('@')[0].title() if user else "the user"
+            result = email_service.send_email(EmailPayload(
+                to_email=contact.email,
+                recipient_name=contact.name,
+                subject="Continuum Pulse: A gentle safety check",
+                template_name="pulse_safety_timer",
+                template_context={
+                    "user_name": user_name,
+                    "purpose": timer.purpose or "a safety timer",
+                    "portal_url": f"{settings.get_frontend_url()}/portal/{contact.portal_token}",
+                },
+                user_id=timer.user_id
+            ), db_session=session)
+            ok, err = result.status != "failed", result.error
+        except Exception as e:
+            err = str(e)
+        if ok:
+            session.add(PulseMessage(user_id=timer.user_id, contact_id=contact.id,
+                                     direction="user_to_contact", message=sent_msg))
+        else:
+            session.rollback()
+            session.add(PulseMessage(user_id=timer.user_id, contact_id=contact.id,
+                                     direction="user_to_contact", message=f"{fail_msg} (attempt {fails + 1})"))
+            logger.error(f"Safety timer {timer.id}: alert to contact {contact.id} failed "
+                         f"(attempt {fails + 1}/{SAFETY_TIMER_MAX_ATTEMPTS}): {err}")
+            if fails + 1 < SAFETY_TIMER_MAX_ATTEMPTS:
+                done = False
+        session.commit()
+    return done
+
+from backend.services.email_service import email_service, EmailPayload
 from backend.config import settings
 from backend.database import User
 import os

@@ -3,8 +3,8 @@ from datetime import datetime
 from sqlmodel import Session, select
 from backend.database import engine
 from backend.config import settings
-from backend.pulse_logic import check_and_escalate_all, trigger_escalation
-from backend.pulse_models import PulseSafetyTimer
+from backend.pulse_logic import check_and_escalate_all, trigger_safety_timer_alert, SAFETY_TIMER_LOG_TIER
+from backend.pulse_models import PulseSafetyTimer, PulseEscalationLog
 from backend.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -19,8 +19,9 @@ def pulse_job():
         escalate_expired_safety_timers(session)
 
 def escalate_expired_safety_timers(session: Session):
-    """Hand each expired active safety timer to the escalation logic once.
-    The timer is deactivated in the same commit as the escalation, so a later tick skips it."""
+    """Alert the safety-timer contacts of each expired active timer.
+    The timer stays active (retried next tick) only while a send can still be retried;
+    each contact is capped at 3 attempts, after which the timer is closed and a log row written."""
     expired = session.exec(
         select(PulseSafetyTimer).where(
             PulseSafetyTimer.is_active == True,
@@ -29,13 +30,17 @@ def escalate_expired_safety_timers(session: Session):
     ).all()
     for timer in expired:
         try:
-            timer.is_active = False
-            session.add(timer)
-            logger.warning(f"Safety timer {timer.id} expired for user {timer.user_id}; escalating once")
-            trigger_escalation(session, timer.user_id, 1, str(timer.expires_at))  # commits
+            logger.warning(f"Safety timer {timer.id} expired for user {timer.user_id}; alerting safety-timer contacts")
+            if trigger_safety_timer_alert(session, timer):
+                timer.is_active = False
+                session.add(PulseEscalationLog(user_id=timer.user_id, tier_number=SAFETY_TIMER_LOG_TIER,
+                                               triggered_at=datetime.utcnow()))
+                session.add(timer)
+                session.commit()
+                logger.info(f"Safety timer {timer.id} closed")
         except Exception:
             session.rollback()
-            logger.error(f"Safety timer {timer.id} escalation failed", exc_info=True)
+            logger.error(f"Safety timer {timer.id} alert failed", exc_info=True)
 
 def start_scheduler():
     if not settings.PULSE_SCHEDULER_ENABLED:

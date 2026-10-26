@@ -1,0 +1,19 @@
+{% extends "emails/base.html" %}
+
+{% block content %}
+<div class="greeting">Dear {{ recipient_name }},</div>
+
+<h2>A Gentle Safety Check</h2>
+
+<p>{{ user_name }} started a safety timer ({{ purpose }}) and it has now run out without being stopped.</p>
+
+<p>This may simply mean they forgot to stop it. When you can, a quick call or message to see how they are would be kind. You can also look in on them through the Guardian Portal.</p>
+
+<div class="cta-container">
+    <a href="{{ portal_url }}" class="cta-button">Open Guardian Portal</a>
+</div>
+
+<p style="font-size: 14px; color: #64748b; margin-top: 24px;">
+    Thank you for being part of {{ user_name }}'s trusted circle.
+</p>
+{% endblock %}

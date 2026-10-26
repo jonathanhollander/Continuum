@@ -364,7 +364,12 @@ async def health_check(session: Session = Depends(get_session)):
     # 3. Verify Scheduler
     try:
         from backend.pulse_scheduler import scheduler
-        health["scheduler"] = scheduler.running
+        if not settings.PULSE_SCHEDULER_ENABLED:
+            health["scheduler"] = "disabled"  # deliberately off: healthy
+        else:
+            health["scheduler"] = scheduler.running
+            if not scheduler.running:
+                health["status"] = "unhealthy"
     except Exception as e:
         logger.error(f"Health check failure: Scheduler status unknown: {e}")
         health["status"] = "unhealthy"
