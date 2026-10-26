@@ -288,7 +288,7 @@
                                 (item.href === "/modules/pulse" &&
                                     isInPulseSection &&
                                     item.key === "pulse")}
-                            <Tooltip content={item.tooltip} position="right">
+                            <Tooltip content={item.tooltip ?? ""} position="right">
                                 <a
                                     href={item.href}
                                     class="flex items-center gap-3 px-3 py-2.5 mx-1 rounded-xl transition-all duration-200 group relative overflow-hidden
@@ -378,7 +378,7 @@
                 <div class="space-y-1">
                     {#each filteredPulseNav as item}
                         {@const isActive = $page.url.pathname === item.href}
-                        <Tooltip content={item.tooltip} position="right">
+                        <Tooltip content={item.tooltip ?? ""} position="right">
                             <a
                                 href={item.href}
                                 class="flex items-center gap-3 px-3 py-2 mx-1 rounded-xl transition-all duration-200 group relative overflow-hidden

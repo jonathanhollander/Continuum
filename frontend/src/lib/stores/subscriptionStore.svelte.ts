@@ -2,7 +2,7 @@ import { registerSync } from "$lib/services/sync.svelte";
 import { oneSpelling } from "$lib/utils/oneSpelling";
 
 export interface Subscription {
-    id?: number;
+    id: number;
     user_id?: number;
     name: string;
     cost?: number;

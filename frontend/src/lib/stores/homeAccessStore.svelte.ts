@@ -1,7 +1,7 @@
 import { registerSync } from "$lib/services/sync.svelte";
 
 export interface HomeAccess {
-    id?: number;
+    id: number;
     user_id?: number;
     location: string;
     code_encrypted: string;
