@@ -1,14 +1,45 @@
 <script lang="ts">
+    import { onMount } from "svelte";
     import { Save, Lock } from "lucide-svelte";
+    import { registerProfileSlice } from "$lib/services/sync.svelte";
 
-    let taskWebhook = "";
-    let systemWebhook = "";
-    let isSaved = false;
+    interface WebhookSettings {
+        taskWebhook: string;
+        systemWebhook: string;
+    }
 
-    function save() {
-        // Mock save
-        isSaved = true;
-        setTimeout(() => (isSaved = false), 2000);
+    // Kept on this account's profile record (/api/estate/profile), like the other settings slices.
+    const webhooks = registerProfileSlice<WebhookSettings>("webhook_settings", (data: any) => ({
+        taskWebhook: data?.taskWebhook || "",
+        systemWebhook: data?.systemWebhook || "",
+    }));
+
+    let taskWebhook = $state(webhooks.data?.taskWebhook || "");
+    let systemWebhook = $state(webhooks.data?.systemWebhook || "");
+    let edited = false;
+    let saving = $state(false);
+    let isSaved = $state(false);
+
+    // Take the server's copy once it answers, unless the person has started typing.
+    onMount(() => {
+        webhooks.sync().then(() => {
+            if (edited || !webhooks.data) return;
+            taskWebhook = webhooks.data.taskWebhook;
+            systemWebhook = webhooks.data.systemWebhook;
+        }).catch(() => {});
+    });
+
+    async function save() {
+        saving = true;
+        try {
+            await webhooks.update({ taskWebhook: taskWebhook.trim(), systemWebhook: systemWebhook.trim() });
+            isSaved = true;
+            setTimeout(() => (isSaved = false), 2000);
+        } catch {
+            // The store has already shown its gentle retry message and kept the typed URLs.
+        } finally {
+            saving = false;
+        }
     }
 </script>
 
@@ -30,8 +61,9 @@
             <input
                 type="text"
                 bind:value={taskWebhook}
+                oninput={() => (edited = true)}
                 placeholder="https://api.pipedream.com/..."
-                class="w-full font-mono text-sm px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#4A7C74]/20 focus:outline-none"
+                class="w-full font-mono text-sm text-gray-900 bg-white px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#4A7C74]/20 focus:outline-none"
             />
             <p class="mt-2 text-xs text-gray-500">
                 Triggers when executor tasks are updated
@@ -45,8 +77,9 @@
             <input
                 type="text"
                 bind:value={systemWebhook}
+                oninput={() => (edited = true)}
                 placeholder="https://hooks.slack.com/..."
-                class="w-full font-mono text-sm px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#4A7C74]/20 focus:outline-none"
+                class="w-full font-mono text-sm text-gray-900 bg-white px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#4A7C74]/20 focus:outline-none"
             />
             <p class="mt-2 text-xs text-gray-500">
                 Global firehose for all estate changes
@@ -54,8 +87,9 @@
         </label>
 
         <button
-            on:click={save}
-            class="flex items-center gap-2 px-6 py-2 bg-[#304743] text-white rounded-lg font-bold hover:bg-[#2A3F3B] transition-colors"
+            onclick={save}
+            disabled={saving}
+            class="flex items-center gap-2 px-6 py-2 bg-[#304743] text-white rounded-lg font-bold hover:bg-[#2A3F3B] transition-colors disabled:opacity-60"
         >
             <Save size={18} />
             {isSaved ? "Saved!" : "Save Config"}
