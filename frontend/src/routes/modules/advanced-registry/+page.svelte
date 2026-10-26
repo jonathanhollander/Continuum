@@ -833,7 +833,7 @@
                                         onclick={() =>
                                             digitalAssetsStore.toggleClosure(
                                                 acc.id,
-                                            )}
+                                            ).catch(() => {})}
                                         class="flex items-center gap-2 group"
                                     >
                                         <div
