@@ -162,7 +162,7 @@
 
 <div class="space-y-2">
     {#if label}
-        <label for="{uid}-file" class="block text-xs font-bold uppercase text-gray-500 mb-1"
+        <label id="{uid}-label" for="{uid}-file" class="block text-xs font-bold uppercase text-gray-500 mb-1"
             >{label}</label
         >
     {/if}
@@ -213,6 +213,7 @@
             onkeydown={(e) => e.key === "Enter" && fileInput?.click()}
             role="button"
             tabindex="0"
+            aria-describedby={label ? `${uid}-label` : undefined}
         >
             <input
                 id="{uid}-file"

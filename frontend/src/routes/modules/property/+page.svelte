@@ -1204,6 +1204,7 @@
                                 {#each ["Owned", "Mortgaged", "Leased"] as status}
                                     <button
                                         type="button"
+                                        aria-pressed={newItem.status === status}
                                         onclick={() =>
                                             (newItem.status = status as any)}
                                         class="flex-1 py-2.5 text-xs font-semibold rounded-lg transition-all {newItem.status ===

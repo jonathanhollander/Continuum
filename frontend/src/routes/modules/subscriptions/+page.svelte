@@ -727,6 +727,7 @@
                         >
                             {#each ["Easy", "Medium", "Hard"] as diff}
                                 <button
+                                    aria-pressed={newSub.difficulty === diff}
                                     class="px-4 py-2 rounded-lg border text-sm font-bold transition-all {newSub.difficulty ===
                                     diff
                                         ? 'bg-primary text-primary-foreground border-primary'
