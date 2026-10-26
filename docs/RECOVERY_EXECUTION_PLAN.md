@@ -1003,7 +1003,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | G2 | ▶ | | |
 | G3 | ▶ | | |
 | G4 | ☑ | 69c4ebb | Snapshot adds calendar events and photo archives; `_media` files attached; packet sections Important dates and Photo archives; one milestone label map; one executor test (flag, role, profile name) for packet and /for; no dead anchors; owner named in wishes step; preview sign-in keeps redirect. Proof 16 FAIL → 20/20 PASS. Caller notes HOLD |
-| G5 | ▶ | | |
+| G5 | ☑ | 168812e, 14265ff | Letters: ethical-will answers in place; Gentle Helper calls the real AI chat with the warmth value, suggestion kept until chosen (AI calls 0 → 1); Print and PDF (0 → 1); owner name signs drafts; template draft editable with recipient picker; shared `milestoneLabel`; T0a wording; letter kind no longer leaks between templates |
 | G6 | ☑ | 3b6007d | Heirloom QR labels → `/modules/heirlooms?id=N` (was property), page opens that story; pack codes → dashboard/executor (was `/access`); wizard saves 0 invented records; photos uploaded via media API (POST 342 B → 142 B); provenance shown; contact picker for recipient; T0a wording |
 | X222 | ▶ | | |
 | G7 | ▶ | | |
@@ -1013,7 +1013,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | G11 | ☑ | 12547e8 | Insurance/property wizards save blank instead of placeholders; insurance cards and table show agent, contact, expiry, notes, document; filter/search with no match shows "Show all" instead of first-run; property hides empty ownership, $0, status; T0b wording; null-safe search |
 | X217 | ▶ | | |
 | G12 | ☑ | 06dd6c9 | Subscriptions: closed state out of totals ($70 → $20); pets microchip, notes, custom fields, blank guardian; home-manual vendor email/website/notes; letter omits blank address; T0b wording; utility provider saved blank; saves catch failure |
-| G13 | ▶ | | |
+| G13 | ☑ | 929a078 | Digital Guardian: example row opens a filled form (no instant save), wishes/instructions/priority editable, wizard saves no invented names, remove asks first; Advanced Registry: Account Wishes empty state, maintenance provider/due/remove, asset select for transactions, claim amount/status/policy; saves wait for the store; T0b/T0d wording |
 | G14 | ☑ | 81da0b2 | Contacts: Designated Executor checkbox (create sent `false` always), Start page badge; medical proxy picks from contacts and fills phone; family-hub remove copy truthful; T0c wording on all four files. Start-page badges 0 → 1; executor control 0 → 1 (server `is_executor` true, hub ring shows); negative strings 3 → 0; proxy list null → 2 names |
 | G15 | ▶ | | |
 | G16 | ☑ | da47755 | Signed-out visitor on `/start` → `/signup?email=` with the email filled in (both cards); landing CTA encodes the email; T0e wording on start, signup, login, verify, welcome. Expert card `/login` → `/signup` prefilled; guided card `/start` → `/signup` prefilled. Encryption claims HOLD |
