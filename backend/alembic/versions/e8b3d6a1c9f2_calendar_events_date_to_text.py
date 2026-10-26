@@ -1,7 +1,7 @@
 """calendar_events.date becomes text on PostgreSQL
 
 Revision ID: e8b3d6a1c9f2
-Revises: d5f1b9c3a7e2
+Revises: e8b2c4d6f0a1
 Create Date: 2026-10-26
 
 Card X13. Production has calendar_events.date as `timestamp without time zone`,
@@ -17,7 +17,7 @@ import sqlalchemy as sa
 
 
 revision: str = 'e8b3d6a1c9f2'
-down_revision: Union[str, Sequence[str], None] = 'd5f1b9c3a7e2'
+down_revision: Union[str, Sequence[str], None] = 'e8b2c4d6f0a1'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

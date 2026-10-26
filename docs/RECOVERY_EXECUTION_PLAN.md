@@ -345,7 +345,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X16 | ☑ | 10b25d0 | Fresh DB: GET prefs 200 `{}`, PATCH 200, GET returns the saved value (also fixed: PATCH mutated the JSON in place so it never saved). Production column is `json`, model `JSON`: same type; not run on the simulated schema |
 | X17 | ☑ | 5b8e66c | Before: 2 CSP errors, 0 font faces; after: no console errors, Inter and EB Garamond loaded; 1440×900 diff 3.02% of pixels, text only (headings now EB Garamond, body Inter) |
 | X18 | ▶ | | |
-| X13 | ▶ | | |
+| X13 | ☑ | 339d96f | Fresh DB: full date and recurring MM-DD events create, edit, re-fetch. PostgreSQL-only `ALTER ... TYPE VARCHAR USING to_char` not run locally. Also fixed: the page sent `isRecurring`/`wish`/`emailTemplate` the model lacks (silently dropped), and upcoming-events sorting. Migration re-parented onto B2 at merge (single head) |
 | X11 | ☑ | 1007f48 | `/api-guide` 200 html; `/api`, `/api/nope` 404 JSON; `/modules/x` 200; traversal no leak |
 | X5 | ☐ | | |
 | X6 | ☐ (owner) | | |
