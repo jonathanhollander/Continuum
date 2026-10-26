@@ -15,13 +15,25 @@
         CircleCheck,
         User,
         Loader2,
+        Download,
     } from "lucide-svelte";
     import Modal from "$lib/components/ui/Modal.svelte";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import {
         medicalStore,
+        directiveMedia,
+        DIRECTIVE_MEDIA_KEY,
+        type DirectiveMedia,
         type MedicalDirective,
     } from "$lib/stores/medicalStore.svelte";
+    import UniversalUploader from "$lib/components/ui/UniversalUploader.svelte";
+    import { cachedBlobUrl } from "$lib/components/ui/MediaView.svelte";
+    import {
+        deleteMedia,
+        downloadMedia,
+        getMedia,
+        updateMediaMetadata,
+    } from "$lib/services/mediaService";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
@@ -37,6 +49,10 @@
 
     let showAddForm = $state(false);
     let parsedCustomAttributes = $state<Record<string, any>>({});
+    /** The file attached in the form, and the one the directive held when the form opened. */
+    let formMedia = $state<DirectiveMedia | null>(null);
+    let savedMedia: DirectiveMedia | null = null;
+    let formMediaUrl = $derived(formMedia ? `/api/media/${formMedia.id}/download` : "");
     let editMode = $state(false);
     let isLoading = $state(true);
     let viewMode = $state<ViewMode>('card');
@@ -89,9 +105,17 @@
     async function saveDirective() {
         if (!newDirective.title) return;
 
+        const { [DIRECTIVE_MEDIA_KEY]: _ignored, ...customValues } = parsedCustomAttributes;
+        const attached = formMedia;
+        const replaced = savedMedia && savedMedia.id !== attached?.id ? savedMedia : null;
+        const customJson = JSON.stringify(
+            attached ? { ...customValues, [DIRECTIVE_MEDIA_KEY]: attached } : customValues,
+        );
         const directiveData = {
             ...newDirective,
-            custom_attributes: JSON.stringify(parsedCustomAttributes),
+            // Both spellings: the record holds the server's camel-cased copy too.
+            custom_attributes: customJson,
+            customAttributes: customJson,
         };
 
         try {
@@ -110,6 +134,9 @@
                 directiveData as Omit<MedicalDirective, "id">,
                 saveDirective,
             );
+            if (attached) {
+                updateMediaMetadata(attached.id, undefined, String(created.id)).catch(() => undefined);
+            }
             activityLog.logEvent({
                 module: "Health & Medical",
                 action: "CREATE",
@@ -120,6 +147,11 @@
             });
         }
 
+        // The directive now holds the new file; the one it replaced goes.
+        if (replaced) {
+            deleteMedia(replaced.id).catch((e) => console.warn("[medical] file removal paused", replaced.id, e));
+        }
+        savedMedia = attached;
         resetForm();
         } catch {
             // The manager already showed the one gentle message; the form stays open with the draft.
@@ -128,11 +160,38 @@
 
     function editDirective(dir: MedicalDirective) {
         newDirective = { ...dir };
-        parsedCustomAttributes = readCustom(dir);
+        const { [DIRECTIVE_MEDIA_KEY]: _media, ...customValues } = readCustom(dir);
+        parsedCustomAttributes = customValues;
+        formMedia = savedMedia = directiveMedia(dir) ?? null;
         showAddForm = true;
     }
 
+    /** A file attached in this form but never saved on the directive. */
+    function dropUnsavedFile() {
+        if (formMedia && formMedia.id !== savedMedia?.id) {
+            const id = formMedia.id;
+            deleteMedia(id).catch((e) => console.warn("[medical] file removal paused", id, e));
+        }
+    }
+
+    async function onFileChange(_url: string, id?: number) {
+        dropUnsavedFile();
+        if (id === undefined) {
+            formMedia = null;
+            return;
+        }
+        try {
+            const m = await getMedia(id);
+            formMedia = { id: m.id, mime_type: m.mime_type, filename: m.filename, file_size: m.file_size };
+        } catch {
+            formMedia = { id, mime_type: "", filename: "", file_size: 0 };
+        }
+    }
+
     function resetForm() {
+        dropUnsavedFile();
+        formMedia = null;
+        savedMedia = null;
         showAddForm = false;
         newDirective = {
             type: "healthcare_proxy",
@@ -397,6 +456,17 @@
                                 <p class="text-sm text-gray-500 mt-1">
                                     {dir.summary}
                                 </p>
+                                {#if directiveMedia(dir)}
+                                    {@const media = directiveMedia(dir)!}
+                                    <button
+                                        type="button"
+                                        onclick={() => downloadMedia(media.id, media.filename || undefined, cachedBlobUrl(media.id)).catch((e) => console.warn("[medical] file save paused", media.id, e))}
+                                        class="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+                                    >
+                                        <Download size={14} />
+                                        {media.filename}
+                                    </button>
+                                {/if}
                             </div>
                         </div>
 
@@ -590,6 +660,14 @@
                 class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
             />
         </div>
+
+        <UniversalUploader
+            module="medical_directives"
+            referenceId={newDirective.id ? String(newDirective.id) : undefined}
+            value={formMediaUrl}
+            mediaId={formMedia?.id ?? null}
+            onchange={onFileChange}
+        />
 
         <!-- Custom Fields -->
         <div class="pt-4 mt-4 border-t border-slate-100">
