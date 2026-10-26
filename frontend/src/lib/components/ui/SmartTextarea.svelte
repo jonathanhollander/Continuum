@@ -14,6 +14,9 @@
         CONTEXT_SUGGESTIONS,
     } from "$lib/services/writerService";
     import { AI_UNAVAILABLE } from "$lib/services/aiConciergeService";
+    import { auth } from "$lib/stores/auth";
+    import { captureSession, isCurrentSession, type SessionOwnership } from "$lib/services/sessionOwnership";
+    import { onDestroy } from "svelte";
     import { fade, slide } from "svelte/transition";
 
     let {
@@ -58,6 +61,27 @@
     // Inputs
     let bullets = $state(["", "", ""]);
     let sentimentValue = $state(50);
+    let owner = captureSession();
+    let requestVersion = 0;
+    let suggestionOwner: SessionOwnership | null = null;
+    let suggestionSource: string | null = null;
+
+    const sourceFingerprint = () => JSON.stringify([context, mode, value, bullets]);
+    function discardSuggestion() {
+        suggestionOwner = null;
+        suggestionSource = null;
+        suggestion = null;
+    }
+    $effect(() => {
+        // An auth transition also invalidates a preview already waiting for acceptance.
+        $auth;
+        if (!isCurrentSession(owner)) {
+            owner = captureSession();
+            closeDrawer();
+        }
+        if (suggestion && suggestionSource !== sourceFingerprint()) discardSuggestion();
+    });
+    onDestroy(() => { requestVersion++; });
 
     const activeSuggestions = $derived(
         (suggestions && suggestions.length > 0
@@ -70,31 +94,41 @@
         if (mode === "draft" && bullets.every((b) => !b.trim())) return;
         if (mode === "polish" && !value?.trim()) return;
 
+        const startedBy = captureSession();
+        if (!isCurrentSession(startedBy)) return;
+        const version = ++requestVersion;
+        const source = sourceFingerprint();
         isProcessing = true;
         notice = "";
-        suggestion = null;
+        discardSuggestion();
         try {
             const result =
                 mode === "draft"
                     ? await aiDraftText(bullets, context)
                     : await aiSoftenText(value, sentimentValue, context);
-            if (result) suggestion = result;
+            if (version !== requestVersion || !isCurrentSession(startedBy) || source !== sourceFingerprint()) return;
+            if (result) {
+                suggestionOwner = startedBy;
+                suggestionSource = source;
+                suggestion = result;
+            }
             else notice = AI_UNAVAILABLE;
         } catch (e) {
+            if (version !== requestVersion || !isCurrentSession(startedBy) || source !== sourceFingerprint()) return;
             console.error(e);
             notice = (e as any)?.gentle && e instanceof Error && e.message ? e.message : AI_UNAVAILABLE;
         } finally {
-            isProcessing = false;
+            if (version === requestVersion && isCurrentSession(startedBy)) isProcessing = false;
         }
     }
 
     function acceptSuggestion() {
-        if (suggestion) {
+        if (suggestion && suggestionOwner && isCurrentSession(suggestionOwner) && suggestionSource === sourceFingerprint()) {
             value = suggestion;
             oninput?.(value);
             onchange?.(value);
             closeDrawer();
-        }
+        } else discardSuggestion();
     }
 
     // A starter becomes the opening words of the field; the cursor lands after it.
@@ -113,8 +147,10 @@
     }
 
     function closeDrawer() {
+        requestVersion++;
+        isProcessing = false;
         isDrawerOpen = false;
-        suggestion = null;
+        discardSuggestion();
         notice = "";
         bullets = ["", "", ""];
         sentimentValue = 50;
@@ -165,7 +201,7 @@
         <button
             type="button"
             aria-label="Writing help"
-            onclick={() => (isDrawerOpen = !isDrawerOpen)}
+            onclick={() => isDrawerOpen ? closeDrawer() : (isDrawerOpen = true)}
             class="absolute top-3 right-3 z-20 p-2 bg-card/80 backdrop-blur shadow-sm border border-border rounded-xl text-primary hover:scale-110 active:scale-95 transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 {isDrawerOpen
                 ? '!opacity-100 bg-primary !text-primary-foreground'
                 : ''}"
@@ -198,7 +234,7 @@
                         <div class="flex items-center gap-2">
                             <button
                                 type="button"
-                                onclick={() => (suggestion = null)}
+                                onclick={discardSuggestion}
                                 class="flex-1 py-2 px-2 whitespace-nowrap bg-card border border-border rounded-lg text-muted-foreground font-bold text-xs hover:bg-muted flex items-center justify-center gap-2"
                             >
                                 <X size={14} /> Keep my words

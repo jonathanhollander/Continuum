@@ -11,7 +11,7 @@
  * download copy always show the same records, names, values and text. A recipient view
  * (card D2) can pass its own snapshot and file fetcher.
  */
-import jsPDF from 'jspdf';
+import { createUnicodePDF, PDF_FONT, splitPDFText, writePDFLine } from '$lib/services/unicodePDF';
 import { get } from 'svelte/store';
 import { API_BASE_URL } from '$lib/config';
 import { auth } from '$lib/stores/auth';
@@ -705,11 +705,6 @@ export function packetHTML(packet: Packet, urlFor: (a: SnapshotAttachment) => st
 // PDF packet
 // ---------------------------------------------------------------------------
 
-/** jsPDF's built-in fonts cover Latin-1; map common typography to it so words stay readable. */
-const latin1 = (s: string) =>
-    s.replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/[–—]/g, '-')
-        .replace(/…/g, '...').replace(/·/g, '-').replace(/[^\x00-\xFF\n]/g, '?');
-
 const blobToDataUrl = (b: Blob) =>
     new Promise<string>((resolve, reject) => {
         const r = new FileReader();
@@ -718,8 +713,8 @@ const blobToDataUrl = (b: Blob) =>
         r.readAsDataURL(b);
     });
 
-export function packetPDF(packet: Packet, images: Map<string, string> = new Map()): Blob {
-    const doc = new jsPDF({ unit: 'pt', format: 'letter' });
+export async function packetPDF(packet: Packet, images: Map<string, string> = new Map()): Promise<Blob> {
+    const doc = await createUnicodePDF();
     const W = doc.internal.pageSize.getWidth();
     const H = doc.internal.pageSize.getHeight();
     const M = 54;
@@ -728,14 +723,15 @@ export function packetPDF(packet: Packet, images: Map<string, string> = new Map(
         if (y + h > H - M) { doc.addPage(); y = M; }
     };
     const write = (s: string, size: number, opts: { bold?: boolean; color?: number; indent?: number; gap?: number } = {}) => {
-        doc.setFont('helvetica', opts.bold ? 'bold' : 'normal');
+        doc.setFont(PDF_FONT, opts.bold ? 'bold' : 'normal');
         doc.setFontSize(size);
         doc.setTextColor(opts.color ?? 28);
-        const lines: string[] = doc.splitTextToSize(latin1(s), W - 2 * M - (opts.indent ?? 0));
+        const width = W - 2 * M - (opts.indent ?? 0);
+        const lines = splitPDFText(doc, s, width);
         const lh = size * 1.35;
         for (const line of lines) {
             need(lh);
-            doc.text(line, M + (opts.indent ?? 0), y + size);
+            writePDFLine(doc, line, M + (opts.indent ?? 0), y + size, width);
             y += lh;
         }
         y += opts.gap ?? 0;
@@ -960,7 +956,7 @@ export async function buildDownloadCopy(
     const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${packet.ownerName ? `The estate of ${esc(packet.ownerName)}` : 'Continuum'}</title></head><body style="margin:0;background:#fff">${packetHTML(packet, (a) => (blobs.has(a.key) ? attachmentPath(a) : null))}</body></html>`;
     entries.unshift({ path: 'packet.html', data: enc.encode(html) });
     const images = await imageDataUrls(blobs, included);
-    entries.splice(1, 0, { path: 'packet.pdf', data: new Uint8Array(await packetPDF(packet, images).arrayBuffer()) });
+    entries.splice(1, 0, { path: 'packet.pdf', data: new Uint8Array(await (await packetPDF(packet, images)).arrayBuffer()) });
 
     // The records as recorded; files kept inside a record point at their copy in files/.
     const records: Record<string, any[]> = {};
