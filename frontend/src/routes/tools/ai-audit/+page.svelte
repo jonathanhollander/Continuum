@@ -73,7 +73,7 @@
             .map(([id]) => ({
                 id: `pass-${id}`,
                 severity: "pass" as const,
-                category: areaLabel[id] ?? id,
+                category: "", // the area is named once, as the title
                 title: areaLabel[id] ?? id,
                 desc: "Well covered.",
             }));
@@ -196,12 +196,14 @@
                         </div>
 
                         <div class="flex-1">
-                            <div class="flex items-center gap-2 mb-1">
-                                <span
-                                    class="text-xs font-bold text-gray-400 uppercase"
-                                    >{finding.category}</span
-                                >
-                            </div>
+                            {#if finding.category}
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span
+                                        class="text-xs font-bold text-gray-400 uppercase"
+                                        >{finding.category}</span
+                                    >
+                                </div>
+                            {/if}
                             <h4 class="font-bold text-lg text-gray-800">
                                 {finding.title}
                             </h4>
