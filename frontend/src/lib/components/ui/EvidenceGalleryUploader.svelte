@@ -27,6 +27,7 @@
 
     // Object URLs from the shared authorised cache, by media id.
     let urls: Record<number, string> = $state({});
+    let fileStates = $state<Record<number, "loading" | "ready" | "error">>({});
     $effect(() => {
         const list = evidence;
         untrack(() => loadUrls(list));
@@ -34,15 +35,19 @@
 
     function loadUrls(list: EvidenceItem[]) {
         for (const e of list) {
-            if (e.id in urls) continue;
-            urls[e.id] = "";
-            blobUrlFor(e.id).then(
-                (u) => (urls = { ...urls, [e.id]: u }),
-                (err) => {
-                    delete urls[e.id];
-                    console.warn("[evidence] file open paused", e.id, err);
-                },
-            );
+            if (!fileStates[e.id]) void openFile(e.id);
+        }
+    }
+
+    async function openFile(id: number) {
+        if (fileStates[id] === "loading") return;
+        fileStates[id] = "loading";
+        try {
+            urls[id] = await blobUrlFor(id);
+            fileStates[id] = "ready";
+        } catch (err) {
+            fileStates[id] = "error";
+            console.warn("[evidence] file open paused", id, err);
         }
     }
 
@@ -173,12 +178,38 @@
 
     <!-- Gallery Display -->
     {#if evidence.length > 0}
-        <MediaGallery
-            items={galleryItems}
-            allowDelete={true}
-            allowFavorites={false}
-            ondelete={handleDelete}
-            onsetcover={handleSetCover}
-        />
+        <div class="space-y-3">
+            {#each evidence as item (item.id)}
+                {#if !urls[item.id]}
+                    <div class="rounded-xl border border-border bg-muted p-4 flex flex-wrap items-center justify-between gap-3" data-media-id={item.id}>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-sm font-medium text-foreground break-words">{item.filename}</p>
+                            {#if fileStates[item.id] === "error"}
+                                <p class="text-xs text-muted-foreground mt-1">You can try opening this file again.</p>
+                            {:else}
+                                <p class="text-xs text-muted-foreground mt-1" role="status">Opening your file…</p>
+                            {/if}
+                        </div>
+                        {#if fileStates[item.id] === "error"}
+                            <button
+                                type="button"
+                                class="rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground hover:bg-primary-hover"
+                                aria-label={`Try again: ${item.filename}`}
+                                onclick={() => void openFile(item.id)}
+                            >Try again</button>
+                        {/if}
+                    </div>
+                {/if}
+            {/each}
+        </div>
+        {#if galleryItems.length > 0}
+            <MediaGallery
+                items={galleryItems}
+                allowDelete={true}
+                allowFavorites={false}
+                ondelete={handleDelete}
+                onsetcover={handleSetCover}
+            />
+        {/if}
     {/if}
 </div>

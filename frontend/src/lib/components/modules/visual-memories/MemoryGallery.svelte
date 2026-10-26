@@ -13,8 +13,9 @@
         Pencil,
     } from "lucide-svelte";
     import { fade, fly } from "svelte/transition";
-    import { onDestroy } from "svelte";
-    import { mediaIdFromRef, getMediaBlobUrl } from "$lib/services/mediaService";
+    import { untrack } from "svelte";
+    import { mediaIdFromRef } from "$lib/services/mediaService";
+    import { blobUrlFor } from "$lib/components/ui/MediaView.svelte";
 
     let {
         memories = [],
@@ -35,25 +36,28 @@
     }>();
 
     // Stored files (url = "/api/media/12/download") need the auth header, so they are
-    // fetched once and shown from object URLs. data: URLs from older records show as-is.
+    // shown from the shared cache. That cache owns/revokes its URLs and evicts failed reads.
+    // data: URLs from older records show as-is.
     let blobUrls = $state<Record<string, string>>({});
-    const requested = new Set<string>();
+    let fileStates = $state<Record<string, "loading" | "ready" | "error">>({});
+
+    async function openFile(ref: string, retry = false) {
+        const id = mediaIdFromRef(ref);
+        if (id === null || fileStates[ref] === "loading" || (!retry && fileStates[ref])) return;
+        fileStates[ref] = "loading";
+        try {
+            blobUrls[ref] = await blobUrlFor(id);
+            fileStates[ref] = "ready";
+        } catch (e) {
+            fileStates[ref] = "error";
+            console.warn("[visual-memories] file open paused", e);
+        }
+    }
 
     $effect(() => {
-        for (const m of memories) {
-            const ref = m?.url;
-            if (!ref || requested.has(ref) || mediaIdFromRef(ref) === null) continue;
-            requested.add(ref);
-            getMediaBlobUrl(ref)
-                .then((u) => (blobUrls = { ...blobUrls, [ref]: u }))
-                .catch((e) => {
-                    requested.delete(ref);
-                    console.warn("[visual-memories] file open failed", e);
-                });
-        }
+        const list = memories;
+        untrack(() => list.forEach((m: VisualMemory) => { if (m?.url) void openFile(m.url); }));
     });
-
-    onDestroy(() => Object.values(blobUrls).forEach((u) => URL.revokeObjectURL(u)));
 
     function srcOf(m: VisualMemory): string | undefined {
         if (!m?.url) return undefined;
@@ -152,6 +156,25 @@
     }
 </script>
 
+{#snippet fileNotice(memory: VisualMemory)}
+    <div class="flex h-full w-full items-center justify-center bg-muted px-4 py-12 text-center text-foreground">
+        <div class="max-w-xs space-y-2">
+            <p class="font-medium text-sm break-words">{memory.name}</p>
+            {#if fileStates[memory.url] === "error"}
+                <p class="text-xs text-muted-foreground">You can try opening this file again.</p>
+                <button
+                    type="button"
+                    class="rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground hover:bg-primary-hover"
+                    aria-label={`Try again: ${memory.name}`}
+                    onclick={(e) => { e.stopPropagation(); void openFile(memory.url, true); }}
+                >Try again</button>
+            {:else}
+                <p class="text-xs text-muted-foreground" role="status">Opening your file…</p>
+            {/if}
+        </div>
+    </div>
+{/snippet}
+
 <div class="flex flex-col h-full">
     <!-- View Controls -->
     <div class="flex justify-end mb-6">
@@ -200,13 +223,15 @@
                         : ''}"
                     onclick={() => handleCardClick(memory)}
                     onkeydown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
+                        if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
                             e.preventDefault();
                             handleCardClick(memory);
                         }
                     }}
                 >
-                    {#if memory.type === "video"}
+                    {#if mediaIdFromRef(memory.url) !== null && !srcOf(memory)}
+                        {@render fileNotice(memory)}
+                    {:else if memory.type === "video"}
                         <video
                             src={srcOf(memory)}
                             muted
@@ -259,6 +284,7 @@
 
                     <!-- Overlay (Only when not in selection mode or on hover) -->
                     {#if !isSelectionMode}
+                        {#if srcOf(memory)}
                         <div
                             class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent {memory.type === 'video'
                                 ? 'opacity-100'
@@ -278,6 +304,7 @@
                                 {/each}
                             </div>
                         </div>
+                        {/if}
 
                         <!-- Actions -->
                         <div
@@ -319,7 +346,11 @@
         >
             <!-- Main Image -->
             {#key activeIndex}
-                {#if memories[activeIndex].type === "video"}
+                {#if mediaIdFromRef(memories[activeIndex].url) !== null && !srcOf(memories[activeIndex])}
+                    <div class="absolute inset-0 pb-64">
+                        {@render fileNotice(memories[activeIndex])}
+                    </div>
+                {:else if memories[activeIndex].type === "video"}
                     <!-- svelte-ignore a11y_media_has_caption -->
                     <video
                         src={srcOf(memories[activeIndex])}
@@ -464,7 +495,9 @@
                             aria-label={mem.name}
                             aria-current={i === activeIndex}
                         >
-                            {#if mem.type === "video"}
+                            {#if mediaIdFromRef(mem.url) !== null && !srcOf(mem)}
+                                <span class="block p-1 text-[10px] text-white">{mem.name}</span>
+                            {:else if mem.type === "video"}
                                 <video src={srcOf(mem)} muted preload="metadata" onloadedmetadata={showFirstFrame} class="w-full h-full object-cover"></video>
                             {:else}
                                 <img
