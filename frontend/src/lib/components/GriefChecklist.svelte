@@ -143,7 +143,7 @@
             <LucideAlertCircle class="w-6 h-6 text-amber-400 shrink-0 mt-1" />
             <p class="text-sm text-amber-200/70 leading-relaxed italic">
                 "The first 24 hours can feel like a blur. Try to focus only on
-                these few things. Everything else can wait."
+                these few things. They are enough for now."
             </p>
         </div>
     {/if}

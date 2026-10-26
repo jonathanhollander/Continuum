@@ -198,10 +198,10 @@
 </script>
 
 <div
-    class="bg-card rounded-2xl border border-border shadow-xl overflow-hidden min-h-[600px] flex flex-col"
+    class="bg-card rounded-2xl border border-border shadow-xl min-h-[600px] flex flex-col"
 >
     <!-- Progress Header -->
-    <div class="bg-muted border-b border-border p-6">
+    <div class="bg-muted border-b border-border p-6 rounded-t-2xl">
         <div class="flex justify-between max-w-3xl mx-auto relative">
             <!-- Progress Line -->
             <div
@@ -250,7 +250,7 @@
     </div>
 
     <!-- Step Content -->
-    <div class="flex-1 p-8 md:p-12 overflow-y-auto">
+    <div class="flex-1 p-8 md:p-12">
         <div class="max-w-3xl mx-auto space-y-8">
             {#if currentStep === 1}
                 <div in:fade class="space-y-8">
@@ -693,7 +693,7 @@
 
     <!-- Footer Controls -->
     <div
-        class="p-6 bg-card border-t border-border flex justify-between items-center"
+        class="p-6 bg-card border-t border-border rounded-b-2xl flex justify-between items-center"
     >
         <button
             on:click={prevStep}

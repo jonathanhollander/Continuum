@@ -36,12 +36,12 @@ export const marketing2Dictionary = {
         weightBridge: "Continuum makes sure they're not alone when that day comes.",
 
         // Section 3: The Guide
-        guideTitle: "You don't have to know where to start.",
+        guideTitle: "Your guide shows you where to begin.",
         guideDesc: "Continuum's guide walks beside you—suggesting what might matter, translating the confusing parts, helping you find words for things you've never had to say.",
         guideReassurance: "Begin anywhere, in any order. Gentle guidance, at your pace.",
 
         // Section 4: The Pulse
-        pulseTitle: "You don't have to have the difficult conversation.",
+        pulseTitle: "Your Pulse carries the difficult conversation for you.",
         pulseDesc: "Set up your Pulse. Check in every few days—a simple \"I'm here.\" And if one day you're not there to check in, Continuum notices.",
         pulseHow: "It reaches out to the people you chose. Opens the right doors, at the right time. Your executor won't face a mystery. They'll receive clarity.",
         pulseTiers: "Different people see different things, in the order you choose. A trusted friend gets a gentle alert first. Later tiers receive more access. You decide who gets what.",
@@ -172,12 +172,12 @@ export const marketing2Dictionary = {
         weightBridge: "Continuum se asegura de que no estén solos cuando llegue ese día.",
 
         // Section 3: The Guide
-        guideTitle: "No tienes que saber por dónde empezar.",
+        guideTitle: "Tu guía te muestra por dónde empezar.",
         guideDesc: "La guía de Continuum camina a tu lado—sugiriendo lo que podría importar, traduciendo las partes confusas, ayudándote a encontrar palabras para cosas que nunca has tenido que decir.",
         guideReassurance: "Empieza por donde quieras, en el orden que quieras. Orientación gentil, a tu ritmo.",
 
         // Section 4: The Pulse
-        pulseTitle: "No tienes que tener la conversación difícil.",
+        pulseTitle: "Tu Pulso lleva la conversación difícil por ti.",
         pulseDesc: "Configura tu Pulso. Confirma cada pocos días—un simple \"Estoy aquí.\" Y si un día no estás para confirmar, Continuum lo nota.",
         pulseHow: "Se comunica con las personas que elegiste. Abre las puertas correctas, en el momento correcto. Tu albacea no enfrentará un misterio. Recibirá claridad.",
         pulseTiers: "Diferentes personas ven diferentes cosas, en el orden que tú elijas. Un amigo de confianza recibe una alerta suave primero. Los niveles posteriores reciben más acceso. Tú decides quién recibe qué.",
@@ -308,12 +308,12 @@ export const marketing2Dictionary = {
         weightBridge: "Continuum s'assure qu'ils ne seront pas seuls quand ce jour viendra.",
 
         // Section 3: The Guide
-        guideTitle: "Vous n'avez pas besoin de savoir par où commencer.",
+        guideTitle: "Votre guide vous montre par où commencer.",
         guideDesc: "Le guide de Continuum marche à vos côtés—suggérant ce qui pourrait compter, traduisant les parties confuses, vous aidant à trouver les mots pour des choses que vous n'avez jamais eu à dire.",
         guideReassurance: "Commencez où vous voulez, dans l'ordre qui vous convient. Des conseils bienveillants, à votre rythme.",
 
         // Section 4: The Pulse
-        pulseTitle: "Vous n'avez pas besoin d'avoir la conversation difficile.",
+        pulseTitle: "Votre Pulse porte la conversation difficile pour vous.",
         pulseDesc: "Configurez votre Pulse. Confirmez tous les quelques jours—un simple « Je suis là ». Et si un jour vous n'êtes pas là pour confirmer, Continuum le remarque.",
         pulseHow: "Il contacte les personnes que vous avez choisies. Ouvre les bonnes portes, au bon moment. Votre exécuteur ne fera pas face à un mystère. Il recevra de la clarté.",
         pulseTiers: "Différentes personnes voient différentes choses, dans l'ordre que vous choisissez. Un ami de confiance reçoit d'abord une alerte douce. Les niveaux suivants reçoivent plus d'accès. Vous décidez qui reçoit quoi.",
@@ -444,12 +444,12 @@ export const marketing2Dictionary = {
         weightBridge: "Continuum stellt sicher, dass sie an diesem Tag nicht allein sind.",
 
         // Section 3: The Guide
-        guideTitle: "Sie müssen nicht wissen, wo Sie anfangen sollen.",
+        guideTitle: "Ihr Leitfaden zeigt Ihnen, wo Sie beginnen können.",
         guideDesc: "Der Continuum-Leitfaden begleitet Sie—schlägt vor, was wichtig sein könnte, übersetzt verwirrende Teile, hilft Ihnen, Worte für Dinge zu finden, die Sie nie sagen mussten.",
         guideReassurance: "Beginnen Sie, wo Sie möchten, in jeder Reihenfolge. Sanfte Anleitung, in Ihrem Tempo.",
 
         // Section 4: The Pulse
-        pulseTitle: "Sie müssen das schwierige Gespräch nicht führen.",
+        pulseTitle: "Ihr Puls führt das schwierige Gespräch für Sie.",
         pulseDesc: "Richten Sie Ihren Puls ein. Bestätigen Sie alle paar Tage—ein einfaches „Ich bin hier.“ Und wenn Sie eines Tages nicht da sind, um zu bestätigen, bemerkt es Continuum.",
         pulseHow: "Es wendet sich an die Menschen, die Sie gewählt haben. Öffnet die richtigen Türen, zur richtigen Zeit. Ihr Testamentsvollstrecker steht nicht vor einem Rätsel. Er erhält Klarheit.",
         pulseTiers: "Verschiedene Personen sehen verschiedene Dinge, in der Reihenfolge, die Sie wählen. Ein vertrauter Freund erhält zuerst eine sanfte Benachrichtigung. Spätere Stufen erhalten mehr Zugang. Sie entscheiden, wer was bekommt.",
@@ -580,12 +580,12 @@ export const marketing2Dictionary = {
         weightBridge: "Continuum гарантирует, что они не будут одиноки, когда наступит этот день.",
 
         // Section 3: The Guide
-        guideTitle: "Вам не нужно знать, с чего начать.",
+        guideTitle: "Ваш гид подскажет, с чего начать.",
         guideDesc: "Гид Continuum идёт рядом с вами—подсказывает, что может быть важным, переводит запутанные части, помогает найти слова для того, что вам никогда не приходилось говорить.",
         guideReassurance: "Начинайте с чего угодно и в любом порядке. Мягкое руководство в вашем темпе.",
 
         // Section 4: The Pulse
-        pulseTitle: "Вам не нужно вести трудный разговор.",
+        pulseTitle: "Ваш Пульс берёт трудный разговор на себя.",
         pulseDesc: "Настройте свой Пульс. Подтверждайте каждые несколько дней—простое «Я здесь». И если однажды вас не будет, чтобы подтвердить, Continuum это заметит.",
         pulseHow: "Он связывается с людьми, которых вы выбрали. Открывает нужные двери в нужное время. Ваш душеприказчик не столкнётся с загадкой. Он получит ясность.",
         pulseTiers: "Разные люди видят разное, в том порядке, который вы выберете. Доверенный друг получит мягкое уведомление первым. Следующие уровни получат больше доступа. Вы решаете, кто что получит.",
@@ -716,12 +716,12 @@ export const marketing2Dictionary = {
         weightBridge: "Continuum מוודא שהם לא יהיו לבד כשהיום הזה יגיע.",
 
         // Section 3: The Guide
-        guideTitle: "אתם לא צריכים לדעת מאיפה להתחיל.",
+        guideTitle: "המדריך שלכם יראה לכם מאיפה להתחיל.",
         guideDesc: "המדריך של Continuum הולך לצידכם—מציע מה עשוי להיות חשוב, מתרגם את החלקים המבלבלים, עוזר לכם למצוא מילים לדברים שמעולם לא הייתם צריכים לומר.",
         guideReassurance: "התחילו מכל מקום, בכל סדר. הדרכה עדינה, בקצב שלכם.",
 
         // Section 4: The Pulse
-        pulseTitle: "אתם לא צריכים לנהל את השיחה הקשה.",
+        pulseTitle: "הפולס שלכם מנהל את השיחה הקשה בשבילכם.",
         pulseDesc: "הגדירו את הפולס שלכם. אשרו כל כמה ימים—פשוט \"אני כאן\". ואם יום אחד לא תהיו שם כדי לאשר, Continuum שם לב.",
         pulseHow: "הוא פונה לאנשים שבחרתם. פותח את הדלתות הנכונות, בזמן הנכון. מנהל העיזבון שלכם לא יתמודד עם תעלומה. הוא יקבל בהירות.",
         pulseTiers: "אנשים שונים רואים דברים שונים, בסדר שאתם בוחרים. חבר מהימן מקבל התראה עדינה קודם. הרמות הבאות מקבלות יותר גישה. אתם מחליטים מי מקבל מה.",

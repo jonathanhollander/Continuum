@@ -272,7 +272,7 @@
     </div>
 
     <div
-        class="bg-card rounded-2xl border border-border shadow-sm overflow-hidden min-h-[500px] p-8"
+        class="bg-card rounded-2xl border border-border shadow-sm min-h-[500px] p-8"
     >
         <!-- Memorial Subject Header (Synced): only the values that are filled in -->
         {#if $estateProfile.ownerName || $estateExecutorName || $estateProfile.legalCityState}

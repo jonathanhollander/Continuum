@@ -266,7 +266,7 @@
                     <div
                         class="min-h-32 bg-gradient-to-br from-primary/10 to-secondary/10 relative p-6 group"
                     >
-                        <div class="absolute right-4 top-4 opacity-10">
+                        <div class="absolute right-4 top-4 opacity-10" aria-hidden="true">
                             {#if pet.type === "cat"}
                                 <Cat size={120} />
                             {:else}

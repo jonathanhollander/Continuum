@@ -96,7 +96,7 @@
             Essential Areas
         </h2>
         <p class="text-sm text-muted-foreground mb-6">
-            These areas may help most first. Everything else can wait until you're ready.
+            These areas may help most first. The rest is here whenever you're ready.
         </p>
     </div>
 

@@ -351,7 +351,7 @@
                     {contacts.length}
                 </div>
             </div>
-            <Users class="text-border" size={32} />
+            <Users class="text-border" size={32} aria-hidden="true" />
         </div>
         <div
             class="p-5 rounded-2xl border shadow-sm flex items-center justify-between {stillToReach > 0
@@ -366,7 +366,7 @@
                     {stillToReach}
                 </div>
             </div>
-            <CircleAlert class={stillToReach > 0 ? "text-warning/40" : "text-border"} size={32} />
+            <CircleAlert class={stillToReach > 0 ? "text-warning/40" : "text-border"} size={32} aria-hidden="true" />
         </div>
         <div
             class="bg-success/10 p-5 rounded-2xl border border-success/20 shadow-sm flex items-center justify-between"
@@ -380,7 +380,7 @@
                         .length}
                 </div>
             </div>
-            <CircleCheck class="text-success/40" size={32} />
+            <CircleCheck class="text-success/40" size={32} aria-hidden="true" />
         </div>
     </div>
 
