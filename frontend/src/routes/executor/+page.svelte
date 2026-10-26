@@ -134,25 +134,25 @@
     }
 </script>
 
-<div class="min-h-screen bg-slate-950 text-slate-200 p-6">
+<div class="surface-dark min-h-screen bg-background text-foreground p-6">
     <div class="max-w-7xl mx-auto">
         <!-- Header -->
         <div class="mb-8" in:fade>
-            <div class="flex items-center gap-2 mb-3 text-rose-400">
+            <div class="flex items-center gap-2 mb-3 text-primary">
                 <Heart size={20} />
                 <span class="text-sm font-medium uppercase tracking-wider">Executor Portal</span>
             </div>
-            <h1 class="text-4xl md:text-5xl font-serif font-bold text-white mb-4">
+            <h1 class="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">
                 Estate Administration Hub
             </h1>
-            <p class="text-xl text-slate-300 max-w-3xl leading-relaxed mb-4">
+            <p class="text-xl text-muted-foreground max-w-3xl leading-relaxed mb-4">
                 {#if deceasedName}
                     You're managing {deceasedName}'s estate. This is important work, and we're here to support you every step of the way.
                 {:else}
                     You're managing their estate. This is important work, and we're here to support you every step of the way.
                 {/if}
             </p>
-            <p class="text-sm text-slate-400 italic">
+            <p class="text-sm text-muted-foreground italic">
                 {encouragement}
             </p>
         </div>
@@ -169,11 +169,11 @@
 
         <!-- Essential Areas -->
         <div class="mb-12">
-            <h2 class="text-2xl font-semibold text-white mb-6 flex items-center gap-2">
-                <CheckCircle2 size={24} class="text-indigo-400" />
+            <h2 class="text-2xl font-semibold text-foreground mb-6 flex items-center gap-2">
+                <CheckCircle2 size={24} class="text-primary" />
                 Essential Areas
             </h2>
-            <p class="text-slate-400 mb-6">
+            <p class="text-muted-foreground mb-6">
                 These are the core areas to explore when you're ready. Start with what feels manageable, and take breaks when you need them.
             </p>
 
@@ -186,31 +186,31 @@
                     {@const isExpanded = expandedArea === area.id}
 
                     <div
-                        class="rounded-2xl bg-slate-800/40 border border-slate-700/50 overflow-hidden
+                        class="rounded-2xl bg-card/40 border border-border/50 overflow-hidden
                                {tone.border} transition-all duration-300"
                         in:fly={{ y: 20, duration: 500, delay: i * 100 }}
                     >
                         <!-- Area Header -->
                         <button
                             onclick={() => toggleArea(area.id)}
-                            class="w-full p-6 flex items-start gap-4 text-left hover:bg-slate-800/60 transition-colors"
+                            class="w-full p-6 flex items-start gap-4 text-left hover:bg-card/60 transition-colors"
                         >
                             <div class="w-14 h-14 rounded-xl {tone.tile} flex items-center justify-center flex-shrink-0">
                                 <Icon size={28} class={tone.icon} />
                             </div>
 
                             <div class="flex-1">
-                                <h3 class="text-xl font-semibold text-white mb-1">
+                                <h3 class="text-xl font-semibold text-foreground mb-1">
                                     {area.title}
                                 </h3>
-                                <p class="text-sm text-slate-400 mb-3">
+                                <p class="text-sm text-muted-foreground mb-3">
                                     {area.description}
                                 </p>
 
                                 <!-- Progress Bar -->
                                 {#if score > 0}
                                     <div class="flex items-center gap-2 text-xs">
-                                        <div class="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
+                                        <div class="w-full h-2 bg-border rounded-full overflow-hidden">
                                             <div
                                                 class="h-full {tone.bar} transition-all duration-500"
                                                 style="width: {score}%"
@@ -221,7 +221,7 @@
                                 {/if}
                             </div>
 
-                            <div class="text-slate-500 transition-transform {isExpanded ? 'rotate-180' : ''}">
+                            <div class="text-muted-foreground transition-transform {isExpanded ? 'rotate-180' : ''}">
                                 ▼
                             </div>
                         </button>
@@ -229,13 +229,13 @@
                         <!-- Expanded Task List -->
                         {#if isExpanded}
                             <div class="px-6 pb-6 space-y-3" in:fade>
-                                <div class="text-sm text-slate-400 mb-3 border-t border-slate-700 pt-4">
+                                <div class="text-sm text-muted-foreground mb-3 border-t border-border pt-4">
                                     Key tasks to consider:
                                 </div>
                                 {#each area.tasks as task}
                                     <div class="flex items-start gap-2 text-sm">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-slate-500 flex-shrink-0 mt-2"></span>
-                                        <span class="text-slate-300">{task}</span>
+                                        <span class="w-1.5 h-1.5 rounded-full bg-muted-foreground flex-shrink-0 mt-2"></span>
+                                        <span class="text-muted-foreground">{task}</span>
                                     </div>
                                 {/each}
 
@@ -255,11 +255,11 @@
 
         <!-- Additional Resources -->
         <div class="mb-12">
-            <h2 class="text-2xl font-semibold text-white mb-6 flex items-center gap-2">
-                <BookOpen size={24} class="text-purple-400" />
+            <h2 class="text-2xl font-semibold text-foreground mb-6 flex items-center gap-2">
+                <BookOpen size={24} class="text-primary" />
                 Guidance & Resources
             </h2>
-            <p class="text-slate-400 mb-6">
+            <p class="text-muted-foreground mb-6">
                 These resources can help you understand your responsibilities and make informed decisions.
             </p>
 
@@ -269,18 +269,18 @@
                     {@const tone = TONES[resource.color]}
                     <a
                         href={resource.link}
-                        class="p-6 rounded-2xl bg-slate-800/40 border border-slate-700/50
-                               {tone.border} hover:bg-slate-800/60
+                        class="p-6 rounded-2xl bg-card/40 border border-border/50
+                               {tone.border} hover:bg-card/60
                                transition-all duration-300 group"
                     >
                         <div class="w-12 h-12 rounded-xl {tone.tile} flex items-center justify-center mb-4
                                     group-hover:scale-110 transition-transform">
                             <Icon size={24} class={tone.icon} />
                         </div>
-                        <h3 class="text-lg font-semibold text-white mb-2">
+                        <h3 class="text-lg font-semibold text-foreground mb-2">
                             {resource.title}
                         </h3>
-                        <p class="text-sm text-slate-400">
+                        <p class="text-sm text-muted-foreground">
                             {resource.description}
                         </p>
                     </a>
@@ -289,8 +289,8 @@
         </div>
 
         <!-- Footer Note -->
-        <div class="text-center py-8 border-t border-slate-800">
-            <p class="text-sm text-slate-500">
+        <div class="text-center py-8 border-t border-border">
+            <p class="text-sm text-muted-foreground">
                 Remember: You can work at your own pace and return whenever you're ready.
             </p>
         </div>

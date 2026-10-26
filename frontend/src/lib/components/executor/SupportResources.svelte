@@ -28,25 +28,25 @@
     ];
 </script>
 
-<div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-rose-500/10 to-purple-500/10 border border-rose-500/20" in:fade>
+<div class="surface-dark relative overflow-hidden rounded-2xl bg-primary/10 border border-primary/20" in:fade>
     <div class="p-6">
         <div class="flex items-start gap-4">
-            <div class="w-10 h-10 rounded-full bg-rose-500/20 flex items-center justify-center flex-shrink-0">
-                <Heart size={20} class="text-rose-400" />
+            <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                <Heart size={20} class="text-primary" />
             </div>
 
             <div class="flex-1">
-                <h3 class="text-lg font-semibold text-white mb-2 flex items-center gap-2">
+                <h3 class="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
                     Support is here for you
                 </h3>
-                <p class="text-slate-300 text-sm mb-4">
+                <p class="text-muted-foreground text-sm mb-4">
                     Managing an estate while grieving is hard work. You can lean on others,
                     and take breaks whenever you need them.
                 </p>
 
                 <button
                     onclick={() => isExpanded = !isExpanded}
-                    class="text-sm font-medium text-rose-400 hover:text-rose-300 transition-colors"
+                    class="text-sm font-medium text-primary hover:text-primary-hover transition-colors"
                 >
                     {isExpanded ? 'Show less' : 'View support resources →'}
                 </button>
@@ -60,20 +60,20 @@
                                 href={resource.link}
                                 target={resource.external ? '_blank' : '_self'}
                                 rel={resource.external ? 'noopener noreferrer' : ''}
-                                class="flex items-start gap-3 p-3 rounded-xl bg-slate-800/60 hover:bg-slate-800/80
-                                       border border-slate-700/50 hover:border-slate-600 transition-all"
+                                class="flex items-start gap-3 p-3 rounded-xl bg-card/60 hover:bg-card
+                                       border border-border/50 hover:border-muted-foreground/50 transition-all"
                             >
-                                <div class="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center flex-shrink-0">
-                                    <Icon size={16} class="text-purple-400" />
+                                <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                    <Icon size={16} class="text-primary" />
                                 </div>
                                 <div class="flex-1">
-                                    <div class="font-medium text-white text-sm flex items-center gap-1">
+                                    <div class="font-medium text-foreground text-sm flex items-center gap-1">
                                         {resource.title}
                                         {#if resource.external}
-                                            <ExternalLink size={12} class="text-slate-500" />
+                                            <ExternalLink size={12} class="text-muted-foreground" />
                                         {/if}
                                     </div>
-                                    <div class="text-xs text-slate-400">
+                                    <div class="text-xs text-muted-foreground">
                                         {resource.description}
                                     </div>
                                 </div>
@@ -81,10 +81,10 @@
                         {/each}
 
                         <!-- Crisis Support -->
-                        <div class="mt-4 p-3 rounded-lg bg-rose-500/10 border border-rose-500/20">
-                            <p class="text-xs text-slate-300">
-                                <strong class="text-rose-400">If you need someone right now,</strong> 988 Suicide &amp; Crisis Lifeline, call or text
-                                <a href="tel:988" class="underline hover:text-white transition-colors">988</a>
+                        <div class="mt-4 p-3 rounded-lg bg-warning-soft border border-warning/20">
+                            <p class="text-xs text-muted-foreground">
+                                <strong class="text-warning">If you need someone right now,</strong> 988 Suicide &amp; Crisis Lifeline, call or text
+                                <a href="tel:988" class="underline hover:text-foreground transition-colors">988</a>
                             </p>
                         </div>
                     </div>

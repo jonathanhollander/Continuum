@@ -21,20 +21,20 @@
     let showFireDrill = $state(false);
 
     function getHealthColor(score: number) {
-        if (score >= 80) return "text-emerald-400";
-        if (score >= 50) return "text-yellow-400";
-        return "text-rose-400";
+        if (score >= 80) return "text-success";
+        if (score >= 50) return "text-info";
+        return "text-warning";
     }
 
     function getHealthBg(score: number) {
-        if (score >= 80) return "bg-emerald-500/20";
-        if (score >= 50) return "bg-yellow-500/20";
-        return "bg-rose-500/20";
+        if (score >= 80) return "bg-success/20";
+        if (score >= 50) return "bg-info/20";
+        return "bg-warning/20";
     }
 </script>
 
 <div
-    class="min-h-screen bg-slate-950 text-slate-100 p-8 relative overflow-hidden"
+    class="surface-dark min-h-screen bg-background text-foreground p-8 relative overflow-hidden"
 >
     {#if showFireDrill}
         <FireDrill on:close={() => (showFireDrill = false)} />
@@ -42,7 +42,7 @@
 
     <!-- Background Gradient -->
     <div
-        class="absolute top-0 right-0 w-[800px] h-[800px] bg-indigo-900/20 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2"
+        class="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/10 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2"
     ></div>
 
     <div class="max-w-6xl mx-auto relative z-10">
@@ -50,20 +50,20 @@
         <header class="flex justify-between items-start mb-12">
             <div in:fly={{ y: -20, duration: 800 }}>
                 <div class="flex items-center gap-3 mb-2 opacity-60">
-                    <Activity size={20} class="text-indigo-400" />
+                    <Activity size={20} class="text-primary" />
                     <span class="text-xs font-bold uppercase tracking-widest"
                         >Where Things Stand</span
                     >
                 </div>
-                <h1 class="text-5xl font-serif font-bold text-white mb-2">
+                <h1 class="text-5xl font-serif font-bold text-foreground mb-2">
                     Insights
                 </h1>
-                <p class="text-slate-400 text-lg max-w-2xl mb-6">
+                <p class="text-muted-foreground text-lg max-w-2xl mb-6">
                     A gentle look at how your plans are coming together across
                     three pillars: Legal, Financial, and Legacy.
                 </p>
                 <button
-                    class="flex items-center gap-2 bg-slate-900 border border-slate-700 text-white px-6 py-3 rounded-2xl transition-all shadow-xl shadow-slate-900/40 hover:scale-105 active:scale-95 font-bold"
+                    class="flex items-center gap-2 bg-card border border-border text-foreground px-6 py-3 rounded-2xl transition-all shadow-xl shadow-black/40 hover:scale-105 active:scale-95 font-bold"
                     onclick={() => (showFireDrill = true)}
                 >
                     <Flame size={18} />
@@ -75,7 +75,7 @@
                 class="text-right"
                 in:fly={{ x: 20, duration: 800, delay: 200 }}
             >
-                <div class="text-xs font-bold uppercase text-slate-500 mb-1">
+                <div class="text-xs font-bold uppercase text-muted-foreground mb-1">
                     The Pulse
                 </div>
                 <div class="flex items-baseline justify-end gap-2">
@@ -85,7 +85,7 @@
                     >
                         {health}
                     </span>
-                    <span class="text-slate-500 text-xl">%</span>
+                    <span class="text-muted-foreground text-xl">%</span>
                 </div>
             </div>
         </header>
@@ -94,12 +94,12 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
             <!-- Legal Pillar -->
             <div
-                class="bg-slate-900/50 backdrop-blur border border-slate-800 rounded-xl p-6 hover:border-slate-700 transition-colors group"
+                class="bg-card/50 backdrop-blur border border-border/60 rounded-xl p-6 hover:border-border transition-colors group"
                 in:fly={{ y: 20, duration: 600, delay: 100 }}
             >
                 <div class="flex justify-between items-start mb-6">
                     <div
-                        class="bg-indigo-500/10 p-3 rounded-lg text-indigo-400 group-hover:bg-indigo-500/20 transition-colors"
+                        class="bg-primary/10 p-3 rounded-lg text-primary group-hover:bg-primary/20 transition-colors"
                     >
                         <Shield size={24} />
                     </div>
@@ -109,10 +109,10 @@
                         {pillars.legal.score}%
                     </span>
                 </div>
-                <h3 class="text-xl font-bold text-white mb-2">
+                <h3 class="text-xl font-bold text-foreground mb-2">
                     Legal Readiness
                 </h3>
-                <p class="text-slate-400 text-sm mb-6 h-10">
+                <p class="text-muted-foreground text-sm mb-6 h-10">
                     Authority & medical proxies to ensure seamless decision
                     making.
                 </p>
@@ -122,9 +122,9 @@
                             {#if active}
                                 <CircleCheck
                                     size={16}
-                                    class="text-emerald-400"
+                                    class="text-success"
                                 />
-                                <span class="text-slate-300 capitalize"
+                                <span class="text-foreground capitalize"
                                     >{key
                                         .replace("has", "")
                                         .replace(/([A-Z])/g, " $1")
@@ -132,9 +132,9 @@
                                 >
                             {:else}
                                 <div
-                                    class="w-4 h-4 rounded-full border border-slate-700"
+                                    class="w-4 h-4 rounded-full border border-border"
                                 ></div>
-                                <span class="text-slate-600 capitalize"
+                                <span class="text-muted-foreground capitalize"
                                     >{key
                                         .replace("has", "")
                                         .replace(/([A-Z])/g, " $1")
@@ -148,12 +148,12 @@
 
             <!-- Financial Pillar -->
             <div
-                class="bg-slate-900/50 backdrop-blur border border-slate-800 rounded-xl p-6 hover:border-slate-700 transition-colors group"
+                class="bg-card/50 backdrop-blur border border-border/60 rounded-xl p-6 hover:border-border transition-colors group"
                 in:fly={{ y: 20, duration: 600, delay: 200 }}
             >
                 <div class="flex justify-between items-start mb-6">
                     <div
-                        class="bg-emerald-500/10 p-3 rounded-lg text-emerald-400 group-hover:bg-emerald-500/20 transition-colors"
+                        class="bg-success/10 p-3 rounded-lg text-success group-hover:bg-success/20 transition-colors"
                     >
                         <Briefcase size={24} />
                     </div>
@@ -163,10 +163,10 @@
                         {pillars.financial.score}%
                     </span>
                 </div>
-                <h3 class="text-xl font-bold text-white mb-2">
+                <h3 class="text-xl font-bold text-foreground mb-2">
                     Financial Clarity
                 </h3>
-                <p class="text-slate-400 text-sm mb-6 h-10">
+                <p class="text-muted-foreground text-sm mb-6 h-10">
                     Asset organization and beneficiary designations for swift
                     transfer.
                 </p>
@@ -174,8 +174,8 @@
                     <div class="flex items-center gap-3 text-sm">
                         <div class="w-full">
                             <div class="flex justify-between mb-1">
-                                <span class="text-slate-400">Total Value</span>
-                                <span class="text-slate-200"
+                                <span class="text-muted-foreground">Total Value</span>
+                                <span class="text-foreground"
                                     >{(
                                         pillars.financial.metrics.totalValue ||
                                         0
@@ -186,10 +186,10 @@
                                 >
                             </div>
                             <div
-                                class="h-1 bg-slate-800 rounded-full overflow-hidden"
+                                class="h-1 bg-border rounded-full overflow-hidden"
                             >
                                 <div
-                                    class="h-full bg-emerald-500/50"
+                                    class="h-full bg-success/50"
                                     style="width: {Math.min(
                                         100,
                                         (pillars.financial.metrics.totalValue /
@@ -202,8 +202,8 @@
                     </div>
                     <div class="flex items-center gap-3 text-sm">
                         {#if pillars.financial.metrics.hasBeneficiary}
-                            <CircleCheck size={16} class="text-emerald-400" />
-                            <span class="text-slate-300"
+                            <CircleCheck size={16} class="text-success" />
+                            <span class="text-foreground"
                                 >Beneficiary Designated</span
                             >
                         {/if}
@@ -213,12 +213,12 @@
 
             <!-- Legacy Pillar -->
             <div
-                class="bg-slate-900/50 backdrop-blur border border-slate-800 rounded-xl p-6 hover:border-slate-700 transition-colors group"
+                class="bg-card/50 backdrop-blur border border-border/60 rounded-xl p-6 hover:border-border transition-colors group"
                 in:fly={{ y: 20, duration: 600, delay: 300 }}
             >
                 <div class="flex justify-between items-start mb-6">
                     <div
-                        class="bg-rose-500/10 p-3 rounded-lg text-rose-400 group-hover:bg-rose-500/20 transition-colors"
+                        class="bg-warning/10 p-3 rounded-lg text-warning group-hover:bg-warning/20 transition-colors"
                     >
                         <Heart size={24} />
                     </div>
@@ -228,24 +228,24 @@
                         {pillars.legacy.score}%
                     </span>
                 </div>
-                <h3 class="text-xl font-bold text-white mb-2">
+                <h3 class="text-xl font-bold text-foreground mb-2">
                     Legacy Vitality
                 </h3>
-                <p class="text-slate-400 text-sm mb-6 h-10">
+                <p class="text-muted-foreground text-sm mb-6 h-10">
                     Emotional wealth, heirlooms, and wishes preserved for the
                     future.
                 </p>
                 <div class="space-y-3">
                     <div class="flex items-center gap-3 text-sm">
-                        <span class="text-slate-400 w-24">Heirlooms</span>
-                        <span class="text-slate-200"
+                        <span class="text-muted-foreground w-24">Heirlooms</span>
+                        <span class="text-foreground"
                             >{pillars.legacy.metrics.heirloomCount} cataloged</span
                         >
                     </div>
                     <div class="flex items-center gap-3 text-sm">
                         {#if pillars.legacy.metrics.wishesDefined}
-                            <CircleCheck size={16} class="text-emerald-400" />
-                            <span class="text-slate-300">Wishes Defined</span>
+                            <CircleCheck size={16} class="text-success" />
+                            <span class="text-foreground">Wishes Defined</span>
                         {/if}
                     </div>
                 </div>
@@ -256,30 +256,30 @@
         {#if gaps.length > 0}
             <div in:slide={{ duration: 400 }}>
                 <h2
-                    class="text-xl font-bold text-white mb-6 flex items-center gap-2"
+                    class="text-xl font-bold text-foreground mb-6 flex items-center gap-2"
                 >
-                    <Heart size={20} class="text-indigo-400" />
+                    <Heart size={20} class="text-primary" />
                     When you're ready
                 </h2>
                 <div class="space-y-4">
                     {#each gaps as gap}
                         <a
                             href={gap.link}
-                            class="block bg-slate-900/80 border border-slate-800 p-4 rounded-lg hover:border-indigo-500/50 hover:bg-slate-800 transition-all group"
+                            class="block bg-card/80 border border-border p-4 rounded-lg hover:border-primary/50 hover:bg-card transition-all group"
                         >
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-4">
                                     <div
-                                        class={`w-2 h-2 rounded-full ${gap.type === "legal" ? "bg-indigo-400" : gap.type === "financial" ? "bg-emerald-400" : "bg-rose-400"}`}
+                                        class={`w-2 h-2 rounded-full ${gap.type === "legal" ? "bg-primary" : gap.type === "financial" ? "bg-success" : "bg-warning"}`}
                                     ></div>
                                     <div>
                                         <div
-                                            class="text-white font-medium group-hover:text-indigo-300 transition-colors"
+                                            class="text-foreground font-medium group-hover:text-primary-hover transition-colors"
                                         >
                                             {gap.message}
                                         </div>
                                         <div
-                                            class="text-slate-500 text-xs uppercase tracking-wider mt-1"
+                                            class="text-muted-foreground text-xs uppercase tracking-wider mt-1"
                                         >
                                             {gap.type} pillar
                                         </div>
@@ -287,7 +287,7 @@
                                 </div>
                                 <ArrowRight
                                     size={18}
-                                    class="text-slate-600 group-hover:text-white transition-colors"
+                                    class="text-muted-foreground group-hover:text-foreground transition-colors"
                                 />
                             </div>
                         </a>
@@ -297,17 +297,17 @@
         {:else}
             <div
                 in:slide={{ duration: 400 }}
-                class="bg-emerald-500/10 border border-emerald-500/20 p-8 rounded-2xl text-center"
+                class="bg-success/10 border border-success/20 p-8 rounded-2xl text-center"
             >
                 <div class="mb-4 flex justify-center">
-                    <div class="bg-emerald-500/20 p-4 rounded-full">
-                        <TrendingUp size={32} class="text-emerald-400" />
+                    <div class="bg-success/20 p-4 rounded-full">
+                        <TrendingUp size={32} class="text-success" />
                     </div>
                 </div>
-                <h2 class="text-2xl font-bold text-white mb-2">
+                <h2 class="text-2xl font-bold text-foreground mb-2">
                     All in order
                 </h2>
-                <p class="text-emerald-200/80 max-w-lg mx-auto">
+                <p class="text-muted-foreground max-w-lg mx-auto">
                     Each pillar is in good shape. A yearly look at your
                     beneficiaries, and a new story now and then, keeps your
                     legacy current.
