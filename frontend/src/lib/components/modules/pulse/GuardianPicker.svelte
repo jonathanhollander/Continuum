@@ -1,0 +1,181 @@
+<script lang="ts">
+    // Select Guardian dialog: places one existing contact in a Pulse tier (sets tier_id).
+    // Shared by the Escalation Plan, Trusted Contacts and Pulse Configuration pages.
+    import { onMount } from "svelte";
+    import { fade } from "svelte/transition";
+    import { Check, X } from "lucide-svelte";
+    import { focusTrap } from "$lib/actions/focusTrap";
+    import { portal } from "$lib/actions/portal";
+    import { apiGet, apiPut } from "$lib/api/client";
+    import { pulseTierNumber } from "./pulseTiers";
+
+    let {
+        tiers,
+        tierId = null,
+        onclose,
+        onsaved,
+    }: {
+        tiers: any[];
+        tierId?: number | null;
+        onclose: () => void;
+        onsaved: () => void | Promise<void>;
+    } = $props();
+
+    const gentleRetry = "Let's try that once more in a moment.";
+
+    let globalContacts = $state<any[]>([]);
+    let loaded = $state(false);
+    let error = $state<string | null>(null);
+    let saving = $state(false);
+    let selectedContactId = $state<number | null>(null);
+    // svelte-ignore state_referenced_locally
+    let targetTierId = $state<number | null>(tierId ?? tiers[0]?.id ?? null);
+
+    const targetTierNumber = $derived(
+        tiers.find((t) => t.id === targetTierId)?.tier_number ?? null,
+    );
+
+    onMount(async () => {
+        try {
+            globalContacts = await apiGet("/api/contacts");
+        } catch (e) {
+            console.error(e);
+            error = gentleRetry;
+        } finally {
+            loaded = true;
+        }
+    });
+
+    async function promoteContact() {
+        if (!selectedContactId || !targetTierId) return;
+        saving = true;
+        error = null;
+        try {
+            await apiPut(`/api/contacts/${selectedContactId}`, {
+                tier_id: targetTierId,
+            });
+            await onsaved();
+            onclose();
+        } catch (e) {
+            console.error(e);
+            error = gentleRetry;
+        } finally {
+            saving = false;
+        }
+    }
+</script>
+
+<div
+    use:portal
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="guardian-dialog-title"
+    use:focusTrap={{ onEscape: onclose }}
+    class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+    transition:fade
+>
+    <div
+        class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl"
+    >
+        <div
+            class="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-950/50"
+        >
+            <h3 id="guardian-dialog-title" class="font-bold text-slate-200">
+                Select Guardian
+            </h3>
+            <button onclick={onclose} aria-label="Close">
+                <X class="w-5 h-5 text-slate-500 hover:text-white" />
+            </button>
+        </div>
+        <div class="p-6">
+            <label class="text-sm text-slate-400 mb-4 flex items-center gap-2">
+                Choose a trusted contact to add to
+                <select
+                    bind:value={targetTierId}
+                    class="bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-sm font-bold text-slate-200 focus:outline-none focus:border-teal-500/50"
+                >
+                    {#each tiers as t (t.id)}
+                        <option value={t.id}>Tier {t.tier_number}</option>
+                    {/each}
+                </select>
+            </label>
+
+            {#if loaded && globalContacts.length === 0 && !error}
+                <div
+                    class="text-center py-6 bg-slate-800/50 rounded-xl border border-dashed border-slate-700"
+                >
+                    <a
+                        href="/modules/contacts"
+                        class="text-teal-400 text-sm font-bold hover:underline"
+                        >Go to Family & Contacts</a
+                    >
+                </div>
+            {:else if loaded}
+                <div class="space-y-3 max-h-[300px] overflow-y-auto mb-6">
+                    {#each globalContacts as contact (contact.id)}
+                        {@const current = pulseTierNumber(contact, tiers)}
+                        <label
+                            class="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all {selectedContactId ===
+                            contact.id
+                                ? 'bg-teal-500/10 border-teal-500/50'
+                                : 'bg-slate-800/50 border-slate-700 hover:border-slate-600'}"
+                        >
+                            <input
+                                type="radio"
+                                name="guardian"
+                                value={contact.id}
+                                bind:group={selectedContactId}
+                                class="sr-only"
+                            />
+                            <div
+                                class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-300"
+                            >
+                                {contact.name.charAt(0)}
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-sm font-bold text-slate-200">
+                                    {contact.name}
+                                </div>
+                                <div class="text-xs text-slate-500">
+                                    {contact.role}
+                                </div>
+                            </div>
+                            {#if selectedContactId === contact.id}
+                                <Check class="w-4 h-4 text-teal-400" />
+                            {/if}
+                            {#if current && current !== targetTierNumber}
+                                <span
+                                    class="text-[9px] uppercase bg-slate-900 text-slate-400 px-1.5 py-0.5 rounded"
+                                >
+                                    Tier {current}
+                                </span>
+                            {/if}
+                        </label>
+                    {/each}
+                </div>
+
+                <button
+                    disabled={!selectedContactId || saving}
+                    onclick={promoteContact}
+                    class="w-full py-3 font-bold rounded-xl transition-colors {selectedContactId
+                        ? 'bg-teal-500 text-slate-950 hover:bg-teal-400'
+                        : 'bg-slate-800 text-slate-300 border border-slate-700 cursor-not-allowed'}"
+                >
+                    Confirm Guardian
+                </button>
+            {/if}
+
+            {#if error}
+                <p class="mt-4 text-sm text-rose-300" role="alert">{error}</p>
+            {/if}
+
+            <div class="mt-4 pt-4 border-t border-slate-800 text-center">
+                <a
+                    href="/modules/contacts"
+                    class="text-xs text-slate-400 hover:text-slate-200"
+                    >Manage Global Contacts</a
+                >
+            </div>
+        </div>
+    </div>
+</div>
