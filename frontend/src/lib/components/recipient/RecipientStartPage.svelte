@@ -3,7 +3,7 @@
     // and the owner's preview (/for/preview/<contactId>), so the two always match. Everything
     // comes from the token-scoped snapshot (D1's builder, filtered on the server); files come
     // through the given fetcher, and the download copy is D1's zip built from the same files.
-    import { onDestroy } from "svelte";
+    import { onDestroy, tick, untrack } from "svelte";
     import { slide } from "svelte/transition";
     import { SvelteMap, SvelteSet } from "svelte/reactivity";
     import { Archive, Loader2, Phone, Mail, ChevronDown } from "lucide-svelte";
@@ -14,9 +14,15 @@
         buildDownloadCopy,
         saveBlob,
         isExecutorContact,
+        fileCoverage,
+        fileCoverageLabel,
+        downloadCopyStatus,
+        packetRecordId,
+        fileFieldLabel,
         type SnapshotAttachment,
     } from "$lib/services/exportService";
     import { milestoneLabel } from "$lib/utils/milestones";
+    import { captureSession, assertCurrentSession, isCurrentSession, SessionChangedError } from "$lib/services/sessionOwnership";
     import type { RecipientView } from "$lib/services/recipientService";
 
     let {
@@ -37,26 +43,41 @@
     const OwnerName = $derived(packet.ownerName || "The person who shared this");
 
     // Files (card X104): each one is fetched when it comes into view (or when the full record or
-    // the download copy needs it), once, shown from a blob URL and reused by the download copy.
-    const files = new Map<string, Blob>();
+    // the download copy needs it). Successful bytes are reused; failed reads remain retryable.
+    const files = new SvelteMap<string, Blob>();
     const urls = new SvelteMap<string, string>();
     const asked = new Map<string, Promise<void>>();
+    const failed = new SvelteSet<string>();
     let gone = false;
     let busy = $state<string | null>(null);
     let downloadNote = $state<string | null>(null);
     let showFull = $state(false);
 
+    const coverage = $derived(fileCoverage(snapshot, packet, files));
+    const fileIssues = $derived(coverage.issues.filter((issue) => issue.kind === "reference" || failed.has(issue.key)));
+    const liveCoverage = $derived({ ...coverage, issues: fileIssues });
+
+    function showFiles(got: Map<string, Blob>) {
+        if (gone) return;
+        for (const [key, blob] of got) {
+            files.set(key, blob);
+            failed.delete(key);
+            if (!urls.has(key)) urls.set(key, URL.createObjectURL(blob));
+        }
+    }
+
     function want(list: SnapshotAttachment[]): Promise<void> {
         return Promise.all(
             list.map((a) => {
+                if (files.has(a.key)) return Promise.resolve();
                 let p = asked.get(a.key);
                 if (!p) {
-                    p = loadAttachmentFiles(snapshot, [a], fetchBlob).then((got) => {
-                        const b = got.get(a.key);
-                        if (!b || gone) return;
-                        files.set(a.key, b);
-                        urls.set(a.key, URL.createObjectURL(b));
-                    });
+                    failed.delete(a.key);
+                    p = loadAttachmentFiles(snapshot, [a], fetchBlob, () => {}, (file) => {
+                        if (!gone) failed.add(file.key);
+                    }).then(showFiles).catch((error) => {
+                        if (!(error instanceof SessionChangedError)) throw error;
+                    }).finally(() => asked.delete(a.key));
                     asked.set(a.key, p);
                 }
                 return p;
@@ -80,7 +101,7 @@
     }
 
     $effect(() => {
-        if (showFull) want(packet.attachments);
+        if (showFull) untrack(() => want(packet.attachments));
     });
     onDestroy(() => {
         gone = true;
@@ -191,7 +212,13 @@
         return out;
     });
 
-    const html = $derived(showFull ? packetHTML(packet, (a) => urls.get(a.key) ?? null) : "");
+    const html = $derived(showFull ? packetHTML(packet, (a) => urls.get(a.key) ?? null, liveCoverage) : "");
+
+    async function revealRecord(section: string, id: any) {
+        showFull = true;
+        await tick();
+        document.getElementById(packetRecordId(section, id))?.scrollIntoView({ block: "center" });
+    }
 
     const fmtDate = (v: any) => {
         if (!v) return "";
@@ -200,28 +227,25 @@
     };
 
     async function downloadCopy() {
+        const owner = view.preview ? captureSession() : null;
         busy = "download";
         downloadNote = null;
         try {
-            const missing = packet.attachments.filter((a) => !asked.has(a.key));
-            if (missing.length) {
-                const p = loadAttachmentFiles(snapshot, missing, fetchBlob, (m) => (downloadNote = m)).then((got) => {
-                    if (gone) return;
-                    for (const [k, b] of got) {
-                        files.set(k, b);
-                        urls.set(k, URL.createObjectURL(b));
-                    }
-                });
-                for (const a of missing) asked.set(a.key, p);
-            }
             await Promise.all(asked.values());
-            const blob = await buildDownloadCopy(snapshot, (m) => (downloadNote = m), files, fetchBlob);
+            const blob = await buildDownloadCopy(snapshot, (m) => (downloadNote = m), files, fetchBlob, owner);
+            if (owner) assertCurrentSession(owner);
+            if (gone) return;
             const safe = (s: string) => s.replace(/[^\w\- ]+/g, "").trim() || "Continuum";
             saveBlob(blob, `${safe(packet.ownerName)} - for ${safe(recipient.name)}.zip`);
-            downloadNote = "Your copy is saved. It opens in any browser, with every file beside it.";
-        } catch {
-            downloadNote = "Everything here stays open to read. You can save a copy again whenever you're ready.";
+            downloadNote = downloadCopyStatus(fileCoverage(snapshot, packet, files));
+        } catch (e) {
+            downloadNote = e instanceof SessionChangedError ? "The account changed. Open the packet from the account you want to use."
+                : "Everything here stays open to read. You can save a copy again whenever you're ready.";
         } finally {
+            if (!owner || isCurrentSession(owner)) {
+                showFiles(files);
+                for (const a of packet.attachments) if (!files.has(a.key)) failed.add(a.key);
+            }
             busy = null;
         }
     }
@@ -243,6 +267,11 @@
                     <img src={url} alt={a.filename || "Photo"} class="max-w-md max-h-80 rounded-xl object-cover" />
                 {:else if url}
                     <a href={url} download={a.filename} target="_blank" rel="noopener" class="text-primary-deep underline text-sm">Open {a.filename || "this file"}</a>
+                {:else if failed.has(a.key)}
+                    <div class="text-sm text-slate-600 space-y-2" role="status" data-testid="recipient-file-retry">
+                        <p>{a.filename || "This file"} · Ready to try again</p>
+                        <button onclick={() => want([a])} class="text-primary-deep underline font-semibold">Try this file again</button>
+                    </div>
                 {:else}
                     <span class="text-sm text-slate-500 inline-flex items-center gap-2 {a.mime_type.startsWith("image/") || a.mime_type.startsWith("video/") ? 'min-h-48' : ''}"><Loader2 class="w-4 h-4 animate-spin" /> Opening {a.filename || "this file"}…</span>
                 {/if}
@@ -406,7 +435,7 @@
             <h2 class="font-serif text-3xl text-primary-deep">The full record</h2>
             <p class="text-slate-600 leading-relaxed">
                 Everything {ownerName} recorded, in one place: accounts, property, insurance, documents, wishes and more.
-                The copy holds this whole page and every file, and opens in any browser.
+                The copy holds the recorded details and the files gathered for it, with a file list.
             </p>
             <div class="flex flex-wrap gap-3">
                 <button
@@ -427,7 +456,30 @@
                     Save a copy to keep
                 </button>
             </div>
-            {#if downloadNote}<p class="text-sm text-slate-600" data-testid="recipient-download-note">{downloadNote}</p>{/if}
+            {#if downloadNote}<p class="text-sm text-slate-600" role="status" data-testid="recipient-download-note">{downloadNote}</p>{/if}
+            {#if fileIssues.length}
+                <div class="rounded-xl border border-slate-200 p-4 space-y-3 text-sm text-slate-600" data-testid="recipient-file-issues">
+                    <p class="font-semibold">{fileCoverageLabel(coverage)}</p>
+                    <h3 class="font-semibold">Files to revisit</h3>
+                    <ul class="space-y-4">
+                        {#each fileIssues as issue (issue.key)}
+                            <li class="space-y-1">
+                                <p class="font-semibold text-slate-800">{issue.filename}</p>
+                                {#each issue.records as record (`${record.section}:${record.id}:${record.field}`)}
+                                    <button onclick={() => revealRecord(record.section, record.id)} class="block text-primary-deep underline text-left">
+                                        {record.title} · {fileFieldLabel(record.field)}
+                                    </button>
+                                {/each}
+                                {#if issue.kind === "retry"}
+                                    <button onclick={() => want(packet.attachments.filter((a) => a.key === issue.key))} class="text-primary-deep underline font-semibold">Try this file again</button>
+                                {:else}
+                                    <p>The original record names this file. You can review its details in the record.</p>
+                                {/if}
+                            </li>
+                        {/each}
+                    </ul>
+                </div>
+            {/if}
             {#if showFull}
                 <div transition:slide class="border-t border-slate-100 pt-4 -mx-8" data-testid="recipient-packet">
                     {@html html}
