@@ -36,7 +36,8 @@ import {
     Key,
     Stethoscope,
     Building2,
-    MapPin
+    MapPin,
+    Eye
 } from "lucide-svelte";
 
 export type UserRole = "Owner" | "Executor" | "Family";
@@ -65,18 +66,18 @@ export type NavGroup = {
 };
 
 // ===========================================
-// ESTATE PLANNING NAVIGATION
+// ESTATE PLANNING NAVIGATION (card E1, CU-018)
 // ===========================================
-// Core problem: Complete estate planning
-// Core essentials: What survivors NEED on day one
-// Secondary: Important but not urgent
-// Catalog: Nice-to-have legacy/memory features
+// Legacy and finances first: after the Dashboard come My Legacy, My Finances,
+// My Instructions and the owner's preview of their recipient's start page
+// (recipientPreviewEntry, rendered by the sidebar after "My Instructions").
+// Labels are the English names; each matches its page heading where the
+// heading is a name. Other languages read `dictionary.ts` by item key.
 
 export const navGroups: NavGroup[] = [
     {
-        groupLabel: "What Matters Most",
-        groupKey: "groupEssentials",
-        groupDescription: "The foundation of your estate",
+        groupLabel: "Estate Overview",
+        groupKey: "groupOverview",
         isPrimary: true,
         items: [
             {
@@ -88,8 +89,79 @@ export const navGroups: NavGroup[] = [
                 isQuickStart: true,
                 tooltip: "Your central hub for estate progress and status"
             },
+        ],
+    },
+    {
+        groupLabel: "My Legacy",
+        groupKey: "groupMyLegacy",
+        groupDescription: "Letters, memories, and treasures",
+        items: [
             {
-                label: "Financial Security",
+                label: "Legacy Correspondence",
+                key: "letters",
+                href: "/modules/letters",
+                icon: Heart,
+                allowedRoles: ["Owner", "Executor", "Family"],
+                tooltip: "Leave meaningful messages for the future"
+            },
+            {
+                label: "Heirlooms & Treasures",
+                key: "heirlooms",
+                href: "/modules/heirlooms",
+                icon: Gift,
+                allowedRoles: ["Owner", "Executor", "Family"],
+                tooltip: "Items with special meaning and their stories"
+            },
+            {
+                label: "Legacy Journal",
+                key: "journal",
+                href: "/modules/legacy-journal",
+                icon: BookOpen,
+                allowedRoles: ["Owner", "Executor", "Family"],
+                tooltip: "Your story, in your own words"
+            },
+            {
+                label: "Visual Memories",
+                key: "visual-memories",
+                href: "/modules/visual-memories",
+                icon: Image,
+                allowedRoles: ["Owner", "Executor", "Family"],
+                tooltip: "Photos and videos, and where the rest are kept"
+            },
+            {
+                label: "Time Capsule Vault",
+                key: "capsule",
+                href: "/modules/time-capsule",
+                icon: Box,
+                allowedRoles: ["Owner", "Executor", "Family"],
+                tooltip: "Messages that open on a date or a milestone"
+            },
+            {
+                label: "The Life Timeline",
+                key: "timeline",
+                href: "/modules/timeline",
+                icon: Calendar,
+                allowedRoles: ["Owner", "Executor", "Family"],
+                tooltip: "The milestones of your life"
+            },
+            {
+                label: "Family Hub",
+                key: "family-hub",
+                href: "/modules/family-hub",
+                icon: Users,
+                allowedRoles: ["Owner", "Executor", "Family"],
+                tooltip: "Your family network and connections"
+            },
+        ],
+    },
+    {
+        groupLabel: "My Finances",
+        groupKey: "groupFinances",
+        groupDescription: "Accounts, insurance, and property",
+        isCollapsedByDefault: true,
+        items: [
+            {
+                label: "Financial Accounts",
                 key: "financial",
                 href: "/modules/financial-accounts",
                 icon: Wallet,
@@ -99,7 +171,7 @@ export const navGroups: NavGroup[] = [
                 tooltip: "Securely document bank accounts and investments"
             },
             {
-                label: "Protection & Insurance",
+                label: "Insurance Portfolio",
                 key: "insurance",
                 href: "/modules/insurance",
                 icon: Shield,
@@ -109,17 +181,40 @@ export const navGroups: NavGroup[] = [
                 tooltip: "Policies that protect the people you love"
             },
             {
-                label: "People Who Matter",
-                key: "contacts",
-                href: "/modules/contacts",
-                icon: Users,
-                allowedRoles: ["Owner", "Executor", "Family"],
+                label: "Property & Real Estate",
+                key: "property",
+                href: "/modules/property",
+                icon: Building2,
+                allowedRoles: ["Owner", "Executor"],
                 isExecutorEssential: true,
-                isCoreAction: true,
-                tooltip: "Key contacts, advisors, and family members"
+                tooltip: "Real estate deeds and property details"
             },
             {
-                label: "Important Documents",
+                label: "Subscriptions & Services",
+                key: "subscriptions",
+                href: "/modules/subscriptions",
+                icon: Receipt,
+                allowedRoles: ["Owner", "Executor"],
+                tooltip: "Recurring payments and memberships to cancel"
+            },
+            {
+                label: "Digital Guardian",
+                key: "guardian",
+                href: "/modules/digital-guardian",
+                icon: Shield,
+                allowedRoles: ["Owner", "Executor"],
+                tooltip: "Online accounts, passwords, and digital life"
+            },
+        ],
+    },
+    {
+        groupLabel: "My Instructions",
+        groupKey: "groupInstructions",
+        groupDescription: "Documents, care, and wishes",
+        isCollapsedByDefault: true,
+        items: [
+            {
+                label: "Document Vault",
                 key: "documents",
                 href: "/modules/legal-documents",
                 icon: Files,
@@ -129,7 +224,7 @@ export const navGroups: NavGroup[] = [
                 tooltip: "Wills, trusts, and critical legal files"
             },
             {
-                label: "Health & Care",
+                label: "Health & Medical",
                 key: "medical",
                 href: "/modules/medical",
                 icon: Stethoscope,
@@ -139,7 +234,7 @@ export const navGroups: NavGroup[] = [
                 tooltip: "Medical directives and healthcare wishes"
             },
             {
-                label: "Home & Keys",
+                label: "The Home Operating Manual",
                 key: "home-manual",
                 href: "/modules/home-manual",
                 icon: Key,
@@ -147,6 +242,48 @@ export const navGroups: NavGroup[] = [
                 isExecutorEssential: true,
                 isCoreAction: true,
                 tooltip: "Access codes, spare keys, and home details"
+            },
+            {
+                label: "Final Wishes",
+                key: "funeral",
+                href: "/modules/funeral",
+                icon: Scroll,
+                allowedRoles: ["Owner", "Executor", "Family"],
+                tooltip: "How you would like to be honored"
+            },
+            {
+                label: "Pet Care",
+                key: "pets",
+                href: "/modules/pets",
+                icon: Dog,
+                allowedRoles: ["Owner", "Executor", "Family"],
+                tooltip: "Care instructions for your furry friends"
+            },
+            {
+                label: "The Red Binder",
+                key: "binder",
+                href: "/binder",
+                icon: Activity,
+                allowedRoles: ["Owner", "Executor"],
+                tooltip: "Generate a physical backup of your plan"
+            },
+        ],
+    },
+    {
+        groupLabel: "People & Check-ins",
+        groupKey: "groupPeople",
+        groupDescription: "The people you trust",
+        isCollapsedByDefault: true,
+        items: [
+            {
+                label: "Family & Contacts",
+                key: "contacts",
+                href: "/modules/contacts",
+                icon: Users,
+                allowedRoles: ["Owner", "Executor", "Family"],
+                isExecutorEssential: true,
+                isCoreAction: true,
+                tooltip: "Key contacts, advisors, and family members"
             },
             {
                 label: "Wellness Check-in",
@@ -160,50 +297,9 @@ export const navGroups: NavGroup[] = [
         ],
     },
     {
-        groupLabel: "When You're Ready",
-        groupKey: "groupSecondary",
-        groupDescription: "Additional areas to explore",
-        isCollapsedByDefault: true,
-        items: [
-            {
-                label: "Subscriptions",
-                key: "subscriptions",
-                href: "/modules/subscriptions",
-                icon: Receipt,
-                allowedRoles: ["Owner", "Executor"],
-                tooltip: "Recurring payments and memberships to cancel"
-            },
-            {
-                label: "Pet Care",
-                key: "pets",
-                href: "/modules/pets",
-                icon: Dog,
-                allowedRoles: ["Owner", "Executor", "Family"],
-                tooltip: "Care instructions for your furry friends"
-            },
-            {
-                label: "Property",
-                key: "property",
-                href: "/modules/property",
-                icon: Building2,
-                allowedRoles: ["Owner", "Executor"],
-                isExecutorEssential: true,
-                tooltip: "Real estate deeds and property details"
-            },
-            {
-                label: "Digital Accounts",
-                key: "guardian",
-                href: "/modules/digital-guardian",
-                icon: Shield,
-                allowedRoles: ["Owner", "Executor"],
-                tooltip: "Online accounts, passwords, and digital life"
-            },
-        ],
-    },
-    {
-        groupLabel: "Life & Legacy",
-        groupKey: "groupLegacy",
-        groupDescription: "Memories, messages, and more",
+        groupLabel: "Extras",
+        groupKey: "groupExtras",
+        groupDescription: "Additional tools and features",
         isCollapsedByDefault: true,
         items: [
             {
@@ -213,54 +309,6 @@ export const navGroups: NavGroup[] = [
                 icon: Compass,
                 allowedRoles: ["Owner", "Executor", "Family"],
                 tooltip: "Browse all available Continuum modules"
-            },
-            {
-                label: "Letters to Loved Ones",
-                key: "letters",
-                href: "/modules/letters",
-                icon: Heart,
-                allowedRoles: ["Owner", "Executor", "Family"],
-                tooltip: "Leave meaningful messages for the future"
-            },
-            {
-                label: "Treasured Heirlooms",
-                key: "heirlooms",
-                href: "/modules/heirlooms",
-                icon: Gift,
-                allowedRoles: ["Owner", "Executor", "Family"],
-                tooltip: "Items with special meaning and their stories"
-            },
-            {
-                label: "The Red Binder",
-                key: "binder",
-                href: "/binder",
-                icon: Activity,
-                allowedRoles: ["Owner", "Executor"],
-                tooltip: "Generate a physical backup of your plan"
-            },
-            {
-                label: "Settings",
-                key: "settings",
-                href: "/settings",
-                icon: Settings,
-                allowedRoles: ["Owner", "Executor", "Family"],
-                tooltip: "Manage your account and preferences"
-            },
-        ],
-    },
-    {
-        groupLabel: "Extras",
-        groupKey: "groupExtras",
-        groupDescription: "Additional tools and features",
-        isCollapsedByDefault: true,
-        items: [
-            {
-                label: "Family Tree",
-                key: "family-hub",
-                href: "/modules/family-hub",
-                icon: Users,
-                allowedRoles: ["Owner", "Executor", "Family"],
-                tooltip: "Your family network and connections"
             },
             {
                 label: "Future Scenarios",
@@ -302,9 +350,32 @@ export const navGroups: NavGroup[] = [
                 allowedRoles: ["Owner", "Executor", "Family"],
                 tooltip: "Interactive guide to finding important items"
             },
+            {
+                label: "Settings",
+                key: "settings",
+                href: "/settings",
+                icon: Settings,
+                allowedRoles: ["Owner", "Executor", "Family"],
+                tooltip: "Manage your account and preferences"
+            },
         ],
     },
 ];
+
+// The owner's preview of the start page their recipient opens (card D2). The sidebar
+// shows it after "My Instructions" and points it at /for/preview/<contactId> once a
+// contact is marked as a recipient; until then it opens Family & Contacts, where a
+// recipient is chosen. Kept out of navGroups so the dashboard grid, the data settings
+// cards and the role guard see only modules.
+export const recipientPreviewAfterGroup = "groupInstructions";
+export const recipientPreviewEntry: NavItem = {
+    label: "For My Son (preview)",
+    key: "recipient-preview",
+    href: "/modules/contacts",
+    icon: Eye,
+    allowedRoles: ["Owner"],
+    tooltip: "You can choose who receives a start page of their own in Family & Contacts",
+};
 
 // Pulse sub-navigation (shown when in Pulse section)
 export const pulseSubNav: NavItem[] = [
@@ -316,49 +387,49 @@ export const pulseSubNav: NavItem[] = [
         allowedRoles: ["Owner", "Executor", "Family"],
     },
     {
-        label: "Security Vault",
+        label: "The Vault",
         key: "pulseVault",
         href: "/modules/pulse/vault",
         icon: ShieldCheck,
         allowedRoles: ["Owner"],
     },
     {
-        label: "Transparency",
+        label: "Data Transparency",
         key: "pulseTransparency",
         href: "/modules/pulse/transparency",
         icon: Info,
         allowedRoles: ["Owner", "Executor", "Family"],
     },
     {
-        label: "Messages",
+        label: "Message Hub",
         key: "pulseMessages",
         href: "/modules/pulse/messages",
         icon: MessageSquare,
         allowedRoles: ["Owner", "Executor", "Family"],
     },
     {
-        label: "History",
+        label: "Check-in History",
         key: "pulseHistory",
         href: "/modules/pulse/history",
         icon: History,
         allowedRoles: ["Owner", "Executor"],
     },
     {
-        label: "Contacts",
+        label: "Trusted Contacts",
         key: "pulseContacts",
         href: "/modules/pulse/contacts",
         icon: Users,
         allowedRoles: ["Owner"],
     },
     {
-        label: "Escalation",
+        label: "Escalation Plan",
         key: "pulseEscalation",
         href: "/modules/pulse/escalation",
         icon: Activity,
         allowedRoles: ["Owner"],
     },
     {
-        label: "Settings",
+        label: "Pulse Configuration",
         key: "pulseSettings",
         href: "/modules/pulse/settings",
         icon: Settings,
@@ -419,4 +490,4 @@ export const catalogCategories: CatalogCategory[] = [
 ];
 
 // Core actions for onboarding tracking
-export const coreActions: NavItem[] = navGroups[0].items.filter(item => item.isCoreAction);
+export const coreActions: NavItem[] = navGroups.flatMap(group => group.items).filter(item => item.isCoreAction);

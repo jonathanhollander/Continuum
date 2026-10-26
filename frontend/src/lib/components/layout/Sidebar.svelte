@@ -1,8 +1,15 @@
 <script lang="ts">
     import { page } from "$app/stores";
-    import { dict, userRole } from "$lib/stores/conciergeStore.svelte";
+    import { dict, userRole, language } from "$lib/stores/conciergeStore.svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
-    import { navGroups, pulseSubNav } from "$lib/config/navigation";
+    import {
+        navGroups,
+        pulseSubNav,
+        recipientPreviewEntry,
+        recipientPreviewAfterGroup,
+    } from "$lib/config/navigation";
+    import { auth } from "$lib/stores/auth";
+    import { API_BASE_URL } from "$lib/config";
     import {
         ChevronDown,
         ChevronRight,
@@ -51,6 +58,49 @@
             }))
             .filter((group) => group.items.length > 0),
     );
+
+    // English names come from navigation.ts (they match the page headings);
+    // other languages read the dictionary by key.
+    const navText = (key: string, label: string) =>
+        $language === "en" ? label : $dict[key] || label;
+
+    // "For My Son (preview)": the owner's preview of their recipient's start page
+    // (card D2). Looked up on each page change, so a recipient chosen in
+    // Family & Contacts appears on the next navigation.
+    type Recipient = { contact_id: number; name: string; relation?: string | null };
+    let recipient = $state<Recipient | null>(null);
+    $effect(() => {
+        const path = $page.url.pathname;
+        const token = $auth.token;
+        if (!token || $userRole !== "Owner" || path.startsWith("/for/")) return;
+        fetch(`${API_BASE_URL}/api/recipient/links`, {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+            .then((r) => (r.ok ? r.json() : null))
+            .then((rows: (Recipient & { is_recipient: boolean })[] | null) => {
+                if (!Array.isArray(rows)) return;
+                const chosen = rows.filter((r) => r.is_recipient);
+                recipient =
+                    chosen.find((r) => /^son$/i.test((r.relation || "").trim())) ??
+                    chosen[0] ??
+                    null;
+            })
+            .catch(() => {});
+    });
+    let previewItem = $derived.by(() => {
+        if (!recipientPreviewEntry.allowedRoles.includes($userRole)) return null;
+        if (!recipient) return recipientPreviewEntry;
+        const relation = (recipient.relation || "").trim();
+        const first = recipient.name.trim().split(/\s+/)[0] || recipient.name;
+        return {
+            ...recipientPreviewEntry,
+            label: relation
+                ? `For My ${relation.charAt(0).toUpperCase()}${relation.slice(1)} (preview)`
+                : `For ${first} (preview)`,
+            href: `/for/preview/${recipient.contact_id}`,
+            tooltip: `See the start page ${first} opens with their link`,
+        };
+    });
 
     // Filter Pulse sub-nav
     let filteredPulseNav = $derived(
@@ -175,7 +225,7 @@
                             <span
                                 class="text-[10px] font-bold text-amber-400/90 uppercase tracking-widest"
                             >
-                                {$dict[group.groupKey] || group.groupLabel}
+                                {navText(group.groupKey, group.groupLabel)}
                             </span>
                         </div>
                         {#if group.groupDescription}
@@ -198,7 +248,7 @@
                             <span
                                 class="text-[10px] font-bold text-primary-foreground/60 uppercase tracking-widest"
                             >
-                                {$dict[group.groupKey] || group.groupLabel}
+                                {navText(group.groupKey, group.groupLabel)}
                             </span>
                             {#if isGroupOpen(group)}
                                 <ChevronDown
@@ -264,7 +314,7 @@
                                             : 'text-primary-foreground/50'}"
                                     />
                                     <span class="text-sm flex-1"
-                                        >{$dict[item.key] || item.label}</span
+                                        >{navText(item.key, item.label)}</span
                                     >
                                     {#if item.isExternal}
                                         <ExternalLink
@@ -284,6 +334,28 @@
                     </div>
                 {/if}
             </div>
+            {#if group.groupKey === recipientPreviewAfterGroup && previewItem}
+                {@const isActive = $page.url.pathname.startsWith("/for/preview/")}
+                <div class="mb-2">
+                    <Tooltip content={previewItem.tooltip ?? ""} position="right">
+                        <a
+                            href={previewItem.href}
+                            class="flex items-center gap-3 px-4 py-3 mx-0 rounded-xl transition-all duration-200 group relative overflow-hidden border border-white/10
+                            {isActive
+                                ? 'bg-white/20 text-white font-semibold'
+                                : 'text-primary-foreground/80 hover:text-white hover:bg-white/10'}"
+                            onclick={handleClose}
+                            data-testid="nav-recipient-preview"
+                        >
+                            <svelte:component
+                                this={previewItem.icon}
+                                class="w-4 h-4 text-primary-foreground/50 transition-transform duration-300 group-hover:scale-110"
+                            />
+                            <span class="text-sm flex-1">{previewItem.label}</span>
+                        </a>
+                    </Tooltip>
+                </div>
+            {/if}
         {/each}
 
         <!-- Pulse Sub-Navigation (shown when in Pulse section) -->
