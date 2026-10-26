@@ -824,7 +824,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | Card | Status | Commit | Proof / current evidence |
 |---|---|---|---|
 | X303 | ▶ | codex/X303 | Dispatched in .worktrees/X303; isolated proof, no push/deploy; orchestrator review pending. |
-| X304 | ☐ | source review 8751f22 | [CONTRACTS F1](reviews/2026-10-26-plan-crosscheck/CONTRACTS.md); P1; implementation not started. |
+| X304 | ▶ | codex/X304 | Shared manager owner; depends on X303 session helper, coordinates Retry and confirmed-remove APIs for X315/X326. |
 | X305 | ☐ | source review 8751f22 | [CONTRACTS F1](reviews/2026-10-26-plan-crosscheck/CONTRACTS.md); P1; implementation not started. |
 | X306 | ☐ | source review 8751f22 | [SHELL F5](reviews/2026-10-26-plan-crosscheck/SHELL.md); P2; implementation not started. |
 | X307 | ▶ | codex/X307 | Dispatched in .worktrees/X307; isolated proof, no push/deploy; orchestrator review pending. |
