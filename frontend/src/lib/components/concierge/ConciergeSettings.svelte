@@ -49,6 +49,14 @@
         { id: "he", label: "Hebrew", native: "עברית" },
     ];
 
+    // The perspective is saved with the account, so it changes only after a confirm
+    function choosePerspective(role: (typeof roles)[number]) {
+        if ($userRole === role.id) return;
+        const label = $dict[role.key] || role.id;
+        if (!confirm(`Change your perspective to ${label}? You can switch back here anytime.`)) return;
+        userRole.set(role.id as any);
+    }
+
     // Export State
     let selectedScope: ExportScope = "full";
     let includeImages = true;
@@ -137,7 +145,7 @@
                             {$userRole === role.id
                                 ? 'bg-primary text-primary-foreground shadow-lg'
                                 : 'text-slate-400 hover:text-slate-600'}"
-                            onclick={() => userRole.set(role.id as any)}
+                            onclick={() => choosePerspective(role)}
                         >
                             <div class="flex flex-col items-center gap-1">
                                 <span>{$dict[role.key] || role.id}</span>
