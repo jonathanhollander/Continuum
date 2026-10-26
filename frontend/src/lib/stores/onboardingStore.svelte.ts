@@ -36,33 +36,36 @@ export const onboardingStore = {
         return manager.update({ hasSeenWelcome: false, isDemoMode: false });
     },
 
-    populateDemoData() {
+    async populateDemoData() {
         console.log("Populating Demo Data...");
         const samples = getSmartSamples('en');
+        // Every sample save is awaited and caught (card X233); a failed one already
+        // shows the store's gentle message, so the rest carry on.
+        const saves: Promise<unknown>[] = [];
 
         // 1. Property
         samples.property.forEach(item => {
-            propertyStore.addItem(item);
+            saves.push(propertyStore.addItem(item));
         });
 
         // 2. Family
         samples.family.forEach(member => {
-            familyStore.addMember(member);
+            saves.push(familyStore.addMember(member));
         });
 
         // 3. Insurance
         samples.insurance.forEach(policy => {
-            insuranceStore.addPolicy(policy);
+            saves.push(insuranceStore.addPolicy(policy));
         });
 
         // 4. Heirlooms
         samples.heirlooms.forEach(heirloom => {
-            heirloomStore.addItem(heirloom);
+            saves.push(heirloomStore.addItem(heirloom));
         });
 
         // 5. Digital Assets
         samples.digital.forEach(account => {
-            digitalAssetsStore.addAccount(account);
+            saves.push(digitalAssetsStore.addAccount(account));
         });
 
         // 6. Medical: each sample carries the medical profile beside the directive fields;
@@ -71,12 +74,14 @@ export const onboardingStore = {
         (samples.medical as (MedicalDirective & Partial<MedicalProfile>)[]).forEach(sample => {
             const { organDonor, bloodType, allergies, ...directive } = sample;
             medicalProfile ??= { organDonor, bloodType, allergies };
-            medicalStore.addDirective(directive);
+            saves.push(medicalStore.addDirective(directive));
         });
 
         if (medicalProfile) {
-            medicalStore.updateProfile(medicalProfile);
+            saves.push(medicalStore.updateProfile(medicalProfile));
         }
+
+        await Promise.allSettled(saves);
 
         // 7. Log Event
         activityLog.logEvent({

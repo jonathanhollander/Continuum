@@ -315,6 +315,7 @@
                                         {event.nextDate
                                             .toLocaleDateString("en-US", {
                                                 month: "short",
+                                                year: event.recurring ? undefined : "numeric",
                                             })
                                             .toUpperCase()}
                                     </span>
@@ -418,7 +419,7 @@
                             {#each $upcomingEvents as event (event.id)}
                                 <tr class="hover:bg-slate-50 transition-colors group">
                                     <td class="px-4 py-3 font-mono text-sm text-slate-600">
-                                        {event.nextDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                                        {event.nextDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: event.recurring ? undefined : "numeric" })}
                                     </td>
                                     <td class="px-4 py-3 font-medium text-slate-800">{event.title}</td>
                                     <td class="px-4 py-3">
