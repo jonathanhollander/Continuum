@@ -105,6 +105,7 @@
                 : "Ethical Will"
             : selectedTemplate?.title || "Draft Letter";
 
+        try {
         const newLetter = await letterSync.create({
             title: `${title} (${new Date().toLocaleDateString()})`,
             content: generatedLetter,
@@ -113,7 +114,7 @@
             triggerDate: letterTriggerDate,
             triggerMilestone: letterTriggerMilestone,
             isLocked: !!(letterTriggerDate || letterTriggerMilestone),
-        });
+        }, false, false, saveToVault);
 
         activityLog.logEvent({
             module: "Letters",
@@ -127,6 +128,9 @@
         // Affirmation is shown automatically by letterSync.create()
         mode = "menu";
         resetSelection();
+        } catch {
+            // The manager already showed the one gentle message; the draft stays on screen.
+        }
     }
 
     function resetSelection() {
@@ -137,14 +141,15 @@
         mode = "menu";
     }
 
-    function deleteLetter(id: string, name: string) {
+    async function deleteLetter(id: string, name: string) {
         if (
             !confirm(
                 `Remove the letter to "${name}"? You can always start over if you feel like it later.`,
             )
         )
             return;
-        letterSync.delete(id);
+        await letterSync.delete(id);
+        if (letterSync.items.some((l) => String(l.id) === String(id))) return;
 
         activityLog.logEvent({
             module: "Letters",

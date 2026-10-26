@@ -123,6 +123,7 @@
     async function saveSubscription() {
         if (!newSub.name) return;
 
+        try {
         if (newSub.id) {
             // Edit Mode
             await subscriptionSync.update(newSub.id, {
@@ -166,7 +167,7 @@
                 loginUrl: newSub.loginUrl || "",
                 notes: newSub.notes || "",
                 custom_attributes: JSON.stringify(parsedCustomAttributes),
-            });
+            }, false, false, saveSubscription);
 
             // Log CREATE
             activityLog.logEvent({
@@ -180,6 +181,9 @@
         }
 
         resetForm();
+        } catch {
+            // The manager already showed the one gentle message; the form stays open with the draft.
+        }
     }
 
     function editSubscription(sub: Subscription) {
@@ -209,7 +213,7 @@
         parsedCustomAttributes = {};
     }
 
-    function removeSubscription(id: string) {
+    async function removeSubscription(id: string) {
         if (
             !confirm(
                 "Remove this subscription? This detail can always be added back later.",
@@ -218,10 +222,10 @@
             return;
         const sub = subscriptions.find((s) => s.id === id);
 
-        subscriptionSync.delete(id);
+        await subscriptionSync.delete(id);
 
-        // Log DELETE
-        if (sub) {
+        // Log DELETE only if the item is really gone (the manager rolls back and shows its message on failure)
+        if (sub && !subscriptionSync.items.some((s) => s.id === id)) {
             activityLog.logEvent({
                 module: "Subscriptions",
                 action: "DELETE",

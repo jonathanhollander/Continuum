@@ -108,9 +108,10 @@
         viewMode = "dashboard";
     }
 
-    function saveMemory() {
+    async function saveMemory() {
         if (!newMemory.title) return;
 
+        try {
         if (newMemory.id) {
             // Edit Mode
             const oldMemory = memories.find(
@@ -139,7 +140,7 @@
                     });
             }
 
-            updateFamilyMemory(newMemory.id, newMemory as any);
+            await updateFamilyMemory(newMemory.id, newMemory as any);
 
             // Log UPDATE
             activityLog.logEvent({
@@ -153,10 +154,10 @@
             });
         } else {
             // Create Mode
-            addFamilyMemory({
+            await addFamilyMemory({
                 ...newMemory,
                 is_favorite: false,
-            } as any);
+            } as any, saveMemory);
 
             // Log CREATE
             activityLog.logEvent({
@@ -171,6 +172,9 @@
 
         showAffirmation = true;
         resetForm();
+        } catch {
+            // The manager already showed the one gentle message; the form stays open with the draft.
+        }
     }
 
     function editMemory(memory: Memory) {

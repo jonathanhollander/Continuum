@@ -167,6 +167,7 @@
         // Serialize Custom Attributes
         const customAttributesStr = JSON.stringify(parsedCustomAttributes);
 
+        try {
         if (newAsset.id) {
             // Edit Mode - update via SyncManager
             const updates = {
@@ -211,7 +212,7 @@
                 documents: newAsset.documents || "",
                 valueHistory: JSON.stringify(generateMockHistory(Number(newAsset.value) || 0)),
                 customAttributes: customAttributesStr,
-            });
+            }, false, false, saveAsset);
 
             // Log CREATE
             activityLog.logEvent({
@@ -226,6 +227,9 @@
 
         // save(); // SyncManager handles persistence
         resetForm();
+        } catch {
+            // The manager already showed the one gentle message; the form stays open with the draft.
+        }
     }
 
     function editAsset(asset: Asset) {
@@ -282,16 +286,16 @@
         showAddForm = false;
     }
 
-    function removeAsset(id: string) {
+    async function removeAsset(id: string) {
         if (!confirm("Remove this asset? You can add it back later if needed."))
             return;
         const asset = assets.find((a) => a.id === id);
 
         // SyncManager delete
-        assetSync.delete(id);
+        await assetSync.delete(id);
 
-        // Log DELETE
-        if (asset) {
+        // Log DELETE only if the item is really gone (the manager rolls back and shows its message on failure)
+        if (asset && !assetSync.items.some((a) => a.id === id)) {
             activityLog.logEvent({
                 module: module.name || "Asset Manager",
                 action: "DELETE",

@@ -118,8 +118,10 @@
         showWizard = false;
     }
 
-    function addWizardItem(name: string, type: any) {
-        const created = propertyStore.addItem({
+    async function addWizardItem(name: string, type: any) {
+        let created;
+        try {
+            created = await propertyStore.addItem({
             name: name,
             type: type,
             location: "TBD",
@@ -131,6 +133,9 @@
             evidence: [],
             thumbnail: "",
         });
+        } catch {
+            return; // the manager already showed the one gentle message
+        }
 
         activityLog.logEvent({
             module: "Property",
