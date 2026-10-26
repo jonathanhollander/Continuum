@@ -3,6 +3,7 @@ import { activeAccountId } from '../stores/keyringStore';
 import { userRole } from '../stores/conciergeStore.svelte.ts';
 
 import { apiFetch } from '../api/client';
+import { parseApiError } from './errorHandler';
 
 export const AI_UNAVAILABLE = "AI help isn't available right now. Everything else is still here for you, and you can come back to this whenever you're ready.";
 
@@ -22,7 +23,9 @@ export async function callAiProxy(messages: Array<{ role: string; content: strin
         body: JSON.stringify({ model: 'google/gemini-2.0-flash-001', messages })
     });
     if (!response.ok) {
-        throw new Error(AI_UNAVAILABLE);
+        const serverError = new Error((await parseApiError(response)).message);
+        (serverError as any).gentle = true;
+        throw serverError;
     }
     const data = await response.json();
     return data.choices[0].message.content;
@@ -195,8 +198,8 @@ Example: { "message": "Sarah recorded as daughter—what a beautiful gift to hav
         console.error('AI Error:', error);
         return {
             failed: true,
-            content: error instanceof Error && error.message === AI_UNAVAILABLE
-                ? AI_UNAVAILABLE
+            content: error instanceof Error && ((error as any).gentle || error.message === AI_UNAVAILABLE)
+                ? error.message
                 : "I'm having a little trouble connecting right now. Please try again in a moment."
         };
     }
