@@ -24,10 +24,10 @@
 
     // Assets from notion-assets & screenshots
     const assets = {
-        vault: "/Marketing/product_shots/shot_vault.png",
-        letters: "/Marketing/product_shots/shot_letters.png",
-        guardian: "/Marketing/product_shots/shot_guardian.png",
-        legacy: "/Marketing/product_shots/shot_heirlooms.png",
+        vault: "/Marketing/product_shots/shot_vault.png?v=2",
+        letters: "/Marketing/product_shots/shot_letters.png?v=2",
+        guardian: "/Marketing/product_shots/shot_guardian.png?v=2",
+        legacy: "/Marketing/product_shots/shot_heirlooms.png?v=2",
         heroBg: "/Marketing/notion-assets/assets/covers_default/digital_legacy_management_cover.png",
     };
 
