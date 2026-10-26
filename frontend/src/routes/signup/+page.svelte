@@ -52,10 +52,32 @@
         }
     }
 
+    // Same-site relative path only (as on /auth/verify); anything else is dropped
+    function sameSitePath(value: string | null): string | null {
+        return value &&
+            value.startsWith("/") &&
+            !value.startsWith("//") &&
+            !value.includes("\\") &&
+            !value.includes("://")
+            ? value
+            : null;
+    }
+
+    $: safeRedirect = sameSitePath($page.url.searchParams.get("redirect"));
+    // Sign-in link carrying the email and the /start choice
+    $: loginHref = (() => {
+        const params = new URLSearchParams();
+        if (email) params.set("email", email);
+        if (safeRedirect) params.set("redirect", safeRedirect);
+        const query = params.toString();
+        return query ? `/login?${query}` : "/login";
+    })();
+    let alreadyHere = false;
+
     // Redirect if already logged in
     onMount(() => {
         if ($auth.user) {
-            goto($page.url.searchParams.get("redirect") || "/dashboard");
+            goto(safeRedirect || "/dashboard");
         }
     });
 
@@ -69,6 +91,7 @@
         }
 
         isLoading = true;
+        alreadyHere = false;
 
         try {
             // Step 1: Create account and start passkey registration
@@ -107,10 +130,8 @@
             console.error("Account creation failed:", e);
             // Show error notification to user
             if (e.message?.includes("already registered") || e.message?.includes("already exists")) {
-                notifications.showError({
-                    message: "Welcome back. This email already has a space here. You can sign in whenever you're ready.",
-                    code: "DUPLICATE_EMAIL",
-                });
+                // Shown beside the email field with a sign-in link
+                alreadyHere = true;
             } else {
                 notifications.showError(e);
             }
@@ -124,8 +145,7 @@
             localStorage.setItem("continuum_last_email", email);
         }
         const params = new URLSearchParams({ method: "email" });
-        const redirect = $page.url.searchParams.get("redirect");
-        if (redirect) params.set("redirect", redirect);
+        if (safeRedirect) params.set("redirect", safeRedirect);
         goto(`/login?${params}`);
     }
 
@@ -174,7 +194,7 @@
             // A path chosen on /start (?redirect=) continues there once signed in
             setTimeout(async () => {
                 await auth.init();
-                goto($page.url.searchParams.get("redirect") || "/onboarding");
+                goto(safeRedirect || "/onboarding");
             }, 2000);
         } catch (e: any) {
             console.warn("Passkey registration did not finish:", e?.name);
@@ -244,6 +264,17 @@
                         <p class="text-slate-500 text-sm mt-3">
                             We'll use this to set up your account and passkey
                         </p>
+                        {#if alreadyHere}
+                            <p class="text-slate-300 text-base mt-3">
+                                Welcome back. This email already has a space here.
+                                <a
+                                    href={loginHref}
+                                    class="text-teal-400 hover:text-teal-300 font-bold transition-colors"
+                                >
+                                    Sign in
+                                </a>
+                            </p>
+                        {/if}
                     </div>
 
                     <button
@@ -359,7 +390,7 @@
                     <p class="text-slate-400 text-lg">
                         Already have an account?
                         <a
-                            href="/login"
+                            href={loginHref}
                             class="text-teal-400 hover:text-teal-300 font-bold transition-colors"
                         >
                             Sign in
