@@ -47,7 +47,8 @@ const insuranceMapper = (item: any) => {
         policyName: out.policyName ?? '',
         insuranceType: pageSpelling(out.insuranceType ?? 'Other', TYPES),
         policyNumber: out.policyNumber ?? '',
-        premiumAmount: out.premiumAmount ?? 0,
+        // A row sent through the API can hold "120"; the totals add it as a number.
+        premiumAmount: Number(out.premiumAmount) || 0,
         premiumFrequency: pageSpelling(out.premiumFrequency ?? 'Monthly', FREQUENCIES, { annual: 'Annually', yearly: 'Annually' }),
         agentName: out.agentName ?? '',
         agentContact: out.agentContact ?? '',

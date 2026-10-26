@@ -144,7 +144,7 @@
         );
         const waiting = wanted.filter((_, i) => results[i].status === "rejected");
         if (waiting.length === 0) {
-            notifications.showAffirmation("general");
+            notifications.showAffirmation("general", "create");
             return;
         }
         const reason = results.find((r) => r.status === "rejected") as PromiseRejectedResult;
@@ -990,11 +990,11 @@
                         class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
                     >
                         <div class="space-y-1.5">
-                            <label
+                            <label for="insurance-policy-name"
                                 class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Policy Title</label
                             >
-                            <input
+                            <input id="insurance-policy-name"
                                 type="text"
                                 bind:value={newPolicy.policyName}
                                 placeholder="e.g. Master Life Policy"
@@ -1002,11 +1002,11 @@
                             />
                         </div>
                         <div class="space-y-1.5">
-                            <label
+                            <label for="insurance-insurance-type"
                                 class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Insurance Classification</label
                             >
-                            <select
+                            <select id="insurance-insurance-type"
                                 bind:value={newPolicy.insuranceType}
                                 class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800 appearance-none cursor-pointer"
                             >
@@ -1016,11 +1016,11 @@
                             </select>
                         </div>
                         <div class="space-y-1.5">
-                            <label
+                            <label for="insurance-insurer"
                                 class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Insurance Carrier</label
                             >
-                            <input
+                            <input id="insurance-insurer"
                                 type="text"
                                 bind:value={newPolicy.insurer}
                                 placeholder="e.g. Prudential Financial"
@@ -1103,7 +1103,7 @@
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div class="space-y-1.5">
-                            <label
+                            <label for="insurance-premium-amount"
                                 class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Premium Amount ($)</label
                             >
@@ -1112,7 +1112,7 @@
                                     size={16}
                                     class="absolute left-4 top-3.5 text-primary"
                                 />
-                                <input
+                                <input id="insurance-premium-amount"
                                     type="number"
                                     bind:value={newPolicy.premiumAmount}
                                     class="w-full px-4 py-3 pl-10 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
@@ -1120,11 +1120,11 @@
                             </div>
                         </div>
                         <div class="space-y-1.5">
-                            <label
+                            <label for="insurance-premium-frequency"
                                 class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Billing Interval</label
                             >
-                            <select
+                            <select id="insurance-premium-frequency"
                                 bind:value={newPolicy.premiumFrequency}
                                 class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800 appearance-none cursor-pointer"
                             >
@@ -1134,11 +1134,13 @@
                             </select>
                         </div>
                         <div class="space-y-1.5">
-                            <label
+                            <span id="insurance-status-label"
                                 class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
-                                >Status Tracking</label
+                                >Status Tracking</span
                             >
                             <div
+                                role="group"
+                                aria-labelledby="insurance-status-label"
                                 class="flex bg-white rounded-xl p-1 border border-slate-200"
                             >
                                 {#each ["Active", "Pending", "Inactive"] as status}
@@ -1170,11 +1172,11 @@
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="space-y-1.5">
-                            <label
+                            <label for="insurance-beneficiaries"
                                 class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Designated Beneficiaries</label
                             >
-                            <input
+                            <input id="insurance-beneficiaries"
                                 type="text"
                                 bind:value={newPolicy.beneficiaries}
                                 placeholder="Split 50/50 between children..."
@@ -1182,11 +1184,11 @@
                             />
                         </div>
                         <div class="space-y-1.5">
-                            <label
+                            <label for="insurance-agent-name"
                                 class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
                                 >Agent / Point of Contact</label
                             >
-                            <input
+                            <input id="insurance-agent-name"
                                 type="text"
                                 bind:value={newPolicy.agentName}
                                 placeholder="Full name and company name"
@@ -1208,7 +1210,7 @@
                             />
                         </div>
                         <div class="space-y-1.5 md:col-span-2">
-                            <label
+                            <label for="insurance-claims-procedure"
                                 class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1 flex items-center gap-2"
                             >
                                 Claims Filing Instructions
@@ -1217,7 +1219,7 @@
                                     >CRITICAL</span
                                 >
                             </label>
-                            <textarea
+                            <textarea id="insurance-claims-procedure"
                                 bind:value={newPolicy.claimsProcedure}
                                 rows="4"
                                 placeholder="Detailed step-by-step for the family..."

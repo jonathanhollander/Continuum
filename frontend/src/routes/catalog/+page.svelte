@@ -57,7 +57,7 @@
         tier="preparation"
     />
 
-    <div class="container mx-auto px-6 py-12">
+    <div class="container mx-auto px-8 py-12">
         <!-- Controls -->
         <div
             class="flex flex-col md:flex-row gap-4 justify-between items-center mb-10"

@@ -4,7 +4,10 @@
 import { writable } from 'svelte/store';
 import type { ErrorNotification } from '$lib/services/errorHandler';
 import { createErrorNotification, type ErrorDetails } from '$lib/services/errorHandler';
-import { getRandomAffirmation, type Affirmation, type AffirmationKind } from '$lib/data/affirmations';
+import { getRandomAffirmation, affirmations, type Affirmation, type AffirmationKind } from '$lib/data/affirmations';
+
+/** Which affirmation pool a save draws from: every module in the affirmations library. */
+export type AffirmationContext = keyof typeof affirmations;
 
 export interface Notification extends ErrorNotification {
 	type: 'error' | 'success' | 'info';
@@ -94,7 +97,7 @@ function createNotificationStore() {
 		 * Uses the affirmations library for meaningful, context-aware messages.
 		 */
 		showAffirmation(
-			module: 'general' | 'documents' | 'wishes' | 'contacts' | 'medical' | 'pets' | 'insurance' | 'funeral' | 'subscriptions' | 'heirlooms' | 'timeline' | 'letters' | 'timeCapsule' | 'pulse' = 'general',
+			module: AffirmationContext = 'general',
 			kind?: AffirmationKind
 		) {
 			const affirmation = getRandomAffirmation(module, kind);

@@ -20,7 +20,6 @@
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import HeirloomCard from "$lib/components/modules/heirlooms/HeirloomCard.svelte";
     import VisionUploader from "$lib/components/modules/heirlooms/VisionUploader.svelte";
-    import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
     import { onMount } from "svelte";
     import {
@@ -129,7 +128,7 @@
         );
         const waiting = wanted.filter((_, i) => results[i].status === "rejected");
         if (waiting.length === 0) {
-            notifications.showAffirmation("heirlooms");
+            notifications.showAffirmation("heirlooms", "create");
             return;
         }
         const reason = results.find((r) => r.status === "rejected") as PromiseRejectedResult;

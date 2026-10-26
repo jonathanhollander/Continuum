@@ -240,7 +240,7 @@
         <Loader2 class="w-8 h-8 animate-spin text-primary" />
     </div>
 {:else}
-<div class="container px-6 mx-auto py-8 animate-in fade-in duration-500">
+<div class="container px-8 mx-auto py-8 animate-in fade-in duration-500">
 
 
     <!-- AI Prompt Bar -->
@@ -477,11 +477,11 @@
     >
         <div class="space-y-4">
             <div>
-                <label
+                <label for="pet-name"
                     class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1 mb-1.5"
                     >Name</label
                 >
-                <input
+                <input id="pet-name"
                     type="text"
                     bind:value={newPet.name}
                     class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
@@ -491,11 +491,11 @@
 
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label
+                    <label for="pet-type"
                         class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1 mb-1.5"
                         >Type</label
                     >
-                    <select
+                    <select id="pet-type"
                         bind:value={newPet.type}
                         class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     >
@@ -505,11 +505,11 @@
                     </select>
                 </div>
                 <div>
-                    <label
+                    <label for="pet-breed"
                         class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1 mb-1.5"
                         >Breed / Species</label
                     >
-                    <input
+                    <input id="pet-breed"
                         type="text"
                         bind:value={newPet.breed}
                         class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
@@ -519,11 +519,11 @@
             </div>
 
             <div>
-                <label
+                <label for="pet-guardian"
                     class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1 mb-1.5"
                     >Their Next Loving Home</label
                 >
-                <input
+                <input id="pet-guardian"
                     type="text"
                     bind:value={newPet.guardian}
                     class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
@@ -537,11 +537,11 @@
             </div>
 
             <div>
-                <label
+                <label for="pet-vet-name"
                     class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1 mb-1.5"
                     >Vet Name</label
                 >
-                <input
+                <input id="pet-vet-name"
                     type="text"
                     bind:value={newPet.vetName}
                     class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
@@ -549,11 +549,11 @@
                 />
             </div>
             <div>
-                <label
+                <label for="pet-vet-phone"
                     class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1 mb-1.5"
                     >Vet Phone</label
                 >
-                <input
+                <input id="pet-vet-phone"
                     type="text"
                     bind:value={newPet.vetPhone}
                     class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
@@ -563,11 +563,11 @@
 
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label
+                    <label for="pet-food-instructions"
                         class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1 mb-1.5"
                         >Their Daily Routine</label
                     >
-                    <input
+                    <input id="pet-food-instructions"
                         type="text"
                         bind:value={newPet.foodInstructions}
                         class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
@@ -575,11 +575,11 @@
                     />
                 </div>
                 <div>
-                    <label
+                    <label for="pet-medical-needs"
                         class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1 mb-1.5"
                         >Health & Medications</label
                     >
-                    <input
+                    <input id="pet-medical-needs"
                         type="text"
                         bind:value={newPet.medicalNeeds}
                         class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"

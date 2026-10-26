@@ -359,11 +359,11 @@
                     {:else}
                         <div class="space-y-4" in:slide>
                             <div>
-                                <label
+                                <label for="medical-blood-type"
                                     class="block text-xs font-bold uppercase text-gray-500 mb-1"
                                     >Blood Type</label
                                 >
-                                <select
+                                <select id="medical-blood-type"
                                     bind:value={tempProfile.bloodType}
                                     class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                 >
@@ -379,11 +379,11 @@
                                 </select>
                             </div>
                             <div>
-                                <label
+                                <label for="medical-allergies"
                                     class="block text-xs font-bold uppercase text-gray-500 mb-1"
                                     >Critical Allergies</label
                                 >
-                                <textarea
+                                <textarea id="medical-allergies"
                                     bind:value={tempProfile.allergies}
                                     class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                     rows="3"
@@ -596,11 +596,11 @@
     >
         <div class="grid grid-cols-2 gap-4">
             <div>
-                <label
+                <label for="medical-type"
                     class="block text-xs font-bold uppercase text-slate-500 mb-1"
                     >Directive Type</label
                 >
-                <select
+                <select id="medical-type"
                     bind:value={newDirective.type}
                     class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                 >
@@ -612,11 +612,11 @@
                 </select>
             </div>
             <div>
-                <label
+                <label for="medical-title"
                     class="block text-xs font-bold uppercase text-slate-500 mb-1"
                     >Title</label
                 >
-                <input
+                <input id="medical-title"
                     type="text"
                     bind:value={newDirective.title}
                     placeholder="e.g. Living Will 2024"
@@ -626,11 +626,11 @@
         </div>
 
         <div>
-            <label
+            <label for="medical-summary"
                 class="block text-xs font-bold uppercase text-slate-500 mb-1"
                 >Summary of Wishes</label
             >
-            <textarea
+            <textarea id="medical-summary"
                 bind:value={newDirective.summary}
                 placeholder="Key points of this directive..."
                 class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
@@ -640,11 +640,11 @@
 
         <div class="grid grid-cols-2 gap-4">
             <div>
-                <label
+                <label for="medical-primary-contact"
                     class="block text-xs font-bold uppercase text-slate-500 mb-1"
                     >Primary Proxy/Contact</label
                 >
-                <input
+                <input id="medical-primary-contact"
                     type="text"
                     bind:value={newDirective.primaryContact}
                     placeholder="e.g. Dr. Sarah Chen"
@@ -652,11 +652,11 @@
                 />
             </div>
             <div>
-                <label
+                <label for="medical-contact-phone"
                     class="block text-xs font-bold uppercase text-slate-500 mb-1"
                     >Contact Phone</label
                 >
-                <input
+                <input id="medical-contact-phone"
                     type="text"
                     bind:value={newDirective.contactPhone}
                     placeholder="e.g. +1 (555) 000-0000"
@@ -666,11 +666,11 @@
         </div>
 
         <div>
-            <label
+            <label for="medical-location-of-original"
                 class="block text-xs font-bold uppercase text-slate-500 mb-1"
                 >Location of Original Document</label
             >
-            <input
+            <input id="medical-location-of-original"
                 type="text"
                 bind:value={newDirective.locationOfOriginal}
                 placeholder="e.g. Safe deposit box at First National Bank"

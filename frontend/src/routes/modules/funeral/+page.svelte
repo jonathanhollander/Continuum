@@ -18,7 +18,6 @@
     } from "lucide-svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
-    import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import GriefSupportBanner from "$lib/components/GriefSupportBanner.svelte";
@@ -567,22 +566,22 @@
                     </div>
                     <div class="p-6 space-y-4">
                         <div class="space-y-2">
-                            <label
+                            <label for="funeral-name"
                                 class="text-xs font-bold uppercase tracking-wider text-muted-foreground"
                                 >Item Name</label
                             >
-                            <input
+                            <input id="funeral-name"
                                 bind:value={newExpense.name}
                                 class="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-[#4A7C74] outline-none font-medium"
                                 placeholder="e.g. Venue Rental"
                             />
                         </div>
                         <div class="space-y-2">
-                            <label
+                            <label for="funeral-cost"
                                 class="text-xs font-bold uppercase tracking-wider text-muted-foreground"
                                 >Cost ($)</label
                             >
-                            <input
+                            <input id="funeral-cost"
                                 type="number"
                                 bind:value={newExpense.cost}
                                 class="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-[#4A7C74] outline-none font-medium"

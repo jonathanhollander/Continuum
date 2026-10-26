@@ -17,6 +17,8 @@
         helpText?: string;
     }>();
 
+    const uid = $props.id();
+
     let inputClasses = $derived(
         `w-full px-4 py-3 rounded-xl border bg-white outline-none transition-all text-slate-800 ${
             error
@@ -28,11 +30,12 @@
 
 <div class="space-y-1.5">
     {#if label}
-        <label class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1">
+        <label for="{uid}-input" class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1">
             {label}{#if required}<span class="text-rose-500 ml-1">*</span>{/if}
         </label>
     {/if}
     <input
+        id="{uid}-input"
         {type}
         bind:value
         {placeholder}

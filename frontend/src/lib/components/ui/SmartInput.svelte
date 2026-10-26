@@ -16,6 +16,8 @@
         type?: string;
     }>();
 
+    const uid = $props.id();
+
     let glowClass = $derived(
         isAIPopulated
             ? "border-amber-500/50 shadow-[0_0_15px_-3px_rgba(245,158,11,0.2)] bg-amber-50/5"
@@ -27,6 +29,7 @@
     {#if label}
         <div class="flex items-center justify-between px-1">
             <label
+                for="{uid}-input"
                 class="text-[11px] font-black text-slate-800 uppercase tracking-wider"
                 >{label}</label
             >
@@ -44,6 +47,7 @@
 
     <div class="relative">
         <input
+            id="{uid}-input"
             {type}
             bind:value
             {placeholder}

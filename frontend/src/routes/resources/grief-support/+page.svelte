@@ -24,6 +24,7 @@
         type Hotline,
     } from "$lib/services/hotlineService";
     import { aiGriefService } from "$lib/services/aiGriefService";
+    import { handleFetchError } from "$lib/services/errorHandler";
     import {
         supportService,
         type SearchResult,
@@ -39,6 +40,8 @@
     let isSearching = $state(false);
     let searchResults = $state<SearchResult[]>([]);
     let showDiscovery = $state(false);
+    let discoveryError = $state("");
+    let chatError = $state("");
 
     // Chat State
     let chatInput = $state("");
@@ -132,6 +135,7 @@
         chatHistory = [...chatHistory, { role: "user", content: userMsg }];
 
         isTyping = true;
+        chatError = "";
         try {
             const response = await aiGriefService.chat(userMsg, chatHistory);
             chatHistory = [
@@ -143,7 +147,10 @@
                 // Focus sidebar or highlight hotlines? Maybe later.
             }
         } catch (e) {
-            console.error(e);
+            // Take the unsent message back out of the thread and into the box so retry resends it once.
+            chatHistory = chatHistory.slice(0, -1);
+            chatInput = userMsg;
+            chatError = handleFetchError(e).message;
         } finally {
             isTyping = false;
         }
@@ -154,12 +161,14 @@
 
         isSearching = true;
         showDiscovery = true;
+        discoveryError = "";
         try {
             const response =
                 await supportService.discoverLocalSupport(searchLocation);
             searchResults = response.results;
         } catch (e) {
-            console.error(e);
+            searchResults = [];
+            discoveryError = handleFetchError(e).message;
         } finally {
             isSearching = false;
         }
@@ -384,6 +393,18 @@
                                 </button>
                             </div>
 
+                            {#if discoveryError}
+                                <div role="alert" class="w-full mb-4 p-4 rounded-2xl bg-white/5 border border-white/10 text-sm text-slate-300">
+                                    <p>{discoveryError}</p>
+                                    <button
+                                        onclick={handleDiscovery}
+                                        class="mt-2 px-3 py-1.5 rounded-xl bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 transition-all text-xs font-medium"
+                                    >
+                                        Try again
+                                    </button>
+                                </div>
+                            {/if}
+
                             {#if showDiscovery && searchResults.length > 0}
                                 <div class="w-full space-y-4" in:fade>
                                     {#each searchResults as result}
@@ -412,7 +433,7 @@
                                         </a>
                                     {/each}
                                 </div>
-                            {:else if showDiscovery && !isSearching}
+                            {:else if showDiscovery && !isSearching && !discoveryError}
                                 <div
                                     class="w-full p-8 border border-dashed border-white/10 rounded-2xl text-center text-slate-500 italic"
                                 >
@@ -491,6 +512,18 @@
                                     </div>
                                 {/if}
                             </div>
+
+                            {#if chatError}
+                                <div role="alert" class="p-4 rounded-2xl bg-white/5 border border-white/10 text-sm text-slate-300">
+                                    <p>{chatError}</p>
+                                    <button
+                                        onclick={handleChat}
+                                        class="mt-2 px-3 py-1.5 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-all text-xs font-medium"
+                                    >
+                                        Try again
+                                    </button>
+                                </div>
+                            {/if}
 
                             <div class="relative group">
                                 <label for="grief-chat-input" class="sr-only">Share what's on your heart</label>

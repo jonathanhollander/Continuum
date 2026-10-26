@@ -27,6 +27,8 @@
         onchange?: (url: string, id?: number) => void;
     }>();
 
+    const uid = $props.id();
+
     let dragging = $state(false);
     let processing = $state(false);
     let error: string | null = $state(null);
@@ -128,7 +130,7 @@
     />
 {:else}
 <div class="space-y-2">
-    <label class="block text-xs font-bold uppercase text-gray-500 mb-1"
+    <label for="{uid}-file" class="block text-xs font-bold uppercase text-gray-500 mb-1"
         >{label}</label
     >
 
@@ -175,6 +177,7 @@
             tabindex="0"
         >
             <input
+                id="{uid}-file"
                 type="file"
                 bind:this={fileInput}
                 onchange={handleFileSelect}

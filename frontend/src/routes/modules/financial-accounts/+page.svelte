@@ -101,7 +101,7 @@
         );
         const failed = accounts.filter((_, i) => results[i].status === "rejected");
         if (failed.length === 0) {
-            notifications.showAffirmation("general");
+            notifications.showAffirmation("general", "create");
             return;
         }
         const reason = results.find((r) => r.status === "rejected") as PromiseRejectedResult;

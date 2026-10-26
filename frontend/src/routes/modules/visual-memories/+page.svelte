@@ -12,7 +12,6 @@
         Save,
         Loader2,
     } from "lucide-svelte";
-    import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
@@ -285,11 +284,11 @@
 
             <div class="p-6 space-y-4">
                 <div class="space-y-2">
-                    <label
+                    <label for="memory-platform"
                         class="text-xs font-bold uppercase text-slate-500 tracking-wider"
                         >Platform / Device Name</label
                     >
-                    <input
+                    <input id="memory-platform"
                         type="text"
                         bind:value={archiveForm.platform}
                         placeholder="e.g. iCloud, Google Photos, My Passport Drive"
@@ -298,11 +297,11 @@
                 </div>
 
                 <div class="space-y-2">
-                    <label
+                    <label for="memory-location-details"
                         class="text-xs font-bold uppercase text-slate-500 tracking-wider"
                         >Access Instructions</label
                     >
-                    <textarea
+                    <textarea id="memory-location-details"
                         bind:value={archiveForm.locationDetails}
                         placeholder="How do executors access this? e.g. 'Login details in password vault' or 'Physical drive in fireproof safe'"
                         class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#4A7C74]/20 focus:border-[#4A7C74] outline-none font-medium h-24 resize-none"
@@ -310,7 +309,7 @@
                 </div>
 
                 <div class="space-y-2">
-                    <label
+                    <label for="memory-access-url"
                         class="text-xs font-bold uppercase text-slate-500 tracking-wider"
                         >Direct URL (Optional)</label
                     >
@@ -319,7 +318,7 @@
                             size={16}
                             class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
                         />
-                        <input
+                        <input id="memory-access-url"
                             type="text"
                             bind:value={archiveForm.accessUrl}
                             placeholder="https://..."

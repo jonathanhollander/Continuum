@@ -7,12 +7,17 @@
         Loader2,
     } from "lucide-svelte";
     import { fade, slide } from "svelte/transition";
-    import { estateAudit, AuditStore } from "$lib/stores/auditStore.svelte";
+    import { estateAudit, AuditStore, hasFuneralWishes } from "$lib/stores/auditStore.svelte";
     import { financialAssetsSync } from "$lib/stores/financialAssetsStore.svelte";
     import { insuranceSync } from "$lib/stores/insuranceStore.svelte";
     import { contactSync } from "$lib/stores/familyStore.svelte";
     import { directiveSync } from "$lib/stores/medicalStore.svelte";
     import { digitalAssetsSync } from "$lib/stores/digitalAssetsStore.svelte";
+    import { heirloomSync } from "$lib/stores/heirloomStore.svelte";
+    import { lettersSync } from "$lib/stores/letterStore.svelte";
+    import { funeralSync } from "$lib/stores/funeralStore.svelte";
+    import { timeCapsuleSync } from "$lib/stores/timeCapsuleStore.svelte";
+    import { getRegistry } from "$lib/services/sync.svelte";
 
     // One finding per audit issue, and one per area the audit scores in full
     interface AuditFinding {
@@ -38,6 +43,15 @@
             : /letter/i.test(text) ? "/modules/letters"
                 : /funeral/i.test(text) ? "/modules/funeral"
                     : "/modules/legacy-journal";
+    // The audit's issue prefix -> the area it scores
+    const prefixArea: Record<string, string> = {
+        Assets: "financial",
+        Insurance: "insurance",
+        Network: "family",
+        Logistics: "medical",
+        Digital: "digital",
+        Legacy: "legacy",
+    };
     const areaLabel: Record<string, string> = {
         financial: "Financial Accounts",
         insurance: "Insurance",
@@ -48,24 +62,36 @@
     };
 
     // Same cue as the readiness hub: wait for each store the audit reads to have its first answer
-    let scanning = $derived(
-        [financialAssetsSync, insuranceSync, contactSync, directiveSync, digitalAssetsSync].some(
-            (m) => m.lastSync === null && m.status !== "error" && m.items.length === 0,
-        ),
-    );
+    // (unless this device already holds its records). The journal and visual-memory managers are
+    // reached through the registry, where their stores registered them.
+    const awaiting = (m: { lastSync: Date | null; status: string } | undefined, held: boolean) =>
+        !!m && m.lastSync === null && m.status !== "error" && !held;
+    let scanning = $derived.by(() => {
+        const reg = getRegistry() as Record<string, any>;
+        const lists = [
+            financialAssetsSync, insuranceSync, contactSync, directiveSync, digitalAssetsSync,
+            heirloomSync, lettersSync, timeCapsuleSync, reg["journal_entries"], reg["visual_memories"],
+        ];
+        // Every store is read each time (no short-circuit), so each one counts as shown and syncs now
+        const waits = [
+            ...lists.map((m) => awaiting(m, (m?.items?.length ?? 0) > 0)),
+            awaiting(funeralSync, hasFuneralWishes(funeralSync.data?.wishes)),
+        ];
+        return waits.includes(true);
+    });
     let score = $derived(estateAudit.percentage);
     let findings = $derived.by((): AuditFinding[] => {
         const open = estateAudit.issues.map((issue, i) => {
             const m = issue.match(/^\[(\w+)\]\s*(.*)$/);
-            const category = m ? m[1] : "Estate";
+            const prefix = m ? m[1] : "";
             const text = m ? m[2] : issue;
             return {
                 id: `issue-${i}`,
                 severity: "warning" as const,
-                category,
+                category: areaLabel[prefixArea[prefix]] ?? "",
                 title: text,
                 desc: "",
-                actionUrl: category === "Legacy" ? legacyPath(text) : issuePath[category],
+                actionUrl: prefix === "Legacy" ? legacyPath(text) : issuePath[prefix],
             };
         });
         const done = Object.entries(estateAudit.moduleScores)
