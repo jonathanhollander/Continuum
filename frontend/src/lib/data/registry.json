@@ -37,7 +37,7 @@
     {
         "id": "subscriptions",
         "title": "Accounts to Close or Transfer",
-        "description": "Every subscription you document is money your family won't lose to forgotten charges. This simple list can save them hundreds—or even thousands—in the months after you're gone.",
+        "description": "Every subscription you document keeps money with your family. A short list can save them a great deal in the months ahead.",
         "icon": "💳",
         "role": "executor"
     },
@@ -51,7 +51,7 @@
     {
         "id": "contacts",
         "title": "Your Circle of Trust",
-        "description": "The people who matter most—who should be notified first, who can help when things go wrong, and who need to know your wishes. Building this list is an act of care for those you love.",
+        "description": "The people who matter most—who should be notified first, who can help when things are hard, and who will carry out your wishes. Building this list is an act of care for those you love.",
         "icon": "🤝",
         "role": "owner"
     },

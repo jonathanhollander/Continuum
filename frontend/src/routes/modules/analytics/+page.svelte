@@ -305,7 +305,7 @@
                     </div>
                 </div>
                 <h2 class="text-2xl font-bold text-white mb-2">
-                    Systems Optimal
+                    All in order
                 </h2>
                 <p class="text-emerald-200/80 max-w-lg mx-auto">
                     Your continuum health is excellent. All major pillars are

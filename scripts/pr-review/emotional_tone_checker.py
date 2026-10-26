@@ -81,13 +81,13 @@ class EmotionalToneChecker:
 
         # Cold Technical Errors
         "error 500": ("something unexpected happened", "cold error"),
-        "error 404": ("we couldn't find that", "cold error"),
-        "request failed": ("we couldn't complete that just now", "cold error"),
-        "operation unsuccessful": ("that didn't work as expected", "cold error"),
+        "error 404": ("that may have been moved", "cold error"),
+        "request failed": ("that paused; try again whenever you're ready", "cold error"),
+        "operation unsuccessful": ("let's try that again together", "cold error"),
         "invalid input": ("we need a bit more information", "cold error"),
         "validation failed": ("let's check that together", "cold error"),
-        "access denied": ("you don't have access to this yet", "cold error"),
-        "permission denied": ("this area isn't available right now", "cold error"),
+        "access denied": ("this belongs to another account", "cold error"),
+        "permission denied": ("this area opens with the owner's invitation", "cold error"),
 
         # Violent/Harsh Language
         "kill": ("end", "harsh language"),
@@ -130,7 +130,7 @@ class EmotionalToneChecker:
         "complete checklist": ("document your wishes", "task-focused"),
         "finish tasks": ("continue your journey", "task-focused"),
         "100% completion required": ("every bit helps", "task-focused"),
-        "task failed": ("that didn't save", "task-focused"),
+        "task failed": ("saving paused; try again whenever you're ready", "task-focused"),
         "incomplete": ("in progress", "task-focused"),
     }
 
@@ -153,7 +153,7 @@ class EmotionalToneChecker:
         "processing...": ("preparing your space...", "generic tech"),
         "please wait": ("almost there...", "generic tech"),
         "success!": ("saved with care", "generic tech"),
-        "failed!": ("couldn't complete that", "generic tech"),
+        "failed!": ("let's try that again together", "generic tech"),
     }
 
     # ==========================================================================

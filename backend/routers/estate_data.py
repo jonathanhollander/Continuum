@@ -356,10 +356,10 @@ def create_item(
         session.refresh(db_item)  # Re-load attributes after audit logging expired them
         return db_item
     except ValueError as e:
-        raise HTTPException(status_code=422, detail=str(e))
+        logger.warning(f"Rejected {data_type} item data: {e}")
+        raise HTTPException(status_code=422, detail="A detail here needs a second look before it saves.")
     except Exception as e:
         logger.error(f"Failed to create {data_type} item: {e}", exc_info=True)
-        # Include detailed error for debugging (TODO: limit this to dev mode)
         raise HTTPException(status_code=400, detail="Saving that paused; try again whenever you're ready.")
 
 @router.put("/{data_type}/{item_id}", summary="Update estate item")
@@ -430,7 +430,8 @@ def update_item(
     except HTTPException:
         raise
     except ValueError as e:
-        raise HTTPException(status_code=422, detail=str(e))
+        logger.warning(f"Rejected {data_type} item {item_id} update: {e}")
+        raise HTTPException(status_code=422, detail="A detail here needs a second look before it saves.")
     except Exception as e:
         logger.error(f"Failed to update {data_type} item {item_id}: {e}", exc_info=True)
         raise HTTPException(status_code=400, detail="Saving that paused; try again whenever you're ready.")

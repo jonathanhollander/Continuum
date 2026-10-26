@@ -428,7 +428,7 @@ def passkey_register_finish(request: Request, payload: PasskeyRegisterFinishPayl
             }},
             exc_info=True
         )
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail="Let's try your passkey again, or sign in another way.")
 
 @router.post("/passkey/login/start", summary="Start Passkey login", description="Initiates the WebAuthn assertion process by returning an authentication challenge.")
 @limiter.limit("10/minute")
