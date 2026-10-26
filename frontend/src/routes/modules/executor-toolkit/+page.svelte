@@ -14,7 +14,7 @@
         FolderOpen,
         NotebookPen,
     } from "lucide-svelte";
-    import { onMount } from "svelte";
+    import { onMount, untrack } from "svelte";
     import GriefSupportBanner from "$lib/components/GriefSupportBanner.svelte";
     import ExecutorTaskDetail from "$lib/components/executor/ExecutorTaskDetail.svelte";
     import { executorTasks } from "$lib/data/executorTasks";
@@ -27,7 +27,10 @@
         executorSteps,
         STEP_RECORDS,
     } from "$lib/stores/executorStepsStore.svelte";
-    import { executorSharing, type ExecutorNoteSharing } from "$lib/stores/executorSharingStore.svelte";
+    import { executorSharing, type ExecutorNoteSharing, type ExecutorSharingOwner } from "$lib/stores/executorSharingStore.svelte";
+    import { auth } from '$lib/stores/auth';
+    import { activeAccountId } from '$lib/stores/keyringStore';
+    import { currentProfileId } from '$lib/stores/profileContext';
 
     let activeTab = $state("checklist");
     let selectedTask = $state<any>(null);
@@ -36,35 +39,68 @@
     let sharingBusy = $state(false);
     let sharingNote = $state('');
     let sharingFailed = $state(false);
+    let sharingOwner: ExecutorSharingOwner | null = null;
+    let sharingNamespace: string | null = null;
+    let sharingEpoch = 0;
 
     async function loadSharing() {
-        await executorSharing.sync();
-        sharingLoaded = executorSharing.status !== 'error';
-        if (sharingLoaded) sharingDraft = executorSharing.current;
-        else sharingNote = 'Your sharing choice is ready to load again.';
+        const owner = executorSharing.captureOwner();
+        const epoch = sharingEpoch;
+        if (!executorSharing.isCurrent(owner)) return;
+        sharingLoaded = false;
+        sharingOwner = null;
+        try {
+            const confirmed = await executorSharing.sync(owner);
+            if (epoch !== sharingEpoch || !executorSharing.isCurrent(owner)) return;
+            sharingLoaded = confirmed;
+            if (confirmed) { sharingDraft = executorSharing.current; sharingOwner = owner; sharingNote = ''; }
+            else sharingNote = 'Your sharing choice is ready to load again.';
+        } catch {
+            if (epoch === sharingEpoch && executorSharing.isCurrent(owner)) sharingNote = 'Your sharing choice is ready to load again.';
+        }
     }
 
     async function saveSharing() {
-        if (!sharingLoaded || sharingBusy) return;
+        const owner = sharingOwner;
+        const epoch = sharingEpoch;
+        if (!sharingLoaded || sharingBusy || !owner || !executorSharing.isCurrent(owner)) return;
         sharingBusy = true;
         sharingNote = '';
         try {
-            await executorSharing.save(sharingDraft);
+            await executorSharing.save(sharingDraft, owner);
+            if (epoch !== sharingEpoch || !executorSharing.isCurrent(owner)) return;
             sharingFailed = false;
             sharingNote = 'Sharing choice saved.';
         } catch {
+            if (epoch !== sharingEpoch || !executorSharing.isCurrent(owner)) return;
             sharingFailed = true;
             sharingNote = 'Your sharing choice is ready to save again.';
         } finally {
-            sharingBusy = false;
+            if (epoch === sharingEpoch && executorSharing.isCurrent(owner)) sharingBusy = false;
         }
     }
+
+    $effect(() => {
+        const ready = !$auth.loading && $auth.isAuthenticated && !!$auth.user && !!$auth.token && !!$activeAccountId;
+        const profile = $currentProfileId;
+        const owner = executorSharing.captureOwner();
+        const namespace = ready && owner.session.ready ? JSON.stringify([owner.session.generation, $activeAccountId, profile]) : null;
+        if (namespace === sharingNamespace) return;
+        sharingNamespace = namespace;
+        sharingEpoch++;
+        sharingOwner = null;
+        sharingDraft = 'executors_only';
+        sharingLoaded = false;
+        sharingBusy = false;
+        sharingNote = '';
+        sharingFailed = false;
+        if (namespace) untrack(() => { void loadSharing(); });
+    });
 
     // Ticks and notes live on the server (executor_steps), so they follow the account.
     // ?tab=bureau opens on the Gov & Bureaus steps (the /executor hub links there).
     onMount(() => {
         executorSteps.sync();
-        loadSharing();
         if (new URL(window.location.href).searchParams.get("tab") === "bureau")
             activeTab = "bureau";
     });
