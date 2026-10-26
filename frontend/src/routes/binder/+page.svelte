@@ -72,11 +72,11 @@
     }
 </script>
 
-<div class="min-h-screen bg-stone-100 p-8 print:bg-white print:p-0">
+<div class="min-h-screen bg-muted p-8 print:bg-white print:p-0">
     <div class="max-w-4xl mx-auto mb-8 print:hidden">
         <div class="mb-4">
-            <h1 class="font-serif font-bold text-3xl text-[#304743]">The Red Binder</h1>
-            <p class="text-stone-500">
+            <h1 class="font-serif font-bold text-3xl text-primary-deep dark:text-primary-hover">The Red Binder</h1>
+            <p class="text-muted-foreground">
                 Everything you have recorded, in one place to print or keep.
             </p>
         </div>
@@ -84,7 +84,7 @@
             <div class="flex flex-wrap items-center gap-3">
                 <button
                     onclick={printBinder}
-                    class="bg-[#304743] hover:bg-[#2A3F3B] text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg transition-all"
+                    class="bg-primary-deep hover:bg-primary-deep/90 text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg transition-all"
                 >
                     <Printer size={18} /> Print or save as PDF
                 </button>
@@ -92,7 +92,7 @@
                     onclick={downloadCopy}
                     disabled={busy !== null}
                     data-testid="download-copy"
-                    class="bg-white hover:bg-stone-50 text-[#304743] border border-stone-300 px-4 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all disabled:opacity-60"
+                    class="bg-card hover:bg-muted text-primary-deep dark:text-primary-hover border border-border px-4 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all disabled:opacity-60"
                 >
                     {#if busy === "zip"}<Loader2 size={18} class="animate-spin" />{:else}<Archive size={18} />{/if}
                     Download copy
@@ -102,15 +102,15 @@
     </div>
 
     {#if note}
-        <div class="max-w-4xl mx-auto mb-6 p-4 rounded-xl bg-white border border-stone-200 text-stone-700 flex items-center justify-between print:hidden">
+        <div class="max-w-4xl mx-auto mb-6 p-4 rounded-xl bg-card border border-border text-foreground flex items-center justify-between print:hidden">
             <span>{note}</span>
-            <button onclick={load} class="text-[#304743] font-semibold underline">Try again</button>
+            <button onclick={load} class="text-primary-deep dark:text-primary-hover font-semibold underline">Try again</button>
         </div>
     {/if}
 
-    <div class="max-w-4xl mx-auto bg-white shadow-xl border border-stone-200 print:shadow-none print:border-none">
+    <div class="max-w-4xl mx-auto shadow-xl border border-border print:shadow-none print:border-none {!loading && packet && packet.sections.length > 0 ? 'bg-white' : 'bg-card'}">
         {#if loading}
-            <div class="p-20 flex items-center justify-center gap-3 text-stone-500 min-h-[600px]">
+            <div class="p-20 flex items-center justify-center gap-3 text-muted-foreground min-h-[600px]">
                 <Loader2 size={22} class="animate-spin" /> Gathering your binder...
             </div>
         {:else if packet && packet.sections.length > 0}
