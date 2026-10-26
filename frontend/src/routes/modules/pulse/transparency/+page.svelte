@@ -1,7 +1,8 @@
 <script lang="ts">
     import { Eye, Lock, Users, FileText, Clock, Phone, MessageSquare, RefreshCw } from "lucide-svelte";
-    import { onMount } from "svelte";
+    import { onMount, onDestroy } from "svelte";
     import { apiGet } from "$lib/api/client";
+    import { captureSession, isCurrentSession } from "$lib/services/sessionOwnership";
 
     interface GuardianChoice { id: number; name: string; tier_number: number | null; link_state: "ready" | "prepared" | "rested"; }
     interface PortalView { user_name: string; user_phone: string | null; user_status: "active" | "grace"; last_checkin: string | null; notes: { message: string; sent_at: string }[]; }
@@ -24,23 +25,34 @@
     let requestVersion = 0;
 
     onMount(() => { loadPreview(); });
+    onDestroy(() => { requestVersion++; });
     async function loadPreview(contactId: number | null = selectedContactId) {
+        const owner = captureSession();
         const version = ++requestVersion;
         selectedContactId = contactId;
         loading = true;
         error = "";
         preview = null;
         try {
+            if (!isCurrentSession(owner)) throw new Error("Session changed");
             const query = contactId === null ? "" : `?contact_id=${encodeURIComponent(contactId)}`;
             const result = await apiGet<{ guardians: GuardianChoice[]; preview: GuardianPreview | null }>(`/api/pulse/transparency${query}`);
-            if (version !== requestVersion) return;
+            if (version !== requestVersion || !isCurrentSession(owner)) return;
             guardians = result.guardians;
             preview = result.preview;
             selectedContactId = preview?.contact_id ?? null;
         } catch {
             if (version === requestVersion) error = "You can try loading this view again whenever you're ready.";
         } finally {
-            if (version === requestVersion) loading = false;
+            if (version === requestVersion) {
+                loading = false;
+                if (!isCurrentSession(owner)) {
+                    guardians = [];
+                    selectedContactId = null;
+                    preview = null;
+                    error = "You can try loading this view again whenever you're ready.";
+                }
+            }
         }
     }
     function formatTime(value: string) { return new Date(value).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }); }
