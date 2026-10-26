@@ -157,6 +157,24 @@ def _encode_singleton_json(data: Dict[str, Any]) -> None:
             data[k] = json.dumps(data[k])
 
 
+# X164: enum-like fields saved in the documented spelling (estate_models.py comments).
+# Match is case-insensitive; values outside the list are stored as sent.
+CANONICAL_VALUES = {
+    (InsurancePolicy, "insurance_type"): ["Life", "Health", "Auto", "Home", "Disability", "Other"],
+    (InsurancePolicy, "premium_frequency"): ["Monthly", "Quarterly", "Annually"],
+    (InsurancePolicy, "status"): ["Active", "Inactive", "Pending"],
+    (Utility, "service_type"): ["water", "electric", "gas"],
+}
+
+
+def _canonicalize(model, data: Dict[str, Any]) -> None:
+    """Rewrite enum-like string fields to the documented spelling (in place)."""
+    for (m, field), allowed in CANONICAL_VALUES.items():
+        value = data.get(field)
+        if m is model and isinstance(value, str):
+            data[field] = next((a for a in allowed if a.lower() == value.strip().lower()), value)
+
+
 def _has(col):
     return func.coalesce(col, "") != ""
 
@@ -313,6 +331,8 @@ def create_item(
         if "custom_attributes" in validated_data and isinstance(validated_data["custom_attributes"], dict):
             validated_data["custom_attributes"] = json.dumps(validated_data["custom_attributes"])
 
+        _canonicalize(model, validated_data)
+
         if data_type in SINGLETON_TYPES:
             _encode_singleton_json(validated_data)
             existing = session.exec(select(model).where(model.user_id == user.id).order_by(model.id)).first()
@@ -382,8 +402,9 @@ def update_item(
         if protected_found:
             raise ValueError(f"Cannot update protected fields: {protected_found}")
 
+        updates = dict(updates)
+        _canonicalize(model, updates)
         if data_type in SINGLETON_TYPES:
-            updates = dict(updates)
             _encode_singleton_json(updates)
 
         for key, value in updates.items():
