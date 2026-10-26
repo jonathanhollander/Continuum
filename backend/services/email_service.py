@@ -22,7 +22,7 @@ from typing import Optional, Dict, Any
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from backend.config import settings
 from sqlmodel import Session
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ValidationError
 from backend.models.email_log import EmailLog
 from backend.utils.logger import get_logger
 from backend.database import get_session, User
@@ -361,14 +361,21 @@ class EmailService:
             4: "Continuum Pulse: EMERGENCY - Full Vault Access"
         }
 
-        payload = EmailPayload(
-            to_email=to_email,
-            recipient_name=recipient_name,
-            subject=tier_subjects.get(tier_number, f"Continuum Pulse: Tier {tier_number} Alert"),
-            template_name=f"pulse_escalation_tier{tier_number}",
-            template_context=context,
-            user_id=user_id
-        )
+        try:
+            payload = EmailPayload(
+                to_email=to_email,
+                recipient_name=recipient_name,
+                subject=tier_subjects.get(tier_number, f"Continuum Pulse: Tier {tier_number} Alert"),
+                template_name=f"pulse_escalation_tier{tier_number}",
+                template_context=context,
+                user_id=user_id
+            )
+        except ValidationError as e:
+            # A missing or invalid guardian address is a failed send, not a crash
+            logger.error(f"Pulse Tier {tier_number} alert not sent: invalid recipient {to_email!r} "
+                         f"(user {user_id}): {e.errors()[0].get('msg')}")
+            return EmailResult(status="failed", error=f"Invalid recipient address: {to_email!r}",
+                               provider=self.provider)
         return self.send_email(payload=payload, db_session=db_session)
 
     def send_welcome_email(

@@ -264,7 +264,7 @@ def send_notification(session: Session, contact: PulseContact, tier_number: int)
             })
 
     # Send email using new service with templates and logging
-    email_service.send_pulse_alert(
+    result = email_service.send_pulse_alert(
         to_email=contact.email,
         recipient_name=contact.name,
         tier_number=tier_number,
@@ -280,6 +280,10 @@ def send_notification(session: Session, contact: PulseContact, tier_number: int)
         user_id=contact.user_id,
         contact_id=contact.id,
         direction="user_to_contact",  # System acting on behalf of user
-        message=f"[System Alert Tier {tier_number}] Escalation notification sent via email"
+        message=(f"[System Alert Tier {tier_number}] Escalation notification sent via email"
+                 if result.status != "failed" else
+                 f"[System Alert Tier {tier_number}] Escalation notification could not be delivered ({result.error})")
     )
+    if result.status == "failed":
+        logger.error(f"Tier {tier_number} alert to contact {contact.id} failed: {result.error}")
     session.add(log_msg)
