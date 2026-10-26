@@ -356,7 +356,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X15 | ☑ | f63a12b | 1440×900, no key: the prompt bar shows the gentle notice as plain text (no draft prefix or monospace); the grief chat shows its own fallback. Screenshots in scratchpad/x15 |
 | X19 | ☑ | cba8a86 | 1440×900: a failure shows the notice with 0 copy buttons; a stubbed draft copies with inline "Copied."; a refused clipboard shows the gentle line; no dialogs; svelte-check = baseline |
 | X21 | ☑ | 07d9e18 | 1440×900: journal and heirlooms show 3 of their own prompt ideas, "Show other ideas" changes all 3, clicking fills the input; contacts 0-pixel diff; svelte-check 287 (baseline 288) |
-| X28 | ▶ | | |
+| X28 | ☑ | 150e7d4 | The three concierge `subscribe` signatures are typed; "Draft an 'ethical will'"; the X21 cast is gone. svelte-check 224 (was 285; typed stores remove the unknown-value errors at their callers); build passes |
 | X22 | ☑ | e95faf8 | Fresh DB: PUT funeral_data with object `wishes` and list `budget` → GET returns JSON text that parses back to the same values |
 | X24 | ▶ | | |
 | X25 | ☑ | 110654f | Signed out at 1440×900: /portal/<token> shows the portal (bare layout), a bad token shows "Link Invalid or Expired", pulse respond/verify and auth/verify stay on their pages, /portalX and /dashboard go to /login. Emails only link /portal/{token}, /auth/verify and /dashboard |
