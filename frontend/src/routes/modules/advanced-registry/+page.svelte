@@ -178,7 +178,6 @@
     <LivingBlueprintHeader
         title="Complete Record"
         subtitle="Precision tracking for assets, maintenance, and digital legacies"
-        tier="protection"
         detailedDescription="The Advanced Registry brings together all detailed records about your assets—purchase history, maintenance logs, insurance claims, and digital account management. This comprehensive documentation helps your family understand not just what you own, but its complete history."
         whyMatters="Detailed asset records prevent costly mistakes and lost value. Your family will know when the roof was last inspected, what warranties still apply, and how to manage your digital footprint—information that would otherwise take months to piece together."
     >

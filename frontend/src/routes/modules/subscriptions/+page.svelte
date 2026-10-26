@@ -373,7 +373,6 @@
 <LivingBlueprintHeader
     title="Subscriptions & Services"
     subtitle="Prevent forgotten charges that drain your estate"
-    tier="preparation"
     detailedDescription="Every subscription you document is money your family won't lose to forgotten charges. This simple list can save them hundreds—or even thousands—in the months after you're gone."
     whyMatters="After you're gone, these charges will keep hitting your bank account until someone notices and cancels them. Without a record, your family won't know what to look for or how to cancel them. Each service you document is one less headache for them."
 >

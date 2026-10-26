@@ -362,7 +362,6 @@
     <LivingBlueprintHeader
         title={module.title}
         subtitle={module.description}
-        tier={module.role === "owner" ? "preparation" : "executor"}
     />
 {/if}
 

@@ -2,18 +2,28 @@
     import { Clock, CheckCircle2, Circle, ArrowRight } from "lucide-svelte";
     import { slide } from "svelte/transition";
 
-    export let title: string; // "Establish Key Medical Contacts"
-    export let description: string; // "Your estate needs to know who to call in an emergency."
-    export let timeEstimate: string = "5 mins";
-    export let steps: { label: string; completed: boolean }[] = [];
+    let {
+        title, // "Establish Key Medical Contacts"
+        description, // "Your estate needs to know who to call in an emergency."
+        timeEstimate = "5 mins",
+        steps = [],
+    }: {
+        title: string;
+        description: string;
+        timeEstimate?: string;
+        steps?: { label: string; completed: boolean }[];
+    } = $props();
 
     // Computed Progress
-    $: completedCount = steps.filter((s) => s.completed).length;
-    $: progressPercent =
-        steps.length > 0 ? (completedCount / steps.length) * 100 : 0;
-    $: isComplete = steps.length > 0 && completedCount === steps.length;
+    let completedCount = $derived(steps.filter((s) => s.completed).length);
+    let progressPercent = $derived(
+        steps.length > 0 ? (completedCount / steps.length) * 100 : 0,
+    );
+    let isComplete = $derived(
+        steps.length > 0 && completedCount === steps.length,
+    );
 
-    let expanded = true;
+    let expanded = $state(true);
 </script>
 
 <div
@@ -26,8 +36,8 @@
         class="bg-slate-50/80 p-4 border-b border-slate-100 flex justify-between items-center cursor-pointer hover:bg-slate-100 transition-colors"
         role="button"
         tabindex="0"
-        on:click={() => (expanded = !expanded)}
-        on:keydown={(e) => {
+        onclick={() => (expanded = !expanded)}
+        onkeydown={(e) => {
             if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
                 e.preventDefault();
                 expanded = !expanded;

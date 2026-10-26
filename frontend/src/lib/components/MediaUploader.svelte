@@ -1,27 +1,35 @@
 <script lang="ts">
     import { uploadMedia, fileToDataUrl, isValidMediaType, formatFileSize, type UploadProgress } from '$lib/services/mediaService';
-    import { createEventDispatcher } from 'svelte';
 
-    export let module: string; // heirlooms, properties, visual_memories, time_capsules
-    export let referenceId: string | undefined = undefined;
-    export let accept: string = 'image/*,video/*,audio/*';
-    export let maxSizeMB: number = 10;
-    export let showPreview: boolean = true;
-    export let buttonText: string = 'Upload Media';
-    export let dropzoneText: string = 'Drop files here or click to browse';
+    let {
+        module, // heirlooms, properties, visual_memories, time_capsules
+        referenceId = undefined,
+        accept = 'image/*,video/*,audio/*',
+        maxSizeMB = 10,
+        showPreview = true,
+        buttonText = 'Upload Media',
+        dropzoneText = 'Drop files here or click to browse',
+        onsuccess = undefined,
+        onerror = undefined,
+    }: {
+        module: string;
+        referenceId?: string;
+        accept?: string;
+        maxSizeMB?: number;
+        showPreview?: boolean;
+        buttonText?: string;
+        dropzoneText?: string;
+        onsuccess?: (detail: { mediaId: number; downloadUrl: string }) => void;
+        onerror?: (detail: { message: string }) => void;
+    } = $props();
 
-    const dispatch = createEventDispatcher<{
-        success: { mediaId: number; downloadUrl: string };
-        error: { message: string };
-    }>();
+    let uploading = $state(false);
+    let progress: UploadProgress | null = $state(null);
+    let error: string | null = $state(null);
+    let previewUrl: string | null = $state(null);
+    let selectedFile: File | null = $state(null);
 
-    let uploading = false;
-    let progress: UploadProgress | null = null;
-    let error: string | null = null;
-    let previewUrl: string | null = null;
-    let selectedFile: File | null = null;
-
-    let fileInput: HTMLInputElement;
+    let fileInput: HTMLInputElement | undefined = $state();
 
     const handleFileSelect = async (event: Event) => {
         const target = event.target as HTMLInputElement;
@@ -93,7 +101,7 @@
                 }
             );
 
-            dispatch('success', {
+            onsuccess?.({
                 mediaId: response.id,
                 downloadUrl: response.download_url
             });
@@ -104,7 +112,7 @@
             progress = null;
         } catch (e: any) {
             error = e.message || 'Upload failed';
-            dispatch('error', { message: error ?? 'Upload failed' });
+            onerror?.({ message: error ?? 'Upload failed' });
         } finally {
             uploading = false;
         }
@@ -125,13 +133,13 @@
     {#if !selectedFile && !uploading}
         <div
             class="dropzone"
-            on:drop={handleDrop}
-            on:dragover={handleDragOver}
-            on:click={() => fileInput.click()}
-            on:keydown={(e) => {
+            ondrop={handleDrop}
+            ondragover={handleDragOver}
+            onclick={() => fileInput?.click()}
+            onkeydown={(e) => {
                 if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
                     e.preventDefault();
-                    fileInput.click();
+                    fileInput?.click();
                 }
             }}
             role="button"
@@ -146,7 +154,7 @@
         <input
             type="file"
             bind:this={fileInput}
-            on:change={handleFileSelect}
+            onchange={handleFileSelect}
             {accept}
             hidden
         />
@@ -161,7 +169,7 @@
                 <p class="file-name">{selectedFile.name}</p>
                 <p class="file-size">{formatFileSize(selectedFile.size)}</p>
             </div>
-            <button aria-label="Remove this item" type="button" on:click={clearFile} class="clear-button">×</button>
+            <button aria-label="Remove this item" type="button" onclick={clearFile} class="clear-button">×</button>
         </div>
     {/if}
 

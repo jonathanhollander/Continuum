@@ -54,7 +54,6 @@
     <LivingBlueprintHeader
         title={text("catalog", selfItem?.label ?? "")}
         subtitle={selfItem?.tooltip}
-        tier="preparation"
     />
 
     <div class="container mx-auto px-8 py-12">

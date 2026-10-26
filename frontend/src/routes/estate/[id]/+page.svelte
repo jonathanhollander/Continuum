@@ -56,7 +56,6 @@
     <LivingBlueprintHeader
         title={estate.name}
         subtitle="Executor Control Center"
-        tier="executor"
     />
 
     <div class="container mx-auto px-6 py-12 space-y-8">

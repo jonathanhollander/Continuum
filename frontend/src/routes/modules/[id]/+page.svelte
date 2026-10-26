@@ -23,7 +23,6 @@
         <LivingBlueprintHeader
             title={module.title}
             subtitle={module.description}
-            tier={module.role === "owner" ? "preparation" : "executor"}
         />
 
         <div class="container mx-auto px-6 py-12">

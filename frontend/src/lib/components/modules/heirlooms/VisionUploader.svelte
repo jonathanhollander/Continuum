@@ -2,12 +2,14 @@
     import { ImagePlus, Upload } from "lucide-svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
 
-    export let imageUrl: string = "";
-    // Bound by the page so the Provenance text is saved with the heirloom.
-    export let provenance: string = "";
+    // Both are bound by the page so the photo and the Provenance text are saved with the heirloom.
+    let {
+        imageUrl = $bindable(""),
+        provenance = $bindable(""),
+    }: { imageUrl?: string; provenance?: string } = $props();
 
     let fileInput: HTMLInputElement;
-    let isDragging = false;
+    let isDragging = $state(false);
 
     function handleDragOver(e: DragEvent) {
         e.preventDefault();
@@ -49,9 +51,9 @@
         {isDragging
             ? 'border-indigo-500 bg-indigo-50/50'
             : 'border-stone-200 hover:border-indigo-300 hover:bg-stone-50'}"
-        on:dragover={handleDragOver}
-        on:dragleave={handleDragLeave}
-        on:drop={handleDrop}
+        ondragover={handleDragOver}
+        ondragleave={handleDragLeave}
+        ondrop={handleDrop}
     >
         <input
             type="file"
@@ -59,7 +61,7 @@
             aria-label="Add a photo"
             class="hidden"
             bind:this={fileInput}
-            on:change={(e) =>
+            onchange={(e) =>
                 e.currentTarget.files && handleFile(e.currentTarget.files[0])}
         />
 
@@ -75,7 +77,7 @@
 
                 <button
                     type="button"
-                    on:click={triggerUpload}
+                    onclick={triggerUpload}
                     class="absolute top-2 right-2 p-2 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors"
                     title="Change Image"
                 >
@@ -88,8 +90,8 @@
                 role="button"
                 tabindex="0"
                 aria-label="Add a photo"
-                on:click={triggerUpload}
-                on:keydown={(e) => {
+                onclick={triggerUpload}
+                onkeydown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
                         triggerUpload();

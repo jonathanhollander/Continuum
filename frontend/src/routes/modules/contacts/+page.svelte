@@ -287,7 +287,6 @@
             : contextStore.isFamily
               ? "Family and friends connected to the estate"
               : module.title}
-        tier={module.role === "owner" ? "preparation" : "executor"}
         detailedDescription="This is more than a contact list—it's your circle of trust. Identify who should be notified and who can help with specific aspects of your estate, from lawyers to close friends."
         whyMatters="In a crisis, your family needs to know exactly who to turn to. Having updated contact information for your support network removes the panic of 'who do I call?'"
     />
