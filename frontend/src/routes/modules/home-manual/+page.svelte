@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { focusTrap } from "$lib/actions/focusTrap";
     import { fade, slide } from "svelte/transition";
+    import Modal from "$lib/components/ui/Modal.svelte";
     import {
         Hammer,
         Phone,
@@ -17,11 +17,9 @@
         Thermometer,
         MapPin,
         Shield,
-        X,
         Save,
         Loader2,
     } from "lucide-svelte";
-    import { fly } from "svelte/transition";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
@@ -75,6 +73,13 @@
     let editingVendorId = $state<number | null>(null);
     let editingCodeId = $state<number | null>(null);
     let editingUtilityId = $state<number | null>(null);
+
+    // The shared modal's field, label and footer styles (UI standards 1.7, 2.1).
+    const labelClass = "block text-xs font-bold uppercase text-slate-500 tracking-wide px-1 mb-1.5";
+    const inputClass = "w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800";
+    const footerClass = "-mx-6 -mb-6 px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 mt-6";
+    const cancelClass = "px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-200 transition-colors whitespace-nowrap";
+    const saveClass = "px-6 py-2.5 rounded-xl font-semibold bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap";
 
     // Form States
     let vendorForm = $state({ category: "", name: "", phone: "" });
@@ -219,250 +224,155 @@
     </div>
 {:else}
 <!-- Vendor Modal -->
-{#if showVendorModal}
-    <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => (showVendorModal = false) }}
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
-        transition:fade
-    >
-        <div
-            class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
-            in:fly={{ y: 20 }}
-        >
-            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
-                <h3 class="font-serif font-bold text-xl text-[#304743]">
-                    {editingVendorId != null ? "Update" : "Add"} Trusted Vendor
-                </h3>
-                <button aria-label="Close"
-                    onclick={() => (showVendorModal = false)}
-                    class="text-slate-400 hover:text-slate-600"
-                >
-                    <X size={20} />
-                </button>
-            </div>
+<Modal bind:open={showVendorModal} title="{editingVendorId != null ? 'Update' : 'Add'} Trusted Vendor" maxWidth="max-w-lg">
+    <div class="space-y-4">
+        <div>
+            <label for="vendor-category" class={labelClass}>Vendor Role</label>
+            <input
+                id="vendor-category"
+                type="text"
+                bind:value={vendorForm.category}
+                placeholder="e.g. Plumber, Electrician, HVAC"
+                class={inputClass}
+            />
+        </div>
 
-            <div class="p-6 space-y-4">
-                <div class="space-y-2">
-                    <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">
-                        Vendor Role
-                    </label>
-                    <input
-                        type="text"
-                        bind:value={vendorForm.category}
-                        placeholder="e.g. Plumber, Electrician, HVAC"
-                        class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium"
-                    />
-                </div>
+        <div>
+            <label for="vendor-name" class={labelClass}>Name / Company</label>
+            <input
+                id="vendor-name"
+                type="text"
+                bind:value={vendorForm.name}
+                placeholder="e.g. Joe's Plumbing"
+                class={inputClass}
+            />
+        </div>
 
-                <div class="space-y-2">
-                    <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">
-                        Name / Company
-                    </label>
-                    <input
-                        type="text"
-                        bind:value={vendorForm.name}
-                        placeholder="e.g. Joe's Plumbing"
-                        class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium"
-                    />
-                </div>
-
-                <div class="space-y-2">
-                    <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">
-                        Phone Number
-                    </label>
-                    <input
-                        type="tel"
-                        bind:value={vendorForm.phone}
-                        placeholder="(555) 123-4567"
-                        class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium"
-                    />
-                </div>
-            </div>
-
-            <div class="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
-                <button
-                    onclick={() => (showVendorModal = false)}
-                    class="px-4 py-2 font-bold text-slate-500 hover:text-slate-700 text-sm"
-                >
-                    Not right now
-                </button>
-                <button
-                    onclick={saveVendor}
-                    disabled={!vendorForm.category || !vendorForm.name || saving}
-                    aria-busy={saving}
-                    class="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-bold text-sm shadow-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
-                >
-                    <Save size={16} /> {saving ? "Saving..." : "Save my helper"}
-                </button>
-            </div>
+        <div>
+            <label for="vendor-phone" class={labelClass}>Phone Number</label>
+            <input
+                id="vendor-phone"
+                type="tel"
+                bind:value={vendorForm.phone}
+                placeholder="(555) 123-4567"
+                class={inputClass}
+            />
         </div>
     </div>
-{/if}
+
+    <div class={footerClass}>
+        <button onclick={() => (showVendorModal = false)} class={cancelClass}>Not right now</button>
+        <button
+            onclick={saveVendor}
+            disabled={!vendorForm.category || !vendorForm.name || saving}
+            aria-busy={saving}
+            class={saveClass}
+        >
+            <Save size={16} /> {saving ? "Saving..." : "Save my helper"}
+        </button>
+    </div>
+</Modal>
 
 <!-- Access Code Modal -->
-{#if showCodeModal}
-    <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => (showCodeModal = false) }}
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
-        transition:fade
-    >
-        <div
-            class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
-            in:fly={{ y: 20 }}
-        >
-            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
-                <h3 class="font-serif font-bold text-xl text-[#304743]">
-                    {editingCodeId != null ? "Update" : "Add"} Access Code
-                </h3>
-                <button aria-label="Close"
-                    onclick={() => (showCodeModal = false)}
-                    class="text-slate-400 hover:text-slate-600"
-                >
-                    <X size={20} />
-                </button>
-            </div>
+<Modal bind:open={showCodeModal} title="{editingCodeId != null ? 'Update' : 'Add'} Access Code" maxWidth="max-w-lg">
+    <div class="space-y-4">
+        <div>
+            <label for="code-location" class={labelClass}>Code Label</label>
+            <input
+                id="code-location"
+                type="text"
+                bind:value={codeForm.location}
+                placeholder="e.g. Gate, Garage, Alarm"
+                class={inputClass}
+            />
+        </div>
 
-            <div class="p-6 space-y-4">
-                <div class="space-y-2">
-                    <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">
-                        Code Label
-                    </label>
-                    <input
-                        type="text"
-                        bind:value={codeForm.location}
-                        placeholder="e.g. Gate, Garage, Alarm"
-                        class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium"
-                    />
-                </div>
+        <div>
+            <label for="code-value" class={labelClass}>Code</label>
+            <input
+                id="code-value"
+                type="text"
+                bind:value={codeForm.code}
+                placeholder="e.g. 1234"
+                class="{inputClass} font-mono text-lg tracking-widest"
+            />
+        </div>
 
-                <div class="space-y-2">
-                    <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">
-                        Code
-                    </label>
-                    <input
-                        type="text"
-                        bind:value={codeForm.code}
-                        placeholder="e.g. 1234"
-                        class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-mono text-lg tracking-widest"
-                    />
-                </div>
-
-                <div class="space-y-2">
-                    <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">
-                        Instructions
-                    </label>
-                    <textarea
-                        bind:value={codeForm.instructions}
-                        rows="3"
-                        placeholder="e.g. Enter the code, then press # within ten seconds"
-                        class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium"
-                    ></textarea>
-                </div>
-            </div>
-
-            <div class="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
-                <button
-                    onclick={() => (showCodeModal = false)}
-                    class="px-4 py-2 font-bold text-slate-500 hover:text-slate-700 text-sm"
-                >
-                    Not right now
-                </button>
-                <button
-                    onclick={saveCode}
-                    disabled={!codeForm.location || saving}
-                    aria-busy={saving}
-                    class="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-bold text-sm shadow-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
-                >
-                    <Save size={16} /> {saving ? "Saving..." : "Save my access code"}
-                </button>
-            </div>
+        <div>
+            <label for="code-instructions" class={labelClass}>Instructions</label>
+            <textarea
+                id="code-instructions"
+                bind:value={codeForm.instructions}
+                rows="3"
+                placeholder="e.g. Enter the code, then press # within ten seconds"
+                class="{inputClass} resize-none"
+            ></textarea>
         </div>
     </div>
-{/if}
+
+    <div class={footerClass}>
+        <button onclick={() => (showCodeModal = false)} class={cancelClass}>Not right now</button>
+        <button
+            onclick={saveCode}
+            disabled={!codeForm.location || saving}
+            aria-busy={saving}
+            class={saveClass}
+        >
+            <Save size={16} /> {saving ? "Saving..." : "Save my access code"}
+        </button>
+    </div>
+</Modal>
 
 <!-- Utility Modal -->
-{#if showUtilityModal}
-    <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => (showUtilityModal = false) }}
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
-        transition:fade
-    >
-        <div
-            class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
-            in:fly={{ y: 20 }}
-        >
-            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
-                <h3 class="font-serif font-bold text-xl text-[#304743]">
-                    {editingUtilityId != null ? "Update" : "Add"} Utility Shutoff
-                </h3>
-                <button aria-label="Close"
-                    onclick={() => (showUtilityModal = false)}
-                    class="text-slate-400 hover:text-slate-600"
-                >
-                    <X size={20} />
-                </button>
-            </div>
+<Modal bind:open={showUtilityModal} title="{editingUtilityId != null ? 'Update' : 'Add'} Utility Shutoff" maxWidth="max-w-lg">
+    <div class="space-y-4">
+        <div>
+            <label for="utility-type" class={labelClass}>Utility Type</label>
+            <select id="utility-type" bind:value={utilityForm.service_type} class={inputClass}>
+                <option value="">Select type...</option>
+                <option value="Water">Water</option>
+                <option value="Gas">Gas</option>
+                <option value="Electric">Electric</option>
+                <option value="Internet">Internet</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
 
-            <div class="p-6 space-y-4">
-                <div class="space-y-2">
-                    <label for="utility-type" class="text-xs font-bold uppercase text-slate-500 tracking-wider">
-                        Utility Type
-                    </label>
-                    <select
-                        id="utility-type"
-                        bind:value={utilityForm.service_type}
-                        class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium"
-                    >
-                        <option value="">Select type...</option>
-                        <option value="Water">Water</option>
-                        <option value="Gas">Gas</option>
-                        <option value="Electric">Electric</option>
-                        <option value="Internet">Internet</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
+        <div>
+            <label for="utility-provider" class={labelClass}>Provider Name</label>
+            <input
+                id="utility-provider"
+                type="text"
+                bind:value={utilityForm.provider}
+                placeholder="e.g. City Water Dept, PG&E"
+                class={inputClass}
+            />
+        </div>
 
-                <div class="space-y-2">
-                    <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">
-                        Provider Name
-                    </label>
-                    <input
-                        type="text"
-                        bind:value={utilityForm.provider}
-                        placeholder="e.g. City Water Dept, PG&E"
-                        class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium"
-                    />
-                </div>
-
-                <div class="space-y-2">
-                    <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">
-                        Shutoff Location
-                    </label>
-                    <input
-                        type="text"
-                        bind:value={utilityForm.location}
-                        placeholder="e.g. Front yard, by the meter"
-                        class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium"
-                    />
-                </div>
-            </div>
-
-            <div class="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
-                <button
-                    onclick={() => (showUtilityModal = false)}
-                    class="px-4 py-2 font-bold text-slate-500 hover:text-slate-700 text-sm"
-                >
-                    Not right now
-                </button>
-                <button
-                    onclick={saveUtility}
-                    disabled={!utilityForm.service_type || saving}
-                    aria-busy={saving}
-                    class="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-bold text-sm shadow-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
-                >
-                    <Save size={16} /> {saving ? "Saving..." : "Save my utility details"}
-                </button>
-            </div>
+        <div>
+            <label for="utility-location" class={labelClass}>Shutoff Location</label>
+            <input
+                id="utility-location"
+                type="text"
+                bind:value={utilityForm.location}
+                placeholder="e.g. Front yard, by the meter"
+                class={inputClass}
+            />
         </div>
     </div>
-{/if}
+
+    <div class={footerClass}>
+        <button onclick={() => (showUtilityModal = false)} class={cancelClass}>Not right now</button>
+        <button
+            onclick={saveUtility}
+            disabled={!utilityForm.service_type || saving}
+            aria-busy={saving}
+            class={saveClass}
+        >
+            <Save size={16} /> {saving ? "Saving..." : "Save my utility details"}
+        </button>
+    </div>
+</Modal>
 
 <div class="max-w-6xl mx-auto p-6 md:p-8 animate-in fade-in duration-500">
     <!-- Header -->
@@ -603,7 +513,7 @@
                                                     aria-label="Remove {vendor.name}"
                                                     class="text-slate-300 hover:text-red-500"
                                                 >
-                                                    &times;
+                                                    <Trash2 size={14} />
                                                 </button>
                                             </div>
                                         </div>
@@ -790,7 +700,7 @@
                                             aria-label="Remove {item.location}"
                                             class="text-slate-300 hover:text-red-500 p-2"
                                         >
-                                            &times;
+                                            <Trash2 size={14} />
                                         </button>
                                     </div>
                                 </div>
@@ -872,7 +782,7 @@
                                             aria-label="Remove {item.service_type} shutoff"
                                             class="text-slate-300 hover:text-red-500"
                                         >
-                                            &times;
+                                            <Trash2 size={14} />
                                         </button>
                                     </div>
                                     <div
