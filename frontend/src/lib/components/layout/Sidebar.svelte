@@ -229,7 +229,7 @@
 </script>
 
 <aside
-    class="fixed lg:sticky top-0 left-0 z-50 h-screen w-72 bg-primary-deep text-white transform transition-transform duration-300 ease-out lg:translate-x-0 flex flex-col shadow-2xl {isOpen
+    class="fixed lg:sticky top-0 left-0 z-50 lg:z-30 h-screen w-72 bg-primary-deep text-white transform transition-transform duration-300 ease-out lg:translate-x-0 flex flex-col shadow-2xl {isOpen
         ? 'translate-x-0'
         : '-translate-x-full'}"
 >

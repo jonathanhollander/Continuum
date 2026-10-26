@@ -399,7 +399,7 @@
 			{:else}
 				<!-- Focus Mode: The Architect -->
 				<div
-					class="hidden lg:block h-screen sticky top-0 z-50 shadow-2xl"
+					class="hidden lg:block h-screen sticky top-0 z-30 shadow-2xl"
 				>
 					<TheArchitect
 						title={$compassStore.title}
