@@ -54,6 +54,7 @@
         <input
             type="file"
             accept="image/*"
+            aria-label="Add a photo"
             class="hidden"
             bind:this={fileInput}
             on:change={(e) =>

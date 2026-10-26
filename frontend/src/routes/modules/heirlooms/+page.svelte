@@ -61,6 +61,18 @@
     // Derived items from SyncManager
     let items = $derived(heirloomSync.items);
 
+    // The search box narrows the list by item, story or recipient; empty shows all.
+    let searchQuery = $state("");
+    let filteredItems = $derived.by(() => {
+        const q = searchQuery.trim().toLowerCase();
+        if (!q) return items;
+        return items.filter((h) =>
+            [h.name, h.story, h.recipient].some((v) =>
+                String(v ?? "").toLowerCase().includes(q),
+            ),
+        );
+    });
+
     const wizardSteps = [
         {
             id: "intro",
@@ -341,6 +353,7 @@
             />
             <input
                 type="text"
+                bind:value={searchQuery}
                 aria-label="Search by item, story, or recipient"
                 placeholder="Search by item, story, or recipient..."
                 class="w-full pl-10 pr-4 py-3 rounded-2xl border border-stone-200 focus:border-[#4A7C74] focus:ring-0 shadow-sm"
@@ -392,7 +405,7 @@
             <div
                 class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
             >
-                {#each items as heirloom (heirloom.id)}
+                {#each filteredItems as heirloom (heirloom.id)}
                     <div in:fade={{ duration: 400 }} class="relative group">
                         <HeirloomCard
                             {heirloom}
@@ -443,7 +456,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
-                        {#each items as heirloom (heirloom.id)}
+                        {#each filteredItems as heirloom (heirloom.id)}
                             <tr class="hover:bg-slate-50 transition-colors group">
                                 <td class="px-4 py-3">
                                     <div class="flex items-center gap-3">
