@@ -26,7 +26,9 @@
             <div class="max-w-4xl mx-auto space-y-12">
                 <!-- Asset ids (financial, property, subscription...) and contacts each have their own page
                      under /modules; vault ids go to /modules/legal-documents in +page.ts. -->
-                <ModuleContent {module} />
+                {#key module.id}
+                    <ModuleContent {module} />
+                {/key}
             </div>
         </div>
     {:else}
