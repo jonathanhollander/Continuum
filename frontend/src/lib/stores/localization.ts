@@ -1,23 +1,23 @@
-import { writable, derived } from "svelte/store";
+import { derived } from "svelte/store";
 import { dictionary } from "$lib/stores/dictionary";
+import { language } from "$lib/stores/conciergeStore.svelte";
 
-export const activeLanguage = writable("en");
-// Alias for compatibility
-export const language = activeLanguage;
+// One language source: the concierge setting (saved with the estate profile and changed by
+// the header and settings switchers). These names are kept for existing importers.
+export { language };
 
-function getNestedValue(obj: any, path: string): string {
-    return path.split('.').reduce((prev, curr) => {
-        return prev ? prev[curr] : null;
-    }, obj) || path;
+function lookup(dict: any, key: string): string | undefined {
+    if (!dict || !key) return undefined;
+    // Flat keys first, then dotted paths ("wizard.start").
+    if (typeof dict[key] === "string") return dict[key];
+    const value = key.split(".").reduce((prev: any, part) => (prev ? prev[part] : undefined), dict);
+    return typeof value === "string" ? value : undefined;
 }
 
-export const t = derived(activeLanguage, ($lang) => {
-    return (key: string) => {
-        const langDict = (dictionary as any)[$lang] || dictionary['en'];
-        // Try direct access first (for flat keys)
-        if (langDict[key]) return langDict[key];
-
-        // Try nested access
-        return getNestedValue(langDict, key);
+// Callable translator: `$t("wizard.start")`. Falls back to English, then to the key itself.
+export const t = derived(language, ($lang) => {
+    return (key: string): string => {
+        const langDict = (dictionary as any)[$lang] || dictionary.en;
+        return lookup(langDict, key) ?? lookup(dictionary.en, key) ?? key;
     };
 });

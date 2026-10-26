@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { t } from "$lib/stores/conciergeStore.svelte";
+    import { dict } from "$lib/stores/conciergeStore.svelte";
     import { registerAccount } from "$lib/stores/keyringStore";
     import { profiles, currentProfileId } from "$lib/stores/profileContext";
     import { get } from "svelte/store";
@@ -110,7 +110,7 @@
             <h2
                 class="text-xs font-bold uppercase tracking-widest text-[#4A7C74] mb-1"
             >
-                {$t.wizTitle}
+                {$dict.wizTitle}
             </h2>
             <div class="flex gap-2">
                 {#each [0, 1, 2, 3, 4] as s}
@@ -141,10 +141,10 @@
                     class="w-16 h-16 border-4 border-[#4A7C74] border-t-transparent rounded-full animate-spin mb-6"
                 ></div>
                 <h3 class="text-2xl font-serif font-bold text-[#304743] mb-2">
-                    {$t.wizConfiguring}
+                    {$dict.wizConfiguring}
                 </h3>
                 <p class="text-muted-foreground">
-                    {$t.wizConfiguringDesc}
+                    {$dict.wizConfiguringDesc}
                 </p>
             </div>
         {/if}
@@ -162,17 +162,17 @@
                     <Shield size={40} />
                 </div>
                 <h1 class="text-4xl font-serif font-bold text-[#304743]">
-                    {$t.wizWelcome}
+                    {$dict.wizWelcome}
                 </h1>
                 <p
                     class="text-lg text-muted-foreground max-w-md mx-auto leading-relaxed"
                 >
-                    {$t.wizWelcomeDesc}
+                    {$dict.wizWelcomeDesc}
                 </p>
                 <p
                     class="text-sm font-bold text-[#4A7C74] uppercase tracking-wide"
                 >
-                    {$t.wizWelcomeCTA}
+                    {$dict.wizWelcomeCTA}
                 </p>
             </div>
         {/if}
@@ -186,10 +186,10 @@
             >
                 <div class="space-y-2">
                     <h2 class="text-3xl font-serif font-bold text-[#304743]">
-                        {$t.wizBasics}
+                        {$dict.wizBasics}
                     </h2>
                     <p class="text-muted-foreground">
-                        {$t.wizBasicsDesc}
+                        {$dict.wizBasicsDesc}
                     </p>
                 </div>
 
@@ -197,7 +197,7 @@
                     <div class="space-y-2">
                         <label
                             class="text-xs font-bold uppercase text-muted-foreground"
-                            >{$t.wizLabelFirstName}</label
+                            >{$dict.wizLabelFirstName}</label
                         >
                         <input
                             bind:value={profile.firstName}
@@ -208,7 +208,7 @@
                     <div class="space-y-2">
                         <label
                             class="text-xs font-bold uppercase text-muted-foreground"
-                            >{$t.wizLabelEmail || "Email (Optional)"}</label
+                            >{$dict.wizLabelEmail || "Email (Optional)"}</label
                         >
                         <input
                             bind:value={profile.email}
@@ -222,7 +222,7 @@
                 <div class="pt-4">
                     <label
                         class="text-xs font-bold uppercase text-muted-foreground block mb-3"
-                        >{$t.wizLabelMarital}</label
+                        >{$dict.wizLabelMarital}</label
                     >
                     <div class="flex gap-4">
                         {#each ["Single", "Married", "Partnered", "Widowed"] as status}
@@ -252,10 +252,10 @@
             >
                 <div class="space-y-2">
                     <h2 class="text-3xl font-serif font-bold text-[#304743]">
-                        {$t.wizFamily}
+                        {$dict.wizFamily}
                     </h2>
                     <p class="text-muted-foreground">
-                        {$t.wizFamilyDesc}
+                        {$dict.wizFamilyDesc}
                     </p>
                 </div>
 
@@ -271,10 +271,10 @@
                             </div>
                             <div>
                                 <h4 class="font-bold text-foreground">
-                                    {$t.wizLabelChildren}
+                                    {$dict.wizLabelChildren}
                                 </h4>
                                 <p class="text-xs text-muted-foreground">
-                                    {$t.wizLabelChildrenDesc}
+                                    {$dict.wizLabelChildrenDesc}
                                 </p>
                             </div>
                         </div>
@@ -313,10 +313,10 @@
                             </div>
                             <div>
                                 <h4 class="font-bold text-foreground">
-                                    {$t.wizLabelPets}
+                                    {$dict.wizLabelPets}
                                 </h4>
                                 <p class="text-xs text-muted-foreground">
-                                    {$t.wizLabelPetsDesc}
+                                    {$dict.wizLabelPetsDesc}
                                 </p>
                             </div>
                         </div>
@@ -339,10 +339,10 @@
             >
                 <div class="space-y-2">
                     <h2 class="text-3xl font-serif font-bold text-[#304743]">
-                        {$t.wizAssets}
+                        {$dict.wizAssets}
                     </h2>
                     <p class="text-muted-foreground">
-                        {$t.wizAssetsDesc}
+                        {$dict.wizAssetsDesc}
                     </p>
                 </div>
 
@@ -394,10 +394,10 @@
             >
                 <div class="space-y-2">
                     <h2 class="text-3xl font-serif font-bold text-[#304743]">
-                        {$t.wizWishes}
+                        {$dict.wizWishes}
                     </h2>
                     <p class="text-muted-foreground">
-                        {$t.wizWishesDesc}
+                        {$dict.wizWishesDesc}
                     </p>
                 </div>
 
@@ -416,7 +416,7 @@
                 </div>
 
                 <p class="text-xs text-muted-foreground text-center pt-8">
-                    {$t.wizWishesNotice}
+                    {$dict.wizWishesNotice}
                 </p>
             </div>
         {/if}
@@ -432,7 +432,7 @@
                 class="text-muted-foreground hover:text-foreground font-bold flex items-center gap-2"
             >
                 <ChevronLeft size={18} />
-                {$t.wizBtnBack}
+                {$dict.wizBtnBack}
             </button>
         {:else}
             <div></div>
@@ -444,11 +444,11 @@
             class="bg-[#4A7C74] hover:bg-[#3b635d] text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all text-lg"
         >
             {#if step === 0}
-                {$t.wizBtnStart}
+                {$dict.wizBtnStart}
             {:else if step === 4}
-                {$t.wizBtnComplete}
+                {$dict.wizBtnComplete}
             {:else}
-                {$t.wizBtnNext} <ArrowRight size={18} />
+                {$dict.wizBtnNext} <ArrowRight size={18} />
             {/if}
         </button>
     </div>

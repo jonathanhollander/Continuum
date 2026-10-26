@@ -1,7 +1,7 @@
 <script>
     import ConciergeSettings from "$lib/components/concierge/ConciergeSettings.svelte";
     import { Settings } from "lucide-svelte";
-    import { t } from "$lib/stores/conciergeStore.svelte";
+    import { dict } from "$lib/stores/conciergeStore.svelte";
 </script>
 
 <div
@@ -13,10 +13,10 @@
         </div>
         <div>
             <h1 class="font-serif text-3xl font-bold text-slate-900">
-                {$t.settingsTitle}
+                {$dict.settingsTitle}
             </h1>
             <p class="text-slate-500 font-medium">
-                {$t.settingsDesc}
+                {$dict.settingsDesc}
             </p>
         </div>
     </div>

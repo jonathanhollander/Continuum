@@ -38,7 +38,7 @@
         type NavItem,
         type NavGroup,
     } from "$lib/config/navigation";
-    import { t, userRole } from "$lib/stores/conciergeStore.svelte";
+    import { dict, userRole } from "$lib/stores/conciergeStore.svelte";
 
     import { notifications } from "$lib/stores/notificationStore";
     import Tooltip from "$lib/components/ui/Tooltip.svelte";
@@ -167,7 +167,7 @@
 
         for (const group of filteredNavGroups) {
             for (const item of group.items) {
-                const label = $t[item.key] || item.label;
+                const label = $dict[item.key] || item.label;
                 if (label.toLowerCase().includes(query)) {
                     results.push(item);
                 }
@@ -561,7 +561,7 @@
                                                         <h3
                                                             class="font-semibold text-lg text-white truncate group-hover:text-indigo-300 transition-colors"
                                                         >
-                                                            {$t[item.key] ||
+                                                            {$dict[item.key] ||
                                                                 item.label}
                                                         </h3>
                                                         {#if status.count > 0}
@@ -619,7 +619,7 @@
                                             <h2
                                                 class="text-lg font-semibold text-slate-200"
                                             >
-                                                {$t[group.groupKey] ||
+                                                {$dict[group.groupKey] ||
                                                     group.groupLabel}
                                             </h2>
                                         </div>
@@ -675,7 +675,7 @@
                                                                     <h3
                                                                         class="font-semibold text-lg text-white group-hover:text-primary transition-colors truncate"
                                                                     >
-                                                                        {$t[
+                                                                        {$dict[
                                                                             item
                                                                                 .key
                                                                         ] ||
@@ -743,7 +743,7 @@
                                             <h2
                                                 class="text-lg font-bold text-amber-400 uppercase tracking-wide"
                                             >
-                                                {$t[group.groupKey] ||
+                                                {$dict[group.groupKey] ||
                                                     group.groupLabel}
                                             </h2>
                                         </div>
@@ -768,7 +768,7 @@
                                                 <h2
                                                     class="text-lg font-semibold text-slate-200"
                                                 >
-                                                    {$t[group.groupKey] ||
+                                                    {$dict[group.groupKey] ||
                                                         group.groupLabel}
                                                 </h2>
                                                 {#if group.groupDescription}
@@ -851,7 +851,7 @@
                                                                 <h3
                                                                     class="font-semibold text-lg text-white group-hover:text-primary transition-colors truncate"
                                                                 >
-                                                                    {$t[
+                                                                    {$dict[
                                                                         item.key
                                                                     ] ||
                                                                         item.label}

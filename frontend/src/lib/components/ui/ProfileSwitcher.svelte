@@ -4,7 +4,7 @@
         profiles,
         type Profile,
     } from "$lib/stores/profileContext";
-    import { t } from "$lib/stores/conciergeStore.svelte";
+    import { dict } from "$lib/stores/conciergeStore.svelte";
     import {
         User,
         Plus,
@@ -107,7 +107,7 @@
                     {activeProfile.name === "Me" ||
                     activeProfile.name === "New User"
                         ? "Secure Your Legacy"
-                        : $t.planningFor}
+                        : $dict.planningFor}
                 </p>
                 <p class="text-sm font-bold text-white truncate">
                     {activeProfile.name}
@@ -153,7 +153,7 @@
                 <div
                     class="px-3 py-2 text-xs font-bold text-slate-500 uppercase tracking-widest"
                 >
-                    {$t.familyCircle || "Family Circles"}
+                    {$dict.familyCircle || "Family Circles"}
                 </div>
 
                 <!-- Profile List -->
