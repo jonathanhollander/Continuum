@@ -1,6 +1,6 @@
 # Continuum — Recovery Execution Plan (subagent-run)
 
-**Last Updated:** 2026-10-26 07:10 EST
+**Last Updated:** 2026-10-26 14:45 EDT
 
 The how and the order for [PROJECT_RECOVERY_PLAN.md](PROJECT_RECOVERY_PLAN.md) (phases A–F).
 Issue IDs (CU-0xx) and their evidence are in
@@ -863,7 +863,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | X151 | ☑ | 7d1599d | `pulse.py` `_parse_settings_datetime` for `ghost_mode_until`, `safety_timer_active_until`, `last_known_location_time`: ISO (incl. `Z`/offsets) → naive UTC, `null` clears, anything else 422 with a gentle message. ISO 500 → 200 and stored; junk → 422; tracebacks 16 → 0. Findings → X152, X153 |
 | X152 | ☑ | add3154 | `pulse_logic.ghost_mode_active()`; `process_user_pulse` returns early while Ghost Mode is on (no tier alert, retry or log row); after expiry the normal one-tier-per-tick rules resume, no burst. Safety timer keeps running (an explicit owner request with its own deadline). Outbox: Ghost on 1 → 0 sends; expired and unset unchanged; 0 tracebacks. Findings: the scheduler sends no owner check-in reminders (CLAUDE.md flow step absent → G0); Ghost copy promises a "Status: Resting" notice nothing sends → T0 |
 | X153 | ☑ | 73abf0f | Pulse settings GET returns the 3 datetimes with `Z` (`_utc_iso`); `_check_settings_fields` 422s bad booleans, frequency 1–365, grace 0–720, biometric 1–168, text ≤2000, lat/lon ranges. Ghost until 03:30Z shows 11/1 in New York; 8 bad bodies 422; GET→POST round-trip 200; 0 tracebacks. Finding → X159 |
-| X154 | ☐ (owner decision) | | |
+| X154 | ▶ | codex/X154 | Owner approved 2026-10-26: alerts follow the displayed “When should they know?” tier; “Kept private” excluded; explicit Pulse tier wins. Backend implementation and isolated outbox proof in progress. |
 | X155 | ☑ | 492378f | Insurance mapper normalises frequency/type/status, utility mapper `service_type` (case-insensitive, unknown values pass through): lowercase seeds $0/$0/0 → $3,600/$300/3, Life filter works, shutoff icons right. 0 errors. Finding → X164 |
 | X156 | ☑ | 3528e09 | /executor no longer saves the executor role on load; Settings Perspective asks before changing the saved role (`choosePerspective`; file is `lib/components/concierge/ConciergeSettings.svelte`). Visit /executor then /dashboard: role stays planning, no executor popup; 0 errors. Finding → X161 |
 | X157 | ☑ | a7e0666 | AI audit findings come from `estateAudit.issues` (links to the page that resolves each), fully covered areas show "Well covered.", score = `estateAudit.percentage`; mock list, fake 2 s timer and URGENT badges gone. Seeded life policy: no life-insurance finding. 0 errors. Finding → X166 |
