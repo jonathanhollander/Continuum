@@ -87,18 +87,17 @@ export function refreshSession(): Promise<RefreshResult> {
     return refreshInFlight;
 }
 
+// The session init already done (or running) for a token: the layout's load and its onMount
+// both call init on every page load, and they share one /api/auth/me.
+let initRun: { token: string; run: Promise<void> } | null = null;
+
 function createAuthStore() {
     const { subscribe, set, update } = writable<AuthState>(initialState);
 
-    return {
-        subscribe,
-
-        /**
-         * Initialize auth state from stored token
-         */
-        init: async () => {
+    /** Load the signed-in user for the stored token; returns the token it ended on when signed in. */
+    const loadSession = async (): Promise<string | null> => {
             let token = browser ? localStorage.getItem(TOKEN_KEY) : null;
-            if (!token) return;
+            if (!token) return null;
 
             update(s => ({ ...s, loading: true, error: null }));
             try {
@@ -117,7 +116,7 @@ function createAuthStore() {
                     } else if (!refreshed.definite) {
                         // Could not reach the server: keep the tokens for the next try
                         update(s => ({ ...s, token, isAuthenticated: true, offline: true, loading: false, error: 'Could not reach the server' }));
-                        return;
+                        return null;
                     }
                 }
 
@@ -131,6 +130,7 @@ function createAuthStore() {
                         preferenceStore.setOnboardingComplete(true);
                     }
                     update(s => ({ ...s, token, user, isAuthenticated: true, offline: false, loading: false }));
+                    return token;
                 } else if (res.status === 401) {
                     // Definitely signed out (refresh also refused)
                     clearTokens();
@@ -144,6 +144,30 @@ function createAuthStore() {
                 console.error("Auth init failed", e);
                 update(s => ({ ...s, token, isAuthenticated: true, offline: true, loading: false, error: 'Failed to initialize authentication' }));
             }
+            return null;
+    };
+
+    return {
+        subscribe,
+
+        /**
+         * Initialize auth state from stored token. A second call for the same token joins the
+         * first; a new token (sign-in) or an earlier failure (offline) loads again.
+         */
+        init: (): Promise<void> => {
+            const token = browser ? localStorage.getItem(TOKEN_KEY) : null;
+            if (!token) return Promise.resolve();
+            if (initRun?.token === token) return initRun.run;
+            const entry = {
+                token,
+                run: loadSession().then(signedIn => {
+                    if (initRun !== entry) return;
+                    if (signedIn) entry.token = signedIn; // a refresh swapped the token
+                    else initRun = null;
+                })
+            };
+            initRun = entry;
+            return entry.run;
         },
 
         /**
@@ -243,6 +267,7 @@ function createAuthStore() {
          * Logout current user
          */
         logout: () => {
+            initRun = null;
             clearTokens();
             set({ token: null, user: null, isAuthenticated: false, loading: false, error: null });
         },

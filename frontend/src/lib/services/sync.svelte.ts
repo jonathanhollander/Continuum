@@ -793,6 +793,20 @@ export async function syncAll() {
     return Promise.allSettled(managers.map(m => m.sync()));
 }
 
+// The active account becoming known (or changing) points every store at that account's records
+// before anything syncs. A store created before the account was known says 'anonymous'; left so,
+// syncAll would take the account's arrival for a switch and reset the store under the page's
+// running sync (a second fetch, and a first upload sent twice). A store cleared by logout (null)
+// is left for syncAll.
+if (browser) {
+    activeAccountId.subscribe(id => {
+        if (!id) return;
+        (Object.values(getRegistry()) as any[]).forEach(m => {
+            if (m.loadedFor !== null && m.loadedFor !== id) m.reset(false);
+        });
+    });
+}
+
 /** Logout: forget every in-memory record so the next account never sees them. */
 export function clearAll() {
     _sessionActive = false;

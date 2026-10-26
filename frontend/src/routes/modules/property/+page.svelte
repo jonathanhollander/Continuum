@@ -28,7 +28,6 @@
         FileText,
         Briefcase,
         Info,
-        ShieldCheck,
         QrCode,
         Loader2,
     } from "lucide-svelte";
@@ -414,7 +413,7 @@
     </div>
 
     <!-- Asset Stats Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div
             class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
         >
@@ -488,29 +487,6 @@
             <p class="text-3xl font-black text-slate-900 tracking-tight">
                 {typeCounts["Valuable"] || 0}
             </p>
-        </div>
-
-        <div
-            class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
-        >
-            <div class="flex items-start justify-between mb-4">
-                <div
-                    class="p-3 bg-primary/10 rounded-2xl text-primary group-hover:scale-110 transition-transform"
-                >
-                    <ShieldCheck size={24} />
-                </div>
-                <div
-                    class="text-[10px] bg-primary/20 text-primary px-2 py-1 rounded-lg font-bold"
-                >
-                    SECURE
-                </div>
-            </div>
-            <p
-                class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1"
-            >
-                Document Match
-            </p>
-            <p class="text-3xl font-black text-slate-900 tracking-tight">85%</p>
         </div>
     </div>
 
@@ -636,7 +612,7 @@
                             <p
                                 class="text-lg font-black text-slate-900 tracking-tight"
                             >
-                                ${item.valuation.toLocaleString()}
+                                ${item.valuation?.toLocaleString() || '0'}
                             </p>
                         </div>
                         <div
@@ -725,16 +701,6 @@
             <!-- GHOST ROW IMPLEMENTATION -->
             {#if filteredItems.length === 0 && searchQuery === ""}
                 <div class="col-span-full space-y-4">
-                    <div
-                        class="border border-blue-200 bg-blue-50/50 rounded-xl p-4 mb-4 flex items-center gap-3 text-blue-800"
-                    >
-                        <Info size={20} />
-                        <p class="text-sm font-medium">
-                            Concierge Mode: Showing examples based on your
-                            region.
-                        </p>
-                    </div>
-
                     {#each getSmartSamples($language).property || [] as sample}
                         <GhostRow
                             name={sample.name}
@@ -773,10 +739,6 @@
     {:else}
         <!-- Table View -->
         {#if filteredItems.length === 0 && searchQuery === ""}
-            <div class="border border-blue-200 bg-blue-50/50 rounded-xl p-4 mb-4 flex items-center gap-3 text-blue-800">
-                <Info size={20} />
-                <p class="text-sm font-medium">Concierge Mode: Showing examples based on your region.</p>
-            </div>
             {#each getSmartSamples($language).property || [] as sample}
                 <GhostRow
                     name={sample.name}
