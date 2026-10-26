@@ -1,11 +1,13 @@
 # Continuum — Project Recovery Plan
 
-**Last Updated:** 2026-10-26 00:22 EST
+**Last Updated:** 2026-10-26 00:45 EST
+
+**Revised 2026-10-26** after the features/usability review (`docs/reviews/2026-10-25-features-usability/REVIEW.md`): the order is now built around the handover, not the existing navigation.
 
 **Execution:** task cards for each phase are in [RECOVERY_EXECUTION_PLAN.md](RECOVERY_EXECUTION_PLAN.md).
 
 **Scope:** Features and the user's experience come first. Security, admin, CI and
-infrastructure hardening are listed in Phase 6 and wait until the core features work.
+infrastructure hardening are listed in Phase F and wait until the handover works.
 **Ground rule:** No module or feature is deleted. Where something is unfinished, it is
 labelled or moved lower in the navigation, never removed.
 
@@ -19,7 +21,7 @@ labelled or moved lower in the navigation, never removed.
 | Production site | Up. `/api/health` reports database, storage and scheduler healthy. | `curl https://continuum.estate/api/health` |
 | Frontend build | **Passes** (`vite build`). | `npm run build` |
 | Frontend type-check | **288 errors, 268 warnings in 112 files.** The saved baseline (`frontend/svelte_check_baseline.txt`) was 245 errors, so it got **worse** while work continued. | `npm run check` |
-| Backend on production's library versions | Starts, login works, and **every module's data loads (GET 200)**. | Local server pinned to production's `pip freeze`, then every frontend sync endpoint called |
+| Backend on production's library versions | Starts and login works. GET returned 200 for 31 of the 32 sync endpoints the frontend uses. `vault_documents` returned 400. A 200 here means the data *loads*; it does not mean fields survive a save (see the review's CU-001). | Local server pinned to production's `pip freeze`, then every frontend sync endpoint called |
 | Backend on the *latest* library versions | **Login and sign-up crash** with `Datetime values must have timezone information`. `requirements.txt` uses `>=`, so the next redeploy installs these versions. | Same test on a fresh install (SQLModel 0.0.48 / SQLAlchemy 2.1.6; production has 0.0.42 / 2.0.52) |
 | Important Documents (a "What Matters Most" module) | **Broken.** `DocumentVault.svelte` syncs to `/api/data/vault_documents`. The generic `/api/data/{type}` route catches that path first and returns `400 Invalid type: vault_documents`. Documents never reach the server. | Local API call; same root cause as `INVESTIGATION_REPORT_LEGAL_DOCUMENTS.md` (2026-01-26), which was diagnosed but never fixed |
 | Modules | 31 module routes, 74 pages in total, 60 store files, 187 Svelte components | `find` |
@@ -78,7 +80,7 @@ issues. Several agents (Antigravity, Claude web sessions, local sessions) worked
 parallel branches. The result is 15 remote branches and 4 "stash-backup" branches with
 work no one has triaged.
 
-### 2.5 Deploy problems took a third of the effort
+### 2.5 Deploy problems caused heavy churn
 40 of 119 commit messages are about deploy, build, Railway, nixpacks, SSL or the health
 check. Railway's history shows two failed deploys on 2026-01-26, and then nothing until
 2026-09-05.
@@ -107,211 +109,119 @@ Each duplicate splits the fixes: a bug fixed in one copy is still present in the
 
 ---
 
-## 3. The plan
+## 3. The target: what "back on track" means
 
-Order: protect what works → find out what works → fix the core user journey → widen it
-outward. Each phase ends with something a user can see working.
+**Completion test (decisive):** the recipient can use what the owner prepared without the
+owner there to explain it.
 
-### Phase 0 — Stop the ground moving (half a day)
+Run it as one fixed scenario with fake data. It is taken from the review at
+`docs/reviews/2026-10-25-features-usability/REVIEW.md`:
+- **Records:** one checking account with ownership and identifying details, one debt, one
+  insurance policy, one PDF will with the original's location, one advisor contact, one
+  household instruction, one full letter to the son, one story or lesson, one photo, one
+  video, and one heirloom story.
+- **Owner:** adds all of these, edits the account and the letter, hits a controlled save
+  failure and retries, reloads, and previews the recipient view.
+- **Recipient:** in a separate browser context, finds the starting note, the immediate
+  steps, the advisor and the original's location, reads the full letter, and plays the
+  media.
+- **Outputs:** the screen, the binder and the PDF agree on records, values and full text.
 
-**R0.1 Pin backend dependencies to the versions production runs now.**
-Replace `>=` in `backend/requirements.txt` with the exact versions from production's
-`pip freeze` (captured this session: FastAPI 0.141.1, SQLModel 0.0.42,
-SQLAlchemy 2.0.52, Pydantic 2.13.5, and others).
-*Why:* this is a feature fix, not a security one. With the current file, the next deploy
-breaks login and sign-up for every user (reproduced above). Pinning makes production and
-every developer machine run identical code. Upgrading later becomes a deliberate step,
-not an accident.
+**Acceptance for any record type:** create → every entered field returned → edit → reload
+→ fetched again independently → present in the recipient view and the export. Where they
+apply, also check failed-save behaviour and attachments. A screenshot or a 200 response on
+its own is not acceptance.
 
-**R0.2 Make this document the single plan, and archive the rest.**
-The old plan and report files move to `docs/archive/` (done in this commit). Status lives
-in one table: the Feature Status table in Phase 1.
-*Why:* cause 2.4. When nine lists disagree, the effect is the same as having none. They
-are archived, not deleted, so the history stays searchable.
+**Design decision: "designated recipient", not a hard-coded "son".** The codebase is a
+multi-account product (production domain, 6-language marketing). The recipient view is
+built for *a person the owner names*. The son is the first recipient and the acceptance
+scenario. Recipient and executor are separate flags on a contact.
 
-**R0.3 Correct the stale instruction in `CLAUDE.md`** that says to wait for GitHub
-Actions. It should say "run `npm run check` and `npm run build` yourself before you
-deploy."
-*Why:* cause 2.6. An instruction pointing at a check that does not exist trains every
-session to skip checks. This is a manual step, not a gate; nothing gets blocked.
+## 4. The plan (order changed after the 2026-10-25 review)
 
-### Phase 1 — Find out what actually works (1–2 days)
+Issue IDs (CU-0xx) refer to the review's issue register.
 
-**R1.1 Click through every core journey in a browser, and record pass or fail in one
-table.**
-The journeys: sign up → onboarding → dashboard → add, edit, reload and remove one item in
-each of the seven "What Matters Most" modules (Financial Security, Protection & Insurance,
-People Who Matter, Important Documents, Health & Care, Home & Keys, Wellness Check-in).
-Each item is checked twice: once after a page reload, and once in a second browser to
-prove the data came back from the server.
-*Why:* cause 2.1. Only a real save → reload → other-device test shows whether a user's
-data is safe, and that is the promise of this product. API tests passed for most modules
-here, but they cannot catch a button that never sends the request.
+**Phase A — Stable ground.**
+- Pin the backend to production's full resolved set (`pip freeze`) plus Python 3.11.
+  *Why:* pinning only the direct dependencies still lets the indirect ones drift.
+- Fix the stale CI line in `CLAUDE.md`.
+- Write a smoke script that sends **the payload the UI actually sends** and compares the
+  fields that come back. *Why:* model-shaped payloads miss exactly the frontend/backend
+  mismatches the review found (CU-001).
 
-**R1.2 Keep a Feature Status table at the bottom of this file** with columns Module |
-Loads | Saves | Survives reload | Second device | Last checked. A module is "done" only
-when every column passes, with the date it was checked.
-*Why:* this replaces the "Implementation Complete" documents with something anyone can
-re-check in a minute.
+**Phase B — Shared contracts first, one owner per area.**
+- Field-name conversion and serialization (CU-001).
+- Collection vs. singleton responses (CU-006, CU-011).
+- Category membership for Asset rows (CU-004).
+- Save-state truth and activity-log isolation (CU-013).
+- Store initialization (CU-014).
 
-### Phase 2 — Make the core journey solid (about 1 week)
+*Why:* these are shared code. Parallel per-module agents would each invent their own
+workaround for the same defect.
 
-**R2.1 Fix Important Documents saving.**
-Choose one of two fixes:
-- point `DocumentVault` at the working `documents` endpoint, or
-- add `vault_documents` to `MODEL_MAP` in `backend/routers/estate_data.py` (a one-line
-  alias, the same pattern already used for `future_letters`).
+**Phase C — Dependable records for the scenario.**
+- Financial accounts with every field.
+- Documents with a real PDF and metadata (CU-002).
+- Letters as stable, editable drafts to a named recipient (CU-008).
+- Journal, ethical will and lessons (CU-007).
+- One file path for PDF, image, audio and video (CU-010).
+- Time capsule (CU-009) and final wishes (CU-011).
 
-Then retire the second document path (R5.2).
-*Why:* this is one of the seven core modules, and right now it silently does not save.
-For a user organising a will or trust, that is the worst possible failure: the screen
-looks saved, but nothing is stored. The fix is small and was diagnosed nine months ago.
+*Why:* these are the records the completion test uses. Legacy is core from the start, not
+Phase 3.
 
-**R2.2 Pick one first-run flow and route every entry point to it.**
-Keep `/onboarding`, the newest (PR #43). Point `/start` and `/welcome` at it, and leave
-their code in place.
-*Why:* cause 2.8. Today, where a new user lands depends on which link they clicked, and
-each flow writes different store keys. One path means one thing to test and one first
-impression. No feature is lost, because the old pages stay reachable.
+**Phase D — The handover.**
+- One export snapshot that both the binder and the PDF read from (CU-003).
+- The recipient start page, plus an owner preview of the same page (CU-005).
+- Persistent executor steps (CU-015).
+- Honest readiness numbers: no "100% protected" on an empty vault (CU-012).
 
-**R2.3 Clear the type errors in the files the core journey touches first.**
-The errors cluster in `lib/components/concierge` (33), `lib/components/onboarding` (26),
-`lib/components/modules` (13), `dashboard` (10), `heirlooms` (11), `property` (10),
-`pets` (10) and the root layout (9). The most common single error, `'$t' is of type
-'unknown'` (78 times), is one typing fix in the translation store.
-*Why:* in a Svelte 5 app, many of these errors are exactly the "button does nothing" and
-"`.update` is not a function" bugs that `BUG_FIX_TASK_LIST.md` chased one at a time.
-Fixing the `$t` type alone removes about a quarter of all errors. This is a manual
-cleanup, not a new build gate.
+*Why:* without this, every module can pass and the handover still fails.
 
-**R2.4 Make save failures visible to the user.**
-In `SyncManager`, when the server rejects a save, show the gentle notification that
-already exists ("We couldn't save that just now…") and keep the item marked "not yet
-saved". Do not show it as saved.
-*Why:* the Document Vault bug went unseen because optimistic updates hide server
-rejections. For end-of-life records, a quiet failure is worse than a visible one. This
-uses the existing `errorHandler` and `notificationStore`, so it adds no new system.
+**Phase E — Polish what was proven.**
+- Navigation that puts legacy and finances first (CU-018).
+- Form simplicity (CU-019).
+- Labels on simulated features (CU-020).
+- Early-preview labels on the extras.
+- Duplicate cleanup.
+- The remaining type errors.
+- Phone and keyboard usability (CU-025).
 
-**R2.5 Write `scripts/smoke_test.py`**: log in, then create, read and delete one item per
-core endpoint, and print a pass/fail table. Run it by hand before each deploy.
-*Why:* it gives the API-level half of R1.1 in 10 seconds, so problems like the Document
-Vault one show up the same day. It is a script you choose to run; it is **not** wired into
-deploys or commits.
+**Phase F — Security, admin and operations.** Unchanged:
+- **Rotate the exposed OpenRouter key now.** It's an owner step in the dashboard and takes
+  minutes.
+- Server-side AI calls.
+- Production environment variables.
+- Untrack the committed `.db` files.
+- The bypass, only when asked.
 
-### Phase 3 — The "When You're Ready" and "Life & Legacy" modules (1–2 weeks)
+**Not a phase:** Pulse, QR, scenarios, analytics and builder tools stay reachable, with
+early-preview labels. They no longer decide when the project counts as "usable".
 
-**R3.1 Run the same Phase 1 test on Subscriptions, Pet Care, Property, Digital Accounts,
-Letters, Heirlooms, Life Journal, Visual Memories, Time Capsule, Timeline, Final Wishes and
-Family Tree.** Fix them in order of how often a real user would reach them: navigation
-order first.
-*Why:* these are the next-most-visible pages. With the core solid, every fix here is
-user-visible improvement rather than more surface area.
+**Deploys:** every phase that changes code is deployed and checked live, per the owner's
+standing rule. Doc-only and discovery work is not deployed. The live check is the
+completion-test step that phase touched, not just `/api/health`.
 
-**R3.2 Finish media upload for Visual Memories, Time Capsule and Heirlooms.**
-`mediaStorage.ts`, `mediaMigration.ts` and `indexedDB.ts` still keep files in the
-browser.
-*Why:* photos and recorded messages that live only in IndexedDB are lost when the
-browser's storage is cleared, or when the user switches devices. For a legacy product,
-those are the irreplaceable items.
+Durations are not estimated until Phase B has scoped the shared defects.
 
-### Phase 4 — Extras: keep them, label them honestly (2–3 days, then ongoing)
+## 5. Documentation move (done 2026-10-25)
 
-**R4.1 Keep Treasure Hunt, Builder Tools, Future Scenarios, Practice Run, QR Codes,
-Insights, Complete Record and Event Calendar.** Until each one passes the Phase 1 test,
-show it only under "Explore All Features" with a small "early preview" label. Remove the
-label module by module as each passes.
-*Why:* this keeps every feature, as instructed. It also stops unverified pages from being
-a new user's first impression. The navigation already has an "Extras" group, so this
-needs a flag, not a redesign.
+All project Markdown is in `/docs`:
+- current guides in `docs/`;
+- history in `docs/archive/`;
+- old agent specs in `docs/agent-specs/`.
 
-**R4.2 Hold new modules and new marketing pages until Phase 3 is green.**
-*Why:* cause 2.2. Each new module adds untested pages faster than they get fixed.
-Pausing is cheaper than adding and then repairing.
+`CLAUDE.md`, `.claude/` and `.agent/` stay where they are, because tools load them by path.
 
-### Phase 5 — Remove duplicates without losing features (2–3 days)
+## Completion test status
 
-**R5.1 Move the three unused store files** (`calendarStore.ts`, `visualMemoryStore.ts`,
-`advancedAssetStore.ts`) into `frontend/src/lib/stores/_archive/`.
-*Why:* nothing imports them, but they register the same sync keys against different
-endpoints. That is a trap: the next person to import one by mistake gets diverging data.
-Moving them keeps the code without leaving the trap. (Confirm before moving; this plan
-does not do it.)
-
-**R5.2 Settle on one document system and one heirloom API.** Have the other path forward
-to it.
-*Why:* duplicate paths split fixes (cause 2.8). Forwarding keeps old links and data
-working.
-
-**R5.3 Triage the 15 remote branches.** For each one: merged already (squash), or work to
-cherry-pick? Then delete the merged ones under the git standing authorisation.
-`feature/phase-3-persistence` (22 commits ahead) and `stash-backup/2026-01-26-34780fe`
-(20 ahead) come first.
-*Why:* feature work may be sitting there unseen. Until they are triaged, nobody knows
-whether a "missing" feature was ever built.
-
-**R5.4 Merge the four agent folders into `.claude/agents/` only**, and move the
-`.agent/` (Antigravity) copies to the archive if you no longer use Antigravity.
-*Why:* cause 2.3. The same agent has up to four diverging definitions. One copy is easier
-to keep accurate.
-
-### Phase 6 — After the features: security, admin, operations
-
-Listed so nothing is lost. Do not start these before Phase 3.
-
-- **Rotate the OpenRouter key and move AI calls server-side (one item that should not
-  wait).** `VITE_OPENROUTER_API_KEY` is compiled into the public JavaScript on
-  continuum.estate (confirmed in `chunks/C5_VTep5.js`). Anyone can copy it and run up
-  charges on your OpenRouter account. Rotating it takes minutes in the OpenRouter
-  dashboard. Moving the calls server-side is a feature change for the AI Concierge.
-- Set `ENVIRONMENT=production`, `JWT_SECRET_KEY`, `SECRET_KEY`, `FRONTEND_URL`, `RP_ID`
-  and `ORIGIN` on Railway. Production currently reports `"environment":"development"`, and
-  the repo with the default JWT secret is public.
-- The `jh@continuum.estate` login bypass: left alone, as `MASTER_TODO.md` records your
-  instruction, until you ask for it to be removed.
-- SQLite `.db` files committed to a public repo (`dev.db`, `backend/continuum*.db*`).
-- The remaining `MASTER_TODO.md` security, testing and polish items, and GitHub Issues
-  #10 and #20–#38.
-
----
-
-## 4. How to measure that the project is back on track
-
-1. The Feature Status table shows all seven core modules passing on four checks, with
-   dates.
-2. `npm run check` stays below its last recorded count on every change, and trends toward
-   zero.
-3. One plan (this file), one onboarding path, one document system.
-4. A redeploy changes nothing unexpected (pinned dependencies).
-
----
-
-## 5. Documentation move (done with this plan)
-
-All project Markdown now lives in `/docs`:
-- `docs/` holds current reference guides.
-- `docs/archive/` holds dated reports, completed or obsolete plans, and old task lists.
-- `docs/agent-specs/` holds the former `agents/` and `continuum-agents/` folders.
-
-References in agent and command files were updated to the new paths.
-
-**Left in place on purpose**, because tools load these by their exact path:
-- `CLAUDE.md`: Claude Code reads project instructions only from the repo root.
-- `.claude/**` and `.agent/**`: agent, skill and command definitions that the tools load
-  from those folders. Moving them would turn the agents off.
-- Markdown inside `node_modules/`: third-party package files, not project docs.
-
----
-
-## Feature Status (fill in during Phase 1)
-
-| Module | Loads | Saves | Survives reload | Second device | Last checked |
-|---|---|---|---|---|---|
-| Dashboard | | n/a | n/a | n/a | |
-| Financial Security | | | | | |
-| Protection & Insurance | | | | | |
-| People Who Matter | | | | | |
-| Important Documents | | ❌ API 400 | | | 2026-10-25 (API) |
-| Health & Care | | | | | |
-| Home & Keys | | | | | |
-| Wellness Check-in | | | | | |
-| Onboarding | | | | | |
+| Step | Status | Evidence |
+|---|---|---|
+| Account with all fields round-trips | ❌ CU-001 | review api-probes.json |
+| PDF will with original location saves | ❌ CU-002 | 400 `vault_documents` |
+| Letter to son, edited, no duplicate | ❌ CU-008 | review source trace |
+| Photo and video retrievable from a second context | ❌ CU-010 | review source trace |
+| Controlled save failure keeps the draft and offers retry | ❌ CU-013 | review browser screenshot |
+| Owner preview of the recipient view | ❌ CU-005 | not built |
+| Recipient finds note, steps, advisor and original | ❌ CU-005 | not built |
+| Screen, binder and PDF agree | ❌ CU-003 | binder omits accounts |
