@@ -15,6 +15,16 @@ export interface Subscription {
     custom_attributes?: string; // JSON string of custom field values
 }
 
+// The page's two cycles. Rows saved elsewhere carry the column default "monthly" in cycle with
+// the real cadence in frequency (or a sample's "Anual"); read them as the page's words.
+const YEARLY = /^(yearly|year|annual|annually|anual)$/i;
+const pageCycle = (cycle: unknown, frequency: unknown): 'Monthly' | 'Yearly' => {
+    const c = String(cycle ?? '').trim();
+    if (c === 'Monthly' || c === 'Yearly') return c;
+    const named = c && c.toLowerCase() !== 'monthly' ? c : String(frequency ?? c).trim();
+    return YEARLY.test(named) ? 'Yearly' : 'Monthly';
+};
+
 // One spelling per field (the page's; paymentMethod is a camel column), newest value kept.
 const mapper = (data: any): Subscription => {
     const out = oneSpelling(data, { auto_renew: 'autoRenew', renewal_date: 'renewalDate', paymentMethod: 'payment_method' });
@@ -22,6 +32,7 @@ const mapper = (data: any): Subscription => {
         ...out,
         id: typeof out.id === 'string' && out.id.length > 10 ? undefined : Number(out.id) || out.id,
         auto_renew: out.auto_renew ?? true,
+        cycle: pageCycle(out.cycle, out.frequency),
     };
 };
 
