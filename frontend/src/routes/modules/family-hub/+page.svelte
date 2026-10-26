@@ -778,11 +778,6 @@
                                 Watch our guide videos to understand your role
                                 in the estate plan.
                             </p>
-                            <span
-                                class="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider bg-white/10 px-3 py-1 rounded-full"
-                            >
-                                5 Videos Available
-                            </span>
                         </div>
                     </button>
 
