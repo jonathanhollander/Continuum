@@ -13,6 +13,8 @@
 
     let width = $state(800);
     const HEIGHT = 600;
+    // Width of the edit panel; the map uses the space beside it while it is open
+    const PANEL_WIDTH = 320;
 
     // The member being edited or added (a copy, so closing the panel leaves the map as it was)
     let draft = $state<any>(null);
@@ -21,10 +23,11 @@
     let nodes = $derived.by((): PlacedNode[] => {
         const members = familyStore.members || [];
         const n = members.length;
-        const cx = width / 2;
+        const mapWidth = draft ? Math.max(0, width - PANEL_WIDTH) : width;
+        const cx = mapWidth / 2;
         const cy = HEIGHT / 2;
         if (n === 1) return [{ ...members[0], x: cx, y: cy }];
-        const rx = Math.max(0, width / 2 - 130);
+        const rx = Math.max(0, mapWidth / 2 - 130);
         const ry = HEIGHT / 2 - 80;
         const outer = n > 12 ? Math.ceil(n * 0.6) : n;
         return members.map((m, i) => {
