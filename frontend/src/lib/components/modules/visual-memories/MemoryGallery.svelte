@@ -7,6 +7,7 @@
         ChevronLeft,
         ChevronRight,
         Heart,
+        Play,
     } from "lucide-svelte";
     import { fade, fly } from "svelte/transition";
     import { onDestroy } from "svelte";
@@ -54,6 +55,15 @@
     function srcOf(m: VisualMemory): string | undefined {
         if (!m?.url) return undefined;
         return mediaIdFromRef(m.url) === null ? m.url : blobUrls[m.url];
+    }
+
+    // A video at rest paints nothing until it has decoded a frame; seeking a
+    // little past 0 once the metadata is in makes the browser show that frame.
+    function showFirstFrame(e: Event) {
+        const v = e.currentTarget as HTMLVideoElement;
+        if (v.currentTime === 0 && v.paused) {
+            v.currentTime = Math.min(0.1, (v.duration || 0.2) / 2);
+        }
     }
 
     // Carousel State
@@ -160,8 +170,19 @@
                             muted
                             playsinline
                             preload="metadata"
+                            onloadedmetadata={showFirstFrame}
                             class="w-full h-full object-cover"
                         ></video>
+                        <div
+                            class="absolute inset-0 flex items-center justify-center pointer-events-none"
+                            aria-hidden="true"
+                        >
+                            <div
+                                class="h-12 w-12 rounded-full bg-black/50 backdrop-blur flex items-center justify-center text-white"
+                            >
+                                <Play size={22} class="fill-white ml-0.5" />
+                            </div>
+                        </div>
                     {:else}
                         <img
                             src={srcOf(memory)}
@@ -197,7 +218,9 @@
                     <!-- Overlay (Only when not in selection mode or on hover) -->
                     {#if !isSelectionMode}
                         <div
-                            class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4"
+                            class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent {memory.type === 'video'
+                                ? 'opacity-100'
+                                : 'opacity-0 group-hover:opacity-100'} transition-opacity flex flex-col justify-end p-4"
                         >
                             <div
                                 class="text-white font-medium truncate text-sm"
@@ -331,7 +354,7 @@
                             onclick={() => (activeIndex = i)}
                         >
                             {#if mem.type === "video"}
-                                <video src={srcOf(mem)} muted preload="metadata" class="w-full h-full object-cover"></video>
+                                <video src={srcOf(mem)} muted preload="metadata" onloadedmetadata={showFirstFrame} class="w-full h-full object-cover"></video>
                             {:else}
                                 <img
                                     src={srcOf(mem)}
