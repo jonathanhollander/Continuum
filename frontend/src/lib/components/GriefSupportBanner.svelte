@@ -43,17 +43,17 @@
         </div>
 
         <div class="flex-1 text-center md:text-left">
-            <h4 class="text-lg font-medium text-slate-100 mb-1">
+            <h4 class="text-lg font-medium text-foreground mb-1">
                 We're sitting with you
             </h4>
-            <p class="text-slate-400 leading-relaxed max-w-2xl">
+            <p class="text-foreground/75 leading-relaxed max-w-2xl">
                 {bannerMessage}
             </p>
         </div>
 
         <a
             href="/resources/grief-support"
-            class="shrink-0 flex items-center gap-3 px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white transition-all group/btn"
+            class="shrink-0 flex items-center gap-3 px-6 py-3 rounded-2xl bg-card border border-border text-foreground hover:bg-muted hover:border-primary/40 transition-all group/btn"
         >
             <span class="text-sm font-medium">Visit the Sanctuary</span>
             <LucideArrowRight
