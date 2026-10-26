@@ -4,7 +4,7 @@
  */
 
 import { mediaStorage } from './indexedDB';
-import { uploadMedia } from './mediaService';
+import { uploadMediaDirect, verifyMediaRetrieval } from './mediaService';
 
 export interface MigrationProgress {
     total: number;
@@ -25,54 +25,41 @@ export interface MigrationResult {
  * Get all media IDs from IndexedDB
  */
 async function getAllMediaIds(): Promise<string[]> {
-    const DB_NAME = 'continuum_media_db';
-    const STORE_NAME = 'media_blobs';
-
-    return new Promise((resolve, reject) => {
-        const request = indexedDB.open(DB_NAME);
-
-        request.onsuccess = () => {
-            const db = request.result;
-
-            // Check if the object store exists before trying to access it
-            if (!db.objectStoreNames.contains(STORE_NAME)) {
-                db.close();
-                resolve([]); // No store = no media to migrate
-                return;
-            }
-
-            try {
-                const transaction = db.transaction([STORE_NAME], 'readonly');
-                const store = transaction.objectStore(STORE_NAME);
-                const getAllKeysRequest = store.getAllKeys();
-
-                getAllKeysRequest.onsuccess = () => {
-                    db.close();
-                    resolve(getAllKeysRequest.result as string[]);
-                };
-
-                getAllKeysRequest.onerror = () => {
-                    db.close();
-                    reject(getAllKeysRequest.error);
-                };
-            } catch (e) {
-                db.close();
-                resolve([]); // Store access failed = treat as empty
-            }
-        };
-
-        request.onerror = () => {
-            // Database doesn't exist or can't be opened - no media to migrate
-            resolve([]);
-        };
-    });
+    // Through indexedDB.ts, so the store is created with the database (a bare
+    // open here used to create an empty database that never got its store)
+    try {
+        return await mediaStorage.keys();
+    } catch {
+        return [];
+    }
 }
 
 /**
  * Parse media ID to extract module and reference info
  * Expected format: "heirlooms_<id>_image" or "properties_<id>_photo_<index>"
  */
-function parseMediaId(id: string): { module: string; referenceId?: string; filename: string } {
+const EXTENSION_BY_TYPE: Record<string, string> = {
+    'application/pdf': 'pdf', 'text/plain': 'txt', 'text/csv': 'csv',
+    'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif', 'image/webp': 'webp', 'image/heic': 'heic',
+    'video/mp4': 'mp4', 'video/webm': 'webm', 'video/quicktime': 'mov',
+    'audio/mpeg': 'mp3', 'audio/wav': 'wav', 'audio/webm': 'webm', 'audio/ogg': 'ogg', 'audio/mp4': 'm4a'
+};
+
+function parseMediaId(id: string, blob?: Blob): { module: string; referenceId?: string; filename: string } {
+    // Uploads that mediaService kept locally: "pending:<module>:<referenceId>:<time>"
+    if (id.startsWith('pending:')) {
+        const [, module, referenceId] = id.split(':');
+        const name = blob instanceof File && blob.name ? blob.name : `${id.replace(/:/g, '_')}`;
+        return { module: module || 'general', referenceId: referenceId || undefined, filename: name };
+    }
+    const typed = blob?.type ? EXTENSION_BY_TYPE[blob.type.split(';')[0].trim().toLowerCase()] : undefined;
+    const parsed = parseLegacyId(id);
+    if (blob instanceof File && blob.name) parsed.filename = blob.name;
+    else if (typed) parsed.filename = parsed.filename.replace(/\.[a-z0-9]+$/, `.${typed}`);
+    return parsed;
+}
+
+function parseLegacyId(id: string): { module: string; referenceId?: string; filename: string } {
     const parts = id.split('_');
 
     // Default values
@@ -129,13 +116,17 @@ async function migrateSingleMedia(
     }
 
     // Parse ID to get module info
-    const { module, referenceId, filename } = parseMediaId(id);
+    const { module, referenceId, filename } = parseMediaId(id, blob);
 
     // Convert blob to File
     const file = new File([blob], filename, { type: blob.type });
 
-    // Upload to backend
-    const response = await uploadMedia(file, module, referenceId, `Migrated from IndexedDB: ${id}`);
+    // Upload to backend (the original stays in IndexedDB until it reads back)
+    const response = await uploadMediaDirect(file, module, referenceId, `Migrated from IndexedDB: ${id}`);
+
+    if (!(await verifyMediaRetrieval(response.id, file.size))) {
+        throw new Error(`Server copy ${response.id} did not read back yet; the local original is kept`);
+    }
 
     return {
         id,
@@ -190,10 +181,13 @@ export async function migrateAllMedia(
                     newId: result.mediaId,
                     downloadUrl: result.downloadUrl
                 });
+                // Record the mapping before removing the original, so records that
+                // still hold the old id resolve to the server copy (indexedDB.ts getUrl)
+                saveMigrationMapping(migrations);
 
                 completed++;
 
-                // Delete from IndexedDB after successful migration
+                // The server copy read back with the same size, so the local original can go
                 await mediaStorage.delete(id);
 
             } catch (error: any) {
@@ -216,8 +210,6 @@ export async function migrateAllMedia(
             }
         }
 
-        // Store migration mapping in localStorage for reference updates
-        localStorage.setItem('media_migration_mapping', JSON.stringify(migrations));
 
         return {
             success: failed === 0,
@@ -237,6 +229,20 @@ export async function migrateAllMedia(
             errors: [{ id: 'migration', error: error.message }]
         };
     }
+}
+
+/** Merge new entries into the stored mapping (earlier runs are kept). */
+function saveMigrationMapping(entries: Array<{ oldId: string; newId: number; downloadUrl: string }>): void {
+    let existing: Array<{ oldId: string; newId: number; downloadUrl: string }> = [];
+    try {
+        existing = JSON.parse(localStorage.getItem('media_migration_mapping') || '[]');
+        if (!Array.isArray(existing)) existing = [];
+    } catch {
+        existing = [];
+    }
+    const byOld = new Map(existing.map((m) => [m.oldId, m]));
+    for (const m of entries) byOld.set(m.oldId, m);
+    localStorage.setItem('media_migration_mapping', JSON.stringify([...byOld.values()]));
 }
 
 /**

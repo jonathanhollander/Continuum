@@ -7,7 +7,9 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlmodel import select
 from typing import List, Optional
+import logging
 import mimetypes
+import re
 from pathlib import Path
 
 from backend.database import get_session, User
@@ -18,10 +20,11 @@ from backend.config import settings
 from backend.utils.audit import log_audit, log_deletion
 from fastapi import Request
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/api/media", tags=["media"])
 
-# Allowed file types
-# Allowed file types
+# Allowed file types (mirrored by ACCEPTED_MEDIA_TYPES in frontend mediaService.ts)
 ALLOWED_IMAGE_TYPES = {
     "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp", "image/heic"
 }
@@ -29,7 +32,8 @@ ALLOWED_VIDEO_TYPES = {
     "video/mp4", "video/quicktime", "video/webm", "video/x-msvideo"
 }
 ALLOWED_AUDIO_TYPES = {
-    "audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg", "audio/webm"
+    "audio/mpeg", "audio/mp3", "audio/wav", "audio/x-wav", "audio/wave", "audio/ogg",
+    "audio/webm", "audio/mp4", "audio/x-m4a", "audio/aac"
 }
 ALLOWED_DOCUMENT_TYPES = {
     "application/pdf", "text/plain", "text/csv"
@@ -39,9 +43,31 @@ ALLOWED_DOCUMENT_TYPES = {
 ALLOWED_MIME_TYPES = ALLOWED_IMAGE_TYPES | ALLOWED_VIDEO_TYPES | ALLOWED_AUDIO_TYPES | ALLOWED_DOCUMENT_TYPES
 
 
+def base_mime_type(mime_type: str) -> str:
+    """'audio/webm;codecs=opus' -> 'audio/webm' (browser recorders add parameters)."""
+    return mime_type.split(";")[0].strip().lower()
+
+
 def validate_file_type(mime_type: str) -> bool:
     """Validate that the file type is allowed"""
-    return mime_type.lower() in ALLOWED_MIME_TYPES
+    return base_mime_type(mime_type) in ALLOWED_MIME_TYPES
+
+
+def safe_module_name(module: str) -> str:
+    """The module name becomes a storage folder, so keep it to [a-z0-9_-]."""
+    cleaned = re.sub(r"[^a-z0-9_-]", "_", (module or "general").lower())[:64]
+    return cleaned.strip("_") or "general"
+
+
+NOT_FOUND = "This file may have been moved."
+
+
+def get_owned_media(session: Session, media_id: int, user: User) -> MediaFile:
+    """The user's own, undeleted file; anyone else's file reads as missing."""
+    media = session.get(MediaFile, media_id)
+    if not media or media.deleted_at is not None or media.user_id != user.id:
+        raise HTTPException(status_code=404, detail=NOT_FOUND)
+    return media
 
 
 def get_doc_category(mime_type: str) -> str:
@@ -79,12 +105,14 @@ async def upload_media(
     Upload a media file or document.
     """
     # Validate file type
-    mime_type = file.content_type or mimetypes.guess_type(file.filename)[0] or "application/octet-stream"
+    mime_type = file.content_type or mimetypes.guess_type(file.filename or "")[0] or "application/octet-stream"
     if not validate_file_type(mime_type):
         raise HTTPException(
             status_code=400,
-            detail=f"File type '{mime_type}' not allowed. Allowed types: PDF, Text, Images, Video, Audio. Word docs not accepted."
+            detail="This space keeps PDF, text and CSV files, images, audio and video."
         )
+    mime_type = base_mime_type(mime_type)
+    module = safe_module_name(module)
 
     # Read file and validate size
     file_data = await file.read()
@@ -94,7 +122,7 @@ async def upload_media(
         max_size_mb = settings.MAX_UPLOAD_SIZE / (1024 * 1024)
         raise HTTPException(
             status_code=413,
-            detail=f"File too large. Maximum size: {max_size_mb:.1f}MB"
+            detail=f"This space holds files up to {max_size_mb:.0f} MB. A smaller copy will fit."
         )
 
     # Determine category
@@ -112,12 +140,13 @@ async def upload_media(
             category=doc_category
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to save file: {str(e)}")
+        logger.error(f"Media save failed for user {user.id}: {e}")
+        raise HTTPException(status_code=500, detail="Saving this file paused. It is ready to try again.")
 
     # Create database record
     media_record = MediaFile(
         user_id=user.id,
-        filename=file.filename,
+        filename=file.filename or "file",
         storage_path=storage_path,
         mime_type=mime_type,
         file_size=file_size,
@@ -162,21 +191,13 @@ async def download_media(
     Download a media file by ID.
     Redirects to S3 presigned URL or serves local file.
     """
-    # Get media record
-    media = session.get(MediaFile, media_id)
-
-    if not media or media.deleted_at is not None:
-        raise HTTPException(status_code=404, detail="Media file not found")
-
-    # Verify user owns this file
-    if media.user_id != user.id:
-        raise HTTPException(status_code=403, detail="Access denied")
+    media = get_owned_media(session, media_id, user)
 
     # Handle S3 Storage
     if media.storage_provider == "s3":
         presigned_url = storage.get_presigned_url(media.storage_path)
         if not presigned_url:
-            raise HTTPException(status_code=500, detail="Could not generate download URL")
+            raise HTTPException(status_code=500, detail="This file is taking a moment to open. You can try again shortly.")
         from fastapi.responses import RedirectResponse
         return RedirectResponse(url=presigned_url)
 
@@ -184,7 +205,8 @@ async def download_media(
     file_path = storage.get_file_path(media.storage_path)
 
     if not file_path.exists():
-        raise HTTPException(status_code=404, detail="File not found on disk")
+        logger.error(f"Media {media.id} is missing from storage at {media.storage_path}")
+        raise HTTPException(status_code=404, detail=NOT_FOUND)
 
     # Return file
     return FileResponse(
@@ -244,13 +266,7 @@ def get_media(
     session: Session = Depends(get_session)
 ):
     """Get metadata for a specific media file"""
-    media = session.get(MediaFile, media_id)
-
-    if not media or media.deleted_at is not None:
-        raise HTTPException(status_code=404, detail="Media file not found")
-
-    if media.user_id != user.id:
-        raise HTTPException(status_code=403, detail="Access denied")
+    media = get_owned_media(session, media_id, user)
 
     return MediaFileResponse(
         id=media.id,
@@ -279,13 +295,7 @@ def delete_media(
     Delete a media file (soft delete).
     The actual file remains on disk but is marked as deleted.
     """
-    media = session.get(MediaFile, media_id)
-
-    if not media or media.deleted_at is not None:
-        raise HTTPException(status_code=404, detail="Media file not found")
-
-    if media.user_id != user.id:
-        raise HTTPException(status_code=403, detail="Access denied")
+    media = get_owned_media(session, media_id, user)
 
     # P1-High: Audit logging for media deletion
     log_deletion(
@@ -308,7 +318,7 @@ def delete_media(
     # If hard delete is needed, we would call:
     # storage.delete_file(media.storage_path, provider=media.storage_provider)
 
-    return {"ok": True, "message": "Media file deleted"}
+    return {"ok": True, "message": "This file has been removed."}
 
 
 @router.put("/{media_id}/metadata")
@@ -320,13 +330,7 @@ def update_media_metadata(
     session: Session = Depends(get_session)
 ):
     """Update media file metadata (description, reference_id)"""
-    media = session.get(MediaFile, media_id)
-
-    if not media or media.deleted_at is not None:
-        raise HTTPException(status_code=404, detail="Media file not found")
-
-    if media.user_id != user.id:
-        raise HTTPException(status_code=403, detail="Access denied")
+    media = get_owned_media(session, media_id, user)
 
     if description is not None:
         media.description = description
