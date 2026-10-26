@@ -945,7 +945,7 @@ Report: files changed, proof output (the one run), any test written (with its ap
 | U77 | ☑ | d267b6d | FileUploader error `role="alert"`; subscriptions Difficulty buttons (filter and modal) `type="button"`. Attributes only; svelte-check 0 errors on the files; build passes. No browser run (attribute-only; diff reviewed) |
 | U78 | ☑ | c02f0f1 | CommandCenter takes an `onclose` prop (dispatcher gone); layout passes it. Ctrl+K opens; Escape, backdrop, Enter and click selection close (same as main, screenshots byte-identical); empty-list arrows no longer set NaN. 0 errors. Finding → U79 |
 | U79 | ☑ | 420d08b | Escape handled only by focusTrap (handleKeydown branch removed): `onclose` calls on Escape 2 → 1; backdrop still 1. 0 px change; 0 errors |
-| U80 | ▶ | | |
+| U80 | ☑ | no change | Cause disproved: main and e25188f both make 22 GETs on cold /modules/financial-accounts; pets/advanced_assets arrive in the idle `_later` queue (~2.5 s) on both, never in the first batch — Command Center marks nothing shown. O1's 19 vs 22 was its measuring window ending mid-queue. Ctrl+K still finds the pet. The background load-everything design is deliberate (instant offline pages); its one heavy item, letters, is X210 |
 | U42 | ☑ | e127714 | Settings left-aligned like the dashboard (heading x 456 → 312); 5 profile inputs labelled (5 → 0 unlabelled); date of death shown to Executor and Family only (Owner 1 → 0). X156 confirm intact. 0 page errors. Finding → U62 |
 | G0 | ☐ (after Wave U) | | |
 | T0 | ☐ (after Wave U, with G0) | | |
