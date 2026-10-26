@@ -34,7 +34,8 @@
     import { activityLog } from "$lib/stores/activityLog.svelte";
     import { fly, scale, slide, fade } from "svelte/transition";
     // import { getStored, setStored } from "$lib/stores/persistence"; // REMOVED
-    import { registerSync } from "$lib/services/sync.svelte"; // ADDDED
+    import { registerSync, type SyncManager } from "$lib/services/sync.svelte";
+    import { financialAssetsSync } from "$lib/stores/financialAssetsStore.svelte";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import { conciergeEngine } from "$lib/stores/conciergeEngine";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
@@ -48,10 +49,11 @@
         module.id === "assets-main"
             ? "financial_assets"
             : `assets_${module.id}`;
-    const assetSync = registerSync<Asset>(
-        syncKey,
-        syncKey,
-    ).setAffirmationContext("general");
+    // financial_assets is owned by financialAssetsStore (one mapper, one wire shape).
+    const assetSync: SyncManager<any> =
+        syncKey === "financial_assets"
+            ? financialAssetsSync
+            : registerSync<Asset>(syncKey, syncKey).setAffirmationContext("general");
 
     type AssetType =
         | "Property"

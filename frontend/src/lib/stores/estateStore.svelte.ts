@@ -26,14 +26,21 @@ const DEFAULT_PROFILE: EstateProfile = {
 
 /**
  * Normalizes estate profile data.
- * SyncManager now handles snake_case <-> camelCase conversion automatically.
+ * Wire contract (shared by every store on estate/profile): keys are sent snake_case, the server
+ * keeps exactly what was posted (shallow merge), and SyncManager camelCases them on the way back.
+ * A mapper must therefore read the camelCase that toCamel(toSnake(key)) produces: "last4SSN" goes
+ * out as last4_ssn and returns as last4Ssn.
+ * Only this profile's own keys are sent, so saving it never rewrites the tone, onboarding,
+ * scenario, concierge or complexity keys other stores keep in the same record.
  */
 const estateMapper = (data: any): EstateProfile => {
-    if (!data) return data;
-    return {
-        ...DEFAULT_PROFILE,
-        ...data,
-    };
+    const src = data && typeof data === 'object' ? data : {};
+    const out: any = { ...DEFAULT_PROFILE };
+    for (const k of Object.keys(DEFAULT_PROFILE)) {
+        if (src[k] !== undefined) out[k] = src[k];
+    }
+    if (src.last4SSN === undefined && src.last4Ssn !== undefined) out.last4SSN = src.last4Ssn;
+    return out;
 };
 
 const estateManager = registerSingletonSync<EstateProfile>(

@@ -88,6 +88,8 @@ export const propertyStore = {
 
     getTotalValuation,
 
+    sync: () => propertySync.sync(),
+
     getValuationByType: () => {
         return propertySync.items.reduce((acc, item) => {
             acc[item.type] = (acc[item.type] || 0) + (item.valuation || 0);

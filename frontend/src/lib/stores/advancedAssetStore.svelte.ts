@@ -46,71 +46,22 @@ export const DEFAULT_ADVANCED_STATE: AdvancedAssetState = {
     claims: []
 };
 
-const advancedAssetMapper = (data: any) => {
-    if (!data) return data;
-
-    // Remote -> Local (if it's a string)
-    let transactions = data.transactions;
-    if (typeof transactions === 'string') {
-        try { transactions = JSON.parse(transactions); } catch { transactions = []; }
-    }
-
-    let maintenance = data.maintenance;
-    if (typeof maintenance === 'string') {
-        try { maintenance = JSON.parse(maintenance); } catch { maintenance = []; }
-    }
-
-    let claims = data.claims;
-    if (typeof claims === 'string') {
-        try { claims = JSON.parse(claims); } catch { claims = []; }
-    }
-
-    // Local -> Remote (if it's an object)
-    // Actually, SQLModel expects strings. But if we send objects, Pydantic might complain.
-    // Our mapper in SyncManager handles this for payload.
-    const isLocal = Array.isArray(transactions);
-
-    return {
-        ...data,
-        transactions: isLocal ? JSON.stringify(transactions) : transactions,
-        maintenance: isLocal ? JSON.stringify(maintenance) : maintenance,
-        claims: isLocal ? JSON.stringify(claims) : claims,
-        // Also provide plain parsed versions for local use
-        _local: {
-            transactions: Array.isArray(transactions) ? transactions : JSON.parse(transactions || '[]'),
-            maintenance: Array.isArray(maintenance) ? maintenance : JSON.parse(maintenance || '[]'),
-            claims: Array.isArray(claims) ? claims : JSON.parse(claims || '[]')
-        }
-    };
+// Always returns arrays: the server stores these as JSON text but accepts real arrays on save
+// (SINGLETON_JSON_FIELDS), so nothing here re-stringifies and running it twice is harmless.
+const parseList = (v: any): any[] => {
+    if (Array.isArray(v)) return v;
+    if (typeof v !== 'string' || !v) return [];
+    try { const p = JSON.parse(v); return Array.isArray(p) ? p : []; } catch { return []; }
 };
 
-// Wait, the mapper pattern I used above is a bit messy because it mixes formats.
-// Better to have SyncManager handle the "serialize" and "deserialize" steps if needed,
-// OR just make the mapper pure for the direction it's being used.
-// If SyncManager.sync calls it: it should return Local format.
-// If SyncManager.update calls it: it should return Remote format.
-
-// Actually, the simplest way is to check the type of input.
 const betterMapper = (data: any) => {
-    if (!data) return data;
-
-    const isRemote = typeof data.transactions === 'string';
-
-    if (isRemote) {
-        return {
-            ...data,
-            transactions: JSON.parse(data.transactions || '[]'),
-            maintenance: JSON.parse(data.maintenance || '[]'),
-            claims: JSON.parse(data.claims || '[]')
-        };
-    } else {
-        return {
-            ...data,
-            transactions: JSON.stringify(data.transactions || []),
-            maintenance: JSON.stringify(data.maintenance || []),
-            claims: JSON.stringify(data.claims || [])
-        };
-    }
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return { ...DEFAULT_ADVANCED_STATE };
+    return {
+        ...data,
+        transactions: parseList(data.transactions),
+        maintenance: parseList(data.maintenance),
+        claims: parseList(data.claims)
+    };
 };
 
 export const advancedAssetSync = registerSingletonSync<AdvancedAssetState>('advanced_assets', 'advanced_assets', betterMapper, '/api/data').setAffirmationContext('general');
@@ -143,6 +94,8 @@ export const advancedAssetStore = {
             claims: [{ ...claim, id: crypto.randomUUID() }, ...current.claims]
         });
     },
+
+    sync: () => advancedAssetSync.sync(),
 
     subscribe: advancedAssetSync.subscribe.bind(advancedAssetSync)
 };

@@ -6,7 +6,7 @@ import { insuranceStore } from "$lib/stores/insuranceStore.svelte";
 import { heirloomStore } from "$lib/stores/heirloomStore.svelte";
 import { digitalAssetsStore } from "$lib/stores/digitalAssetsStore.svelte";
 import { medicalStore } from "$lib/stores/medicalStore.svelte";
-import { activityLog } from '$lib/stores/activityLog';
+import { activityLog } from '$lib/stores/activityLog.svelte';
 
 // Persistent Key
 const ONBOARDING_KEY = 'continuum_onboarding_state';

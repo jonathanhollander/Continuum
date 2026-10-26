@@ -6,7 +6,7 @@
     import LegalDisclaimer from "$lib/components/common/LegalDisclaimer.svelte";
     import ConciergeFlow from "$lib/components/concierge/ConciergeFlow.svelte";
     import Modal from "$lib/components/ui/Modal.svelte";
-    import { registerSync } from "$lib/services/sync.svelte";
+    import { financialAssetsSync } from "$lib/stores/financialAssetsStore.svelte";
     import { t } from "$lib/stores/localization";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import Affirmation from "$lib/components/Affirmation.svelte";
@@ -16,8 +16,8 @@
     let isLoading = $state(true);
     let showAffirmation = $state(false);
 
-    // Initialize Sync Service for Financial Assets
-    const assetSync = registerSync("financial_assets", "financial_accounts");
+    // The financial_assets store owns this registry key (and its mapper).
+    const assetSync: any = financialAssetsSync;
 
     onMount(async () => {
         await assetSync.init();

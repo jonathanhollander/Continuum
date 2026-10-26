@@ -109,24 +109,19 @@
     }
 
     onMount(async () => {
-        // Migration: Fix broken/legacy Unsplash URLs in existing data
-        await heirloomSync.update((items) => {
-            let hasChanges = false;
-            const updated = items.map((item) => {
-                if (item.image && item.image.includes("unsplash.com")) {
-                    hasChanges = true;
-                    return {
-                        ...item,
-                        image: getsuggestedImage(
-                            item.name || "",
-                            item.story || "",
-                        ),
-                    };
+        await heirloomSync.sync();
+        // Migration: Fix broken/legacy Unsplash URLs in existing data (one update per record)
+        for (const item of [...heirloomSync.items]) {
+            if (item.image && item.image.includes("unsplash.com")) {
+                try {
+                    await heirloomSync.update(item.id, {
+                        image: getsuggestedImage(item.name || "", item.story || ""),
+                    });
+                } catch {
+                    // The record stays as it was; the gentle message has already been shown.
                 }
-                return item;
-            });
-            return hasChanges ? updated : items;
-        });
+            }
+        }
         isLoading = false;
     });
 
