@@ -92,7 +92,9 @@
         for (const a of snapshot.attachments) {
             for (const r of a.records) {
                 const k = `${r.section}:${r.id}`;
-                m.set(k, [...(m.get(k) ?? []), a]);
+                const list = m.get(k) ?? [];
+                if (!list.some((file) => file.key === a.key)) list.push(a);
+                m.set(k, list);
             }
         }
         return m;

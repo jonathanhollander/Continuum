@@ -137,8 +137,9 @@ def _attachments(sections: Dict[str, List[Dict[str, Any]]], media: Dict[int, Med
             "download_url": f"/api/media/{mid}/download",
             "records": [],
         })
-        # one entry per record, even when it names the file twice (file_path and media_id)
-        if not any(r["section"] == ref["section"] and r["id"] == ref["id"] for r in entry["records"]):
+        # One file's bytes, with every distinct record/field that points to it. A cover can
+        # also be in the evidence gallery; that is one attachment with both source references.
+        if ref not in entry["records"]:
             entry["records"].append(ref)
 
     for section, rows in sections.items():
@@ -146,6 +147,22 @@ def _attachments(sections: Dict[str, List[Dict[str, Any]]], media: Dict[int, Med
             rid = _record_id(section, row)
             for field, value in row.items():
                 ref = {"section": section, "id": rid, "field": field}
+                if section == "assets" and field == "evidence":
+                    # The property gallery persists JSON [{id, filename, mime}], rather than
+                    # download URLs. Resolve through this owner's undeleted media map as usual.
+                    try:
+                        evidence = json.loads(value) if isinstance(value, str) else value
+                    except ValueError:
+                        evidence = None
+                    if isinstance(evidence, list):
+                        for item in evidence:
+                            mid = item.get("id") if isinstance(item, dict) else None
+                            if isinstance(mid, (int, str)) and str(mid).isdigit():
+                                link_media(int(mid), ref)
+                        continue
+                if section == "assets" and field == "thumbnail" and str(value).isdigit():
+                    link_media(int(value), ref)
+                    continue
                 if field == "custom_attributes" and isinstance(value, str) and CUSTOM_MEDIA_KEY in value:
                     try:
                         held = json.loads(value).get(CUSTOM_MEDIA_KEY)
