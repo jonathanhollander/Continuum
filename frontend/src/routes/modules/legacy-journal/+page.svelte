@@ -338,7 +338,7 @@
                         <!-- No search results -->
                         <div class="text-center py-12">
                             <Search size={48} class="mx-auto text-slate-300 mb-4" />
-                            <p class="text-slate-500">Showing reflections that match "{searchQuery}"</p>
+                            <p class="text-slate-500">Try another word to find a reflection.</p>
                             <button
                                 onclick={() => (searchQuery = "")}
                                 class="mt-4 text-primary hover:underline"
