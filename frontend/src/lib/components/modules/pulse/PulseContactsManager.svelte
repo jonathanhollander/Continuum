@@ -14,6 +14,7 @@
     import { pulseTierNumber } from "./pulseTiers";
     import { apiGet, apiPut } from "$lib/api/client";
     import { contactSync } from "$lib/stores/familyStore.svelte";
+    import { notifications } from "$lib/stores/notificationStore";
 
     let {
         userId = 1,
@@ -72,7 +73,7 @@
             editingTierId = null;
         } catch (e) {
             console.error(e);
-            alert(gentleRetry);
+            notifications.showError(gentleRetry);
         }
     }
 
@@ -151,14 +152,14 @@
             >
                 <Users class="w-5 h-5 text-slate-400" />
                 {viewMode === "escalation"
-                    ? "Escalation Protocol"
+                    ? "Who we reach out to"
                     : "Trusted Contacts"}
             </h3>
             {#if viewMode === "escalation"}
                 <div
                     class="text-[10px] uppercase tracking-widest text-slate-500 font-bold"
                 >
-                    Individual Nudge Settings Active
+                    Personal timing set
                 </div>
             {/if}
         </div>
@@ -188,7 +189,7 @@
                 class="h-40 bg-slate-900/50 rounded-2xl animate-pulse flex items-center justify-center"
             >
                 <span class="text-slate-500 text-sm font-medium animate-bounce"
-                    >Loading Protocols...</span
+                    >Gathering your circle...</span
                 >
             </div>
         {:else if tiers.length === 0 && !error}
@@ -198,7 +199,7 @@
                 <button
                     onclick={loadData}
                     class="bg-teal-500/10 text-teal-400 hover:text-teal-300 hover:bg-teal-500/20 px-4 py-2 rounded-lg text-sm font-bold transition-all"
-                    >Initialize Protocols</button
+                    >Set up your circle's plan</button
                 >
             </div>
         {:else if (viewMode === "contacts" ? guardians.length : contacts.length) === 0 && !error}
@@ -211,20 +212,16 @@
                 >
                     <Users class="w-8 h-8 text-slate-500" />
                 </div>
-                <h3 class="text-xl font-serif text-slate-200 mb-2">
-                    Build Your Circle
-                </h3>
                 <p
                     class="text-slate-400 max-w-sm mx-auto mb-8 text-sm leading-relaxed"
                 >
-                    Add your first Trusted Contact to start protecting your
-                    legacy.
+                    Choose the first person you trust, whenever you're ready.
                 </p>
                 <button
                     onclick={() => openAddGuardianModal(tiers[0]?.id ?? null)}
                     class="inline-flex items-center gap-2 bg-teal-500 text-slate-950 px-6 py-3 rounded-xl font-bold text-sm hover:bg-teal-400 transition-colors"
                 >
-                    <Plus class="w-4 h-4" /> Add First Guardian
+                    <Plus class="w-4 h-4" /> Add a guardian
                 </button>
             </div>
         {:else if viewMode === "contacts"}
@@ -259,7 +256,11 @@
                             <div
                                 class="text-xs text-slate-500 break-all"
                             >
+                                {#if contact.email}
                                 {contact.email}
+                            {:else}
+                                <a href="/modules/contacts" class="text-amber-300 hover:text-amber-200">Add an email so we can reach {contact.name}</a>
+                            {/if}
                             </div>
                         </div>
                         <span
@@ -320,11 +321,11 @@
                             {:else}
                                 <button
                                     type="button"
-                                    aria-label={`Tier ${tier.tier_number}: +${tier.delay_hours}h default`}
+                                    aria-label={`Tier ${tier.tier_number}: ${tier.delay_hours} hours by default`}
                                     class="text-[10px] text-slate-400 uppercase tracking-widest bg-slate-900/50 px-2 py-0.5 rounded border border-slate-700 flex items-center gap-2 cursor-pointer hover:border-teal-500/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-400 transition-colors"
                                     onclick={() => startTierEdit(tier)}
                                 >
-                                    +{tier.delay_hours}h default
+                                    {tier.delay_hours} hours by default
                                     <Pencil class="w-2 h-2" />
                                 </button>
                             {/if}
@@ -360,7 +361,11 @@
                                             <div
                                                 class="text-xs text-slate-500 break-all"
                                             >
-                                                {contact.email}
+                                                {#if contact.email}
+                                {contact.email}
+                            {:else}
+                                <a href="/modules/contacts" class="text-amber-300 hover:text-amber-200">Add an email so we can reach {contact.name}</a>
+                            {/if}
                                             </div>
                                         </div>
                                     </div>
@@ -383,8 +388,8 @@
                                             for="delay-{contact.id}"
                                             class="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest"
                                         >
-                                            <Settings2 class="w-3 h-3" /> Custom
-                                            Delay (h)
+                                            <Settings2 class="w-3 h-3" /> Personal
+                                            wait (hours)
                                         </label>
                                         <div class="flex items-center gap-2">
                                             <input
@@ -400,7 +405,7 @@
                                             />
                                             <span
                                                 class="text-[10px] text-slate-600 italic"
-                                                >Overrides Tier</span
+                                                >Used instead of the tier's wait</span
                                             >
                                         </div>
                                     </div>
@@ -422,8 +427,8 @@
                                                     : 'bg-slate-800 border-slate-700 text-slate-500'}"
                                             >
                                                 {contact.notify_on_safety_timer
-                                                    ? "Active Responder"
-                                                    : "Standard Only"}
+                                                    ? "Told when I start a timer"
+                                                    : "Told only if I'm quiet"}
                                             </button>
                                         </div>
                                     </div>

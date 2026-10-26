@@ -80,7 +80,7 @@
             class="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-950/50"
         >
             <h3 id="guardian-dialog-title" class="font-bold text-slate-200">
-                Select Guardian
+                Choose a guardian
             </h3>
             <button onclick={onclose} aria-label="Close">
                 <X class="w-5 h-5 text-slate-500 hover:text-white" />
@@ -106,7 +106,7 @@
                     <a
                         href="/modules/contacts"
                         class="text-teal-400 text-sm font-bold hover:underline"
-                        >Go to Family & Contacts</a
+                        >Add someone in Family & Contacts</a
                     >
                 </div>
             {:else if loaded || globalContacts.length > 0}
@@ -138,8 +138,12 @@
                                 <div class="text-sm font-bold text-slate-200">
                                     {contact.name}
                                 </div>
-                                <div class="text-xs text-slate-500">
-                                    {contact.role}
+                                <div class="text-xs text-slate-500 break-all">
+                                    {#if contact.email}
+                                        {contact.email}
+                                    {:else}
+                                        <span class="text-amber-300">Add an email so we can reach {contact.name}</span>
+                                    {/if}
                                 </div>
                             </div>
                             {#if selectedContactId === contact.id}
@@ -163,7 +167,7 @@
                         ? 'bg-teal-500 text-slate-950 hover:bg-teal-400'
                         : 'bg-slate-800 text-slate-300 border border-slate-700 cursor-not-allowed'}"
                 >
-                    Confirm Guardian
+                    Add them to my circle
                 </button>
             {/if}
 
@@ -175,7 +179,7 @@
                 <a
                     href="/modules/contacts"
                     class="text-xs text-slate-400 hover:text-slate-200"
-                    >Manage Global Contacts</a
+                    >Open Family & Contacts</a
                 >
             </div>
         </div>

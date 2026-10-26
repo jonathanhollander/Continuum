@@ -2,10 +2,6 @@
     import { pulse } from "$lib/stores/pulse.svelte";
     import { onMount } from "svelte";
     import {
-        startRegistration,
-        startAuthentication,
-    } from "@simplewebauthn/browser";
-    import {
         Shield,
         Activity,
         Clock,
@@ -18,7 +14,6 @@
     import GuardianPicker from "$lib/components/modules/pulse/GuardianPicker.svelte";
 
     let saving = $state(false);
-    let connectingBio = $state(false);
     let showGuardianPicker = $state(false);
 
     let settings = $state({
@@ -60,6 +55,8 @@
         try {
             await apiPost("/api/pulse/settings", {
                 enabled: settings.enabled,
+                frequency_days: settings.frequency_days,
+                grace_period_hours: settings.grace_period_hours,
                 ghost_mode_until: settings.ghost_mode_until,
                 biometric_extension_enabled: settings.biometric_extension_enabled,
                 location_vault_enabled: settings.location_vault_enabled,
@@ -87,51 +84,36 @@
         saveSettings(() => (settings.ghost_mode_until = before));
     }
 
-    async function toggleBiometric() {
-        if (settings.biometric_extension_enabled) {
-            // Disable simply
-            settings.biometric_extension_enabled = false;
-            await saveSettings(() => (settings.biometric_extension_enabled = true));
+    // How often we check in and the grace period: whole numbers in the ranges the server
+    // accepts (routers/pulse.py _SETTINGS_INT_FIELDS); saved when the field is left.
+    function saveNumber(field: "frequency_days" | "grace_period_hours", raw: string, low: number, high: number) {
+        const before = settings[field];
+        const value = Math.round(Number(raw));
+        if (raw === "" || !Number.isFinite(value) || value < low || value > high) {
+            settings[field] = before;
+            notifications.showError(
+                field === "frequency_days"
+                    ? "Choose how often we check in as a whole number of days, from 1 to 365."
+                    : "Choose the grace period as a whole number of hours, from 0 to 720 (30 days).",
+            );
             return;
         }
-
-        // Start Real Enrollment Flow
-        try {
-            connectingBio = true;
-
-            // 1. Get Options
-            const options = await apiPost(
-                "/api/pulse/auth/webauthn/register/start",
-            );
-
-            // 2. Browser Interaction
-            const attResp = await startRegistration(options);
-
-            // 3. Verify
-            await apiPost("/api/pulse/auth/webauthn/register/finish", attResp);
-
-            settings.biometric_extension_enabled = true;
-            await saveSettings(() => (settings.biometric_extension_enabled = false));
-        } catch (e) {
-            console.error("WebAuthn Failed", e);
-            alert("Could not register biometric device. See console.");
-        } finally {
-            connectingBio = false;
-        }
+        if (value === before) return;
+        settings[field] = value;
+        saveSettings(() => (settings[field] = before));
     }
-
 </script>
 
 <div class="max-w-4xl mx-auto p-4 md:p-8 pb-32">
     <div class="flex items-center justify-between mb-8">
         <h1 class="text-2xl font-serif text-slate-100 flex items-center gap-2">
             <Activity class="text-teal-400" />
-            Pulse Configuration
+            Your Check-in Settings
         </h1>
         <a
             href="/modules/pulse"
             class="text-sm text-teal-400 hover:text-teal-300 transition-colors"
-            >Back to Dashboard</a
+            >Back to Wellness Check-in</a
         >
     </div>
 
@@ -143,7 +125,7 @@
             <div>
                 <h3 class="text-lg font-medium text-white">Active Heartbeat</h3>
                 <p class="text-slate-400 text-sm">
-                    Enable the automated wellness check-in system.
+                    Turn on gentle wellness check-ins.
                 </p>
             </div>
             <button
@@ -166,6 +148,48 @@
             </button>
         </div>
 
+        <!-- HOW OFTEN: frequency_days and grace_period_hours (pulse_logic reads both) -->
+        <div
+            class="bg-slate-900/50 p-6 rounded-2xl border border-slate-700/50 grid md:grid-cols-2 gap-6 backdrop-blur-sm"
+        >
+            <div class="space-y-2">
+                <label for="pulse-frequency" class="text-sm font-medium text-white flex items-center gap-2">
+                    <Clock class="w-4 h-4 text-teal-400" /> How often we check in
+                </label>
+                <div class="flex items-center gap-2">
+                    <input
+                        id="pulse-frequency"
+                        type="number"
+                        min="1"
+                        max="365"
+                        step="1"
+                        value={settings.frequency_days}
+                        onchange={(e) => saveNumber("frequency_days", e.currentTarget.value, 1, 365)}
+                        class="w-24 bg-slate-950/60 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-teal-500/50"
+                    />
+                    <span class="text-sm text-slate-400">days</span>
+                </div>
+            </div>
+            <div class="space-y-2">
+                <label for="pulse-grace" class="text-sm font-medium text-white flex items-center gap-2">
+                    <Clock class="w-4 h-4 text-teal-400" /> Grace period
+                </label>
+                <div class="flex items-center gap-2">
+                    <input
+                        id="pulse-grace"
+                        type="number"
+                        min="0"
+                        max="720"
+                        step="1"
+                        value={settings.grace_period_hours}
+                        onchange={(e) => saveNumber("grace_period_hours", e.currentTarget.value, 0, 720)}
+                        class="w-24 bg-slate-950/60 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-teal-500/50"
+                    />
+                    <span class="text-sm text-slate-400">hours</span>
+                </div>
+            </div>
+        </div>
+
         <!-- ESCALATION PROTOCOL: the tier boxes live on the Escalation Plan page -->
         <div class="space-y-4" id="contacts-section">
             <div class="flex items-center justify-between">
@@ -173,7 +197,7 @@
                     class="text-lg font-medium text-slate-200 flex items-center gap-2"
                 >
                     <Users class="w-5 h-5 text-slate-400" />
-                    Escalation Protocol
+                    Who we reach out to
                 </h3>
             </div>
 
@@ -215,14 +239,14 @@
                             : 'text-slate-400'}"
                     />
                     <h3 class="text-lg font-medium text-slate-200">
-                        Ghost Mode
+                        Rest Mode
                     </h3>
                 </div>
                 <p
                     class="text-sm text-slate-400 mb-6 relative z-10 leading-relaxed"
                 >
-                    Pause all alerts for 7 days. Your inner circle receives a
-                    "Status: Resting" notification without an alert trigger.
+                    Rest for 7 days. Your circle is told you are resting, and
+                    alerts wait until you return.
                 </p>
                 {#if settings.ghost_mode_until}
                     <div
@@ -243,8 +267,8 @@
                         : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:border-slate-600'}"
                 >
                     {settings.ghost_mode_until
-                        ? "Deactivate"
-                        : "Activate (7 Days)"}
+                        ? "Return from rest"
+                        : "Rest for 7 days"}
                 </button>
             </div>
 
@@ -254,12 +278,13 @@
                 <div class="flex items-center gap-2">
                     <Shield class="w-5 h-5 text-indigo-400" />
                     <h3 class="text-lg font-medium text-slate-200">
-                        Vault Integration
+                        Notes for your guardians
                     </h3>
                 </div>
                 <p class="text-sm text-slate-400 leading-relaxed">
-                    Automatically decrypt specific files and instructions for
-                    your Guardians when an escalation Tier exceeds 24 hours.
+                    Share the notes in <a href="/modules/pulse/vault" class="text-teal-400 hover:text-teal-300">your vault</a>
+                    with your guardians once an escalation reaches the tier you
+                    set for each one.
                 </p>
                 <div
                     class="flex items-center justify-between p-3 rounded-xl bg-slate-950/40 border border-slate-800"

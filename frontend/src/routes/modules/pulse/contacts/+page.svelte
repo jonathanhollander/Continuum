@@ -12,14 +12,15 @@
         <a
             href="/modules/pulse"
             class="text-sm text-teal-400 hover:text-teal-300 transition-colors"
-            >Back to Dashboard</a
+            >Back to Wellness Check-in</a
         >
     </div>
 
     <div class="bg-slate-900/30 p-6 rounded-2xl border border-slate-800">
         <p class="text-slate-400 mb-6 max-w-2xl">
-            These are the people Continuum will contact if you fail to check in.
-            Use the "Escalation Plan" to configure <em>when</em> they are contacted.
+            These are the people Continuum will reach out to when a check-in has
+            been quiet for a while. In the Escalation Plan you choose how long
+            Continuum waits before each group is contacted.
         </p>
         <PulseContactsManager
             userId={1}

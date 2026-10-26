@@ -62,28 +62,41 @@
             );
     }
 
-    // Repeated identical system-alert rows (a tier retried up to 3 times) show as one line
-    // with an attempt count; the latest row of each group keeps its place and time.
+    // Rows the app writes itself (pulse_logic): "[System Alert Tier N] ..." for tier alerts and
+    // "[Safety timer N] alert sent" / "[Safety timer N] send failed (attempt k)" for safety timers.
+    function isSystem(text: string) {
+        return text.startsWith("[System Alert") || text.startsWith("[Safety timer");
+    }
+    // Rows that say the same thing group together (a retried send differs only in "(attempt k)")
+    function groupKey(text: string) {
+        return text.replace(/ \(attempt \d+\)$/, "");
+    }
+
+    // Repeated identical system rows (a send retried up to 3 times) show as one line with a
+    // count; the latest row of each group keeps its place and time.
     function getThreadForContact(contactId: number | null) {
         const msgs = getMessagesForContact(contactId);
         const counts = new Map<string, number>();
         for (const m of msgs) {
-            if (m.message.startsWith("[System Alert")) {
-                counts.set(m.message, (counts.get(m.message) ?? 0) + 1);
+            if (isSystem(m.message)) {
+                const k = groupKey(m.message);
+                counts.set(k, (counts.get(k) ?? 0) + 1);
             }
         }
         const seen = new Map<string, number>();
         return msgs
             .filter((m) => {
-                if (!m.message.startsWith("[System Alert")) return true;
-                const n = (seen.get(m.message) ?? 0) + 1;
-                seen.set(m.message, n);
-                return n === counts.get(m.message);
+                if (!isSystem(m.message)) return true;
+                const k = groupKey(m.message);
+                const n = (seen.get(k) ?? 0) + 1;
+                seen.set(k, n);
+                return n === counts.get(k);
             })
             .map((m) => ({
                 ...m,
-                attempts: m.message.startsWith("[System Alert")
-                    ? (counts.get(m.message) ?? 1)
+                system: isSystem(m.message),
+                attempts: isSystem(m.message)
+                    ? (counts.get(groupKey(m.message)) ?? 1)
                     : 1,
             }));
     }
@@ -94,6 +107,12 @@
     }
 
     function stripAlertPrefix(text: string) {
+        const timer = text.match(/^\[Safety timer \d+\] (.*?)( \(attempt \d+\))?$/);
+        if (timer) {
+            return timer[1] === "alert sent"
+                ? "Safety timer alert sent"
+                : "We couldn't deliver this safety timer alert.";
+        }
         return text.replace(/^\[System Alert Tier \d+\] /, "");
     }
 
@@ -124,7 +143,7 @@
                 Message Hub
             </h1>
             <p class="text-slate-400 text-sm mt-1">
-                Bi-directional contact notes.
+                Notes between you and the people you trust.
             </p>
         </div>
         <a
@@ -183,8 +202,7 @@
                                 {/if}
                             </div>
                             <p class="text-xs text-slate-500 truncate">
-                                {getLastMessagePreview(contact.id) ||
-                                    "No messages yet"}
+                                {getLastMessagePreview(contact.id)}
                             </p>
                         </div>
                     </button>
@@ -193,13 +211,13 @@
                     <div class="p-8 text-center">
                         <Inbox class="w-10 h-10 text-slate-600 mx-auto mb-3" />
                         <p class="text-slate-400 text-sm font-medium mb-2">
-                            No Pulse contacts yet
+                            Your circle will appear here
                         </p>
                         <p
                             class="text-slate-500 text-xs leading-relaxed max-w-xs mx-auto"
                         >
-                            Add trusted contacts in Pulse Settings first.
-                            They'll appear here once you can message them.
+                            When you add trusted contacts in Pulse Settings,
+                            they will appear here.
                         </p>
                     </div>
                 {/if}
@@ -253,18 +271,16 @@
                                 {/if}
                             </div>
                             <div
-                                class="p-3 rounded-2xl text-sm leading-relaxed max-w-full {msg.message.startsWith(
-                                    '[System Alert',
-                                )
+                                class="p-3 rounded-2xl text-sm leading-relaxed max-w-full {msg.system
                                     ? 'bg-amber-900/20 border border-amber-500/30 text-amber-100 rounded-tr-2xl rounded-tl-2xl w-full text-center italic'
                                     : msg.direction === 'user_to_contact'
                                       ? 'bg-teal-500/20 text-white border border-teal-500/20 rounded-tr-none'
                                       : 'bg-slate-800 text-slate-300 rounded-tl-none'}"
                             >
-                                {#if msg.message.startsWith("[System Alert")}
+                                {#if msg.system}
                                     <span
                                         class="text-[10px] font-bold uppercase tracking-widest text-amber-500 block mb-1"
-                                        >Automated System Log</span
+                                        >A gentle note from Continuum</span
                                     >
                                 {/if}
                                 {stripAlertPrefix(msg.message)}
@@ -272,13 +288,11 @@
                                     <span
                                         class="block mt-1 text-[11px] not-italic text-amber-300/80"
                                         data-testid="alert-attempts"
-                                        >{msg.attempts} attempts</span
+                                        >Sent {msg.attempts} times</span
                                     >
                                 {/if}
                                 <div
-                                    class="mt-1 text-[10px] opacity-50 {msg.message.startsWith(
-                                        '[System Alert',
-                                    )
+                                    class="mt-1 text-[10px] opacity-50 {msg.system
                                         ? 'text-center'
                                         : 'text-right'}"
                                 >
@@ -293,7 +307,7 @@
                         <div
                             class="flex-1 flex items-center justify-center text-slate-500 text-sm italic"
                         >
-                            No conversation history. Start chatting below.
+                            Write the first note below whenever you're ready.
                         </div>
                     {/each}
                 </div>
@@ -310,7 +324,7 @@
                         <input
                             type="text"
                             bind:value={newMessage.text}
-                            placeholder="Type a secure note..."
+                            placeholder="Write a note for them..."
                             class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-teal-500/50 transition-colors"
                         />
                         <button aria-label="Send"
@@ -327,7 +341,7 @@
                     class="flex-1 flex flex-col items-center justify-center text-slate-500"
                 >
                     <MessageSquare class="w-16 h-16 opacity-20 mb-4" />
-                    <p>Select a conversation to view secured notes.</p>
+                    <p>Choose a person to read your notes together.</p>
                 </div>
             {/if}
         </div>

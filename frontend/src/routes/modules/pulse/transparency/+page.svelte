@@ -4,131 +4,84 @@
         Shield,
         Lock,
         Users,
-        ChevronRight,
         FileText,
         Activity,
+        Clock,
         AlertTriangle,
     } from "lucide-svelte";
-    import { fade, slide } from "svelte/transition";
+    import { fade } from "svelte/transition";
     import { onMount } from "svelte";
     import { apiGet } from "$lib/api/client";
+    // Index into `tiers` (0 = Active, then one per escalation tier)
     let activeTier = $state(0);
-    // Tiers will be fetched from backend
     let tiers = $state<any[]>([]);
 
     onMount(async () => {
         try {
-            const rawTiers = await apiGet("/api/pulse/tiers");
-            tiers = mapTiersToUI(rawTiers);
+            const [rawTiers, vault] = await Promise.all([
+                apiGet("/api/pulse/tiers"),
+                apiGet("/api/pulse/vault"),
+            ]);
+            tiers = mapTiersToUI(rawTiers, vault);
         } catch (e) {
             console.error(e);
         }
     });
 
-    function mapTiersToUI(backendTiers: any[]) {
-        // Base "Normal" State
+    // Vault notes store "tier_<N>_escalation" (same reading as routers/pulse.py get_portal_vault)
+    function unlockTier(condition: string): number | null {
+        const parts = (condition || "").split("_");
+        return parts.length >= 2 && parts[0] === "tier" && /^\d+$/.test(parts[1])
+            ? Number(parts[1])
+            : null;
+    }
+
+    // What the guardian portal really shows (routers/pulse.py get_portal_view and
+    // get_portal_vault): the owner's name, whether they checked in recently and when, to every
+    // guardian; and each vault note once an escalation reaches the tier set for it.
+    function mapTiersToUI(backendTiers: any[], vault: any[]) {
+        const always = [
+            { name: "Your name", icon: Users },
+            { name: "Whether you have checked in recently", icon: Activity },
+            { name: "Your last check-in time", icon: Clock },
+        ];
+        const notes = (vault ?? []).map((v: any) => ({ name: v.name, tier: unlockTier(v.unlock_condition) }));
         const uiTiers = [
             {
-                id: 0,
-                name: "Active (Normal)",
+                name: "Active",
                 delay: "Always",
                 icon: Shield,
                 color: "text-teal-400",
                 bg: "bg-teal-500/10",
                 border: "border-teal-500/20",
-                access: [
-                    { name: "First Name", type: "public", icon: Users },
-                    { name: "Status: Active", type: "public", icon: Activity },
-                ],
-                hidden: [
-                    "Location Data",
-                    "Financial Vault",
-                    "Medical Records",
-                    "Personal Messages",
-                ],
+                access: always,
+                hidden: notes.map((n) => n.name),
             },
         ];
 
-        // Map backend tiers 1-4
         const colors = [
-            {
-                c: "text-amber-400",
-                bg: "bg-amber-500/10",
-                b: "border-amber-500/20",
-                i: Users,
-            }, // Tier 1
-            {
-                c: "text-orange-400",
-                bg: "bg-orange-500/10",
-                b: "border-orange-500/20",
-                i: Users,
-            }, // Tier 2
-            {
-                c: "text-rose-400",
-                bg: "bg-rose-500/10",
-                b: "border-rose-500/20",
-                i: AlertTriangle,
-            }, // Tier 3
-            {
-                c: "text-purple-400",
-                bg: "bg-purple-500/10",
-                b: "border-purple-500/20",
-                i: AlertTriangle,
-            }, // Tier 4
+            { c: "text-amber-400", bg: "bg-amber-500/10", b: "border-amber-500/20", i: Users },
+            { c: "text-orange-400", bg: "bg-orange-500/10", b: "border-orange-500/20", i: Users },
+            { c: "text-rose-400", bg: "bg-rose-500/10", b: "border-rose-500/20", i: AlertTriangle },
+            { c: "text-purple-400", bg: "bg-purple-500/10", b: "border-purple-500/20", i: AlertTriangle },
         ];
 
-        backendTiers.forEach((tier, index) => {
-            const style = colors[Math.min(index, 3)];
-
-            // Define access based on tier level (simplified logic for demo)
-            const access = [];
-            const hidden = [];
-
-            if (tier.tier_number >= 1) {
-                access.push({
-                    name: "Last Check-in Time",
-                    type: "restricted",
-                    icon: Activity,
+        [...backendTiers]
+            .sort((a, b) => a.tier_number - b.tier_number)
+            .forEach((tier, index) => {
+                const style = colors[Math.min(index, 3)];
+                const open = notes.filter((n) => n.tier !== null && n.tier <= tier.tier_number);
+                uiTiers.push({
+                    name: `Tier ${tier.tier_number}`,
+                    delay: `After ${tier.delay_hours} hours`,
+                    icon: style.i,
+                    color: style.c,
+                    bg: style.bg,
+                    border: style.b,
+                    access: [...always, ...open.map((n) => ({ name: n.name, icon: FileText }))],
+                    hidden: notes.filter((n) => !open.includes(n)).map((n) => n.name),
                 });
-                hidden.push("Exact Location", "Vault Access Codes");
-            }
-            if (tier.tier_number >= 2) {
-                access.push({
-                    name: "Daily Memory (Photo)",
-                    type: "restricted",
-                    icon: FileText,
-                });
-            }
-            if (tier.tier_number >= 3) {
-                access.push({
-                    name: "Medical Directives (DNR)",
-                    type: "critical",
-                    icon: FileText,
-                });
-                hidden.length = 0; // Everything revealed really
-                hidden.push("Vault (If locked to Tier 4)");
-            }
-            if (tier.tier_number >= 4) {
-                access.push({
-                    name: "Vault Access Codes",
-                    type: "critical",
-                    icon: Lock,
-                });
-                hidden.length = 0;
-            }
-
-            uiTiers.push({
-                id: tier.id,
-                name: `Tier ${tier.tier_number}: Escalation`,
-                delay: `T + ${tier.delay_hours} Hours`,
-                icon: style.i,
-                color: style.c,
-                bg: style.bg,
-                border: style.b,
-                access: access,
-                hidden: hidden,
             });
-        });
 
         return uiTiers;
     }
@@ -141,7 +94,7 @@
                 class="text-2xl font-serif text-slate-100 flex items-center gap-2"
             >
                 <Eye class="text-teal-400" />
-                Data Transparency
+                What your guardians can see
             </h1>
             <p class="text-slate-400 text-sm mt-1">
                 See exactly what is shared, and when.
@@ -157,13 +110,13 @@
     <div class="grid md:grid-cols-12 gap-8">
         <!-- Timeline Selector -->
         <div class="md:col-span-4 space-y-4">
-            {#each tiers as tier}
+            {#each tiers as tier, i}
                 <button
                     class="w-full text-left p-4 rounded-xl border transition-all duration-300 relative overflow-hidden group {activeTier ===
-                    tier.id
+                    i
                         ? `${tier.bg} ${tier.border} border-l-4`
                         : 'bg-slate-900/40 border-slate-800 hover:bg-slate-800/60'}"
-                    onclick={() => (activeTier = tier.id)}
+                    onclick={() => (activeTier = i)}
                 >
                     <div class="flex items-center gap-3 relative z-10">
                         <div
@@ -230,12 +183,6 @@
                                                     class="text-slate-200 text-sm"
                                                     >{item.name}</span
                                                 >
-                                                {#if item.type === "critical"}
-                                                    <span
-                                                        class="ml-auto text-[10px] uppercase font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20"
-                                                        >Critical</span
-                                                    >
-                                                {/if}
                                             </div>
                                         {/each}
                                     </div>
@@ -251,7 +198,7 @@
                                         >
                                             <Lock
                                                 class="w-4 h-4 text-slate-500"
-                                            /> Still Encrypted
+                                            /> Kept private
                                         </h3>
                                         <div class="grid sm:grid-cols-2 gap-2">
                                             {#each tiers[activeTier].hidden as hiddenItem}
@@ -274,7 +221,7 @@
                     <div
                         class="flex items-center justify-center h-full text-slate-500"
                     >
-                        Loading Transparency Data...
+                        Gathering this for you...
                     </div>
                 {/if}
             </div>
