@@ -1,5 +1,6 @@
 import { registerSync } from "$lib/services/sync.svelte";
 import { mediaIdFromRef } from "$lib/services/mediaService";
+import { getStored, setStored, removeStored } from "$lib/stores/persistence";
 
 export type DocType = "Will" | "Trust" | "Deed" | "Insurance" | "Tax" | "ID" | "Other";
 
@@ -58,9 +59,31 @@ function docMapper(d: any): any {
     };
 }
 
+/**
+ * One-time move: documents saved on this device under the old vault key `docs_legal-vault`
+ * (the account and profile now active) join the `documents` list, and the old key is emptied.
+ * Rows whose id is already in `documents` stay as they are there.
+ */
+function moveOldVaultKey() {
+    const old = getStored<any[]>('docs_legal-vault', []);
+    if (!Array.isArray(old) || old.length === 0) return;
+    const current = getStored<any[]>('documents', []);
+    const have = new Set(current.map((d) => String(d.id)));
+    setStored('documents', [...current, ...old.filter((d) => !have.has(String(d.id)))]);
+    removeStored('docs_legal-vault');
+}
+moveOldVaultKey(); // before the manager reads its saved list
+
 /** The one manager for /api/data/documents. */
 export const documentSync = registerSync<Document>('documents', 'documents', docMapper, '/api/data')
     .setAffirmationContext('documents');
+
+// A later sign-in or account switch reloads the saved list: move that account's old rows first.
+const resetManager = documentSync.reset.bind(documentSync);
+documentSync.reset = (clear = false) => {
+    if (!clear) moveOldVaultKey();
+    resetManager(clear);
+};
 
 export const documentStore = {
     subscribe: documentSync.subscribe.bind(documentSync),
