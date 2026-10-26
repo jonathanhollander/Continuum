@@ -114,35 +114,35 @@
         <div class="relative group cursor-pointer mb-8" onclick={checkIn}>
             <!-- Breathing Rings -->
             <div
-                class="absolute inset-0 bg-primary/20 rounded-full blur-3xl scale-125 animate-pulse-slow"
+                class="absolute inset-0 bg-teal-500/20 rounded-full blur-3xl scale-125 animate-pulse-slow"
             ></div>
             <div
-                class="absolute inset-0 border-2 border-primary/10 rounded-full scale-[1.15] animate-ripple-slow"
+                class="absolute inset-0 border-2 border-teal-500/10 rounded-full scale-[1.15] animate-ripple-slow"
             ></div>
             <div
-                class="absolute inset-0 border border-primary/5 rounded-full scale-[1.3] animate-ripple-delayed"
+                class="absolute inset-0 border border-teal-500/5 rounded-full scale-[1.3] animate-ripple-delayed"
             ></div>
 
             <button
-                class="relative w-48 h-48 md:w-64 md:h-64 rounded-full bg-slate-900 border-2 border-slate-800 shadow-[0_0_50px_-10px_rgba(var(--color-primary),0.2)] flex flex-col items-center justify-center transition-all duration-700 active:scale-95 group-hover:border-primary/40"
+                class="relative w-48 h-48 md:w-64 md:h-64 rounded-full bg-slate-900 border-2 border-slate-800 shadow-[0_0_50px_-10px_rgba(var(--color-primary),0.2)] flex flex-col items-center justify-center transition-all duration-700 active:scale-95 group-hover:border-teal-500/40"
             >
                 {#if localStatus.checkingIn}
-                    <Loader2 class="w-12 h-12 text-primary animate-spin" />
+                    <Loader2 class="w-12 h-12 text-teal-400 animate-spin" />
                     <span
-                        class="text-xs font-bold text-primary mt-4 uppercase tracking-[0.3em]"
+                        class="text-xs font-bold text-teal-400 mt-4 uppercase tracking-[0.3em]"
                         >Synching...</span
                     >
                 {:else if localStatus.lastSuccess}
                     <CheckCircle2
-                        class="w-12 h-12 text-primary transition-all scale-125"
+                        class="w-12 h-12 text-teal-400 transition-all scale-125"
                     />
                     <span
-                        class="text-xs font-bold text-primary mt-4 uppercase tracking-[0.3em]"
+                        class="text-xs font-bold text-teal-400 mt-4 uppercase tracking-[0.3em]"
                         >Verified</span
                     >
                 {:else}
                     <div
-                        class="w-16 h-1 bg-primary/50 rounded-full mb-6 group-hover:bg-primary transition-colors"
+                        class="w-16 h-1 bg-teal-500/50 rounded-full mb-6 group-hover:bg-teal-500 transition-colors"
                     ></div>
                     <span
                         class="text-sm font-bold text-slate-400 uppercase tracking-[0.4em] mb-2"
@@ -152,7 +152,7 @@
                         I'm Here
                     </h2>
                     <div
-                        class="w-16 h-1 bg-primary/50 rounded-full mt-6 group-hover:bg-primary transition-colors"
+                        class="w-16 h-1 bg-teal-500/50 rounded-full mt-6 group-hover:bg-teal-500 transition-colors"
                     ></div>
                 {/if}
             </button>
@@ -165,7 +165,7 @@
                     : "Seeking Connection"}
                 {#if pulse.status === "active"}
                     <span
-                        class="inline-block w-2 h-2 bg-primary rounded-full animate-ping"
+                        class="inline-block w-2 h-2 bg-teal-500 rounded-full animate-ping"
                     ></span>
                 {/if}
             </h2>
@@ -182,7 +182,7 @@
                     })}.{/if}
             </p>
             {#if pulse.guardianCheckin}
-                <p class="text-primary text-sm max-w-sm mx-auto">
+                <p class="text-teal-400 text-sm max-w-sm mx-auto">
                     {pulse.guardianCheckin.by} checked on you on {new Date(
                         pulse.guardianCheckin.at,
                     ).toLocaleString()}.
@@ -195,19 +195,19 @@
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         <!-- SAFETY TIMER CARD (Fidelity Update) -->
         <div
-            class="bg-slate-950/20 border border-slate-800/50 rounded-[2rem] p-8 backdrop-blur-md relative overflow-hidden group hover:border-primary/30 transition-all"
+            class="bg-slate-950/20 border border-slate-800/50 rounded-[2rem] p-8 backdrop-blur-md relative overflow-hidden group hover:border-teal-500/30 transition-all"
         >
             <div
                 class="absolute -right-4 -top-4 opacity-10 group-hover:opacity-20 transition-opacity"
             >
-                <Navigation class="w-24 h-24 text-primary" />
+                <Navigation class="w-24 h-24 text-teal-400" />
             </div>
 
             <div class="flex items-center gap-3 mb-6">
                 <div
-                    class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center"
+                    class="w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center"
                 >
-                    <Zap class="w-5 h-5 text-primary" />
+                    <Zap class="w-5 h-5 text-teal-400" />
                 </div>
                 <h3 class="font-medium text-slate-100">Safety Timer</h3>
             </div>
@@ -216,14 +216,14 @@
                 <div class="space-y-4">
                     <div class="text-center py-4">
                         <div
-                            class="text-4xl font-mono text-primary tracking-tighter mb-1"
+                            class="text-4xl font-mono text-teal-400 tracking-tighter mb-1"
                         >
                             {getTimeRemaining(
                                 localStatus.safetyTimer.expires_at,
                             )}
                         </div>
                         <p
-                            class="text-[10px] text-primary/60 uppercase tracking-widest uppercase"
+                            class="text-[10px] text-teal-400/60 uppercase tracking-widest uppercase"
                         >
                             Immediate Escalation on Zero
                         </p>
@@ -254,15 +254,15 @@
                             step="5"
                             aria-label="Minutes"
                             bind:value={localStatus.safetyInput}
-                            class="flex-1 h-1.5 bg-slate-800 accent-primary rounded-lg cursor-pointer"
+                            class="flex-1 h-1.5 bg-slate-800 accent-teal-500 rounded-lg cursor-pointer"
                         />
-                        <span class="text-xs font-bold text-primary w-12"
+                        <span class="text-xs font-bold text-teal-400 w-12"
                             >{localStatus.safetyInput}m</span
                         >
                     </div>
                     <button
                         onclick={startSafety}
-                        class="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 rounded-2xl text-xs font-bold transition-all"
+                        class="w-full bg-teal-500 hover:bg-teal-500/90 text-white py-3 rounded-2xl text-xs font-bold transition-all"
                     >
                         Activate Immediate Guard
                     </button>
@@ -274,7 +274,7 @@
                 </p>
                 <button
                     onclick={() => (localStatus.showSafetyConfig = true)}
-                    class="w-full bg-slate-900 border border-slate-800 text-slate-300 py-3 rounded-2xl text-xs font-bold hover:border-primary/50 hover:text-white transition-all"
+                    class="w-full bg-slate-900 border border-slate-800 text-slate-300 py-3 rounded-2xl text-xs font-bold hover:border-teal-500/50 hover:text-white transition-all"
                 >
                     Start Safety Timer
                 </button>
@@ -284,7 +284,7 @@
         <!-- MESSAGES HUD -->
         <a
             href="/modules/pulse/messages"
-            class="bg-slate-950/40 border border-slate-800 rounded-[2rem] p-8 hover:border-primary/30 transition-all flex flex-col justify-between group"
+            class="bg-slate-950/40 border border-slate-800 rounded-[2rem] p-8 hover:border-teal-500/30 transition-all flex flex-col justify-between group"
         >
             <div>
                 <div class="flex items-center gap-3 mb-4">
@@ -292,7 +292,7 @@
                         class="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center border border-slate-800"
                     >
                         <Activity
-                            class="w-5 h-5 text-slate-400 group-hover:text-primary transition-colors"
+                            class="w-5 h-5 text-slate-400 group-hover:text-teal-400 transition-colors"
                         />
                     </div>
                     <h3 class="font-medium text-slate-100 italic">
@@ -305,7 +305,7 @@
             </div>
             <div class="pt-6">
                 <span
-                    class="text-[10px] text-primary font-bold uppercase tracking-widest border border-primary/20 px-3 py-1 rounded-full"
+                    class="text-[10px] text-teal-400 font-bold uppercase tracking-widest border border-teal-500/20 px-3 py-1 rounded-full"
                     >Explore Connection</span
                 >
             </div>
@@ -347,7 +347,7 @@
         class="bg-slate-900/40 border border-slate-800/50 rounded-[2.5rem] p-8 md:p-12 text-center backdrop-blur-sm relative overflow-hidden"
     >
         <div
-            class="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent"
+            class="absolute inset-0 bg-gradient-to-b from-teal-500/5 to-transparent"
         ></div>
         <div class="relative z-10 flex flex-col items-center">
             <h3
@@ -357,7 +357,7 @@
             </h3>
             {#if estateAudit.percentage > 0}
                 <div class="text-5xl md:text-7xl font-serif text-white mb-2" data-testid="pulse-readiness">
-                    {estateAudit.percentage}<span class="text-primary">%</span>
+                    {estateAudit.percentage}<span class="text-teal-400">%</span>
                 </div>
             {:else}
                 <div class="text-3xl md:text-4xl font-serif text-white mb-2" data-testid="pulse-readiness">

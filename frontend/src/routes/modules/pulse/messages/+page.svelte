@@ -113,14 +113,14 @@
 </script>
 
 <div
-    class="max-w-6xl mx-auto p-4 md:p-8 pb-32 h-[calc(100vh-100px)] flex flex-col"
+    class="max-w-4xl mx-auto p-4 md:p-8 pb-32 h-[calc(100vh-100px)] flex flex-col"
 >
     <div class="flex items-center justify-between mb-6 shrink-0">
         <div>
             <h1
                 class="text-2xl font-serif text-slate-100 flex items-center gap-2"
             >
-                <Inbox class="text-primary" />
+                <Inbox class="text-teal-400" />
                 Message Hub
             </h1>
             <p class="text-slate-400 text-sm mt-1">
@@ -129,8 +129,8 @@
         </div>
         <a
             href="/modules/pulse"
-            class="text-sm text-primary hover:text-primary/80"
-            >Back to Dashboard</a
+            class="text-sm text-teal-400 hover:text-teal-300"
+            >Back to Wellness Check-in</a
         >
     </div>
 
@@ -153,7 +153,7 @@
                     <button
                         class="w-full text-left p-4 hover:bg-slate-800/50 transition-colors flex items-center gap-3 border-b border-slate-800/50 {newMessage.contact_id ===
                         contact.id
-                            ? 'bg-primary/10 border-l-2 border-l-primary'
+                            ? 'bg-teal-500/10 border-l-2 border-l-teal-500'
                             : ''}"
                         onclick={() => {
                             newMessage.contact_id = contact.id;
@@ -243,7 +243,7 @@
                             <div
                                 class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 {msg.direction ===
                                 'user_to_contact'
-                                    ? 'bg-primary/20 text-primary'
+                                    ? 'bg-teal-500/20 text-teal-400'
                                     : 'bg-slate-800 text-slate-400'}"
                             >
                                 {#if msg.direction === "user_to_contact"}
@@ -258,7 +258,7 @@
                                 )
                                     ? 'bg-amber-900/20 border border-amber-500/30 text-amber-100 rounded-tr-2xl rounded-tl-2xl w-full text-center italic'
                                     : msg.direction === 'user_to_contact'
-                                      ? 'bg-primary/20 text-primary-foreground border border-primary/20 rounded-tr-none'
+                                      ? 'bg-teal-500/20 text-white border border-teal-500/20 rounded-tr-none'
                                       : 'bg-slate-800 text-slate-300 rounded-tl-none'}"
                             >
                                 {#if msg.message.startsWith("[System Alert")}
@@ -311,12 +311,12 @@
                             type="text"
                             bind:value={newMessage.text}
                             placeholder="Type a secure note..."
-                            class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-primary/50 transition-colors"
+                            class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-teal-500/50 transition-colors"
                         />
                         <button aria-label="Send"
                             type="submit"
                             disabled={!newMessage.text}
-                            class="bg-primary hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed text-primary-foreground p-3 rounded-xl transition-all"
+                            class="bg-teal-500 hover:bg-teal-500/80 disabled:opacity-50 disabled:cursor-not-allowed text-white p-3 rounded-xl transition-all"
                         >
                             <Send class="w-5 h-5" />
                         </button>
