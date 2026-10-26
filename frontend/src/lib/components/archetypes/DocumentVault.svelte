@@ -31,14 +31,15 @@
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { activityLog } from "$lib/stores/activityLog.svelte";
-    import type { ViewMode } from "$lib/stores/userPreferencesStore.svelte";
+    import { userPreferencesStore } from "$lib/stores/userPreferencesStore.svelte";
     import { downloadMedia, mediaIdFromRef } from "$lib/services/mediaService";
     import { notifications } from "$lib/stores/notificationStore";
     import { pluralWord } from "$lib/utils/plural";
     import { dateWords } from "$lib/utils/dateWords";
 
-    let { module, viewMode: initialViewMode = 'card' }: { module: { id: string; name?: string }, viewMode?: ViewMode } = $props();
-    let viewMode = $state<ViewMode>(initialViewMode);
+    let { module }: { module: { id: string; name?: string } } = $props();
+    // The one Cards/Table toggle below remembers its choice in userPreferencesStore; read it from there.
+    let viewMode = $derived(userPreferencesStore.getViewMode("legal-documents"));
 
     type DocType =
         | "Will"
@@ -59,6 +60,7 @@
         signedDate?: string;
         nextReviewDate?: string;
         status: "verified" | "pending" | "needs_review";
+        notes?: string;
         filePath?: string; // stored copy: "/api/media/12/download" (or an older data URL)
         mediaId?: number | null;
         customAttributes?: Record<string, any>;
@@ -89,6 +91,7 @@
             signedDate: d.signedDate ?? "",
             nextReviewDate: d.nextReviewDate ?? "",
             status: d.status || "verified",
+            notes: d.notes ?? "",
             filePath,
             mediaId: d.mediaId ?? mediaIdFromRef(filePath),
             isDigitized: !!filePath,
@@ -282,6 +285,16 @@
     // Vault Health Logic
     let readyDocs = $derived(docs.filter((d) => docState(d) === "ready").length);
     let needsReview = $derived(docs.length - readyDocs);
+
+    // Search box: matches name, type and notes as you type; empty shows every document.
+    let searchQuery = $state("");
+    let visibleDocs = $derived.by(() => {
+        const q = searchQuery.trim().toLowerCase();
+        if (!q) return docs;
+        return docs.filter((d) =>
+            [d.name, d.type, d.notes].some((f) => (f || "").toLowerCase().includes(q)),
+        );
+    });
     // Share of documents ready for the family; no score until there is a document
     let healthScore = $derived(
         docs.length ? Math.round((readyDocs / docs.length) * 100) : null,
@@ -425,12 +438,13 @@
                 class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
             />
             <input
+                bind:value={searchQuery}
                 placeholder="Search your peace of mind..."
                 class="w-full bg-transparent border-none outline-none pl-9 text-sm h-10 placeholder:text-muted-foreground/50"
             />
         </div>
         <div class="flex items-center gap-3">
-            <DataViewToggle module="legal-documents" onchange={(mode) => viewMode = mode} />
+            <DataViewToggle module="legal-documents" />
             <button
                 type="button"
                 onclick={() => (showExampleWill = true)}
@@ -691,7 +705,7 @@
     <!-- Doc Grid -->
     {#if viewMode === 'card'}
         <div class="grid grid-cols-1 gap-4">
-            {#each docs as doc (doc.id)}
+            {#each visibleDocs as doc (doc.id)}
                 <div
                     class="group glass-card p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between hover:bg-white/80 transition-all border border-transparent hover:border-[#4A7C74]/20 gap-4"
                 >
@@ -837,7 +851,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
-                    {#each docs as doc (doc.id)}
+                    {#each visibleDocs as doc (doc.id)}
                         <tr class="hover:bg-slate-50 transition-colors group">
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-3">
