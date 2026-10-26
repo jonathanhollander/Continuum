@@ -10,9 +10,13 @@
     import { dateWords } from "$lib/utils/dateWords";
     import { formatMoney } from "$lib/utils/money";
 
-    let { sub, onCancel, onGenerateLetter } = $props();
+    let {
+        sub,
+        onCancel,
+        onGenerateLetter,
+    }: { sub: Record<string, any>; onCancel?: () => void; onGenerateLetter: () => void } = $props();
 
-    let expanded = false;
+    let expanded = $state(false);
 
     // The renewal day, only when one is written down (an empty value once read as 12/31/1969).
     let nextDate = $derived.by(() => {
