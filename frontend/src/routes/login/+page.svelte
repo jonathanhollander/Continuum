@@ -435,7 +435,7 @@
         <!-- Footer Info -->
         <div class="mt-8 text-center">
             <p class="text-muted-foreground text-sm">
-                Your data is encrypted and secured with industry-standard protection
+                Your information stays private to your account and travels over a secure connection
             </p>
         </div>
     </div>
