@@ -51,7 +51,7 @@ class PulseVault(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="users.id")
     name: str 
-    encrypted_content: bytes
+    encrypted_content: bytes  # Not actually encrypted: plain UTF-8 text (encryption is out of scope)
     unlock_condition: str # "tier_4_escalation"
 
 class PulseCheckin(SQLModel, table=True):

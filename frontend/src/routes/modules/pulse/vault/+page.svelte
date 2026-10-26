@@ -23,7 +23,7 @@
     let saving = $state(false);
     let showSecrets = $state<Record<number, boolean>>({});
 
-    let newItem = $state({
+    let newItem = $state<{ id?: number; name: string; content: string; unlock_condition: string }>({
         name: "",
         content: "",
         unlock_condition: "tier_3_escalation",

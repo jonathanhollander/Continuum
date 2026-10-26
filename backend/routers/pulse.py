@@ -242,18 +242,33 @@ def send_message(contact_id: int, message: str, user: User = Depends(get_current
 
 # --- Vault & Instructions ---
 
+class VaultItemIn(BaseModel):
+    name: str
+    content: str
+    unlock_condition: str = "tier_3_escalation"
+
+def _vault_out(item: PulseVault) -> dict:
+    return {
+        "id": item.id,
+        "name": item.name,
+        "content": (item.encrypted_content or b"").decode("utf-8", errors="replace"),
+        "unlock_condition": item.unlock_condition,
+    }
+
 @router.get("/vault")
 @limiter.limit("10/minute")
 def get_vault(request: Request, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
-    return session.exec(select(PulseVault).where(PulseVault.user_id == user.id)).all()
+    items = session.exec(select(PulseVault).where(PulseVault.user_id == user.id)).all()
+    return [_vault_out(i) for i in items]
 
 @router.post("/vault")
-def add_vault_item(item: PulseVault, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
-    item.user_id = user.id
+def add_vault_item(data: VaultItemIn, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    # Not actually encrypted: "encrypted_content" holds plain UTF-8 text (encryption is out of scope).
+    item = PulseVault(user_id=user.id, name=data.name, encrypted_content=data.content.encode("utf-8"), unlock_condition=data.unlock_condition)
     session.add(item)
     session.commit()
     session.refresh(item)
-    return item
+    return _vault_out(item)
 
 @router.delete("/vault/{item_id}")
 def delete_vault_item(item_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
@@ -265,19 +280,19 @@ def delete_vault_item(item_id: int, user: User = Depends(get_current_user), sess
     return {"status": "deleted"}
 
 @router.put("/vault/{item_id}")
-def update_vault_item(item_id: int, updated: PulseVault, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+def update_vault_item(item_id: int, data: VaultItemIn, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     item = session.get(PulseVault, item_id)
     if not item or item.user_id != user.id:
         raise HTTPException(status_code=404, detail="Item not found")
-    
-    item.name = updated.name
-    item.content = updated.content
-    item.unlock_condition = updated.unlock_condition
-    
+
+    item.name = data.name
+    item.encrypted_content = data.content.encode("utf-8")  # plain UTF-8, not encrypted
+    item.unlock_condition = data.unlock_condition
+
     session.add(item)
     session.commit()
     session.refresh(item)
-    return item
+    return _vault_out(item)
 
 @router.post("/nudge/{token}")
 @limiter.limit("10/minute")  # Public portal action, authorized by the portal token
