@@ -1,6 +1,19 @@
+<script module lang="ts">
+    import type { PulseSettingsChanges } from "$lib/stores/pulse.svelte";
+    // A visit to another page keeps this account's already requested saves in order.
+    const settingsWrites = new Map<string, Promise<void>>();
+    const confirmedSettings = new Map<string, PulseSettingsChanges>();
+    const newestSettingsWrite = new Map<string, number>();
+    let nextSettingsWrite = 0;
+</script>
+
 <script lang="ts">
     import { pulse } from "$lib/stores/pulse.svelte";
     import { onMount } from "svelte";
+    import { get } from "svelte/store";
+    import { activeAccountId } from "$lib/stores/keyringStore";
+    import { currentProfileId } from "$lib/stores/profileContext";
+    import { captureSession, isCurrentSession } from "$lib/services/sessionOwnership";
     import {
         Shield,
         Activity,
@@ -16,7 +29,7 @@
     let saving = $state(false);
     let showGuardianPicker = $state(false);
 
-    let settings = $state({
+    let settings = $state<PulseSettingsChanges>({
         enabled: false,
         frequency_days: 2,
         grace_period_hours: 24,
@@ -49,7 +62,9 @@
     async function loadSettings() {
         const settingsData = await pulse.loadSettings();
         if (settingsData) {
-            settings = settingsData as typeof settings;
+            settings = { ...settings, ...settingsData };
+            const account = get(activeAccountId) || "anonymous";
+            if (!settingsWrites.has(account)) confirmedSettings.set(account, captureSettings());
             loaded = true;
         } else {
             notifications.showError(settingsNotice, () => loadSettings());
@@ -65,35 +80,76 @@
         }
     }
 
-    // Saves only the choices this page edits; the rest of the row (check-in token, safety timer,
-    // message, schedule) stays as the server has it, even if it changed since the page loaded.
-    // `undo` puts back the change the caller just made when the save fails, so the page never
-    // shows a setting the server did not keep.
-    async function saveSettings(undo?: () => void) {
+    const editableFields = ["enabled", "frequency_days", "grace_period_hours", "ghost_mode_until",
+        "biometric_extension_enabled", "location_vault_enabled"] as const;
+    const captureSettings = (): PulseSettingsChanges => ({
+        enabled: settings.enabled, frequency_days: settings.frequency_days,
+        grace_period_hours: settings.grace_period_hours, ghost_mode_until: settings.ghost_mode_until,
+        biometric_extension_enabled: settings.biometric_extension_enabled,
+        location_vault_enabled: settings.location_vault_enabled,
+    });
+    const typingVersion = { frequency_days: 0, grace_period_hours: 0 };
+    const failedNotices = new Set<string>();
+    let pendingSaves = 0;
+    function restoreField<K extends keyof PulseSettingsChanges>(field: K, value: PulseSettingsChanges[K]) {
+        settings[field] = value;
+    }
+
+    // Each action captures all six choices. A later snapshot also carries earlier pending choices,
+    // so an earlier failure leaves it alone. Only a latest failed snapshot rolls back to the last
+    // confirmed values, field by field; typing that started after that snapshot stays in the input.
+    function saveSettings(before: Partial<PulseSettingsChanges>) {
         if (!loaded) {
-            undo?.();
+            Object.assign(settings, before);
             notifications.showError(settingsNotice, () => loadSettings());
-            return;
+            return Promise.resolve();
         }
+        const snapshot = captureSettings();
+        const owner = captureSession();
+        const account = get(activeAccountId) || "anonymous";
+        const profile = get(currentProfileId);
+        const current = () => isCurrentSession(owner)
+            && (get(activeAccountId) || "anonymous") === account && get(currentProfileId) === profile;
+        const version = ++nextSettingsWrite;
+        newestSettingsWrite.set(account, version);
+        const typed = { ...typingVersion };
+        pendingSaves++;
         saving = true;
-        try {
-            await apiPost("/api/pulse/settings", {
-                enabled: settings.enabled,
-                frequency_days: settings.frequency_days,
-                grace_period_hours: settings.grace_period_hours,
-                ghost_mode_until: settings.ghost_mode_until,
-                biometric_extension_enabled: settings.biometric_extension_enabled,
-                location_vault_enabled: settings.location_vault_enabled,
-            });
-            pulse.showEnabled(settings.enabled);
-            pulse.init();
-        } catch (e) {
-            console.error(e);
-            undo?.();
-            notifications.showError("You can try again whenever you're ready.");
-        } finally {
-            saving = false;
-        }
+        pulse.showSettings(snapshot, owner);
+        const previous = settingsWrites.get(account) || Promise.resolve();
+        const save = previous.then(async () => {
+            if (!current()) return;
+            try {
+                await apiPost("/api/pulse/settings", snapshot);
+                if (!current()) return;
+                confirmedSettings.set(account, snapshot);
+                if (newestSettingsWrite.get(account) === version) {
+                    pulse.showSettings(snapshot, owner);
+                    failedNotices.forEach(id => notifications.dismiss(id));
+                    failedNotices.clear();
+                }
+                pulse.init();
+            } catch (e) {
+                if (!current()) return;
+                console.error(e);
+                if (newestSettingsWrite.get(account) === version) {
+                    const confirmed = confirmedSettings.get(account) || { ...snapshot, ...before };
+                    for (const field of editableFields) {
+                        const newerTyping = (field === "frequency_days" || field === "grace_period_hours")
+                            && typingVersion[field] !== typed[field];
+                        if (!newerTyping && settings[field] === snapshot[field]) restoreField(field, confirmed[field]);
+                    }
+                    pulse.showSettings(confirmed, owner);
+                }
+                failedNotices.add(notifications.showError("You can try again whenever you're ready."));
+            }
+        }).finally(() => {
+            pendingSaves--;
+            saving = pendingSaves > 0;
+            if (settingsWrites.get(account) === save) settingsWrites.delete(account);
+        });
+        settingsWrites.set(account, save);
+        return save;
     }
 
     function toggleGhostMode() {
@@ -106,7 +162,7 @@
             date.setDate(date.getDate() + 7);
             settings.ghost_mode_until = date.toISOString();
         }
-        saveSettings(() => (settings.ghost_mode_until = before));
+        saveSettings({ ghost_mode_until: before });
     }
 
     // How often we check in and the grace period: whole numbers in the ranges the server
@@ -125,7 +181,7 @@
         }
         if (value === before) return;
         settings[field] = value;
-        saveSettings(() => (settings[field] = before));
+        saveSettings({ [field]: before });
     }
 </script>
 
@@ -162,8 +218,9 @@
                 aria-label="Active Heartbeat"
                 disabled={!loaded}
                 onclick={() => {
-                    settings.enabled = !settings.enabled;
-                    saveSettings(() => (settings.enabled = !settings.enabled));
+                    const before = settings.enabled;
+                    settings.enabled = !before;
+                    saveSettings({ enabled: before });
                 }}
             >
                 {#if loaded}
@@ -193,6 +250,7 @@
                         step="1"
                         value={loaded ? settings.frequency_days : ""}
                         disabled={!loaded}
+                        oninput={() => typingVersion.frequency_days++}
                         onchange={(e) => saveNumber("frequency_days", e.currentTarget.value, 1, 365)}
                         class="w-24 bg-slate-950/60 border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
                     />
@@ -212,6 +270,7 @@
                         step="1"
                         value={loaded ? settings.grace_period_hours : ""}
                         disabled={!loaded}
+                        oninput={() => typingVersion.grace_period_hours++}
                         onchange={(e) => saveNumber("grace_period_hours", e.currentTarget.value, 0, 720)}
                         class="w-24 bg-slate-950/60 border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
                     />
@@ -334,13 +393,9 @@
                         aria-label="Automatic Release"
                         disabled={!loaded}
                         onclick={() => {
-                            settings.location_vault_enabled =
-                                !settings.location_vault_enabled;
-                            saveSettings(
-                                () =>
-                                    (settings.location_vault_enabled =
-                                        !settings.location_vault_enabled),
-                            );
+                            const before = settings.location_vault_enabled;
+                            settings.location_vault_enabled = !before;
+                            saveSettings({ location_vault_enabled: before });
                         }}
                     >
                         {#if loaded}

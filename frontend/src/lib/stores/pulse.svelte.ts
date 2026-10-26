@@ -1,5 +1,6 @@
 import { registerSingletonSync } from "$lib/services/sync.svelte";
 import { apiPost } from '$lib/api/client';
+import { captureSession, isCurrentSession, type SessionOwnership } from '$lib/services/sessionOwnership';
 
 // SyncManager stores keys camelCased (convertKeys in sync.svelte.ts): /api/pulse/status's
 // next_nudge arrives here as nextNudge. Times are UTC ISO with "Z".
@@ -26,6 +27,16 @@ export interface PulseTierActivity {
         failedAttempts: number; retryAvailable: boolean;
         sourceMessages: { id: number; message: string; sentAt: string; state: PulseAlertState }[];
     }[];
+}
+
+/** The six settings edited by the settings page, in the API's spelling. */
+export interface PulseSettingsChanges {
+    enabled: boolean;
+    frequency_days: number;
+    grace_period_hours: number;
+    ghost_mode_until: string | null;
+    biometric_extension_enabled: boolean;
+    location_vault_enabled: boolean;
 }
 
 export interface PulseSettings {
@@ -84,6 +95,20 @@ export const pulse = {
      *  read or saved it, so writing it back would be a second save the person never made. */
     showEnabled(enabled: boolean) {
         settingsSync.updateLocal({ ...(settingsSync.data || {}), enabled } as PulseSettings);
+    },
+    /** Mirror this owner's explicit settings intent/confirmation without posting a second save.
+     * The cache uses camelCase; fields this page does not edit stay as they were. */
+    showSettings(fields: PulseSettingsChanges, owner: SessionOwnership = captureSession()) {
+        if (!isCurrentSession(owner)) return;
+        settingsSync.updateLocal({
+            ...(settingsSync.data || {}),
+            enabled: fields.enabled,
+            frequencyDays: fields.frequency_days,
+            gracePeriodHours: fields.grace_period_hours,
+            ghostModeUntil: fields.ghost_mode_until,
+            biometricExtensionEnabled: fields.biometric_extension_enabled,
+            locationVaultEnabled: fields.location_vault_enabled,
+        } as PulseSettings);
     },
     checkin: (note?: string) => pulseStore.checkin(note),
     // Store compatibility for derived()
