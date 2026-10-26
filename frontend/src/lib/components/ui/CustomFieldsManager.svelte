@@ -155,6 +155,8 @@
         >
             <h5 class="text-xs font-bold text-indigo-800">Create New Field</h5>
             <div class="flex flex-col gap-3">
+                <!-- Focus moves to this field because the person just chose to add something here. -->
+                <!-- svelte-ignore a11y_autofocus -->
                 <input
                     type="text"
                     bind:value={newFieldName}

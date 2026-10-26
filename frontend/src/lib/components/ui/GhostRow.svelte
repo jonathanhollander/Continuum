@@ -21,7 +21,7 @@
     }>();
 
     // Support both onclick and onClick prop naming conventions
-    const handleClick = onclick || onClick;
+    const handleClick = () => (onclick || onClick)?.();
 </script>
 
 <!-- 

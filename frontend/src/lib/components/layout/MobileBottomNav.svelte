@@ -24,7 +24,6 @@
 <!-- Mobile Bottom Navigation - Only visible on small screens -->
 <nav
     class="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white border-t border-gray-200 shadow-lg shadow-black/10 safe-area-bottom"
-    role="navigation"
     aria-label="Mobile navigation"
 >
     <div class="flex items-stretch justify-around h-16">

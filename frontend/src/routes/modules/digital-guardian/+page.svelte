@@ -94,6 +94,8 @@
         setStored(PENDING_KEY, pending ? $state.snapshot(pending) : null);
     });
     // Toggles kept from before a reload: shown at once, sent once the server row has loaded.
+    // One-time start-up read of the device copy, on purpose.
+    // svelte-ignore state_referenced_locally
     let restored = pending !== null;
     // Restored before this sync ran: the sync's answer (or its upload of the device copy) is the
     // server's, so it can show the toggles already saved. After it, the copy is only this page's.
@@ -105,6 +107,8 @@
             (k) => JSON.stringify(data[k]) === JSON.stringify(pending![k]),
         );
     };
+    // One-time start-up read of the device copy, on purpose.
+    // svelte-ignore state_referenced_locally
     if (pending) digitalGuardianSync.updateLocal({ ...(digitalGuardianSync.data ?? {}), ...pending });
     $effect(() => {
         if (restored && digitalGuardianSync.status === "synced") {

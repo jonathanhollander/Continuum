@@ -193,6 +193,8 @@
                     <div
                         class="mt-2 p-2 bg-slate-900/50 rounded-lg border border-slate-700/50 animate-in fade-in"
                     >
+                        <!-- Focus moves to this field because the person just chose to add something here. -->
+                        <!-- svelte-ignore a11y_autofocus -->
                         <input
                             bind:value={newProfileName}
                             placeholder="Name (e.g. Spouse)"

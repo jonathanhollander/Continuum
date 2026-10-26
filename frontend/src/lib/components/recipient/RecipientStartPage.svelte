@@ -228,6 +228,8 @@
                 {@const url = urls.get(a.key)}
                 <div use:inView={a} class="flex flex-col">
                 {#if url && a.mime_type.startsWith("video/")}
+                    <!-- Recordings made by family members carry no caption track. -->
+                    <!-- svelte-ignore a11y_media_has_caption -->
                     <video src={url} controls preload="metadata" class="w-full max-w-xl rounded-xl bg-black" data-testid="recipient-video"></video>
                 {:else if url && a.mime_type.startsWith("audio/")}
                     <audio src={url} controls class="w-full max-w-xl" data-testid="recipient-audio"></audio>

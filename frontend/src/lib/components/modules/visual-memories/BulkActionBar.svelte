@@ -44,6 +44,8 @@
                 <div
                     class="flex items-center gap-2 animate-in slide-in-from-right-4 fade-in"
                 >
+                    <!-- Focus moves to this field because the person just chose to add something here. -->
+                    <!-- svelte-ignore a11y_autofocus -->
                     <input
                         type="text"
                         bind:value={newTag}

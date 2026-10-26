@@ -8,6 +8,8 @@
     export let subtitle: string | undefined = undefined;
     // Kept so existing pages compile; the header shows no tier label (card E3:
     // the raw tier id rendered as a literal "financial Module" eyebrow).
+    // Kept so existing pages that pass tier still compile.
+    // svelte-ignore export_let_unused
     export let tier: string = "preparation";
     export let detailedDescription: string | undefined = undefined;
     export let whyMatters: string | undefined = undefined;

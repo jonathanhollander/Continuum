@@ -676,6 +676,8 @@
                             class="block text-xs font-bold uppercase text-gray-500 mb-1"
                             >What Service?</label
                         >
+                        <!-- Focus moves to this field because the person just chose to add something here. -->
+                        <!-- svelte-ignore a11y_autofocus -->
                         <input id="subscription-name"
                             type="text"
                             bind:value={newSub.name}

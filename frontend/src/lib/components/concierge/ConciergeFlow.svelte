@@ -218,6 +218,8 @@
                         </button>
                     </div>
                 {:else if currentStep.type === "textarea"}
+                    <!-- Focus moves to this field because the person just chose to add something here. -->
+                    <!-- svelte-ignore a11y_autofocus -->
                     <textarea
                         bind:value={currentInput}
                         onkeydown={handleKeydown}
@@ -243,6 +245,8 @@
                         {/each}
                     </div>
                 {:else}
+                    <!-- Focus moves to this field because the person just chose to add something here. -->
+                    <!-- svelte-ignore a11y_autofocus -->
                     <input
                         type="text"
                         bind:value={currentInput}

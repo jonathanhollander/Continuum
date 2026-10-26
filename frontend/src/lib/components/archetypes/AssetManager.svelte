@@ -56,6 +56,8 @@
 
     // Determine sync key based on module ID
     // Financial Accounts passes 'assets-main', so we map it to 'financial_assets'
+    // The module is fixed for the life of this page, so the key is read once.
+    // svelte-ignore state_referenced_locally
     const syncKey =
         module.id === "assets-main"
             ? "financial_assets"

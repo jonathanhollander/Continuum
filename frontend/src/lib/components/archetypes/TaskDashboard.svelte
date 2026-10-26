@@ -43,6 +43,8 @@
     let showWizard = $state(false);
     let newTask = $state("");
 
+    // The module is fixed for the life of this page, so the key is read once.
+    // svelte-ignore state_referenced_locally
     const storageKey = `tasks_${module.id}`;
 
     // Standard Blueprints for One-Click Setup

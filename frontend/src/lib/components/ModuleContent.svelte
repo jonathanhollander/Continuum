@@ -174,6 +174,8 @@
                 </h3>
                 <ul class="space-y-3">
                     <li>
+                        <!-- Placeholder links, kept as they are. -->
+                        <!-- svelte-ignore a11y_invalid_attribute -->
                         <a
                             href="#"
                             class="flex items-center justify-between group p-2 hover:bg-background rounded transition-colors text-sm"
@@ -189,6 +191,8 @@
                         </a>
                     </li>
                     <li>
+                        <!-- Placeholder links, kept as they are. -->
+                        <!-- svelte-ignore a11y_invalid_attribute -->
                         <a
                             href="#"
                             class="flex items-center justify-between group p-2 hover:bg-background rounded transition-colors text-sm"
@@ -204,6 +208,8 @@
                         </a>
                     </li>
                     <li>
+                        <!-- Placeholder links, kept as they are. -->
+                        <!-- svelte-ignore a11y_invalid_attribute -->
                         <a
                             href="#"
                             class="flex items-center justify-between group p-2 hover:bg-background rounded transition-colors text-sm"

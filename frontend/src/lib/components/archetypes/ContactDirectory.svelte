@@ -57,6 +57,8 @@
         isEmergencyContact: false,
     });
 
+    // The module is fixed for the life of this page, so the key is read once.
+    // svelte-ignore state_referenced_locally
     const storageKey = `contacts_${module.id}`;
 
     onMount(() => {
