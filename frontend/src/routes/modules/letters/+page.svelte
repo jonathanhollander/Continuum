@@ -235,7 +235,6 @@
     let mode = $state<
         | "menu"
         | "emotional_interview"
-        | "drafting"
         | "review"
         | "transactional_preview"
         | "variable_input"
@@ -274,6 +273,8 @@
     let selectedTemplate = $state<LetterTemplate | null>(null);
     let templateVariables = $state<Record<string, string>>({});
     let detectedVariables = $state<string[]>([]);
+    // True when the Estate Profile filled at least one field of the chosen template.
+    let filledFromProfile = $state(false);
 
     // Editor Content
     let generatedLetter = $state("");
@@ -323,6 +324,7 @@
         detectedVariables.forEach((v) => {
             templateVariables[v] = mappingKeys[v] || "";
         });
+        filledFromProfile = detectedVariables.some((v) => v !== "Date" && !!mappingKeys[v]);
 
         if (detectedVariables.length > 0) {
             mode = "variable_input";
@@ -359,27 +361,28 @@
     }
 
     function generateEmotionalDraft() {
-        mode = "drafting";
-        setTimeout(() => {
-            if (emotionalFlow === "spouse") {
-                generatedLetter = `My Dearest,\n\nI was sitting here thinking about us, and my mind drifted to that time: ${emotionalReflections.memory}. It still makes me smile.\n\nI want you to know how much I admire you. Specifically, ${emotionalReflections.values}. You have always been my rock.\n\nMy greatest wish for you is this: ${emotionalReflections.hopes}. Be happy, live fully, and know that you were loved beyond measure.\n\nForever yours,\n[Your Name]`;
-            } else {
-                generatedLetter = `To My Family,\n\nAs I look back on my life, I want to leave you with more than just things. I want to share who I was and what I believed in.\n\nMy life was guided by three core values: ${emotionalReflections.values}. I hope they serve you as well as they served me.\n\nI learned many lessons, but the most important was: ${emotionalReflections.memory}. Don't make the same mistake I did—or if you do, forgive yourself quickly.\n\nWhen times are tough, remember: ${emotionalReflections.hopes}.\n\nWith all my love,\n[Your Name]`;
-            }
-            mode = "review";
+        if (emotionalFlow === "spouse") {
+            generatedLetter = `My Dearest,\n\nI was sitting here thinking about us, and my mind drifted to that time: ${emotionalReflections.memory}. It still makes me smile.\n\nI want you to know how much I admire you. Specifically, ${emotionalReflections.values}. You have always been my rock.\n\nMy greatest wish for you is this: ${emotionalReflections.hopes}. Be happy, live fully, and know that you were loved beyond measure.\n\nForever yours,\n[Your Name]`;
+        } else {
+            generatedLetter = `To My Family,\n\nAs I look back on my life, I want to leave you with more than just things. I want to share who I was and what I believed in.\n\nMy life was guided by three core values: ${emotionalReflections.values}. I hope they serve you as well as they served me.\n\nI learned many lessons, but the most important was: ${emotionalReflections.memory}. Don't make the same mistake I did—or if you do, forgive yourself quickly.\n\nWhen times are tough, remember: ${emotionalReflections.hopes}.\n\nWith all my love,\n[Your Name]`;
+        }
+        mode = "review";
+        // Put the keyboard straight into the new letter.
+        tick().then(() => {
+            document.querySelector<HTMLTextAreaElement>("[data-letter-editor] textarea")?.focus({ preventScroll: true });
+        });
 
-            activityLog.logEvent({
-                module: "Letters",
-                action: "GENERATE",
-                entityType: "Emotional Draft",
-                entityId: "draft-temp",
-                entityName:
-                    emotionalFlow === "spouse"
-                        ? "Letter to Loved One"
-                        : "Ethical Will",
-                userContext: $estateProfile.ownerName || "User",
-            });
-        }, 1500);
+        activityLog.logEvent({
+            module: "Letters",
+            action: "GENERATE",
+            entityType: "Emotional Draft",
+            entityId: "draft-temp",
+            entityName:
+                emotionalFlow === "spouse"
+                    ? "Letter to Loved One"
+                    : "Ethical Will",
+            userContext: $estateProfile.ownerName || "User",
+        });
     }
 
     const categories = [
@@ -778,12 +781,14 @@
                 >
                     <ArrowLeft size={16} /> Back to Library
                 </button>
-                <div
-                    class="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full text-xs font-bold"
-                >
-                    <Sparkles size={14} />
-                    <span>Auto-mapped from Estate Profile</span>
-                </div>
+                {#if filledFromProfile}
+                    <div
+                        class="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full text-xs font-bold"
+                    >
+                        <Sparkles size={14} />
+                        <span>Auto-mapped from Estate Profile</span>
+                    </div>
+                {/if}
             </div>
 
             <div
@@ -800,13 +805,15 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {#each detectedVariables as variable}
+                    {#each detectedVariables as variable, i}
                         <div class="space-y-3">
                             <label
+                                for="letter-var-{i}"
                                 class="block text-[11px] font-black text-slate-800 uppercase tracking-widest pl-1"
                                 >{variable}</label
                             >
                             <input
+                                id="letter-var-{i}"
                                 type="text"
                                 bind:value={templateVariables[variable]}
                                 class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
@@ -970,35 +977,8 @@
         </div>
     {/if}
 
-    <!-- Emotional Drafting & Review Mode -->
-    {#if mode === "drafting"}
-        <div
-            class="flex flex-col items-center justify-center py-48 space-y-8"
-            in:fade
-        >
-            <div class="relative">
-                <div
-                    class="w-24 h-24 border-8 border-slate-100 rounded-full animate-ping opacity-20"
-                ></div>
-                <div class="absolute inset-0 flex items-center justify-center">
-                    <PenTool size={48} class="text-primary animate-bounce" />
-                </div>
-            </div>
-            <div class="text-center space-y-2">
-                <h3 class="text-3xl font-black text-slate-900 font-serif">
-                    Compose Legacy Draft...
-                </h3>
-                <p
-                    class="text-slate-400 font-bold uppercase tracking-widest text-xs"
-                >
-                    Placing your words into a letter template
-                </p>
-            </div>
-        </div>
-    {/if}
-
     {#if mode === "review"}
-        <div class="max-w-[1400px] mx-auto space-y-8" in:fade>
+        <div class="max-w-[1400px] mx-auto space-y-8" in:fade={{ duration: 150 }}>
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-4">
                     <button
@@ -1061,7 +1041,7 @@
                                 <select
                                     id="letter-recipient"
                                     bind:value={letterRecipientId}
-                                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800 text-sm"
                                 >
                                     <option value="">Choose someone from your contacts</option>
                                     {#each contacts as contact (contact.id)}
@@ -1175,6 +1155,7 @@
                             class="absolute -inset-4 bg-gradient-to-r from-[#4A7C74]/5 to-blue-500/5 rounded-2xl blur-2xl opacity-50 group-hover:opacity-100 transition-opacity"
                         ></div>
                         <div
+                            data-letter-editor
                             class="relative bg-[#FDFBF7] p-16 rounded-2xl border border-stone-200 shadow-2xl font-serif text-xl leading-[2] text-stone-800 paper-texture ring-8 ring-stone-50/30 min-h-[700px]"
                         >
                             <SmartTextarea

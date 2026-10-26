@@ -61,7 +61,7 @@
             <div class="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
                 <Sparkles size={18} />
             </div>
-            <h3 class="font-bold font-serif text-lg">Empathy Engine</h3>
+            <h3 class="font-bold font-serif text-lg text-white">Empathy Engine</h3>
         </div>
         <div class="flex bg-black/20 rounded-lg p-1 text-xs font-bold">
             <button

@@ -26,8 +26,10 @@
     let timerInterval: any;
     let error: string | null = null;
     let isSaving = false;
+    let cameraReady = false;
 
     async function startCamera() {
+        cameraReady = false;
         try {
             stream = await navigator.mediaDevices.getUserMedia({
                 video: true,
@@ -38,6 +40,7 @@
                 videoPreview.muted = true; // Avoid feedback loop
             }
             error = null;
+            cameraReady = true;
         } catch (err) {
             console.error("Camera access denied:", err);
             error = "Camera access denied. Please verify permissions.";
@@ -45,7 +48,7 @@
     }
 
     function startRecording() {
-        if (!stream) return;
+        if (!stream || !cameraReady) return;
         chunks = [];
         mediaRecorder = new MediaRecorder(stream);
 
@@ -146,7 +149,7 @@
             in:fade
         >
             <CircleAlert size={48} class="text-rose-500 mb-4" />
-            <h3 class="font-bold text-xl mb-2">Camera Error</h3>
+            <h3 class="font-bold text-xl mb-2 text-white">Camera Error</h3>
             <p class="text-slate-400">{error}</p>
             <button
                 on:click={startCamera}
@@ -176,7 +179,9 @@
                 <button
                     on:click={startRecording}
                     aria-label="Start Recording"
-                    class="w-16 h-16 rounded-full border-[6px] border-white/30 flex items-center justify-center hover:scale-105 transition-all group/rec"
+                    disabled={!cameraReady}
+                    aria-busy={!cameraReady}
+                    class="w-16 h-16 rounded-full border-[6px] border-white/30 flex items-center justify-center hover:scale-105 transition-all group/rec disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                     <div
                         class="w-12 h-12 bg-rose-500 rounded-full group-hover/rec:scale-90 transition-all"
