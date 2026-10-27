@@ -173,6 +173,20 @@ export class SyncManager<T extends { id: number | string }> {
         return this;
     }
 
+    /** A long log: this device keeps only the newest `count` rows, ordered by `field`. */
+    private cap?: { count: number; field: string };
+    keepNewest(count: number, field: string) {
+        this.cap = { count, field };
+        this.items = this.capped(this.items);
+        return this;
+    }
+    private capped(rows: T[]): T[] {
+        if (!this.cap || rows.length <= this.cap.count) return rows;
+        const f = this.cap.field;
+        const at = (r: T) => String((r as Record<string, unknown>)[f] ?? '');
+        return [...rows].sort((a, b) => at(b).localeCompare(at(a))).slice(0, this.cap.count);
+    }
+
     /** Large stores (letters): syncAll leaves this one alone until something shows it
      *  (or the page shows every module); until then the device copy stands. */
     onDemand = false;
@@ -480,6 +494,7 @@ export class SyncManager<T extends { id: number | string }> {
 
     /** Mirror the server's list (server truth): the device keeps it and the ids the server holds. */
     private updateLocal(data: T[]) {
+        data = this.capped(data);
         this.items = data;
         setStored(this.key, data);
         setStored(this.sentKey, data.map(i => String(i.id)));
@@ -578,7 +593,7 @@ export class SyncManager<T extends { id: number | string }> {
             }
             const newItem = confirmed;
             if (!skipLocal) {
-                this.items = [...this.items, newItem];
+                this.items = this.capped([...this.items, newItem]);
                 setStored(this.key, this.items);
                 const sentIds = getStored<string[] | null>(this.sentKey, null);
                 if (sentIds) setStored(this.sentKey, [...sentIds, String(newItem.id)]);
@@ -595,6 +610,8 @@ export class SyncManager<T extends { id: number | string }> {
             }
             console.error("Create failed", e);
             if (quiet) throw e;
+            this.remember(owner, operation); // kept on this device for Try Again, also after a reload
+            this.recoveryNotices.add(operation.key);
             if (!skipLocal) { this.status = "error"; this.error = errMessage(e) || "Failed to save"; }
             this.trackNotice(operation.key, notifications.showError({
                 message: 'Your draft is kept. We can save it again whenever you\'re ready.',
@@ -675,8 +692,12 @@ export class SyncManager<T extends { id: number | string }> {
             await before;
             if (!current()) throw ACCOUNT_CHANGED;
             const token = sessionToken(owner.session);
-            const payloadRaw = this.mapper ? this.mapper(updatedItem) : updatedItem;
-            const payload = toWire(payloadRaw);
+            // Only the fields this update changed go out, so a row this device read earlier never
+            // writes its older values over another device's newer edits (the server merges).
+            const full = toWire(this.mapper ? this.mapper(updatedItem) : updatedItem);
+            const changed = new Set(Object.keys(updates).map(toWireKey));
+            const payload: Record<string, unknown> = {};
+            for (const k of Object.keys(full)) if (changed.has(k)) payload[k] = full[k];
 
             // Remove protected fields that backend won't accept
             delete payload.id;
@@ -742,8 +763,8 @@ export class SyncManager<T extends { id: number | string }> {
                 throw ACCOUNT_CHANGED;
             }
             console.error("Update failed, rolling back", e);
-            // A newer update to this row is still open: it carries the whole row, so its answer
-            // decides. Otherwise every field these updates touched goes back to the server's
+            // A newer update to this row is still open: its answer (the server's row) decides what
+            // shows. Otherwise every field these updates touched goes back to the server's
             // latest row (an earlier update's answer, or the row before them); other fields stay.
             close();
             if (entry.open.size === 0) {
@@ -760,8 +781,10 @@ export class SyncManager<T extends { id: number | string }> {
             }
             this.status = "error";
             this.error = errMessage(e) || "Failed to save";
-            // Rollback restores the saved record; the caller's form still holds the typed draft,
-            // and Try Again re-applies exactly those edits.
+            // Rollback restores the saved record. The typed edits stay on this device (also after
+            // the form closes or the page reloads), and Try Again re-applies exactly those edits.
+            this.remember(owner, operation);
+            this.recoveryNotices.add(operation.key);
             this.trackNotice(operation.key, notifications.showError({
                 message: 'Your draft is kept. We can save it again whenever you\'re ready.',
                 code: 'DATABASE_ERROR',
@@ -1520,9 +1543,12 @@ export class SingletonSyncManager<T extends object> {
             if (!current()) throw ACCOUNT_CHANGED;
             if (this.released(owner, operation.key)) throw identifiedFailure(new Error('This earlier draft was superseded'), operation.key);
             const token = sessionToken(owner.session);
-            // Earlier responses and later optimistic patches never become this save's
-            // input accidentally. Only the confirmed base plus this explicit patch goes out.
-            const payload = this.wirePayload({ ...(this.confirmedBases.get(owner.account) || this.standaloneBase || {}), ...newData } as T);
+            // Only the keys this save changed go out (the server merges them into its row), so
+            // values this device read earlier never overwrite another device's newer save.
+            const full = this.wirePayload({ ...(this.confirmedBases.get(owner.account) || this.standaloneBase || {}), ...newData } as T);
+            const changed = new Set(Object.keys(newData).map(toSnake));
+            const payload: Record<string, unknown> = {};
+            for (const k of Object.keys(full || {})) if (changed.has(k)) payload[k] = full[k];
             const res = await writeFetch(`${BASE_URL}${this.apiBase}/${this.endpoint}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
@@ -1568,6 +1594,8 @@ export class SingletonSyncManager<T extends object> {
             if (this.released(owner, operation.key)) throw identifiedFailure(e, operation.key);
             console.error(`[Sync:${this.key}] Update failed, retaining newer changes`, e);
             if (quiet) { this.activeWrites.delete(operation.key); throw identifiedFailure(e, operation.key); }
+            this.remember(operation); // kept on this device for Try Again, also after a reload
+            this.recoveryNotices.add(operation.key);
             this.trackNotice(operation.key, notifications.showError({
                 message: 'Your draft is kept. We can save it again whenever you\'re ready.',
                 code: 'DATABASE_ERROR',
