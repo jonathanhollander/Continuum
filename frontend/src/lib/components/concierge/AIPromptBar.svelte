@@ -1,158 +1,86 @@
 <script lang="ts">
     import { slide } from "svelte/transition";
+    import { onMount, onDestroy } from "svelte";
     import { Sparkles, ArrowRight, Loader2, Copy } from "lucide-svelte";
     import { logInteraction } from "$lib/stores/conciergeStore.svelte";
+    import { auth } from "$lib/stores/auth";
     import { aiConciergeService } from "$lib/services/aiConciergeService";
-    import type { AIModuleVariant } from "$lib/services/aiCapabilities";
+    import { aiRuntimeAssets, aiAssets, assetStrings, observeAIConfig, currentAIJob, aiJobChanges, type AIModuleVariant, type AIWritingJob, type AIHistoryMessage } from "$lib/services/aiCapabilities";
+    import { captureSession, isCurrentSession } from "$lib/services/sessionOwnership";
 
     export let context: AIModuleVariant = "obituary";
-    // A page's own chips replace the context defaults below.
-    export let prompts: string[] = [];
-    // Page-specific ideas; three are shown at a time and can be reshuffled.
-    export let promptPool: string[] = [];
-
+    export let promptSource = "";
+    export let promptPoolSource = "";
+    export let job: AIWritingJob | undefined = undefined;
     let prompt = "";
     let isGenerating = false;
     let result = "";
-    let isNotice = false; // gentle unavailable message: plain text, no draft framing
+    let isNotice = false;
     let copyStatus: "" | "copied" | "failed" = "";
-
-    const quickPrompts: Record<string, string[]> = {
-        obituary: [
-            "Draft a standard obituary based on these notes...",
-            "Write a warm, humorous eulogy...",
-            "Create a short death notice for the newspaper...",
-        ],
-        letters: [
-            "Help me start a letter to my daughter...",
-            "Write a note of forgiveness...",
-            "Draft an 'ethical will' listing my values...",
-        ],
-        executor: [
-            "Summarize the immediate next steps...",
-            "Draft an email to the bank...",
-            "How do I get a death certificate?",
-        ],
-        heirlooms: [
-            "Help me describe why this means so much...",
-            "Draft a letter to accompany this gift...",
-            "Explain the history of this item...",
-        ],
-        legal_explainer: [
-            "Explain what a Living Will is...",
-            "Summarize the role of a Healthcare Proxy...",
-            "What is a Power of Attorney?",
-        ],
-        contacts: [
-            "Help me organize my emergency contact list...",
-            "Draft a message to notify loved ones...",
-            "Who should be in my inner circle?",
-        ],
-        medical: [
-            "Explain advance healthcare directives...",
-            "Help me document my medical wishes...",
-            "What should my healthcare proxy know?",
-        ],
-        pets: [
-            "Help me write care instructions for my pet...",
-            "Draft a letter to my pet's future guardian...",
-            "What details should I include about my pet?",
-        ],
-        property: [
-            "Help me document property ownership details...",
-            "What information do executors need about real estate?",
-            "Draft a property description for my records...",
-        ],
-        insurance: [
-            "Help me organize my insurance policies...",
-            "What insurance information should I document?",
-            "Explain how beneficiaries claim insurance...",
-        ],
-        "digital-guardian": [
-            "Help me document my digital accounts...",
-            "What happens to online accounts when I pass?",
-            "How do I set up a digital legacy contact?",
-        ],
-        "visual-memories": [
-            "Help me organize my photo archives...",
-            "How should I document my memory locations?",
-            "Draft notes about my photo collection...",
-        ],
-        financial: [
-            "What should my family know about my accounts?",
-            "How do beneficiary designations work on bank accounts?",
-            "Help me write a note about where my accounts are held...",
-        ],
-        "activity-log": [
-            "How can a record of changes help my executor?",
-            "How often should I revisit my estate plan?",
-            "Which life events are a good time to update my plan?",
-        ],
-        subscriptions: [
-            "How can my executor cancel my subscriptions?",
-            "What should I record about each subscription?",
-            "How do automatic renewals work after someone passes away?",
-        ],
-        "advanced-registry": [
-            "What details belong in a record of a home or car purchase?",
-            "Help me plan a yearly home maintenance schedule...",
-            "How does an executor follow up on an open insurance claim?",
-        ],
-        "qr-codes": [
-            "Explain how QR access codes work for my estate...",
-            "Help me set up secure access for my family...",
-            "Where can I keep printed QR codes safe at home?",
-        ],
-        "home-manual": [
-            "Help me document my home's maintenance schedule...",
-            "Write instructions for shutting off my home's water, gas and power...",
-            "Which home details help my family most?",
-        ],
-        calendar: [
-            "Suggest meaningful ways my family could mark my birthday",
-            "What are some unique ways to be remembered on holidays?",
-            "Help me write a message for a future anniversary...",
-        ],
-    };
-
-    function pickIdeas(pool: string[], current: string[] = []): string[] {
-        const fresh = pool.filter((p) => !current.includes(p));
-        const source = fresh.length >= 3 ? fresh : pool;
-        return [...source].sort(() => Math.random() - 0.5).slice(0, 3);
+    let history: AIHistoryMessage[] = [];
+    let workingDraft = "";
+    let owner = captureSession();
+    let identity = "";
+    let sequence = 0;
+    let alive = true;
+    let poolIdeas: string[] = [];
+    const currentJob = () => job ?? currentAIJob();
+    const jobKey = () => JSON.stringify([context, typeof location === 'undefined' ? '' : location.pathname, currentJob()?.job_id ?? '']);
+    function followJob() {
+        const key = jobKey();
+        if (key === identity && isCurrentSession(owner)) return;
+        identity = key;
+        owner = captureSession();
+        sequence++;
+        history = [];
+        workingDraft = result = prompt = "";
+        isGenerating = false;
+        copyStatus = "";
     }
-
-    $: poolIdeas = pickIdeas(promptPool);
-    $: chips =
-        prompts.length > 0 || promptPool.length > 0
-            ? prompts
-            : quickPrompts[context] || [];
-
+    $: { $aiJobChanges; if (typeof window !== 'undefined' && (context || job)) followJob(); }
+    onMount(() => {
+        const stopAuth = auth.subscribe(followJob);
+        const stopConfig = observeAIConfig({ purpose: 'concierge.module_prompt', variant: context });
+        return () => { stopAuth(); stopConfig(); };
+    });
+    onDestroy(() => { alive = false; sequence++; });
+    $: assets = aiAssets({purpose:'concierge.module_prompt',variant:context}, $aiRuntimeAssets);
+    $: chips = assetStrings(promptSource ? assets[promptSource] : (assets['lib/components/concierge/AIPromptBar.svelte:quickPrompts'] as Record<string, unknown> | undefined)?.[context]);
+    $: pool = assetStrings(promptPoolSource ? assets[promptPoolSource] : []);
+    $: poolIdeas = pickIdeas(pool);
+    function pickIdeas(values: string[], current: string[] = []): string[] {
+        const fresh = values.filter((p) => !current.includes(p));
+        return [...(fresh.length >= 3 ? fresh : values)].sort(() => Math.random() - 0.5).slice(0, 3);
+    }
     async function runPrompt(text: string) {
+        followJob();
+        if (isGenerating || !text.trim() || !isCurrentSession(owner)) return;
+        const startedBy = owner, key = identity, version = ++sequence;
+        const record = currentJob();
+        const fingerprint = JSON.stringify(record);
         prompt = text;
         isGenerating = true;
         copyStatus = "";
         logInteraction("AI Prompt", `Context: ${context} | Prompt: ${text}`);
-
+        const current: AIWritingJob = { ...record, job_id: record?.job_id ?? key,
+            job_brief: record?.job_brief ?? history.find((m) => m.role === 'user')?.content ?? text,
+            current_draft: workingDraft || record?.current_draft || "",
+            current_draft_source: workingDraft ? 'proposed' : 'edited' };
         try {
-            // chat() never throws; on failure it sets `failed` and returns a gentle notice.
-            const response = await aiConciergeService.modulePrompt(text, context);
+            const response = await aiConciergeService.modulePrompt(text, context, history, current);
+            if (!alive || version !== sequence || key !== jobKey() || !isCurrentSession(startedBy) || fingerprint !== JSON.stringify(currentJob())) return;
             isNotice = response.failed === true;
-            result = isNotice
-                ? response.content
-                : `[Draft based on: "${text}"]\n\n${response.content}`;
-        } finally {
-            isGenerating = false;
-        }
+            result = isNotice ? response.content : `[Draft based on: "${text}"]\n\n${response.content}`;
+            if (!response.failed) {
+                history = [...history, { role: 'user', content: text, source: 'user' }, { role: 'assistant', content: response.historyContent ?? response.content, source: 'model' }];
+                workingDraft = response.content;
+            }
+        } finally { if (alive && version === sequence && isCurrentSession(startedBy)) isGenerating = false; }
     }
-
+    function startOver() { sequence++; history = []; workingDraft = result = ""; copyStatus = ""; isGenerating = false; }
     async function copyResult() {
-        try {
-            await navigator.clipboard.writeText(result);
-            copyStatus = "copied";
-            logInteraction("AI Copy", context);
-        } catch {
-            copyStatus = "failed";
-        }
+        try { await navigator.clipboard.writeText(result); copyStatus = "copied"; logInteraction("AI Copy", context); }
+        catch { copyStatus = "failed"; }
     }
 </script>
 
@@ -211,10 +139,10 @@
                     {idea}
                 </button>
             {/each}
-            {#if promptPool.length > 3}
+            {#if pool.length > 3}
                 <button
                     class="px-3 py-1.5 text-xs text-primary-hover hover:underline"
-                    on:click={() => (poolIdeas = pickIdeas(promptPool, poolIdeas))}
+                    on:click={() => (poolIdeas = pickIdeas(pool, poolIdeas))}
                 >
                     Show other ideas
                 </button>
@@ -252,10 +180,7 @@
             {/if}
             <button
                 class="block w-full text-center text-xs text-primary-hover mt-4 hover:underline"
-                on:click={() => {
-                    result = "";
-                    copyStatus = "";
-                }}
+                on:click={startOver}
             >
                 Start Over
             </button>

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { aiJobId, aiSourceFacts } from "$lib/services/aiCapabilities";
     import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { focusTrap } from "$lib/actions/focusTrap";
     import { readCustom } from "$lib/utils/customFields";
@@ -303,6 +304,7 @@
 
                     <div class="space-y-1">
                         <SmartTextarea
+                            job={{job_id:aiJobId("timeline", newEvent, newEvent.id)+":description",document_title:newEvent.label,source_facts:aiSourceFacts({label:newEvent.label,type:newEvent.type,year:newEvent.year,date:newEvent.date,assignedContactId:newEvent.assignedContactId})}}
                             bind:value={newEvent.description}
                             context="timeline"
                             placeholder="Share the memory..."
@@ -405,6 +407,7 @@
                             </div>
                             <div class="space-y-1">
                                 <SmartTextarea
+                            job={{job_id:aiJobId("timeline", newEvent, newEvent.id)+":reflection",document_title:newEvent.label,source_facts:aiSourceFacts({label:newEvent.label,type:newEvent.type,year:newEvent.year,date:newEvent.date,assignedContactId:newEvent.assignedContactId})}}
                                     bind:value={newEvent.reflection}
                                     context="storytelling"
                                     placeholder="What does this achievement mean to you?"
@@ -467,12 +470,7 @@
     <!-- AI Concierge Drafting Assistant -->
     <AIPromptBar
         context="heirlooms"
-        prompts={[
-            "Help me capture a milestone from my life...",
-            "Draft a reflection on a major life event...",
-            "Describe the meaning of this accomplishment...",
-            "Write about a turning point in my story..."
-        ]}
+        promptSource="routes/modules/timeline/+page.svelte:prompts"
     />
 
     <!-- Empty State with GhostRow Samples -->

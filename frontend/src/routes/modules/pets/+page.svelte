@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { aiJobId, aiSourceFacts } from "$lib/services/aiCapabilities";
     import { petSync } from "$lib/stores/petStore.svelte";
     import { formSaveAttempt } from "$lib/utils/formSaveAttempt";
     import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
@@ -636,6 +637,7 @@
 
             <div class="pt-2">
                 <SmartTextarea
+                            job={{job_id:aiJobId("pet", newPet, newPet.id)+":notes",document_title:newPet.name,source_facts:aiSourceFacts({name:newPet.name,type:newPet.type,guardian:newPet.guardian,vetName:newPet.vetName,foodInstructions:newPet.foodInstructions,medicalNeeds:newPet.medicalNeeds})}}
                     bind:value={newPet.notes}
                     context="pet"
                     placeholder="Share a favorite memory, tribute, or special quirks..."

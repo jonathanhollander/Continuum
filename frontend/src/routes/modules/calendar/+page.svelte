@@ -520,11 +520,7 @@
     <div class="mt-12">
         <AIPromptBar
             context="calendar"
-            prompts={[
-                "Suggest 3 meaningful things my family could do on my birthday",
-                "Draft a funny anniversary email to my spouse",
-                "What are some unique ways to be remembered on Christmas?",
-            ]}
+            promptSource="routes/modules/calendar/+page.svelte:prompts"
         />
     </div>
 

@@ -233,12 +233,7 @@
     <!-- AI Concierge Drafting Assistant -->
     <AIPromptBar
         context="calendar"
-        prompts={[
-            "Suggest a meaningful ritual for this anniversary...",
-            "Help me write about the significance of this date...",
-            "Draft instructions for commemorating this day...",
-            "Create a remembrance message for my family..."
-        ]}
+        promptSource="routes/modules/anniversary-manager/+page.svelte:prompts"
     />
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">

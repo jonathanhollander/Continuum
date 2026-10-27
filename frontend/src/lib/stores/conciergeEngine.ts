@@ -5,22 +5,8 @@ import { auth } from './auth';
 import { captureSession, isCurrentSession, type SessionOwnership } from '../services/sessionOwnership';
 import { goto } from '$app/navigation';
 import { browser } from '$app/environment';
+import { loadAIConfig, aiAsset, renderAIAsset, currentAIJob, type AIWritingJob } from '../services/aiCapabilities';
 import { navGroups } from '../config/navigation';
-
-// Keyed by the navigation label (navigation.ts), which setContext uses as the context name.
-const PIVOT_GREETINGS: Record<string, string> = {
-    'Property & Real Estate': "We've moved to your properties. Taking care of your home—the place where so many memories are made—is a beautiful way to protect your legacy. Where shall we start?",
-    'Financial Accounts': "Securing your financial resources is a vital act of protection for those you love. Which account shall we document first to ensure they're provided for?",
-    'Document Vault': "Legal foundations bring such peace of mind to a family. Do you have a copy of your Will or Trust ready to secure here?",
-    'Health & Medical': "These decisions are about your dignity and care. It takes courage to think through these. Have you designated a healthcare proxy?",
-    'Family & Contacts': "Legacy is, above all, about the people we love. Who is the first person you'd like to include in your circle of trust?",
-    'Legacy Correspondence': "Your voice is a gift that will last forever. These letters will mean so much. Who would you like to speak to first?",
-    'The Life Timeline': "Every life is a profound story. Which milestone should we honor first on your timeline?",
-    'Insurance Portfolio': "Insurance is a safety net you've built for your family's future. Do you have any active policies we should record so they're always easy to find?",
-    'Digital Guardian': "Your digital life is part of your story. Let's make sure your family has the keys they'll need. Do you have a password manager we should record the location of?",
-    'Wellness Check-in': "The Pulse system is like a steady hand, making sure you're okay. Who would you trust most to respond first when a check-in needs attention?",
-    'Heirlooms & Treasures': "Objects carry the stories of our lives. What's a cherished heirloom you'd like to protect today?"
-};
 
 export interface Message {
     id: string;
@@ -28,6 +14,10 @@ export interface Message {
     content: string;
     timestamp: number;
     isDictated?: boolean;
+    source?: 'user' | 'model' | 'app';
+    status?: boolean;
+    historyContent?: string;
+    job_id?: string;
     resources?: Array<{
         title: string;
         description: string;
@@ -40,6 +30,8 @@ interface ConciergeState {
     accountId: number | null;
     accountEpoch: number;
     composerDraft: string;
+    writingJob?: AIWritingJob;
+    writingJobSource?: string;
     isOpen: boolean;
     messages: Message[];
     isThinking: boolean;
@@ -100,7 +92,7 @@ function createConciergeEngine() {
                 ...parsed,
                 accountId: id,
                 accountEpoch,
-                messages: Array.isArray(parsed?.messages) ? parsed.messages : [],
+                messages: Array.isArray(parsed?.messages) ? parsed.messages.map((message: Message) => ({...message,source:message.source ?? (message.role === 'user' ? 'user' : message.id === '1' ? 'app' : 'model')})) : [],
                 composerDraft: typeof parsed?.composerDraft === "string" ? parsed.composerDraft : "",
                 floatingPosition: legacyDefault ? null : (parsed?.floatingPosition ?? null),
                 floatingPositionV: 2,
@@ -176,52 +168,30 @@ function createConciergeEngine() {
         });
     }
 
-    const updateInitialGreeting = () => {
-        const state = get({ subscribe });
-        if (state.messages.length > 0) return;
-
-        const contextName = state.currentContextName || 'Continuum Dashboard';
-        const isHome = contextName === 'Continuum Dashboard' || contextName === 'Marketing' || contextName === 'Continuum';
-
-        // Proactive Contextual Greetings
-        const contextGreetings: Record<string, string> = {
-            'Property & Real Estate': "I'm here to help you catalog your assets. Your home is the foundation of so much family history—where shall we begin?",
-            'Financial Accounts': "Thinking ahead about these resources is such a kind thing to do for your family. Which account is most important to record first?",
-            'Document Vault': "Building a solid legal foundation is an act of great care. Do you have a copy of your Will or Trust ready to upload?",
-            'Health & Medical': "With medical clarity, doctors and family know what you would want. Have you designated a healthcare proxy or created a living will?",
-            'Family & Contacts': "Legacy is all about the people you care for. Who is the first person you'd like to include in your circle of trust?",
-            'Legacy Correspondence': "Your voice is a treasure for those you leave behind. Who would you like to write your first legacy letter to?",
-            'The Life Timeline': "Your life is a story worth telling. What is a major life milestone we should honor first on your timeline?",
-            'Insurance Portfolio': "Protection brings peace of mind. Do you have any active life or property insurance policies we should track to make sure your family is secure?",
-            'Digital Guardian': "Your digital legacy is vital. Let's make sure your loved ones can reach the accounts that matter. Do you have a list of priority digital accounts to secure?",
-            'Wellness Check-in': "The Pulse system is here to watch over you. Who should be your primary responder, the person you trust most to check in on you?",
-            'Heirlooms & Treasures': "Every object has a story and a connection. What's a meaningful heirloom you'd like to register today?"
-        };
-
-        let prefix = "";
-        if (!state.hasInteracted) {
-            prefix = "Welcome to Continuum. I'm here to help you put your plan together. ";
-        } else {
-            prefix = "Ready to continue. ";
-        }
-
-        const greetingBody = contextGreetings[contextName] ||
-            (isHome ? "To begin, let's gather your circle of trust. Who is your primary emergency contact?" : `What's the first detail we should record here in ${contextName}?`);
-
-        const newGreeting = `${prefix}${greetingBody}`;
-
-        update(s => ({
-            ...s,
-            messages: [{
-                id: '1',
-                role: 'assistant',
-                content: newGreeting,
-                timestamp: Date.now()
-            }],
-            // Mark as interacted once they've seen the first greeting
-            hasInteracted: true
-        }));
+    const addConfiguredGreeting = async (pivot = false) => {
+        const owner = captureSession(), epoch = conversationEpoch;
+        const contextName = get({subscribe}).currentContextName;
+        try {
+            await loadAIConfig({purpose:'concierge.chat'});
+            if (!isCurrentSession(owner) || epoch !== conversationEpoch || contextName !== get({subscribe}).currentContextName) return;
+            const state = get({subscribe});
+            if (!pivot && state.messages.length) return;
+            const asset = <T>(name: string) => aiAsset<T>(`lib/stores/conciergeEngine.ts:${name}`, {purpose:'concierge.chat'});
+            const render = (name: string, values: Record<string,string>) => renderAIAsset(asset<string>(name) ?? '', values);
+            let content: string;
+            if (pivot) {
+                const lead = asset<Record<string,string>>('PIVOT_GREETINGS')?.[contextName] ?? render('pivot_fallback', {context_name:contextName});
+                content = render('pivot_join', {context_name:contextName,lead_question:lead});
+            } else {
+                const home = ['Continuum Dashboard','Marketing','Continuum'].includes(contextName);
+                const body = asset<Record<string,string>>('contextGreetings')?.[contextName] ?? (home ? asset<string>('greeting_home') ?? '' : render('greeting_other', {context_name:contextName}));
+                content = render('greeting_join', {prefix:asset<string>(state.hasInteracted ? 'greeting_prefix_return' : 'greeting_prefix_first') ?? '',body});
+            }
+            if (!content) return;
+            update(state => ({...state, messages:[...state.messages,{id:crypto.randomUUID(),role:'assistant',source:'app',content,timestamp:Date.now()}],hasInteracted:true,hasPendingContextSwitch:false}));
+        } catch { /* Configuration is required; keep the existing thread available for retry. */ }
     };
+    const updateInitialGreeting = () => { void addConfiguredGreeting(); };
 
     return {
         subscribe,
@@ -239,22 +209,7 @@ function createConciergeEngine() {
             // Check for pending context switch (Delayed Pivot)
             const state = get({ subscribe });
             if (state.hasPendingContextSwitch) {
-                const contextName = state.currentContextName;
-                const leadQuestion = PIVOT_GREETINGS[contextName] || `Shall we start securing the details for ${contextName}?`;
-                const pivotMsg = `We've moved into ${contextName}. ${leadQuestion}`;
-
-                const assistantMsg: Message = {
-                    id: Math.random().toString(36).substring(7),
-                    role: 'assistant',
-                    content: pivotMsg,
-                    timestamp: Date.now()
-                };
-
-                update(s => ({
-                    ...s,
-                    messages: [...s.messages, assistantMsg],
-                    hasPendingContextSwitch: false
-                }));
+                void addConfiguredGreeting(true);
             } else {
                 updateInitialGreeting();
             }
@@ -328,16 +283,7 @@ function createConciergeEngine() {
             // Proactive Pivot: If panel is open and context changes, interject
             if (oldContext !== contextName && state.messages.length >= 1) {
                 if (state.isOpen) {
-                    const leadQuestion = PIVOT_GREETINGS[contextName] || `Shall we start securing the details for ${contextName}?`;
-                    const pivotMsg = `We've moved into ${contextName}. ${leadQuestion}`;
-
-                    const assistantMsg: Message = {
-                        id: Math.random().toString(36).substring(7),
-                        role: 'assistant',
-                        content: pivotMsg,
-                        timestamp: Date.now()
-                    };
-                    update(s => ({ ...s, messages: [...s.messages, assistantMsg] }));
+                    void addConfiguredGreeting(true);
                 } else {
                     // Panel is closed, mark for pending pivot on next open
                     update(s => ({ ...s, hasPendingContextSwitch: true }));
@@ -352,9 +298,19 @@ function createConciergeEngine() {
             const session = captureSession();
             const epoch = conversationEpoch;
             if (owner === null || !isCurrentSession(session)) return null;
+            const before = get({subscribe});
+            const selectedJob = currentAIJob();
+            // Svelte fields may be proxies; persist/broadcast an immutable plain job snapshot.
+            const activeJob: AIWritingJob | undefined = selectedJob ? {...JSON.parse(JSON.stringify(selectedJob)),current_draft_source:selectedJob.current_draft_source ?? 'edited'} : undefined;
+            const jobSource = JSON.stringify(selectedJob);
+            const job = activeJob && jobSource !== before.writingJobSource
+                ? {...activeJob,job_brief:activeJob.job_brief ?? content}
+                : before.writingJob ?? activeJob;
             const userMsg: Message = {
                 id: Math.random().toString(36).substring(7),
                 role: 'user',
+                source: 'user',
+                job_id: job?.job_id,
                 content,
                 timestamp: Date.now(),
                 isDictated
@@ -364,6 +320,8 @@ function createConciergeEngine() {
                 const newState = {
                     ...s,
                     messages: [...s.messages, userMsg],
+                    writingJob: job,
+                    writingJobSource: activeJob ? jobSource : s.writingJobSource,
                     isThinking: true,
                     hasInteracted: true
                 };
@@ -372,8 +330,9 @@ function createConciergeEngine() {
 
             try {
                 const state = get({ subscribe });
-                const response = await aiConciergeService.chat(content, state.messages, state.currentContextName);
+                const response = await aiConciergeService.chat(content, state.messages.filter(message => !message.status && message.job_id === job?.job_id).map(message => ({...message,source:message.source ?? (message.role === 'user' ? 'user' : 'model')})), state.currentContextName, undefined, {purpose:'concierge.chat'}, job);
                 if (accountId !== owner || conversationEpoch !== epoch || !isCurrentSession(session)) return null;
+                if (currentAIJob() && JSON.stringify(currentAIJob()) !== jobSource) { update(state => ({...state,isThinking:false})); return null; }
 
                 // chat() has already parsed the envelope. Display text is never parsed as another action.
                 const resources = response.resources || [];
@@ -382,7 +341,11 @@ function createConciergeEngine() {
                 const assistantMsg: Message = {
                     id: Math.random().toString(36).substring(7),
                     role: 'assistant',
+                    source: response.failed ? undefined : 'model',
+                    status: response.failed === true,
+                    job_id: job?.job_id,
                     content: response.content,
+                    historyContent: response.historyContent,
                     timestamp: new Date().getTime(),
                     resources: resources.length > 0 ? resources : undefined
                 };
@@ -392,7 +355,8 @@ function createConciergeEngine() {
                         ...s,
                         messages: [...s.messages, assistantMsg],
                         isThinking: false,
-                        lastExtractedData: extractedDataFromResponse
+                        lastExtractedData: extractedDataFromResponse,
+                        writingJob: job && !response.failed ? {...job,current_draft:response.content,current_draft_source:'proposed' as const} : job
                     };
                     return newState;
                 });
@@ -444,7 +408,7 @@ function createConciergeEngine() {
 
         clearHistory: () => {
             conversationEpoch++; // a reply from the conversation being cleared stays with that conversation
-            update(s => ({ ...s, messages: [], lastExtractedData: null, isThinking: false }));
+            update(s => ({ ...s, messages: [], writingJob: undefined, writingJobSource: undefined, lastExtractedData: null, isThinking: false }));
             updateInitialGreeting();
         },
 

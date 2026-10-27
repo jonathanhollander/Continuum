@@ -6,13 +6,15 @@
         Feather,
     } from "lucide-svelte";
     import { aiDraftLetter, aiSoftenLetter } from "$lib/services/writerService";
+    import { type AIWritingJob } from "$lib/services/aiCapabilities";
     import { auth } from "$lib/stores/auth";
     import { captureSession, isCurrentSession, type SessionOwnership } from "$lib/services/sessionOwnership";
     import { onDestroy } from "svelte";
 
-    let { currentContent = "", onupdate } = $props<{
+    let { currentContent = "", onupdate, job } = $props<{
         currentContent?: string;
         onupdate?: (content: string) => void;
+        job?: AIWritingJob;
     }>();
 
     let isProcessing = $state(false);
@@ -31,7 +33,17 @@
     let requestVersion = 0;
     let suggestionOwner: SessionOwnership | null = null;
     let suggestionSource: string | null = null;
-    const sourceFingerprint = () => JSON.stringify([mode, currentContent, bullets]);
+    const sourceFingerprint = () => JSON.stringify([mode, currentContent, bullets, sentimentValue, job]);
+    let observedSource = $state("");
+    $effect(() => {
+        const source = sourceFingerprint();
+        if (source !== observedSource) {
+            observedSource = source;
+            requestVersion++;
+            isProcessing = false;
+            discardSuggestion();
+        }
+    });
     function discardSuggestion() {
         suggestionOwner = null;
         suggestionSource = null;
@@ -82,12 +94,12 @@
 
     function handleDraft() {
         if (bullets.every((b) => !b.trim())) return;
-        ask(() => aiDraftLetter(bullets));
+        ask(() => aiDraftLetter(bullets, { ...job, current_draft: currentContent }));
     }
 
     function handleRefine() {
         if (!currentContent.trim()) return;
-        ask(() => aiSoftenLetter(currentContent, sentimentValue));
+        ask(() => aiSoftenLetter(currentContent, sentimentValue, job));
     }
 
     function useSuggestion() {

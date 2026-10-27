@@ -354,12 +354,7 @@
     <!-- AI Concierge Drafting Assistant -->
     <AIPromptBar
         context="advanced-registry"
-        prompts={[
-            "What details belong in a record of a home or car purchase?",
-            "Help me plan a yearly home maintenance schedule...",
-            "How does an executor follow up on an open insurance claim?",
-            "Write instructions for managing my digital accounts..."
-        ]}
+        promptSource="routes/modules/advanced-registry/+page.svelte:prompts"
     />
 
     <!-- Tabs -->
