@@ -93,7 +93,7 @@ class Settings(BaseSettings):
     SMTP_PORT: int = 587
     SMTP_USERNAME: Optional[str] = None
     SMTP_PASSWORD: Optional[str] = None
-    SMTP_FROM_EMAIL: str = "noreply@continuum.im"
+    SMTP_FROM_EMAIL: str = "noreply@continuum.estate"
     SMTP_FROM_NAME: str = "Continuum Pulse"
     SMTP_USE_TLS: bool = True
 
