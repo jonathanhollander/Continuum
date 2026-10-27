@@ -32,7 +32,6 @@
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
     import RefreshControl from "$lib/components/ui/RefreshControl.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
-    import { REFLECTION_POOLS } from "$lib/data/reflectionPools"; // NEW IMPORT
 
     // The page opens its budget tab from the last step.
     export let onOpenBudget: (() => void) | undefined = undefined;
@@ -65,20 +64,20 @@
 
     onMount(() => observeAIConfig({purpose:'writer.rewrite_text',variant:'funeral'}));
     $: configuredStarters = (aiAssets({purpose:'writer.rewrite_text',variant:'funeral'}, $aiRuntimeAssets)['lib/data/funeralTraditions.ts:smartTextareaPrompts'] as Record<string,Record<string,string[]>> | undefined)?.[wishes.religiousTradition || 'secular'];
-    // Dynamic Questions State
-    let questions = {
-        foundation: REFLECTION_POOLS.funeral.foundation[0],
-        atmosphere: REFLECTION_POOLS.funeral.atmosphere[0],
-        legacy: REFLECTION_POOLS.funeral.legacy[0],
-    };
-
-    function refreshQuestion(category: "foundation" | "atmosphere" | "legacy") {
-        const pool = REFLECTION_POOLS.funeral[category];
-        let newQ;
-        do {
-            newQ = pool[Math.floor(Math.random() * pool.length)];
-        } while (newQ === questions[category] && pool.length > 1);
-        questions = { ...questions, [category]: newQ };
+    // Display and send the same selected question from the registered runtime pool.
+    $: configuredQuestions = aiAssets({purpose:'writer.rewrite_text',variant:'funeral'}, $aiRuntimeAssets)['lib/data/reflectionPools.ts:funeral'] as Record<string,string[]> | undefined;
+    let questions = { foundation: '', atmosphere: '', legacy: '' };
+    $: if (configuredQuestions) {
+        for (const category of ['foundation','atmosphere','legacy'] as const) {
+            if (!questions[category] && configuredQuestions[category]?.length) questions = {...questions,[category]:configuredQuestions[category][0]};
+        }
+    }
+    function refreshQuestion(category: 'foundation' | 'atmosphere' | 'legacy') {
+        const pool = assetStrings(configuredQuestions?.[category]);
+        if (!pool.length) return;
+        const choices = pool.filter(question => question !== questions[category]);
+        const next = choices.length ? choices : pool;
+        questions = {...questions,[category]:next[Math.floor(Math.random()*next.length)]};
     }
 
     // Apply a change to the draft (never to the saved data) and queue a save.
@@ -313,6 +312,7 @@
                         label="Core Values & Wishes"
                         context="funeral"
                         placeholder={questions.foundation}
+                        question={questions.foundation}
                         suggestions={assetStrings(configuredStarters?.foundation)}
                         value={wishes.ceremonyDetails?.type || ""}
                         onchange={(v) =>
@@ -528,6 +528,7 @@
                         label="Vibe & Atmosphere"
                         context="funeral"
                         placeholder={questions.atmosphere}
+                        question={questions.atmosphere}
                         suggestions={assetStrings(configuredStarters?.atmosphere)}
                         value={wishes.mood || ""}
                         onchange={(v) => updateField(["mood"], v)}
@@ -638,6 +639,7 @@
                         label="Obituary Notes & Life Story"
                         context="funeral"
                         placeholder={questions.legacy}
+                        question={questions.legacy}
                         suggestions={assetStrings(configuredStarters?.legacy)}
                         value={wishes.legacy?.obituaryNotes || ""}
                         onchange={(v) =>

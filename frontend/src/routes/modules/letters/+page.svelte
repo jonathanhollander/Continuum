@@ -143,7 +143,7 @@
                 ...details,
                 title: `${title} (${new Date().toLocaleDateString()})`,
                 date: new Date().toLocaleDateString(),
-                type: emotionalFlow ? "emotional" : "transactional",
+                type: currentLetterType(),
             } as Letter, false, false, saveToVault);
 
         activityLog.logEvent({
@@ -161,6 +161,11 @@
         } catch {
             // The manager already showed the one gentle message; the draft stays on screen.
         }
+    }
+
+    function currentLetterType(): string {
+        if (editingId !== null) return savedLetters.find(letter => String(letter.id) === String(editingId))?.type ?? 'emotional';
+        return selectedTemplate && !emotionalFlow ? 'transactional' : 'emotional';
     }
 
     function letterTitle() {
@@ -233,6 +238,10 @@
     function clearLetterDetails() {
         selectionVersion++;
         writingDraft = {};
+        generatedLetter = "";
+        reflections = ["", "", ""];
+        reflectionQuestions = ["", "", ""];
+        currentQuestion = "";
         editingId = null;
         letterRecipientId = "";
         recordedRecipientName = "";
@@ -242,6 +251,9 @@
         letterTriggerMilestone = "";
         letterHold = false;
         customAttributes = {};
+        templateVariables = {};
+        detectedVariables = [];
+        filledFromProfile = false;
     }
 
     function resetSelection() {
@@ -274,7 +286,9 @@
     }
 
     function viewLetter(letter: Letter) {
-        selectionVersion++;
+        clearLetterDetails();
+        emotionalFlow = null;
+        selectedTemplate = null;
         generatedLetter = letter.content;
         editingId = letter.id;
         recordedRecipientName = letter.recipientName ?? "";
@@ -323,6 +337,11 @@
     let emotionalFlow = $state<"spouse" | "ethical_will" | null>(null);
     // One answer per interview step, in the order the steps are asked (see REFLECTION_POOLS.letters).
     let reflections = $state(["", "", ""]);
+    let reflectionQuestions = $state(["", "", ""]);
+    function recordReflection(answer: string) {
+        reflections[currentPromptIndex] = answer;
+        reflectionQuestions[currentPromptIndex] = currentQuestion;
+    }
     let currentPromptIndex = $state(0);
     let currentSuggestions = $derived(
         emotionalFlow
@@ -387,15 +406,21 @@
         return { job_id: aiJobId('letter', writingDraft, editingId), document_type: emotionalFlow || selectedTemplate?.category || 'letter',
             document_title: editingId !== null ? savedLetters.find((letter) => String(letter.id) === String(editingId))?.title : selectedTemplate?.title,
             current_draft: generatedLetter, recipient_name: recipient.recipientName, recipient_relationship: person?.relation,
-            notes: [...reflections], source_facts: aiSourceFacts({ ...templateVariables, reflection_1: reflections[0], reflection_2: reflections[1], reflection_3: reflections[2], signature: $estateProfile.ownerName }) };
+            notes: [...reflections],
+            field_label: mode === 'emotional_interview' ? currentQuestion : 'Your letter',
+            field_question: mode === 'emotional_interview' ? currentQuestion : '',
+            question_answers: reflections.flatMap((answer, index) => answer.trim() && reflectionQuestions[index]
+                ? [JSON.stringify({question:reflectionQuestions[index],answer})] : []),
+            source_facts: aiSourceFacts({ ...templateVariables, signature: $estateProfile.ownerName }) };
     };
-    $effect(() => { $auth; mode; writingJob().job_id; return registerAIJob(() => mode === 'menu' ? undefined : writingJob()); });
+    const retainedWritingJob = (): AIWritingJob | undefined => editingId !== null || generatedLetter.trim() || reflections.some(answer => answer.trim()) || selectedTemplate || emotionalFlow
+        ? writingJob() : undefined;
+    $effect(() => { $auth; mode; writingJob().job_id; return registerAIJob(() => mode === 'menu' ? retainedWritingJob() : writingJob()); });
 
     let editorReadState = $derived(letterReadState({
         ...recipientDetails(),
         content: generatedLetter,
-        type: editingId !== null ? savedLetters.find((letter) => String(letter.id) === String(editingId))?.type
-            : emotionalFlow ? "emotional" : "transactional",
+        type: currentLetterType(),
         isLocked: letterHold,
     }, contacts));
 
@@ -416,6 +441,19 @@
         currentPromptIndex = 0;
         reflections = ["", "", ""];
         refreshQuestion();
+    }
+
+    async function useAssistantDraft(text: string, ownsResult: () => boolean) {
+        const owner = captureSession(), version = selectionVersion;
+        const source = JSON.stringify(retainedWritingJob());
+        if (!ownsResult() || !ownsSelection(owner, version)) return;
+        if (generatedLetter.trim() && generatedLetter !== text && !(await askConfirm('Use this version in your letter editor?', 'Use this version'))) return;
+        if (!ownsResult() || !ownsSelection(owner, version) || source !== JSON.stringify(retainedWritingJob())) return;
+        generatedLetter = text;
+        mode = 'review';
+        await tick();
+        if (!isCurrentSession(owner)) return;
+        document.querySelector<HTMLTextAreaElement>('[data-letter-editor] textarea')?.focus({preventScroll:true});
     }
 
     // Template fields the Estate Profile can fill.
@@ -693,6 +731,8 @@
         <!-- AI Concierge Drafting Assistant -->
         <AIPromptBar
             context="letters"
+            job={retainedWritingJob()}
+            onUseDraft={useAssistantDraft}
             promptSource="routes/modules/letters/+page.svelte:prompts"
         />
 
@@ -1457,6 +1497,8 @@
                             job={{ ...writingJob(), job_id: `${writingJob().job_id}:reflection:${currentPromptIndex}` }}
                             context="letter"
                             label={currentQuestion}
+                            question={currentQuestion}
+                            oninput={recordReflection}
                             hideLabel
                             minimal={true}
                             minHeight="16rem"

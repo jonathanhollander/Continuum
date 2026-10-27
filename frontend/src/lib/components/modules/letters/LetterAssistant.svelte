@@ -6,7 +6,7 @@
         Feather,
     } from "lucide-svelte";
     import { aiDraftLetter, aiSoftenLetter } from "$lib/services/writerService";
-    import { type AIWritingJob } from "$lib/services/aiCapabilities";
+    import { aiRuntimeAssets, aiAssets, assetStrings, observeAIConfig, loadAIConfig, type AIWritingJob } from "$lib/services/aiCapabilities";
     import { auth } from "$lib/stores/auth";
     import { captureSession, isCurrentSession, type SessionOwnership } from "$lib/services/sessionOwnership";
     import { onDestroy } from "svelte";
@@ -22,6 +22,13 @@
 
     // Draft Mode
     let bullets = $state(["", "", ""]);
+    const bulletQuestions = $derived(assetStrings(aiAssets({purpose:'letter.draft'}, $aiRuntimeAssets)['lib/components/modules/letters/LetterAssistant.svelte:bullet_questions']));
+    $effect(() => observeAIConfig({purpose:'letter.draft'}));
+    function retryQuestions() { void loadAIConfig({purpose:'letter.draft'}, true).catch(() => {}); }
+    const draftingJob = (): AIWritingJob => ({ ...job, current_draft: currentContent,
+        field_label: 'Bullets to Narrative',
+        question_answers: [...(job?.question_answers ?? []), ...bullets.flatMap((answer, index) => answer.trim() && bulletQuestions[index]
+            ? [JSON.stringify({question:bulletQuestions[index],answer})] : [])] });
 
     // Refine Mode
     let sentimentValue = $state(50); // 0 = Direct, 100 = Poetic/Soft
@@ -33,7 +40,7 @@
     let requestVersion = 0;
     let suggestionOwner: SessionOwnership | null = null;
     let suggestionSource: string | null = null;
-    const sourceFingerprint = () => JSON.stringify([mode, currentContent, bullets, sentimentValue, job]);
+    const sourceFingerprint = () => JSON.stringify([mode, currentContent, bullets, sentimentValue, job, bulletQuestions]);
     let observedSource = $state("");
     $effect(() => {
         const source = sourceFingerprint();
@@ -93,8 +100,8 @@
     }
 
     function handleDraft() {
-        if (bullets.every((b) => !b.trim())) return;
-        ask(() => aiDraftLetter(bullets, { ...job, current_draft: currentContent }));
+        if (bullets.every((b) => !b.trim()) || bulletQuestions.length !== 3) return;
+        ask(() => aiDraftLetter(bullets, draftingJob()));
     }
 
     function handleRefine() {
@@ -148,6 +155,7 @@
                 >
                     Bullets to Narrative
                 </p>
+                {#if bulletQuestions.length !== 3}<p class="text-xs text-muted-foreground" role="status">Choose Try Again to load writing questions. <button type="button" class="underline" onclick={retryQuestions}>Try Again</button></p>{/if}
                 <div class="space-y-2">
                     {#each bullets as bullet, i}
                         <div class="flex items-center gap-2">
@@ -158,18 +166,15 @@
                                 type="text"
                                 bind:value={bullets[i]}
                                 class="w-full bg-muted border-none rounded-xl px-4 py-2 text-sm font-medium focus:ring-2 focus:ring-primary/20"
-                                placeholder={i === 0
-                                    ? "Share a specific memory..."
-                                    : i === 1
-                                      ? "What did this teach you?"
-                                      : "Your wish for them..."}
+                                placeholder={bulletQuestions[i] ?? ""}
+                            aria-label={bulletQuestions[i] || `Writing note ${i + 1}`}
                             />
                         </div>
                     {/each}
                 </div>
                 <button
                     onclick={handleDraft}
-                    disabled={isProcessing}
+                    disabled={isProcessing || bulletQuestions.length !== 3}
                     class="w-full py-3 bg-primary text-primary-foreground rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-primary-hover disabled:opacity-50 transition-all"
                 >
                     {#if isProcessing}

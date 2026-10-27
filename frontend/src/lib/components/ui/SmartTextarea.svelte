@@ -32,6 +32,7 @@
         oninput,
         onchange,
         job,
+        question = "",
     } = $props<{
         value?: string;
         placeholder?: string;
@@ -45,6 +46,7 @@
         oninput?: (val: string) => void;
         onchange?: (val: string) => void;
         job?: AIWritingJob;
+        question?: string;
     }>();
 
     const ownId = $props.id();
@@ -68,7 +70,9 @@
     let suggestionOwner: SessionOwnership | null = null;
     let suggestionSource: string | null = null;
 
-    const currentJob = (): AIWritingJob => ({ ...job, job_id: job?.job_id ?? `${context}:${ownId}`, document_type: job?.document_type ?? context, current_draft: value });
+    const currentJob = (): AIWritingJob => ({ ...job, job_id: job?.job_id ?? `${context}:${ownId}`, document_type: job?.document_type ?? context, current_draft: value,
+        field_label: label || Array.from(textareaEl?.labels ?? []).map(item => item.textContent?.trim() ?? "").filter(Boolean).join(" "),
+        field_question: question || placeholder });
     const sourceFingerprint = () => JSON.stringify([context, mode, value, bullets, sentimentValue, currentJob()]);
     let observedSource = $state("");
     $effect(() => {
@@ -181,7 +185,8 @@
         sentimentValue = 50;
     }
 
-    function handleInput() {
+    function handleInput(event: Event) {
+        value = (event.currentTarget as HTMLTextAreaElement).value;
         oninput?.(value);
     }
 
