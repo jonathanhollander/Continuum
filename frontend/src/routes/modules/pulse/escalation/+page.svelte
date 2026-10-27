@@ -18,8 +18,10 @@
 
     <div class="bg-background/30 p-6 rounded-2xl border border-slate-800">
         <p class="text-muted-foreground mb-6 max-w-2xl">
-            Choose how long Continuum waits before reaching out to each group of
-            your guardians.
+            Choose the wait for each alert tier. Tier 1's wait starts after your check-in interval
+            and grace period. Each later tier's wait starts when the previous tier is reached.
+            A personal wait replaces that person's tier wait, from the same starting point.
+            An explicit Pulse tier takes precedence over the call order in Family &amp; Contacts.
         </p>
         <PulseContactsManager
             userId={1}
