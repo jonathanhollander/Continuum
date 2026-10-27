@@ -39,7 +39,7 @@
     type Subscription = {
         id: string;
         name: string;
-        cost: number;
+        cost: number | null;
         cycle: "Monthly" | "Yearly";
         paymentMethod: string;
         nextBilling: string;
@@ -153,7 +153,7 @@
         const ownerName = $estateProfile.ownerName || "User";
         const id = form.id;
         const payload = {
-            name: form.name, cost: Number(form.cost) || 0, cycle: form.cycle || "Monthly",
+            name: form.name, cost: form.cost == null || String(form.cost).trim() === '' ? null : Number(form.cost), cycle: form.cycle || "Monthly",
             paymentMethod: form.paymentMethod || "", nextBilling: form.nextBilling || "",
             difficulty: form.difficulty || "Medium", cancellationInstructions: form.cancellationInstructions || "",
             loginUrl: form.loginUrl || "", notes: form.notes || "", auto_renew: !isClosed(form),
@@ -363,9 +363,11 @@
     }
 
     // Derived stats
-    let totals = $derived(subscriptionAmounts(activeSubscriptions));
-    let totalMonthly = $derived(totals.monthly);
-    let totalYearly = $derived(totals.yearly);
+    let recordedSubscriptions = $derived(activeSubscriptions.filter((s) => s.cost != null && Number.isFinite(s.cost)));
+    let totals = $derived(subscriptionAmounts(recordedSubscriptions));
+    let unknownTotals = $derived(activeSubscriptions.length > 0 && recordedSubscriptions.length === 0);
+    let totalMonthly = $derived(unknownTotals ? null : totals.monthly);
+    let totalYearly = $derived(unknownTotals ? null : totals.yearly);
 </script>
 
 <LivingBlueprintHeader
@@ -446,11 +448,12 @@
                 <div
                     class="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1"
                 >
-                    Monthly total
+                    Recorded monthly equivalent
                 </div>
                 <div class="text-2xl font-bold text-foreground">
-                    {formatMoney(totalMonthly)}
+                    {totalMonthly == null ? "Not recorded" : formatMoney(totalMonthly)}
                 </div>
+                <p class="mt-2 text-xs text-muted-foreground">{recordedSubscriptions.length} of {activeSubscriptions.length} amounts recorded</p>
             </div>
             <div
                 class="bg-card p-5 rounded-2xl border border-border shadow-sm"
@@ -458,11 +461,12 @@
                 <div
                     class="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1"
                 >
-                    Annual Impact
+                    Recorded annual cost
                 </div>
                 <div class="text-2xl font-bold text-foreground">
-                    {formatMoney(totalYearly)}
+                    {totalYearly == null ? "Not recorded" : formatMoney(totalYearly)}
                 </div>
+                <p class="mt-2 text-xs text-muted-foreground">{recordedSubscriptions.length} of {activeSubscriptions.length} amounts recorded</p>
             </div>
             <div
                 class="bg-background p-5 rounded-2xl border border-border shadow-sm flex items-center gap-4"
@@ -577,7 +581,7 @@
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 text-sm text-muted-foreground font-medium">
-                                        {formatMoney(sub.cost)}
+                                        {sub.cost == null ? "Not recorded" : formatMoney(sub.cost)}
                                     </td>
                                     <td class="px-4 py-3 text-sm text-muted-foreground">{sub.cycle}</td>
                                     <td class="px-4 py-3">

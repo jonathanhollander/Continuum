@@ -7,7 +7,7 @@ export interface InsurancePolicy {
     insuranceType: 'Life' | 'Health' | 'Auto' | 'Home' | 'Disability' | 'Other';
     insurer: string;
     policyNumber: string;
-    premiumAmount: number;
+    premiumAmount: number | null;
     premiumFrequency: 'Monthly' | 'Quarterly' | 'Annually';
     beneficiaries: string;
     agentName: string;
@@ -48,8 +48,9 @@ const insuranceMapper = (item: any) => {
         insurer: out.insurer ?? '',
         insuranceType: pageSpelling(out.insuranceType ?? 'Other', TYPES),
         policyNumber: out.policyNumber ?? '',
-        // A row sent through the API can hold "120"; the totals add it as a number.
-        premiumAmount: Number(out.premiumAmount) || 0,
+        // Blank amounts stay unknown; an explicitly recorded zero stays zero.
+        premiumAmount: out.premiumAmount == null || String(out.premiumAmount).trim() === ''
+            ? null : Number(out.premiumAmount),
         premiumFrequency: pageSpelling(out.premiumFrequency ?? 'Monthly', FREQUENCIES, { annual: 'Annually', yearly: 'Annually' }),
         agentName: out.agentName ?? '',
         agentContact: out.agentContact ?? '',
@@ -78,9 +79,14 @@ export const insuranceStore = {
     getTotalPremiums: () => {
         let monthlyTotal = 0;
         let annualTotal = 0;
+        let eligible = 0;
+        let recorded = 0;
 
         insuranceSync.items.forEach(policy => {
             if (policy.status === 'Active') {
+                eligible++;
+                if (policy.premiumAmount == null || !Number.isFinite(policy.premiumAmount)) return;
+                recorded++;
                 if (policy.premiumFrequency === 'Monthly') {
                     monthlyTotal += policy.premiumAmount;
                     annualTotal += policy.premiumAmount * 12;
@@ -94,7 +100,8 @@ export const insuranceStore = {
             }
         });
 
-        return { monthly: monthlyTotal, annual: annualTotal };
+        const unknown = eligible > 0 && recorded === 0;
+        return { monthly: unknown ? null : monthlyTotal, annual: unknown ? null : annualTotal, recorded, eligible };
     },
     // Store Compatibility
     subscribe: insuranceSync.subscribe.bind(insuranceSync)

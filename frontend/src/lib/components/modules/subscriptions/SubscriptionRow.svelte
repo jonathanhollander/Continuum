@@ -77,7 +77,7 @@
         <div class="flex items-center gap-6">
             <div class="text-right hidden sm:block">
                 <div class="font-bold text-foreground">
-                    {formatMoney(sub.cost)}
+                    {sub.cost == null ? "Not recorded" : formatMoney(sub.cost)}
                 </div>
                 <div class="text-xs text-muted-foreground uppercase tracking-wide">
                     /{sub.cycle}

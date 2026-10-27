@@ -321,7 +321,7 @@
         const fields = JSON.stringify([form, parsedCustomAttributes]);
         const id = isEditing ? form.id : undefined;
         const ownerName = estateProfile.current.ownerName || "User";
-        const policyData = { ...form, custom_attributes: JSON.stringify(parsedCustomAttributes) };
+        const policyData = { ...form, premiumAmount: form.premiumAmount ?? null, custom_attributes: JSON.stringify(parsedCustomAttributes) };
         const oldPolicy = id ? insuranceStore.getPolicy(id) : undefined;
         const changes = oldPolicy ? (["policyName", "premiumAmount", "status"] as const)
             .filter((field) => oldPolicy[field] !== form[field])
@@ -480,11 +480,12 @@
             <p
                 class="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1"
             >
-                Total Premiums
+                Recorded annual premiums
             </p>
             <p class="text-3xl font-black text-foreground tracking-tight">
-                {formatMoney(stats.annual)}
+                {stats.annual == null ? "Not recorded" : formatMoney(stats.annual)}
             </p>
+            <p class="mt-2 text-xs text-muted-foreground">{stats.recorded} of {stats.eligible} amounts recorded</p>
         </div>
 
         <div
@@ -505,11 +506,12 @@
             <p
                 class="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1"
             >
-                Monthly Average
+                Recorded monthly equivalent
             </p>
             <p class="text-3xl font-black text-foreground tracking-tight">
-                {formatMoney(stats.monthly)}
+                {stats.monthly == null ? "Not recorded" : formatMoney(stats.monthly)}
             </p>
+            <p class="mt-2 text-xs text-muted-foreground">{stats.recorded} of {stats.eligible} amounts recorded</p>
         </div>
 
         <div

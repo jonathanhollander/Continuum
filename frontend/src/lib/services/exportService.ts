@@ -291,10 +291,13 @@ const assetCategoryTotals = (rows: any[]): PacketField[] => [
 const subscriptionClosed = (r: any) => r.auto_renew === false || r.autoRenew === false;
 const subscriptionTotals = (rows: any[]): PacketField[] => {
     const open = rows.filter((r) => !subscriptionClosed(r));
-    const totals = subscriptionAmounts(open);
+    const recorded = open.filter((r) => has(r.cost) && Number.isFinite(Number(r.cost)));
+    const totals = subscriptionAmounts(recorded);
+    const unknown = open.length > 0 && recorded.length === 0;
     return [
-        { label: 'Monthly total', value: money(totals.monthly) },
-        { label: 'Yearly total', value: money(totals.yearly) }
+        { label: 'Recorded monthly equivalent', value: unknown ? 'Not recorded' : money(totals.monthly) },
+        { label: 'Recorded annual cost', value: unknown ? 'Not recorded' : money(totals.yearly) },
+        { label: 'Amounts recorded', value: `${recorded.length} of ${open.length}` }
     ];
 };
 
@@ -390,7 +393,7 @@ const SECTIONS: SectionDef[] = [
         name: (r) => r.policy_name,
         fields: [
             ['insurance_type', 'Type'], ['insurer', 'Insurer'], ['policy_number', 'Policy number'],
-            [(r) => (has(r.premium_amount) && Number(r.premium_amount) !== 0 ? `${money(r.premium_amount)}${r.premium_frequency ? ` ${String(r.premium_frequency).toLowerCase()}` : ''}` : ''), 'Premium'],
+            [(r) => (has(r.premium_amount) ? `${money(r.premium_amount)}${r.premium_frequency ? ` ${String(r.premium_frequency).toLowerCase()}` : ''}` : 'Not recorded'), 'Premium'],
             ['beneficiaries', 'Beneficiaries'], ['agent_name', 'Agent'], ['agent_contact', 'Agent contact'],
             ['expiration_date', 'Expires', { fmt: dateWords }], ['status', 'Status', { fmt: words }],
             ['claims_procedure', 'How to claim', { long: true }], ['notes', 'Notes', { long: true }]
@@ -578,12 +581,12 @@ const SECTIONS: SectionDef[] = [
         key: 'subscriptions', source: 'subscriptions', title: 'Recurring services',
         name: (r) => r.name,
         fields: [
-            ['cost', 'Cost', { money: true }], [(r) => subscriptionCycle(r.cycle, r.frequency), 'Billed'], ['paymentMethod', 'Paid with'],
+            [(r) => has(r.cost) ? money(r.cost) : 'Not recorded', 'Cost'], [(r) => subscriptionCycle(r.cycle, r.frequency), 'Billed'], ['paymentMethod', 'Paid with'],
             ['nextBilling', 'Next billing'], ['loginUrl', 'Login address'],
             ['cancellationInstructions', 'How to cancel', { long: true }], ['notes', 'Notes', { long: true }],
             [(r) => (subscriptionClosed(r) ? 'Closed' : ''), 'Status']
         ],
-        consumed: ['cycle', 'frequency', 'auto_renew', 'autoRenew', 'renewal_date', 'difficulty'],
+        consumed: ['cost', 'cycle', 'frequency', 'auto_renew', 'autoRenew', 'renewal_date', 'difficulty'],
         summary: subscriptionTotals
     },
     {
