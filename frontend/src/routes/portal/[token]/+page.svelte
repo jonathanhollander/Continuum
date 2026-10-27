@@ -175,7 +175,7 @@
 
         {#if data.last_checkin}
           <div>
-            <p class="text-muted-foreground text-sm mb-1">LAST RECORDED OWNER CHECK-IN</p>
+            <p class="text-muted-foreground text-sm mb-1">{data.checkins_began ? "CHECK-INS BEGAN" : "LAST RECORDED OWNER CHECK-IN"}</p>
             <p class="text-2xl font-mono text-foreground">
               {parseUtc(data.last_checkin).toLocaleString()}
             </p>

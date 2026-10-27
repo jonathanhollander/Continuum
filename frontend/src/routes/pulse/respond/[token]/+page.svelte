@@ -158,7 +158,7 @@
                                     class="text-sm text-muted-foreground mt-1 leading-relaxed"
                                 >
                                     {#if state.data.last_checkin}
-                                        {state.data.user_name}'s last check-in was {parseUtc(
+                                        {state.data.user_name}'s {state.data.checkins_began ? "check-ins began on" : "last check-in was"} {parseUtc(
                                             state.data.last_checkin,
                                         ).toLocaleDateString()} at {parseUtc(
                                             state.data.last_checkin,

@@ -20,7 +20,7 @@
 {% if last_checkin_date %}
 <p><strong>Timeline:</strong></p>
 <ul style="color: #475569; margin: 16px 0;">
-    <li>Last check-in: {{ last_checkin_date }}</li>
+    <li>{% if checkins_began %}Check-ins began{% else %}Last check-in{% endif %}: {{ last_checkin_date }}</li>
     <li>This note was sent: {{ escalation_date }}</li>
 </ul>
 {% endif %}

@@ -22,7 +22,7 @@
 <p><strong>In the Guardian Portal you'll find:</strong></p>
 <ul style="color: #475569; margin: 16px 0;">
     <li>Their current check-in status</li>
-    {% if has_last_checkin %}<li>When {{ user_name }} last checked in</li>{% endif %}
+    {% if has_last_checkin %}<li>{% if checkins_began %}When {{ user_name }}'s check-ins began{% else %}When {{ user_name }} last checked in{% endif %}</li>{% endif %}
     {% if has_owner_phone %}<li>The phone number {{ user_name }} saved for you</li>{% endif %}
     {% if has_owner_messages %}<li>Messages {{ user_name }} wrote for you</li>{% endif %}
     {% for name in available_vault_names %}<li>Shared vault note: {{ name }}</li>{% endfor %}

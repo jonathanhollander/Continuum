@@ -28,13 +28,9 @@ def _check_directive(data: dict, existing: Optional[MedicalDirective] = None) ->
 # --- Medical Profile ---
 @router.get("/profile", response_model=MedicalProfile, summary="Get medical profile", description="Retrieves the user's core medical information (blood type, organ donor status, allergies).")
 def get_medical_profile(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
-    profile = session.get(MedicalProfile, user.id)
-    if not profile:
-        profile = MedicalProfile(user_id=user.id)
-        session.add(profile)
-        session.commit()
-        session.refresh(profile)
-    return profile
+    # A read never writes: with no saved row, return the defaults unsaved (as /api/pulse/settings
+    # does). The row is created when the person saves their profile.
+    return session.get(MedicalProfile, user.id) or MedicalProfile(user_id=user.id)
 
 @router.post("/profile", response_model=MedicalProfile)
 @router.put("/profile", response_model=MedicalProfile)

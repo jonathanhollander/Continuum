@@ -371,6 +371,7 @@ def tier_alert_context(session: Session, contact: PulseContact, tier_number: int
         context.update({
             "available_vault_names": [item.name for item in shared],
             "has_last_checkin": bool(view.get("last_checkin")),
+            "checkins_began": bool(view.get("checkins_began")),
             "has_owner_phone": bool(view.get("user_phone")),
             "has_owner_messages": bool(view.get("notes")),
         })
@@ -379,6 +380,7 @@ def tier_alert_context(session: Session, contact: PulseContact, tier_number: int
         if last_checkin:
             context.update({
                 "last_checkin_date": last_checkin.timestamp.strftime("%B %d, %Y at %I:%M %p UTC"),
+                "checkins_began": last_checkin.method == "pulse_enabled",
                 "escalation_date": utc_now().strftime("%B %d, %Y at %I:%M %p UTC")
             })
     return context
@@ -567,9 +569,11 @@ def send_individual_alerts(session: Session, user_id: int, since: datetime,
 
 
 def contact_reach(session: Session, contact: PulseContact) -> Optional[int]:
-    """Up to which tier this guardian's portal opens the owner's notes in this outage, or None.
-    Open once the outage has reached their tier, or once they were sent their own tier alert
-    (a guardian with an individual wait can be told before or after the tier itself)."""
+    """Up to which tier this guardian's portal opens the owner's released vault notes and
+    sensitive details in this outage, or None. Open once the outage has reached their tier, or
+    once they were sent their own tier alert (a guardian with an individual wait can be told
+    before or after the tier itself). The owner's Pulse messages to this guardian are shown at
+    all times (owner_notes), as the owner's Messages page says."""
     tier_number = pulse_tier_number(session, contact)
     if tier_number is None:
         return None
@@ -631,6 +635,8 @@ def guardian_portal_view(session: Session, contact: PulseContact) -> dict:
         "user_phone": owner_phone(session, contact.user_id),
         "user_status": "active" if last and utc_now() < last.timestamp + timedelta(days=frequency) else "grace",
         "last_checkin": _utc_string(last.timestamp) if last else None,
+        # Switching Pulse on starts the clock (routers.pulse.PULSE_ENABLED_METHOD); say so, not "last check-in"
+        "checkins_began": bool(last and last.method == "pulse_enabled"),
         "show_sensitive": sensitive,
         "sensitive_data": {"medical_proxy": "Active" if sensitive else "Locked", "safe_pass": sensitive},
         "notes": [{"message": note.message, "sent_at": _utc_string(note.sent_at)}
