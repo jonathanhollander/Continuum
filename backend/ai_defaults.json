@@ -1507,16 +1507,12 @@
     {
       "key": "lib/data/reflectionPools.ts:funeral",
       "label": "Funeral reflection questions",
-      "purpose": "writer.draft_text",
+      "purpose": "writer.rewrite_text",
       "variant": "funeral",
       "surface": "lib/data/reflectionPools.ts",
       "kind": "object",
       "placeholders": [],
       "consumers": [
-        {
-          "purpose": "writer.draft_text",
-          "variant": "funeral"
-        },
         {
           "purpose": "writer.rewrite_text",
           "variant": "funeral"
