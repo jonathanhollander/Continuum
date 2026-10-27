@@ -20,32 +20,32 @@
 export const marketing2Dictionary = {
     en: {
         // Section 1: The Shoebox
-        heroLine1: "Your parents had a shoebox",
-        heroLine2: "under the bed.",
-        heroLine3: "You have Continuum.",
+        heroLine1: "Your records and memories,",
+        heroLine2: "in your own words.",
+        heroLine3: "Ready to share with care.",
         heroDesc: "A calm place to organize your life for the people you love.",
 
         // Section 1.5: The Kitchen Story (emotional contrast)
-        kitchenTitle: "Picture the kitchen.",
-        kitchenDesc: "After they're gone, you're standing in their kitchen. Searching. Which drawer has the insurance papers? Who was their accountant? Did they want to be cremated? The kettle boils. You find yourself wondering where they kept the tea.",
-        kitchenPunchline: "That feeling? You can spare your family from it.",
+        kitchenTitle: "Help them find a starting point.",
+        kitchenDesc: "Your son may need to find an account, contact an adviser, or locate a signed document. You can record where to look and explain what you want him to know.",
+        kitchenPunchline: "Start with one useful detail. Add the rest over time.",
 
         // Section 2: The Weight
-        weightTitle: "Someday, someone will need to figure out your life.",
-        weightDesc: "Where's the will? What accounts exist? What did you want? They'll be grieving. And searching. You can leave them something better than a drawer full of questions.",
-        weightBridge: "With Continuum, your guidance is there with them when that day comes.",
+        weightTitle: "Leave practical guidance alongside your memories.",
+        weightDesc: "Record accounts and document locations, name the people who can help, and write letters and wishes in your own words.",
+        weightBridge: "Preview the recipient page and download a copy to check what you have prepared.",
 
         // Section 3: The Guide
         guideTitle: "Your guide shows you where to begin.",
-        guideDesc: "Continuum's guide walks beside you—suggesting what might matter, translating the confusing parts, helping you find words for the things that matter most.",
+        guideDesc: "Use prompts and guided forms to record what you know. Optional writing help drafts from the details you provide; you review the words before saving them.",
         guideReassurance: "Begin anywhere, in any order. Gentle guidance, at your pace.",
 
         // Section 4: The Pulse
-        pulseTitle: "Your Pulse carries the difficult conversation for you.",
-        pulseDesc: "Set up your Pulse. Check in every few days—a simple \"I'm here.\" And if the check-ins stop one day, Continuum notices.",
-        pulseHow: "It reaches out to the people you chose. Opens the right doors, at the right time. Your executor receives clarity.",
-        pulseTiers: "Different people see different things, in the order you choose. A trusted friend gets a gentle alert first. Later tiers receive more access. You decide who gets what.",
-        pulseGift: "You already took care of them. This was your final gift.",
+        pulseTitle: "Optional check-ins with Pulse.",
+        pulseDesc: "Configure a check-in schedule, alert contacts, and escalation tiers. Missed check-ins follow the settings you save.",
+        pulseHow: "Pulse can alert the contacts you configure. Vault release applies only to the items and recipients you explicitly configure for release.",
+        pulseTiers: "Review each contact’s displayed notification tier and your escalation settings. Share the recipient page separately after checking its preview.",
+        pulseGift: "Review your settings and contact details as your circumstances change.",
 
         // Section 5: The Distinction
         distinctionTitle: "Made to work alongside your lawyer and advisors.",
@@ -54,21 +54,21 @@ export const marketing2Dictionary = {
         distinctionTagline: "They create the plan. We help your family find it, understand it, and use it.",
 
         // Section 5.5: Security
-        securityTitle: "Your life, protected.",
-        securityDesc: "Everything you store in Continuum stays private to your account.",
+        securityTitle: "Your records and sharing choices.",
+        securityDesc: "Record details in your account, then review the recipient page before sharing its link.",
         securityEncryption: "A secure connection",
         securityEncryptionDesc: "Your information travels between your device and Continuum over a secure connection.",
         securityPrivacy: "Kept for your family",
         securityPrivacyDesc: "What you store here is there to help you and the people you choose.",
         securityControl: "You control access",
-        securityControlDesc: "Choose exactly who sees what, and when.",
+        securityControlDesc: "Choose a recipient, preview their page, and manage or revoke their sharing link.",
 
         // Section 6: The Gift
         giftTitle: "What they'll receive",
         giftClarity: "Clarity",
-        giftClarityDesc: "Everything organized. Found when it's needed.",
+        giftClarityDesc: "The records, document locations, and contacts you have saved.",
         giftGuidance: "Guidance",
-        giftGuidanceDesc: "Step-by-step help when they need it most.",
+        giftGuidanceDesc: "Practical checklists and the instructions you have recorded.",
         giftVoice: "Your voice",
         giftVoiceDesc: "Letters, wishes, context—in your words.",
 
@@ -89,37 +89,37 @@ export const marketing2Dictionary = {
         signupEmailPlaceholder: "Your email",
         signupButton: "Continue",
         signupWelcome: "Welcome,",
-        signupNext: "Your space is ready. Take all the time you need.",
-        signupEnter: "Enter Continuum",
+        signupNext: "Continue to set up your account.",
+        signupEnter: "Set up account",
         signupBack: "Return",
 
         // Features page (minimal)
         featuresTitle: "What's inside",
-        featuresIntro: "Continuum has dozens of tools. Start with any one of them. The guide takes you where you need to go.",
+        featuresIntro: "Start with letters, memories, financial records, or handover instructions. Find optional tools in the catalog when they are useful to you.",
         featurePracticalTitle: "The Practical",
         featurePracticalDesc: "Accounts. Documents. Contacts. The things they'll need to find.",
         featurePersonalTitle: "The Personal",
         featurePersonalDesc: "Letters. Heirlooms. Memories. The things that carry meaning.",
         featureProtectiveTitle: "The Protective",
-        featureProtectiveDesc: "Medical wishes. Pet care. The Pulse. Making sure the living are cared for.",
+        featureProtectiveDesc: "Record medical wishes and pet care instructions. Configure optional Pulse check-ins and alerts.",
         featurePreparedTitle: "The Prepared",
-        featurePreparedDesc: "Tools for your executor. A binder they can hold. A system they can trust.",
+        featurePreparedDesc: "Checklists, recipient previews, printable records, and a ZIP download with original attached files.",
 
         // How it works (3 beats)
         howTitle: "How it works",
         howBeat1Title: "You start, wherever feels right.",
-        howBeat1Desc: "The guide asks gentle questions. Suggests what might matter. You go at your own pace.",
+        howBeat1Desc: "Choose a record or letter. Use the prompts if helpful, and leave unknown details for later.",
         howBeat2Title: "You build, over time.",
-        howBeat2Desc: "Documents. Wishes. Letters. Whatever you're ready for. Save anything else for another day.",
-        howBeat3Title: "It opens, when needed.",
-        howBeat3Desc: "Set up your Pulse. Check in now and then. If you stop, it reaches out to the people you trust—and gives them exactly what they need.",
+        howBeat2Desc: "Save and revise your records, attach files, and explain where originals are kept.",
+        howBeat3Title: "Review and share a useful copy.",
+        howBeat3Desc: "Check the recipient preview, manage the sharing link, and download a copy. Optional Pulse alerts and configured vault release have their own settings.",
         howIntro: "Three gentle steps, at your own pace.",
 
         // Feature list items
         practicalItem1: "Financial accounts & policies",
         practicalItem2: "Legal documents & wills",
         practicalItem3: "Key contacts & advisors",
-        practicalItem4: "Home access & passwords",
+        practicalItem4: "Home instructions & recovery locations",
         personalItem1: "Letters for the future",
         personalItem2: "Heirlooms with stories",
         personalItem3: "Photos & memories",
@@ -127,21 +127,21 @@ export const marketing2Dictionary = {
         protectiveItem1: "Medical wishes & directives",
         protectiveItem2: "Pet care instructions",
         protectiveItem3: "The Pulse check-in system",
-        protectiveItem4: "Safety timer for peace of mind",
+        protectiveItem4: "Optional safety timer",
         preparedItem1: "Executor toolkit & checklists",
-        preparedItem2: "The Red Binder (printable backup)",
-        preparedItem3: "QR labels that link to your records",
+        preparedItem2: "Printable records & original-file download",
+        preparedItem3: "QR shortcuts to signed-in pages",
         preparedItem4: "Practice run simulator",
-        featuresMore: "There's more here than you'll ever need. That's the point. Whatever your situation—complicated family, multiple properties, beloved pets, specific wishes—Continuum has a place for it.",
-        featuresMoreSub: "You'll find it when you need it. The guide will take you there.",
+        featuresMore: "Use the sections that fit your situation. Record what is known, what is still missing, and who can help with the next step.",
+        featuresMoreSub: "The catalog keeps additional tools available without requiring you to use every one.",
 
         // SEO
         metaTitle: "Continuum — Organize your life for the people you love",
-        metaDescription: "A calm place to document everything your family will need. Private to your account, and ready when the time comes.",
+        metaDescription: "Record personal messages, practical details, and document locations. Preview the recipient page and download your saved records and attached files.",
         metaTitleFeatures: "What's Inside — Continuum",
         metaDescFeatures: "Explore the tools inside Continuum: practical documents, personal letters, protective systems, and executor preparation.",
         metaTitleHow: "How It Works — Continuum",
-        metaDescHow: "Three gentle steps: start where feels right, build over time, and let it open when needed.",
+        metaDescHow: "Start with one record, save and revise over time, then preview and share a useful copy.",
 
         // Footer
         footerDisclaimer: "Continuum is a documentation and organization tool. For legal, financial, tax or medical advice, a qualified professional can help.",
