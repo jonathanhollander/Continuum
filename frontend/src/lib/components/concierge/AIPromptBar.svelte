@@ -45,7 +45,7 @@
     });
     onDestroy(() => { alive = false; sequence++; });
     $: assets = aiAssets({purpose:'concierge.module_prompt',variant:context}, $aiRuntimeAssets);
-    $: chips = assetStrings(promptSource ? assets[promptSource] : (assets['lib/components/concierge/AIPromptBar.svelte:quickPrompts'] as Record<string, unknown> | undefined)?.[context]);
+    $: chips = promptPoolSource ? [] : assetStrings(promptSource ? assets[promptSource] : (assets['lib/components/concierge/AIPromptBar.svelte:quickPrompts'] as Record<string, unknown> | undefined)?.[context]);
     $: pool = assetStrings(promptPoolSource ? assets[promptPoolSource] : []);
     $: poolIdeas = pickIdeas(pool);
     function pickIdeas(values: string[], current: string[] = []): string[] {

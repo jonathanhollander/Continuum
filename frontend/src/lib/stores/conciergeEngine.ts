@@ -304,7 +304,7 @@ function createConciergeEngine() {
             const activeJob: AIWritingJob | undefined = selectedJob ? {...JSON.parse(JSON.stringify(selectedJob)),current_draft_source:selectedJob.current_draft_source ?? 'edited'} : undefined;
             const jobSource = JSON.stringify(selectedJob);
             const job = activeJob && jobSource !== before.writingJobSource
-                ? {...activeJob,job_brief:activeJob.job_brief ?? content}
+                ? {...activeJob,job_brief:activeJob.job_brief ?? (activeJob.job_id === before.writingJob?.job_id ? before.writingJob?.job_brief : undefined) ?? content}
                 : before.writingJob ?? activeJob;
             const userMsg: Message = {
                 id: Math.random().toString(36).substring(7),
