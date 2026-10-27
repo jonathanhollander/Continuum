@@ -10,6 +10,16 @@ Improve every page's useful content and align each AI interaction with the actua
 
 **The site remains private to owner user38. Do not unset PRIVATE_ACCESS_USER_ID, enable signups, or reopen token routes on completion or cleanup.** Existing owner session works. No paid inference or real correspondence has been used for this work.
 
+## Owner-approved followups, 2026-10-27
+
+The owner explicitly reopened X141/X364 and requested X398. X398 is accepted: live Teal/Indigo/Rose changed menus/content consistently on Help and Grief Support; original Teal/light restored and reload-verified. No theme code or extra test matrix was needed. [Live evidence](reviews/2026-10-27-theme/X398.md).
+
+X364 is reviewed/merged: four frontend files retain explicit sample origin only in create recovery metadata; confirmed IDs update the captured account/profile registry and current marker view. Actual isolated JWT/API/DB/UI proof covered recovered reload, captured live Retry, uncertain/late responses, B isolation, confirmed-delete Retry and preservation of author/unknown IDs.17 confirmed samples were removed; author1/uncertain3 remained. Check0/0/build passed. Exact frontend tree `4124a976311059ee407746e338e061a0fb5b92bf`;230-file manifest `cc7470454e6a2c5c56d6bd03fe44e4a049112b950f3e5bc37653bea878f1beb3` matches copied primary dist. [Scope and explicit device/recovery limits](reviews/2026-10-27-admin/X364.md). Do not repeat the completed proof.
+
+X141's exact reviewed pinned apply succeeded. Only stored builder/health leaves changed to already-effective values; all volume/region/runtime/source/network attributes and26 configured/40 resolved variable hashes were preserved, private owner38 remains. Approved IaC ownership covers the existing web service and attached app volume only; Postgres is untouched. Actual automatic deployment `7c956cc9-9014-44c1-95ae-2a28a60ee808` of old source912ab10 was healthy. Root merged `.railway/railway.ts` and removal of root `railway.toml`; remote config-file binding is already null. [Reviewed operation and preservation proof](reviews/2026-10-27-infra/X141.md).
+
+Combined source cut `efe924c46cd28f2539cc634af08300bce8b3914f` has the verified frontend tree above and unchanged backend `47300d3c6217751ab3873395d7a8ca17e6c21554`. Root is publishing this batch. audit_pulse must observe exact-SHA successful deployment, no resolved legacy TOML, retained stored builder/health/variables/volumes, private access and zero IaC drift. No production sample generation, data purge, inference or mail verification. Cleanup the two completed nested checkouts only after preserving the accepted build/private evidence and checking their merge/state/ignored files. X6 remains separate and is not authorized by these requests.
+
 ## Earlier displayed-question core release
 
 Release `dcaf74f0740bb5bbce4d5e846dfdb271ea9b4321`, Railway deployment `fa9778a6-824c-4e14-8f0f-86ceec0ae9e2`, reached SUCCESS. Health is healthy; anonymous status reports private mode, signup disabled and access denied. Three empty signup/register probes, documentation and reserved fake-token routes returned403. Root verified the signed-in owner can open Final Wishes with its three relevant suggestions and select its dedicated Funeral context in Admin, including the displayed-question/labeled-answer template slots. Temporary verification tab closed; original tabs preserved.
@@ -46,7 +56,7 @@ Concurrent branding work in docs/README.md, docs/CONTINUUM_LOGO_REVIEW.*, docs/b
 
 All64 active X303–X367 corrections were accepted/deployed (X364 explicitly deferred), followed by X368–X377 complete AI/admin/context work. Historical releases/proofs remain linked in the canonical board and [release evidence](reviews/2026-10-26-implementation/RELEASE-CURRENT.md). Do not rerun finished broad suites without a new justified change.
 
-Owner holds remain separate: X6 old OpenRouter key rotation; X141 infrastructure apply before December1 (branchcard/X141 retains two unpublished commits); X364 administrative sample-recovery expansion. X320 preserves the user's saved executor-note audience choice. No recurring automation was restarted. Keep all branches and central stashes; never remove the primary checkout or another task's active worktree.
+X6 old OpenRouter key rotation remains owner-held. The later explicit approval superseded the old X141/X364 deferrals; their current status is above. X320 preserves the user's saved executor-note audience choice. No recurring automation was restarted. Keep all branches and central stashes; never remove the primary checkout or another task's active worktree.
 
 ## Completion checkpoint
 
