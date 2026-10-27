@@ -1,5 +1,6 @@
 import { getStored, setStored } from "$lib/stores/persistence";
 import { API_BASE_URL } from "$lib/config";
+import { markConfirmedSample, type CreateOrigin } from "$lib/services/sampleRegistry";
 
 import { auth } from "../stores/auth.ts";
 import { activeAccountId } from "$lib/stores/keyringStore";
@@ -85,6 +86,7 @@ const ACCOUNT_CHANGED = new SessionChangedError();
 type RecoveredWrite<V> = {
     key: string; kind: 'create' | 'update' | 'delete'; id?: string | number; data?: Partial<V>;
     skipLocal?: boolean; quiet?: boolean; affirm?: boolean; requiresFollowUp?: boolean;
+    origin?: CreateOrigin;
 };
 /** Opaque request identity lets an editor retry/release its own draft without content deduplication. */
 export type SaveFailure = Error & { recoveryId?: string };
@@ -276,7 +278,7 @@ export class SyncManager<T extends { id: number | string }> {
             }, fromRecord ? undefined : () => {
                 if (!currentOwner(owner) || this.releasedRecoveries.has(write.key)) return;
                 const attempt = write.kind === 'create'
-                    ? this.create(write.data || {}, !!write.skipLocal, !!write.quiet, undefined, write.key)
+                    ? this.create(write.data || {}, !!write.skipLocal, !!write.quiet, undefined, write.key, write.origin)
                     : write.kind === 'update' ? this.update(write.id!, write.data, write.affirm, undefined, write.key)
                     : this.delete(write.id!, undefined, write.key);
                 attempt.catch(() => {});
@@ -552,18 +554,23 @@ export class SyncManager<T extends { id: number | string }> {
     // CRUD
     // quiet: background bookkeeping (activity log). Failures are logged to the console only,
     // never shown to the user, and never change this manager's status.
-    async create(data: Partial<T>, skipLocal = false, quiet = false, onRetry?: () => Promise<unknown>, recoveryId?: string) {
+    async create(data: Partial<T>, skipLocal = false, quiet = false, onRetry?: () => Promise<unknown>, recoveryId?: string, origin?: CreateOrigin) {
         const owner = captureOwner();
         const generation = this.generation;
         const current = () => generation === this.generation && currentOwner(owner);
         if (!current()) throw ACCOUNT_CHANGED;
         const draft = cloneData(data);
-        const operation: RecoveredWrite<T> = { key: recoveryId || crypto.randomUUID(), kind: 'create', data: draft, skipLocal, quiet };
+        const operation: RecoveredWrite<T> = { key: recoveryId || crypto.randomUUID(), kind: 'create', data: draft, skipLocal, quiet, origin };
         if (!quiet) this.activeWrites.set(operation.key, { owner, write: operation });
         let confirmed: T | undefined;
         if (!quiet && !skipLocal) { this.status = "syncing"; this.error = null; }
         try {
             confirmed = await this.post(draft, sessionToken(owner.session));
+            if (operation.origin === 'admin-sample' && confirmed.id != null) {
+                // Device bookkeeping must never turn an accepted POST into a create retry.
+                try { markConfirmedSample(owner, this.key, confirmed.id); }
+                catch (e) { console.warn('[Sync] Sample marker bookkeeping paused', e); }
+            }
             if (!current()) {
                 if (!skipLocal) this.keepCreated(owner, confirmed);
                 this.forget(owner, operation.key);
@@ -595,7 +602,7 @@ export class SyncManager<T extends { id: number | string }> {
             }, () => {
                 if (!current() || this.releasedRecoveries.has(operation.key)) return;
                 this.activeWrites.delete(operation.key);
-                (onRetry ? onRetry() : this.create(draft, skipLocal, quiet, undefined, operation.key)).catch(() => {});
+                (onRetry ? onRetry() : this.create(draft, skipLocal, quiet, undefined, operation.key, operation.origin)).catch(() => {});
             }));
             throw identifiedFailure(e, operation.key);
         }
