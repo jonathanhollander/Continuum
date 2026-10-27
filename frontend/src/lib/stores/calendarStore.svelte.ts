@@ -5,7 +5,7 @@ import { getLegacy } from "$lib/stores/persistence";
 import { activeAccountId } from "$lib/stores/keyringStore";
 import { auth } from "$lib/stores/auth";
 
-// The one type list for 'calendar_events', shared by the calendar page and Important Dates.
+// The one type list for 'calendar_events' (the Event Calendar page; /modules/anniversary-manager redirects there).
 export const EVENT_TYPES = [
     { value: 'birthday', label: 'Birthday' },
     { value: 'anniversary', label: 'Anniversary' },
