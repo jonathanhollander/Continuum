@@ -40,12 +40,14 @@
         EMOTIONAL_PROMPTS,
         type LetterTemplate,
     } from "$lib/data/letterTemplates";
-    import { onMount, tick, untrack } from "svelte";
+    import { onMount, onDestroy, tick, untrack } from "svelte";
     import { activityLog } from "$lib/stores/activityLog.svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import LetterAssistant from "$lib/components/modules/letters/LetterAssistant.svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
-    import { REFLECTION_POOLS } from "$lib/data/reflectionPools";
+    import { aiRuntimeAssets, aiAssets, aiAsset, assetStrings, loadAIConfig, observeAIConfig, renderAIAsset, registerAIJob, aiJobId, aiSourceFacts, type AIWritingJob } from "$lib/services/aiCapabilities";
+    import { auth } from "$lib/stores/auth";
+    import { captureSession, isCurrentSession, type SessionOwnership } from "$lib/services/sessionOwnership";
     import RefreshControl from "$lib/components/ui/RefreshControl.svelte";
     import { notifications } from "$lib/stores/notificationStore";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
@@ -229,6 +231,8 @@
 
     // Per-letter details; cleared whenever a new letter is started.
     function clearLetterDetails() {
+        selectionVersion++;
+        writingDraft = {};
         editingId = null;
         letterRecipientId = "";
         recordedRecipientName = "";
@@ -270,6 +274,7 @@
     }
 
     function viewLetter(letter: Letter) {
+        selectionVersion++;
         generatedLetter = letter.content;
         editingId = letter.id;
         recordedRecipientName = letter.recipientName ?? "";
@@ -310,6 +315,10 @@
         | "variable_input"
     >("menu");
 
+    let letterAssets = $derived(aiAssets({purpose:'letter.draft'}, $aiRuntimeAssets));
+    type ReflectionFlow = { title: string; steps: { category: string; pool: string[]; suggestions: string[] }[] };
+    let reflectionFlows = $derived(letterAssets['lib/data/reflectionPools.ts:letters'] as Record<string, ReflectionFlow> | undefined);
+    $effect(() => observeAIConfig({ purpose: 'letter.draft' }));
     // Emotional State
     let emotionalFlow = $state<"spouse" | "ethical_will" | null>(null);
     // One answer per interview step, in the order the steps are asked (see REFLECTION_POOLS.letters).
@@ -317,7 +326,7 @@
     let currentPromptIndex = $state(0);
     let currentSuggestions = $derived(
         emotionalFlow
-            ? REFLECTION_POOLS.letters[emotionalFlow].steps[currentPromptIndex].suggestions
+            ? reflectionFlows?.[emotionalFlow]?.steps[currentPromptIndex]?.suggestions ?? []
             : [],
     );
     let currentQuestion = $state("");
@@ -325,8 +334,8 @@
     function refreshQuestion() {
         if (!emotionalFlow) return;
         const pool =
-            REFLECTION_POOLS.letters[emotionalFlow].steps[currentPromptIndex]
-                .pool;
+            reflectionFlows?.[emotionalFlow]?.steps[currentPromptIndex]?.pool ?? [];
+        if (!pool.length) return;
         let newQuestion = currentQuestion;
         if (pool.length > 1) {
             // helper to avoid same question twice in a row
@@ -350,6 +359,8 @@
 
     // Editor Content
     let generatedLetter = $state("");
+    let writingDraft = $state<object>({});
+
 
     // Details of the letter being written or reopened
     let editingId = $state<number | string | null>(null);
@@ -370,6 +381,16 @@
         return { recipientName: recipient?.name ?? "", recipientContactId: recipient ? Number(recipient.id) : null };
     }
 
+    const writingJob = (): AIWritingJob => {
+        const recipient = recipientDetails();
+        const person = contacts.find((contact) => String(contact.id) === String(recipient.recipientContactId));
+        return { job_id: aiJobId('letter', writingDraft, editingId), document_type: emotionalFlow || selectedTemplate?.category || 'letter',
+            document_title: editingId !== null ? savedLetters.find((letter) => String(letter.id) === String(editingId))?.title : selectedTemplate?.title,
+            current_draft: generatedLetter, recipient_name: recipient.recipientName, recipient_relationship: person?.relation,
+            notes: [...reflections], source_facts: aiSourceFacts({ ...templateVariables, reflection_1: reflections[0], reflection_2: reflections[1], reflection_3: reflections[2], signature: $estateProfile.ownerName }) };
+    };
+    $effect(() => { $auth; mode; writingJob().job_id; return registerAIJob(() => mode === 'menu' ? undefined : writingJob()); });
+
     let editorReadState = $derived(letterReadState({
         ...recipientDetails(),
         content: generatedLetter,
@@ -378,7 +399,16 @@
         isLocked: letterHold,
     }, contacts));
 
-    function startEmotionalFlow(flow: "spouse" | "ethical_will") {
+    let selectionVersion = 0;
+    let selectionAlive = true;
+    const ownsSelection = (owner: SessionOwnership, version: number) => selectionAlive && version === selectionVersion && isCurrentSession(owner);
+    onDestroy(() => { selectionAlive = false; selectionVersion++; });
+    function returnToMenu() { selectionVersion++; mode = "menu"; }
+    async function startEmotionalFlow(flow: "spouse" | "ethical_will") {
+        const owner = captureSession(), version = ++selectionVersion;
+        try { await loadAIConfig({ purpose: 'letter.draft' }, true); }
+        catch (error) { if (ownsSelection(owner, version)) notifications.showError(error instanceof Error ? error : String(error)); return; }
+        if (!ownsSelection(owner, version)) return;
         clearLetterDetails();
         selectedTemplate = null;
         emotionalFlow = flow;
@@ -428,7 +458,15 @@
         });
     });
 
-    function selectTransactional(template: LetterTemplate) {
+    async function selectTransactional(template: LetterTemplate) {
+        const owner = captureSession(), version = ++selectionVersion;
+        try {
+            await loadAIConfig({ purpose: 'letter.draft' }, true);
+            if (!ownsSelection(owner, version)) return;
+            const body = aiAsset<Record<string, string>>('lib/data/letterTemplates.ts:bodies', {purpose:'letter.draft'})?.[template.id];
+            if (typeof body !== 'string') throw new Error('Drafting template could not be loaded');
+            template = { ...template, body };
+        } catch (error) { if (ownsSelection(owner, version)) notifications.showError(error instanceof Error ? error : String(error)); return; }
         clearLetterDetails();
         // A letter from the library is never an emotional letter, even after one was open.
         emotionalFlow = null;
@@ -475,17 +513,12 @@
     }
 
     function generateEmotionalDraft() {
-        // Signed with the name from the Estate Profile when it is known.
-        const signature = $estateProfile.ownerName?.trim() || "[Your Name]";
-        if (emotionalFlow === "spouse") {
-            // Steps: memory, what you admire, hopes.
-            const [memory, admire, hopes] = reflections;
-            generatedLetter = `My Dearest,\n\nI was sitting here thinking about us, and my mind drifted to that time: ${memory}. It still makes me smile.\n\nI want you to know how much I admire you. Specifically, ${admire}. You have always been my rock.\n\nMy greatest wish for you is this: ${hopes}. Be happy, live fully, and know that you were loved beyond measure.\n\nForever yours,\n${signature}`;
-        } else {
-            // Steps: values, lessons, legacy.
-            const [values, lesson, legacy] = reflections;
-            generatedLetter = `To My Family,\n\nAs I look back on my life, I want to leave you with more than just things. I want to share who I was and what I believed in.\n\nMy life was guided by these values: ${values}. I hope they serve you as well as they served me.\n\nI learned many lessons, but the most important was: ${lesson}. Be as gentle with yourself as I would be with you.\n\nHere is what I hope you carry with you: ${legacy}.\n\nWith all my love,\n${signature}`;
-        }
+        const templates = aiAsset<Record<string, string>>('routes/modules/letters/+page.svelte:emotional_drafts', {purpose:'letter.draft'});
+        const template = templates?.[emotionalFlow || ''];
+        if (typeof template !== 'string') return;
+        const signature = $estateProfile.ownerName?.trim() || templates?.signature_placeholder || '';
+        const [one, two, three] = reflections;
+        generatedLetter = renderAIAsset(template, { signature, memory: one, admire: two, hopes: three, values: one, lesson: two, legacy: three });
         mode = "review";
         // Put the keyboard straight into the new letter.
         tick().then(() => {
@@ -533,13 +566,14 @@
     };
 
     // A writing prompt: adds one reflection question to the draft to write beneath.
-    const WRITING_PROMPTS = Object.values(REFLECTION_POOLS.letters).flatMap((flow) =>
-        flow.steps.flatMap((step) => step.pool),
-    );
-
     function addWritingPrompt() {
-        const prompt = WRITING_PROMPTS[Math.floor(Math.random() * WRITING_PROMPTS.length)];
-        generatedLetter = (generatedLetter ? generatedLetter.trimEnd() + "\n\n" : "") + prompt + "\n";
+        const prompts = Object.values(reflectionFlows ?? {}).flatMap((flow) => flow.steps.flatMap((step) => step.pool));
+        if (!prompts.length) return;
+        const prompt = prompts[Math.floor(Math.random() * prompts.length)];
+        const template = aiAsset<string>('routes/modules/letters/+page.svelte:writing_prompt_append', {purpose:'letter.draft'});
+        const separator = aiAsset<string>('routes/modules/letters/+page.svelte:writing_prompt_separator', {purpose:'letter.draft'});
+        if (typeof template !== 'string' || typeof separator !== 'string') return;
+        generatedLetter = renderAIAsset(template, { draft: generatedLetter.trimEnd(), separator: generatedLetter ? separator : '', prompt });
     }
 
     let filteredTemplates = $derived(
@@ -659,12 +693,7 @@
         <!-- AI Concierge Drafting Assistant -->
         <AIPromptBar
             context="letters"
-            prompts={[
-                "Help me write a letter to my daughter...",
-                "Draft a note expressing my forgiveness...",
-                "Write an ethical will sharing my values...",
-                "Help me craft a goodbye message to my spouse..."
-            ]}
+            promptSource="routes/modules/letters/+page.svelte:prompts"
         />
 
         <div class="mb-12">
@@ -997,7 +1026,7 @@
             <div class="lg:col-span-2 space-y-8">
                 <div class="flex items-center justify-between gap-4">
                     <button aria-label="Back to Your letters"
-                        onclick={() => (mode = "menu")}
+                        onclick={returnToMenu}
                         class="p-4 bg-card border border-border rounded-2xl text-muted-foreground hover:text-foreground transition-all"
                     >
                         <ArrowLeft size={20} />
@@ -1150,7 +1179,7 @@
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-4">
                     <button
-                        onclick={() => (mode = "menu")}
+                        onclick={returnToMenu}
                         class="p-3 bg-card border border-border rounded-xl text-muted-foreground hover:text-foreground"
                         aria-label="Back to Your letters"
                     >
@@ -1322,6 +1351,7 @@
                         >
                             <SmartTextarea
                                 bind:value={generatedLetter}
+                                job={writingJob()}
                                 label="Refine Your Draft"
                                 hideLabel
                                 placeholder="Begin typing your legacy here..."
@@ -1337,6 +1367,7 @@
                 <div class="space-y-6">
                     <LetterAssistant
                         currentContent={generatedLetter}
+                        job={writingJob()}
                         onupdate={(content: string) =>
                             (generatedLetter = content)}
                     />
@@ -1423,6 +1454,7 @@
                     >
                         <SmartTextarea
                             bind:value={reflections[currentPromptIndex]}
+                            job={{ ...writingJob(), job_id: `${writingJob().job_id}:reflection:${currentPromptIndex}` }}
                             context="letter"
                             label={currentQuestion}
                             hideLabel

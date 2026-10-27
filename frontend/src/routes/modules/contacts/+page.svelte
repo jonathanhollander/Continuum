@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { aiJobId, aiSourceFacts } from "$lib/services/aiCapabilities";
     import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { fade, slide } from "svelte/transition";
     import {
@@ -778,6 +779,7 @@
 
             <div class="space-y-1">
                 <SmartTextarea
+                            job={{job_id:aiJobId("contact", newContact, editingId)+":notes",document_title:newContact.name,source_facts:aiSourceFacts({name:newContact.name,relation:newContact.relation,role:newContact.role})}}
                     bind:value={newContact.notes}
                     context="contact"
                     placeholder="e.g. 'Speak gently; they love hearing your voice'"

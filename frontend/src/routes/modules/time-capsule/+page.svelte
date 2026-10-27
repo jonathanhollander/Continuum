@@ -437,12 +437,7 @@
     <!-- AI Concierge Drafting Assistant -->
     <AIPromptBar
         context="letters"
-        prompts={[
-            "Help me write a message to my daughter for her wedding...",
-            "Draft words of wisdom for my grandchild's graduation...",
-            "Write a letter expressing my love and hopes for the future...",
-            "Create a meaningful message for my spouse to read later..."
-        ]}
+        promptSource="routes/modules/time-capsule/+page.svelte:prompts"
     />
 
     <!-- Active Capsules Grid -->

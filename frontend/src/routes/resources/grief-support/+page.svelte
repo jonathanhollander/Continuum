@@ -1,4 +1,8 @@
 <script lang="ts">
+    import { auth } from "$lib/stores/auth";
+    import { aiRuntimeAssets, aiAssets, observeAIConfig, type AIHistoryMessage } from "$lib/services/aiCapabilities";
+    import { captureSession, isCurrentSession } from "$lib/services/sessionOwnership";
+    import { onDestroy } from "svelte";
     import { onMount } from "svelte";
     import { fade, fly } from "svelte/transition";
     import {
@@ -46,13 +50,19 @@
     // Chat State
     let chatInput = $state("");
     let isTyping = $state(false);
-    let chatHistory = $state<{ role: string; content: string }[]>([
-        {
-            role: "assistant",
-            content:
-                "I'm here. If you'd like to talk, or need a quiet place to reflect, I'm sitting with you.",
-        },
-    ]);
+    let chatHistory = $state<(AIHistoryMessage & {historyContent?:string})[]>([]);
+    let chatOwner = captureSession();
+    let chatVersion = 0;
+    $effect(() => observeAIConfig({purpose:'grief.chat'}));
+    $effect(() => {
+        $auth;
+        if (!isCurrentSession(chatOwner)) {
+            chatOwner = captureSession(); chatVersion++; chatHistory = []; chatInput = ''; chatError = ''; isTyping = false;
+        }
+        const greeting = aiAssets({purpose:'grief.chat'}, $aiRuntimeAssets)['routes/resources/grief-support/+page.svelte:greeting'];
+        if (isCurrentSession(chatOwner) && !chatHistory.length && typeof greeting === 'string' && greeting) chatHistory = [{role:'assistant',source:'app',content:greeting}];
+    });
+    onDestroy(() => { chatVersion++; });
 
     // Guide Viewer State
     let selectedGuide = $state<Guide | null>(null);
@@ -130,14 +140,17 @@
     async function handleChat() {
         if (!chatInput.trim() || isTyping) return;
 
+        const owner = captureSession(), version = ++chatVersion;
+        if (!isCurrentSession(owner)) return;
         const userMsg = chatInput;
         chatInput = "";
-        chatHistory = [...chatHistory, { role: "user", content: userMsg }];
+        chatHistory = [...chatHistory, { role: "user", source: "user", content: userMsg }];
 
         isTyping = true;
         chatError = "";
         try {
             const response = await aiGriefService.chat(userMsg, chatHistory);
+            if (version !== chatVersion || !isCurrentSession(owner)) return;
             if (response.failed) {
                 // Keep the thread and the draft intact so Try again resends it once.
                 chatHistory = chatHistory.slice(0, -1);
@@ -147,19 +160,20 @@
             }
             chatHistory = [
                 ...chatHistory,
-                { role: "assistant", content: response.content },
+                { role: "assistant", source: "model", content: response.content, historyContent:response.historyContent },
             ];
 
             if (response.suggestAction === "hotline") {
                 // Focus sidebar or highlight hotlines? Maybe later.
             }
         } catch (e) {
+            if (version !== chatVersion || !isCurrentSession(owner)) return;
             // Take the unsent message back out of the thread and into the box so retry resends it once.
             chatHistory = chatHistory.slice(0, -1);
             chatInput = userMsg;
             chatError = handleFetchError(e).message;
         } finally {
-            isTyping = false;
+            if (version === chatVersion && isCurrentSession(owner)) isTyping = false;
         }
     }
 

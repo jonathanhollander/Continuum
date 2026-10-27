@@ -357,12 +357,7 @@
     <!-- AI Concierge Drafting Assistant -->
     <AIPromptBar
         context="subscriptions"
-        prompts={[
-            "Help me write instructions for cancelling my streaming and software subscriptions...",
-            "Draft a letter my executor can send to close a subscription account...",
-            "List the steps my executor can follow to cancel subscriptions...",
-            "How do automatic renewals work after someone passes away?"
-        ]}
+        promptSource="routes/modules/subscriptions/+page.svelte:prompts"
     />
 
     <!-- Content -->

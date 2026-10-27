@@ -28,25 +28,3 @@ def validate_selection(purpose: str, variant: str = "", *, allow_shared: bool = 
     if (purpose not in PURPOSES or (variant and variant not in PURPOSES[purpose][1])
             or (not variant and PURPOSES[purpose][1] and not allow_shared)):
         raise ValueError("Choose an AI use and one of its contexts.")
-
-
-def required_output(purpose: str) -> str:
-    """Keep the existing consumers' functional response contracts explicit."""
-    privacy = "Keep every bracketed REDACTED token exactly as supplied."
-    if purpose.startswith("concierge."):
-        return (
-            f"{privacy} Return only a JSON object with a string message. Optional fields are "
-            "extractedData, resources (title, description, link, type), and intent. "
-            "Intent, when supplied, is one of add_contact, add_property, add_financial, "
-            "add_insurance, add_healthcare, add_digital, suggest_break, provide_resource."
-        )
-    if purpose == "grief.chat":
-        return (
-            f"{privacy} Return only a JSON object with a string message. Optional fields are "
-            "suggestedResources (strings) and suggestAction (discovery, hotline, or break)."
-        )
-    return (
-        f"{privacy} Preserve the author's meaning, facts, names and signatures. "
-        "Use only supplied facts and memories. Return the suggested passage or letter as "
-        "plain text alone, with no title, notes, quotation marks, markdown or JSON."
-    )

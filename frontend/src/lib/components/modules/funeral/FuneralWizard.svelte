@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { aiRuntimeAssets, aiAssets, assetStrings, observeAIConfig, aiSourceFacts } from "$lib/services/aiCapabilities";
     import { fade, slide } from "svelte/transition";
     import {
         Scroll,
@@ -62,6 +63,8 @@
     $: activeTradition =
         FUNERAL_TRADITIONS[wishes.religiousTradition || "secular"];
 
+    onMount(() => observeAIConfig({purpose:'writer.rewrite_text',variant:'funeral'}));
+    $: configuredStarters = (aiAssets({purpose:'writer.rewrite_text',variant:'funeral'}, $aiRuntimeAssets)['lib/data/funeralTraditions.ts:smartTextareaPrompts'] as Record<string,Record<string,string[]>> | undefined)?.[wishes.religiousTradition || 'secular'];
     // Dynamic Questions State
     let questions = {
         foundation: REFLECTION_POOLS.funeral.foundation[0],
@@ -306,11 +309,11 @@
                         />
                     </div>
                     <SmartTextarea
+                        job={{job_id:"funeral:wishes:foundation",document_type:"funeral",source_facts:aiSourceFacts({tradition:wishes.religiousTradition,mood:wishes.mood,ceremony:wishes.ceremonyDetails?.type})}}
                         label="Core Values & Wishes"
                         context="funeral"
                         placeholder={questions.foundation}
-                        suggestions={activeTradition.smartTextareaPrompts
-                            .foundation || []}
+                        suggestions={assetStrings(configuredStarters?.foundation)}
                         value={wishes.ceremonyDetails?.type || ""}
                         onchange={(v) =>
                             updateField(["ceremonyDetails", "type"], v)}
@@ -521,11 +524,11 @@
                         />
                     </div>
                     <SmartTextarea
+                        job={{job_id:"funeral:wishes:atmosphere",document_type:"funeral",source_facts:aiSourceFacts({tradition:wishes.religiousTradition,mood:wishes.mood,ceremony:wishes.ceremonyDetails?.type})}}
                         label="Vibe & Atmosphere"
                         context="funeral"
                         placeholder={questions.atmosphere}
-                        suggestions={activeTradition.smartTextareaPrompts
-                            .atmosphere || []}
+                        suggestions={assetStrings(configuredStarters?.atmosphere)}
                         value={wishes.mood || ""}
                         onchange={(v) => updateField(["mood"], v)}
                         minHeight="150px"
@@ -631,11 +634,11 @@
                         />
                     </div>
                     <SmartTextarea
+                        job={{job_id:"funeral:wishes:legacy",document_type:"funeral",source_facts:aiSourceFacts({tradition:wishes.religiousTradition,mood:wishes.mood,ceremony:wishes.ceremonyDetails?.type})}}
                         label="Obituary Notes & Life Story"
                         context="funeral"
                         placeholder={questions.legacy}
-                        suggestions={activeTradition.smartTextareaPrompts
-                            .legacy || []}
+                        suggestions={assetStrings(configuredStarters?.legacy)}
                         value={wishes.legacy?.obituaryNotes || ""}
                         onchange={(v) =>
                             updateField(["legacy", "obituaryNotes"], v)}

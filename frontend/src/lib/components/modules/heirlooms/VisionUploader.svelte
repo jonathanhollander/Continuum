@@ -1,4 +1,5 @@
 <script lang="ts">
+    import type { AIWritingJob } from "$lib/services/aiCapabilities";
     import { onDestroy } from "svelte";
     import { ImagePlus, Upload } from "lucide-svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
@@ -12,9 +13,10 @@
         uploading = $bindable(false),
         uploadFailed = $bindable(false),
         onselect,
+        job,
     }: {
         imageUrl?: string; provenance?: string; uploading?: boolean; uploadFailed?: boolean;
-        onselect?: () => void;
+        onselect?: () => void; job?: AIWritingJob;
     } = $props();
 
     let fileInput: HTMLInputElement;
@@ -190,6 +192,7 @@
     <!-- Provenance / Story Field with SmartTextarea -->
     <div class="pt-4">
         <SmartTextarea
+            {job}
             bind:value={provenance}
             context="heirloom"
             placeholder="Tell the story of this item..."
