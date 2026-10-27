@@ -92,10 +92,10 @@
 
     function getMessage(p: number) {
         if (p === 100)
-            return "Every step in this drill is in place. Your loved ones have what they need.";
+            return "You answered Yes to all six questions. Review the actual instructions and documents with the people involved; these answers do not verify access or completeness.";
         if (p >= 60)
-            return "A strong foundation. A few more steps bring even more peace of mind.";
-        return "A good start. Each step you take makes things easier for the people you love.";
+            return "You answered Yes to some of these questions. Revisit the No answers and check the arrangements with the people involved.";
+        return "Use the No answers as questions to review. This drill records only your answers for this visit; it does not inspect documents or test access.";
     }
 </script>
 
@@ -123,6 +123,7 @@
         {#if step < questions.length}
             <!-- Question Step -->
             <div class="p-8">
+                <p class="text-sm text-muted-foreground text-center mb-4">Six self-reported checks. Answers are not saved and do not test your records or anyone's access.</p>
                 <!-- Progress -->
                 <div class="flex items-center gap-2 mb-8">
                     {#each questions as q, i}
@@ -177,11 +178,12 @@
                     </div>
                 </div>
                 <h2 class="text-3xl font-serif font-bold text-foreground mb-2">
-                    Fire Drill Complete
+                    Your Drill Answers
                 </h2>
                 <div class="text-5xl font-bold text-foreground mb-4">
                     {score} / {total}
                 </div>
+                <p class="text-sm text-muted-foreground mb-4">Questions answered Yes</p>
                 <p class="text-muted-foreground mb-8 max-w-sm mx-auto">
                     {getMessage(percentage)}
                 </p>
@@ -190,7 +192,7 @@
                     on:click={close}
                     class="w-full py-4 bg-primary text-primary-foreground font-bold rounded-xl hover:bg-primary-hover transition-colors flex items-center justify-center gap-2"
                 >
-                    Return to Status
+                    Return to Recorded Information
                     <ArrowRight size={18} />
                 </button>
             </div>

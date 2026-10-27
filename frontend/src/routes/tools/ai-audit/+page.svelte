@@ -77,7 +77,7 @@
                 severity: "pass" as const,
                 category: "", // the area is named once, as the title
                 title: areaLabel[id] ?? id,
-                desc: "Well covered.",
+                desc: "The recorded fields used by this section's checks are filled. Review the source records for accuracy and availability.",
             }));
         return [...open, ...done];
     });
@@ -106,11 +106,12 @@
             {/if}
         </div>
         <h1 class="font-serif font-bold text-4xl text-primary-deep dark:text-primary-hover mb-4">
-            Plan Check-in
+            Recorded Information Check
         </h1>
         <p class="text-lg text-muted-foreground max-w-xl mx-auto">
-            A gentle check across what you've recorded, to see what is well
-            covered and where a little more could help.
+            Rule-based checks for recorded information across six areas.
+            These checks do not use AI, assess legal validity, verify current values
+            or establish that your handover is complete.
         </p>
     </div>
 
@@ -125,17 +126,17 @@
                     <h2
                         class="font-bold text-xl text-white/80 uppercase tracking-widest mb-2"
                     >
-                        How well covered
+                        Record coverage score
                     </h2>
                     <div class="text-6xl font-serif font-bold mb-4">
                         {score}/100
                     </div>
                     <p class="text-white/70 max-w-sm">
                         {score === 0
-                            ? "Ready when you are."
+                            ? "No points from these record checks yet."
                             : score < 100
-                              ? "A good start."
-                              : "Well covered."}
+                              ? "Some recorded fields used by these checks are filled."
+                              : "These checks are filled. Review the actual records and sharing choices."}
                     </p>
                 </div>
 
@@ -165,7 +166,7 @@
                 <h3
                     class="font-bold text-muted-foreground text-sm uppercase tracking-wider mb-6 ml-2"
                 >
-                    Gentle next steps
+                    Questions to review
                 </h3>
 
                 {#each findings as finding (finding.id)}
