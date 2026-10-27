@@ -62,3 +62,7 @@ openwiki/.run.json
 
 # Local email outbox (dev sends)
 backend/outbox/
+
+# Proof screenshots and build logs
+frontend/live/
+frontend/build.log

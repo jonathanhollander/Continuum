@@ -5,7 +5,6 @@
 - **Tech Stack**: SvelteKit 5 (runes: $state, $derived) + FastAPI + SQLModel + Alembic
 - **Database**: PostgreSQL (Railway prod) / SQLite (local dev)
 - **Auth**: JWT + WebAuthn/Passkeys
-- **README.md is outdated** - references Next.js, ignore it. This is SvelteKit 5.
 
 ---
 
@@ -20,7 +19,7 @@ pip install -r backend/requirements.txt       # Python 3.11, exact pins
 (cd backend && alembic upgrade head)
 python -m backend.main                        # from repo root; http://localhost:8000
 
-# Dev user auto-seeded: dev@continuum.im / dev123
+# Dev user auto-seeded locally: dev@continuum.im / dev123
 ```
 
 ---
@@ -124,19 +123,21 @@ Production (Railway): Uses PostgreSQL with SSL, different RP_ID/ORIGIN for domai
 
 - **Platform**: Railway with PostgreSQL
 - **Production URL**: https://continuum.estate
-- **Pre-deploy**: Run `npm run check` and `npm run build` (in `frontend/`) by hand.
-- **Commands**: `railway up --verbose`, `railway logs`
+- **Deploy**: push to `main`; Railway builds from GitHub (config in `.railway/railway.ts`, IaC — `checkSuites: true` means any future GitHub check would gate deploys).
+- **Migrations**: deploys run none. After a model change, `pg_dump` first, then run `alembic upgrade head` against production by hand.
+- **Pre-deploy**: run `npm run check` and `npm run build` (in `frontend/`) by hand.
+- **Logs**: `railway logs`; wait for a deploy with `railway deployment list --json` (newest `SUCCESS` with your `commitHash`).
 
 ---
 
 ## Important Notes for Claude
 
-1. **README.md is Outdated**: Ignore Next.js references. This is SvelteKit 5.
+1. **Docs index**: `docs/README.md`. Open work: `docs/PUNCHLIST.md`.
 2. **SyncManager is Critical**: All data sync goes through `sync.svelte.ts`. Don't bypass it.
 3. **All Models Must Be Imported**: Alembic won't detect changes to models not imported in `env.py`.
 4. **Compassionate Language**: End-of-life planning requires gentle, supportive language.
-5. **No Automated Tests**: Manual testing only. Test by running the app.
-6. **Dev User Always Available**: `dev@continuum.im` / `dev123` (auto-seeded)
+5. **Testing**: mostly manual — run the app. A few backend scripts live in `backend/tests/` and `backend/test_*.py`.
+6. **Dev User (local only)**: `dev@continuum.im` / `dev123`, seeded outside production.
 7. **Railway Uses PostgreSQL**: Local uses SQLite, production uses PostgreSQL with SSL.
 8. **GitHub Token Issue**: Run `unset GITHUB_TOKEN` before `gh` commands if getting 403 errors.
 
@@ -155,7 +156,7 @@ Production (Railway): Uses PostgreSQL with SSL, different RP_ID/ORIGIN for domai
 
 ## Documentation
 
-All project docs live in `docs/` (index: `docs/README.md`). Current plan: `docs/PROJECT_RECOVERY_PLAN.md`.
+All project docs live in `docs/` (index: `docs/README.md`). Open work: `docs/PUNCHLIST.md` (the recovery plan `docs/RECOVERY_EXECUTION_PLAN.md` is complete).
 
 Detailed guides exist for specific topics:
 - `docs/MIGRATIONS.md` - Alembic database migrations
@@ -178,7 +179,7 @@ Once a question is answered, do not repeat it through every tool. Use narrow `rg
 
 ---
 
-_Last Updated: 2026-10-26 13:30 EST_
+_Last Updated: 2026-10-27 16:05 EST_
 
 <!-- OPENWIKI:START -->
 

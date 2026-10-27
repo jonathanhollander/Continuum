@@ -96,7 +96,7 @@ Production runs on Railway at `https://continuum.estate`, with PostgreSQL.
 - `Procfile` carries the same start command.
 - `backend/requirements.txt` uses exact pins copied from production's `pip freeze`. Unpinned installs pulled a newer SQLModel/SQLAlchemy that broke login and seeding.
 
-The established Railway CLI commands are `railway up` and `railway logs`; refreshing this wiki does not authorize deployment. Schema changes go out by running `alembic upgrade head` against the production database (see [Data Model and Migrations](/openwiki/architecture/data-model-and-migrations.md)); the startup `create_all` and column patches also run on boot. The HTTPS redirect trusts `X-Forwarded-Proto` because Railway terminates TLS at its proxy, and never redirects `/api/health`, which Railway probes over plain HTTP.
+Pushes to `main` deploy automatically from GitHub (`.railway/railway.ts`); `railway logs` reads the logs; refreshing this wiki does not authorize deployment. Schema changes go out by running `alembic upgrade head` against the production database (see [Data Model and Migrations](/openwiki/architecture/data-model-and-migrations.md)); the startup `create_all` and column patches also run on boot. The HTTPS redirect trusts `X-Forwarded-Proto` because Railway terminates TLS at its proxy, and never redirects `/api/health`, which Railway probes over plain HTTP.
 
 ## Related pages
 

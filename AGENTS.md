@@ -1,6 +1,6 @@
 # Continuum — instructions for coding agents
 
-**Last Updated:** 2026-10-26 EDT
+**Last Updated:** 2026-10-27 16:10 EST
 
 ## Purpose and current priority
 
@@ -8,7 +8,7 @@ Continuum is Jonathan's personal legacy and financial handover for his son in th
 
 The product must let Jonathan record, revise, and preserve both practical information and his own words. His son must be able to find it, understand it, and take a useful copy away without Jonathan explaining the interface.
 
-**Owner direction for this recovery: features and usability first. Security hardening, administration, commercial features, and deployment infrastructure are deferred.** Do not spend the feature budget on those areas unless Jonathan changes the priority. Preserve existing protections while working. Data actually saving, surviving reloads, remaining complete, and reaching the intended reader are core functionality and remain essential now.
+**Owner direction for this recovery: features and usability first. Commercial features remain deferred; security, administration and infrastructure work happen when Jonathan asks (open items: `docs/PUNCHLIST.md`).** Preserve existing protections while working. Data actually saving, surviving reloads, remaining complete, and reaching the intended reader are core functionality and remain essential now.
 
 The first assignment was review and documentation, not an application rewrite or deployment. The initial evidence and open issue register are in [the recovery review](docs/reviews/2026-10-25-features-usability/REVIEW.md). The canonical roadmap is [PROJECT_RECOVERY_PLAN.md](docs/PROJECT_RECOVERY_PLAN.md), with task cards in [RECOVERY_EXECUTION_PLAN.md](docs/RECOVERY_EXECUTION_PLAN.md). Reconcile the review's verified CU findings into the relevant cards when implementing; do not create another competing task board. Update issue status and evidence when a fix is verified. Historical `*_COMPLETE.md`, audit reports, and task lists are background, not proof of current behavior. A plan's suggested dispatch or deployment step does not itself authorize those actions.
 
@@ -60,7 +60,7 @@ Use narrow `rg` or targeted source reads only for a specific gap, unindexed cont
 - Strip server-managed identifiers and timestamps consistently from writes. Do not strip a required client-generated ID without resolving that endpoint's contract.
 - Registering a store does not fetch it. Verify initialization after authentication and when visiting a lazily loaded module directly.
 - Preserve drafts on save failure, show the actual save state, and provide retry. Success requires persistence of the intended fields. Background activity logging must not make a successful record save appear to fail.
-- Collections must have the correct category membership. `properties`, `digital_assets`, and generic `heirlooms` currently alias the same Asset table without filtering.
+- Collections must have the correct category membership. `properties`, `digital_assets`, and generic `heirlooms` alias the same Asset table and are filtered by category; keep that filter on every read and export.
 - Singleton APIs must return and update a singleton. Do not use a list endpoint as an object endpoint or create a new row for every preference/wishes edit.
 - Account/profile changes must reload the correct state. The server currently scopes most records by user, whereas browser keys also include profiles; do not imply independent estates until this works through the API.
 - Recorded financial values need clear meaning, ownership treatment, debt treatment, and currency. Never invent growth charts, balances, valuations, personal facts, or history.
@@ -93,7 +93,7 @@ Backend dependencies are listed in `backend/requirements.txt`; isolate them in a
 
 Backend requirements are pinned to production's freeze since card A1. Before that, the unbounded requirements were not reproducible: the initial review's fresh SQLModel 0.0.48 / SQLAlchemy 2.1.6 environment failed to seed a user because of naive datetime defaults. API probes used an explicitly documented temporary SQLModel 0.0.31 / SQLAlchemy 2.0.55 compatibility environment. That is review evidence, not an approved production dependency change.
 
-Use a disposable database, uploads directory, local outbox, synthetic names, and reserved example addresses for tests and screenshots. Do not read, seed, migrate, or alter the owner's existing databases to test features. Do not send email or messages. The Pulse scheduler currently ignores `PULSE_SCHEDULER_ENABLED`; avoid application lifespan startup in API probes or explicitly replace the scheduler in an isolated test harness.
+Use a disposable database, uploads directory, local outbox, synthetic names, and reserved example addresses for tests and screenshots. Do not read, seed, migrate, or alter the owner's existing databases to test features. Do not send email or messages. Set `PULSE_SCHEDULER_ENABLED=false` for API probes so the scheduler stays off.
 
 The initial review's [reproduction script](docs/reviews/2026-10-25-features-usability/evidence/reproduce_api_probes.py) creates its own temporary database and skips startup. It is an observational probe script, not a passing regression suite. Its dependency override does not verify real recipient access or authentication.
 
@@ -114,7 +114,7 @@ Use the existing checkout or a suitable worktree when possible. Do not deploy, p
 - Inspect `git status` before edits. Preserve unrelated and concurrent changes, including lockfiles and tool configuration. Do not commit secrets, real family records, databases, or test captures containing actual personal data.
 - Every new worktree must be **inside this repository**, at `.worktrees/<name>`. Add `.worktrees/` to this project's `.gitignore` before creating the first one. Never create sibling `<project>-<branch>` folders under `~/AI Code`.
 - Use `git worktree move` to relocate ordinary worktrees, never `mv`. Follow the app's managed-worktree lifecycle only if its placement satisfies the owner's nested-worktree rule.
-- At the end of completed work, safely clean up worktrees no longer needed. Verify merged or backed-up work; preserve unique uncommitted/ignored databases, datasets, config, and secrets; retain shared canonical data. Never remove the primary checkout or another active task's worktree. Use `git worktree remove` for ordinary worktrees and the archive tool for managed worktrees. Keep branches and central stashes unless separately authorized to delete them. Report cleanup and reclaimed space.
+- At the end of completed work, safely clean up worktrees no longer needed. Verify merged or backed-up work; preserve unique uncommitted/ignored databases, datasets, config, and secrets; retain shared canonical data. Never remove the primary checkout or another active task's worktree. Use `git worktree remove` for ordinary worktrees and the archive tool for managed worktrees. Delete merged branches after merge (plan decision 6); keep stashes unless separately authorized. Report cleanup and reclaimed space.
 - Before deleting **any directory containing a repository**, check all five: unpushed commits; uncommitted files; stashes; ignored unique files; and no-upstream branches with commits unreachable from remote refs. Archive-like folder names do not prove backup.
 - For apparent worktrees, inspect whether `.git` is a file or directory and whether its gitdir target exists. A dead pointer may mean the contents are the only copy; compare against the remote first.
 - Preserve before deletion: commit/push appropriate work, back up each stash as a remote branch, copy needed ignored files outside the deletion target, and verify remote refs with `git ls-remote`. Scan dormant/untracked content for credentials before committing, especially to public remotes. Never push credentials as part of a backup.
