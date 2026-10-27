@@ -118,6 +118,10 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
 # Add request ID middleware (should be early in chain)
 app.add_middleware(RequestIdMiddleware)
 
+# Naive-UTC datetimes leave as UTC ("...Z") in every JSON response; see backend/utils/utc_json.py.
+from backend.utils.utc_json import UtcJsonMiddleware
+app.add_middleware(UtcJsonMiddleware)
+
 # Security Headers Configuration
 def _inline_script_sources():
     # SvelteKit's adapter-static writes one inline bootstrap <script> into dist/index.html and its
