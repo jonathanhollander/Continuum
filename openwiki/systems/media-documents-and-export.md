@@ -5,22 +5,22 @@ description: Where Continuum keeps uploaded files and recordings (backend media 
 tags: [media, uploads, storage, documents, export, pdf]
 verified:
   - by: openwiki/0.4.3
-    at: 2026-10-26T04:52:34.633Z
+    at: 2026-10-27T00:41:19.118Z
 sources:
   - id: openwiki-source-82a325da453da1db06378e6d
     resource: repo://backend/config.py
-  - id: openwiki-source-7c71a30249a930334214acfd
-    resource: repo://backend/estate_models.py
-  - id: openwiki-source-1e5af31bf167b154eac9b49f
-    resource: repo://backend/routers/documents.py
+  - id: openwiki-source-fcffbe3e28749eaf9a39557c
+    resource: repo://backend/main.py
+  - id: openwiki-source-4be256b5d86d6f7252b493a6
+    resource: repo://backend/routers/estate_data.py
+  - id: openwiki-source-324f535ac1aad0434228ec83
+    resource: repo://backend/routers/export.py
   - id: openwiki-source-41a1eca19991b116136cabe8
     resource: repo://backend/routers/media.py
+  - id: openwiki-source-809887f30a8cfd2ece5a8458
+    resource: repo://backend/routers/recipient.py
   - id: openwiki-source-306b4630976cea3bea2eec27
     resource: repo://backend/utils/file_storage.py
-  - id: openwiki-source-cd4369ae6063931c17cf6844
-    resource: repo://frontend/src/lib/components/MediaMigrationNotice.svelte
-  - id: openwiki-source-de073f67ed10ac976aa5dcfd
-    resource: repo://frontend/src/lib/components/modules/heirlooms/VisionUploader.svelte
   - id: openwiki-source-14c3be6935399696130cf8cb
     resource: repo://frontend/src/lib/components/ui/FileUploader.svelte
   - id: openwiki-source-f915623e80b2f9d67a451aab
@@ -37,11 +37,7 @@ sources:
     resource: repo://frontend/src/routes/binder/%2Bpage.svelte
   - id: openwiki-source-3d0548204610eff66b0d9787
     resource: repo://frontend/src/routes/export/preview/%2Bpage.svelte
-  - id: openwiki-source-5e94c9a80820e508294c7cf5
-    resource: repo://frontend/src/routes/modules/time-capsule/%2Bpage.svelte
-  - id: openwiki-source-1dc2c5da93432466cee6ad1b
-    resource: repo://frontend/src/routes/modules/visual-memories/%2Bpage.svelte
-generated: { by: "claude-code", at: "2026-10-26T04:52:34.633Z" }
+generated: { by: "codex", at: "2026-10-27T00:41:19.118Z" }
 ---
 
 # Media, Documents and Export
@@ -57,7 +53,7 @@ Files reach storage by three different routes, depending on which module saved t
 | `POST /upload` | Multipart upload; checks MIME type against image, video, audio and document allow-lists and size against `MAX_UPLOAD_SIZE` (10 MB); stores the file and a `MediaFile` row with `storage_provider` and `doc_category` |
 | `GET /` | List the user's non-deleted media |
 | `GET /{id}` | Metadata |
-| `GET /{id}/download` | Owner only (403 otherwise); S3 files redirect to a presigned URL, local files are streamed with `FileResponse` |
+| `GET /{id}/download` | Authenticated owner read; S3 files redirect to a presigned URL, local files are streamed with `FileResponse` |
 | `PUT /{id}/metadata` | Update descriptive fields |
 | `DELETE /{id}` | **Soft delete**: sets `deleted_at` and keeps the file in storage |
 
@@ -71,31 +67,31 @@ Files reach storage by three different routes, depending on which module saved t
 
 On the frontend, `src/lib/services/mediaService.ts` wraps these endpoints (`uploadMedia` with progress, `listMedia`, `getMedia`, `getMediaBlobUrl`, `deleteMedia`, `updateMediaMetadata`) and also offers `fileToDataUrl` and `isValidMediaType`.
 
-## Browser-only storage
+## Browser originals and verified recovery
 
-Two older paths keep files inside the browser:
+The canonical IndexedDB store is `continuum_media_db`; `utils/mediaStorage.ts` reexports it instead of creating another database. Its keys bind pending originals to the authenticated account. Browser bytes and temporary blob URLs remain local until a durable server copy has been verified.
 
-- **IndexedDB** — `src/lib/services/indexedDB.ts` (database `continuum_media_db`) and `src/lib/utils/mediaStorage.ts` (database `continuum-media`, via `idb`) both expose a `mediaStorage` object. The time capsule page still saves recordings with `mediaStorage.save(...)` from `indexedDB.ts`.
-- **Data URLs** — several uploaders read the file with `FileReader.readAsDataURL` and store the resulting string inside the record itself (for example `FileUploader.svelte`, the heirloom `VisionUploader.svelte` and the visual memories page). Those strings then travel through the normal record sync and can be large.
+`mediaService.ts` captures session ownership for uploads, adds CSRF itself on XHR, refreshes an expired session once and checks ownership before accepting progress/results. `verifyMediaRetrieval` compares returned bytes with the original. Image-processing controls can also use data URLs; these are distinct from server media references.
 
-Files in IndexedDB exist only in that browser. `src/lib/services/mediaMigration.ts` moves them to the server: `needsMigration()` checks `continuum_media_db`, `migrateAllMedia(onProgress)` uploads each blob through `uploadMedia` and records an old-id → new-id mapping in localStorage (`getMigrationMapping`, `clearMigrationMapping`). The root layout shows `MediaMigrationNotice.svelte`, which offers this migration.
+`mediaMigration.ts` presents pending originals, offers a separate save-copy action and repairs interrupted uploads. It reuses a verified uploaded identity when available, reads fresh parent rows, changes only attachment references and rechecks snapshot membership and bytes before releasing the local original. Changed/missing parent rows, unavailable bytes and account changes keep the original for another attempt. Advanced-asset history repairs use conditional updates to avoid overwriting a concurrently changed list. A migration mapping alone is not proof of recoverability.
 
-## Documents
+## Document records
 
-Vault documents are `Document` rows (`documents` table) served by `backend/routers/documents.py` at `/api/data/vault_documents` — list, create, update and delete, scoped to the current user. This router is registered before the generic `/api/data/{data_type}` router so the generic route does not capture it (see [Backend API and Routers](/openwiki/architecture/backend-api.md)). A document row records a required `title` and `category` (will, trust, deed, insurance…), plus optional `name`, `status`, `location_physical`, `location`, `is_digitized`, `file_path` and notes.
+The active generic `/api/data/documents` and `/api/data/vault_documents` aliases both use `Document`. The document vault is `/modules/legal-documents`; historical dedicated router files are not mounted. Records describe the paper/original location, digitized status and optional stored file reference; describing where an original is kept does not imply an uploaded copy exists.
 
-## PDF export
+## One snapshot for the handover
 
-`src/lib/services/exportService.ts` builds PDFs in the browser with `jsPDF` and `jspdf-autotable`:
+`GET /api/export/snapshot` gathers owner-scoped server records, owner/profile details, attachment membership and missing references. `exportService.ts` builds the same packet structure for the binder, PDF and downloadable copy. It no longer depends on whichever frontend modules happened to be imported or on older fixed localStorage keys.
 
-- `createPDFBlob(scope, includeImages, onProgress)` reads current data from the frontend stores (property, heirlooms, timeline, medical, insurance) and lays out tables per section. `scope` is `'full'`, `'insurance'` or `'medical'`.
-- `generatePDF(...)` creates the blob and triggers a download.
+`createPDFBlob` builds `full`, `insurance` or `medical` scope from the snapshot and optionally retrieves JPEG/PNG images. `/export/preview` reads scope/images query parameters, fetches a snapshot and displays the resulting PDF through an object URL. `/binder` fetches the same snapshot, builds the full packet, retrieves files, offers per-file retry and prints with `window.print()`.
 
-`/export/preview` reads `scope` and `images` from the query string, calls `createPDFBlob`, and shows the result from an object URL with a download button. Because the export reads the stores, it reflects what the browser has loaded and synced.
+The download ZIP contains `packet.html`, `packet.pdf`, `snapshot.json`, `manifest.json` and successfully fetched attachment bytes. The manifest records file path/type/size/SHA-256, the source records and fields each file belongs to, included versus expected counts, missing references and retry issues. A failed read is retried on the next download rather than cached as success. Partial file coverage is stated explicitly in the screen, readable packet and manifest; a downloaded copy is not called complete just because ZIP creation succeeded.
 
-## The Red Binder
+## Recipient access and files
 
-`/binder` is a printable summary. On mount it reads cached data directly with `getStored` from fixed localStorage keys — for example `docs_legal-vault`, `assets_assets-main` and `subscriptions` — builds a list of sections, and prints with `window.print()`. It does not call the API or go through the SyncManager stores, so sections whose data is stored under different keys show as empty.
+`/for/<token>` and the owner's `/for/preview/<contactId>` use the server-filtered recipient snapshot. A selected contact ID takes precedence over name matching. Held or differently addressed letters and unreleased/not-addressed capsules are removed before file matching. Executor checklist notes follow their explicit sharing policy. The recipient uses the same packet/export logic over this filtered payload.
+
+`/api/media/shared/<token>/<media_id>` revalidates the live recipient link and serves only undeleted owner files used by records in that view. This is separate from authenticated owner downloads; a browser-only original cannot be retrieved through either path until the server bytes and record links exist.
 
 ## Related pages
 

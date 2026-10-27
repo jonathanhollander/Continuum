@@ -1,11 +1,11 @@
 ---
 type: system
 title: Authentication
-description: How users sign in to Continuum — password, magic link, WebAuthn passkeys and the jh@continuum.estate development bypass — and how JWT access and refresh tokens, get_current_user, the WebAuthn challenge store, CSRF exemptions, rate limits and the frontend auth store fit together.
+description: How users sign in to Continuum — password, magic link, WebAuthn passkeys — and how JWT access and refresh tokens, get_current_user, the WebAuthn challenge store, CSRF exemptions, rate limits and the frontend auth store fit together.
 tags: [auth, jwt, webauthn, passkeys, security]
 verified:
   - by: openwiki/0.4.3
-    at: 2026-10-26T04:52:34.633Z
+    at: 2026-10-27T00:41:19.118Z
 sources:
   - id: openwiki-source-9d39a51fb1867de8482d70e3
     resource: repo://backend/auth.py
@@ -17,7 +17,7 @@ sources:
     resource: repo://backend/routers/auth.py
   - id: openwiki-source-5314c7322469359ea3b510ed
     resource: repo://frontend/src/lib/stores/auth.ts
-generated: { by: "claude-code", at: "2026-10-26T04:52:34.633Z" }
+generated: { by: "codex", at: "2026-10-27T00:41:19.118Z" }
 ---
 
 # Authentication
@@ -33,17 +33,16 @@ Key files: `backend/auth.py` (hashing, JWTs, refresh tokens, dependencies), `bac
 | Password | `POST /api/auth/signup`, `POST /api/auth/token` (OAuth2 form: `username`, `password`) | Both limited to 5/minute |
 | Magic link | `POST /api/auth/magic-link`, `GET /api/auth/magic-link/verify?token=` | Email link to `/auth/verify`; 5/minute |
 | Passkey | `POST /api/auth/passkey/register/start|finish`, `POST /api/auth/passkey/login/start|finish` | WebAuthn via `@simplewebauthn/browser`; 10/minute |
-| Dev bypass | `POST /api/auth/token` with username `jh@continuum.estate` | Any password; see below |
 
 Each successful sign-in returns `{ access_token, refresh_token, token_type: "bearer", expires_in }`.
 
 **Passwords** are pre-hashed with SHA-256 and then hashed with Argon2 (bcrypt still accepted for older hashes; legacy `$2a/$2b/$2y$` hashes are checked directly with the `bcrypt` library). An unrecognised stored value counts as a failed check rather than an error.
 
-**Magic links** are JWTs with `type: "magic_link"`, a random `jti` and a 15-minute lifetime. The request endpoint always answers "If this email is registered…" so it does not reveal which emails exist. Verification accepts each `jti` once: it records a revoked row in `refresh_tokens` keyed by a hash of the `jti`, so a second use is rejected. Tokens without a `jti` are refused.
+**Magic links** are JWTs with `type: "magic_link"`, a random `jti` and a 15-minute lifetime. The request endpoint returns the same request receipt for registered/unknown accounts and failed delivery. A receipt is not proof of an accepted or delivered email; provider outcome is recorded separately. Verification accepts each `jti` once: it records a revoked row in `refresh_tokens` keyed by a hash of the `jti`, so a second use is rejected. Tokens without a `jti` are refused.
 
 **Passkeys**: registration start creates the `User` row (with an empty `public_key` placeholder), stores the WebAuthn challenge, and returns options; finish verifies the attestation and stores the credential as a `PulseCredential` row. Login start optionally looks up the email's credentials to restrict the prompt; login finish pops the challenge, verifies the assertion against the stored public key and sign count, and updates the sign count. The relying party comes from `RP_ID`, `RP_NAME` and `ORIGIN` (see [Development, Configuration and Deployment](/openwiki/operations/development-and-deployment.md)).
 
-**Dev bypass**: `/api/auth/token` with username `jh@continuum.estate` skips password verification and creates that user (password hash `BYPASS_AUTH`) if missing. The check has no environment condition, so it is active wherever the code runs; it logs a `SECURITY BYPASS` warning each time.
+Password login always verifies the stored hash; the former hard-coded account bypass is no longer present.
 
 ## Tokens
 
@@ -56,17 +55,18 @@ Each successful sign-in returns `{ access_token, refresh_token, token_type: "bea
 
 `frontend/src/lib/stores/auth.ts` exposes `init`, `signup`, `login`, `logout` and passkey support detection.
 
-- `init()` (called by the root layout) reads the stored token and calls `/api/auth/me`; on failure it deletes the token and marks the user signed out.
-- `login()` posts the form to `/api/auth/token`, stores **only** the access token, fetches `/me`, and registers the email in the local keyring that namespaces cached data (see [Frontend State and SyncManager](/openwiki/frontend/state-and-sync.md)).
-- `logout()` removes the token locally; it does not call `/api/auth/logout`.
+- `init()` shares the current token's in-flight `/api/auth/me` check across layout calls. A 401 attempts one refresh and reloads `/me`; a transient network/server failure keeps tokens and exposes offline/retry state instead of signing out.
+- `login()` and `signup()` store access and refresh tokens, load the user, and establish the local account namespace. Delayed responses are checked against session ownership before changing active state.
+- `refreshSession()` coalesces parallel callers for one session and stores rotated tokens. The client fetch hook uses it to retry eligible authenticated API calls once; only a definite token refusal triggers sign-out.
+- `logout()` removes both tokens locally and resets the active auth store; it does not call the server revocation endpoint. Server `/logout` and `/logout-all` remain separate API capabilities.
 
-The frontend never stores or uses the refresh token, so a session ends when the 15-minute access token expires: the next `/me` or API call returns 401, and the API helpers log the user out and send them to `/login`.
+A 15-minute access-token expiry therefore does not by itself end a session while a usable refresh token remains. Session ownership prevents a response from an older sign-in or account from installing tokens into the current session.
 
-The login page (`src/routes/login`) drives the passkey flow with `startAuthentication` and the magic-link request; `src/routes/auth/verify` exchanges the link token and stores the returned access token.
+The login page (`src/routes/login`) drives the passkey flow with `startAuthentication` and the magic-link request; `src/routes/auth/verify` exchanges the link token and stores the returned token pair.
 
 ## CSRF and rate limits
 
-The CSRF middleware (see [Backend API and Routers](/openwiki/architecture/backend-api.md)) exempts the sign-in endpoints by exact path — token, signup, refresh, the four passkey routes, magic link and its verify — plus the public Pulse `/api/pulse/respond/` and `/api/pulse/confirm/` token routes. Rate limits are per client IP via `slowapi`, set on each endpoint with `@limiter.limit`.
+The CSRF middleware (see [Backend API and Routers](/openwiki/architecture/backend-api.md)) exempts the sign-in endpoints by exact path — token, signup, refresh, the four passkey routes, magic link and its verify — plus the public Pulse `/api/pulse/respond/` and `/api/pulse/confirm/` and `/api/pulse/nudge/` token routes. Rate limits are per client IP via `slowapi`, set on each endpoint with `@limiter.limit`.
 
 ## Related pages
 

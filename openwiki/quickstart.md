@@ -5,8 +5,10 @@ description: Orientation for a new developer on Continuum — what the product i
 tags: [quickstart, onboarding, setup]
 verified:
   - by: openwiki/0.4.3
-    at: 2026-10-26T04:52:34.633Z
+    at: 2026-10-27T00:41:19.118Z
 sources:
+  - id: openwiki-source-8037e2358a2c4f9b2c722a11
+    resource: repo://AGENTS.md
   - id: openwiki-source-fcffbe3e28749eaf9a39557c
     resource: repo://backend/main.py
   - id: openwiki-source-a2371d6362e5db4bc834ad03
@@ -17,23 +19,25 @@ sources:
     resource: repo://frontend/package.json
   - id: openwiki-source-d61d83066a37e33b8d45f791
     resource: repo://start.sh
-generated: { by: "claude-code", at: "2026-10-26T04:52:34.633Z" }
+generated: { by: "codex", at: "2026-10-27T00:41:19.118Z" }
 ---
 
 # Quickstart
 
-Continuum is end-of-life planning software: one place for a person's accounts, documents, medical wishes, contacts, letters and memories, plus **Pulse**, a welfare check-in that alerts chosen guardians if the person stops responding. Its users may be planning ahead or grieving, so user-facing text is deliberately gentle ("Save my thoughts", not "Submit").
+Continuum is Jonathan's personal legacy and financial handover for his son. The recovery prioritizes recording his words and practical information, preserving complete saves, and making a readable copy his son can use. It is also end-of-life planning software: one place for a person's accounts, documents, medical wishes, contacts, letters and memories, plus **Pulse**, a welfare check-in that alerts chosen guardians if the person stops responding. Its users may be planning ahead or grieving, so user-facing text is deliberately gentle ("Save my thoughts", not "Submit").
 
-The stack is a SvelteKit 2 / Svelte 5 single-page app (`frontend/`) and a FastAPI + SQLModel + Alembic backend (`backend/`), deployed as one service on Railway at `https://continuum.estate`. The root `README.md` still describes an old Next.js version; ignore it. `legacy_nextjs_archive/` is that old code.
+The stack is a SvelteKit 2 / Svelte 5 single-page app (`frontend/`) and a FastAPI + SQLModel + Alembic backend (`backend/`), deployed as one service on Railway at `https://continuum.estate`. The former root Next.js README is archived under `docs/archive/`; use `docs/README.md` as the current documentation index. `legacy_nextjs_archive/` is that old code.
 
 ## Run it locally
 
-Backend (Python 3.11), from the repository root:
+Backend (Python 3.11), from the repository root. Use an isolated virtual environment and explicitly configure a disposable database, uploads directory and local outbox before running checks; do not point setup or probes at the owner's existing records:
 
 ```bash
+python -m venv .venv
+source .venv/bin/activate
 pip install -r backend/requirements.txt     # exact pins
 (cd backend && alembic upgrade head)
-python -m backend.main                       # http://localhost:8000
+PULSE_SCHEDULER_ENABLED=false python -m backend.main # http://localhost:8000
 ```
 
 Backend modules import each other as `backend.…`, so start it from the repository root (`python -m backend.main` or `uvicorn backend.main:app`). `start.sh` runs `uvicorn main:app` from inside `backend/`, which does not match that import style.
@@ -41,16 +45,18 @@ Backend modules import each other as `backend.…`, so start it from the reposit
 Frontend (Node 20+), in a second terminal:
 
 ```bash
-cd frontend && npm install && npm run dev    # http://localhost:5173
+cd frontend
+npm ci                                      # fresh checkout; preserve active dependency work
+npm run dev    # http://localhost:5173
 ```
 
-Vite proxies `/api` to port 8000. With no environment set, the backend uses SQLite (`continuum_saas.db`), development mode (CSRF warnings only, `_technical` error details shown), and the local email outbox (`backend/outbox/`) instead of sending mail.
+Vite proxies `/api` to port 8000. Defaults use SQLite (`continuum_saas.db`) and development mode; local-only error details are suppressed on Railway. Email falls back to `backend/outbox` only when an external provider is not configured. For checks, explicitly isolate storage/database/outbox and disable external sends. The scheduler now honors `PULSE_SCHEDULER_ENABLED=false`; without that override its default is enabled.
 
 ## Signing in locally
 
 - `dev@continuum.im` / `dev123` — seeded on every backend start if missing.
-- `jh@continuum.estate` with any password — a development bypass on the password login endpoint (see [Authentication](/openwiki/systems/authentication.md)).
-- Magic links are written to `backend/outbox/` as HTML files in local mode.
+- Password verification is required for every account; the former hard-coded bypass is removed.
+- Magic links are written to the configured local outbox in local mode. A request receipt is not proof of sent or delivered email.
 
 ## Where things live
 
@@ -71,8 +77,9 @@ Vite proxies `/api` to port 8000. With no environment set, the backend uses SQLi
 
 - Module data goes through the SyncManager stores; don't call the API directly from pages.
 - Every model must be imported in `backend/alembic/env.py` for autogenerate to see it.
-- There is no automated test suite or CI; test by running the app. Run `npm run check` and `npm run build` in `frontend/` before deploying.
-- Deploy with `railway up`.
+- The frontend has `check` and `build` scripts and no configured test/test:e2e script. Use focused regression checks plus desktop/phone browser journeys with synthetic data. A build alone does not prove fields survived a save/reload.
+- A knowledge refresh does not authorize deployment or correspondence. Run `npm run check` and `npm run build` before any separately authorized deployment.
+- Handover flows use the server snapshot for binder, PDF, structured copy and attachment manifest. Verify actual file bytes and partial-coverage reporting, including the recipient view.
 
 ## Which page to read
 
