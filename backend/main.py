@@ -13,7 +13,6 @@ from sqlmodel import Session
 from backend.config import settings
 from backend.database import engine, create_db_and_tables, get_session, User, Estate
 from backend.estate_persistence import estate_for_write, merge_profile, profile_of, recovery_summary
-from backend.utils.clock import utc_now
 from backend.security import verify_registration, get_authentication_options, verify_authentication
 from backend.auth import create_access_token, get_current_user, ACCESS_TOKEN_EXPIRE_MINUTES
 from backend.pulse_scheduler import start_scheduler, stop_scheduler
@@ -304,24 +303,6 @@ from pydantic import field_validator
 MAX_ESTATE_DATA_SIZE = 100000  # 100KB max for estate data
 
 
-class EstateDataPayload(BaseModel):
-    """Validated model for estate data storage."""
-    transparent_data: Optional[str] = "{}"
-    encrypted_vault: Optional[bytes] = b""
-
-    @field_validator("transparent_data")
-    @classmethod
-    def validate_transparent_data(cls, v):
-        if v and len(v) > MAX_ESTATE_DATA_SIZE:
-            raise ValueError(f"transparent_data exceeds maximum size ({MAX_ESTATE_DATA_SIZE} bytes)")
-        # Validate it's valid JSON
-        try:
-            json.loads(v or "{}")
-        except json.JSONDecodeError:
-            raise ValueError("transparent_data must be valid JSON")
-        return v
-
-
 class EstateProfilePayload(BaseModel):
     """Validated model for estate profile data."""
     data: Dict[str, Any]
@@ -407,16 +388,6 @@ def get_estate(user: User = Depends(get_current_user), session: Session = Depend
     session.commit()
     session.refresh(estate)
     return estate
-
-@app.post("/api/estate")
-def save_estate(estate_data: EstateDataPayload, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
-    """Save estate data with Pydantic validation (P1-High Security)."""
-    estate = estate_for_write(session, user.id)
-    estate.transparent_data = estate_data.transparent_data
-    estate.encrypted_vault = estate_data.encrypted_vault
-    estate.updated_at = utc_now()
-    session.commit()
-    return {"status": "saved"}
 
 @app.get("/api/estate/profile")
 def get_estate_profile(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
