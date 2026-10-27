@@ -10,6 +10,7 @@ from backend.config import settings
 from backend.database import engine
 
 PRIVATE_MESSAGE = "Continuum is in private preview."
+SIGNUP_CLOSED_MESSAGE = "New signups are currently closed. Existing users can still sign in."
 _PUBLIC_API = {
     ("GET", "/api/health"), ("GET", "/api/csrf-token"),
     ("GET", "/api/auth/access-status"), ("POST", "/api/auth/token"),
@@ -33,9 +34,13 @@ def require_allowed_user(user_id: int | None) -> None:
         raise HTTPException(status_code=403, detail=PRIVATE_MESSAGE)
 
 
+def signup_enabled() -> bool:
+    return settings.SIGNUP_ENABLED and not private_mode()
+
+
 def require_signup_enabled() -> None:
-    if private_mode():
-        raise HTTPException(status_code=403, detail=PRIVATE_MESSAGE)
+    if not signup_enabled():
+        raise HTTPException(status_code=403, detail=SIGNUP_CLOSED_MESSAGE)
 
 
 def _authorize(token: str) -> None:
@@ -47,12 +52,12 @@ def _authorize(token: str) -> None:
 
 async def enforce_private_access(request: Request, call_next):
     path = request.url.path.rstrip("/")
+    if path in _SIGNUP_API and request.method == "POST" and not signup_enabled():
+        return JSONResponse(status_code=403, content={"detail": SIGNUP_CLOSED_MESSAGE})
     if (not private_mode() or not (path == "/api" or path.startswith("/api/")
                                  or path in {"/openapi.json", "/docs", "/redoc"})
             or request.method == "OPTIONS"):
         return await call_next(request)
-    if path in _SIGNUP_API:
-        return JSONResponse(status_code=403, content={"detail": PRIVATE_MESSAGE})
     if (request.method, path) in _PUBLIC_API:
         return await call_next(request)
     scheme, token = get_authorization_scheme_param(request.headers.get("Authorization"))

@@ -29,6 +29,8 @@ class Settings(BaseSettings):
     # Environment
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
+    # Closing registration must not restrict the website or existing accounts.
+    SIGNUP_ENABLED: bool = False
     PRIVATE_ACCESS_USER_ID: Optional[int] = Field(default=None, gt=0)
 
     # Application

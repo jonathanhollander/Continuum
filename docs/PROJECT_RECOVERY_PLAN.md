@@ -4,6 +4,8 @@
 
 **Revised 2026-10-26** after the features/usability review (`docs/reviews/2026-10-25-features-usability/REVIEW.md`): the order is now built around the handover, not the existing navigation.
 
+**Owner correction, 2026-10-27:** only new signups are blocked. Public website access and existing-account sign-in must work. The earlier owner-only private-preview interpretation is superseded; see the execution plan and [verification](reviews/2026-10-27-signup-closure.md).
+
 **Execution:** task cards for each phase are in [RECOVERY_EXECUTION_PLAN.md](RECOVERY_EXECUTION_PLAN.md).
 
 **Current recovery status (2026-10-26):** the later [code/plan cross-check](reviews/2026-10-26-plan-crosscheck/REVIEW.md)

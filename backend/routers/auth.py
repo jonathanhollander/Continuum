@@ -7,7 +7,7 @@ from typing import List, Optional, Dict, Any
 from datetime import timedelta
 from backend.database import User, get_session
 from backend.config import settings
-from backend.private_access import private_mode, user_allowed, require_allowed_user, require_signup_enabled
+from backend.private_access import private_mode, user_allowed, require_allowed_user, require_signup_enabled, signup_enabled
 from backend.auth import (
     create_access_token,
     get_password_hash,
@@ -289,7 +289,7 @@ def get_current_user_info(current_user: User = Depends(get_current_user)):
 def access_status(response: Response, user: Optional[User] = Depends(optional_current_user)):
     response.headers["Cache-Control"] = "no-store"
     response.headers["Vary"] = "Authorization"
-    return {"private_mode": private_mode(), "signup_enabled": not private_mode(),
+    return {"private_mode": private_mode(), "signup_enabled": signup_enabled(),
             "access_allowed": user_allowed(user.id if user else None)}
 
 
