@@ -28,6 +28,7 @@ const preservedVariables = [
   "ORIGIN",
   "POSTMARK_WEBHOOK_SECRET",
   "PYTHONPATH",
+  "RESEND_API_KEY",
   "RP_ID",
   "S3_ENABLED",
   "SECRET_KEY",

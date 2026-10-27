@@ -2,6 +2,7 @@
 Production-ready email service with multiple provider support.
 
 Supports:
+- Resend API (production)
 - Postmark API (recommended for production)
 - SMTP (fallback for generic providers)
 - Local file storage (development/testing)
@@ -13,7 +14,9 @@ Features:
 - Graceful fallback between providers
 """
 import os
+import re
 import smtplib
+import httpx
 from datetime import datetime
 from backend.utils.clock import utc_now
 from email.mime.text import MIMEText
@@ -29,6 +32,8 @@ from backend.utils.logger import get_logger
 from backend.database import get_session, User
 
 logger = get_logger(__name__)
+
+RESEND_API_URL = "https://api.resend.com/emails"
 
 
 class EmailPayload(BaseModel):
@@ -101,7 +106,9 @@ class EmailService:
 
     def _determine_provider(self) -> str:
         """Determine which email provider to use based on configuration."""
-        if settings.POSTMARK_API_KEY:
+        if settings.RESEND_API_KEY:
+            return "resend"
+        elif settings.POSTMARK_API_KEY:
             return "postmark"
         elif settings.SMTP_ENABLED and settings.SMTP_HOST:
             return "smtp"
@@ -175,7 +182,9 @@ class EmailService:
         # Send via appropriate provider
         result = None
         try:
-            if self.provider == "postmark":
+            if self.provider == "resend":
+                result = self._send_via_resend(to_email, subject, html_body)
+            elif self.provider == "postmark":
                 result = self._send_via_postmark(to_email, subject, html_body)
             elif self.provider == "smtp":
                 result = self._send_via_smtp(to_email, recipient_name, subject, html_body)
@@ -217,6 +226,34 @@ class EmailService:
                 db_session.commit()
 
             return EmailResult(status="failed", error=str(e), provider=self.provider)
+
+    def _send_via_resend(self, to_email: str, subject: str, html_body: str) -> Dict[str, Any]:
+        """Send email using the Resend HTTP API. A non-2xx response raises, so the send is logged as failed."""
+        response = httpx.post(
+            RESEND_API_URL,
+            headers={"Authorization": f"Bearer {settings.RESEND_API_KEY}"},
+            json={
+                "from": f"{settings.SMTP_FROM_NAME} <{settings.SMTP_FROM_EMAIL}>",
+                "to": [to_email],
+                "subject": subject,
+                "html": html_body,
+            },
+            timeout=15,
+        )
+        if not response.is_success:
+            raise RuntimeError(f"Resend returned {response.status_code}: {response.text[:500]}")
+
+        message_id = response.json().get("id")
+        logger.info(
+            "Email sent via Resend",
+            extra={"context": {
+                "provider": "resend",
+                "recipient": to_email,
+                "subject": subject,
+                "message_id": message_id
+            }}
+        )
+        return {"status": "sent", "provider": "resend", "message_id": message_id}
 
     def _send_via_postmark(self, to_email: str, subject: str, html_body: str) -> Dict[str, Any]:
         """Send email using Postmark API."""
@@ -276,7 +313,7 @@ class EmailService:
             msg.attach(html_part)
 
             # Send via SMTP
-            with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
+            with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=15) as server:
                 if settings.SMTP_PORT == 587:
                     server.starttls()
                 if settings.SMTP_USERNAME and settings.SMTP_PASSWORD:
@@ -315,7 +352,7 @@ class EmailService:
         """Save email to local file (development mode)."""
         timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
         safe_subject = subject.replace(" ", "_").lower()[:30]
-        filename = f"{timestamp}_{safe_subject}_{to_email}.html"
+        filename = re.sub(r"[^\w.@+-]", "_", f"{timestamp}_{safe_subject}_{to_email}") + ".html"
         filepath = os.path.join(self.outbox_dir, filename)
 
         with open(filepath, "w", encoding="utf-8") as f:

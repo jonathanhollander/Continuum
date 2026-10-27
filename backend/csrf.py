@@ -48,6 +48,7 @@ CSRF_EXEMPT_PATHS = {
     "/api/auth/magic-link/verify",
     "/api/pulse/checkin/respond",  # Legacy path (no such route today)
     "/api/health",
+    "/api/emails/webhook/postmark",  # Postmark bounce webhook (own shared secret)
     "/docs",
     "/redoc",
     "/openapi.json",

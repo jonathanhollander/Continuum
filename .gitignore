@@ -59,3 +59,6 @@ openwiki/.run.json
 # Agent worktrees (docs/RECOVERY_EXECUTION_PLAN.md decision 6)
 .worktrees/
 *.bundle
+
+# Local email outbox (dev sends)
+backend/outbox/

@@ -72,9 +72,13 @@ class Settings(BaseSettings):
 
     # Email Configuration
     # Provider Selection (automatic based on available credentials):
-    # 1. Postmark (recommended) - if POSTMARK_API_KEY is set
-    # 2. SMTP - if SMTP_ENABLED=true and SMTP_HOST is set
-    # 3. Local File Storage - fallback for development
+    # 1. Resend - if RESEND_API_KEY is set (sends from SMTP_FROM_NAME <SMTP_FROM_EMAIL>)
+    # 2. Postmark - if POSTMARK_API_KEY is set
+    # 3. SMTP - if SMTP_ENABLED=true and SMTP_HOST is set
+    # 4. Local File Storage - fallback for development
+
+    # Resend (production provider)
+    RESEND_API_KEY: Optional[str] = None
 
     # Postmark (recommended for production)
     POSTMARK_API_KEY: Optional[str] = None
@@ -97,7 +101,7 @@ class Settings(BaseSettings):
     EMAIL_MAX_RETRIES: int = 3
     EMAIL_RETRY_DELAY_SECONDS: int = 60
 
-    # File Storage
+    # File Storage (OUTBOX_DIR moves to /data/outbox when UPLOAD_DIR is on the /data volume)
     OUTBOX_DIR: str = "backend/outbox"
     UPLOAD_DIR: str = "backend/uploads"
     MAX_UPLOAD_SIZE: int = 10485760  # 10MB in bytes
@@ -195,7 +199,11 @@ class Settings(BaseSettings):
             # Also ensure Frontend URL matches
             if self.FRONTEND_URL == "http://localhost:5173" and self.is_production():
                 self.FRONTEND_URL = f"https://{self.RAILWAY_PUBLIC_DOMAIN}"
-                
+
+        # Keep the local outbox on the persistent volume alongside uploads
+        if self.OUTBOX_DIR == "backend/outbox" and self.UPLOAD_DIR.startswith("/data"):
+            self.OUTBOX_DIR = "/data/outbox"
+
         return self
 
     def get_cors_origins_list(self) -> List[str]:
