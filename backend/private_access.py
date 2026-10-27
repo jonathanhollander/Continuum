@@ -8,11 +8,12 @@ from sqlmodel import Session
 from backend.auth import get_current_user
 from backend.config import settings
 from backend.database import engine
+from backend.errors import ErrorResponse
 
 PRIVATE_MESSAGE = "Continuum is in private preview."
-SIGNUP_CLOSED_MESSAGE = "New signups are currently closed. Existing users can still sign in."
+SIGNUP_CLOSED_MESSAGE = "Continuum is open to existing members. Sign in whenever you're ready."
 _PUBLIC_API = {
-    ("GET", "/api/health"), ("GET", "/api/csrf-token"),
+    ("GET", "/api/health"), ("HEAD", "/api/health"), ("GET", "/api/csrf-token"),
     ("GET", "/api/auth/access-status"), ("POST", "/api/auth/token"),
     ("POST", "/api/auth/passkey/login/start"), ("POST", "/api/auth/passkey/login/finish"),
     ("POST", "/api/auth/magic-link"), ("GET", "/api/auth/magic-link/verify"),
@@ -43,6 +44,13 @@ def require_signup_enabled() -> None:
         raise HTTPException(status_code=403, detail=SIGNUP_CLOSED_MESSAGE)
 
 
+def _denied(status_code: int, message: str, headers=None) -> JSONResponse:
+    # The standard {"error": {"message"}} shape the frontend reads (PL-19).
+    body = ErrorResponse(message=f"Private access: {message}", user_message=message,
+                         status_code=status_code, error_code="PRIVATE_ACCESS").to_dict()
+    return JSONResponse(status_code=status_code, content=body, headers=headers)
+
+
 def _authorize(token: str) -> None:
     # Keep database work in a sync worker and reuse the existing JWT/type/user checks.
     with Session(engine) as session:
@@ -53,7 +61,7 @@ def _authorize(token: str) -> None:
 async def enforce_private_access(request: Request, call_next):
     path = request.url.path.rstrip("/")
     if path in _SIGNUP_API and request.method == "POST" and not signup_enabled():
-        return JSONResponse(status_code=403, content={"detail": SIGNUP_CLOSED_MESSAGE})
+        return _denied(403, SIGNUP_CLOSED_MESSAGE)
     if (not private_mode() or not (path == "/api" or path.startswith("/api/")
                                  or path in {"/openapi.json", "/docs", "/redoc"})
             or request.method == "OPTIONS"):
@@ -62,9 +70,9 @@ async def enforce_private_access(request: Request, call_next):
         return await call_next(request)
     scheme, token = get_authorization_scheme_param(request.headers.get("Authorization"))
     if scheme.lower() != "bearer" or not token:
-        return JSONResponse(status_code=403, content={"detail": PRIVATE_MESSAGE})
+        return _denied(403, PRIVATE_MESSAGE)
     try:
         await run_in_threadpool(_authorize, token)
     except HTTPException as error:
-        return JSONResponse(status_code=error.status_code, content={"detail": error.detail}, headers=error.headers)
+        return _denied(error.status_code, error.detail, error.headers)
     return await call_next(request)

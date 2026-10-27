@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Body
 from backend.limiter import limiter
 from sqlmodel import Session, select, func, and_, or_
-from sqlalchemy import Integer, DateTime, update
+from sqlalchemy import Integer, DateTime, String, update
 from datetime import datetime
 from typing import List, Any, Dict, Optional
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel, ValidationError, field_validator, model_validator
 import json
 from backend.database import get_session, User
 from backend.auth import get_current_user
@@ -437,6 +437,7 @@ def update_item(
             session.refresh(db_item)
             return db_item
 
+        changes = {}
         for key, value in updates.items():
             if key == "custom_attributes" and isinstance(value, dict):
                 value = json.dumps(value)
@@ -447,8 +448,19 @@ def update_item(
             if col is not None and isinstance(col.type, DateTime) and isinstance(value, str):
                 # setattr skips validation; SQLite's DateTime column refuses ISO text ("2027-03-10").
                 value = datetime.fromisoformat(value) if value else None
-            if hasattr(db_item, key):
-                setattr(db_item, key, value)
+            if value == "" and col is not None and not isinstance(col.type, String):
+                value = None  # a cleared number or date field
+            if key in model.model_fields:
+                changes[key] = value
+
+        # setattr skips validation, so check the changed fields the way POST does (a mismatch is a 422).
+        try:
+            changes = {k: getattr(model.model_validate({**db_item.model_dump(), **changes}), k) for k in changes}
+        except ValidationError as e:
+            if any(err["loc"] and err["loc"][0] in changes for err in e.errors()):
+                raise
+        for key, value in changes.items():
+            setattr(db_item, key, value)
 
         session.add(db_item)
         _log_estate_action(session, request, "update", user, data_type, item_id)

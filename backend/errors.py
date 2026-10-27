@@ -8,6 +8,8 @@ Provides:
 - Error logging integration
 """
 from fastapi import HTTPException, status
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from http import HTTPStatus
 from typing import Optional, Dict, Any
 import traceback
 from datetime import datetime
@@ -348,11 +350,12 @@ def handle_exception(exc: Exception, context: str = "operation") -> ErrorRespons
     if isinstance(exc, ContinuumException):
         return exc.to_error_response()
 
-    # Handle FastAPI HTTPException
-    if isinstance(exc, HTTPException):
+    # Handle FastAPI and Starlette HTTPException; a bare status phrase ("Method Not Allowed") gets gentle copy
+    if isinstance(exc, StarletteHTTPException):
+        phrase = HTTPStatus(exc.status_code).phrase if exc.status_code in HTTPStatus._value2member_map_ else None
         return ErrorResponse(
             message=f"HTTP {exc.status_code}: {exc.detail}",
-            user_message=exc.detail if isinstance(exc.detail, str) else "Something unexpected happened. Try again whenever you're ready.",
+            user_message=exc.detail if isinstance(exc.detail, str) and exc.detail != phrase else "That paused for a moment. We can try again whenever you're ready.",
             status_code=exc.status_code,
             error_code="HTTP_ERROR"
         )
@@ -364,7 +367,7 @@ def handle_exception(exc: Exception, context: str = "operation") -> ErrorRespons
 
     return ErrorResponse(
         message=f"Unhandled exception: {str(exc)}",
-        user_message="Something unexpected happened, and our team knows. Try again whenever you're ready, or reach out and we'll help.",
+        user_message="That paused on our side for a moment. We can try again whenever you're ready.",
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         error_code="INTERNAL_ERROR",
         details={"context": context}

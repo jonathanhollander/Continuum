@@ -8,5 +8,5 @@ from backend.database import User
 def require_admin(user: User = Depends(get_current_user)) -> User:
     if not user.is_admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="Administrator access is required.")
+                            detail="This area is for administrators.")
     return user

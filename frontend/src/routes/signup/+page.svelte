@@ -441,10 +441,10 @@
 {:else}
 <main class="min-h-screen bg-background text-foreground flex items-center justify-center p-6 font-sans">
     <div class="max-w-lg space-y-6 text-center">
-        <h1 class="text-3xl font-serif font-bold">New signups are currently closed</h1>
-        <p class="text-muted-foreground">Existing users can still sign in.</p>
+        <h1 class="text-3xl font-serif font-bold">Continuum is open to existing members</h1>
+        <p class="text-muted-foreground">Sign in whenever you're ready.</p>
         {#if $accessStatus.phase === "error"}
-            <p role="alert">Access status is unavailable. Try again when you are ready.</p>
+            <p role="alert">Checking access paused for a moment. We can try again whenever you're ready.</p>
             <button class="text-primary font-semibold underline" on:click={() => refreshAccessStatus()}>Try again</button>
         {:else if $accessStatus.phase === "loading"}<p role="status">Checking access…</p>{/if}
         <a href={loginHref} class="block text-primary font-semibold underline">Sign in</a>

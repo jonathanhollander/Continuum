@@ -209,7 +209,7 @@ def signup(request: Request, signup_data: SignupRequest, session: Session = Depe
         if result.status == "saved_local":
             warnings.append(WarningMessage(
                 code="EMAIL_LOCAL_ONLY",
-                message="Your account is ready! The welcome email was saved to backend/outbox/ (development mode).",
+                message="Your account is ready! The welcome email is saved on the server.",
                 severity="info"
             ))
         elif result.status == "failed":
@@ -871,6 +871,8 @@ def update_preferences(
 ):
     """Update user preferences."""
     if "overwhelm_muted" in prefs:
+        if not isinstance(prefs["overwhelm_muted"], bool):
+            raise HTTPException(status_code=422, detail="That setting takes on or off.")
         current_user.overwhelm_muted = prefs["overwhelm_muted"]
 
     if "user_role" in prefs:

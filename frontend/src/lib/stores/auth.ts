@@ -216,14 +216,14 @@ function createAuthStore() {
                     const error = await res.json();
                     if (!isCurrentSession(owner, true)) return false;
                     if (previous.ready && previous.token === owner.token) completeSession(owner);
-                    update(s => ({ ...s, loading: false, error: error.detail || 'Signup failed' }));
+                    update(s => ({ ...s, loading: false, error: error.error?.message || error.detail || 'That pause was on our side. We can try again whenever you\'re ready.' }));
                     return false;
                 }
             } catch (e) {
                 if (!isCurrentSession(owner, true)) return false;
                 if (previous.ready && previous.token === owner.token) completeSession(owner);
                 console.error("Signup failed", e);
-                update(s => ({ ...s, loading: false, error: 'Signup failed. Please try again.' }));
+                update(s => ({ ...s, loading: false, error: 'That pause was on our side. We can try again whenever you\'re ready.' }));
                 return false;
             }
         },
@@ -254,14 +254,14 @@ function createAuthStore() {
                     const error = await res.json();
                     if (!isCurrentSession(owner, true)) return false;
                     if (previous.ready && previous.token === owner.token) completeSession(owner);
-                    update(s => ({ ...s, loading: false, error: error.detail || 'Login failed' }));
+                    update(s => ({ ...s, loading: false, error: error.error?.message || error.detail || 'Sign-in paused for a moment. We can try again whenever you\'re ready.' }));
                     return false;
                 }
             } catch (e) {
                 if (!isCurrentSession(owner, true)) return false;
                 if (previous.ready && previous.token === owner.token) completeSession(owner);
                 console.error("Login failed", e);
-                update(s => ({ ...s, loading: false, error: 'Login failed. Please try again.' }));
+                update(s => ({ ...s, loading: false, error: 'Sign-in paused for a moment. We can try again whenever you\'re ready.' }));
                 return false;
             }
         },

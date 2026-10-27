@@ -95,7 +95,7 @@ async function csrfToken(): Promise<string | null> {
     let token = readCsrfCookie();
     if (!token) {
         try {
-            await fetch(`${API_BASE_URL}/api/health`, { credentials: 'include' });
+            await fetch(`${API_BASE_URL}/api/csrf-token`, { credentials: 'include' });
         } catch {
             // the upload reports its own result
         }

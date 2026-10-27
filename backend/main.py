@@ -23,8 +23,7 @@ from datetime import timedelta
 from backend.routers import pulse, contacts, estate_data, medical, memories, auth as auth_router, media, email, support, ai_proxy, export, recipient, admin_users, ai_settings
 from backend.models.ai_settings import AISetting
 
-from backend.errors import ContinuumException, handle_exception
-from slowapi import _rate_limit_exceeded_handler
+from backend.errors import ContinuumException, ErrorResponse, handle_exception
 from slowapi.errors import RateLimitExceeded
 from backend.limiter import limiter
 from secure import Secure, ContentSecurityPolicy, StrictTransportSecurity, ReferrerPolicy
@@ -94,7 +93,6 @@ This API provides endpoints for:
     redoc_url="/redoc" if settings.DEBUG else "/api/redoc",
 )
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Request ID Middleware for log correlation
 class RequestIdMiddleware(BaseHTTPMiddleware):
@@ -254,6 +252,9 @@ if settings.is_production():
         return await call_next(request)
 
 # --- Global Exception Handlers ---
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from sqlalchemy.exc import DataError
 
 # The technical message stays in the logs. The browser receives it only on a local
 # development run: ENVIRONMENT defaults to "development", and production on Railway
@@ -280,14 +281,56 @@ async def continuum_exception_handler(request: Request, exc: ContinuumException)
     )
 
 
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exc: HTTPException):
-    """Handle FastAPI HTTPException errors."""
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    """Handle FastAPI and Starlette HTTPException errors (including routing 404/405)."""
     error_response = handle_exception(exc, context=f"{request.method} {request.url.path}")
     return JSONResponse(
         status_code=exc.status_code,
-        content=_error_json(request, error_response)
+        content=_error_json(request, error_response),
+        headers=getattr(exc, "headers", None),
     )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Request validation (422) in the standard shape; field names only, never the sent values."""
+    fields = [{"field": " · ".join(str(part) for part in e.get("loc", ())[1:]), "message": e.get("msg", "")}
+              for e in exc.errors()]
+    error_response = ErrorResponse(
+        message=f"Validation failed: {fields}",
+        user_message="A detail here needs a second look before it saves.",
+        status_code=422,
+        error_code="VALIDATION_ERROR",
+        details={"fields": fields},
+    )
+    return JSONResponse(status_code=422, content=_error_json(request, error_response))
+
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_exception_handler(request: Request, exc: RateLimitExceeded):
+    """429 in the standard shape, with slowapi's Retry-After / X-RateLimit headers."""
+    error_response = ErrorResponse(
+        message=f"Rate limit exceeded: {exc.detail}",
+        user_message="Let's pause for a minute, then try again whenever you're ready.",
+        status_code=429,
+        error_code="RATE_LIMITED",
+    )
+    response = JSONResponse(status_code=429, content=_error_json(request, error_response))
+    return request.app.state.limiter._inject_headers(response, request.state.view_rate_limit)
+
+
+@app.exception_handler(OverflowError)
+@app.exception_handler(DataError)
+async def out_of_range_exception_handler(request: Request, exc: Exception):
+    """A number too large for the database column (SQLite OverflowError, PostgreSQL DataError) is a 422."""
+    error_response = ErrorResponse(
+        message=f"Value out of range: {exc}",
+        user_message="A smaller number will fit here.",
+        status_code=422,
+        error_code="VALUE_OUT_OF_RANGE",
+    )
+    return JSONResponse(status_code=422, content=_error_json(request, error_response))
 
 
 @app.exception_handler(Exception)
@@ -323,7 +366,7 @@ class EstateDataPayload(BaseModel):
             json.loads(v or "{}")
         except json.JSONDecodeError:
             raise ValueError("transparent_data must be valid JSON")
-        return v
+        return "{}" if v is None else v
 
 
 class EstateProfilePayload(BaseModel):
@@ -351,7 +394,7 @@ async def csrf_token(request: Request):
     return get_csrf_token_endpoint(request)
 
 
-@app.get("/api/health", summary="Perform a deep health check", tags=["monitoring"])
+@app.api_route("/api/health", methods=["GET", "HEAD"], summary="Perform a deep health check", tags=["monitoring"])
 async def health_check(session: Session = Depends(get_session)):
     """
     Perform a robust health check that verifies:
@@ -439,7 +482,10 @@ def save_estate_profile(body: Dict[str, Any] = Body(...), user: User = Depends(g
     """Shallow-merge the posted keys into the stored profile. Accepts a raw object or {data: {...}}.
     A key posted as null is removed from the profile."""
     updates = body["data"] if set(body) == {"data"} and isinstance(body["data"], dict) else body
-    updates = EstateProfilePayload(data=updates).data  # size validation
+    try:
+        updates = EstateProfilePayload(data=updates).data  # size validation
+    except ValueError:
+        raise HTTPException(status_code=413, detail="A shorter profile will fit here.")
     return merge_profile(session, user.id, updates)
 
 
