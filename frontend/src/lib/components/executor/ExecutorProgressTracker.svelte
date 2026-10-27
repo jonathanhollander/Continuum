@@ -50,15 +50,15 @@
 
     let statusMessage = $derived.by(() => {
         if (progress.done === 0) {
-            return "You've begun. Take it one step at a time.";
+            return "Mark guide steps as finished to track your work here.";
         } else if (completion < 30) {
-            return "You've taken the first steps. That's meaningful.";
+            return "These are the guide steps you have marked finished.";
         } else if (completion < 60) {
-            return "You're making steady progress. Remember to take breaks when you need them.";
+            return "Your saved checks track work through this guide.";
         } else if (completion < 90) {
-            return "Most of the steps are finished. You're doing well.";
+            return "Most guide steps are marked finished. Review any remaining questions.";
         } else {
-            return "You've done important work here.";
+            return "Review your checks and notes with the people handling the estate.";
         }
     });
 
@@ -78,7 +78,7 @@
     <div class="flex items-start justify-between mb-4">
         <div>
             <h3 class="text-lg font-semibold text-foreground mb-1">
-                Estate Settlement Progress
+                Executor Guide progress
             </h3>
             <p class="text-sm text-muted-foreground">
                 {statusMessage}
