@@ -103,7 +103,7 @@ def create_contact(request: Request, body: ContactCreate, user: User = Depends(g
     return contact
 
 @router.put("/{contact_id}", response_model=PulseContact)
-def update_contact(contact_id: int, updated: ContactUpdate, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+def update_contact(request: Request, contact_id: int, updated: ContactUpdate, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     """Update a contact. Only the fields sent are changed."""
     contact = session.get(PulseContact, contact_id)
     if not contact or contact.user_id != user.id:
@@ -112,7 +112,17 @@ def update_contact(contact_id: int, updated: ContactUpdate, user: User = Depends
     _apply(contact, updated.model_dump(exclude_unset=True), user, session)
 
     session.add(contact)
-    session.commit()
+    log_audit(
+        session=session,
+        request=request,
+        action="update_contact",
+        user_id=user.id,
+        user_email=user.email,
+        resource_type="contact",
+        resource_id=str(contact.id),
+        commit=False,
+    )
+    session.commit()  # the change and its audit entry in one transaction
     session.refresh(contact)
     return contact
 
