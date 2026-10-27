@@ -11,13 +11,13 @@ from backend.auth import get_current_user
 from backend.estate_models import (
     Asset, FinancialAccount, Vendor, HomeAccess, Utility,
     Document, Letter, JournalEntry, Subscription, CalendarEvent,
-    InsurancePolicy, MedicalDirective, Pet, ContactRelationship,
-    MedicalProfile, LifeEvent, TimeCapsuleMessage, FuneralData,
+    InsurancePolicy, MedicalDirective, Pet,
+    LifeEvent, TimeCapsuleMessage, FuneralData,
     AdvancedAssetData, DigitalGuardianData, UserCustomFieldDefinition,
     ExecutorStep
 )
 from backend.models.activity_models import ActivityLogEntry
-from backend.models.qr_models import QRAccessPack, QRAssetLabel
+from backend.models.qr_models import QRAccessPack, QRAssetLabel  # noqa: F401 (registers the tables for SQLite create_all)
 from backend.models.acceptance_models import AcceptanceTask
 from backend.models.automation_models import AutomationRule
 from backend.utils.logger import get_logger
@@ -32,8 +32,10 @@ router = APIRouter(prefix="/api/data", tags=["estate_data"])
 PROTECTED_FIELDS = {"id", "user_id", "created_at", "updated_at", "__class__", "__dict__"}
 # Maximum reasonable field count to prevent DoS
 MAX_FIELDS = 50
-# Maximum string length for any field value
-MAX_STRING_LENGTH = 10000
+# Maximum string length for any field value (a long letter or a saved history list fits)
+MAX_STRING_LENGTH = 100000
+# activity_log lists the newest entries only
+ACTIVITY_LOG_LIMIT = 200
 
 
 class EstateItemCreate(BaseModel):
@@ -110,7 +112,6 @@ MODEL_MAP = {
     "calendar_events": CalendarEvent,
     "insurance_policies": InsurancePolicy,
     "pets": Pet,
-    "contact_relationships": ContactRelationship,
     "assets": Asset,
     "properties": Asset,
     "digital_assets": Asset,
@@ -121,13 +122,9 @@ MODEL_MAP = {
     "home_access": HomeAccess,
     "utilities": Utility,
     "documents": Document,
-    # Alias: the vault's older endpoint name (settings/data counts from it); every verb lands here.
-    "vault_documents": Document,
     "letters": Letter,
-    "future_letters": Letter,  # Alias for frontend SyncManager endpoint
     "journal_entries": JournalEntry,
     "subscriptions": Subscription,
-    "medical_profiles": MedicalProfile,
     "medical_directives": MedicalDirective,
     "timeline_events": LifeEvent,
     "time_capsule": TimeCapsuleMessage,
@@ -136,8 +133,6 @@ MODEL_MAP = {
     "digital_guardian": DigitalGuardianData,
     "executor_steps": ExecutorStep,
     "activity_log": ActivityLogEntry,
-    "qr_packs": QRAccessPack,
-    "qr_labels": QRAssetLabel,
     "acceptance_tasks": AcceptanceTask,
     "automation_rules": AutomationRule
 }
@@ -274,6 +269,8 @@ def get_items(data_type: str, user: User = Depends(get_current_user), session: S
     statement = select(model).where(model.user_id == user.id)
     if data_type in SINGLETON_TYPES:
         return session.exec(statement.order_by(model.id)).first() or {}
+    if model is ActivityLogEntry:
+        statement = statement.order_by(ActivityLogEntry.timestamp.desc()).limit(ACTIVITY_LOG_LIMIT)
     clause = _category_clause(data_type)
     if clause is not None:
         statement = statement.where(clause)
@@ -318,10 +315,8 @@ def create_item(
         else:
             validated_data = body.copy()
 
-        # Validate input - check for protected fields
-        protected_found = PROTECTED_FIELDS & set(validated_data.keys())
-        if protected_found:
-            raise ValueError(f"Cannot set protected fields: {protected_found}")
+        # Field count, key names, value length and protected fields (raises ValueError)
+        EstateItemCreate(data=validated_data)
 
         # Add user_id
         validated_data["user_id"] = user.id
@@ -412,10 +407,8 @@ def update_item(
         else:
             updates = body
 
-        # Validate input - check for protected fields
-        protected_found = PROTECTED_FIELDS & set(updates.keys())
-        if protected_found:
-            raise ValueError(f"Cannot update protected fields: {protected_found}")
+        # Field count, key names, value length and protected fields (raises ValueError)
+        EstateItemUpdate(data=updates)
 
         updates = dict(updates)
         _canonicalize(model, updates)

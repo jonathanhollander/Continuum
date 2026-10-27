@@ -46,7 +46,6 @@ CSRF_EXEMPT_PATHS = {
     "/api/auth/passkey/login/finish",
     "/api/auth/magic-link",
     "/api/auth/magic-link/verify",
-    "/api/pulse/checkin/respond",  # Legacy path (no such route today)
     "/api/health",
     "/docs",
     "/redoc",
