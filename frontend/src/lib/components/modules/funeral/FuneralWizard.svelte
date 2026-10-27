@@ -52,7 +52,13 @@
         contextMounted = true;
         const stop = auth.subscribe(() => {
             contextCurrent = isCurrentSession(contextOwner);
-            if (!contextCurrent) onContextChange?.(null);
+            if (!contextCurrent) {
+                if (saveTimer) clearTimeout(saveTimer);
+                saveTimer = null;
+                draft = sending = null;
+                saving = false;
+                onContextChange?.(null);
+            }
         });
         return () => { contextMounted = false; stop(); onContextChange?.(null); };
     });
@@ -109,6 +115,7 @@
 
     // Apply a change to the draft (never to the saved data) and queue a save.
     function edit(fn: (w: FuneralWishes) => FuneralWishes) {
+        if (!isCurrentSession(contextOwner)) return;
         draft = fn(draft ?? funeralStore.wishes);
         if (saveTimer) clearTimeout(saveTimer);
         saveTimer = setTimeout(flush, 500);
@@ -117,23 +124,27 @@
     async function flush() {
         if (saveTimer) clearTimeout(saveTimer);
         saveTimer = null;
-        if (saving || !draft) return; // the save in flight picks up the newer draft
+        if (!isCurrentSession(contextOwner) || saving || !draft) return; // the save in flight picks up the newer draft
         const sent = draft;
         saving = true;
         sending = sent;
         try {
             await funeralStore.update((data) => ({ ...data, wishes: sent }));
+            if (!isCurrentSession(contextOwner)) return;
             if (draft === sent) draft = null; // saved: show the server's copy
         } catch {
+            if (!isCurrentSession(contextOwner)) return;
             // the manager rolled back and shows the gentle retry line
             draft = null;
             if (saveTimer) clearTimeout(saveTimer);
             saveTimer = null;
         } finally {
-            saving = false;
-            sending = null;
+            if (isCurrentSession(contextOwner)) {
+                saving = false;
+                sending = null;
+            }
         }
-        if (draft && !saveTimer) flush(); // changes made while that save ran
+        if (isCurrentSession(contextOwner) && draft && !saveTimer) flush(); // changes made while that save ran
     }
 
     onDestroy(() => {
@@ -146,7 +157,7 @@
         if (saveTimer) clearTimeout(saveTimer);
         saveTimer = null;
         const pending = draft;
-        if (!pending || pending === sending) return;
+        if (!isCurrentSession(contextOwner) || !pending || pending === sending) return;
         sending = pending;
         funeralStore.update((data) => ({ ...data, wishes: pending })).catch(() => {});
     }
