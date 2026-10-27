@@ -22,6 +22,9 @@ INPUT_SLOTS = [
     for key, label, kind, description in (
         ("user_text", "Current user message", "text", "The current question or follow-up."),
         ("notes", "Writing notes", "text_list", "Notes represented as a JSON list, in supplied order."),
+        ("field_label", "Current field label", "text", "The label of the field currently being edited, as shown in the interface."),
+        ("field_question", "Current visible question", "text", "The exact visible question for the current field; context for the person's answer, not an asserted fact."),
+        ("question_answers", "Earlier labeled questions and answers", "text_list", "Earlier supplied answers, each serialized with its visible question or field label, in order; not inferred source facts."),
         ("current_draft", "Current working draft", "text", "Edited text for a one-shot writing action, or the latest proposed conversation draft pending review; not proof saved or applied."),
         ("current_draft_source", "Current draft source", "text", "Whether this working draft is edited text or a proposal pending review. Omitted means no source was supplied."),
         ("job_brief", "Job brief", "text", "The retained purpose and instructions for this writing job."),
@@ -192,6 +195,9 @@ class DynamicInputs(BaseModel):
     model_config = ConfigDict(extra="forbid")
     user_text: str = Field(default="", max_length=2000000)
     notes: list[str] = Field(default_factory=list, max_length=1000)
+    field_label: str = Field(default="", max_length=20000)
+    field_question: str = Field(default="", max_length=30000)
+    question_answers: list[str] = Field(default_factory=list, max_length=1000)
     current_draft: str = Field(default="", max_length=2000000)
     current_draft_source: Literal["edited", "proposed"] | None = None
     job_brief: str = Field(default="", max_length=2000000)

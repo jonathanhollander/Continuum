@@ -18,6 +18,8 @@
         const values: Record<string, string | string[] | number> = {
             user_text: 'Make the example passage warmer while keeping its facts.',
             notes: ['We took an example walk together and talked about kindness.'],
+            field_label: 'A memory to share', field_question: 'What did this experience teach you?',
+            question_answers: ['What happened? We took an example walk together.', 'What mattered most? The kindness you showed.'],
             current_draft: 'I remember our walk and the kindness you showed.', current_draft_source: 'edited',
             job_brief: 'Write a personal family memory for Example Son.',
             document_title: 'An example family memory', document_type: 'story',
