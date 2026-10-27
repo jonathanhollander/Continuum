@@ -1,6 +1,6 @@
 # Complete AI configuration and conversation context
 
-Application cut: `4be25685e1dacc23b9e6b1d6ece5fbd24c3f27dc`, reviewed locally on 2026-10-26. Production release verification is pending the consolidated push.
+Application cut: `4be25685e1dacc23b9e6b1d6ece5fbd24c3f27dc`, reviewed locally on 2026-10-26. Released in `c5d8a8599bd01a7ccf274d811d93e90ca188eaff`; production verification passed on 2026-10-26 EDT (2026-10-27 UTC).
 
 ## Owner requirement and implemented behavior
 
@@ -30,7 +30,7 @@ Only affected or unfinished cases were resumed after retained harness/source fai
 
 The owner gave action-time confirmation for the prepared `llm.jch.guru` access changes. OpenRouter's existing credential now allows `*`; Fireworks preserves existing permissions and adds only the missing Ember family pattern. The new Continuum virtual key uses only the two selected provider credentials, eight native Fireworks IDs and seven family patterns, OpenRouter all models, content logging off and no MCP/agent grants. Existing keys/settings remain. Reload readback and root's safe screenshot review passed.
 
-The new key and base URL were stored privately through Railway CLI stdin with `--skip-deploys`, explicit Continuum selectors, internal equality checks and clipboard restoration. No value appeared in Git, arguments, screenshots or tool output. One request using the exact app HTTPX client/headers/default UA returned200 and539 OpenRouter/Fireworks model rows. Their fully qualified IDs work without `owned_by`. Deployed gateway source84621fb's optional `pricing.prompt`/`completion` fields are dollars/token and match Continuum's parser; actual row completeness still awaits the normal application catalogue read. No paid inference, gateway upgrade or ClaimsChat mutation occurred.
+The new key and base URL were stored privately through Railway CLI stdin with `--skip-deploys`, explicit Continuum selectors, internal equality checks and clipboard restoration. No value appeared in Git, arguments, screenshots or tool output. One request using the exact app HTTPX client/headers/default UA returned200 and539 OpenRouter/Fireworks model rows. Their fully qualified IDs work without `owned_by`. Deployed gateway source84621fb's optional `pricing.prompt`/`completion` fields are dollars/token and match Continuum's parser. The deployed application catalogue subsequently displayed539 models with provider filters, prices and context/output metadata. No paid inference, gateway upgrade or ClaimsChat mutation occurred.
 
 Gateway UI inspection found no configured prompt injector in the inspected plugins/prompts/agents/caching/routing screens; four existing routing rules are Hermes-only. Two compatibility switches remain enabled. Provider UI warns that future `config.json` changes can overwrite its edits; reload persistence is verified, restart/config-sync behavior is not.
 
@@ -40,4 +40,6 @@ All completed checkouts were removed after merged/clean/ignored-file/stash/upstr
 
 ## Release verification
 
-Pending consolidated push, exact Railway identity/health and read-only signed-in Admin/catalogue checks. Staged gateway variables must become active through this release. Do not create a real record or paid completion for verification.
+Railway deployment `ea64cd84-5cf0-400f-aaab-ff3aa2352bce` matched release commit `c5d8a8599bd01a7ccf274d811d93e90ca188eaff` and reached SUCCESS at 2026-10-27 01:16:15.987 UTC. Health returned200/healthy at01:16:32.170 UTC, including database, storage and scheduler checks. The staged gateway variables are active. The existing signed-in owner browser loaded the Admin editor and actual539-model catalogue; OpenRouter/Fireworks filtering and model metadata were visible. The selected Fireworks row showed $0.22 input/$0.66 output per million tokens,1,048,576 context and393,216 output tokens.
+
+The owner's final choice, **Fireworks DeepSeek V4.1 Flash**, was saved as the shared default through the working Admin page and confirmed by server readback. Exact ID: `fireworks/accounts/fireworks/models/deepseek-v4p1-flash`. A fresh accepted-source production configuration resolution verified **41/41 actual call combinations** use that model with source `saved.shared`. No per-call model overrides existed, so the verification required no database writes. Internal before/after and fresh-session hashes confirmed instructions and request configuration unchanged. Private model/timestamp rollback metadata and safe operation manifests remain in the existing release evidence directory. No fake production record, prompt edit, paid inference or correspondence was used for verification.

@@ -1,10 +1,10 @@
 # Continuum active implementation handoff
 
-**Last Updated:** 2026-10-26 21:15 EDT
+**Last Updated:** 2026-10-26, final release acceptance
 
 The only board is [RECOVERY_EXECUTION_PLAN.md](RECOVERY_EXECUTION_PLAN.md). This checkpoint supersedes prior operational snapshots; Git retains them.
 
-## Current release candidate
+## Current accepted release
 
 Application cut `4be25685e1dacc23b9e6b1d6ece5fbd24c3f27dc` contains all reviewed X368–X377 extensions. X374 complete request configuration, X375 conversation/job continuity, X376 Admin editors/request inspection and X377 prompt-load retry are reviewed, merged and cleaned. See [complete acceptance and limitations](reviews/2026-10-26-implementation/AI-CONTEXT-RELEASE.md) and [O1 supplement](reviews/2026-10-26-implementation/O1-AI-CONTEXT.md).
 
@@ -18,7 +18,7 @@ O1:320 successful synthetic requests with flat SQL (2 reads/4 writes); final45-s
 
 Owner action-time confirmation was received for llm.jch.guru. The operator saved/reloaded OpenRouter* and the missing Fireworks Ember family regex, preserving existing provider/key settings. One Continuum virtual key restricts access to the two chosen OR/FW credentials (eight native FW models/seven family patterns), with content logging off and no MCP/agent grants. The new key and base URL were stored privately through Railway CLI stdin with --skip-deploys; internal equality checks passed and clipboard was restored. No secret appeared in outputs/Git/files/arguments/screenshots.
 
-One exact application-httpx catalogue call returned200 and539 OR/FW rows. Fully qualified IDs/no owned_by match the normalizer. Independent deployed-source84621fb pricing DTO review matches prompt/completion dollars-per-token; actual catalogue completeness still needs the normal deployed application read. Inspected gateway screens had no configured prompt injector; four routing rules are Hermes-only. Two compatibility switches remain on, so inspection is labelled Continuum final request rather than unverified provider wire. Future config.json changes can overwrite UI settings; reload persistence is verified, restart/config-sync behavior is not. ClaimsChat's active gateway was untouched; no upgrade.
+One exact application-httpx catalogue call returned200 and539 OR/FW rows. Fully qualified IDs/no owned_by match the normalizer. Independent deployed-source84621fb pricing DTO review matches prompt/completion dollars-per-token; the deployed Admin catalogue subsequently showed539 models, provider filters and actual price/context/output metadata. Inspected gateway screens had no configured prompt injector; four routing rules are Hermes-only. Two compatibility switches remain on, so inspection is labelled Continuum final request rather than unverified provider wire. Future config.json changes can overwrite UI settings; reload persistence is verified, restart/config-sync behavior is not. ClaimsChat's active gateway was untouched; no upgrade.
 
 ## Production prerequisite completed
 
@@ -26,14 +26,16 @@ Fresh verified pg_dump backup `/private/tmp/continuum-ai-context-release-2026-10
 
 Continuum Railway project25d74db2-ed30-4e38-a6cd-3e52ae9399bf / production9fbb046e-a376-411a-949b-e7c3409615b7 / webservice1a96d157-aa0a-4df8-9aa6-445ea288917f. Postgres service2e64e516-6efb-4410-8ec5-2e7fdd86dbbb is separate; never assume the webservice has DATABASE_PUBLIC_URL.
 
-## Required next steps
+## Release accepted; final documentation sync
 
-Commit the release evidence/status update and consolidate main→origin push (main auto-deploys). Confirm exact Railway commit/deployment success and health, then use the existing signed-in owner browser for read-only Admin/editor/catalogue verification. This release applies the staged Bifrost variables. Do not write fake prompts/records to production or send inference. Preserve the owner's original tab/drafts/session; use the root-created verification tab or a fresh one. Verify actual model metadata/provider filters, avoid printing any key. Record acceptance, sync documentation/main/origin, verify the final documentation deployment has the same application trees, then perform the goal completion audit.
+Release commit `c5d8a8599bd01a7ccf274d811d93e90ca188eaff` deployed as Railway `ea64cd84-5cf0-400f-aaab-ff3aa2352bce`, SUCCESS at2026-10-27 01:16:15.987 UTC. Health returned200/healthy at01:16:32.170 UTC. The staged Bifrost variables are active; signed-in Admin editor/catalogue verification passed in the root-created tab while preserving the owner's original tab/session.
+
+Owner-selected shared default is **Fireworks DeepSeek V4.1 Flash**, exact ID `fireworks/accounts/fireworks/models/deepseek-v4p1-flash`. Admin save/readback and a fresh production configuration resolution confirm all41 call combinations inherit it from `saved.shared`; no model overrides needed clearing. Instruction/configuration hashes stayed unchanged. No paid inference or fake production records/prompts were used. The final documentation-only sync must retain the frontend/backend trees above; verify its exact Railway identity and health before closing the orchestration goal. No further implementation is outstanding within this accepted scope.
 
 Only the primary checkout remains. This batch removed223571968bytes of measured checkout footprints; cumulative removal4681801728bytes. Branches, both central stashes, shared primary dependencies, private proof evidence and verified build remain. Manifests are `.git/worktree-cleanup-backups/2026-10-26/` (X374 has an additional validation-followup removal). Concurrent knowledge-index commitf7932ba is preserved; do not undo it or hand-edit generated OpenWiki pages.
 
 ## Earlier completed recovery and separate holds
 
-All64 active X303–X367 corrections were accepted/deployed (X364 explicitly deferred). Correction source e8e3576/release4468a90 and exact deploymentfcc43b09-6a3d-49b3-be13-99ff6a08bb43 are documented in [R0](reviews/2026-10-26-implementation/R0-CURRENT.md), [O1](reviews/2026-10-26-implementation/O1-RELEASE-CURRENT.md), [O2](reviews/2026-10-26-implementation/O2-RELEASE-CURRENT.md) and [release](reviews/2026-10-26-implementation/RELEASE-CURRENT.md). Initial AI/admin/accent extensionb82bb16 deployed successfully asdc2d3016-2dc2-4219-894f-81fdcd78c346; it is superseded by this complete-context candidate.
+All64 active X303–X367 corrections were accepted/deployed (X364 explicitly deferred). Correction source e8e3576/release4468a90 and exact deploymentfcc43b09-6a3d-49b3-be13-99ff6a08bb43 are documented in [R0](reviews/2026-10-26-implementation/R0-CURRENT.md), [O1](reviews/2026-10-26-implementation/O1-RELEASE-CURRENT.md), [O2](reviews/2026-10-26-implementation/O2-RELEASE-CURRENT.md) and [release](reviews/2026-10-26-implementation/RELEASE-CURRENT.md). Initial AI/admin/accent extensionb82bb16 deployed successfully asdc2d3016-2dc2-4219-894f-81fdcd78c346; it is superseded by this accepted complete-context release.
 
 Owner holds X6 key rotation, X141 infrastructure apply and X364 administrative sample-recovery expansion remain separate. Phone/commercial/security expansion stays deferred. X320 remains the saved executor-notes user choice (executor-only default or all recipients). Do not revive broad rewrites, exhaustive ClaimsChat discovery, recurring loops or extra provider tests. No automation was restarted.
