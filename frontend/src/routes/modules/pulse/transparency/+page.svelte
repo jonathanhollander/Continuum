@@ -5,7 +5,7 @@
     import { captureSession, isCurrentSession } from "$lib/services/sessionOwnership";
 
     interface GuardianChoice { id: number; name: string; tier_number: number | null; link_state: "ready" | "prepared" | "rested"; }
-    interface PortalView { user_name: string; user_phone: string | null; user_status: "active" | "grace"; last_checkin: string | null; notes: { message: string; sent_at: string }[]; }
+    interface PortalView { user_name: string; user_phone: string | null; user_status: "active" | "grace"; last_checkin: string | null; checkins_began?: boolean; notes: { message: string; sent_at: string }[]; }
     interface GuardianPreview {
         contact_id: number; contact_name: string; tier_number: number | null;
         link_state: GuardianChoice["link_state"]; view: PortalView | null;
@@ -107,7 +107,7 @@
                     <div><dt class="text-muted-foreground mb-1">Your name</dt><dd class="text-foreground">{view.user_name}</dd></div>
                     <div><dt class="text-muted-foreground mb-1">Check-in status</dt><dd class="text-foreground">{view.user_status === "active" ? "Checked in recently" : "Waiting for a check-in"}</dd></div>
                     {#if view.last_checkin}
-                        <div><dt class="text-muted-foreground mb-1 flex items-center gap-1.5"><Clock class="w-4 h-4" /> Last check-in</dt><dd class="text-foreground">{formatTime(view.last_checkin)}</dd></div>
+                        <div><dt class="text-muted-foreground mb-1 flex items-center gap-1.5"><Clock class="w-4 h-4" /> {view.checkins_began ? "Check-ins began" : "Last check-in"}</dt><dd class="text-foreground">{formatTime(view.last_checkin)}</dd></div>
                     {/if}
                     {#if view.user_phone}
                         <div><dt class="text-muted-foreground mb-1 flex items-center gap-1.5"><Phone class="w-4 h-4" /> Your phone</dt><dd class="text-foreground">{view.user_phone} <a href="/settings" class="text-xs text-primary hover:underline ml-2">Saved profile</a></dd></div>

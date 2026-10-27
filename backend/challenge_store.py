@@ -120,12 +120,19 @@ class PostgresChallengeStore(ChallengeStoreInterface):
         from backend.database import engine
         from sqlmodel import SQLModel, Field, Session, select, text
 
-        # Create the challenges table if it doesn't exist
-        self._ensure_table()
+        # Create the challenges table if it doesn't exist. If Postgres is still waking, each later
+        # use retries this, so the store stays on Postgres for the life of the process.
+        self._table_ready = False
+        try:
+            self._ensure_table()
+        except Exception as e:
+            logger.warning(f"PostgreSQL challenge store will finish setup on first use: {e}")
         logger.info("Using PostgreSQL challenge store (production mode)")
 
     def _ensure_table(self) -> None:
-        """Ensure the webauthn_challenges table exists"""
+        """Ensure the webauthn_challenges table exists (once per process, once it succeeds)"""
+        if self._table_ready:
+            return
         from backend.database import engine
         from sqlmodel import text
 
@@ -145,6 +152,7 @@ class PostgresChallengeStore(ChallengeStoreInterface):
                 if statement.strip():
                     conn.execute(text(statement))
             conn.commit()
+        self._table_ready = True
 
     def _cleanup_expired(self) -> None:
         """Remove expired challenges"""
@@ -160,6 +168,7 @@ class PostgresChallengeStore(ChallengeStoreInterface):
 
     def set(self, key: str, value: Any, expire_seconds: int = 300) -> None:
         """Store a challenge with expiration"""
+        self._ensure_table()
         from backend.database import engine
         from sqlmodel import text
 
@@ -187,6 +196,7 @@ class PostgresChallengeStore(ChallengeStoreInterface):
 
     def get(self, key: str) -> Optional[Any]:
         """Get a challenge without removing it"""
+        self._ensure_table()
         from backend.database import engine
         from sqlmodel import text
 
@@ -205,6 +215,7 @@ class PostgresChallengeStore(ChallengeStoreInterface):
 
     def pop(self, key: str) -> Optional[Any]:
         """Get and remove a challenge atomically"""
+        self._ensure_table()
         from backend.database import engine
         from sqlmodel import text
 
@@ -232,6 +243,7 @@ class PostgresChallengeStore(ChallengeStoreInterface):
 
     def delete(self, key: str) -> bool:
         """Delete a challenge"""
+        self._ensure_table()
         from backend.database import engine
         from sqlmodel import text
 
@@ -250,11 +262,7 @@ def create_challenge_store() -> ChallengeStoreInterface:
     Uses PostgreSQL in production, in-memory in development.
     """
     if settings.is_production():
-        try:
-            return PostgresChallengeStore()
-        except Exception as e:
-            logger.warning(f"Failed to initialize PostgreSQL challenge store: {e}. Falling back to in-memory.")
-            return InMemoryChallengeStore()
+        return PostgresChallengeStore()  # setup retries on use if Postgres is still waking
 
     # Development mode: use in-memory store
     return InMemoryChallengeStore()

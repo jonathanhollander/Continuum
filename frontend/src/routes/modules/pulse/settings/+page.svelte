@@ -141,7 +141,10 @@
                     }
                     pulse.showSettings(confirmed, owner);
                 }
-                failedNotices.add(notifications.showError("You can try again whenever you're ready."));
+                const keptOn = (confirmedSettings.get(account) || { ...snapshot, ...before }).enabled;
+                failedNotices.add(notifications.showError("enabled" in before
+                    ? `Active Heartbeat stays ${keptOn ? "on" : "resting"}, as you had it. You can try again whenever you're ready.`
+                    : "You can try again whenever you're ready."));
             }
         }).finally(() => {
             pendingSaves--;

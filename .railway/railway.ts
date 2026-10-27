@@ -61,7 +61,7 @@ export default defineRailway(() => {
         }
       },
       "runtime": "V2",
-      "sleepApplication": true,
+      "sleepApplication": false,
       "useLegacyStacker": false,
       "healthcheckPath": "/api/health"
     },

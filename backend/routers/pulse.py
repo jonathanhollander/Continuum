@@ -1,14 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlmodel import Session, select
+from sqlalchemy.exc import IntegrityError
 from backend.limiter import limiter
 from datetime import datetime, timedelta, timezone
 from backend.utils.clock import utc_now
 from backend.database import get_session, User
 from backend.auth import get_current_user
 import secrets
-import base64
-from typing import Any, Dict
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel
 from backend.pulse_models import (
     PulseSettings, PulseCheckin, PulseVault,
     PulseEscalationTier, PulseContact,
@@ -16,37 +15,11 @@ from backend.pulse_models import (
 )
 from backend.utils.logger import get_logger
 from backend.routers.contacts import ContactCreate, ContactUpdate, _apply as apply_contact_fields
-from backend.challenge_store import challenge_store
 from backend.utils.table_body import validated_changes
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/api/pulse", tags=["pulse"])
 
-
-# --- Pydantic Validation Models (P1-High Security) ---
-
-class WebAuthnCredentialPayload(BaseModel):
-    """Validated model for WebAuthn credential registration."""
-    id: str
-    rawId: str
-    response: Dict[str, Any]
-    type: str
-
-    @field_validator("type")
-    @classmethod
-    def validate_type(cls, v):
-        if v != "public-key":
-            raise ValueError("Invalid credential type - must be 'public-key'")
-        return v
-
-    @field_validator("response")
-    @classmethod
-    def validate_response(cls, v):
-        required_fields = ["clientDataJSON", "attestationObject"]
-        missing = [f for f in required_fields if f not in v]
-        if missing:
-            raise ValueError(f"Missing required response fields: {missing}")
-        return v
 
 @router.post("/checkin", summary="Record a life-check-in", description="Allows the user to manually check in, confirming they are safe. This resets the escalation timer.")
 @limiter.limit("5/minute")
@@ -274,6 +247,7 @@ PULSE_ENABLED_METHOD = "pulse_enabled"  # an owner check-in (pulse_logic.owner_l
 
 @router.get("/history")
 def get_history(limit: int = 10, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    limit = max(1, min(limit, 500))  # a page of history, kept to a sane size
     statement = select(PulseCheckin).where(PulseCheckin.user_id == user.id).order_by(PulseCheckin.timestamp.desc()).limit(limit)
     # Stored times are naive UTC; send them with "Z" (as /status does) so the browser reads UTC
     return [{**c.model_dump(), "timestamp": _utc_iso(c.timestamp)} for c in session.exec(statement).all()]
@@ -584,6 +558,8 @@ def confirm_contact(request: Request, token: str, session: Session = Depends(get
 
 @router.post("/safety/start")
 def start_safety_timer(minutes: int, purpose: str = "Walking home", user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    if not 1 <= minutes <= 1440:
+        raise HTTPException(status_code=422, detail="Choose a timer from 1 minute to 24 hours.")
     existing = session.exec(select(PulseSafetyTimer).where(PulseSafetyTimer.user_id == user.id, PulseSafetyTimer.is_active == True)).all()
     for t in existing: t.is_active = False; session.add(t)
         
@@ -654,11 +630,16 @@ def get_tiers(user: User = Depends(get_current_user), session: Session = Depends
         ]
         for t in defaults:
             session.add(t)
-        session.commit()
-        # Refresh to get IDs
+        try:
+            session.commit()
+        except IntegrityError:
+            # A parallel first load saved them first (unique user_id + tier_number); read theirs.
+            session.rollback()
         tiers = session.exec(select(PulseEscalationTier).where(PulseEscalationTier.user_id == user.id).order_by(PulseEscalationTier.tier_number)).all()
     
     return tiers
+
+TIER_NOTIFICATION_METHODS = ("email", "sms", "both")
 
 @router.put("/tiers/{tier_id}")
 def update_tier(tier_id: int, updated: PulseEscalationTier, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
@@ -668,79 +649,15 @@ def update_tier(tier_id: int, updated: PulseEscalationTier, user: User = Depends
     
     # Only these two are the owner's to change; an omitted one keeps its saved value.
     changes = updated.model_dump(exclude_unset=True, include={"delay_hours", "notification_method"})
-    for key, val in validated_changes(PulseEscalationTier, tier, changes).items():
+    changes = validated_changes(PulseEscalationTier, tier, changes)
+    if not 0 <= changes.get("delay_hours", tier.delay_hours) <= 720:
+        raise HTTPException(status_code=422, detail="Choose the wait as a whole number of hours, from 0 to 720 (30 days).")
+    if changes.get("notification_method", tier.notification_method) not in TIER_NOTIFICATION_METHODS:
+        raise HTTPException(status_code=422, detail="Choose how this tier is reached: email, text, or both.")
+    for key, val in changes.items():
         setattr(tier, key, val)
 
     session.add(tier)
     session.commit()
     session.refresh(tier)  # the commit expires it; otherwise the response is {}
     return tier
-
-from backend.security import get_registration_options, verify_registration
-from backend.pulse_models import PulseCredential
-
-@router.post("/auth/webauthn/register/start")
-def register_webauthn_start(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
-    """Start WebAuthn registration for current user."""
-    options = get_registration_options(str(user.id), user.email)
-
-    # Store challenge temporarily (uses Redis in production, in-memory in development)
-    challenge_store.set(f"pulse_webauthn:{user.id}", options.challenge, expire_seconds=300)
-
-    # Convert to JSON-compatible dict
-    from webauthn import options_to_json
-    import json
-    return json.loads(options_to_json(options))
-
-@router.post("/auth/webauthn/register/finish")
-def register_webauthn_finish(payload: WebAuthnCredentialPayload, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
-    """
-    Finish WebAuthn registration for current user.
-    Uses Pydantic validation for payload security (P1-High).
-    """
-    challenge = challenge_store.pop(f"pulse_webauthn:{user.id}")
-    if not challenge:
-        raise HTTPException(status_code=400, detail="That passkey step paused. Start it again whenever you're ready.")
-
-    try:
-        # Verify the registration - convert Pydantic model to dict for library
-        verification = verify_registration(
-            options={"challenge": challenge},
-            response=payload.model_dump()
-        )
-
-        # Store credential
-        cred_id = verification.credential_id
-        pub_key = verification.credential_public_key
-        
-        # Convert bytes to base64url strings for safe storage
-        cred_id_b64 = base64.urlsafe_b64encode(cred_id).decode('utf-8').rstrip('=')
-        pub_key_b64 = base64.urlsafe_b64encode(pub_key).decode('utf-8').rstrip('=')
-
-        # Check if credential already exists
-        existing = session.get(PulseCredential, cred_id_b64)
-        if existing:
-            session.delete(existing)
-            session.commit()
-
-        new_cred = PulseCredential(
-            id=cred_id_b64,
-            user_id=user.id,
-            public_key=pub_key_b64,
-            sign_count=verification.sign_count
-        )
-        session.add(new_cred)
-        session.commit()
-
-        return {"status": "verified", "credential_id": cred_id_b64}
-
-    except Exception as e:
-        logger.error(
-            "WebAuthn verification failed for Pulse credential",
-            extra={"context": {
-                "error": str(e),
-                "error_type": type(e).__name__
-            }},
-            exc_info=True
-        )
-        raise HTTPException(status_code=400, detail="Let's try setting up your device again in a moment.")

@@ -1,7 +1,7 @@
 from typing import Optional
 from datetime import datetime
 from backend.utils.clock import utc_now
-from sqlalchemy import Index
+from sqlalchemy import Index, UniqueConstraint
 from sqlmodel import Field, SQLModel
 
 class PulseSettings(SQLModel, table=True):
@@ -79,6 +79,8 @@ class PulseEscalationLog(SQLModel, table=True):
     medical_safe_pass_triggered: bool = Field(default=False)
 class PulseEscalationTier(SQLModel, table=True):
     __tablename__ = "pulse_escalation_tiers"
+    # One row per tier per person (migration a1c3e5f7b9d1), so parallel first loads cannot duplicate defaults
+    __table_args__ = (UniqueConstraint("user_id", "tier_number", name="uq_pulse_escalation_tiers_user_tier"),)
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="users.id", index=True)
     tier_number: int # 1, 2, 3, 4
