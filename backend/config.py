@@ -7,7 +7,7 @@ import logging
 from typing import List, Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from urllib.parse import urlparse
-from pydantic import field_validator, ValidationError, model_validator
+from pydantic import Field, field_validator, ValidationError, model_validator
 
 # Use standard library logging to avoid circular imports
 # (This module is imported by backend.utils.logger)
@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     # Environment
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
+    PRIVATE_ACCESS_USER_ID: Optional[int] = Field(default=None, gt=0)
 
     # Application
     APP_NAME: str = "Continuum SaaS API"

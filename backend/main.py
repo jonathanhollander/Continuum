@@ -30,6 +30,7 @@ from backend.limiter import limiter
 from secure import Secure, ContentSecurityPolicy, StrictTransportSecurity, ReferrerPolicy
 from backend.utils.logger import get_logger, setup_logging
 from backend.csrf import CSRFMiddleware, get_csrf_token_endpoint
+from backend.private_access import enforce_private_access
 
 def setup_app_documentation(app: FastAPI):
     """Configure OpenAPI tags and documentation for the app."""
@@ -233,6 +234,7 @@ app.add_middleware(
 # In production, rejects requests without valid CSRF token
 # In development, logs warning but allows (for easier testing)
 app.add_middleware(CSRFMiddleware)
+app.middleware("http")(enforce_private_access)
 
 # HTTPS Enforcement for Production
 if settings.is_production():

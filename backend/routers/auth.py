@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from backend.limiter import limiter
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session, select
@@ -6,11 +6,14 @@ from pydantic import BaseModel, EmailStr, Field
 from typing import List, Optional, Dict, Any
 from datetime import timedelta
 from backend.database import User, get_session
+from backend.config import settings
+from backend.private_access import private_mode, user_allowed, require_allowed_user, require_signup_enabled
 from backend.auth import (
     create_access_token,
     get_password_hash,
     verify_password,
     get_current_user,
+    optional_current_user,
     ACCESS_TOKEN_EXPIRE_MINUTES,
     create_refresh_token,
     verify_refresh_token,
@@ -160,6 +163,7 @@ class PasskeyLoginFinishPayload(BaseModel):
 @limiter.limit("5/minute")
 def signup(request: Request, signup_data: SignupRequest, session: Session = Depends(get_session)):
     """Register a new user account."""
+    require_signup_enabled()
     # Check if user already exists
     existing_user = session.exec(select(User).where(User.email == signup_data.email)).first()
     if existing_user:
@@ -257,6 +261,8 @@ def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), se
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    require_allowed_user(user.id)
+
     # Log successful login; create_refresh_token's commit writes it (X289)
     log_auth_success(session, request, user.id, user.email, "password", commit=False)
 
@@ -278,6 +284,14 @@ def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), se
 def get_current_user_info(current_user: User = Depends(get_current_user)):
     """Get current authenticated user information."""
     return current_user
+
+@router.get("/access-status")
+def access_status(response: Response, user: Optional[User] = Depends(optional_current_user)):
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["Vary"] = "Authorization"
+    return {"private_mode": private_mode(), "signup_enabled": not private_mode(),
+            "access_allowed": user_allowed(user.id if user else None)}
+
 
 # WebAuthn/Passkey Authentication
 
@@ -310,6 +324,7 @@ def passkey_register_start(request: Request, signup_data: PasskeySignupRequest, 
     Start passkey registration flow (Step 1 of 2).
     Creates user account and initiates WebAuthn registration.
     """
+    require_signup_enabled()
     registration_id = signup_data.registration_id
     if registration_id:
         new_user = _pending_registration_user(session, registration_id, email=signup_data.email)
@@ -360,6 +375,7 @@ def passkey_register_finish(request: Request, payload: PasskeyRegisterFinishPayl
     Uses Pydantic validation for payload security (P1-High).
     """
     # Validated by Pydantic model
+    require_signup_enabled()
     user_id = payload.user_id
     credential_response = payload.credential
 
@@ -461,6 +477,12 @@ def passkey_login_start(request: Request, payload: PasskeyLoginStartPayload = No
     authentication to platform authenticators only (prevents QR code).
     """
     credentials = None
+    if private_mode():
+        owner = session.get(User, settings.PRIVATE_ACCESS_USER_ID)
+        if owner is None or (payload and payload.email and payload.email != owner.email):
+            require_allowed_user(None)
+        credentials = [{"id": credential.id} for credential in session.exec(
+            select(PulseCredential).where(PulseCredential.user_id == owner.id)).all()]
 
     # Debug: Log what we received
     logger.info(f"Passkey login start - payload: {payload}")
@@ -521,6 +543,9 @@ def passkey_login_finish(request: Request, payload: PasskeyLoginFinishPayload, s
     challenge_id = payload.challenge_id
     credential_response = payload.credential
 
+    if private_mode():
+        candidate = session.get(PulseCredential, credential_response.get("id"))
+        require_allowed_user(candidate.user_id if candidate else None)
     challenge_data = challenge_store.pop(challenge_id)
     if not challenge_data or challenge_data.get("type") != "authentication":
         raise HTTPException(status_code=400, detail="That passkey step paused. Start it again whenever you're ready.")
@@ -614,6 +639,8 @@ def send_magic_link(request: Request, link_data: MagicLinkRequest, session: Sess
     }
     user = session.exec(select(User).where(User.email == link_data.email)).first()
 
+    if private_mode() and (user is None or not user_allowed(user.id)):
+        return response
     if not user:
         # Keep the public response identical for existing and unknown accounts.
         # Still log the attempt for security monitoring
@@ -719,6 +746,8 @@ def verify_magic_link(request: Request, token: str, session: Session = Depends(g
             log_auth_failure(session, request, "", "magic_link_verify", "User not found")
             raise HTTPException(status_code=401, detail="Let's check the email you used.")
 
+        require_allowed_user(user.id)
+
         # One-time use: record the jti on first verify. Reuses refresh_tokens (unique token_hash,
         # revoked=True so it can never act as a refresh token). Tokens without a jti (issued before
         # this change) are refused: they live 15 minutes at most and fail-closed is the safe default.
@@ -775,6 +804,9 @@ def refresh_access_token(request: Request, token_request: RefreshTokenRequest, s
     Refresh access token using a refresh token.
     Implements token rotation (old refresh token is revoked, new one is issued).
     """
+    if private_mode():
+        candidate = verify_refresh_token(token_request.refresh_token, session)
+        require_allowed_user(candidate.id if candidate else None)
     result = rotate_refresh_token(token_request.refresh_token, session)
 
     if not result:
@@ -810,6 +842,9 @@ def logout(request: Request, token_request: RefreshTokenRequest, session: Sessio
     Logout by revoking the provided refresh token.
     This only affects the current device/session.
     """
+    if private_mode():
+        candidate = verify_refresh_token(token_request.refresh_token, session)
+        require_allowed_user(candidate.id if candidate else None)
     if revoke_refresh_token(token_request.refresh_token, session):
         return {"status": "success", "message": "You're signed out. Take care."}
     else:
