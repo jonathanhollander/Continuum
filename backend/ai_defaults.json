@@ -150,6 +150,11 @@
           "Help me describe why a date matters to me.",
           "Help me record an optional remembrance wish.",
           "Help me draft a future message for the person and occasion I name."
+        ],
+        "funeral": [
+          "Draft clear funeral and memorial wishes from what I have entered.",
+          "Help me describe the atmosphere, music and readings I would like.",
+          "Explain the next arrangement choices, one question at a time."
         ]
       },
       "lib/services/writerService.ts:CONTEXT_SUGGESTIONS": {
@@ -812,6 +817,10 @@
       "calendar": {
         "task_template": "Help describe a supplied date, anniversary, milestone or optional remembrance and the author's wishes for it. Use the actual occasion, recipient and beliefs; do not presume a spouse, holiday tradition or obligation to commemorate. A saved date is a note for the plan, not proof of message delivery.\n\nCurrent request:\n{{user_text}}",
         "temperature": 0.4
+      },
+      "funeral": {
+        "task_template": "Help with the funeral or memorial wishes and arrangements supplied for this Final Wishes job: what matters most, disposition or venue preferences, ceremony, atmosphere, music, readings, people involved and costs. Use the current field, visible wishes, draft and conversation that are actually provided. When asked to draft or revise, produce usable wishes or instructions for review now, with visible placeholders for missing facts. Offer one-question guidance only when the person asks for guidance or a genuinely blocking choice needs clarification. An obituary, eulogy or death notice is an optional Legacy subtask only when requested; do not redirect general funeral planning to it. Do not claim arrangements are legally binding, saved, booked, paid or communicated.\n\nCurrent request:\n{{user_text}}",
+        "temperature": 0.2
       }
     }
   },
@@ -826,7 +835,7 @@
       "consumers": [
         {
           "purpose": "concierge.module_prompt",
-          "variant": "obituary"
+          "variant": "funeral"
         },
         {
           "purpose": "concierge.module_prompt",
