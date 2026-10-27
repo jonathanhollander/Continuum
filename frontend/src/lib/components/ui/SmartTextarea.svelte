@@ -12,7 +12,7 @@
         aiSoftenText,
         type WriterContext,
     } from "$lib/services/writerService";
-    import { aiRuntimeAssets, aiAssets, assetStrings, observeAIConfig, registerAIJob, notifyAIJobChanged, type AIWritingJob } from "$lib/services/aiCapabilities";
+    import { aiRuntimeAssets, aiAssets, aiConfigStates, aiConfigState, loadAIConfig, assetStrings, observeAIConfig, registerAIJob, notifyAIJobChanged, type AIWritingJob } from "$lib/services/aiCapabilities";
     import { AI_UNAVAILABLE } from "$lib/services/aiConciergeService";
     import { auth } from "$lib/stores/auth";
     import { captureSession, isCurrentSession, type SessionOwnership } from "$lib/services/sessionOwnership";
@@ -102,6 +102,10 @@
     onDestroy(() => { requestVersion++; releaseJob?.(); });
 
     const assets = $derived(aiAssets({purpose:mode === 'draft' ? 'writer.draft_text' : 'writer.rewrite_text',variant:context}, $aiRuntimeAssets));
+    const configState = $derived(aiConfigState({purpose:mode === 'draft' ? 'writer.draft_text' : 'writer.rewrite_text',variant:context}, $aiConfigStates));
+    function retryConfig() {
+        void loadAIConfig({purpose:mode === 'draft' ? 'writer.draft_text' : 'writer.rewrite_text',variant:context}, true).catch(() => {});
+    }
     $effect(() => observeAIConfig({ purpose: 'writer.draft_text', variant: context }));
     const activeSuggestions = $derived(
         (suggestions && suggestions.length > 0
@@ -372,6 +376,17 @@
             </div>
         {/if}
     </div>
+
+    {#if configState === 'loading' || configState === 'error'}
+        <div class="flex items-center gap-3 text-xs text-muted-foreground" role="status">
+            {#if configState === 'loading'}
+                <span>Loading writing starters...</span>
+            {:else}
+                <span>Choose Try Again to load writing starters.</span>
+                <button type="button" class="font-semibold text-primary-hover underline" aria-label="Retry writing starters" onclick={retryConfig}>Try Again</button>
+            {/if}
+        </div>
+    {/if}
 
     {#if !minimal && !value && !isDrawerOpen && activeSuggestions.length > 0}
         {@render starters()}

@@ -78,6 +78,8 @@ export interface AIRuntimeConfig {
 }
 
 export const aiRuntimeAssets = writable<Record<string, Record<string, unknown>>>({});
+export type AIConfigState = 'idle' | 'loading' | 'ready' | 'error';
+export const aiConfigStates = writable<Record<string, AIConfigState>>({});
 const configurations = new Map<string, { owner: SessionOwnership; value: Promise<AIRuntimeConfig> }>();
 export const aiJobChanges = writable(0);
 export const notifyAIJobChanged = () => aiJobChanges.update(version => version + 1);
@@ -85,7 +87,18 @@ const jobs = new Map<symbol, { owner: SessionOwnership; read: () => AIWritingJob
 let runtimeOwner: SessionOwnership | null = null;
 const refreshers = new Set<() => void>();
 let configEpoch = 0;
-export function invalidateAIConfig() { configEpoch++; configurations.clear(); aiRuntimeAssets.set({}); refreshers.forEach(refresh => refresh()); }
+export function invalidateAIConfig() {
+    followSession();
+    configEpoch++;
+    configurations.clear();
+    // A same-session refresh keeps its last loaded choices while the next read settles.
+    aiConfigStates.set({});
+    refreshers.forEach(refresh => refresh());
+}
+export function aiConfigState(selection: AICapability, values = get(aiConfigStates)): AIConfigState {
+    const { purpose, variant } = aiCapability(selection);
+    return values[`${purpose}:${variant}`] ?? 'idle';
+}
 export function aiAssets(selection: AICapability, values = get(aiRuntimeAssets)): Record<string, unknown> {
     const { purpose, variant } = aiCapability(selection);
     return values[`${purpose}:${variant}`] ?? {};
@@ -97,6 +110,7 @@ function followSession() {
         jobs.clear();
         notifyAIJobChanged();
         aiRuntimeAssets.set({});
+        aiConfigStates.set({});
         runtimeOwner = null;
     }
 }
@@ -111,6 +125,8 @@ export async function loadAIConfig(selection: AICapability, refresh = false): Pr
     const cached = configurations.get(key);
     if (!refresh && cached && isCurrentSession(cached.owner)) return cached.value;
     const epoch = configEpoch;
+    const current = () => isCurrentSession(owner) && epoch === configEpoch
+        && configurations.get(key)?.value === value;
     const value = (async () => {
         const response = await apiFetch(`/api/ai/config?${new URLSearchParams({ purpose, variant })}`);
         assertCurrentSession(owner);
@@ -118,12 +134,19 @@ export async function loadAIConfig(selection: AICapability, refresh = false): Pr
         const data: AIRuntimeConfig = await response.json();
         assertCurrentSession(owner);
         if (!data.ui_assets || typeof data.ui_assets !== 'object' || Array.isArray(data.ui_assets)) throw new Error('Invalid AI configuration');
-        if (epoch !== configEpoch) throw new Error("AI configuration changed");
+        if (!current()) throw new Error("AI configuration changed");
         aiRuntimeAssets.update(values => ({...values, [key]: data.ui_assets}));
+        aiConfigStates.update(values => ({...values, [key]: 'ready'}));
         return data;
     })();
     configurations.set(key, { owner, value });
-    value.catch(() => { if (configurations.get(key)?.value === value) configurations.delete(key); });
+    aiConfigStates.update(values => ({...values, [key]: 'loading'}));
+    value.catch(() => {
+        if (current()) {
+            configurations.delete(key);
+            aiConfigStates.update(values => ({...values, [key]: 'error'}));
+        }
+    });
     return value;
 }
 

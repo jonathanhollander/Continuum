@@ -5,7 +5,7 @@
     import { logInteraction } from "$lib/stores/conciergeStore.svelte";
     import { auth } from "$lib/stores/auth";
     import { aiConciergeService } from "$lib/services/aiConciergeService";
-    import { aiRuntimeAssets, aiAssets, assetStrings, observeAIConfig, currentAIJob, aiJobChanges, type AIModuleVariant, type AIWritingJob, type AIHistoryMessage } from "$lib/services/aiCapabilities";
+    import { aiRuntimeAssets, aiAssets, aiConfigStates, aiConfigState, loadAIConfig, assetStrings, observeAIConfig, currentAIJob, aiJobChanges, type AIModuleVariant, type AIWritingJob, type AIHistoryMessage } from "$lib/services/aiCapabilities";
     import { captureSession, isCurrentSession } from "$lib/services/sessionOwnership";
 
     export let context: AIModuleVariant = "obituary";
@@ -24,6 +24,8 @@
     let sequence = 0;
     let alive = true;
     let poolIdeas: string[] = [];
+    let mounted = false;
+    let stopConfig: (() => void) | undefined;
     const currentJob = () => job ?? currentAIJob();
     const jobKey = () => JSON.stringify([context, typeof location === 'undefined' ? '' : location.pathname, currentJob()?.job_id ?? '']);
     function followJob() {
@@ -39,11 +41,20 @@
     }
     $: { $aiJobChanges; if (typeof window !== 'undefined' && (context || job)) followJob(); }
     onMount(() => {
+        mounted = true;
         const stopAuth = auth.subscribe(followJob);
-        const stopConfig = observeAIConfig({ purpose: 'concierge.module_prompt', variant: context });
-        return () => { stopAuth(); stopConfig(); };
+        return () => { mounted = false; stopAuth(); };
     });
-    onDestroy(() => { alive = false; sequence++; });
+    $: if (mounted) observeContext(context);
+    function observeContext(variant: AIModuleVariant) {
+        stopConfig?.();
+        stopConfig = observeAIConfig({ purpose: 'concierge.module_prompt', variant });
+    }
+    onDestroy(() => { alive = false; sequence++; stopConfig?.(); });
+    $: configState = aiConfigState({purpose:'concierge.module_prompt',variant:context}, $aiConfigStates);
+    function retryConfig() {
+        void loadAIConfig({purpose:'concierge.module_prompt',variant:context}, true).catch(() => {});
+    }
     $: assets = aiAssets({purpose:'concierge.module_prompt',variant:context}, $aiRuntimeAssets);
     $: chips = promptPoolSource ? [] : assetStrings(promptSource ? assets[promptSource] : (assets['lib/components/concierge/AIPromptBar.svelte:quickPrompts'] as Record<string, unknown> | undefined)?.[context]);
     $: pool = assetStrings(promptPoolSource ? assets[promptPoolSource] : []);
@@ -119,6 +130,17 @@
             </button>
         </div>
     </div>
+
+    {#if configState === 'loading' || configState === 'error'}
+        <div class="flex items-center gap-3 mt-3 text-xs text-muted-foreground" role="status">
+            {#if configState === 'loading'}
+                <span>Loading writing ideas...</span>
+            {:else}
+                <span>Choose Try Again to load writing ideas.</span>
+                <button type="button" class="font-semibold text-primary-hover underline" aria-label="Retry writing ideas" on:click={retryConfig}>Try Again</button>
+            {/if}
+        </div>
+    {/if}
 
     <!-- Quick Prompts -->
     {#if !result && !isGenerating}
