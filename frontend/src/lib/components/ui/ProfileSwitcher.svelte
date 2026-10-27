@@ -2,24 +2,19 @@
     import {
         currentProfileId,
         profiles,
-        type Profile,
     } from "$lib/stores/profileContext";
     import { dict } from "$lib/stores/conciergeStore.svelte";
     import {
         User,
-        Plus,
         Check,
         ChevronDown,
         Users,
         Settings,
     } from "lucide-svelte";
     import { fade, slide } from "svelte/transition";
-    import { tick } from "svelte";
     import { goto } from "$app/navigation";
 
     let isOpen = $state(false);
-    let newProfileName = $state("");
-    let isCreating = $state(false);
 
     // Derived: Current Profile Object
     let activeProfile = $derived(
@@ -32,7 +27,6 @@
 
     function toggleDropdown() {
         isOpen = !isOpen;
-        isCreating = false;
     }
 
     function selectProfile(id: string) {
@@ -41,30 +35,6 @@
         // Reload page strictly not needed due to reactivity, but ensures clean slate feel
         // However, we want smooth transition, so we rely on store reactivity.
     }
-
-    async function createProfile() {
-        if (!newProfileName.trim()) return;
-
-        const newId = crypto.randomUUID();
-        const newProfile: Profile = {
-            id: newId,
-            name: newProfileName,
-            role: "Family",
-            created: Date.now(),
-        };
-
-        // Update profiles store
-        $profiles = [...$profiles, newProfile];
-
-        // Switch to new profile
-        $currentProfileId = newId;
-
-        // Reset UI
-        newProfileName = "";
-        isCreating = false;
-        isOpen = false;
-    }
-
 </script>
 
 <div class="relative w-full">
@@ -170,57 +140,6 @@
                         {/if}
                     </button>
                 {/each}
-
-                <!-- Create New Profile -->
-                {#if isCreating}
-                    <div
-                        class="mt-2 p-2 bg-slate-900/50 rounded-lg border border-slate-700/50 animate-in fade-in"
-                    >
-                        <!-- Focus moves to this field because the person just chose to add something here. -->
-                        <!-- svelte-ignore a11y_autofocus -->
-                        <input
-                            bind:value={newProfileName}
-                            placeholder={$dict.placeholderProfileName}
-                            class="w-full bg-transparent text-sm text-white placeholder:text-slate-400 outline-none mb-2"
-                            autofocus
-                            onkeydown={(e) =>
-                                e.key === "Enter" && createProfile()}
-                        />
-                        <div class="flex gap-2">
-                            <button
-                                onclick={createProfile}
-                                class="flex-1 py-1 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary-hover transition-all shadow-lg"
-                            >
-                                {$dict.btnCreate}
-                            </button>
-                            <button
-                                onclick={() => (isCreating = false)}
-                                class="px-2 py-1 text-xs text-slate-400 hover:text-white"
-                            >
-                                {$dict.maybeLater}
-                            </button>
-                        </div>
-                    </div>
-                {:else}
-                    <button
-                        class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-colors mt-2 border-t border-slate-700/50"
-                        onclick={() => {
-                            isCreating = true;
-                            tick().then(() =>
-                                document.querySelector("input")?.focus(),
-                            );
-                        }}
-                    >
-                        <div
-                            class="w-8 h-8 rounded-full border-2 border-dashed border-slate-600 flex items-center justify-center"
-                        >
-                            <Plus size={14} />
-                        </div>
-                        <span class="text-sm font-medium"
-                            >{$dict.addFamilyMember}</span
-                        >
-                    </button>
-                {/if}
 
                 <!-- Settings link -->
                 <a

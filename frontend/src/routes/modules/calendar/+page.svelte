@@ -45,6 +45,7 @@
             body: string;
         };
         custom_attributes?: string;
+        ritualInstructions?: string; // ritual guidance saved from Important Dates (free text)
     };
 
     let parsedCustomAttributes = $state<Record<string, any>>({});
@@ -304,12 +305,6 @@
     </LivingBlueprintHeader>
 
 <div class="p-8 max-w-[1400px] mx-auto animate-in fade-in duration-500">
-    <p class="text-sm text-muted-foreground mb-6">
-        These dates also appear in
-        <a href="/modules/anniversary-manager" class="font-bold text-primary-hover hover:underline">Important Dates</a>,
-        where you can write ritual guidance for your family.
-    </p>
-
     {#if events.length === 0}
         <EmptyState
             title="Add a date and what it means"
@@ -424,6 +419,13 @@
                                         "{evt.wish}"
                                     </p>
                                 </div>
+                            </div>
+                        {/if}
+
+                        {#if evt.ritualInstructions && !evt.emailTemplate}
+                            <div class="bg-success/10 p-4 rounded-xl mb-4 border border-success/20">
+                                <span class="text-xs font-bold uppercase tracking-wider text-success block mb-1">Ritual guidance</span>
+                                <p class="text-muted-foreground text-sm italic">"{evt.ritualInstructions}"</p>
                             </div>
                         {/if}
 
