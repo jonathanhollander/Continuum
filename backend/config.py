@@ -28,7 +28,8 @@ class Settings(BaseSettings):
 
     # Environment
     ENVIRONMENT: str = "development"
-    DEBUG: bool = True
+    # Unset: on everywhere except production, so production serves no /docs or /openapi.json and logs at INFO.
+    DEBUG: Optional[bool] = None
     # Closing registration must not restrict the website or existing accounts.
     SIGNUP_ENABLED: bool = False
     PRIVATE_ACCESS_USER_ID: Optional[int] = Field(default=None, gt=0)
@@ -45,7 +46,6 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "http://localhost:5173"
     FRONTEND_URL_PRODUCTION: Optional[str] = None
     API_URL: str = "http://localhost:8000"
-    API_TIMEOUT_SECONDS: int = 30
 
     # CORS Configuration
     CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
@@ -118,20 +118,7 @@ class Settings(BaseSettings):
     PULSE_SCHEDULER_ENABLED: bool = True
     PULSE_CHECK_INTERVAL_MINUTES: int = 15
 
-    # Security
-    ALLOWED_HOSTS: str = "*"
-    SECRET_KEY: str = "continuum-secret-key-change-in-production"
-
-    # Clerk (Legacy - keeping for backwards compatibility)
-    CLERK_SECRET_KEY: Optional[str] = None
-    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: Optional[str] = None
-
-    # Rate Limiting Defaults
-    DEFAULT_RATE_LIMIT_SENSITIVE: str = "5/minute"
-    DEFAULT_RATE_LIMIT_STANDARD: str = "30/minute"
-
     # External APIs
-    GITHUB_TOKEN: Optional[str] = None
     OPENROUTER_API_KEY: Optional[str] = None
     VITE_OPENROUTER_API_KEY: Optional[str] = None  # legacy name; used if OPENROUTER_API_KEY is unset
     BIFROST_BASE_URL: Optional[str] = None
@@ -177,6 +164,9 @@ class Settings(BaseSettings):
         Automatically configure RP_ID and ORIGIN based on Railway environment
         if not explicitly provided.
         """
+        if self.DEBUG is None:
+            self.DEBUG = not self.is_production()
+
         if self.is_production():
             # Real production domain. Explicit RP_ID / ORIGIN / FRONTEND_URL env vars win;
             # these only replace the localhost development defaults.
@@ -285,9 +275,6 @@ class Settings(BaseSettings):
             # Check critical secrets are not defaults
             if self.JWT_SECRET_KEY == "continuum-dev-secret-key-change-in-production":
                 errors.append("JWT_SECRET_KEY must be changed in production")
-
-            if self.SECRET_KEY == "continuum-secret-key-change-in-production":
-                errors.append("SECRET_KEY must be changed in production")
 
             # Check URLs don't contain localhost
             if "localhost" in self.FRONTEND_URL.lower():

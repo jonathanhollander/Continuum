@@ -108,8 +108,13 @@ def create_db_and_tables():
     for i in range(retries):
         try:
             logger.info(f"Attempting Database Connection ({i+1}/{retries})...")
-            SQLModel.metadata.create_all(engine)
-            migrate_db()
+            if engine.dialect.name == "sqlite":
+                # Local SQLite builds its schema at startup. Postgres schema belongs to Alembic only.
+                SQLModel.metadata.create_all(engine)
+                migrate_db()
+            else:
+                with engine.connect() as connection:
+                    connection.execute(text("SELECT 1"))
             logger.info("Database Connected & Initialized!")
             break
         except OperationalError as e:

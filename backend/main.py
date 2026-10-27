@@ -5,7 +5,9 @@ from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 import uvicorn
 import json
+import logging
 import os
+import sys
 import uuid
 from typing import List, Optional
 from pydantic import BaseModel
@@ -13,7 +15,6 @@ from sqlmodel import Session
 from backend.config import settings
 from backend.database import engine, create_db_and_tables, get_session, User, Estate
 from backend.estate_persistence import estate_for_write, merge_profile, profile_of, recovery_summary
-from backend.utils.clock import utc_now
 from backend.security import verify_registration, get_authentication_options, verify_authentication
 from backend.auth import create_access_token, get_current_user, ACCESS_TOKEN_EXPIRE_MINUTES
 from backend.pulse_scheduler import start_scheduler, stop_scheduler
@@ -31,13 +32,14 @@ from backend.utils.logger import get_logger, setup_logging
 from backend.csrf import CSRFMiddleware, get_csrf_token_endpoint
 from backend.private_access import enforce_private_access
 
-def setup_app_documentation(app: FastAPI):
-    """Configure OpenAPI tags and documentation for the app."""
-    # This logic is currently inline in app instantiation, 
-    # but we add this docstring for architectural reference.
-    pass
-
 logger = get_logger(__name__)
+
+# Uvicorn's own startup lines go to stderr, which Railway shows as level "error". The app is
+# imported before uvicorn logs "Started server process", so pointing its handler at stdout here
+# covers every uvicorn line.
+for _handler in logging.getLogger("uvicorn").handlers:
+    if isinstance(_handler, logging.StreamHandler) and _handler.stream is sys.stderr:
+        _handler.setStream(sys.stdout)
 
 # Initialize rate limiter
 # limiter definition moved to backend/limiter.py to avoid circular imports
@@ -54,7 +56,8 @@ async def lifespan(app: FastAPI):
     logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
 
     create_db_and_tables()
-    seed_dev_user()
+    if not settings.is_production():
+        seed_dev_user()
     start_scheduler()
     yield
     # Shutdown
@@ -89,8 +92,9 @@ This API provides endpoints for:
         {"name": "media", "description": "Backend file storage and management"},
         {"name": "email", "description": "Internal email service verification"},
     ],
-    docs_url="/docs" if settings.DEBUG else "/api/docs",
-    redoc_url="/redoc" if settings.DEBUG else "/api/redoc",
+    docs_url="/docs" if settings.DEBUG else None,
+    redoc_url="/redoc" if settings.DEBUG else None,
+    openapi_url="/openapi.json" if settings.DEBUG else None,
 )
 app.state.limiter = limiter
 
@@ -217,6 +221,8 @@ async def set_secure_headers(request: Request, call_next):
     """Add security headers to all responses."""
     response = await call_next(request)
     secure_headers.set_headers(response)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Permissions-Policy"] = "camera=(self), microphone=(self), geolocation=(), payment=(), usb=()"
     return response
 
 # Configure CORS (Reload Triggered)
@@ -351,24 +357,6 @@ from pydantic import field_validator
 MAX_ESTATE_DATA_SIZE = 100000  # 100KB max for estate data
 
 
-class EstateDataPayload(BaseModel):
-    """Validated model for estate data storage."""
-    transparent_data: Optional[str] = "{}"
-    encrypted_vault: Optional[bytes] = b""
-
-    @field_validator("transparent_data")
-    @classmethod
-    def validate_transparent_data(cls, v):
-        if v and len(v) > MAX_ESTATE_DATA_SIZE:
-            raise ValueError(f"transparent_data exceeds maximum size ({MAX_ESTATE_DATA_SIZE} bytes)")
-        # Validate it's valid JSON
-        try:
-            json.loads(v or "{}")
-        except json.JSONDecodeError:
-            raise ValueError("transparent_data must be valid JSON")
-        return "{}" if v is None else v
-
-
 class EstateProfilePayload(BaseModel):
     """Validated model for estate profile data."""
     data: Dict[str, Any]
@@ -454,16 +442,6 @@ def get_estate(user: User = Depends(get_current_user), session: Session = Depend
     session.commit()
     session.refresh(estate)
     return estate
-
-@app.post("/api/estate")
-def save_estate(estate_data: EstateDataPayload, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
-    """Save estate data with Pydantic validation (P1-High Security)."""
-    estate = estate_for_write(session, user.id)
-    estate.transparent_data = estate_data.transparent_data
-    estate.encrypted_vault = estate_data.encrypted_vault
-    estate.updated_at = utc_now()
-    session.commit()
-    return {"status": "saved"}
 
 @app.get("/api/estate/profile")
 def get_estate_profile(user: User = Depends(get_current_user), session: Session = Depends(get_session)):

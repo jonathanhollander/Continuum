@@ -84,6 +84,38 @@ def get_doc_category(mime_type: str) -> str:
     return "uncategorized"
 
 
+# What the first bytes say a file is: (family of acceptable claimed types, type used when the claim is outside it).
+def sniff_mime_family(head: bytes):
+    if head.startswith(b"\xff\xd8\xff"):
+        return {"image/jpeg", "image/jpg"}, "image/jpeg"
+    if head.startswith(b"\x89PNG\r\n\x1a\n"):
+        return {"image/png"}, "image/png"
+    if head.startswith(b"GIF8"):
+        return {"image/gif"}, "image/gif"
+    if head.startswith(b"%PDF-"):
+        return {"application/pdf"}, "application/pdf"
+    if head.startswith(b"\x1a\x45\xdf\xa3"):
+        return {"video/webm", "audio/webm"}, "video/webm"
+    if head.startswith(b"OggS"):
+        return {"audio/ogg"}, "audio/ogg"
+    if head.startswith(b"ID3") or head[:2] in (b"\xff\xfb", b"\xff\xf3", b"\xff\xf2"):
+        return {"audio/mpeg", "audio/mp3"}, "audio/mpeg"
+    if head[:4] == b"RIFF" and head[8:12] == b"WEBP":
+        return {"image/webp"}, "image/webp"
+    if head[:4] == b"RIFF" and head[8:12] == b"WAVE":
+        return {"audio/wav", "audio/x-wav", "audio/wave"}, "audio/wav"
+    if head[:4] == b"RIFF" and head[8:11] == b"AVI":
+        return {"video/x-msvideo"}, "video/x-msvideo"
+    if head[4:8] == b"ftyp":
+        brand = head[8:12]
+        if brand in (b"heic", b"heix", b"mif1", b"msf1", b"hevc"):
+            return {"image/heic"}, "image/heic"
+        if brand == b"qt  ":
+            return {"video/quicktime"}, "video/quicktime"
+        return {"video/mp4", "video/quicktime", "audio/mp4", "audio/x-m4a", "audio/aac"}, "video/mp4"
+    return None
+
+
 def validate_file_size(file_size: int) -> bool:
     """Validate that the file size is within limits"""
     return file_size <= settings.MAX_UPLOAD_SIZE
@@ -117,8 +149,8 @@ async def upload_media(
     mime_type = base_mime_type(mime_type)
     module = safe_module_name(module)
 
-    # Read file and validate size
-    file_data = await file.read()
+    # Read at most one byte past the cap, so an oversized file is refused without loading it all
+    file_data = await file.read(settings.MAX_UPLOAD_SIZE + 1)
     file_size = len(file_data)
 
     if not validate_file_size(file_size):
@@ -126,6 +158,18 @@ async def upload_media(
         raise HTTPException(
             status_code=413,
             detail=f"This space holds files up to {max_size_mb:.0f} MB. A smaller copy will fit."
+        )
+
+    # The file's own bytes decide its type; the browser's label is kept only when it agrees
+    sniffed = sniff_mime_family(file_data[:16])
+    if sniffed:
+        family, detected = sniffed
+        if mime_type not in family:
+            mime_type = detected
+    elif mime_type in ALLOWED_IMAGE_TYPES or mime_type == "application/pdf":
+        raise HTTPException(
+            status_code=400,
+            detail="This space keeps PDF, text and CSV files, images, audio and video."
         )
 
     # Determine category
