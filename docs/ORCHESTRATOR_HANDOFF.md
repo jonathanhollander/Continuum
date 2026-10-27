@@ -1,6 +1,6 @@
 # Continuum active implementation handoff
 
-**Last Updated:** 2026-10-26, final release acceptance
+**Last Updated:** 2026-10-26, owner prompt-suitability extension
 
 The only board is [RECOVERY_EXECUTION_PLAN.md](RECOVERY_EXECUTION_PLAN.md). This checkpoint supersedes prior operational snapshots; Git retains them.
 
@@ -30,9 +30,15 @@ Continuum Railway project25d74db2-ed30-4e38-a6cd-3e52ae9399bf / production9fbb04
 
 Release commit `c5d8a8599bd01a7ccf274d811d93e90ca188eaff` deployed as Railway `ea64cd84-5cf0-400f-aaab-ff3aa2352bce`, SUCCESS at2026-10-27 01:16:15.987 UTC. Health returned200/healthy at01:16:32.170 UTC. The staged Bifrost variables are active; signed-in Admin editor/catalogue verification passed in the root-created tab while preserving the owner's original tab/session.
 
-Owner-selected shared default is **Fireworks DeepSeek V4.1 Flash**, exact ID `fireworks/accounts/fireworks/models/deepseek-v4p1-flash`. Admin save/readback and a fresh production configuration resolution confirm all41 call combinations inherit it from `saved.shared`; no model overrides needed clearing. Instruction/configuration hashes stayed unchanged. No paid inference or fake production records/prompts were used. The final documentation-only sync must retain the frontend/backend trees above; verify its exact Railway identity and health before closing the orchestration goal. No further implementation is outstanding within this accepted scope.
+Owner-selected shared default is **Fireworks DeepSeek V4.1 Flash**, exact ID `fireworks/accounts/fireworks/models/deepseek-v4p1-flash`. Admin save/readback and a fresh production configuration resolution confirm all41 call combinations inherit it from `saved.shared`; no model overrides needed clearing. Instruction/configuration hashes stayed unchanged. No paid inference or fake production records/prompts were used. Documentation-only commit `b3a52541c59800230139c56c38733b4210d2ef16` retained the application trees above and deployed as `ca9e80ae-7b44-40c8-81dc-22f8b8ee62ff`, SUCCESS at2026-10-27 01:35:18.028 UTC, health200/healthy at01:35:27.763 UTC.
 
-Only the primary checkout remains. This batch removed223571968bytes of measured checkout footprints; cumulative removal4681801728bytes. Branches, both central stashes, shared primary dependencies, private proof evidence and verified build remain. Manifests are `.git/worktree-cleanup-backups/2026-10-26/` (X374 has an additional validation-followup removal). Concurrent knowledge-index commitf7932ba is preserved; do not undo it or hand-edit generated OpenWiki pages.
+## New owner extension in progress
+
+X378 now reviews every registered AI call and its actual caller, tailoring prompts/context/settings to Continuum's personal-writing and practical handover jobs using the existing defaults file. X379 adds a visible application-name setting defaulting to Continuum and outgoing User-Agent attribution through the shared request path. Agents work in nested `.worktrees/X378` and `.worktrees/X379`; root owns plan/status/review/merge/release. Fireworks stays the shared model. No new framework, paid inference or broad suite is authorized.
+
+The dedicated gateway's exact active User-Agent mapping Continuum→Continuum was saved and reload-verified after root reviewed the prepared form. Other controls, grants and logging settings stayed unchanged. This labels OSS logs; metrics/spans have separate built-in classification and are not claimed. Configuration proof is not a paid inference/log-event proof.
+
+Before this new extension, only the primary checkout remained. The accepted batch removed223571968bytes of measured checkout footprints; cumulative removal4681801728bytes. Branches, both central stashes, shared primary dependencies, private proof evidence and verified build remain. Manifests are `.git/worktree-cleanup-backups/2026-10-26/` (X374 has an additional validation-followup removal). Concurrent knowledge-index commitf7932ba is preserved; do not undo it or hand-edit generated OpenWiki pages.
 
 ## Earlier completed recovery and separate holds
 
