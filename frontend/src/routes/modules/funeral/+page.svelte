@@ -34,7 +34,7 @@
     import { activityLog } from "$lib/stores/activityLog.svelte";
     import { UserCircle, MapPin as MapPinIcon, Cross } from "lucide-svelte";
     import { funeralStore, funeralSync, type FuneralWishes, type FuneralBudgetItem } from "$lib/stores/funeralStore.svelte";
-    import FuneralWizard from "$lib/components/modules/funeral/FuneralWizard.svelte";
+    import FuneralWizard, { type FuneralShownContext } from "$lib/components/modules/funeral/FuneralWizard.svelte";
     import LegalDisclaimer from "$lib/components/common/LegalDisclaimer.svelte";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
     import * as registryRaw from "$lib/data/registry.json";
@@ -48,19 +48,29 @@
     const funeralIntro = "Record the funeral or memorial arrangements you want your family to follow. Start with what matters most; leave details open and return when you're ready.";
     let activeTab = $state("wishes"); // 'wishes' | 'budget'
     const funeralTabLabel = $derived(activeTab === "wishes" ? "Funeral & memorial wishes" : "Costs & arrangements");
+    const pageOwner = captureSession();
+    let shownContext = $state<FuneralShownContext | null>(null);
+    function acceptShownContext(context: FuneralShownContext | null) {
+        shownContext = context && isCurrentSession(pageOwner) ? context : null;
+    }
     const funeralJob = $derived.by((): AIWritingJob => {
         $aiJobChanges;
         const engaged = currentAIJob();
-        const field = activeTab === "wishes" && engaged?.document_type === "funeral"
-            && engaged.job_id?.startsWith("funeral:wishes:") ? engaged : undefined;
+        const shown = activeTab === "wishes" ? shownContext : null;
+        const category = shown?.step === 1 ? "foundation" : shown?.step === 4 ? "atmosphere" : shown?.step === 5 ? "legacy" : null;
+        const field = category && engaged?.document_type === "funeral"
+            && engaged.job_id === `funeral:wishes:${category}` ? engaged : undefined;
         const recorded = funeralSync.data;
+        const displayed = shown ? JSON.stringify({ current_stage: shown.stage, displayed_wishes: shown.wishes, save_pending: shown.pending }) : "";
         return {
-            ...field, job_id: field?.job_id ?? `funeral:${activeTab}`,
+            ...field, job_id: `funeral:${activeTab}`,
             job_brief: funeralTabLabel, document_title: "Final Wishes", document_type: "funeral",
-            field_label: field?.field_label || funeralTabLabel,
-            current_draft: field?.current_draft ?? (recorded ? JSON.stringify(activeTab === "wishes" ? recorded.wishes || {} : recorded.budget || [], null, 2) : ""),
+            field_label: field?.field_label || shown?.stage || funeralTabLabel,
+            field_question: field?.field_question || shown?.question || "",
+            question_answers: [...(field?.question_answers || []), ...(field && displayed ? [displayed] : [])],
+            current_draft: field?.current_draft ?? (shown ? displayed : recorded ? JSON.stringify(activeTab === "wishes" ? recorded.wishes || {} : recorded.budget || [], null, 2) : ""),
             current_draft_source: field?.current_draft_source ?? "edited",
-            source_facts: recorded ? [JSON.stringify({ wishes: recorded.wishes || {}, budget: recorded.budget || [] })] : [],
+            source_facts: recorded ? [JSON.stringify({ wishes: recorded.wishes || {}, budget: recorded.budget || [], sync_status: funeralSync.status })] : [],
         };
     });
     let showAddExpense = $state(false);
@@ -394,7 +404,7 @@
         {/if}
 
         {#if activeTab === "wishes"}
-            <FuneralWizard onOpenBudget={() => (activeTab = "budget")} />
+            <FuneralWizard onOpenBudget={() => (activeTab = "budget")} onContextChange={acceptShownContext} />
         {/if}
         {#if activeTab === "budget"}
             <!-- BUDGET TAB -->
