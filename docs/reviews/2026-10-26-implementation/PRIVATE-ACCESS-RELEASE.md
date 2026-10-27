@@ -1,0 +1,22 @@
+# Private preparation period — X380/X381
+
+The owner explicitly requires public signups and use to remain closed. Production has `PRIVATE_ACCESS_USER_ID` staged for the internally verified existing owner account. **Do not unset it or reopen access as part of completion or cleanup; reopening requires the owner's direction.** No accounts or records were removed, no grants or credentials changed, and existing sessions were not globally revoked.
+
+Application cut `8a0389e5aa9f9ae2f94436809d1b91a2ce77bd6f` includes the reviewed backend `e37a851` and frontend `baa152a`, `b6e170b`, `363dfc5`, `50829f5`. Backend tree `d68339741570bbef40d96a4d53986f38909b8c83`; frontend tree `876b796360c39222850bda74aaf59b233cc29209`.
+
+The server blocks all public account-creation paths before their handlers run, including an already-started passkey registration. Existing non-owner JWT sessions and public recipient, Pulse and shared-media tokens cannot use the API. Interactive API documentation is also gated. Exact existing owner authentication/refresh routes, health, CSRF bootstrap and static assets remain available. Auth handlers reject non-owner credential/token flows before successful-auth mutations or mail; private status exposes three booleans with `no-store` and `Vary: Authorization`.
+
+The UI waits for current-session access status before mounting application pages or starting data sync. Signup forms and submission handlers remain closed; visitors see a preparation notice and Sign in. Login and verification remain mounted during owner bootstrap. Retry and stale-token/session guards preserve the boundary. Normal behavior is retained when private mode is deliberately disabled.
+
+## Verification
+
+- Actual JWT/main middleware/disposable migrated database: signup refusal with no user, credential, challenge, token or mail writes; non-owner auth refusals; owner password/passkey/magic/refresh/logout, credential enrollment and uploaded bytes; expired owner401→real refresh→me200. WebAuthn cryptographic verification and mail delivery were mocked. `/private/tmp/continuum-x380-proof.log`.
+- Forty explicit nested-router/public-token/docs requests confirm anonymous/non-owner refusal and unchanged records, correcting an earlier incomplete lazy-router count without repeating passed auth cases. Status cache-header proof passed after preserving the fixture-only missing-auth-router failure. `/private/tmp/continuum-x380-token-coverage.log`, `/private/tmp/continuum-x380-status-headers-corrected.log`.
+- Seven composed actual1440px browser/API phases passed: anonymous closure before child mount; unavailable-status retry; non-owner refusal; held owner/non-owner response isolation; single-use owner magic verification; expired owner refresh; ordinary off-mode signup draft retained after an intercepted refusal. Zero uncaught page errors. Two real bootstrap defects were fixed, with failures retained and only unfinished phases resumed. `/private/tmp/continuum-x376/x381-proof-results.json` and adjacent screenshots/logs.
+- Root reviewed the source, adjacent auth/session/data paths and working screenshots. Final check0 errors/0 warnings and build passed. All233 build files match primary byte-for-byte; manifest SHA256 `8f5526c3a306f60631b664afffcff556eccfda429643e8a2c3c4b7b3b919f84a`.
+
+Before the sole variable change, the operator correlated the web/Postgres targets, internally verified the existing owner identity, took a fresh164744-byte custom backup and verified its restore listing. Backup SHA256 `7d6b4960e24f71881f406be62a17d977f998b5ba81969f4456dd97f0b0e5b8fc`; private artifacts `/private/tmp/continuum-private-access-release-2026-10-26/` (directory0700, dump0600). Railway CLI stdin/explicit selectors/skip-deploys stored the owner setting; internal readback passed and all other variable hashes matched. No production feature data or correspondence was created for testing.
+
+Production activation is pending the priority release. Verify exact deployment/health, anonymous status and all three signup refusals without a valid account payload, plus the preserved signed-in owner browser. External copies or previously issued external storage URLs cannot be remotely erased by this gate; production uses the existing local volume. No paid inference or external mail was sent.
+
+The separate UI-question/answer corrections X382/X383 continue behind this private boundary; their completion must not reopen the site.

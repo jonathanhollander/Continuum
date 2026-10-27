@@ -1,8 +1,14 @@
 # Continuum active implementation handoff
 
-**Last Updated:** 2026-10-26, owner prompt-suitability extension
+**Last Updated:** 2026-10-26, priority private-access release
 
 The only board is [RECOVERY_EXECUTION_PLAN.md](RECOVERY_EXECUTION_PLAN.md). This checkpoint supersedes prior operational snapshots; Git retains them.
+
+## Immediate priority
+
+The owner requires **no public signups or use**. X380/X381 are reviewed and merged in `8a0389e5aa9f9ae2f94436809d1b91a2ce77bd6f`; private owner access is staged in Railway but becomes effective only when this source deploys. [Private-access evidence](reviews/2026-10-26-implementation/PRIVATE-ACCESS-RELEASE.md) records the verified backup, exact app trees, zero-write refusal and seven-phase owner/UI proof. Final frontend check0/0/build and233-file artifact copy passed. Push this priority cut, verify exact deployment/health, anonymous signup/token-link refusal and current-owner browser access. **Do not reopen access on completion or cleanup.**
+
+The owner's exact bad AI example exposed lost displayed questions/answer pairing, misleading draft decoration and no reviewed draft destination. X378 acceptance is reopened. X382 adds finite Admin-visible question slots/assets and artifact instructions; X383 wires actual questions/answers, current letter job and reviewed editor adoption. They are coding in nested worktrees and must continue after the private release. Do not claim general prompt-tone changes alone fix that interaction. No paid inference is authorized.
 
 ## Current accepted release
 
