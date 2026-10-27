@@ -12,15 +12,21 @@
     export let promptSource = "";
     export let promptPoolSource = "";
     export let job: AIWritingJob | undefined = undefined;
+    export let onUseDraft: ((text: string, ownsResult: () => boolean) => void | Promise<void>) | undefined = undefined;
     let prompt = "";
     let isGenerating = false;
     let result = "";
     let isNotice = false;
+    let responsePrompt = "";
+    let responseOwner = captureSession();
+    let responseSource = "";
+    let isUsing = false;
     let copyStatus: "" | "copied" | "failed" = "";
     let history: AIHistoryMessage[] = [];
     let workingDraft = "";
     let owner = captureSession();
     let identity = "";
+    let contextSource = "";
     let sequence = 0;
     let alive = true;
     let poolIdeas: string[] = [];
@@ -30,12 +36,24 @@
     const jobKey = () => JSON.stringify([context, typeof location === 'undefined' ? '' : location.pathname, currentJob()?.job_id ?? '']);
     function followJob() {
         const key = jobKey();
-        if (key === identity && isCurrentSession(owner)) return;
+        const source = JSON.stringify(currentJob()) ?? "";
+        if (key === identity && isCurrentSession(owner)) {
+            if (source !== contextSource) {
+                contextSource = source;
+                sequence++;
+                workingDraft = result = responsePrompt = "";
+                isGenerating = false;
+                copyStatus = "";
+            }
+            return;
+        }
+        contextSource = source;
         identity = key;
         owner = captureSession();
         sequence++;
         history = [];
-        workingDraft = result = prompt = "";
+        workingDraft = result = prompt = responsePrompt = "";
+        responseSource = "";
         isGenerating = false;
         copyStatus = "";
     }
@@ -68,7 +86,7 @@
         if (isGenerating || !text.trim() || !isCurrentSession(owner)) return;
         const startedBy = owner, key = identity, version = ++sequence;
         const record = currentJob();
-        const fingerprint = JSON.stringify(record);
+        const fingerprint = JSON.stringify(record) ?? "";
         prompt = text;
         isGenerating = true;
         copyStatus = "";
@@ -79,16 +97,30 @@
             current_draft_source: workingDraft ? 'proposed' : 'edited' };
         try {
             const response = await aiConciergeService.modulePrompt(text, context, history, current);
-            if (!alive || version !== sequence || key !== jobKey() || !isCurrentSession(startedBy) || fingerprint !== JSON.stringify(currentJob())) return;
+            if (!alive || version !== sequence || key !== jobKey() || !isCurrentSession(startedBy) || fingerprint !== (JSON.stringify(currentJob()) ?? "")) return;
             isNotice = response.failed === true;
-            result = isNotice ? response.content : `[Draft based on: "${text}"]\n\n${response.content}`;
+            result = response.content;
+            responsePrompt = text;
+            responseOwner = startedBy;
+            responseSource = fingerprint;
             if (!response.failed) {
                 history = [...history, { role: 'user', content: text, source: 'user' }, { role: 'assistant', content: response.historyContent ?? response.content, source: 'model' }];
                 workingDraft = response.content;
             }
         } finally { if (alive && version === sequence && isCurrentSession(startedBy)) isGenerating = false; }
     }
-    function startOver() { sequence++; history = []; workingDraft = result = ""; copyStatus = ""; isGenerating = false; }
+    function startOver() { sequence++; history = []; workingDraft = result = responsePrompt = ""; responseSource = ""; copyStatus = ""; isGenerating = false; }
+    function editResult(event: Event) { result = (event.currentTarget as HTMLTextAreaElement).value; workingDraft = result; }
+    async function useDraft() {
+        if (!onUseDraft || isUsing || isNotice || !result.trim()) return;
+        const text = result, version = sequence, source = responseSource, startedBy = responseOwner;
+        const ownsResult = () => alive && version === sequence && result === text && source === responseSource
+            && source === (JSON.stringify(currentJob()) ?? "") && isCurrentSession(startedBy);
+        if (!ownsResult()) return;
+        isUsing = true;
+        try { await onUseDraft(text, ownsResult); }
+        finally { if (alive) isUsing = false; }
+    }
     async function copyResult() {
         try { await navigator.clipboard.writeText(result); copyStatus = "copied"; logInteraction("AI Copy", context); }
         catch { copyStatus = "failed"; }
@@ -103,6 +135,7 @@
         <span>Concierge Drafting Assistant</span>
     </div>
 
+    {#if job?.document_title || job?.recipient_name}<p class="mb-3 text-xs text-muted-foreground">Working with: {job.document_title || "Current letter"}{#if job.recipient_name} · For {job.recipient_name}{/if}</p>{/if}
     <!-- Input Area -->
     <div class="relative">
         <input
@@ -178,12 +211,15 @@
             class="mt-4 bg-card rounded-xl p-4 border border-primary/20 shadow-sm relative group"
             transition:slide
         >
-            <div
-                class="text-sm text-foreground whitespace-pre-wrap {isNotice ? '' : 'font-mono'}"
-            >
-                {result}
-            </div>
+            {#if isNotice}
+                <p class="text-sm text-foreground whitespace-pre-wrap" role="status">{result}</p>
+            {:else}
+                <p class="text-xs text-muted-foreground mb-2">Response to: {responsePrompt}</p>
+                <textarea aria-label="Assistant response" bind:value={result} on:input={editResult}
+                    class="w-full min-h-64 bg-card border border-border rounded-lg p-3 text-sm text-foreground leading-relaxed" rows="10"></textarea>
+            {/if}
             {#if !isNotice}
+                {#if onUseDraft}<button type="button" class="mt-3 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50" disabled={isUsing || !result.trim()} on:click={useDraft}>Use in letter editor</button>{/if}
                 <button
                     class="absolute top-2 right-2 p-2 bg-muted text-muted-foreground rounded-lg opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity hover:bg-primary-soft hover:text-primary-hover"
                     on:click={copyResult}
