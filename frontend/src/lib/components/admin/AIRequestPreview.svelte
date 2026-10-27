@@ -45,7 +45,7 @@
             if (!isCurrentSession(owner) || scope !== initiatingScope || revision !== initiatingRevision || inputText !== text) return;
             result = prepared;
         } catch (failure) {
-            if (isCurrentSession(owner) && scope === initiatingScope && !(failure instanceof SessionChangedError)) error = failure instanceof Error ? failure.message : 'Try preparing the request again.';
+            if (isCurrentSession(owner) && scope === initiatingScope && revision === initiatingRevision && inputText === text && !(failure instanceof SessionChangedError)) error = failure instanceof Error ? failure.message : 'Try preparing the request again.';
         } finally {
             if (isCurrentSession(owner) && scope === initiatingScope) busy = false;
         }
