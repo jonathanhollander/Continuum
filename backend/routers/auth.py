@@ -819,6 +819,13 @@ def refresh_access_token(request: Request, token_request: RefreshTokenRequest, s
 
     new_refresh_token, user = result
 
+    # Expired rows (old refresh tokens, used magic-link markers past their link's expiry) can never verify again
+    from sqlalchemy import delete
+    from backend.database import RefreshToken
+    from backend.utils.clock import utc_now
+    session.execute(delete(RefreshToken).where(RefreshToken.expires_at < utc_now()))
+    session.commit()
+
     # Generate new access token
     access_token = create_access_token(
         data={"sub": str(user.id)},

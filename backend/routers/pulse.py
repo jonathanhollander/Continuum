@@ -462,7 +462,7 @@ ACKNOWLEDGE_MESSAGE = "I've seen this. I'm looking in on you."
 
 @router.get("/messages")
 def get_messages(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
-    statement = select(PulseMessage).where(PulseMessage.user_id == user.id).order_by(PulseMessage.sent_at.desc())
+    statement = select(PulseMessage).where(PulseMessage.user_id == user.id).order_by(PulseMessage.sent_at.desc()).limit(200)
     return [{**m.model_dump(), "sent_at": _utc_iso(m.sent_at), "read_at": _utc_iso(m.read_at)}
             for m in session.exec(statement).all()]
 
