@@ -33,7 +33,6 @@
             </h1>
             <p class="text-slate-400">
                 Questions raised by the same six-area record checks as Record Coverage.
-                This list does not check review dates or establish that information is current.
             </p>
         </div>
         {#if auditSources.canScore}<div
@@ -68,7 +67,7 @@
                 <div
                     class="p-4 bg-success/10 border border-success/30 rounded-lg text-success text-sm flex items-center gap-2"
                 >
-                    <Activity size={16} /> No gaps found by these record checks. Review dates, details and access separately.
+                    <Activity size={16} /> Every one of these record checks has an entry. Review dates, details and access separately.
                 </div>
             {:else}
                 <ul class="space-y-2">

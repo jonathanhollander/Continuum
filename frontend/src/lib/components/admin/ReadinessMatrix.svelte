@@ -19,8 +19,7 @@
                 Recorded Items by Area
             </h2>
             <p class="text-muted-foreground">
-                Areas with recorded items or checked setup steps. This does not
-                verify the records, test functionality or measure a complete plan.
+                Areas with recorded items or checked setup steps.
             </p>
         </div>
         <div class="text-right">
@@ -60,7 +59,7 @@
                             {#if mod.hasData}
                                 {plural(mod.itemCount, "entry", "entries")}
                             {:else}
-                                No recorded items or checks found
+                                Ready for its first entry
                             {/if}
                         </div>
                     </div>

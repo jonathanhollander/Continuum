@@ -575,7 +575,7 @@
                 <div class="mb-8" in:fly={{ y: 20, duration: 600, delay: 400 }}>
                     <div class="relative w-full max-w-md mx-auto lg:mx-0 group">
                         <Search
-                            class="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground size-4 transition-colors group-focus-within:text-primary"
+                            class="absolute left-4 top-1/2 -translate-y-1/2 z-10 text-muted-foreground size-4 transition-colors group-focus-within:text-primary"
                         />
                         <input
                             type="text"

@@ -42,7 +42,7 @@ const OLD_SAMPLE_LETTER_START = "To my dearest family,\n\nMore than my possessio
 const OLD_SAMPLE_VALUES = new Set([
     "Integrity|Doing the right thing, even when no one is watching.",
     "Curiosity|Never stop learning and asking questions.",
-    "Kindness|Everyone is fighting a battle you know nothing about.",
+    "Kindness|Everyone you meet carries a quiet battle of their own.",
     "Resilience|It's not about how hard you fall, but how you get up.",
 ]);
 const isOldSampleLetter = (t: string) => t.trim().startsWith(OLD_SAMPLE_LETTER_START) && t.trim().endsWith("[Your Name]");

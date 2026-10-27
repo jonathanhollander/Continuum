@@ -31,15 +31,15 @@ export const affirmations = {
     ],
 
     wishes: [
-        { primary: "You're giving your voice to a moment when you can't speak", secondary: "Wishes saved" },
+        { primary: "You're giving your voice to a moment when others will speak for you", secondary: "Wishes saved" },
         { primary: "This is one of the most loving things you can do", secondary: "Your wishes are recorded" },
         { primary: "You're honoring your values and protecting your dignity", secondary: "Wishes updated" },
-        { primary: "Your family won't have to guess what you wanted", secondary: "Preferences saved" },
+        { primary: "Your family will know what you wanted", secondary: "Preferences saved" },
     ],
 
     contacts: [
         { primary: "You're creating a safety net", secondary: "Contact saved" },
-        { primary: "Your family won't have to search for these numbers", secondary: "Contact information saved" },
+        { primary: "Your family will have these numbers in one place", secondary: "Contact information saved" },
         { primary: "You're connecting the people who'll need each other", secondary: "Contact added" },
         { primary: "This simple list will mean everything", secondary: "Contact details updated" },
     ],
@@ -71,7 +71,7 @@ export const affirmations = {
 
     subscriptions: [
         { primary: "You might have just saved them hundreds of dollars", secondary: "Subscription saved" },
-        { primary: "No more zombie bills draining the estate", secondary: "Service documented" },
+        { primary: "Each recorded bill is one your family can close", secondary: "Service documented" },
         { primary: "They'll know exactly what to cancel", secondary: "Information updated" },
     ],
 
@@ -121,7 +121,7 @@ export const affirmations = {
         { primary: "Your story will be remembered", secondary: "Reflection saved" },
         { primary: "You're giving your loved ones a window into your heart", secondary: "Memory preserved" },
         { primary: "These words are a treasure they'll return to again and again", secondary: "Entry saved" },
-        { primary: "You're passing down wisdom that can't be Googled", secondary: "Reflection documented" },
+        { primary: "You're passing down wisdom only you can share", secondary: "Reflection documented" },
         { primary: "This is how legacies are built - one memory at a time", secondary: "Story captured" },
     ],
 } as const;

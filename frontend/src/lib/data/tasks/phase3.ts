@@ -107,7 +107,7 @@ export const phase3Tasks = [
             {"type": "heading_2", "content": "Questions and next actions"},
             {"type": "numbered_list_item", "content": "Identify which accounts contain photos, messages or other material the family wants to preserve before requesting changes."},
             {"type": "numbered_list_item", "content": "Ask or check the platform’s official process for a legacy contact, memorialization, data request or closure, and its authority requirements."},
-            {"type": "numbered_list_item", "content": "Record the chosen action, requester, reference and any material preserved. Do not assume the same process fits every account."},
+            {"type": "numbered_list_item", "content": "Record the chosen action, requester, reference and any material preserved. Each account may follow its own process."},
             {"type": "paragraph", "content": "Use your notes below for the contact, answer, source document and next action. Mark this step finished when the relevant work is complete or its outcome is recorded."}
         ]
     },
@@ -142,7 +142,7 @@ export const phase3Tasks = [
             {"type": "paragraph", "content": "Find the property address and agree who should receive estate correspondence."},
             {"type": "heading_2", "content": "Questions and next actions"},
             {"type": "numbered_list_item", "content": "Ask the postal service who may redirect this mail, what evidence is needed and which application fits the situation."},
-            {"type": "numbered_list_item", "content": "Confirm the destination, start date, duration, cost and any mail that will not be forwarded."},
+            {"type": "numbered_list_item", "content": "Confirm the destination, start date, duration, cost and which mail the service forwards."},
             {"type": "numbered_list_item", "content": "Record the confirmation and review date; update important institutions directly where needed."},
             {"type": "paragraph", "content": "Use your notes below for the contact, answer, source document and next action. Mark this step finished when the relevant work is complete or its outcome is recorded."}
         ]

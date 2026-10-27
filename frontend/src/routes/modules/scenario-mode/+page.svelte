@@ -147,8 +147,7 @@
                 Future Scenarios
             </h1>
             <p class="text-muted-foreground mt-2 text-lg">
-                Find selected records for a practice discussion. Presence does not
-                verify authority, document validity, access or a complete handover.
+                Find selected records for a practice discussion.
             </p>
         </div>
         <div
@@ -336,7 +335,7 @@
                                         >
                                             {readiness.hasDigital
                                                 ? countRecords(sources.hasDigital.length, "digital account")
-                                                : "No digital account records found. Record the accounts and where approved recovery instructions are kept."}
+                                                : "Record your digital accounts and where approved recovery instructions are kept."}
                                         </p>
                                         {@render recordedSources("hasDigital")}
                                     </div>
@@ -373,7 +372,7 @@
                                         >
                                             {readiness.hasHeirlooms
                                                 ? countRecords(sources.hasHeirlooms.length, "heirloom")
-                                                : "No heirloom records found. Record the items, their stories and intended recipients."}
+                                                : "Record your heirlooms, their stories and intended recipients."}
                                         </p>
                                         {@render recordedSources("hasHeirlooms")}
                                     </div>
@@ -406,7 +405,7 @@
                                 {#if nextCheck}
                                     The first missing check in this walkthrough's fixed list is
                                     <strong>{nextCheck.label}</strong>. Review it so that {nextCheck.goal}.
-                                    This list does not rank legal or emergency priorities.
+                                    This list follows a fixed order, separate from legal or emergency priorities.
                                 {:else}
                                     The records used in <strong>{activeScenario.title}</strong>
                                     are present. Review their details and access instructions.

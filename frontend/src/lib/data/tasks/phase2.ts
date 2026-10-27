@@ -29,7 +29,7 @@ export const phase2Tasks = [
         phase: "Legal",
         blocks: [
             {"type": "heading_1", "content": "Task 12: Obtain Letters Testamentary"},
-            {"type": "paragraph", "content": "Being named as executor in Continuum does not establish authority to act. Find out which appointment or other evidence applies."},
+            {"type": "paragraph", "content": "Authority to act comes from a court appointment or other legal evidence. Find out which applies."},
             {"type": "heading_2", "content": "Questions and next actions"},
             {"type": "numbered_list_item", "content": "Ask the relevant court or adviser which appointment process applies and which documents show the person’s authority."},
             {"type": "numbered_list_item", "content": "Record any application, hearing or appointment details and questions still outstanding."},

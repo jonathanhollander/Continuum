@@ -28,12 +28,12 @@
     const share = (id: string, score: number) =>
         Math.min(1, score / (AuditStore.maxScores[id] || 50));
     const checkRule: Record<string, string> = {
-        financial: "Open non-debt accounts: 20 points for any record, up to 40 for filled beneficiary fields and up to 40 for numeric values, including zero. This does not verify institution records.",
+        financial: "Open non-debt accounts: 20 points for any record, up to 40 for filled beneficiary fields and up to 40 for numeric values, including zero.",
         insurance: "Any insurance policy record earns 50 points. Coverage, beneficiaries and claim requirements still need review.",
-        family: "Any saved contact earns 50 points. This does not confirm that the person knows their role or can access your records.",
+        family: "Any saved contact earns 50 points.",
         medical: "Any medical directive record earns 50 points. Its content, original and applicable authority still need review.",
-        digital: "Any digital account record earns 50 points. This does not test credentials, recovery instructions or recipient access.",
-        legacy: "25 points each for any heirloom, any letter, a filled funeral wish, and any journal entry, visual memory or time-capsule message. This does not check their completeness or delivery.",
+        digital: "Any digital account record earns 50 points.",
+        legacy: "25 points each for any heirloom, any letter, a filled funeral wish, and any journal entry, visual memory or time-capsule message.",
     };
     const sectionSources: Record<string, string[]> = {
         financial: ["financial_assets"], insurance: ["insurance_policies"],
@@ -48,8 +48,7 @@
     <div>
         <h1 class="text-3xl font-bold text-white mb-2">Record Coverage</h1>
         <p class="text-slate-400 max-w-2xl">
-            Points for recorded information in six areas. A filled check does not
-            establish legal validity, current values, access or a complete handover.
+            Points for recorded information in six areas.
         </p>
     </div>
 
@@ -123,7 +122,7 @@
 
             <p class="text-sm text-slate-400 mb-4">
                 {#if score === 0}
-                    No points from these record checks yet.
+                    0 points from these record checks so far.
                 {:else if share(id, score) < 1}
                     Some checked fields are filled.
                 {:else}
@@ -133,7 +132,7 @@
             <p class="text-xs text-slate-400 mb-4">{checkRule[id]}</p>
             <details class="mb-4 text-xs text-slate-300" data-coverage-sources={id}>
                 <summary class="cursor-pointer font-semibold">Source records for these checks</summary>
-                <p class="mt-2 text-slate-400">Loaded source IDs before the scoring rules above are applied. A listed row does not necessarily add points.</p>
+                <p class="mt-2 text-slate-400">Loaded source IDs before the scoring rules above are applied. The rules above decide which rows add points.</p>
                 {#each auditSources.sources.filter((source) => sectionSources[id]?.includes(source.id)) as source (source.id)}
                     <div class="mt-3" data-coverage-source={source.id}>
                         <a class="underline underline-offset-2" href={source.path}>{source.name}</a>
@@ -145,7 +144,7 @@
                                 {/each}
                             </ul>
                         {:else}
-                            <p class="mt-1 text-slate-400">No source IDs returned.</p>
+                            <p class="mt-1 text-slate-400">0 source IDs returned.</p>
                         {/if}
                     </div>
                 {/each}

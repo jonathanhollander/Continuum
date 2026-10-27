@@ -110,8 +110,6 @@
         </h1>
         <p class="text-lg text-muted-foreground max-w-xl mx-auto">
             Rule-based checks for recorded information across six areas.
-            These checks do not use AI, assess legal validity, verify current values
-            or establish that your handover is complete.
         </p>
     </div>
 
@@ -133,7 +131,7 @@
                     </div>
                     <p class="text-white/70 max-w-sm">
                         {score === 0
-                            ? "No points from these record checks yet."
+                            ? "0 points from these record checks so far."
                             : score < 100
                               ? "Some recorded fields used by these checks are filled."
                               : "These checks are filled. Review the actual records and sharing choices."}

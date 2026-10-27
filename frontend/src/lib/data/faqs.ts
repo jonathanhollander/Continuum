@@ -11,8 +11,8 @@ export const faqs: FAQItem[] = [
         category: "General"
     },
     {
-        question: "What if I do not have a will or trust yet?",
-        answer: "You can still record accounts, people, wishes and questions for an adviser. In Legal documents, note which papers you have and where the originals are kept. Recording a wish here does not create a will or establish someone's authority to act.",
+        question: "Can I start before I have a will or trust?",
+        answer: "You can still record accounts, people, wishes and questions for an adviser. In Legal documents, note which papers you have and where the originals are kept. A will and someone's authority to act come from signed legal documents; your notes here help you prepare them with your adviser.",
         category: "Legal"
     },
     {
@@ -22,7 +22,7 @@ export const faqs: FAQItem[] = [
     },
     {
         question: "How do I share records with my son or executor?",
-        answer: "Open Family & Contacts, choose the person and create their recipient link. Add a note, then preview the page to check what they will see before you share the link yourself. Marking someone as executor records that role; it does not share records or send an invitation. Their page lets them read the shared records and download a copy with available files.",
+        answer: "Open Family & Contacts, choose the person and create their recipient link. Add a note, then preview the page to check what they will see before you share the link yourself. Marking someone as executor records that role; sharing happens through the recipient link you send. Their page lets them read the shared records and download a copy with available files.",
         category: "Technical"
     },
     {
@@ -31,7 +31,7 @@ export const faqs: FAQItem[] = [
         category: "Technical"
     },
     {
-        question: "Can I record details that do not fit the usual fields?",
+        question: "Where do I record details beyond the usual fields?",
         answer: "Use the record's notes and, where offered, custom fields. For example, add an account's branch contact or an heirloom's repair history. Save and reopen the record, then preview the recipient page or Red Binder to check how those details read.",
         category: "General"
     }
