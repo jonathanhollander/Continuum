@@ -44,6 +44,7 @@
     let isSearching = $state(false);
     let searchResults = $state<SearchResult[]>([]);
     let showDiscovery = $state(false);
+    let discoveryAvailable = $state(false);
     let discoveryError = $state("");
     let chatError = $state("");
 
@@ -135,6 +136,12 @@
         selectedCountry = languageToCountry[currentLang] || "US";
 
         refreshHotlines();
+    });
+
+    // Local search needs sign-in and a configured provider; ask again when the session changes.
+    $effect(() => {
+        if (!$auth.isAuthenticated) { discoveryAvailable = false; return; }
+        supportService.isDiscoveryAvailable().then((ok) => (discoveryAvailable = ok));
     });
 
     async function handleChat() {
@@ -359,7 +366,8 @@
                             {/if}
                         {/each}
 
-                        <!-- Local Search Discovery -->
+                        <!-- Local Search Discovery (shown when the server can search) -->
+                        {#if discoveryAvailable}
                         <div
                             in:fly={{ y: 20, delay: 500, duration: 600 }}
                             class="p-8 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 backdrop-blur-xl border border-white/10 flex flex-col items-start text-left group transition-all duration-500 md:col-span-2 lg:col-span-3"
@@ -466,6 +474,7 @@
                                 </div>
                             {/if}
                         </div>
+                        {/if}
                     </div>
 
                     <!-- Companion AI Section -->

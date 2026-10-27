@@ -216,7 +216,7 @@ function createAuthStore() {
                     const error = await res.json();
                     if (!isCurrentSession(owner, true)) return false;
                     if (previous.ready && previous.token === owner.token) completeSession(owner);
-                    update(s => ({ ...s, loading: false, error: error.detail || 'Signup failed' }));
+                    update(s => ({ ...s, loading: false, error: error.error?.message || error.detail || 'Signup failed' }));
                     return false;
                 }
             } catch (e) {
@@ -254,7 +254,7 @@ function createAuthStore() {
                     const error = await res.json();
                     if (!isCurrentSession(owner, true)) return false;
                     if (previous.ready && previous.token === owner.token) completeSession(owner);
-                    update(s => ({ ...s, loading: false, error: error.detail || 'Login failed' }));
+                    update(s => ({ ...s, loading: false, error: error.error?.message || error.detail || 'Login failed' }));
                     return false;
                 }
             } catch (e) {

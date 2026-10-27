@@ -4,6 +4,8 @@ from typing import List, Optional
 import httpx
 import os
 from backend.config import settings
+from backend.auth import get_current_user
+from backend.database import User
 from backend.utils.logger import get_logger
 
 router = APIRouter(prefix="/api/support", tags=["support"])
@@ -19,17 +21,25 @@ class SearchResponse(BaseModel):
     results: List[SearchResult]
     query: str
 
+def _api_key() -> Optional[str]:
+    return os.getenv("TAVILY_API_KEY") or getattr(settings, "TAVILY_API_KEY", None)
+
+@router.get("/discovery/available")
+def discovery_available(user: User = Depends(get_current_user)):
+    """Whether local search is configured, so the page shows it only when it can answer."""
+    return {"available": bool(_api_key())}
+
 @router.get("/discovery", response_model=SearchResponse)
 async def discover_local_support(
-    location: str = Query(..., description="City, state, or zip code"),
-    category: str = Query("grief counseling", description="Type of support to search for")
+    location: str = Query(..., max_length=200, description="City, state, or zip code"),
+    category: str = Query("grief counseling", max_length=100, description="Type of support to search for"),
+    user: User = Depends(get_current_user),
 ):
     """
     Search for local grief support practitioners and groups using Tavily.
     """
-    # Use Tavily API key from environment
-    api_key = os.getenv("TAVILY_API_KEY") or getattr(settings, "TAVILY_API_KEY", None)
-    
+    api_key = _api_key()
+
     if not api_key:
         logger.warning("Local support discovery provider is not configured.")
         raise HTTPException(
@@ -67,4 +77,4 @@ async def discover_local_support(
 
     except Exception as e:
         logger.error(f"Tavily search failed: {e}")
-        raise HTTPException(status_code=500, detail="We can search for local support again whenever you're ready.")
+        raise HTTPException(status_code=503, detail="We can search for local support again whenever you're ready.")

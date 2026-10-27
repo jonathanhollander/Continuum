@@ -136,7 +136,7 @@ def get_email_by_id(
         )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Email log not found"
+            detail="That email record may have moved."
         )
 
     # Security check
@@ -152,7 +152,7 @@ def get_email_by_id(
         )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to view this email log"
+            detail="This email record belongs to another account."
         )
 
     return email_log
@@ -175,7 +175,7 @@ def resend_email(
     if not email_log:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Email log not found"
+            detail="That email record may have moved."
         )
 
     if email_log.status in ("sent", "resent"):

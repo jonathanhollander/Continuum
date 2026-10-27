@@ -135,9 +135,12 @@ async function request<T>(path: string, owner: SessionOwnership, method = 'GET',
     assertCurrentSession(owner);
     if (!response.ok) {
         const detail = data?.detail;
+        const fields = data?.error?.details?.fields;
         const message = typeof detail === 'string' ? detail : Array.isArray(detail)
             ? detail.map((item: any) => `${Array.isArray(item.loc) ? item.loc.filter((part: unknown) => part !== 'body').join(' · ') : 'Settings'}: ${typeof item.msg === 'string' ? item.msg : 'Review this value.'}`).join('\n')
-            : 'Please try the request again.';
+            : Array.isArray(fields) && fields.length
+            ? fields.map((item: any) => `${item.field || 'Settings'}: ${item.message || 'Review this value.'}`).join('\n')
+            : data?.error?.message || 'Please try the request again.';
         throw new Error(message);
     }
     return data as T;

@@ -64,9 +64,9 @@ if (typeof window !== 'undefined' && !(window.fetch as { __csrfWrapped?: boolean
 		let token = readCsrfCookie();
 		if (!token) {
 			// The server sets the cookie on any response; it expires after an hour, so
-			// fetch a cheap one if it is gone.
+			// fetch the cheap token endpoint if it is gone.
 			try {
-				await nativeFetch(`${API_BASE_URL}/api/health`, { credentials: 'include' });
+				await nativeFetch(`${API_BASE_URL}/api/csrf-token`, { credentials: 'include' });
 			} catch {
 				// fall through; the write will report its own failure
 			}

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Query
 from sqlmodel import Session, select
 from backend.limiter import limiter
 from datetime import datetime, timedelta, timezone
@@ -273,7 +273,7 @@ def update_settings(request: Request, new_settings: PulseSettings, user: User = 
 PULSE_ENABLED_METHOD = "pulse_enabled"  # an owner check-in (pulse_logic.owner_last_checkin counts it)
 
 @router.get("/history")
-def get_history(limit: int = 10, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+def get_history(limit: int = Query(10, ge=1, le=500), user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     statement = select(PulseCheckin).where(PulseCheckin.user_id == user.id).order_by(PulseCheckin.timestamp.desc()).limit(limit)
     # Stored times are naive UTC; send them with "Z" (as /status does) so the browser reads UTC
     return [{**c.model_dump(), "timestamp": _utc_iso(c.timestamp)} for c in session.exec(statement).all()]
@@ -583,7 +583,7 @@ def confirm_contact(request: Request, token: str, session: Session = Depends(get
 # --- Safety & Monitoring ---
 
 @router.post("/safety/start")
-def start_safety_timer(minutes: int, purpose: str = "Walking home", user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+def start_safety_timer(minutes: int = Query(..., ge=1, le=1440), purpose: str = Query("Walking home", max_length=200), user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     existing = session.exec(select(PulseSafetyTimer).where(PulseSafetyTimer.user_id == user.id, PulseSafetyTimer.is_active == True)).all()
     for t in existing: t.is_active = False; session.add(t)
         
