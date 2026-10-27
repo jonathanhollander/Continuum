@@ -142,7 +142,7 @@ export function aiAsset<T>(key: string, selection: AICapability): T | undefined 
 
 export const assetStrings = (value: unknown): string[] => Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : [];
 export function renderAIAsset(template: string, values: Record<string, string>): string {
-    return template.replace(/\{\{([a-zA-Z_]+)\}\}/g, (match, key) => Object.hasOwn(values, key) ? values[key] : match);
+    return template.replace(/\{\{\s*([A-Za-z_][A-Za-z0-9_]*)\s*\}\}/g, (match, key) => Object.hasOwn(values, key) ? values[key] : match);
 }
 
 /** The active editor supplies only its own record; this is not an estate-wide data collector. */

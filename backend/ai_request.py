@@ -136,7 +136,28 @@ def validate_configuration(config: dict, *, patch: bool = False) -> dict:
     if ((not patch or {"warmth_low_max", "warmth_mid_max"} <= set(config))
             and complete["warmth_low_max"] >= complete["warmth_mid_max"]):
         raise ValueError("Set the lower warmth maximum below the middle maximum.")
+    if patch:
+        # Validate only the assets supplied by this write, not every shipped
+        # asset on runtime configuration reads.
+        descriptors = {asset["key"]: asset for asset in DEFAULTS["asset_fields"]}
+        for asset_key, asset in config.get("ui_assets", {}).items():
+            descriptor = descriptors[asset_key]
+            try:
+                _validate_asset_placeholders(asset, descriptor["placeholders"])
+            except ValueError:
+                raise ValueError(f"Use the displayed placeholders for {descriptor['label']}.") from None
     return config
+
+
+def _validate_asset_placeholders(value: object, allowed: list[str]) -> None:
+    if isinstance(value, str):
+        _validate_text(value, allowed)
+    elif isinstance(value, dict):
+        for child in value.values():
+            _validate_asset_placeholders(child, allowed)
+    elif isinstance(value, list):
+        for child in value:
+            _validate_asset_placeholders(child, allowed)
 
 
 def _validate_text(value: object, allowed: list[str]) -> None:
