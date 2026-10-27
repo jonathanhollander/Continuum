@@ -360,7 +360,7 @@
 			<a class="block text-primary font-semibold underline" href="/login">Sign in</a>
 		</div>
 	</main>
-{:else if $auth.loading || (!isAccessBootstrapRoute && !accessAllowed)}
+{:else if !isAccessBootstrapRoute && ($auth.loading || !accessAllowed)}
 	<!-- Global Loading State -->
 	<div
 		class="min-h-screen bg-background flex flex-col items-center justify-center p-6 font-sans"
