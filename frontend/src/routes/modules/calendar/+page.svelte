@@ -45,6 +45,7 @@
             body: string;
         };
         custom_attributes?: string;
+        ritualInstructions?: string; // ritual guidance saved from Important Dates (free text)
     };
 
     let parsedCustomAttributes = $state<Record<string, any>>({});
@@ -73,6 +74,9 @@
     let formRecipient = $state("");
     let formSubject = $state("");
     let formBody = $state("");
+    // Ritual guidance (free text) shares ritual_instructions with the email draft, so it shows while the draft is empty.
+    let formRitual = $state("");
+    let hasDraft = $derived(!!(formRecipient || formSubject || formBody));
 
     // --- Logic ---
 
@@ -147,6 +151,7 @@
                           body: formBody,
                       }
                     : undefined,
+            ...(formRecipient || formSubject || formBody ? {} : { ritualInstructions: formRitual }),
             custom_attributes: JSON.stringify(parsedCustomAttributes),
         };
 
@@ -193,6 +198,7 @@
             formSubject = "";
             formBody = "";
         }
+        formRitual = evt.emailTemplate ? "" : (evt.ritualInstructions ?? "");
 
         parsedCustomAttributes = readCustom(evt);
 
@@ -219,6 +225,7 @@
         formRecipient = "";
         formSubject = "";
         formBody = "";
+        formRitual = "";
         parsedCustomAttributes = {};
     }
 
@@ -304,12 +311,6 @@
     </LivingBlueprintHeader>
 
 <div class="p-8 max-w-[1400px] mx-auto animate-in fade-in duration-500">
-    <p class="text-sm text-muted-foreground mb-6">
-        These dates also appear in
-        <a href="/modules/anniversary-manager" class="font-bold text-primary-hover hover:underline">Important Dates</a>,
-        where you can write ritual guidance for your family.
-    </p>
-
     {#if events.length === 0}
         <EmptyState
             title="Add a date and what it means"
@@ -424,6 +425,13 @@
                                         "{evt.wish}"
                                     </p>
                                 </div>
+                            </div>
+                        {/if}
+
+                        {#if evt.ritualInstructions && !evt.emailTemplate}
+                            <div class="bg-success/10 p-4 rounded-xl mb-4 border border-success/20">
+                                <span class="text-xs font-bold uppercase tracking-wider text-success block mb-1">Ritual guidance</span>
+                                <p class="text-muted-foreground text-sm italic">"{evt.ritualInstructions}"</p>
                             </div>
                         {/if}
 
@@ -639,6 +647,21 @@
                             Write the wish you want your family to be able to find.
                         </p>
                     </div>
+
+                    {#if !hasDraft}
+                        <div class="bg-success/10 p-4 rounded-xl border border-success/20">
+                            <label for="event-ritual" class="block text-xs font-bold uppercase text-success mb-2">
+                                Ritual guidance, if you wish
+                            </label>
+                            <textarea
+                                id="event-ritual"
+                                bind:value={formRitual}
+                                rows="2"
+                                placeholder="e.g. Light a candle and play our song."
+                                class="w-full px-4 py-2 rounded-xl border border-success/30 bg-card focus:outline-none focus:ring-2 focus:ring-success/30"
+                            ></textarea>
+                        </div>
+                    {/if}
 
                     <!-- Future Email -->
                     <div class="border-t border-border pt-4">

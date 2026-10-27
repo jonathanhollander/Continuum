@@ -144,12 +144,11 @@
 		$page.url.pathname.startsWith("/wizard") ||
 			$page.url.pathname.startsWith("/start"),
 	);
-	// Onboarding and the welcome page are full-screen like the wizard (own logo,
-	// no sidebar); they stay behind sign-in, so isWizardRoute is left alone.
+	// Onboarding is full-screen like the wizard (own logo,
+	// no sidebar); it stays behind sign-in, so isWizardRoute is left alone.
 	let isFullScreenRoute = $derived(
 		isWizardRoute ||
 			$page.url.pathname === "/onboarding" ||
-			$page.url.pathname === "/welcome" ||
 			$page.url.pathname.startsWith("/admin"),
 	);
 	let isMarketingRoute = $derived(

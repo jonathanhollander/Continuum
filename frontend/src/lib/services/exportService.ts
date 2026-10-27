@@ -190,7 +190,7 @@ export function isExecutorContact(c: any, executorName?: any): boolean {
     return !!named && named === String(c.name ?? '').trim().toLowerCase();
 }
 
-// Important Dates keep "MMDD"/"YYYYMMDD" (calendar page) or "MM-DD"/"YYYY-MM-DD".
+// Calendar event dates are "MMDD"/"YYYYMMDD" (calendar page) or "MM-DD"/"YYYY-MM-DD" (older Important Dates rows).
 function calendarDate(v: any): string {
     const d = String(v ?? '').replace(/-/g, '');
     if (!/^\d{4}(\d{4})?$/.test(d)) return text(v);

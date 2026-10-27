@@ -77,6 +77,13 @@
                 You're gathering information about their estate. Take your time. We've organized everything you need in one place.
             {/if}
         </p>
+        <a
+            href="/executor"
+            class="inline-flex items-center gap-2 mt-4 text-info hover:text-foreground font-medium transition-colors"
+        >
+            Open the Estate Administration Hub
+            <span aria-hidden="true">→</span>
+        </a>
     </div>
 
     <!-- Progress Tracker -->
