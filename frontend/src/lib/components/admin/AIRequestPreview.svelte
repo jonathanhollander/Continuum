@@ -64,6 +64,8 @@
 <dt class="text-muted-foreground">AI purpose</dt><dd>{prepared.purpose}{prepared.variant ? ` · ${prepared.variant}` : ''}</dd>
             <dt class="text-muted-foreground">Selected model</dt><dd class="font-mono break-all">{prepared.selected_model_id}</dd>
             <dt class="text-muted-foreground">Transport</dt><dd>{prepared.transport}</dd>
+            <dt class="text-muted-foreground">Application name</dt><dd>{prepared.application_name}</dd>
+            <dt class="text-muted-foreground">Outgoing User-Agent</dt><dd class="font-mono break-all">{prepared.user_agent}</dd>
             <dt class="text-muted-foreground">Model sent</dt><dd class="font-mono break-all">{prepared.request.model}</dd>
             <dt class="text-muted-foreground">Maximum output tokens</dt><dd>{prepared.request.max_tokens}</dd>
             <dt class="text-muted-foreground">Temperature</dt><dd>{prepared.request.temperature ?? 'Provider default'}</dd>

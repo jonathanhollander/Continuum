@@ -51,6 +51,7 @@ def _field(key: str, label: str, kind: str, **options) -> dict:
 
 
 CONFIG_FIELDS = [
+    _field("application_name", "Application name", "text", slots=[], max_length=128),
     *[_field(key, label, "text", slots=ALLOWED_SLOTS, max_length=30000)
       for key, label in (
         ("shared_system_template", "Shared system instruction"),
@@ -109,7 +110,11 @@ def validate_configuration(config: dict, *, patch: bool = False) -> dict:
         if value is None and field.get("nullable"):
             continue
         kind = field["type"]
-        if kind == "text":
+        if key == "application_name":
+            if (not isinstance(value, str) or not 1 <= len(value) <= 128 or value != value.strip()
+                    or any(ord(c) < 32 or ord(c) > 126 for c in value) or "{{" in value or "}}" in value):
+                raise ValueError("Use an application name of 1–128 visible ASCII characters, with no surrounding spaces or templates.")
+        elif kind == "text":
             _validate_text(value, field["slots"])
         elif kind == "boolean":
             if type(value) is not bool:
@@ -323,6 +328,7 @@ def assemble_request(body: StructuredRequest, resolved: dict, wire_model: str, t
         payload["temperature"] = config["temperature"]
     return {"purpose": body.purpose, "variant": body.variant,
             "request": payload, "selected_model_id": resolved["model_id"], "transport": transport,
+            "application_name": config["application_name"], "user_agent": config["application_name"],
             "sources": resolved["sources"], "included_inputs": included + included_history,
             "omitted_inputs": omitted,
             "limits": {"max_input_chars": config["max_input_chars"], "input_chars": count,
