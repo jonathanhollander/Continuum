@@ -152,8 +152,6 @@ def validate_configuration(config: dict, *, patch: bool = False) -> dict:
 def _validate_asset_placeholders(value: object, allowed: list[str]) -> None:
     if isinstance(value, str):
         _validate_text(value, allowed)
-        if "}}" in _TOKEN.sub("", value):
-            raise ValueError("Use complete dynamic input placeholders.")
     elif isinstance(value, dict):
         for child in value.values():
             _validate_asset_placeholders(child, allowed)
