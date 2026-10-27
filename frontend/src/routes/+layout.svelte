@@ -344,7 +344,7 @@
 {/snippet}
 
 <!-- Global Notification Container (appears on ALL pages, including auth) -->
-<NotificationContainer />
+{#if accessAllowed || isAccessBootstrapRoute}<NotificationContainer />{/if}
 
 <!-- Media Migration Notice (prompts IndexedDB → Cloud migration when needed) -->
 {#if accessAllowed}<MediaMigrationNotice />{/if}
