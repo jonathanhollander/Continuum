@@ -455,7 +455,7 @@ const SECTIONS: SectionDef[] = [
         name: (r) => r.name,
         fields: [
             ['role', 'Role'], ['relation', 'Relationship'], ['phone', 'Phone'], ['email', 'Email'],
-            [(r) => [r.is_executor && 'Executor', r.is_beneficiary && 'Beneficiary', r.is_emergency_contact && 'Emergency contact', r.is_recipient && 'Recipient'].filter(Boolean).join(', '), 'Named as'],
+            [(r, s) => [isExecutorContact(r, s.owner?.executor_name) && 'Executor', r.is_beneficiary && 'Beneficiary', r.is_emergency_contact && 'Emergency contact', r.is_recipient && 'Recipient'].filter(Boolean).join(', '), 'Named as'],
             ['call_tier', 'Call order', { fmt: (v) => ({ '1_Immediate': 'Tier 1: Immediate Notification', '2_SameDay': 'Tier 2: Same Day (Inner Circle)', '3_Service': 'Tier 3: Service Notice', '4_DNR': 'Tier 4' } as Record<string, string>)[v] || v }],
             ['notes', 'Notes', { long: true }]
         ],
@@ -498,11 +498,12 @@ const SECTIONS: SectionDef[] = [
         fields: [
             ['recipient', 'For'],
             [(r) => (r.trigger_type === 'milestone' ? `Milestone: ${milestoneLabel(r.trigger_value)}` : r.trigger_value ? `On ${dateWords(r.trigger_value)}` : ''), 'Opens'],
-            [(r) => (r.is_released ? 'Released' : ''), 'Status'],
+            // The recipient page's rule (recipient.capsule_released): marked released, or its date has arrived.
+            [(r) => (r.is_released || (r.trigger_type === 'date' && r.trigger_value && String(r.trigger_value).slice(0, 10) <= new Date().toISOString().slice(0, 10)) ? 'Released' : ''), 'Status'],
             ['created_at', 'Recorded', { fmt: dateWords }],
             ['content_preview', 'Message', { long: true }]
         ],
-        consumed: ['trigger_type', 'trigger_value', 'is_released', 'video_url', 'audio_url']
+        consumed: ['recipient_contact_id', 'trigger_type', 'trigger_value', 'is_released', 'video_url', 'audio_url']
     },
     {
         key: 'visual_memories', source: 'visual_memories', title: 'Photos and videos',

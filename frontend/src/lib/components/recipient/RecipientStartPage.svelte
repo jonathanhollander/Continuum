@@ -341,7 +341,7 @@
                             <div class="flex items-start justify-between gap-3">
                                 <div>
                                     <p class="font-semibold text-lg">{c.name}</p>
-                                    <p class="text-sm text-slate-500">{[c.relation, c.role, isExecutorContact(c, snapshot.owner?.executor_name) && String(c.role ?? "").trim().toLowerCase() !== "executor" ? "Executor" : ""].filter(Boolean).join(" · ")}</p>
+                                    <p class="text-sm text-slate-500">{[String(c.relation ?? "").trim().toLowerCase() !== String(c.role ?? "").trim().toLowerCase() && c.relation, c.role, isExecutorContact(c, snapshot.owner?.executor_name) && String(c.role ?? "").trim().toLowerCase() !== "executor" ? "Executor" : ""].filter(Boolean).join(" · ")}</p>
                                 </div>
                                 {#if TIERS[c.call_tier]}
                                     <span class="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-gold/15 text-[#7a6420]">{TIERS[c.call_tier][1]}</span>
