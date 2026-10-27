@@ -31,13 +31,13 @@ Location: `frontend/src/lib/services/sync.svelte.ts`
 
 All data sync goes through SyncManager. Never bypass it.
 - Instant load from localStorage (no spinners)
-- Optimistic updates with rollback on failure
+- Updates and deletes are optimistic with rollback; creates wait for the server. A failed save keeps the draft (localStorage) for Try Again
 - Server is truth after sync
 
 ```typescript
 const store = new SyncManager('contacts', 'contacts');
 await store.init();  // Critical - triggers sync
-await store.create(data);  // Optimistic create
+await store.create(data);  // saved once the server confirms
 ```
 
 ### Alembic Migrations (Critical)
