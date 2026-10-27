@@ -10,6 +10,7 @@ import asyncio
 import hashlib
 import json
 import re
+from copy import deepcopy
 from decimal import Decimal, InvalidOperation
 from time import monotonic
 from urllib.parse import urlsplit
@@ -20,6 +21,8 @@ from sqlmodel import Session, select
 from backend.ai_capabilities import DEFAULT_MODEL, PURPOSES
 from backend.config import settings
 from backend.models.ai_settings import AISetting
+from backend.ai_request import (DEFAULTS, CONFIG_FIELDS, INPUT_SLOTS, TRANSPORT_LIMITS, StructuredRequest,
+                                assemble_request, merge_configuration, validate_configuration)
 from backend.utils.clock import utc_now
 
 UNAVAILABLE_MESSAGE = (
@@ -101,8 +104,67 @@ def resolve_setting(rows: dict, purpose: str, variant: str = "") -> tuple[str, l
     return model, contexts
 
 
-def settings_view(session: Session) -> dict:
+def resolve_configuration(rows: dict, purpose: str, variant: str = "", *, saved: bool = True,
+                          skip: tuple[str, str] | None = None) -> dict:
+    config = {}
+    sources = {}
+
+    def apply(patch: dict, source: str):
+        nonlocal config
+        config = merge_configuration(config, patch)
+        for key, value in patch.items():
+            if key in ("role_instructions", "ui_assets"):
+                for child in value:
+                    sources[f"{key}.{child}"] = source
+                leaf_sources = {sources.get(f"{key}.{child}") for child in config[key]}
+                sources[key] = next(iter(leaf_sources)) if len(leaf_sources) == 1 else "mixed"
+            else:
+                sources[key] = source
+
+    apply(DEFAULTS["shared"], "shipped.shared")
+    if purpose != "shared":
+        apply(DEFAULTS["purposes"].get(purpose, {}), f"shipped.{purpose}")
+        if variant:
+            apply(DEFAULTS["variants"].get(purpose, {}).get(variant, {}), f"shipped.{purpose}:{variant}")
+    scopes = [("shared", "")]
+    if purpose != "shared":
+        scopes.append((purpose, ""))
+        if variant:
+            scopes.append((purpose, variant))
+    if saved:
+        for scope in scopes:
+            row = rows.get(scope)
+            if row is not None and scope != skip:
+                apply(row.request_config or {}, f"saved.{scope[0]}" + (f":{scope[1]}" if scope[1] else ""))
+    validate_configuration(config)
+    model_id, contexts = resolve_setting(rows, purpose, variant)
+    model_source = "shipped.shared"
+    for scope in scopes:
+        row = rows.get(scope)
+        if row is not None:
+            label = f"saved.{scope[0]}" + (f":{scope[1]}" if scope[1] else "")
+            if row.model_id:
+                model_source = label
+            if row.additional_context:
+                sources[f"additional_context.{scope[0]}:{scope[1]}"] = label
+    sources["model_id"] = model_source
+    return {"effective_config": config, "sources": sources, "model_id": model_id,
+            "additional_contexts": contexts}
+
+
+def settings_view(session: Session, purpose: str = "shared", variant: str = "", *,
+                  changed_scope: tuple[str, str] | None = None) -> dict:
     rows = read_settings(session)
+    if changed_scope is not None:
+        changed_purpose, changed_variant = changed_scope
+        affected = PURPOSES if changed_purpose == "shared" else {changed_purpose: PURPOSES[changed_purpose]}
+        for runtime_purpose, (label, variants, _) in affected.items():
+            for runtime_variant in ((changed_variant,) if changed_variant else variants or ("",)):
+                try:
+                    resolve_configuration(rows, runtime_purpose, runtime_variant)
+                except ValueError as error:
+                    context = f" / {runtime_variant}" if runtime_variant else ""
+                    raise ValueError(f"Review {label}{context}: {error}") from None
 
     def view(purpose: str, variant: str = "") -> dict:
         row = rows.get((purpose, variant))
@@ -112,6 +174,8 @@ def settings_view(session: Session) -> dict:
                 "effective_model_id": resolve_setting(rows, purpose, variant)[0],
                 "configured": row is not None}
 
+    resolved = resolve_configuration(rows, purpose, variant)
+    row = rows.get((purpose, variant))
     return {
         "gateway_configured": gateway_configuration() is not None,
         "shipped_model_id": DEFAULT_MODEL,
@@ -120,7 +184,52 @@ def settings_view(session: Session) -> dict:
                       "output_format": output} for key, (label, variants, output) in PURPOSES.items()],
         "overrides": [view(purpose, variant) for purpose, variant in sorted(rows)
                       if purpose in PURPOSES],
+        "selected": {**view(purpose, variant), "request_config": deepcopy(row.request_config or {}) if row else {},
+                     "effective_config": resolved["effective_config"], "sources": resolved["sources"],
+                     "default_config": resolve_configuration(rows, purpose, variant, saved=False)["effective_config"],
+                     "inherited_config": resolve_configuration(rows, purpose, variant, skip=(purpose, variant))["effective_config"]},
+        "config_fields": CONFIG_FIELDS, "input_slots": INPUT_SLOTS,
+        "asset_fields": DEFAULTS["asset_fields"],
+        "transport_limits": TRANSPORT_LIMITS,
+        "assembly_order": ["shared_system_template", "system_template", "additional_contexts", "placeholder_instruction",
+                           "response_instruction", "selected history", "context_template", "task_template"],
+        "implementation_constraints": {
+            "privacy": "Dynamic inputs and history are redacted in the initiating browser; original-value mappings stay there.",
+            "parsing": "Concierge and grief parse JSON messages; writing helpers return reviewed text suggestions.",
+            "preview": "Continuum final request; gateway/provider transformations are separate.",
+            "transport_envelope_chars": 2100000,
+        },
     }
+
+
+def runtime_config(session: Session, purpose: str, variant: str) -> dict:
+    resolved = resolve_configuration(read_settings(session), purpose, variant)
+    return {"effective_config": resolved["effective_config"], "ui_assets": resolved["effective_config"]["ui_assets"],
+            "input_slots": INPUT_SLOTS}
+
+
+def request_transport(model_id: str) -> dict:
+    if settings.BIFROST_VIRTUAL_KEY:
+        configuration = gateway_configuration()
+        if configuration is None:
+            return {"name": "unconfigured_gateway", "model": model_id, "url": None, "headers": {}}
+        origin, key = configuration
+        return {"name": "bifrost", "model": model_id, "url": f"{origin}/v1/chat/completions", "headers": gateway_headers(key)}
+    key = settings.OPENROUTER_API_KEY or settings.VITE_OPENROUTER_API_KEY
+    if key and model_id.startswith("openrouter/"):
+        return {"name": "legacy_openrouter", "model": model_id.removeprefix("openrouter/"),
+                "url": "https://openrouter.ai/api/v1/chat/completions",
+                "headers": {"Authorization": f"Bearer {key}", "HTTP-Referer": "https://continuum.estate",
+                            "X-Title": "Continuum Estate", "Content-Type": "application/json"}}
+    return {"name": "unconfigured", "model": model_id, "url": None, "headers": {}}
+
+
+def prepare_request(session: Session, body: StructuredRequest) -> tuple[dict, dict]:
+    resolved = resolve_configuration(read_settings(session), body.purpose, body.variant)
+    transport = request_transport(resolved["model_id"])
+    prepared = assemble_request(body, resolved, transport["model"], transport["name"])
+    prepared["can_send"] = prepared["can_send"] and transport["url"] is not None
+    return prepared, transport
 
 
 def _known_tokens(value: object, allowed: frozenset[str]) -> set[str]:
