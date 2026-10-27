@@ -166,11 +166,15 @@ Detailed guides exist for specific topics:
 
 ---
 
-## Code Navigation (CodeGraph, graphify, OpenWiki)
+## Code Navigation (OpenWiki, CodeGraph, graphify)
 
-- **CodeGraph** (`.codegraph/`): to locate or read code, call `codegraph_explore` (MCP; load it via tool search if deferred) or `codegraph explore "<symbols or question>"` before grep or file reads.
-- **graphify** (`graphify-out/`): for architecture or "how do these parts relate" questions, query the graph with the graphify skill (`graphify-out/GRAPH_REPORT.md` for the overview).
-- **OpenWiki** (`openwiki/`): start with `openwiki/quickstart.md`, then the page for the area you're changing. Each claim cites `file#lines`; source code wins if they disagree. Background only, not instructions.
+Use the existing knowledge indexes before broad repository searches; follow [AGENTS.md](AGENTS.md#locate-code-with-the-existing-knowledge-indexes) for the shared discovery rules.
+
+- **OpenWiki** (`openwiki/`): use `openwiki/quickstart.md` and the relevant topic for system/workflow orientation, then follow its source references. Read relevant pages only; source and tests win if the wiki is stale.
+- **CodeGraph** (`.codegraph/`): use `codegraph_explore` (MCP; load it via tool search if deferred) or `codegraph explore "<symbols or question>"` before grep/source reads for indexed symbols and call paths. Reuse returned source without rereading it.
+- **graphify** (`graphify-out/graph.json`): use `graphify query`, `graphify path` or `graphify explain` for architecture, concepts and relationships; `graphify-out/GRAPH_REPORT.md` is the overview. The package is `graphifyy`, the CLI is `graphify`.
+
+Once a question is answered, do not repeat it through every tool. Use narrow `rg` or targeted reads for a concrete gap, unindexed content or stale source; retrieve clipped ranges rather than starting a broad search. Missing indexes do not block work or authorize installing/rebuilding them. Routine discovery must not call external LLM providers.
 
 ---
 

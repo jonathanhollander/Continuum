@@ -1,38 +1,42 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:d1db880779cf0e9f9a69eb1ea965f314dfc2eb1590169a8a5704fa7b62b409b6",
+  "pageVersion": "sha256:360a7b5e858e529826775cfadc842111a11a8abf03d1a6280af404f165dbc70f",
   "claims": [
     {
       "id": "claim_cc26c152130447d8bdbf0af66e36836f",
-      "statement": "navigation.ts defines the sidebar as navGroups with four groups in order: What Matters Most, When You're Ready, Life & Legacy and Extras, each item carrying label, key, href, icon and allowedRoles.",
+      "statement": "navigation.ts defines sidebar groups in order as Estate Overview, My Legacy, My Finances, My Instructions, People & Check-ins and Extras, with role-bearing items and progressive disclosure.",
       "evidence": [
         {
-          "resource": "repo://frontend/src/lib/config/navigation.ts#L43-L300",
-          "version": "repo-lines-v1:sha256:8cfe63fe374313ab76a5ce95a0e6a2e17379aff4b436f746d822e2b6306f2cef:eyJzZWxlY3RlZExpbmVDb3VudCI6MjU4LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIwMWJhNDcxOWM4MGI2ZmU5MTFiMDkxYTdjMDUxMjRiNjRlZWVjZTk2NGUwOWMwNThlZjhmOTgwNWRhY2E1NDZiIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI3MDkzNjNiNGVmMjQyZmRkOGNjNjNmZDFlYmNjMzkwMzlmMzQyNmQ4YmI4YzcyZTY4NzcxMzU2MTE2MzYwZjgwIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJlMzA5NTZhZTNjZGQyMThkN2RkZTFmMDcwMDBjZGIyM2Y3MzAyYTE3N2IwM2ExNzQ2NzQ0YTk5NTA0ZjRkMDFmIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI4NTdkZmE3N2Y3MjNhY2RiNzMyN2U1NTYxYmMyZDY3NWY5YWIwODRmMzg0MjNhMjI2OWU0NGIzZjQzOTc5ZjhkIn0"
+          "resource": "repo://frontend/src/lib/config/navigation.ts#L44-L79",
+          "version": "repo-lines-v1:sha256:d825d81917f5154757886c76590a099b0e4aa0a7bd3f5eecd65fb433946733b9:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM3NWQwODgxMWE0MGU4ZWZhZWEyMGZkYTFjZmY4NGIzNWQ5YmY2M2NiN2RkY2FiMTRhYWI1MTllNjM2YTFhMzAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk0OWY2MzU1NjI2NTczZDYwMTE5MzYxZDkyMzQ3ODYyOTNiYmM0MDJkYjU5OWJmM2FjOTUwOWZhZGU3NmU1YWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJjYzIwZGM5MWFmM2QwNDFmMTg3MTFhMmI3MTBmNDJhNDcyMjU4NmNiZjAzN2E2ZTUyOWExNzg2YWM2NGM2ZTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk5NTM0OGMxMWUxYzdjZTUwM2YyOGE3ZWNkNzZjMmM4ZTdkYTZiZTMyZDNiNThiNTllNzE1ZTQ0NzQzNDlhNjEifQ"
+        },
+        {
+          "resource": "repo://frontend/src/lib/config/navigation.ts#L79-L377",
+          "version": "repo-lines-v1:sha256:7f4b59da983e26d2fd80876773ad906f41d4f7181817b661fda8d2cb6b1ea46e:eyJzZWxlY3RlZExpbmVDb3VudCI6Mjk5LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI5NDlmNjM1NTYyNjU3M2Q2MDExOTM2MWQ5MjM0Nzg2MjkzYmJjNDAyZGI1OTliZjNhYzk1MDlmYWRlNzZlNWFmIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJiMDJkMmMwZDZkYzVlNzRkOTJmYTE0YjkxZGJlYTI2NDA5MGJlYjM1ZmRiOTE4OGQ5YjM0MTE4MWRjZTlmNGNlIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJlZTRmNTI0MTExNTVhMjIxNjhmZjlkOWVlODMzYzFkYjNlOWI5NzFiNmM2MDdiODlmMjViNjQ2OTc4Y2EzMGI2IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJmODlkNmU2YjYwZDNkZGZjMTU5MWQ2NTQxM2VmYTE3NGNjMmY1MGEyZWJmOTQxY2UzZGY4YjMwMGI1YWViNmNiIn0"
         }
       ]
     },
     {
       "id": "claim_c424d5971d534054bf9df4631b16d560",
-      "statement": "catalogCategories in navigation.ts drives the module catalog with Life & Legacy and Helpful Tools categories, and coreActions is the subset of the first nav group flagged isCoreAction.",
+      "statement": "catalogCategories defines Life & Legacy and Helpful Tools, while coreActions is every navGroups item flagged isCoreAction across all groups.",
       "evidence": [
         {
-          "resource": "repo://frontend/src/lib/config/navigation.ts#L382-L422",
-          "version": "repo-lines-v1:sha256:6248df95e68f45097c8003251841f0db4bafcaf86cf4cc93058909c94c159565:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYxMzMxZWMxZWU3YmZlZmVkZmIyZDhkOTJlYzYyOGRmODQyM2M5NTU0NzQxNmYxZWZiZDQ1NzE2M2JjYmMzZGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFhMjZiOGNjOTEyYWE3YzkyZjEyNTc0MjBiZThjMWZiMDRmMTg5YzBmZWQ0M2QzMzRjN2NkNzA0MzFkYWVhYjYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc4YWY1OTgzMWJjODVhNDM4NjE5YWIzZGQzY2IyYmQ4M2RlY2ZmYmRlYzU3ODYwMWY4ZjhkN2ZhN2Q0MTMyZWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+          "resource": "repo://frontend/src/lib/config/navigation.ts#L480-L521",
+          "version": "repo-lines-v1:sha256:d62f85d7b6f22c81ddc597240729a20c99e6277e9d8a9f527ca7829e3071c3c4:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYxMzMxZWMxZWU3YmZlZmVkZmIyZDhkOTJlYzYyOGRmODQyM2M5NTU0NzQxNmYxZWZiZDQ1NzE2M2JjYmMzZGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI1ZmY3NTMzMTlmODQxNzQ3ZTA2NDcxMzEzOTA1MzZjYzRiMjFiMjI1YmU2YjZlZTI4NzQ3MDQzY2MxODZiMjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc4YWY1OTgzMWJjODVhNDM4NjE5YWIzZGQzY2IyYmQ4M2RlY2ZmYmRlYzU3ODYwMWY4ZjhkN2ZhN2Q0MTMyZWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
         }
       ]
     },
     {
       "id": "claim_747348e3eb5349d898d4c10d45c842dd",
-      "statement": "The root layout redirects unauthenticated users to /login on any route that is not a wizard, marketing, auth or public Pulse respond/verify route.",
+      "statement": "The root layout redirects signed-out users on protected routes to /login, except offline-local mode; wizard/start, marketing, auth, public Pulse/guardian and /for/ recipient routes bypass the login guard.",
       "evidence": [
         {
-          "resource": "repo://frontend/src/routes/%2Blayout.svelte#L136-L155",
-          "version": "repo-lines-v1:sha256:de8ce4ed4181ba155cf719e6065a0d847bf02b9bb6bd958be4e24faaabfc6996:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE5YzI1ZGUxNzJhZThlNWI3NmIyMzIwYzNmN2JiNTEwMGM2ZWJiNGQ3MzM3MmExZjRlOTlkZTMyMjIxNzk4YTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMGM4YmQ0ODAzMTUxNDE0ZDI3YTBkNjA2MDE3NzgzMDRmZWVmZjYwM2VmMWUzMWNhMmE0YTQyMDJhODIwYTciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU5OWUwOGI1MTU4NzlmN2YzMzhhZGYyODFhOWE1MDExNTRkMmIyMWE0OWQwNWEzNzk3YjRhNzI4YTJiNDJmNGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkwYTg3MTNjY2M0Yjk2MTUwNjc1MGM3NzYyYjVmYzc4NTNhNmJmNzJjYzg1ODEwNjVmZDYyZjkyZWZjZDdkOTMifQ"
+          "resource": "repo://frontend/src/routes/%2Blayout.svelte#L141-L175",
+          "version": "repo-lines-v1:sha256:4cdde7c3d53cb65e795acc7243c69ca6faa834b2ace693e5d3ef60b0557cddba:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU4NGMzZjRhYTk0NzZkZWZjNzVkODU2ZGMxYjUzNTdmYjNhMTVlZDNkYmE1YTJlYmZmNDRjNjExMGYzYTMyYWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUzZjcwMDkwZjVlZWIzMWEzZDQ2MzcxNDFlYmFhMGY0MGFhOGEyZjk1OGYxY2U0MTFjOWY0YTIxZGZkY2E2NWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRmNTkwYzE0ODQ5OTg0MGI3ZmMyNzk3NjM3Y2EwYjU0ZThhOTE3MTU2NDQzM2Q4YjcxMzRjZjNiNmMxYjVjY2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkwYTg3MTNjY2M0Yjk2MTUwNjc1MGM3NzYyYjVmYzc4NTNhNmJmNzJjYzg1ODEwNjVmZDYyZjkyZWZjZDdkOTMifQ"
         },
         {
-          "resource": "repo://frontend/src/routes/%2Blayout.svelte#L267-L280",
-          "version": "repo-lines-v1:sha256:40322aa46f9b8a427c364396a5febc5f00b37ba5ed6d945a6ad9add5375d1af3:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2ODA2ZjE1NWM1YWMxYWUyNzIyY2EwNmYyYWM5Y2FkY2I4ODFiOTEyM2NiNjI0YTNjMTA0NzViNDQ0OWRjMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUxM2Q5YTZiZDliZGYwMGY3ZGE4ODdiNjk3M2YwNzM5YjcxNzMxM2Q0YjYyMjg4NTQ0ZDc3MGQxOWM1ODgxZTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZhNzY2MGEzZWRmMTc1ODc1YTRhYTY5NjcxMmE4MTEyOGI2NDc5NTY1OWI5YzQyYWFiN2QyMGI4NWUyZmZlMzMifQ"
+          "resource": "repo://frontend/src/routes/%2Blayout.svelte#L300-L330",
+          "version": "repo-lines-v1:sha256:5e777433c58ddadf7890e9a7c394603925cb36dcdd2a8bc47f366beac89fb7b5:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRmZmYwNjMzNDhhMWUxYTMyNTEzZWFjYzAxNmZjMjVjZmZlZjBiNGM5MGJmMGM4ODhlZDU4NTdmMjEzYTMyZGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY0ZWZjNDk0MThkMjZkY2YxMjliMjJhNmFhMjExMDhjZWVjMzc2NzdhMzJkMDhlOWQ1ZmVlMzVkZGE2NmJiOWQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcwODc1YzJkMjJkMWMxYjE2ODQzOWU4MzgxZGEzYzEzNmI1YzA5OGJjODY3MjE0Zjc5NGZmMzRjMzRlZmRiYWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjEyNjg4NTMzMGY4OWQ1MTM5YWIwZTg1MjFlNWM4NWE1OTFlMjZhYTgxZjQ1YTQxYWI0MTlmZTZiZDA1YzMyNWQifQ"
         }
       ]
     },
@@ -41,48 +45,102 @@
       "statement": "For logged-in users the layout redirects to /dashboard when the current path exactly matches a navGroups item whose allowedRoles excludes the current role; paths not in navGroups are not role-checked.",
       "evidence": [
         {
-          "resource": "repo://frontend/src/routes/%2Blayout.svelte#L282-L298",
-          "version": "repo-lines-v1:sha256:88a0f7f58989ffa10bdec5bc22e065109ab9ca7da5f48d204853ecd6eaf19350:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIzZTA1ZGM3MDBhMDM1ZmY4NTYyYjMxN2UyOGI5MjlkMGYzZTI4OThmMWM2ZWQ5MGI1YzZlYmJiNDg5NTY1MzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY0ZWZjNDk0MThkMjZkY2YxMjliMjJhNmFhMjExMDhjZWVjMzc2NzdhMzJkMDhlOWQ1ZmVlMzVkZGE2NmJiOWQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMxMDAyZjNiY2Q3Yjk5MzE5Yjc5OTIxNzAxNzUzMzQ5OWJiZmY5ZTVkZmNjN2QxMTM3NWMzYzg2MTQ1Y2E3NDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjEyNjg4NTMzMGY4OWQ1MTM5YWIwZTg1MjFlNWM4NWE1OTFlMjZhYTgxZjQ1YTQxYWI0MTlmZTZiZDA1YzMyNWQifQ"
+          "resource": "repo://frontend/src/routes/%2Blayout.svelte#L314-L329",
+          "version": "repo-lines-v1:sha256:8174e1d018687666a04886c9765f3dd68060e2085ce92e4918c59c797abac03b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIzZTA1ZGM3MDBhMDM1ZmY4NTYyYjMxN2UyOGI5MjlkMGYzZTI4OThmMWM2ZWQ5MGI1YzZlYmJiNDg5NTY1MzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2ODA2ZjE1NWM1YWMxYWUyNzIyY2EwNmYyYWM5Y2FkY2I4ODFiOTEyM2NiNjI0YTNjMTA0NzViNDQ0OWRjMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMxMDAyZjNiY2Q3Yjk5MzE5Yjc5OTIxNzAxNzUzMzQ5OWJiZmY5ZTVkZmNjN2QxMTM3NWMzYzg2MTQ1Y2E3NDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM1NTk5N2I2NTcwNGMyNWU0YjVjMjhkMDdiMzYxNTUyNGU5NDYwMjg3NmVjYmUxMmM0MTE2NjM4ODVlMWQyOWQifQ"
         }
       ]
     },
     {
       "id": "claim_e30ad22efedb46a2acc5f0afda7d9813",
-      "statement": "The /modules/[id] route looks the id up in registry.json and chooses an archetype component such as AssetManager or ContactDirectory by substring of the module id.",
+      "statement": "The /modules/[id] fallback looks up registry.json and renders keyed ModuleContent; vault-like IDs redirect to /modules/legal-documents, while named module routes take precedence.",
       "evidence": [
         {
-          "resource": "repo://frontend/src/routes/modules/%5Bid%5D/%2Bpage.svelte#L1-L60",
-          "version": "repo-lines-v1:sha256:6f61f906ad6d68d2c43d4b810dfbbfbc5460f07a42ff9e8a8e2ee2ca11ef0c32:eyJzZWxlY3RlZExpbmVDb3VudCI6NjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk0YWJjOGVkNzU0MzgyMjA2NWMwMjlmNWVhMjUyZDEyMjNkNzZhYTdkMmQzZDRmYjEyNTgxMmY2YjVhOTlkZGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRmNGRlZThlODEwMmZhMGRiOGVjYmE2YmJjYWY3ZTc1ZjAwZGFlMGJjYTJjNmMwOWNkYWQyNjM3Yjg2Zjc3NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVhNjM5ZDg1MTEwZDFmMTg0YzliZTFiZGFmZWY5YTU1NjcxNjI1ZTI1MTFmOGI0OGYwNjRmNjVlOWIzOWI5MDMifQ"
+          "resource": "repo://frontend/src/routes/modules/%5Bid%5D/%2Bpage.svelte#L1-L49",
+          "version": "repo-lines-v1:sha256:4aab3f1d09c417ec34788f87129eb06e9027325ac48bc086ce9f5292ebd28969:eyJzZWxlY3RlZExpbmVDb3VudCI6NDksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk0YWJjOGVkNzU0MzgyMjA2NWMwMjlmNWVhMjUyZDEyMjNkNzZhYTdkMmQzZDRmYjEyNTgxMmY2YjVhOTlkZGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVlYjUxNjU4YzRmZjAzNWZlY2RlYjRjMjY5ZWZiMmQzM2E2N2FjOTkyOGEyYTZjMmQyZDlhMTQ2MzBhMGVjMzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://frontend/src/routes/modules/%5Bid%5D/%2Bpage.ts#L1-L12",
+          "version": "repo-lines-v1:sha256:db659b373d08daa44f33220a3d6b49eae4d903e346447685500782976a6c0534:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2MGVhYmM0YTc0YjRhYmI3NzMyMzk4M2ZlNzc3Mjk1M2Y0ODVhOTBmNWM5OTcyNmViYTJhYzk4NGM5Njk0YWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
         }
       ]
     },
     {
       "id": "claim_6888eef4f42e4a39b2537c91f1db0dba",
-      "statement": "dictionary.ts contains translations for en, es, fr, de, ru and he, and localization.ts provides an activeLanguage store with a derived t function that falls back to the key.",
+      "statement": "localization.ts reexports the shared concierge language store; its derived translator looks up flat or dotted keys, falling back to English and then the key itself.",
       "evidence": [
         {
-          "resource": "repo://frontend/src/lib/stores/dictionary.ts#L1-L30",
-          "version": "repo-lines-v1:sha256:64f9037036cc880a4c778cdefa6ce08d20972142fbebcabc75b12daba0ae3c74:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFlOTgzOTM0NjhkMjgwMWFmNjdjZjI5Zjc1N2Q0OTdhMThjZmIzMWM5Y2IwODQyMGM3NzliNGU2OWYxNTVmZWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMGQ0YjE0ZTJjOWUyODJiOTUzY2RmMTcwZjcxNjdiOWM2MzFkZDU2NjA0M2ZmMzllZjQwYWVmODU2ZTZjOWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE1YzllNjYxOWZjMTkyYTExZjQ0ZmVmMDU1MDNmOWRkZDY2Yzg4ZjJhMDY0ZWIyMzdiMDc1YzEwNGUwNjYxYzkifQ"
-        },
-        {
           "resource": "repo://frontend/src/lib/stores/localization.ts#L1-L23",
-          "version": "repo-lines-v1:sha256:914ab4571608aad820742f862beda6447e3b600b46afebe06d0654b65af16ade:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU5MTg3ZjZiNjMyNDMwNThhNjY4YmM4NGRkYWM5ZDkxMTQ1YTkwMmE0YWYyZjI1MjE4N2FlZGJjNTc3ODJkMDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+          "version": "repo-lines-v1:sha256:c44abd7a715a9ca695cfede7b25e09ca52b4aa776248aa025e53a0a1146ee445:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYyZjMzMmI1MzMxMGU2ZDJlY2I0OGExZDZkYzhlOGNiMjJlMWFiZTgwNTZkYTk5M2UyZTkwNDZmMGY4MjEwMTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
         }
       ]
     },
     {
       "id": "claim_35305095d9de4568b25fe21b6b41746e",
-      "statement": "The root layout picks up an email and optional lang query parameter, registers the account locally, and removes the parameters from the URL.",
+      "statement": "Only /start picks up email/lang handoff query parameters and removes them; the account becomes active at sign-in rather than from URL parameters.",
       "evidence": [
         {
-          "resource": "repo://frontend/src/routes/%2Blayout.svelte#L190-L201",
-          "version": "repo-lines-v1:sha256:5c978539686c47f86ce31b45ac2eac2f81fb8549bee21993042d9f07ce9ae946:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU1Nzg5NWI0MmI1YWVmYWQ2YTM1ZTYwMGY5NWE1MTVlNzg3MTBhYWU2MjA1ODNkN2M0YzcyOTZhNGE3ZGQ5MTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY0ZWZjNDk0MThkMjZkY2YxMjliMjJhNmFhMjExMDhjZWVjMzc2NzdhMzJkMDhlOWQ1ZmVlMzVkZGE2NmJiOWQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ1ZDA3OTRhZGMyNTVhMjk5Mjg0NDkwNTc3ZjNiYTMzNzI0ZTNiOTQwNzc3YmJmNGM4YWFiZDQ1Njk1OWRmMTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA5NmRlMmUxOTRkNjczMWFmOTk4NGMyZWIzZTgxYjlmMGE5YWUyM2ZlNjBmODA0MDY3MzcyNGJjYzA3ZWY5NTkifQ"
+          "resource": "repo://frontend/src/routes/%2Blayout.svelte#L239-L252",
+          "version": "repo-lines-v1:sha256:8e1c1df0e7ca34057f958f17b85ad3ac6f5249eac99f4d6bc3292d389c5474df:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2N2FiZTRhMzY0NTI5ODYwN2ZkYzkwZWEzOTI4ODBmN2RiMWIxYTBjOTc0YTk2MDQzOTg4MGJmNDVmZGMyYjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY0ZWZjNDk0MThkMjZkY2YxMjliMjJhNmFhMjExMDhjZWVjMzc2NzdhMzJkMDhlOWQ1ZmVlMzVkZGE2NmJiOWQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ1ZDA3OTRhZGMyNTVhMjk5Mjg0NDkwNTc3ZjNiYTMzNzI0ZTNiOTQwNzc3YmJmNGM4YWFiZDQ1Njk1OWRmMTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA5NmRlMmUxOTRkNjczMWFmOTk4NGMyZWIzZTgxYjlmMGE5YWUyM2ZlNjBmODA0MDY3MzcyNGJjYzA3ZWY5NTkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_27efe89a385048c9aa330606aab44101",
+      "statement": "The owner recipient-preview entry is rendered after My Instructions and Help & Resources after Extras; both stay outside navGroups so module grids and role guards see module entries only.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/lib/config/navigation.ts#L379-L405",
+          "version": "repo-lines-v1:sha256:560eb02d9034a2fb02be456b8eccb7c9c1de37ccc52ecf069ab6d95de8c1a63d:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjliZGM4NmYxYmQzODU3NzA2ZWY1M2FkNzEwZDJkZjNkMzJkMzlmNTVkNjQxM2ZiOTMzOTYwNDIwYmFjOTljMGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFhZjJmNTdjZTg4YjU1MDJiZWRjMDMyNzQxZWUyZTczYWE2MTM5YmRhNzQyMGRjZTkwOTVjY2RhNTBmMDFjYjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU3YmI3NmY0YzAyMGViYTUwYzkyMjU2ZjEwMDQ0Mzk5ZmFiNjFlYzQyZDc0MWFmY2RlNTkwMGY4ZmIyMmY4MDkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2b55bcae326648e496b8086748041076",
+      "statement": "The active route tree owns /start, /welcome and /onboarding but no /wizard, and former estate/debug/popout pages are archived outside frontend/src/routes.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/_archive/routes/concierge-window/%2Bpage.svelte",
+          "version": "repo-file-v1:sha256:1e5e6b24e7907e63e844ce2c2d9eb4718000e76617cf4ab8ec4b8ec2d51d5458"
+        },
+        {
+          "resource": "repo://frontend/_archive/routes/debug-textarea/%2Bpage.svelte",
+          "version": "repo-file-v1:sha256:b47cb1d195fe1239f01c87db2ee33232fc483e082926ec9e30bd9911dc06a9ad"
+        },
+        {
+          "resource": "repo://frontend/_archive/routes/estate/%5Bid%5D/%2Bpage.svelte",
+          "version": "repo-file-v1:sha256:19dedec0faa23b22c64684042542eda9a610d40f8b99306dd6b633c7d3a0e533"
+        },
+        {
+          "resource": "repo://frontend/_archive/routes/test-registry/%2Bpage.svelte",
+          "version": "repo-file-v1:sha256:8c4ead3c1a3c2a63fe50a00834923493a7ed837328db11ee842a2a23b7b36436"
+        },
+        {
+          "resource": "repo://frontend/src/routes/%2Blayout.svelte#L141-L175",
+          "version": "repo-lines-v1:sha256:4cdde7c3d53cb65e795acc7243c69ca6faa834b2ace693e5d3ef60b0557cddba:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU4NGMzZjRhYTk0NzZkZWZjNzVkODU2ZGMxYjUzNTdmYjNhMTVlZDNkYmE1YTJlYmZmNDRjNjExMGYzYTMyYWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUzZjcwMDkwZjVlZWIzMWEzZDQ2MzcxNDFlYmFhMGY0MGFhOGEyZjk1OGYxY2U0MTFjOWY0YTIxZGZkY2E2NWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRmNTkwYzE0ODQ5OTg0MGI3ZmMyNzk3NjM3Y2EwYjU0ZThhOTE3MTU2NDQzM2Q4YjcxMzRjZjNiNmMxYjVjY2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkwYTg3MTNjY2M0Yjk2MTUwNjc1MGM3NzYyYjVmYzc4NTNhNmJmNzJjYzg1ODEwNjVmZDYyZjkyZWZjZDdkOTMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5bbe3b9ab6db4b8f8bd1e07f20bc0cd1",
+      "statement": "Legacy /pulse/portal/[token] redirects to /portal/[token], /pulse redirects to /modules/pulse keeping the query, and /modules/executor-guide redirects to /modules/executor-toolkit.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/routes/modules/executor-guide/%2Bpage.ts#L1-L10",
+          "version": "repo-lines-v1:sha256:ffecd457c204ca7480ecfde08af7c107284951dcd297ff5aa81ce8b47d1cc61e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ5OGUwYjJjNmQwMGYwZTQ5NDZiY2ZlNjAxOTk4NTAzYTVjZDUxZmE5NzNjOGMwN2VlZmRhYzgyMGEzZDYwNjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://frontend/src/routes/pulse/%2Bpage.ts#L1-L7",
+          "version": "repo-lines-v1:sha256:e9d00a4986003af0396eb8b7f5104a8e4136a83acf7f3bce3f3de36c8803ea4e:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDk4ZTBiMmM2ZDAwZjBlNDk0NmJjZmU2MDE5OTg1MDNhNWNkNTFmYTk3M2M4YzA3ZWVmZGFjODIwYTNkNjA2MyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWExZDFhNjMzOTAyMjljNzk4MzQ3ZTgzYTA0MDU0NDFjOTQwMDAzNTI4NGFkMTY4YzFiZjZjZGYxZDcwYTM3MCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        },
+        {
+          "resource": "repo://frontend/src/routes/pulse/portal/%5Btoken%5D/%2Bpage.ts#L1-L8",
+          "version": "repo-lines-v1:sha256:35659975b00971acb35f98531eef23a8cad814d4132d224db6bef90b9a1379ef:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDk4ZTBiMmM2ZDAwZjBlNDk0NmJjZmU2MDE5OTg1MDNhNWNkNTFmYTk3M2M4YzA3ZWVmZGFjODIwYTNkNjA2MyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWExZDFhNjMzOTAyMjljNzk4MzQ3ZTgzYTA0MDU0NDFjOTQwMDAzNTI4NGFkMTY4YzFiZjZjZGYxZDcwYTM3MCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
         }
       ]
     }
   ],
   "verification": {
     "by": "openwiki/0.4.3",
-    "at": "2026-10-26T04:52:34.633Z"
+    "at": "2026-10-27T00:50:18.916Z"
   }
 }
