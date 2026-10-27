@@ -336,7 +336,7 @@ const SECTIONS: SectionDef[] = [
                 { label: 'Accounts', value: String(rows.length) },
                 { label: 'Total assets', value: money(t.assets) },
                 { label: 'Total debts', value: money(t.debts) },
-                { label: 'Net estate', value: money(t.net) }
+                { label: 'Net financial value recorded', value: money(t.net) }
             ];
         }
     },

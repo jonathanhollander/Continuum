@@ -17,6 +17,7 @@
     // The saved values stay as they are; these are the words shown on each chip.
     const statusLabel: Record<string, string> = {
         Pending: "Waiting",
+        Notified: "Marked notified",
         LeftMsg: "Left a message",
         Unreachable: "Will try again",
     };
@@ -46,7 +47,7 @@
                 <div
                     class="mt-2 text-xs text-warning bg-warning-soft px-2 py-1 rounded inline-block border border-warning/20"
                 >
-                    <strong>Note:</strong>
+                    <strong>Contact notes:</strong>
                     {contact.notes}
                 </div>
             {/if}

@@ -210,9 +210,9 @@
 
 <LivingBlueprintHeader
     title="Pet Care"
-    subtitle="Your companions deserve a plan for their future care"
-    detailedDescription="Your pets depend on you completely. This plan ensures they'll be loved and cared for by someone you trust, for the rest of their life. It's one of the kindest things you can do for them—and for the person who steps in to help."
-    whyMatters="A documented plan places your pets with someone who knows their needs, fears, and routines. Creating this plan ensures they'll be loved and cared for by someone you trust."
+    subtitle="People, routines and records for your pet's next carer"
+    detailedDescription="Record who you would like to care for each pet and the practical details they will need: food, routine, veterinary contacts, medications and where supplies are kept. Add the arrangements you have discussed with that person."
+    whyMatters="Familiar routines and accurate care details help the person stepping in. Review the instructions with your chosen carer and share a copy of the saved plan."
 >
     <div class="flex items-center gap-4">
         <DataViewToggle module="pets" />
@@ -220,7 +220,7 @@
             class="bg-primary text-primary-foreground px-6 py-2 rounded-xl font-bold hover:opacity-90 transition-colors flex items-center gap-2 shadow-lg shadow-primary/20"
             onclick={() => (showAddForm = !showAddForm)}
         >
-            <Plus size={20} /> Share a pet detail
+            <Plus size={20} /> Record a pet care plan
         </button>
     </div>
 </LivingBlueprintHeader>
@@ -235,6 +235,7 @@
 
     <!-- AI Prompt Bar -->
     <div class="max-w-3xl mb-8">
+        <p class="text-sm text-muted-foreground">Use your own care notes for help drafting clear instructions for the next carer. Review the wording and exact care details, then add it to the record you save.</p>
         <AIPromptBar context="pets" />
     </div>
 
@@ -410,11 +411,11 @@
                 <div class="col-span-full">
                     <EmptyState
                         title="Your companions deserve a plan too"
-                        whyMatters="<strong>A documented plan places your pets with someone who knows their needs, fears, and routines.</strong><br/><br/>Creating this plan ensures they'll be loved and cared for by someone you trust—someone who knows their favorite toy, their medical needs, and the way they like to be held. It's one of the most loving things you can do for them."
-                        encouragement="When you're ready, take a moment to think about who would give them the life they deserve."
+                        whyMatters="Start with the person you would like to help, the vet contact and the daily routine. Add where food, medication instructions, equipment and care records are kept."
+                        encouragement="Begin with one pet and the details someone would need on their first day of care."
                         icon={Dog}
                         iconClass="text-primary"
-                        ctaLabel="Share your companion's story"
+                        ctaLabel="Record a pet care plan"
                         onAction={() => (showAddForm = true)}
                     />
                 </div>
@@ -425,11 +426,11 @@
         {#if petStore.items.length === 0}
             <EmptyState
                 title="Your companions deserve a plan too"
-                whyMatters="<strong>A documented plan places your pets with someone who knows their needs, fears, and routines.</strong><br/><br/>Creating this plan ensures they'll be loved and cared for by someone you trust—someone who knows their favorite toy, their medical needs, and the way they like to be held. It's one of the most loving things you can do for them."
-                encouragement="When you're ready, take a moment to think about who would give them the life they deserve."
+                whyMatters="Start with the person you would like to help, the vet contact and the daily routine. Add where food, medication instructions, equipment and care records are kept."
+                encouragement="Begin with one pet and the details someone would need on their first day of care."
                 icon={Dog}
                 iconClass="text-primary"
-                ctaLabel="Share your companion's story"
+                ctaLabel="Record a pet care plan"
                 onAction={() => (showAddForm = true)}
             />
         {:else}
@@ -491,7 +492,7 @@
     <!-- Add Pet Modal -->
     <Modal
         bind:open={() => showAddForm, setFormOpen}
-        title={newPet.id ? "Update Their Care Plan" : "Share your companion's story"}
+        title={newPet.id ? "Update Their Care Plan" : "Record a pet care plan"}
         description={newPet.id
             ? "Keep their information current so their next caregiver has everything they need."
             : "Your pet will be cared for by someone who truly understands them—their routines, their quirks, and their needs."}
@@ -556,18 +557,16 @@
             <div>
                 <label for="pet-guardian"
                     class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1 mb-1.5"
-                    >Their Next Loving Home</label
+                    >Person you would like to care for them</label
                 >
                 <input id="pet-guardian"
                     type="text"
                     bind:value={newPet.guardian}
                     class="w-full px-4 py-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                    placeholder="Who will love them next?"
+                    placeholder="Name of the person you have discussed care with"
                 />
                 <p class="text-xs text-muted-foreground mt-1.5 leading-relaxed px-1">
-                    Choose someone who already knows and loves them, if
-                    possible. This person will receive all the care
-                    details you provide here.
+                    Record the person you have discussed care with. Share the saved details with them and keep their contact information in Family &amp; Contacts.
                 </p>
             </div>
 
@@ -618,7 +617,7 @@
                         type="text"
                         bind:value={newPet.medicalNeeds}
                         class="w-full px-4 py-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                        placeholder="Any ongoing care needs"
+                        placeholder="Exact vet-provided medication instructions, care needs and where the current records are kept"
                     />
                 </div>
             </div>
@@ -640,8 +639,8 @@
                             job={{job_id:aiJobId("pet", newPet, newPet.id)+":notes",document_title:newPet.name,source_facts:aiSourceFacts({name:newPet.name,type:newPet.type,guardian:newPet.guardian,vetName:newPet.vetName,foodInstructions:newPet.foodInstructions,medicalNeeds:newPet.medicalNeeds})}}
                     bind:value={newPet.notes}
                     context="pet"
-                    placeholder="Share a favorite memory, tribute, or special quirks..."
-                    label="Tribute & Notes"
+                    placeholder="Handling, comfort, walking arrangements and supply locations. Add familiar quirks or a memory if you wish."
+                    label="Care notes and familiar routines"
                     minHeight="100px"
                 />
             </div>

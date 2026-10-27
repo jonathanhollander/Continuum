@@ -20,6 +20,8 @@
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import { onMount, tick } from "svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
+    import { auth } from "$lib/stores/auth";
+    import { captureSession, isCurrentSession } from "$lib/services/sessionOwnership";
     import { activityLog } from "$lib/stores/activityLog.svelte";
     import { fade, scale } from "svelte/transition";
     import { FileText, Download, Printer } from "lucide-svelte";
@@ -76,10 +78,11 @@
     });
 
     let showAddForm = $state(false);
+    let exampleDraft = $state(false);
     let newSub = $state<Partial<Subscription> & { id?: string }>({
         difficulty: "Easy",
         cycle: "Monthly",
-        cost: 0,
+        cost: undefined,
         auto_renew: true,
     });
     const isClosed = (s: Partial<Subscription>) => s.auto_renew === false;
@@ -88,21 +91,29 @@
     let selectedSubForLetter = $state<Subscription | null>(null);
     let showLetterModal = $state(false);
     let customLetterContent = $state("");
+    let letterSigner = $state("");
+    let letterCapacity = $state("");
+    let letterOwner = captureSession();
+    $effect(() => {
+        $auth;
+        if (showLetterModal && !isCurrentSession(letterOwner)) closeLetterModal();
+    });
 
     function generateDefaultLetter(sub: Subscription) {
         return `
             <p>Dear Customer Service Team,</p>
             
-            <p>Please accept this formal request to cancel the account and all associated services for <strong>${esc($estateProfile.ownerName || "[Name]")}</strong>, effective as of the date of this letter.</p>
+            <p>I am contacting you about the <strong>${esc(sub.name)}</strong> service recorded for <strong>${esc($estateProfile.ownerName || "[Account holder]")}</strong>.</p>
             
             <p><strong>Account Details:</strong></p>
             <ul>
                 <li>Service: ${esc(sub.name)}</li>
                 ${$estateProfile.legalAddress ? `<li>Billing Address: ${esc($estateProfile.legalAddress)}</li>` : ""}
-                <li>Payment Method: ${esc(sub.paymentMethod || "On File")}</li>
+                <li>Identifying reference: [Add the reference the provider requests]</li>
             </ul>
 
-            <p>This request is being made on behalf of the estate by the designated executor. We request that you confirm this cancellation in writing and provide a final statement of account.</p>
+            <p>Please tell me the process and documents needed to close this service, and confirm any remaining charges, renewal dates or refund questions.</p>
+            <p>My relationship or authority to make this enquiry: [Describe your actual role and any documents you can provide].</p>
             
             <p>Thank you for your prompt attention to this matter.</p>
         `;
@@ -155,18 +166,20 @@
     }
 
     function editSubscription(sub: Subscription) {
+        exampleDraft = false;
         newSub = { ...sub };
         parsedCustomAttributes = readCustom(sub);
         showAddForm = true;
     }
 
     function resetForm() {
+        exampleDraft = false;
         showAddForm = false;
         newSub = {
             id: undefined,
             difficulty: "Easy",
             cycle: "Monthly",
-            cost: 0,
+            cost: undefined,
             name: "",
             paymentMethod: "",
             nextBilling: "",
@@ -204,6 +217,8 @@
 
     function openLetterModal(sub: Subscription) {
         selectedSubForLetter = sub;
+        letterOwner = captureSession();
+        letterSigner = letterCapacity = "";
         customLetterContent = generateDefaultLetter(sub);
         showLetterModal = true;
 
@@ -220,6 +235,7 @@
 
     function resetLetter() {
         if (selectedSubForLetter) {
+            letterSigner = letterCapacity = "";
             customLetterContent = generateDefaultLetter(selectedSubForLetter);
         }
     }
@@ -227,6 +243,7 @@
     function closeLetterModal() {
         showLetterModal = false;
         selectedSubForLetter = null;
+        customLetterContent = letterSigner = letterCapacity = "";
     }
 
     // The letter body as written in the modal (edits included); the rest is the same text the sheet shows.
@@ -237,9 +254,9 @@
         return {
             date: `Date: ${new Date().toLocaleDateString()}`,
             to: `To: ${sub.name} Billing Department`,
-            subject: `Subject: Account Cancellation Request - ${sub.name}`,
-            signer: $estateProfile.executorName || "[Executor name]",
-            role: `Executor of the Estate of ${$estateProfile.ownerName || ""}`,
+            subject: `Subject: Subscription closure enquiry - ${sub.name}`,
+            signer: letterSigner.trim() || "[Your name]",
+            role: letterCapacity.trim() || "[Your relationship or authority, if applicable]",
         };
     }
 
@@ -253,7 +270,7 @@
         frame.id = "letter-print-frame";
         frame.setAttribute("aria-hidden", "true");
         frame.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden";
-        frame.srcdoc = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(sub.name)} cancellation letter</title><style>
+        frame.srcdoc = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(sub.name)} closure enquiry</title><style>
             @page { margin: 1in; }
             body { font-family: Georgia, "Times New Roman", serif; font-size: 12pt; line-height: 1.5; color: #1e293b; margin: 0; }
             p { margin: 0 0 0.8em; } ul { margin: 0 0 0.8em; padding-left: 1.4em; }
@@ -314,7 +331,7 @@
             y += 6;
             write(l.signer, { bold: true });
             write(l.role, { italic: true, size: 9 });
-            const file = `${sub.name || "Subscription"} cancellation letter`.replace(/[\\/:*?"<>|]+/g, " ").trim();
+            const file = `${sub.name || "Subscription"} closure enquiry`.replace(/[\\/:*?"<>|]+/g, " ").trim();
             saveBlob(doc.output("blob"), `${file}.pdf`);
         } finally {
             pdfBusy = false;
@@ -330,8 +347,8 @@
 <LivingBlueprintHeader
     title="Subscriptions & Services"
     subtitle="Keep recurring charges in view for your family"
-    detailedDescription="Every subscription you document helps your family keep money that might otherwise go to forgotten charges."
-    whyMatters="A short list of your subscriptions gives your family the names and steps to close each one, one less thing for them to carry."
+    detailedDescription="Record recurring services, their billing details and provider instructions. Use Notes to explain which services you would like your family to continue, review or close."
+    whyMatters="A useful service record identifies the provider, how it is paid, the next billing date and whom to ask about current cancellation or renewal requirements."
 >
     <div class="flex items-center gap-4">
         <DataViewToggle module="subscriptions" />
@@ -355,6 +372,7 @@
 >
 
     <!-- AI Concierge Drafting Assistant -->
+    <p class="text-sm text-muted-foreground">Describe one service for help organizing its details or drafting an enquiry. Review the wording, then add it to the record or correspondence you prepare.</p>
     <AIPromptBar
         context="subscriptions"
         promptSource="routes/modules/subscriptions/+page.svelte:prompts"
@@ -364,7 +382,7 @@
     {#if subscriptions.length === 0}
         <EmptyState
             title="Gather your recurring charges"
-            whyMatters="Every subscription you document helps your family keep money that might otherwise go to forgotten charges.<br/><br/>Documenting your subscriptions also gives your family the steps to close each one."
+            whyMatters="Start with a service shown on a current bill or statement. Record how it is paid, where the provider instructions are kept, and whether your family should continue, review or close it."
             encouragement="Start with the obvious ones—Netflix, Spotify, your gym. You can add others as you remember them."
             icon={Receipt}
             iconClass="text-muted-foreground"
@@ -374,7 +392,7 @@
 
         <!-- Sample Data GhostRows -->
         <div class="mt-8">
-            <p class="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-4 text-center">Example entries to inspire you</p>
+            <p class="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-4 text-center">Examples open a blank service record for your own details</p>
             <div class="space-y-3">
                 {#each getSmartSamples($language).subscriptions || [] as sample}
                     <GhostRow
@@ -383,13 +401,8 @@
                         type="Subscription"
                         value={sample.cost}
                         onClick={() => {
-                            newSub = {
-                                ...newSub,
-                                name: sample.name,
-                                cost: sample.cost,
-                                cycle: sample.cycle as "Monthly" | "Yearly",
-                                notes: sample.notes
-                            };
+                            exampleDraft = true;
+                            newSub = { ...newSub, cycle: newSub.name ? newSub.cycle : sample.cycle as "Monthly" | "Yearly" };
                             showAddForm = true;
                         }}
                     >
@@ -610,9 +623,8 @@
                                 : "Track a Recurring Charge"}
                         </h3>
                         <p class="text-muted-foreground text-sm mt-2 leading-relaxed">
-                            {newSub.id
-                                ? "Keep this information current—it makes the cancellation process smoother."
-                                : "Documenting these gives your family a clear path through closing each subscription."}
+                            Record the current bill or provider details. Use Notes for your wish about continuing, reviewing or closing this service.
+                            {#if exampleDraft}<span class="block mt-2 text-primary-hover" role="status">Example starting point: enter your own service name, amount and billing details. Your entered words stay in the form.</span>{/if}
                         </p>
                     </div>
                     <button
@@ -707,7 +719,7 @@
                         <textarea id="subscription-cancellation-instructions"
                             bind:value={newSub.cancellationInstructions}
                             class="w-full px-4 py-3 rounded-xl border border-border h-24"
-                            placeholder="How do we turn this off?"
+                            placeholder="Provider contact or account page, current instructions, notice period and questions still to ask"
                         ></textarea>
                     </div>
 
@@ -822,7 +834,7 @@
                             <FileText size={20} />
                         </div>
                         <h3 class="font-serif font-bold text-xl text-foreground">
-                            Cancellation Request
+                            Subscription closure enquiry
                         </h3>
                     </div>
                     <button aria-label="Close"
@@ -834,6 +846,7 @@
                 </div>
 
                 <div class="flex-1 overflow-y-auto p-8 bg-background/30">
+                    <p class="mb-4 text-sm text-muted-foreground">Edit the body and sender details below. Complete bracketed details using your actual role and records, then print or download a copy to send through the provider's process.</p>
                     <!-- Letter Document -->
                     <div
                         class="bg-card shadow-sm border border-border p-12 aspect-[1/1.4] max-w-[500px] mx-auto text-sm text-foreground space-y-8 font-serif"
@@ -849,7 +862,7 @@
 
                         <div class="space-y-4">
                             <p class="font-bold">
-                                Subject: Account Cancellation Request - {selectedSubForLetter.name}
+                                {letterParts(selectedSubForLetter).subject}
                             </p>
 
                             <div
@@ -864,13 +877,10 @@
                                 <div
                                     class="w-48 h-12 border-b border-slate-300"
                                 ></div>
-                                <p class="font-bold">
-                                    {$estateProfile.executorName ||
-                                        "[Executor name]"}
-                                </p>
-                                <p class="text-xs text-muted-foreground italic">
-                                    Executor of the Estate of {$estateProfile.ownerName}
-                                </p>
+                                <label class="block text-xs font-bold text-muted-foreground" for="subscription-letter-signer">Sender name for this draft</label>
+                                <input id="subscription-letter-signer" bind:value={letterSigner} placeholder="[Your name]" class="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground" />
+                                <label class="block text-xs font-bold text-muted-foreground" for="subscription-letter-capacity">Relationship or authority for this draft</label>
+                                <input id="subscription-letter-capacity" bind:value={letterCapacity} placeholder="[Your relationship or authority, if applicable]" class="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground" />
                             </div>
                         </div>
                     </div>
