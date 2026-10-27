@@ -4,7 +4,7 @@ MODULE_VARIANTS = (
     "obituary", "letters", "executor", "heirlooms", "legal_explainer", "contacts",
     "medical", "pets", "property", "insurance", "digital-guardian", "visual-memories",
     "financial", "activity-log", "subscriptions", "advanced-registry", "qr-codes",
-    "home-manual", "calendar",
+    "home-manual", "calendar", "funeral",
 )
 WRITER_VARIANTS = (
     "heirloom", "timeline", "contact", "pet", "funeral", "letter", "ethical_will",
@@ -19,7 +19,7 @@ PURPOSES = {
     "letter.draft": ("Draft a letter", (), "text"),
     "letter.rewrite": ("Rewrite a letter", (), "text"),
 }
-DEFAULT_MODEL = "openrouter/google/gemini-2.0-flash-001"
+DEFAULT_MODEL = "fireworks/accounts/fireworks/models/deepseek-v4p1-flash"
 
 
 def validate_selection(purpose: str, variant: str = "", *, allow_shared: bool = False) -> None:

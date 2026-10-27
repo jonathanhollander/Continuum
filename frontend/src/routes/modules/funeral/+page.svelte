@@ -23,6 +23,7 @@
     } from "lucide-svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
+    import { aiJobChanges, currentAIJob, type AIWritingJob } from "$lib/services/aiCapabilities";
     import EmptyState from "$lib/components/EmptyState.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import GriefSupportBanner from "$lib/components/GriefSupportBanner.svelte";
@@ -44,7 +45,24 @@
     const registry = Array.isArray(registryData) ? registryData : [];
     const module = registry.find((m) => m.id === "funeral");
 
+    const funeralIntro = "Record the funeral or memorial arrangements you want your family to follow. Start with what matters most; leave details open and return when you're ready.";
     let activeTab = $state("wishes"); // 'wishes' | 'budget'
+    const funeralTabLabel = $derived(activeTab === "wishes" ? "Funeral & memorial wishes" : "Costs & arrangements");
+    const funeralJob = $derived.by((): AIWritingJob => {
+        $aiJobChanges;
+        const engaged = currentAIJob();
+        const field = activeTab === "wishes" && engaged?.document_type === "funeral"
+            && engaged.job_id?.startsWith("funeral:wishes:") ? engaged : undefined;
+        const recorded = funeralSync.data;
+        return {
+            ...field, job_id: field?.job_id ?? `funeral:${activeTab}`,
+            job_brief: funeralTabLabel, document_title: "Final Wishes", document_type: "funeral",
+            field_label: field?.field_label || funeralTabLabel,
+            current_draft: field?.current_draft ?? (recorded ? JSON.stringify(activeTab === "wishes" ? recorded.wishes || {} : recorded.budget || [], null, 2) : ""),
+            current_draft_source: field?.current_draft_source ?? "edited",
+            source_facts: recorded ? [JSON.stringify({ wishes: recorded.wishes || {}, budget: recorded.budget || [] })] : [],
+        };
+    });
     let showAddExpense = $state(false);
     let newExpense = $state<Partial<FuneralBudgetItem>>({
         name: "",
@@ -255,14 +273,16 @@
     <LivingBlueprintHeader
         title="Final Wishes"
         subtitle={module.title}
-        detailedDescription={module.description}
+        detailedDescription={funeralIntro}
     />
 {/if}
 
 <div class="max-w-6xl mx-auto p-8 animate-in fade-in duration-500">
     <div class="mb-12 text-center">
         <div class="max-w-xl mx-auto mb-8">
-            <AIPromptBar context="obituary" />
+            <p class="text-left text-muted-foreground mb-4">{funeralIntro}</p>
+            <p class="text-left text-sm text-muted-foreground mb-4">This notebook holds your wishes. The helper uses the current field and wishes shown here to draft text for you to review and copy.</p>
+            <AIPromptBar context="funeral" job={funeralJob} />
         </div>
 
         <div class="max-w-3xl mx-auto text-left">
@@ -281,7 +301,7 @@
 
     <!-- Tabs -->
     <div class="flex justify-center items-center gap-4 mb-8">
-        <div class="bg-muted p-1.5 rounded-xl inline-flex gap-2">
+        <div class="bg-muted p-1.5 rounded-xl inline-flex max-w-full flex-wrap justify-center gap-2">
             <button
                 class="px-6 py-2.5 rounded-lg font-bold text-sm transition-all {activeTab ===
                 'wishes'
@@ -289,7 +309,7 @@
                     : 'text-muted-foreground hover:text-foreground'}"
                 onclick={() => (activeTab = "wishes")}
             >
-                Vision & Spirit
+                Funeral &amp; memorial wishes
             </button>
             <button
                 class="px-6 py-2.5 rounded-lg font-bold text-sm transition-all {activeTab ===
@@ -298,7 +318,7 @@
                     : 'text-muted-foreground hover:text-foreground'}"
                 onclick={() => (activeTab = "budget")}
             >
-                Financial Care
+                Costs &amp; arrangements
             </button>
         </div>
     </div>
