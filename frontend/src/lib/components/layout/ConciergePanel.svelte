@@ -69,6 +69,9 @@
     });
 
     let input = $state("");
+    // Header status follows the latest AI reply: answered (ready) or returned unavailable (paused).
+    let lastReply = $derived([...$conciergeEngine.messages].reverse().find((m) => m.source === "model" || m.status === true));
+    let aiStatus = $derived(lastReply?.status === true ? "Assistant paused" : lastReply ? "Assistant ready" : "AI Assistant");
     let scrollContainer = $state<HTMLElement | null>(null);
     $effect(() => { input = $conciergeEngine.composerDraft; });
 
@@ -344,11 +347,11 @@
                     <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
                         <span class="flex items-center gap-2 whitespace-nowrap">
                             <span
-                                class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"
+                                class="w-1.5 h-1.5 rounded-full {aiStatus === 'Assistant ready' ? 'bg-primary animate-pulse' : 'bg-white/30'}"
                             ></span>
                             <span
                                 class="text-[10px] uppercase tracking-widest text-white/40 font-bold"
-                                >Active Assistant</span
+                                data-testid="concierge-ai-status">{aiStatus}</span
                             >
                         </span>
                         {#if $conciergeEngine.currentContextName}

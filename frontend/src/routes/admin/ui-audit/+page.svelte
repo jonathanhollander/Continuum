@@ -42,8 +42,7 @@
             <h1 class="text-3xl font-bold text-white mb-2">Manual Interface Checklist</h1>
             <p class="text-slate-400">
                 Mark the visual checks you have personally reviewed. Checkmarks are
-                saved with your account; they are not automated test results or proof
-                that every page has been checked.
+                saved with your account and record your own manual review.
             </p>
         </div>
     </div>

@@ -358,8 +358,7 @@
             </h4>
             <p class="text-muted-foreground text-sm mt-1">
                 Open a related page, review its records, then tick the check yourself.
-                These percentages count your review checks; they do not assess whether
-                your estate or legal arrangements are complete.
+                These percentages count your review checks.
             </p>
         </div>
         <a

@@ -10,7 +10,7 @@ export const REFLECTION_POOLS = {
                         "Describe the moment you knew we were meant to be.",
                         "What is a hardship we overcame that made us stronger?",
                         "What is the funniest thing that ever happened to us?",
-                        "What is a quiet moment we shared that you'll never forget?",
+                        "What is a quiet moment we shared that you'll always remember?",
                         "Describe a trip or adventure that changed our relationship."
                     ],
                     suggestions: ["Our first trip together", "The day we met", "A quiet moment shared"]
@@ -32,7 +32,7 @@ export const REFLECTION_POOLS = {
                         "What is one wish you have for their future happiness?",
                         "What advice would you give them for finding peace?",
                         "What do you want them to know about moving forward?",
-                        "What do you hope they never forget about themselves?",
+                        "What do you hope they always remember about themselves?",
                         "If you could promise them one thing for the future, what would it be?"
                     ],
                     suggestions: ["Deep happiness", "Finding peace", "Adventure and love"]

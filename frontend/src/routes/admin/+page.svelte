@@ -16,8 +16,7 @@
                 Recorded Information Overview
             </h1>
             <p class="text-white/80 text-lg max-w-2xl">
-                Review recorded items and practice settings. Record presence and
-                manual checkmarks do not verify a complete or legally effective plan.
+                Review recorded items and practice settings.
             </p>
         </div>
     </div>

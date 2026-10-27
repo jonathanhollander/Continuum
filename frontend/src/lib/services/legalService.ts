@@ -12,7 +12,7 @@ export type ExampleLegalDoc = {
 };
 
 export const EXAMPLE_WILL: ExampleLegalDoc = {
-    fullText: `LAST WILL AND TESTAMENT\n\nI, [Name], being of sound mind, declare this to be my Last Will and Testament.\n\nARTICLE I: I direct that all my debts and funeral expenses be paid as soon after my death as may be reasonably convenient.\n\nARTICLE II: I give, devise, and bequeath all the rest, residue, and remainder of my estate to my spouse. If my spouse does not survive me, I give one-half of my estate to my children, per stirpes.\n\nARTICLE III: I hereby appoint my spouse as Executor of this Will. If they are unable to serve, I appoint [Name] as successor Executor, to serve without bond.`,
+    fullText: `LAST WILL AND TESTAMENT\n\nI, [Name], being of sound mind, declare this to be my Last Will and Testament.\n\nARTICLE I: I direct that all my debts and funeral expenses be paid as soon after my death as may be reasonably convenient.\n\nARTICLE II: I give, devise, and bequeath all the rest, residue, and remainder of my estate to my spouse. If my spouse predeceases me, I give one-half of my estate to my children, per stirpes.\n\nARTICLE III: I hereby appoint my spouse as Executor of this Will. If they are unable to serve, I appoint [Name] as successor Executor, to serve without bond.`,
     terms: [
         {
             term: "per stirpes",

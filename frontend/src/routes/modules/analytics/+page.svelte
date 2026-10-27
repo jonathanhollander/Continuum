@@ -79,7 +79,6 @@
                 <p class="text-muted-foreground text-lg max-w-2xl mb-6">
                     See which record checks are filled across legal, financial
                     and personal information, then open the source records to review them.
-                    These percentages do not verify legal authority, current values or a complete handover.
                 </p>
                 <button
                     class="flex items-center gap-2 bg-card border border-border text-foreground px-6 py-3 rounded-2xl transition-all shadow-xl shadow-black/40 hover:scale-105 active:scale-95 font-bold"
@@ -141,7 +140,7 @@
                 {#if !profileConfirmed}
                     <div class="mb-6 space-y-3 text-sm text-muted-foreground" role="status" data-testid="analytics-profile-status">
                         <p>{estateProfile.status === "error"
-                            ? "Your estate profile could not be confirmed. Try Again before treating a missing executor name as an empty record."
+                            ? "Your estate profile needs a fresh check. Try Again to confirm the recorded executor name."
                             : "Gathering your estate profile before checking the recorded executor name."}</p>
                         {#if executorContactConfirmed}
                             <p>The executor check uses a confirmed contact record. Profile-dependent review topics are still waiting.</p>
@@ -347,7 +346,7 @@
                     </div>
                 </div>
                 <h2 class="text-2xl font-bold text-foreground mb-2">
-                    No gaps in this topic list
+                    Every topic here has an entry
                 </h2>
                 <p class="text-muted-foreground max-w-lg mx-auto">
                     The topics listed here have recorded information or setup choices.

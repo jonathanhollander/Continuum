@@ -176,7 +176,7 @@
                     >
                 </div>
 
-                <p class="text-sm text-muted-foreground">These are manual review checks. They count what you have ticked, not whether your estate arrangements are complete.</p>
+                <p class="text-sm text-muted-foreground">These are manual review checks. The percentage counts what you have ticked.</p>
 
                 <!-- Progress Bar -->
                 <div

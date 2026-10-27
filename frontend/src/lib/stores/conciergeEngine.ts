@@ -140,7 +140,8 @@ function createConciergeEngine() {
         syncChannel = null;
         accountId = nextId;
         accountSession = nextId === null ? null : owner;
-        set(nextId === null ? { ...initialState, accountEpoch } : loadState(nextId));
+        const { currentRoute, currentContextName } = get({ subscribe });
+        set({ ...(nextId === null ? { ...initialState, accountEpoch } : loadState(nextId)), currentRoute, currentContextName });
         if (nextId === null) return;
 
         const channel = new BroadcastChannel(`continuum-concierge:user:${nextId}`);
@@ -152,7 +153,7 @@ function createConciergeEngine() {
             const { type, state: remoteState } = event.data;
             if (type === 'STATE_UPDATE' && remoteState?.accountId === accountId) {
                 updateStore(state => {
-                    const next = { ...state, ...remoteState, accountId, accountEpoch };
+                    const next = { ...state, ...remoteState, accountId, accountEpoch, currentRoute: state.currentRoute, currentContextName: state.currentContextName };
                     persistState(next);
                     return next;
                 });

@@ -92,10 +92,10 @@
 
     function getMessage(p: number) {
         if (p === 100)
-            return "You answered Yes to all six questions. Review the actual instructions and documents with the people involved; these answers do not verify access or completeness.";
+            return "You answered Yes to all six questions. Review the actual instructions and documents with the people involved to confirm access.";
         if (p >= 60)
-            return "You answered Yes to some of these questions. Revisit the No answers and check the arrangements with the people involved.";
-        return "Use the No answers as questions to review. This drill records only your answers for this visit; it does not inspect documents or test access.";
+            return "You answered Yes to some of these questions. Revisit the questions you answered No to and check the arrangements with the people involved.";
+        return "Use the questions you answered No to as your review list. Your answers stay with this visit only.";
     }
 </script>
 
@@ -123,7 +123,7 @@
         {#if step < questions.length}
             <!-- Question Step -->
             <div class="p-8">
-                <p class="text-sm text-muted-foreground text-center mb-4">Six self-reported checks. Answers are not saved and do not test your records or anyone's access.</p>
+                <p class="text-sm text-muted-foreground text-center mb-4">Six self-reported checks. Your answers stay with this visit only.</p>
                 <!-- Progress -->
                 <div class="flex items-center gap-2 mb-8">
                     {#each questions as q, i}

@@ -27,7 +27,7 @@ export const phase5Tasks = [
             {"type": "heading_2", "content": "Questions and next actions"},
             {"type": "numbered_list_item", "content": "Ask which national, state or other estate or inheritance tax rules apply for the relevant date and circumstances."},
             {"type": "numbered_list_item", "content": "Ask whether any election or spouse-related filing should be considered even if no payment is expected."},
-            {"type": "numbered_list_item", "content": "Record the adviser’s conclusion, source, applicable dates and documents needed; do not infer a filing requirement from a fixed threshold in this guide."},
+            {"type": "numbered_list_item", "content": "Record the adviser’s conclusion, source, applicable dates and documents needed; the adviser confirms whether a filing is required."},
             {"type": "paragraph", "content": "Use your notes below for the contact, answer, source document and next action. Mark this step finished when the relevant work is complete or its outcome is recorded."}
         ]
     },
@@ -183,7 +183,7 @@ export const phase5Tasks = [
             {"type": "paragraph", "content": "Bring the account details, cash needs and recorded investment instructions to the authorized adviser."},
             {"type": "heading_2", "content": "Questions and next actions"},
             {"type": "numbered_list_item", "content": "Ask who may give instructions and what responsibilities and restrictions apply during administration."},
-            {"type": "numbered_list_item", "content": "Discuss liquidity needs, risks and any proposed trades with the authorized person and qualified adviser; do not assume a move to cash or rebalancing is appropriate."},
+            {"type": "numbered_list_item", "content": "Discuss liquidity needs, risks and any proposed trades with the authorized person and qualified adviser before any move to cash or rebalancing."},
             {"type": "numbered_list_item", "content": "Record the agreed plan, source of advice, decisions, approvals and review date."},
             {"type": "paragraph", "content": "Use your notes below for the contact, answer, source document and next action. Mark this step finished when the relevant work is complete or its outcome is recorded."}
         ]

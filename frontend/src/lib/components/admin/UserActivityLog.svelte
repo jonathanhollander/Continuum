@@ -19,8 +19,8 @@
             <Activity size={20} />
         </div>
         <div>
-            <h3 class="font-bold text-lg text-foreground">User Activity Log</h3>
-            <p class="text-xs text-muted-foreground">Real-time session interactions</p>
+            <h3 class="font-bold text-lg text-foreground">This Session's Activity</h3>
+            <p class="text-xs text-muted-foreground">Actions in this browser session</p>
         </div>
         <div class="ml-auto text-xs text-muted-foreground bg-background px-2 py-1 rounded">
             {$engagementLog.length} events

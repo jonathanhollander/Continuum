@@ -260,7 +260,7 @@
                 Guidance & Resources
             </h2>
             <p class="text-muted-foreground mb-6">
-                Confirm requirements with the court, institution or adviser handling the matter. Being named here does not establish authority to act.
+                Confirm requirements with the court, institution or adviser handling the matter. Authority to act comes from the court or legal appointment.
             </p>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">

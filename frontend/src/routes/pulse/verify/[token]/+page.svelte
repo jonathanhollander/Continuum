@@ -93,7 +93,7 @@
                 </p>
                 <div class="pt-4">
                     <a
-                        href="https://continuum.estate"
+                        href="/"
                         class="text-primary hover:underline text-sm font-medium"
                         >Return to Home</a
                     >

@@ -92,7 +92,7 @@
         pausedSources = sources.filter(({ manager }) => !manager.lastSync || manager.status !== "synced")
             .map(({ name, path }) => ({ name, path }));
         if (pausedSources.length > 0) {
-            pauseMessage = "These sources have not been confirmed, so this walkthrough has no result yet. Existing device records are kept. Try Again to refresh the selected scenario.";
+            pauseMessage = "This walkthrough is waiting for these sources to confirm. Existing device records are kept. Try Again to refresh the selected scenario.";
             simulationState = "paused";
             return;
         }
@@ -112,14 +112,14 @@
                 status: hasIDs,
                 msg: hasIDs
                     ? "A Document Vault record is categorized as ID. Open it to check the attachment or original's location."
-                    : "No Document Vault record categorized as ID was found. Record where a copy or original can be found.",
+                    : "Record where a copy or original of your ID can be found in the Document Vault, categorized as ID.",
             });
             checks.push({
                 check: "Financial or Debt Record",
                 status: hasCards,
                 msg: hasCards
                     ? "An open Financial or debt record was found. Check that the actual cards and institution contact details are listed."
-                    : "No open Financial or debt record was found. Record the actual accounts or cards and institution contacts.",
+                    : "Record the actual accounts or cards and institution contacts in Financial to add them to this check.",
             });
             overallStatus = hasIDs && hasCards ? "pass" : "fail";
         }
@@ -147,7 +147,7 @@
                     ? hasDirective
                         ? "A living-will, DNR, palliative-care or other directive record was found in Health & Medical."
                         : "A Document Vault title matches a healthcare-directive term. Review the actual document and original."
-                    : "No matching directive record or document title was found. Record your wishes and where the relevant originals are kept.",
+                    : "Record your wishes and where the relevant originals are kept to add them to this check.",
             });
             checks.push({
                 check: "Proxy / Power-of-Attorney Record",
@@ -156,7 +156,7 @@
                     ? hasProxy
                         ? "A healthcare-proxy record was found in Health & Medical. Confirm the person, document and applicable authority."
                         : "A Document Vault title matches power of attorney or POA. Check its actual purpose and authority."
-                    : "No healthcare-proxy record or matching power-of-attorney title was found. Record the person and location of the relevant document.",
+                    : "Record the healthcare proxy and the location of the relevant document to add them to this check.",
             });
             overallStatus = hasHealth && hasPOA ? "pass" : "fail";
         }
@@ -176,7 +176,7 @@
                 msg:
                     hasWill || hasTrust
                         ? "A Document Vault record is categorized as Will or Trust. Review the document and original's location."
-                        : "No Document Vault record categorized as Will or Trust was found. Record where the relevant documents or originals are kept.",
+                        : "Record where the relevant will or trust documents or originals are kept in the Document Vault, categorized as Will or Trust.",
             });
             checks.push({
                 check: "Beneficiary Fields",
@@ -215,7 +215,6 @@
             </h1>
             <p class="text-lg text-muted-foreground">
                 Look for selected record categories and fields in a practice scenario.
-                This does not test document validity, attachments, access or a complete response to an emergency.
             </p>
         </div>
         <div
@@ -348,7 +347,7 @@
                                     Questions to Review
                                 </h1>
                                 <p class="text-muted-foreground mt-2">
-                                    One or more selected record checks did not pass. Use the findings below to review the source records.
+                                    Some selected record checks are open for review. Use the findings below to review the source records.
                                 </p>
                             {/if}
                         </div>
